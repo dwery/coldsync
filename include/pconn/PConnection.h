@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.10 2000-12-13 16:39:01 arensb Exp $
+ * $Id: PConnection.h,v 1.11 2000-12-13 16:58:15 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -102,19 +102,6 @@ struct PConnection
 		int (*write)(struct PConnection *pconn,
 			     const ubyte *buf,
 			     uword len);
-		/* XXX - With NetSync, it looks as if the format is
-		 * slightly different: there appears to be a udword slot in
-		 * the request packet where 'errno' goes in the response;
-		 * the argc and arg length fields are both udwords.
-		 *
-		 * If NetSync can't handle traditional packets, then either
-		 * add a field here saying to use udwords everywhere (which
-		 * dlp_send_req() and dlp_recv_resp() have to look at), or
-		 * better, implement NetSync-specific versions of those
-		 * functions, and replace 'read' and 'write' above with
-		 * pointers to them (net_send_dlp_req(),
-		 * net_recv_dlp_resp()).
-		 */
 	} dlp;
 
 	/* NetSync protocol */
