@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.12 2000-11-28 01:42:39 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.13 2000-12-18 06:20:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2965,9 +2965,18 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
+	int msglen;			/* Log message length */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> AddSyncLogEntry \"%s\"\n", msg);
+
+	/* If 'msg' is too long, keep only the last DLPC_MAXLOGLEN
+	 * characters, since that's more likely to contain any errors that
+	 * may have occurred at the end.
+	 */
+	msglen = strlen(msg);
+	if (msglen > DLPC_MAXLOGLEN-1)
+		msg += (msglen - DLPC_MAXLOGLEN + 1);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_AddSyncLogEntry;
