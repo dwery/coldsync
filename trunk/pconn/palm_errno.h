@@ -2,7 +2,7 @@
  *
  * Error codes for libpalm.
  *
- * $Id: palm_errno.h,v 1.1 1999-02-19 22:51:55 arensb Exp $
+ * $Id: palm_errno.h,v 1.2 1999-02-21 08:14:23 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -18,6 +18,7 @@
 #define PALMERR_ABORT		6	/* Palm has aborted */
 #define PALMERR_BADID		7	/* Invalid request ID */
 #define PALMERR_BADRESID	8	/* Invalid result ID */
+#define PALMERR_BADARGID	9	/* Invalid argument ID */
 
 extern int palm_errno;			/* Error code */
 extern const char *palm_errlist[];	/* List of error messages */
