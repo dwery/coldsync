@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.37 2000-09-03 07:31:02 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.38 2000-09-08 15:56:47 arensb Exp $
  */
 
 /* Note on I/O:
@@ -78,8 +78,11 @@ static inline bool PRIVATE(const struct pdb_record *r)
 int
 run_GenericConduit(
 	struct PConnection *pconn,
-	struct dlp_dbinfo *dbinfo)
+	struct dlp_dbinfo *dbinfo,
+	const conduit_block *block)
 {
+	// XXX - Ctor or run() should take 'block' as well, for the user
+	// headers
 	GenericConduit gc(pconn, dbinfo);
 
 	return gc.run();
@@ -153,9 +156,32 @@ GenericConduit::run()
 	 */
 	if (DBINFO_ISRSRC(_dbinfo))
 	{
-		fprintf(stderr, _("I don't deal with resource databases.\n"));
-		add_to_log(_("Not synced\n"));
-		return -1;
+		struct stat statbuf;	/* For stat(), to see if the backup
+					 * file exists.
+					 */
+		const char *bakfname;
+
+		/* See if the backup file exists */
+		bakfname = mkbakfname(_dbinfo);
+		err = lstat(bakfname, &statbuf);
+		if ((err < 0) && (errno == ENOENT))
+		{
+			SYNC_TRACE(2)
+				fprintf(stderr, "%s doesn't exist. Doing a "
+					"backup\n",
+					bakfname);
+			err = backup(_pconn, _dbinfo, backupdir);
+			/* XXX - Error-checking */
+			MISC_TRACE(2)
+				fprintf(stderr, "backup() returned %d\n", err);
+		}
+
+		SYNC_TRACE(2)
+			fprintf(stderr,
+				"[generic]: \"%s\": I don't deal with "
+				"resource databases (yet).\n",
+			_dbinfo->name);
+		return 0;
 	}
 
 	/* Read the backup file, and put the local database in _localdb */
