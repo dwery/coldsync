@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.14 2001-02-08 07:39:56 arensb Exp $
+ * $Id: misc.c,v 2.15 2001-02-21 11:20:48 arensb Exp $
  */
 
 #include "config.h"
@@ -205,8 +205,7 @@ mkfname(const char *first, ...)
 	va_start(ap, first);
 	str = first;
 	MISC_TRACE(8)
-		fprintf(stderr, "First str == 0x%08lx [%s]\n",
-			(long) str, str);
+		fprintf(stderr, "First str == %p [%s]\n", str, str)
 	len = 0;
 	while (str != NULL)
 	{
