@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.41 2003-09-30 20:10:19 azummo Exp $
+ * $Id: install.c,v 2.42 2004-10-21 20:24:14 azummo Exp $
  */
 
 #include "config.h"
@@ -69,9 +69,10 @@ upload_database(PConnection *pconn, struct pdb *db, Bool force)
 		fprintf(stderr, "Uploading \"%s\"\n", db->name);
 
 	/* Call OpenConduit to let the Palm (or the user) know that
-	 * something's going on. (Actually, I don't know that that's the
-	 * reason. I'm just imitating HotSync, here.
+	 * something's going on. (Actually, I don't know the reason
+	 * behind, I'm just imitating the HotSync manager.
 	 */
+
 	err = DlpOpenConduit(pconn);
 
 	if (err != DLPSTAT_NOERR)
