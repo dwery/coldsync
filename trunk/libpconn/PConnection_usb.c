@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.4 2000-02-06 22:29:18 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.5 2000-03-14 06:35:30 arensb Exp $
  */
 
 #include "config.h"
@@ -184,7 +184,9 @@ usb_close(struct PConnection *p)
 }
 
 static int
-usb_select(struct PConnection *p, int which, struct timeval *tvp) {
+usb_select(struct PConnection *p, pconn_direction which,
+	   struct timeval *tvp)
+{
 	fd_set fds;
 	struct usb_data *u = p->io_private;
 

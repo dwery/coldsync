@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.3 2000-02-03 04:25:36 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.4 2000-03-14 06:35:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -56,7 +56,9 @@ serial_close(struct PConnection *p)
 }
 
 static int
-serial_select(struct PConnection *p, int which, struct timeval *tvp) {
+serial_select(struct PConnection *p,
+	      pconn_direction which,
+	      struct timeval *tvp) {
 	fd_set fds;
 
 	FD_ZERO(&fds);
