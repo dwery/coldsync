@@ -3,7 +3,7 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 2.1 1999-07-12 09:20:04 arensb Exp $
+ * $Id: backup.c,v 2.2 1999-07-14 12:24:29 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -88,11 +88,11 @@ Backup(struct PConnection *pconn,
 		err = DlpOpenDB(pconn,
 				CARD0,
 				dbinfo->name,
-				DLPCMD_MODE_READ |
-				(dbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
-				 0 :
-				 DLPCMD_MODE_WRITE) |
-				DLPCMD_MODE_SECRET,
+				DLPCMD_MODE_READ | DLPCMD_MODE_SECRET,
+				/* This is just a backup; we're not going
+				 * to be modifying anything, so there's no
+				 * reason to open the database read-write.
+				 */
 				/* "Secret" records aren't actually secret.
 				 * They're actually just the ones marked
 				 * private, and they're not at all secret.
