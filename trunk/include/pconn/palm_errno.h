@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.2 2001-03-16 14:16:30 arensb Exp $
+ * $Id: palm_errno.h,v 1.3 2001-04-15 04:33:06 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -23,6 +23,7 @@
 #define PALMERR_BADID		7	/* Invalid request ID */
 #define PALMERR_BADRESID	8	/* Invalid result ID */
 #define PALMERR_BADARGID	9	/* Invalid argument ID */
+#define PALMERR_ACKXID		10	/* XID on ACK doesn't match request */
 
 extern int palm_errno;			/* Error code */
 extern const char *palm_errlist[];	/* List of error messages */
