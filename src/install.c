@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.11 2000-04-09 14:25:11 arensb Exp $
+ * $Id: install.c,v 2.12 2000-05-06 11:43:39 arensb Exp $
  */
 
 #include "config.h"
@@ -48,9 +48,6 @@
 /* InstallNewFiles
  * Go through the install directory. If there are any databases there
  * that don't exist on the Palm, install them.
- */
-/* XXX It ought to be possible to force an upload of a database. But this
- * should probably be done on a per-database basis.
  */
 int
 InstallNewFiles(struct PConnection *pconn,
