@@ -8,7 +8,8 @@ coldsync_SOURCES = \
 	pdb.c \
 	sync.c \
 	config.c \
-	download.c
+	download.c \
+	archive.c
 
 coldsync_DEPENDENCIES = $(top_builddir)/pconn/libpconn.a
 
@@ -17,7 +18,8 @@ INCLUDES = \
 
 EXTRA_DIST = \
 	coldsync.h \
-	pdb.h
+	pdb.h \
+	archive.h
 
 ## INCLUDES = -I$(srcdir)
 LIBS = -L$(top_builddir)/pconn -lpconn
