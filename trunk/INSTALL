@@ -1,4 +1,4 @@
-$Id: INSTALL,v 1.5 2004-02-09 09:00:58 azummo Exp $
+$Id: INSTALL,v 1.6 2005-02-02 02:31:59 christophe Exp $
 
 The latter part of this file is the standard GNU tool installation
 instructions. Skip them if you're used to building GNU packages.
@@ -45,6 +45,13 @@ instance, if you use 'stow', you might want to install ColdSync in
 If you do this, bear in mind that the .packlist created for the
 ColdSync.pm package will contain pathnames based on the install-time
 prefix. This may or may not be correct for what you're doing.
+
+Note that the default installation is to /usr/local, even for the ColdSync
+perl module. Many (most?) stock perl installs don't look for modules under
+/usr/local/. You may need to add something like the following to whatever
+you use to run coldsync for any perl conduits to work:
+
+	export PERL5LIB=/usr/local/lib/perl5/site_perl/5.8.5
 
 Running ColdSync
 ======= ========
