@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.103 2000-12-15 07:30:37 arensb Exp $
+dnl # $Id: configure.in,v 1.104 2000-12-16 20:25:40 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -313,6 +313,8 @@ AC_STRUCT_TIMEZONE
 AC_CHECK_FUNCS(fpurge \
 	getopt \
 	memcpy \
+	memset \
+	bzero \
 	mkstemp \
 	select \
 	rename \
