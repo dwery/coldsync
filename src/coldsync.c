@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.150 2003-06-26 21:01:07 azummo Exp $
+ * $Id: coldsync.c,v 1.151 2003-09-30 20:53:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -99,7 +99,6 @@ main(int argc, char *argv[])
 	global_opts.verbosity		= 0;
 	global_opts.listen_name		= NULL;
 	global_opts.autoinit		= Undefined;	/* Default to False */
-	global_opts.use_card_serial	= False;
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;
@@ -319,8 +318,6 @@ main(int argc, char *argv[])
 			Bool3str(global_opts.autoinit));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
-		fprintf(stderr, "\tuse_card_serial: %s\n",
-			global_opts.use_card_serial ? "True" : "False");
 		tmp = get_symbol("CS_LOGFILE");
 		fprintf(stderr, "\tlog_fname: \"%s\"\n",
 			(tmp == NULL ? "(null)" : tmp));

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.76 2003-09-30 20:10:18 azummo Exp $
+ * $Id: coldsync.h,v 1.77 2003-09-30 20:53:31 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -101,11 +101,6 @@ struct cmd_opts {
 				 * ~/.palm/install, even if the modnum of
 				 * the database to be installed is smaller
 				 * than that of the existing database.
-				 */
-	Bool3 use_card_serial;	/* If true, coldsync will try to retrieve a valid
-				 * serial number from the SD/MMC card if the
-				 * Palm has no internal serial number
-				 * (m125, Zire71)
 				 */
 	int verbosity;		/* Level of verbosity. This is different
 				 * from debugging messages, in that
@@ -336,7 +331,6 @@ struct sync_config {
 					 * Palm has no internal serial number
 					 * (m125, Zire71)
 					 */
-
 		/* XXX - Perhaps allow "final" here, so that the sysadmin
 		 * can lock options in place.
 		 */
