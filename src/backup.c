@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.8 1999-11-20 05:13:21 arensb Exp $
+ * $Id: backup.c,v 2.9 1999-11-27 05:50:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,7 +23,6 @@
 #include "pdb.h"
 #include "coldsync.h"
 
-/* XXX - Should this only back up one file, by analogy with conduits? */
 int
 Backup(struct PConnection *pconn,
        struct Palm *palm)
@@ -69,6 +68,10 @@ Backup(struct PConnection *pconn,
 				MAXPATHLEN - strlen(bakfname));
 		bakfname[MAXPATHLEN] = '\0';	/* Terminate the string */
 
+		add_to_log(_("Backup "));
+		add_to_log(dbinfo->name);
+		add_to_log(" - ");
+
 		/* XXX - This is logging, not debugging */
 		SYNC_TRACE(2)
 			fprintf(stderr, "Backing up \"%s\" to \"%s\"\n",
@@ -79,10 +82,13 @@ Backup(struct PConnection *pconn,
 		bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (bakfd < 0)
 		{
-			fprintf(stderr, _("Backup: can't create new backup file %s\n"
-				"It may already exist.\n"),
+			fprintf(stderr, _("%s: can't create new backup file "
+					  "%s\n"
+					  "It may already exist.\n"),
+				"Backup",
 				bakfname);
 			perror("open");
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 		/* XXX - Lock the file */
@@ -93,6 +99,7 @@ Backup(struct PConnection *pconn,
 		{
 			fprintf(stderr, _("Can't open backup conduit.\n"));
 			close(bakfd);
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 
@@ -114,6 +121,7 @@ Backup(struct PConnection *pconn,
 			fprintf(stderr, _("Can't open database \"%s\"\n"),
 				dbinfo->name);
 			close(bakfd);
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 
@@ -129,9 +137,12 @@ Backup(struct PConnection *pconn,
 		err = pdb_Write(pdb, bakfd);
 		if (err < 0)
 		{
-			fprintf(stderr, _("Backup: can't write database \"%s\" to \"%s\"\n"),
+			fprintf(stderr, _("%s: can't write database \"%s\" "
+					  "to \"%s\"\n"),
+				"Backup",
 				dbinfo->name, bakfname);
 			close(bakfd);
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 		SYNC_TRACE(3)
@@ -139,6 +150,7 @@ Backup(struct PConnection *pconn,
 				dbinfo->name, bakfname);
 
 		close(bakfd);
+		add_to_log(_("OK\n"));
 	}
 	return 0;
 }
