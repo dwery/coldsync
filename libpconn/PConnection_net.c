@@ -180,7 +180,7 @@ net_close(struct PConnection *p)
 	dlp_tini(p);
 	netsync_tini(p);
 
-	return close(p->fd);
+	return (p->fd >= 0 ? close(p->fd) : 0);
 }
 
 static int
@@ -281,7 +281,8 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	if (err < 0)
 	{
 		perror("bind");
-		close(pconn->fd);
+		if (pconn->fd >= 0)
+			close(pconn->fd);
 		return -1;
 	}
 
@@ -291,7 +292,6 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	return pconn->fd;
 }
 
-/* XXX - Highly experimental function. */
 static int
 net_udp_listen(struct PConnection *pconn,
 	       struct netsync_wakeup *wakeup_pkt,
@@ -398,10 +398,13 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 	}
 
 	fprintf(stderr, "Closing UDP socket.\n");
-	err = close(pconn->fd);
-	fprintf(stderr, "close() returned %d\n", err);
-	if (err < 0)
-		perror("close");
+	if (pconn->fd >= 0)
+	{
+		err = close(pconn->fd);
+		fprintf(stderr, "close() returned %d\n", err);
+		if (err < 0)
+			perror("close");
+	}
 
 	return 0;
 }
