@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.13 1999-11-20 05:13:57 arensb Exp $
+ * $Id: coldsync.c,v 1.14 1999-11-27 05:53:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,9 +23,11 @@
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
+
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL */
+
 #include "pconn/pconn.h"
 #include "coldsync.h"
 #include "pdb.h"
@@ -129,6 +131,9 @@ main(int argc, char *argv[])
 	int i;
 
 #if HAVE_LIBINTL
+	/* Set things up so that i18n works. The constants PACKAGE and
+	 * LOCALEDIR are strings set up in ../config.h by 'configure'.
+	 */
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
@@ -191,14 +196,12 @@ main(int argc, char *argv[])
 	/* XXX - Figure out fastest speed at which each serial port will
 	 * run
 	 */
-	/* XXX - Clean this up */
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
 			config.listen[0].device);
 	if ((pconn = new_PConnection(config.listen[0].device)) == NULL)
 	{
 		fprintf(stderr, _("Error: can't open connection.\n"));
-		/* XXX - Clean up */
 		exit(1);
 	}
 
@@ -208,7 +211,7 @@ main(int argc, char *argv[])
 	if ((err = Connect(pconn)) < 0)
 	{
 		fprintf(stderr, _("Can't connect to Palm\n"));
-		/* XXX - Clean up */
+		PConnClose(pconn);
 		exit(1);
 	}
 
@@ -216,7 +219,14 @@ main(int argc, char *argv[])
 	if ((err = GetPalmInfo(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
-		/* XXX - Clean up */
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				/* XXX - I'm not sure this is quite right.
+				 * That is, if things are so screwed up
+				 * that we can't get the user info, then
+				 * I'm not sure that we can abort the
+				 * connection cleanly.
+				 */
+		pconn = NULL;
 		exit(1);
 	}
 
@@ -226,7 +236,8 @@ main(int argc, char *argv[])
 	if ((err = load_palm_config(&palm)) < 0)
 	{
 		fprintf(stderr, _("Can't get per-Palm config.\n"));
-		/* XXX - Clean up */
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
 		exit(1);
 	}
 
@@ -237,14 +248,16 @@ main(int argc, char *argv[])
 	if ((err = init_conduits(&palm)) < 0)
 	{
 		fprintf(stderr, _("Can't initialize conduits\n"));
-		/* XXX - Clean up */
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
 		exit(1);
 	}
 
 	if ((err = GetMemInfo(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
-		/* XXX - Clean up */
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
 		exit(1);
 	}
 
@@ -278,7 +291,8 @@ main(int argc, char *argv[])
 	if ((err = ListDBs(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, _("ListDBs returned %d\n"), err);
-		/* XXX - Clean up */
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
 		exit(1);
 	}
 
@@ -364,19 +378,19 @@ main(int argc, char *argv[])
 		 */
 		err = InstallNewFiles(pconn, &palm, installdir, True);
 
-		/* XXX - This is just for purposes of illustration; it
-		 * should be possible to specify a list of directories to
-		 * look in: that way, the user can put new databases in
-		 * ~/.palm/install, whereas in a larger site, the sysadmin
-		 * can install databases in /usr/local/stuff; they'll be
-		 * uploaded from there, but not deleted.
+		/* XXX - It should be possible to specify a list of
+		 * directories to look in: that way, the user can put new
+		 * databases in ~/.palm/install, whereas in a larger site,
+		 * the sysadmin can install databases in /usr/local/stuff;
+		 * they'll be uploaded from there, but not deleted.
 		 */
 		/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
 				      False);*/
 		if (err < 0)
 		{
 			fprintf(stderr, _("Error installing new files.\n"));
-			/* XXX - Clean up */
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			pconn = NULL;
 			exit(1);
 		}
 
@@ -388,10 +402,11 @@ main(int argc, char *argv[])
 			err = run_Fetch_conduits(&palm, &(palm.dblist[i]));
 			if (err < 0)
 			{
-				fprintf(stderr,
-					_("Error %d running pre-fetch conduits.\n"),
+				fprintf(stderr, _("Error %d running pre-fetch "
+						  "conduits.\n"),
 					err);
-				/* XXX - Clean up */
+				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				pconn = NULL;
 				exit(1);
 			}
 		}
@@ -402,7 +417,9 @@ main(int argc, char *argv[])
 			err = HandleDB(pconn, &palm, i);
 			if (err < 0)
 			{
-				fprintf(stderr, _("!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"));
+				fprintf(stderr,
+					_("!!! Oh, my God! A conduit failed! "
+					  "Mayday, mayday! Bailing!\n"));
 				/* XXX - Ought to be able to recover from
 				 * this: if it's a problem with the conduit
 				 * or with the local copy of the backup
@@ -410,7 +427,7 @@ main(int argc, char *argv[])
 				 * and go on to the next one.
 				 */
 				Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-				/* XXX - Error-handling */
+				pconn = NULL;
 				exit(1);
 			}
 		}
@@ -433,21 +450,23 @@ main(int argc, char *argv[])
 		if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
 		{
 			fprintf(stderr, _("Error writing user info\n"));
-			/* XXX - Clean up */
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
 			exit(1);
 		}
+	}
 
-		if (synclog != NULL)
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
-			SYNC_TRACE(2)
-				fprintf(stderr, "Writing log to Palm\n");
-
-			if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-			{
-				fprintf(stderr, _("Error writing sync log.\n"));
-				/* XXX - Clean up */
-				exit(1);
-			}
+			fprintf(stderr, _("Error writing sync log.\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+			exit(1);
 		}
 	}
 
@@ -457,9 +476,9 @@ main(int argc, char *argv[])
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, _("Error disconnecting\n"));
-		/* XXX - Clean up */
 		exit(1);
 	}
+	pconn = NULL;
 
 	/* XXX - For each database in the palm, walk config.dump, looking
 	 * for applicable conduits. This is done after we've disconnected
@@ -474,7 +493,6 @@ main(int argc, char *argv[])
 			fprintf(stderr,
 				_("Error %d running post-dump conduits.\n"),
 				err);
-			/* XXX - Clean up */
 			break;
 		}
 	}
@@ -485,11 +503,9 @@ main(int argc, char *argv[])
 	if ((err = tini_conduits()) < 0)
 	{
 		fprintf(stderr, _("Error cleaning up conduits\n"));
-		/* XXX - Clean up */
 		exit(1);
 	}
 
-	/* XXX - Clean up */
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
 	exit(0);
@@ -530,7 +546,7 @@ Connect(struct PConnection *pconn)
 				continue;
 			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
 				palm_errno,
-				palm_errlist[palm_errno]);
+				_(palm_errlist[palm_errno]));
 			exit(1); /* XXX */
 		}
 	} while (cmpp.type != CMP_TYPE_WAKEUP);
@@ -602,7 +618,8 @@ Disconnect(struct PConnection *pconn, const ubyte status)
 	{
 		fprintf(stderr, _("Error during DlpEndOfSync: (%d) %s\n"),
 			palm_errno,
-			palm_errlist[palm_errno]);
+			_(palm_errlist[palm_errno]));
+		PConnClose(pconn);
 		return err;
 	}
 	SYNC_TRACE(5)
@@ -803,7 +820,8 @@ CheckLocalFiles(struct Palm *palm)
 
 	if ((dir = opendir(backupdir)) == NULL)
 	{
-		fprintf(stderr, _("CheckLocalFiles: can't open \"%s/\"\n"),
+		fprintf(stderr, _("%s: can't open \"%s/\"\n"),
+			"CheckLocalFiles",
 			backupdir);
 		perror("opendir");
 		return -1;
@@ -931,7 +949,9 @@ CheckLocalFiles(struct Palm *palm)
 			 */
 			if (errno != ENOENT)
 			{
-				fprintf(stderr, _("CheckLocalFiles: Error in checking for \"%s\"\n"),
+				fprintf(stderr, _("%s: Error in checking for "
+						  "\"%s\"\n"),
+					"CheckLocalFiles",
 					toname);
 				perror("stat");
 				closedir(dir);
@@ -948,7 +968,9 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				fprintf(stderr, _("CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n"),
+				fprintf(stderr, _("%s: Can't rename \"%s\" "
+						  "to \"%s\"\n"),
+					"CheckLocalFiles",
 					fromname, toname);
 				perror("rename");
 				closedir(dir);
@@ -992,8 +1014,9 @@ CheckLocalFiles(struct Palm *palm)
 			 */
 			if (errno != ENOENT)
 			{
-				fprintf(stderr,
-					_("CheckLocalFiles: Error in checking for \"%s\"\n"),
+				fprintf(stderr, _("%s: Error in checking for "
+						  "\"%s\"\n"),
+					"CheckLocalFiles",
 					toname);
 				perror("stat");
 				closedir(dir);
@@ -1010,7 +1033,9 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				fprintf(stderr, _("CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n"),
+				fprintf(stderr, _("%s: Can't rename \"%s\" "
+						  "to \"%s\"\n"),
+					"CheckLocalFiles",
 					fromname, toname);
 				perror("rename");
 				closedir(dir);
@@ -1390,7 +1415,7 @@ _("\n"
 		DEFAULT_GLOBAL_CONFIG);
 }
 
-/* find_dbinfo
+/* find_dbentry
  * XXX - This really doesn't belong in this file.
  * Look through the list of databases in 'palm' and try to find the one
  * named 'name'. Returns a pointer to its entry in 'palm->dblist' if it
