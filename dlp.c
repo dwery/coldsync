@@ -7,8 +7,9 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.2 1999-01-23 23:08:11 arensb Exp $
+ * $Id: dlp.c,v 1.3 1999-01-31 22:00:18 arensb Exp $
  */
+# if 0
 #include <stdio.h>
 #include <stdlib.h>	/* For malloc() */
 #include "padp.h"
@@ -71,7 +72,7 @@ dlp_free_arglist(int argc, struct dlp_arg *argv)
  */
 /* XXX - Perhaps write a varargs version of this function? */
 int
-dlp_send_req(int fd,		/* File descriptor on which to send */
+dlp_send_req(PConnHandle ph,	/* Connection on which to send */
 	     struct dlp_req_header *header,
 				/* Request header */
 	     struct dlp_arg argv[])
@@ -95,8 +96,8 @@ dlp_send_req(int fd,		/* File descriptor on which to send */
 	 */
 	for (i = 0; i < header->argc; i++)
 	{
-		DLP_TRACE(3, "dlp_send_req: len == %d\n", len);
-		DLP_TRACE(3, "dlp_send_req: argv[%d].size == %d\n",
+		DLP_TRACE(3, "dlp_send_req: len == %ld\n", len);
+		DLP_TRACE(3, "dlp_send_req: argv[%d].size == %ld\n",
 			  i, argv[i].size);
 		if (argv[i].size <= DLP_TINY_ARG_MAX)
 		{
@@ -116,7 +117,7 @@ dlp_send_req(int fd,		/* File descriptor on which to send */
 
 		len += argv[i].size;	/* Size of the argument's data */
 	}
-	DLP_TRACE(2, "dlp_send_req: len == %d\n", len);
+	DLP_TRACE(2, "dlp_send_req: len == %ld\n", len);
 
 	/* Allocate space for 'outbuf'. This is where we'll write the
 	 * request itself.
@@ -184,7 +185,7 @@ dlp_send_req(int fd,		/* File descriptor on which to send */
 	}
 
 	/* Send the argument */
-	err = padp_send(fd, outbuf, op);
+	err = padp_send(ph/*fd*/, outbuf, op);
 	if (err < 0)
 	{
 		fprintf(stderr, "dlp_send_req: error in padp_send()\n");
@@ -204,7 +205,7 @@ dlp_send_req(int fd,		/* File descriptor on which to send */
  * Read a response to a DLP request.
  */
 int
-dlp_read_resp(int fd,		/* File descriptor to read from */
+dlp_read_resp(PConnHandle ph,	/* Connection on which to read */
 	      struct dlp_resp_header *header,
 				/* Response header */
 	      struct dlp_arg **argv_ret)
@@ -220,7 +221,7 @@ dlp_read_resp(int fd,		/* File descriptor to read from */
 	DLP_TRACE(2, "Awaiting DLP response\n");
 
 	/* Read a PADP packet */
-	if ((err = padp_recv(fd, inbuf, sizeof(inbuf))) < 0)
+	if ((err = padp_recv(ph/*fd*/, inbuf, sizeof(inbuf))) < 0)
 	{
 		fprintf(stderr, "dlp_read_resp: padp_recv failed: %d\n",
 			err);
@@ -230,7 +231,7 @@ dlp_read_resp(int fd,		/* File descriptor to read from */
 	/* Copy the header information to 'header' */
 	header->id = inbuf[0];	/* XXX - Check to make sure the high bit is set: it's a response */
 	header->argc = inbuf[1];
-	header->errno = ((dword) inbuf[2] << 8) |
+	header->errno = ((udword) inbuf[2] << 8) |
 		inbuf[3];
 	DLP_TRACE(2, "DLP response: id 0x%02x (0x%02x), argc %d, errno %d\n",
 		  header->id, (header->id & ~0x80), header->argc,
@@ -290,7 +291,7 @@ dlp_read_resp(int fd,		/* File descriptor to read from */
 			fprintf(stderr, "Arithmetic has failed me. The world is coming to an end!\n");
 			break;
 		}
-		DLP_TRACE(2, "DLP response arg %d: id 0x%x, size %d\n",
+		DLP_TRACE(2, "DLP response arg %d: id 0x%x, size %ld\n",
 			  i, (*argv_ret)[i].id, (*argv_ret)[i].size);
 
 		/* Got the argument structure. Now allocate and copy
@@ -306,5 +307,166 @@ dlp_read_resp(int fd,		/* File descriptor to read from */
 		memcpy((*argv_ret)[i].data, iptr, (*argv_ret)[i].size);
 		iptr += (*argv_ret)[i].size;
 	}
+return 0;
+}
+#endif	/* 0 */
+
+#include <stdio.h>
+#include "dlp.h"
+#include "padp.h"
+#include "util.h"
+
+#define DLP_DEBUG	1
+#ifdef DLP_DEBUG
+int dlp_debug = 0;
+
+#define DLP_TRACE(level, format...)		\
+	if (dlp_debug >= (level))		\
+		fprintf(stderr, "DLP:" format)
+
+#endif	/* DLP_DEBUG */
+
+int dlp_errno;			/* Error code */
+
+char *dlp_errlist[] = {
+	"No error",				/* DLPERR_NOERR */
+};
+
+int
+dlp_send_req(int fd,			/* File descriptor */
+	     struct dlp_req_header *header,
+	     				/* Request header */
+	     struct dlp_arg argv[])	/* Array of request arguments */
+{
+	int i;
+	int err;
+	static ubyte outbuf[2048];	/* Outgoing request buffer */
+					/* XXX - Fixed size: bad */
+	ubyte *ptr;			/* Pointer into buffers */
+
+	dlp_errno = DLPERR_NOERR;
+
+	/* XXX - Ought to figure out the total length of the request
+	 * and allocate a buffer for it.
+	 */
+
+	/* Construct a DLP request header in the output buffer */
+	ptr = outbuf;
+	put_ubyte(&ptr, header->id);
+	put_ubyte(&ptr, header->argc);
+	DLP_TRACE(5, ">>> request id 0x%02x, %d args\n",
+		  header->id, header->argc);
+
+	/* Append the request headers to the output buffer */
+	for (i = 0; i < header->argc; i++)
+	{
+		/* See whether this argument ought to be tiny, small
+		 * or large, and construct an appropriate header.
+		 */
+		/* XXX - There's magic to identify tiny, small and
+		 * long arguments. How does this interact? Presumably
+		 * one can force a 12-byte argument to be long, but is
+		 * this mandated by the protocol?
+		 */
+		if (argv[i].size <= DLP_TINYARG_MAXLEN)
+		{
+			/* Tiny argument */
+			DLP_TRACE(10, "Tiny argument %d, id 0x%02x, size %ld\n",
+				  i, argv[i].id, argv[i].size);
+			put_ubyte(&ptr, argv[i].id);
+			put_ubyte(&ptr, argv[i].size);
+		} else if (argv[i].size <= DLP_SMALLARG_MAXLEN)
+		{
+			/* Small argument */
+			DLP_TRACE(10, "Small argument %d, id 0x%02x, size %ld\n",
+				  i, argv[i].id, argv[i].size);
+			put_ubyte(&ptr, argv[i].id);
+			put_ubyte(&ptr, 0);		/* Padding */
+			put_uword(&ptr, argv[i].size);
+		} else {
+			/* Long argument */
+			/* XXX - Check to make sure the comm. protocol
+			 * supports long arguments.
+			 */
+			DLP_TRACE(10, "Long argument %d, id 0x%04x, size %ld\n",
+				  i, argv[i].id, argv[i].size);
+			put_uword(&ptr, argv[i].id);
+			put_udword(&ptr, argv[i].size);
+		}
+
+		/* Append the argument data to the header */
+		memcpy(ptr, argv[i].data, argv[i].size);
+		ptr += argv[i].size;
+	}
+
+	/* Send the request */
+	err = padp_write(fd, outbuf, ptr-outbuf);
+
+return err;
+}
+
+int
+dlp_recv_resp(int fd,
+	      struct dlp_resp_header *header,
+	      int argc,
+	      struct dlp_arg argv[])
+{
+	int i;
+	int err;
+	static ubyte inbuf[2048];	/* Buffer for holding response */
+					/* XXX - Fixed size: bad! */
+	ubyte *ptr;			/* Pointer into buffers */
+
+	/* Read the response */
+	err = padp_read(fd, inbuf, 2048);
+	/* XXX - Error-checking */
+
+	/* Parse the response header */
+	ptr = inbuf;
+	header->id = get_ubyte(&ptr);
+	header->argc = get_ubyte(&ptr);
+	header->errno = get_uword(&ptr);
+	DLP_TRACE(6, "Got response, id 0x%02x, argc %d, errno %d\n",
+		  header->id,
+		  header->argc,
+		  header->errno);
+
+	/* Make sure there's room for all of the arguments */
+	if (header->argc > argc)
+	{
+		fprintf(stderr, "Too many arguments in response (expected %d, got %d)\n",
+			argc, header->argc);
+		return -1;
+	}
+
+	/* Parse the arguments */
+	for (i = 0; i < header->argc; i++)
+	{
+		/* See if it's a tiny, small or long argument */
+		switch (*ptr & 0xc0)
+		{
+		    case 0xc0:		/* Long argument */
+			DLP_TRACE(5, "Arg %d is long\n", i);
+			argv[i].id = get_uword(&ptr);
+			argv[i].size = get_udword(&ptr);
+			break;
+		    case 0x80:		/* Small argument */
+			DLP_TRACE(5, "Arg %d is small\n", i);
+			argv[i].id = get_ubyte(&ptr);
+			get_ubyte(&ptr);	/* Skip over padding */
+			argv[i].size = get_uword(&ptr);
+			break;
+		    default:		/* Tiny argument */
+			DLP_TRACE(5, "Arg %d is tiny\n", i);
+			argv[i].id = get_ubyte(&ptr);
+			argv[i].size = get_ubyte(&ptr);
+			break;
+		}
+		DLP_TRACE(6, "Got arg %d, id 0x%02x, size %ld\n",
+			  i, argv[i].id, argv[i].size);
+		argv[i].data = ptr;
+		ptr += argv[i].size;
+	}
+
 return 0;
 }
