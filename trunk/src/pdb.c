@@ -2,7 +2,11 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.4 1999-08-25 08:07:48 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: pdb.c,v 1.5 1999-09-04 21:06:46 arensb Exp $
  */
 
 #include "config.h"
@@ -19,6 +23,8 @@
 #include "palm_types.h"
 #include "util.h"
 #include "pdb.h"
+
+extern int add_to_log(char *msg);
 
 /* Helper functions */
 static uword get_file_length(int fd);
@@ -735,6 +741,9 @@ pdb_Upload(struct PConnection *pconn,
 	PDB_TRACE(1)
 		fprintf(stderr, "Uploading \"%s\"\n", db->name);
 
+	add_to_log(db->name);
+	add_to_log(" - ");
+
 	/* Call OpenConduit to let the Palm (or the user) know that
 	 * something's going on. (Actually, I don't know that that's the
 	 * reason. I'm just imitating HotSync, here.
@@ -744,6 +753,7 @@ pdb_Upload(struct PConnection *pconn,
 	{
 		fprintf(stderr, "Can't open conduit for \"%s\", err == %d\n",
 			db->name, err);
+		add_to_log("Error\n");
 		return -1;
 	}
 
@@ -751,7 +761,8 @@ pdb_Upload(struct PConnection *pconn,
 	newdb.creator = db->creator;
 	newdb.type = db->type;
 	newdb.card = CARD0;
-	newdb.flags = db->attributes;	/* XXX - Is this right? This is voodoo code */
+	newdb.flags = db->attributes;
+			/* XXX - Is this right? This is voodoo code */
 	newdb.version = db->version;
 	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
 
@@ -760,6 +771,7 @@ pdb_Upload(struct PConnection *pconn,
 	{
 		fprintf(stderr, "Error creating database \"%s\", err == %d\n",
 			db->name, err);
+		add_to_log("Error\n");
 		return -1;
 	}
 
@@ -773,7 +785,10 @@ pdb_Upload(struct PConnection *pconn,
 				       0, db->appinfo_len,
 				       db->appinfo);
 		if (err < 0)
+		{
+			add_to_log("Error\n");
 			return err;
+		}
 	}
 
 	/* Upload the sort block, if it exists */
@@ -786,7 +801,10 @@ pdb_Upload(struct PConnection *pconn,
 					0, db->sortinfo_len,
 					db->sortinfo);
 		if (err < 0)
+		{
+			add_to_log("Error\n");
 			return err;
+		}
 	}
 
 	/* Upload each record/resource in turn */
@@ -818,6 +836,7 @@ pdb_Upload(struct PConnection *pconn,
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 		}
@@ -862,6 +881,7 @@ pdb_Upload(struct PConnection *pconn,
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 
@@ -872,6 +892,8 @@ pdb_Upload(struct PConnection *pconn,
 
 	/* Clean up */
 	err = DlpCloseDB(pconn, dbh);
+
+	add_to_log("OK (New)\n");
 
 	return 0;		/* Success */
 }
