@@ -270,9 +270,6 @@
 - ColdSync.pm: "-config" prints default type as "/" instead of "*/*".
 - Possible API for "Sync" conduits: run generic conduit. Run an
   external program. Then rerun the generic conduit.
-- Bug: Slow sync thinks that any record with category 8 is expunged.
-	Quick fix: fix ARCHIVE() inline function to consider top nybble.
-	Better fix: fix libpdb to split attributes and category.
 - Add "-A" flag: if present, then the AppInfo block is synced as
   follows: if the APPINFO_DIRTY flag is set on the local PDB, its
   AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
