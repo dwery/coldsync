@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.2 2002-03-29 18:20:17 azummo Exp $
+ * $Id: spalm.h,v 2.3 2002-04-17 23:18:34 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -87,19 +87,23 @@ extern struct Palm *new_Palm(PConnection *pconn);
 extern void free_Palm(struct Palm *palm);
 
 /* Accessors. One for each datum one might want to get */
-extern PConnection *palm_pconn(struct Palm *palm);
+extern PConnection *palm_pconn(const struct Palm *palm);
 extern const udword palm_rom_version(struct Palm *palm);
 extern const int palm_serial_len(struct Palm *palm);
 extern const char *palm_serial(struct Palm *palm);
 extern const int palm_num_cards(struct Palm *palm);
 
 extern const char *palm_username(struct Palm *palm);
+extern const int palm_username_len(struct Palm *palm);
 extern const udword palm_userid(struct Palm *palm);
 extern const udword palm_viewerid(struct Palm *palm);
 extern const udword palm_lastsyncPC(struct Palm *palm);
 /* XXX - lastgoodsync */
 /* XXX - lastsync */
 /* XXX - passwd */
+extern const int palm_reload(struct Palm *palm);
+
+
 
 /* XXX - This needs to be redone as a whole set of accessors */
 /*  extern int ListDBs(PConnection *pconn, struct Palm *palm); */

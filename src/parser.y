@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.63 2002-04-02 16:51:00 azummo Exp $
+ * $Id: parser.y,v 2.64 2002-04-17 23:18:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -20,11 +20,11 @@
 
 #include "parser.h"
 #include "symboltable.h"
+#include "trace.h"
 
 #define YYDEBUG 1
 
 int parse_trace = 0;		/* Debugging level for config file parser */
-#define PARSE_TRACE(n)	if (parse_trace >= (n))
 
 #define ANOTHER_ERROR \
 	{ if (++num_errors > 10) \
@@ -82,6 +82,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token FORWARD
 %token HOSTID
 %token INSTALL_FIRST
+%token AUTOINIT
 %token LISTEN
 %token OPTIONS
 %token PATH
@@ -867,6 +868,18 @@ option:	FORCE_INSTALL colon boolean ';'
 		PARSE_TRACE(3)
 			fprintf(stderr, "Option: install_first.\n");
 		file_config->options.install_first = True3;
+	}
+	| AUTOINIT colon boolean ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: autoinit.\n");
+		file_config->options.autoinit = $3;
+	}
+	| AUTOINIT ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: autoinit.\n");
+		file_config->options.autoinit = True3;
 	}
 	| HOSTID colon NUMBER semicolon
 	{

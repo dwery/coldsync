@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.24 2001-10-12 03:59:40 arensb Exp $
+ * $Id: log.c,v 1.25 2002-04-17 23:18:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -43,7 +43,7 @@ va_add_to_log(PConnection *pconn, const char *fmt, ...)
 	va_start(ap, fmt);
 	err = vsnprintf(buf, DLPC_MAXLOGLEN, fmt, ap);
 
-	SYNC_TRACE(4)
+	SYNC_TRACE(6)
 		fprintf(stderr,
 			"va_add_to_log: vsnprintf() returned %d, "
 			"buf == [%.*s]\n",

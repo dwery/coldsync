@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.7 2002-04-02 20:52:27 azummo Exp $
+ * $Id: spalm.c,v 2.8 2002-04-17 23:18:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -690,7 +690,7 @@ ListDBs(struct Palm *palm)
  */
 
 PConnection *
-palm_pconn(struct Palm *palm)
+palm_pconn(const struct Palm *palm)
 {
 	return palm->pconn_;
 }
@@ -727,6 +727,23 @@ const char *palm_username(struct Palm *palm)
 	}
 
 	return palm->userinfo_.username;
+}
+
+/* palm_username_len
+ * Returns the username lenght from the Palm.
+ */
+const int palm_username_len(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch UserInfo if we haven't done so yet */
+	if (!palm->have_userinfo_)
+	{
+		if ((err = fetch_userinfo(palm)) < 0)
+			return -1;
+	}
+
+	return palm->userinfo_.usernamelen;
 }
 
 /* palm_userid
@@ -1067,6 +1084,20 @@ palm_netsync_netmask(struct Palm *palm)
 	}
 
 	return palm->netsyncinfo_.hostnetmask;
+}
+
+const int 
+palm_reload(struct Palm *palm)
+{
+	int err;
+	
+	if ((err = fetch_userinfo(palm)) < 0)
+		return err;
+
+	if ((err = fetch_netsyncinfo(palm)) < 0)
+		return err;
+
+	return 0;
 }
 
 /* This is for Emacs's benefit:
