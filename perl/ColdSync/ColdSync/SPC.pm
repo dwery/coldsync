@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.18 2002-11-09 16:08:29 azummo Exp $
+# $Id: SPC.pm,v 1.19 2002-11-09 21:04:36 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.18 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.19 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -1045,7 +1045,7 @@ sub dlp_WriteUserInfo
 	$ui->{'userid'}		= $ui->{'userid'} or 0;
 	$ui->{'viewer'}		= $ui->{'viewer'} or 0;
 	$ui->{'lastsyncpc'}	= $ui->{'lastsyncpc'} or 0;
-	$ui->{'username'}	= $ui->{'username'} or '';
+	$ui->{'username'}	= defined $ui->{'username'} ? $ui->{'username'} : '';
 	$ui->{'usernamelen'}	= length $ui->{'username'} + 1;
 
 	# XXX - Check for the maximum length of an username.
