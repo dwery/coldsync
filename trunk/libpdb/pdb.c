@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.28 2000-12-10 00:27:03 arensb Exp $
+ * $Id: pdb.c,v 1.29 2000-12-15 06:12:33 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -1092,6 +1092,7 @@ pdb_DeleteRecordByID(
  * Append a new record to 'db's record list. 'newrec' is not copied, so it
  * is important that the caller not free it afterwards.
  */
+/* XXX - Ought to make sure that the ID is unique */
 int
 pdb_AppendRecord(struct pdb *db,
 		 struct pdb_record *newrec)
