@@ -2,7 +2,7 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.3 1999-03-11 03:38:02 arensb Exp $
+ * $Id: handledb.c,v 1.4 1999-03-11 04:14:37 arensb Exp $
  */
 
 #include <stdio.h>
@@ -16,14 +16,14 @@
 #include "pconn/dlp_cmd.h"
 #include "pdb.h"
 
-/* Cold_HandleDB
+/* HandleDB
  * Sync database number 'dbnum' with the desktop. If the database doesn't
  * exist on the desktop, 
  */
 int
-Cold_HandleDB(struct PConnection *pconn,
-	      struct Palm *palm,
-	      const int dbnum)
+HandleDB(struct PConnection *pconn,
+	 struct Palm *palm,
+	 const int dbnum)
 {
 	int err;
 	struct dlp_dbinfo *dbinfo;	/* Info about the database we're
@@ -99,8 +99,7 @@ Cold_HandleDB(struct PConnection *pconn,
 
 		/* The file doesn't exist. Back it up */
 		printf("\tNeed to do a backup\n");
-		return Cold_Backup(pconn, palm,
-					 dbinfo, bakfname);
+		return Backup(pconn, palm, dbinfo, bakfname);
 
 		/*NOTREACHED*/
 	}

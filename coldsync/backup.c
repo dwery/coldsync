@@ -3,7 +3,7 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 1.5 1999-03-11 03:48:39 arensb Exp $
+ * $Id: backup.c,v 1.6 1999-03-11 04:13:40 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,10 +21,10 @@
 #include "coldsync.h"
 
 int
-Cold_Backup(struct PConnection *pconn,
-		  struct Palm *palm,
-		  struct dlp_dbinfo *dbinfo,
-		  char *bakfname)
+Backup(struct PConnection *pconn,
+       struct Palm *palm,
+       struct dlp_dbinfo *dbinfo,
+       char *bakfname)
 {
 	int err;
 	struct pdb *db;
@@ -66,14 +66,14 @@ printf("--> Backing up database %s to %s\n",
 		/* Can't complete this particular operation, but it's not a
 		 * show-stopper. The sync can go on.
 		 */
-		fprintf(stderr, "Cold_RecordBackup: Can't open \"%s\": %d\n",
+		fprintf(stderr, "Backup: Can't open \"%s\": %d\n",
 			dbinfo->name, err);
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync can't
 		 * continue.
 		 */
-		fprintf(stderr, "Cold_RecordBackup: Can't open \"%s\": %d\n",
+		fprintf(stderr, "Backup: Can't open \"%s\": %d\n",
 			dbinfo->name, err);
 		return -1;
 	}
