@@ -1,0 +1,1914 @@
+# coldsync ja.po.
+# Copyright (C) 2002 Artistic License.
+# This file is distributed under the same license as the coldsync package.
+# Takeshi Aihana <aihana@jcom.home.ne.jp>, 2002.
+#
+#, no-wrap
+msgid ""
+msgstr ""
+"Project-Id-Version: coldsync 2.2.5\n"
+"POT-Creation-Date: 2002-05-01 03:18+0900\n"
+"PO-Revision-Date: 2002-05-02 01:59+0900\n"
+"Last-Translator: Takeshi AIHANA <aihana@jcom.home.ne.jp>\n"
+"Language-Team: Japanese\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=euc-jp\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/config.c:819
+msgid "\t-F:\t\tForce fast sync.\n"
+msgstr "\t-F:\t\t強制的に高速で同期する。\n"
+
+#: ../src/config.c:817
+msgid "\t-I:\t\tForce installation of new databases.\n"
+msgstr "\t-I:\t\t新しいデータベースを強制的にインストールする。\n"
+
+#: ../src/config.c:823
+msgid "\t-P <protocol>:\tSoftware protocol [default|full|simple|net].\n"
+msgstr "\t-P <protocol>:\tソフトウェア・プロトコル [default|full|simple|net] を指定する。\n"
+
+#: ../src/config.c:820
+msgid "\t-R:\t\tCheck ROM databases.\n"
+msgstr "\t-R:\t\tROM データベースをチェックする。\n"
+
+#: ../src/config.c:818
+msgid "\t-S:\t\tForce slow sync.\n"
+msgstr "\t-S:\t\t強制的に低速で同期する。\n"
+
+#: ../src/config.c:814
+msgid "\t-V:\t\tPrint version and exit.\n"
+msgstr "\t-V:\t\tColdSync のバージョンを表示して終了する。\n"
+
+#: ../src/config.c:829
+msgid "\t-d <fac[:level]>:\tSet debugging level.\n"
+msgstr "\t-d <fac[:level]>:\tデバッグ・レベル level をセットする。\n"
+
+#: ../src/config.c:815
+msgid "\t-f <file>:\tRead configuration from <file>\n"
+msgstr "\t-f <file>:\t<file> から設定を読み込む。\n"
+
+#: ../src/config.c:813
+msgid "\t-h:\t\tPrint this help message and exit.\n"
+msgstr "\t-h:\t\tこのヘルプを表示して終了する。\n"
+
+#: ../src/config.c:826
+msgid "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
+msgstr "\t-l: <file>:\tエラー/デバッグ・メッセージを <file> に書き込む。\n"
+
+#: ../src/config.c:807
+msgid "\t-mI:\tInitialize.\n"
+msgstr "\t-mI:\t初期化する。\n"
+
+#: ../src/config.c:808
+msgid ""
+"\t-mb <dir> [database...]\n"
+"\t\tPerform a backup to <dir>.\n"
+msgstr ""
+"\t-mb <dir> [database...]\n"
+"\t\t<dir> に (databese を) バックアップする。\n"
+
+#: ../src/config.c:810
+msgid ""
+"\t-mr <file|dir>...\n"
+"\t\tRestore or install new databases.\n"
+msgstr ""
+"\t-mr <file|dir>...\n"
+"\t\t新しいデータベースをリストア/インストールする。\n"
+
+#: ../src/config.c:806
+msgid "\t-ms:\tSynchronize (default).\n"
+msgstr "\t-ms:\t同期する。(デフォルト)\n"
+
+#: ../src/config.c:821
+msgid "\t-p <port>:\tListen on device <port>.\n"
+msgstr "\t-p <port>:\t<port> のデバイスを監視する。\n"
+
+#: ../src/config.c:825
+msgid "\t-s:\t\tLog error messages to syslog.\n"
+msgstr "\t-s:\t\tエラーメッセージを Syslog にログする。\n"
+
+#: ../src/config.c:822
+msgid "\t-t <devtype>:\tPort type [serial|usb|net].\n"
+msgstr "\t-t <devtype>:\tポートの種類 devtype を指定する。[serial|usb|net]\n"
+
+#: ../src/config.c:828
+msgid "\t-v:\t\tIncrease verbosity.\n"
+msgstr "\t-v:\t\t出力するメッセージを詳細にする。\n"
+
+#: ../src/config.c:816
+msgid "\t-z:\t\tInstall databases after sync.\n"
+msgstr "\t-z:\t\t同期した後にデータベースをインストールする。\n"
+
+#: ../src/parser.y:326 ../src/parser.y:584 ../src/parser.y:1128
+#, c-format
+msgid "\tError near \"%s\"."
+msgstr "\t\"%s\" でエラーが発生しました。"
+
+#: ../src/parser.y:1157
+msgid "\tMissing ':'."
+msgstr "\t':' がありません。"
+
+#: ../src/parser.y:1174
+msgid "\tMissing ';'."
+msgstr "\t';' がありません。"
+
+#: ../src/parser.y:1166
+msgid "\tMissing '{'."
+msgstr "\t'{' がありません。"
+
+#: ../src/parser.y:749
+#, c-format
+msgid "\tMissing argument name near \": %s\"."
+msgstr "\t\": %s\" の引数名がありません。"
+
+#: ../src/parser.y:247
+msgid "\tMissing listen block type."
+msgstr "\t監視するブロックの種類がありません。"
+
+#: ../src/parser.y:821
+#, c-format
+msgid "\tMissing option name near \"%s\"."
+msgstr "\t\"%s\" のオプション名がありません。"
+
+#: ../src/parser.y:414
+#, c-format
+msgid "\tUnrecognized conduit flavor \"%s\"."
+msgstr "\t認識できないコンジット形式: \"%s\""
+
+#: ../src/parser.y:249
+#, c-format
+msgid "\tUnrecognized listen type \"%s\"."
+msgstr "\t認識できない監視形式: \"%s\""
+
+#: ../src/parser.y:448
+#, c-format
+msgid "\tUnrecognized protocol: \"%s\"."
+msgstr "\t認識できないプロトコル: \"%s\""
+
+#: ../src/config.c:874
+#, c-format
+msgid ""
+"\n"
+"    Default global configuration file: %s\n"
+msgstr "\n    デフォルトのシステム設定ファイル: %s\n"
+
+#: ../src/coldsync.c:386
+#, c-format
+msgid ""
+"\n"
+"Log closed on %s"
+msgstr "\n%s のログ完了"
+
+#: ../src/coldsync.c:1824
+msgid ""
+"\n"
+"This Palm already has user information that matches neither what's in your\n"
+"configuration file, nor the defaults. Please edit your .coldsyncrc and\n"
+"reinitialize.\n"
+"\n"
+"Your .coldsyncrc should contain something like the following:\n"
+"\n"
+msgstr ""
+"\n"
+"この Palm には既にユーザ情報があります。但し、このユーザ情報は\n"
+".coldsyncrc 設定ファイルの中には存在せず、更にデフォルト値でもありません。\n"
+".coldsyncrc 設定ファイルを編集して、再度初期化して下さい。\n"
+"\n"
+".coldsyncrc 設定ファイルには次のような情報が記載されています:\n"
+"\n"
+
+#: ../src/config.c:869
+msgid ""
+"    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
+"        to case, whenever possible.\n"
+msgstr ""
+"    HAVE_STRCASECMP, HAVE_STRNCASECMP: 可能ならば、大文字/小文字の区別なしに\n"
+"        文字列の比較を行う。\n"
+
+#: ../src/config.c:864
+msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
+msgstr "    WITH_EFENCE: バッファ・オーバーランはセグメンテーション・フォルトを引き起こします。\n"
+
+#: ../src/config.c:860
+msgid "    WITH_USB: USB support.\n"
+msgstr "    WITH_USB: USB をサポートする。\n"
+
+#: ../libpdb/pdb.c:546
+#, c-format
+msgid "\"%.*s\" record 0x%08lx has length 0.\n"
+msgstr "\"%.*s\" レコード 0x%08lx の長さが 0 です。\n"
+
+#: ../src/coldsync.c:1312
+#, c-format
+msgid "\"%s\" exists, but is not a directory."
+msgstr "\"%s\" は存在しますが、ディレクトリではありません。"
+
+#: ../libpconn/dlp_cmd.c:1517 ../libpconn/dlp_cmd.c:1606
+#: ../libpconn/dlp_cmd.c:1697 ../libpconn/dlp_cmd.c:1799
+#: ../libpconn/dlp_cmd.c:2352 ../libpconn/dlp_cmd.c:2792
+#: ../libpconn/dlp_cmd.c:2946 ../libpconn/dlp_cmd.c:3005
+#: ../libpconn/dlp_cmd.c:3092 ../libpconn/dlp_cmd.c:3164
+#: ../libpconn/dlp_cmd.c:3241 ../libpconn/dlp_cmd.c:3300
+#: ../libpconn/dlp_cmd.c:3369 ../libpconn/dlp_cmd.c:3436
+#: ../libpconn/dlp_cmd.c:3560 ../libpconn/dlp_cmd.c:3670
+#: ../libpconn/dlp_cmd.c:3782 ../libpconn/dlp_cmd.c:3889
+#: ../libpconn/dlp_cmd.c:3986 ../libpconn/dlp_cmd.c:4098
+#: ../libpconn/dlp_cmd.c:4213
+#, c-format
+msgid "##### %s: Unknown argument type: 0x%02x\n"
+msgstr "##### %s: 不明な引数の種類: 0x%02x\n"
+
+#: ../libpconn/dlp_cmd.c:218 ../libpconn/dlp_cmd.c:322
+#: ../libpconn/dlp_cmd.c:432 ../libpconn/dlp_cmd.c:501
+#: ../libpconn/dlp_cmd.c:579 ../libpconn/dlp_cmd.c:716
+#: ../libpconn/dlp_cmd.c:950 ../libpconn/dlp_cmd.c:1053
+#: ../libpconn/dlp_cmd.c:1160 ../libpconn/dlp_cmd.c:1244
+#: ../libpconn/dlp_cmd.c:1328 ../libpconn/dlp_cmd.c:1426
+#: ../libpconn/dlp_cmd.c:1914 ../libpconn/dlp_cmd.c:2031
+#: ../libpconn/dlp_cmd.c:2160 ../libpconn/dlp_cmd.c:2246
+#: ../libpconn/dlp_cmd.c:2466 ../libpconn/dlp_cmd.c:2570
+#: ../libpconn/dlp_cmd.c:2657 ../libpconn/dlp_cmd.c:2726
+#: ../libpconn/dlp_cmd.c:4309
+#, c-format
+msgid "##### %s: Unknown argument type: 0x%02x.\n"
+msgstr "##### %s: 不明な引数の種類: 0x%02x\n"
+
+#: ../libpconn/padp.c:484
+#, c-format
+msgid "##### Bad offset: wanted %d, got %d.\n"
+msgstr "##### おかしなオフセット: 期待値 %d, 取得値: %d\n"
+
+#: ../libpconn/dlp.c:286
+#, c-format
+msgid "##### Bad response ID: expected 0x%02x, got 0x%02x.\n"
+msgstr "##### おかしな応答 ID: 期待値 0x%02x, 取得値 0x%02x\n"
+
+#: ../libpconn/padp.c:802
+#, c-format
+msgid "##### Expected XID 0x%02x, got 0x%02x.\n"
+msgstr "##### XID 期待値 0x%02x, 取得値 0x%02x\n"
+
+#: ../libpconn/dlp.c:277
+msgid "##### Expected a DLP response, but this isn't one!\n"
+msgstr "##### DLP 応答を期待しましたが、これは違います！\n"
+
+#: ../libpconn/padp.c:729
+msgid "##### Got an unexpected data packet. Sending an ACK to shut it up.\n"
+msgstr "##### 期待していないパケットを受信しました。無効にするために ACK を送信します。\n"
+
+#: ../libpconn/padp.c:198 ../libpconn/padp.c:446
+msgid "##### I just got an unexpected ACK. I'm confused!\n"
+msgstr "##### 期待していない ACK を受信したので、対処できません！\n"
+
+#: ../libpconn/padp.c:471
+msgid "##### I wasn't expecting a new fragment. I'm confused!\n"
+msgstr "##### 期待していない新しいフラグメントを受信したので、対処できません！\n"
+
+#: ../libpconn/padp.c:217 ../libpconn/padp.c:461 ../libpconn/padp.c:790
+#, c-format
+msgid "##### Unexpected packet type %d.\n"
+msgstr "##### %d は予想外のパケット形式です。\n"
+
+#: lexer.l:459
+#, c-format
+msgid ""
+"%d: Unexpected character near \"%s\".\n"
+"    You probably meant \"$(%.*s)\".\n"
+msgstr ""
+"%d: \"%s\" で予想外の文字があります。\n"
+"    おそらく \"$(%.*s)\" のようです。\n"
+
+#: lexer.l:468
+#, c-format
+msgid ""
+"%d: Unexpected character near \"%s\".\n"
+"    You probably meant \"${%.*s}\".\n"
+msgstr ""
+"%d: \"%s\" で予想外の文字があります。\n"
+"    おそらく \"${%.*s}\" のようです。\n"
+
+#: lexer.l:473
+#, c-format
+msgid ""
+"%d: Unterminated variable reference near \"%s\".\n"
+"    You probably meant \"$(%.*s)\".\n"
+msgstr ""
+"%d: \"%s\" で終了していない変数参照があります。\n"
+"    おそらく \"$(%.*s)\" のようです。\n"
+
+#: ../src/config.c:845
+#, c-format
+msgid "%s version %s.\n"
+msgstr "%s バージョン %s\n"
+
+#: ../src/parser.y:613
+#, c-format
+msgid "%s: %d: Bogus creator \"%s\"."
+msgstr "%s: %d: \"%s\" はおかしなクリエーターです。"
+
+#: ../src/parser.y:637
+#, c-format
+msgid "%s: %d: Bogus type \"%s\"."
+msgstr "%s: %d: \"%s\" はおかしな形式です。"
+
+#: ../src/parser.y:497
+#, c-format
+msgid "%s: %d: Can't add creator-type pair to list. This is very bad."
+msgstr "%s: %d: 一覧に対のクリエーター形式を追加できません。これは致命的な状態です。"
+
+#: ../src/parser.y:552
+#, c-format
+msgid "%s: %d: Can't add preference to list. This is very bad."
+msgstr "%s: %d: 一覧に設定を追加できません。これは致命的な状態です。"
+
+#: ../src/parser.y:286
+#, c-format
+msgid "%s: %d: Device already defined."
+msgstr "%s: %d: デバイスは既に定義されています。"
+
+#: ../src/parser.y:1030
+#, c-format
+msgid "%s: %d: Directory already defined."
+msgstr "%s: %d: ディレクトリは既に定義されています。"
+
+#: ../src/parser.y:1000
+#, c-format
+msgid ""
+"%s: %d: Incorrect checksum\n"
+"for serial number \"%s-%c\". Should be \"%s-%c\"."
+msgstr ""
+"%s: %d: シリアル番号 \"%s-%c\" の\n"
+"チェックサムが不正です。\"%s-%c\" にして下さい。"
+
+#: ../src/parser.y:513
+#, c-format
+msgid "%s: %d: Path already defined."
+msgstr "%s: %d: パスは既に定義されています。"
+
+#: ../src/parser.y:979
+#, c-format
+msgid ""
+"%s: %d: Serial number \"%s\" has no checksum.\n"
+"You may want to rewrite it as \"%s-%c\"."
+msgstr ""
+"%s: %d: シリアル番号 \"%s\" はチェックサムではありません。\n"
+"\"%s-%c\" を指定して再度書き込んで下さい。"
+
+#: ../src/parser.y:948
+#, c-format
+msgid "%s: %d: Serial number already defined."
+msgstr "%s: %d: シリアル番号は既に定義されています。"
+
+#: ../src/parser.y:300
+#, c-format
+msgid "%s: %d: Speed already defined."
+msgstr "%s: %d: 速度は既に定義されています。"
+
+#: ../src/parser.y:1066
+#, c-format
+msgid "%s: %d: Userid already defined."
+msgstr "%s: %d: ユーザ ID は既に定義されています。"
+
+#: ../src/parser.y:1051
+#, c-format
+msgid "%s: %d: Username already defined."
+msgstr "%s: %d: ユーザ名は既に定義されています。"
+
+#: ../libpconn/dlp.c:152
+#, c-format
+msgid "%s: Can't allocate %ld-byte buffer.\n"
+msgstr "%s: %ld バイトのバッファを確保できません。\n"
+
+#: ../src/parser.y:843
+#, c-format
+msgid "%s: Can't allocate PDA block."
+msgstr "%s: PDA ブロックを確保できません。"
+
+#: ../src/parser.y:707
+#, c-format
+msgid "%s: Can't allocate conduit header."
+msgstr "%s: コンジット・ヘッダを確保できません。"
+
+#: ../src/parser.y:339
+#, c-format
+msgid "%s: Can't allocate conduit_block!"
+msgstr "%s: conduit_block を確保できません！"
+
+#: ../src/parser.y:176
+#, c-format
+msgid "%s: Can't allocate listen block."
+msgstr "%s: 監視ブロックを確保できません。"
+
+#: ../src/GenericConduit.cc:1121
+#, c-format
+msgid "%s: Can't allocate new record."
+msgstr "%s: 新しいレコードを確保できません。"
+
+#: ../src/GenericConduit.cc:1221
+#, c-format
+msgid "%s: Can't append new record to database: %d."
+msgstr "%s: データベースに新しいレコードを追加できません: %d"
+
+#: lexer.l:365
+#, c-format
+msgid "%s: Can't append to qstring."
+msgstr "%s: qstring に追加できません。"
+
+#: ../src/backup.c:716
+#, c-format
+msgid "%s: Can't back up \"%s\"."
+msgstr "%s: \"%s\" をバックアップできません。"
+
+#: ../src/GenericConduit.cc:448 ../src/GenericConduit.cc:948
+#: ../src/GenericConduit.cc:1490
+#, c-format
+msgid "%s: Can't clean up database: %d."
+msgstr "%s: データベースをクリアすることができません: %d"
+
+#: ../src/GenericConduit.cc:1960 ../src/GenericConduit.cc:1998
+#: ../src/GenericConduit.cc:2132
+#, c-format
+msgid "%s: Can't copy record."
+msgstr "%s: レコードを複写できません。"
+
+#: ../src/conduit.c:1540
+#, c-format
+msgid "%s: Can't create file handle to child's stdin."
+msgstr "%s: 標準入力 (子プロセス) に対するファイルハンドルを生成できません。"
+
+#: ../src/conduit.c:1568
+#, c-format
+msgid "%s: Can't create file handle to child's stdout."
+msgstr "%s: 標準出力 (子プロセス) に対するファイルハンドルを生成できません。"
+
+#: ../src/coldsync.c:3680 ../src/coldsync.c:3700
+#, c-format
+msgid "%s: Can't create staging file \"%s\"."
+msgstr "%s: Staging ファイル \"%s\" を生成できません。"
+
+#: ../src/coldsync.c:3690
+#, c-format
+msgid "%s: Can't create staging file name."
+msgstr "%s: Staging ファイル名を生成できません。"
+
+#: ../src/GenericConduit.cc:608
+#, c-format
+msgid "%s: Can't download \"%s\"."
+msgstr "%s: \"%s\" をダウンロードできません。"
+
+#: ../src/conduit.c:2035
+#, c-format
+msgid "%s: Can't get child process status."
+msgstr "%s: 子プロセスの状態を取得することができません。"
+
+#: ../libpconn/PConnection_usb.c:505
+#, c-format
+msgid "%s: Can't get information about USB device.\n"
+msgstr "%s: USB デバイス情報を取得することができません。\n"
+
+#: ../src/GenericConduit.cc:2094 ../src/GenericConduit.cc:2143
+#, c-format
+msgid "%s: Can't insert record 0x%08lx."
+msgstr "%s: レコード 0x%08lx を挿入できません。"
+
+#: ../src/GenericConduit.cc:2505
+#, c-format
+msgid "%s: Can't load \"%s\"."
+msgstr "%s: \"%s\" を読み込めません。"
+
+#: ../src/install.c:270 ../src/install.c:526
+#, c-format
+msgid "%s: Can't load database \"%s\"."
+msgstr "%s: データベース \"%s\" を読み込めません。"
+
+#: ../src/conduit.c:1586
+#, c-format
+msgid "%s: Can't make child's stdout be line-buffered."
+msgstr "%s: 標準出力 (子プロセス) をラインバッファ化することができません。"
+
+#: lexer.l:135 lexer.l:148 lexer.l:227 lexer.l:302 lexer.l:517 lexer.l:567
+#, c-format
+msgid "%s: Can't make copy of string."
+msgstr "%s: 文字列を複写することができません。"
+
+#: ../src/archive.c:68 ../src/archive.c:127 ../src/install.c:260
+#: ../src/install.c:425 ../src/install.c:516 ../src/parser.y:1215
+#: ../src/GenericConduit.cc:2495
+#, c-format
+msgid "%s: Can't open \"%s\"."
+msgstr "%s: \"%s\" を開けません。"
+
+#: ../libpconn/PConnection_usb.c:718
+#, c-format
+msgid "%s: Can't open \"%s\".\n"
+msgstr "%s: \"%s\" を開けません。\n"
+
+#: ../src/GenericConduit.cc:298 ../src/GenericConduit.cc:318
+#: ../src/GenericConduit.cc:568 ../src/GenericConduit.cc:587
+#: ../src/GenericConduit.cc:1063 ../src/GenericConduit.cc:1082
+#, c-format
+msgid "%s: Can't open \"%s\": %d."
+msgstr "%s: \"%s\" を開けません: %d"
+
+#: ../libpconn/PConnection_usb.c:491
+#, c-format
+msgid "%s: Can't open USB device.\n"
+msgstr "%s: USB デバイスを開けません。\n"
+
+#: ../src/coldsync.c:2941
+#, c-format
+msgid "%s: Can't open directory \"%s\"."
+msgstr "%s: ディレクトリ \"%s\" を開けません。"
+
+#: ../src/install.c:403 ../src/install.c:468
+#, c-format
+msgid "%s: Can't open install directory."
+msgstr "%s: インストールするディレクトリを開けません。"
+
+#: ../src/GenericConduit.cc:194
+#, c-format
+msgid "%s: Can't read %s backup file."
+msgstr "%s: バックアップ・ファイル %s が読めません。"
+
+#: ../src/backup.c:166
+#, c-format
+msgid "%s: Can't read AppInfo block for %s: %d.\n"
+msgstr "%s: %s の AppInfo 部録が読めません: %d\n"
+
+#: ../src/backup.c:111
+#, c-format
+msgid "%s: Can't read database info: %d.\n"
+msgstr "%s: データベース情報が読めません: %d.\n"
+
+#: ../src/backup.c:206
+#, c-format
+msgid "%s: Can't read sort block for %s: %d.\n"
+msgstr "%s: %s のソート・ブロックが読めません: %d.\n"
+
+#: ../src/coldsync.c:3046 ../src/coldsync.c:3084
+#, c-format
+msgid "%s: Can't rename \"%s\" to \"%s\"."
+msgstr "%s: \"%s\" から \"%s\" にファイル名を変更できません。"
+
+#: ../src/GenericConduit.cc:2564
+#, c-format
+msgid ""
+"%s: Can't rename staging file.\n"
+"Backup left in \"%s\", hopefully."
+msgstr ""
+"%s: Staging ファイルの名前を変更できません。\n"
+"うまくいけば、\"%s\" の中にバックアップが作成されます。"
+
+#: ../src/GenericConduit.cc:468 ../src/GenericConduit.cc:967
+#: ../src/GenericConduit.cc:1510
+#, c-format
+msgid "%s: Can't reset sync flags: %d."
+msgstr "%s: 同期フラグを初期化できません: %d"
+
+#: ../src/restore.c:120
+#, c-format
+msgid "%s: Can't restore %s: it is opened by another application."
+msgstr "%s: %s をリストアできません: 他のアプリケーションが使用しているようです。"
+
+#: ../src/archive.c:138
+#, c-format
+msgid "%s: Can't seek to end of file."
+msgstr "%s: ファイルの終端に移動することができません。"
+
+#: ../src/conduit.c:373
+#, c-format
+msgid "%s: Can't set signal handler."
+msgstr "%s: シグナル・ハンドラをセットすることができません。"
+
+#: ../src/conduit.c:427
+#, c-format
+msgid "%s: Can't spawn conduit."
+msgstr "%s: コンジットを起動できません。"
+
+#: ../libpdb/pdb.c:598
+#, c-format
+msgid "%s: Can't write AppInfo block for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" の AppInfo ブロックを書き込めません。\n"
+
+#: ../src/archive.c:89
+#, c-format
+msgid "%s: Can't write archive file header."
+msgstr "%s: アーカイブ・ファイルのヘッダを書き込めません。"
+
+#: ../src/GenericConduit.cc:419 ../src/GenericConduit.cc:925
+#: ../src/GenericConduit.cc:1461
+#, c-format
+msgid "%s: Can't write backup file."
+msgstr "%s: バックアップ・ファイルを書き込めません。"
+
+#: ../libpdb/pdb.c:659
+#, c-format
+msgid "%s: Can't write record data for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" のレコードを書き込めません。\n"
+
+#: ../libpdb/pdb.c:564
+#, c-format
+msgid "%s: Can't write record index entry for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" のレコード目録エントリを書き込めません。\n"
+
+#: ../libpdb/pdb.c:639
+#, c-format
+msgid "%s: Can't write resource data for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" 用のリソース・データを書き込めません。\n"
+
+#: ../libpdb/pdb.c:513
+#, c-format
+msgid "%s: Can't write resource index entry for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" 用のリソース目録エントリを書き込めません。\n"
+
+#: ../libpdb/pdb.c:613
+#, c-format
+msgid "%s: Can't write sort block for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" 用のソート・ブロックを書き込めません。\n"
+
+#: ../src/GenericConduit.cc:2552
+#, c-format
+msgid "%s: Can't write staging file \"%s\"."
+msgstr "%s: Staging ファイル \"%s\" を書き込めません。"
+
+#: ../libpdb/pdb.c:584
+#, c-format
+msgid "%s: Can't write the two useless NULs to \"%.*s\".\n"
+msgstr "%s: 無用な二つの NUL 文字を \"%.*s\" に書き込めません。\n"
+
+#: ../src/conduit.c:1858
+#, c-format
+msgid "%s: Conduit exited unexpectedly."
+msgstr "%s: 突然、コンジットが強制終了しました。"
+
+#: ../src/conduit.c:677
+#, c-format
+msgid ""
+"%s: Conduit handler is in an inconsistent state at\n"
+"%s, line %d. Please notify the maintainer."
+msgstr ""
+"%s: コンジット・ハンドラが %s:%d 行で矛盾した\n"
+"状態の中にあります。作者に連絡して下さい。"
+
+#: ../src/conduit.c:1849
+#, c-format
+msgid ""
+"%s: Conduit is running happily, but hasn't printed anything.\n"
+"And yet, I was notified. This is a bug. Please notify the maintainer."
+msgstr ""
+"%s: コンジットが起動していますが、何も出力していません。\n"
+"これはバグです。作者に連絡して下さい。"
+
+#: ../libpconn/PConnection_usb.c:626
+#, c-format
+msgid "%s: Could not find HotSync endpoint on Visor.\n"
+msgstr "%s: Visor に HotSync endpoint が見つかりませんでした。\n"
+
+#: ../src/restore.c:109
+#, c-format
+msgid "%s: Database %s doesn't exist, yet it is open. Huh?"
+msgstr "%s: データベース %s がありません。まだ開いています。Huh?"
+
+#: ../src/install.c:335 ../src/install.c:580
+#, c-format
+msgid "%s: Error deleting \"%s\"."
+msgstr "%s: \"%s\" の削除中にエラーが発生しました。"
+
+#: ../src/GenericConduit.cc:1355 ../src/GenericConduit.cc:1394
+#, c-format
+msgid "%s: Error deleting record 0x%08lx: %d."
+msgstr "%s: レコード 0x%08lx の削除中にエラー: %d"
+
+#: ../src/conduit.c:788
+#, c-format
+msgid "%s: Error header wrong length %ld."
+msgstr "%s: ヘッダの長さ %ld が間違っています。"
+
+#: ../libpconn/dlp_rpc.c:444
+#, c-format
+msgid "%s: Error in DlpRPC().\n"
+msgstr "%s: DlpRPC() の中でエラーが発生しました。\n"
+
+#: ../src/conduit.c:708
+#, c-format
+msgid "%s: Error in select()."
+msgstr "%s: select() の中でエラーが発生しました。"
+
+#: ../src/conduit.c:774
+#, c-format
+msgid "%s: Error reading SPC request from conduit."
+msgstr "%s: コンジットから SPC 要求の読み取り中にエラーが発生しました。"
+
+#: ../src/conduit.c:847
+#, c-format
+msgid "%s: Error reading SPC request."
+msgstr "%s: SPC 要求の読み取り中にエラーが発生しました。"
+
+#: ../src/conduit.c:975
+#, c-format
+msgid "%s: Error sending SPC response data."
+msgstr "%s: SPC 応答データの送信中にエラーが発生しました。"
+
+#: ../libpconn/padp.c:757
+#, c-format
+msgid "%s: Error sending dummy ACK. This is serious.\n"
+msgstr "%s: ダミー ACK の送信中にエラーが発生しました。これは重大なエラーです。\n"
+
+#: ../src/install.c:356 ../src/install.c:612
+#, c-format
+msgid "%s: Error uploading \"%s\"."
+msgstr "%s: \"%s\" のアップロード中にエラーが発生しました。"
+
+#: ../libpconn/dlp_rpc.c:167
+#, c-format
+msgid "%s: Error: dlp.write returned %d.\n"
+msgstr "%s: ERROR: dlp.write が %d を返しました。\n"
+
+#: ../src/conduit.c:353
+#, c-format
+msgid ""
+"%s: I just got file descriptor %d. There appears to be a file\n"
+"descriptor leak. Please notify the maintainer."
+msgstr ""
+"%s: ファイル・デスクリプタ %d を取得しました。\n"
+"ファイル・デスクリプタが leak しているようです。作者に連絡して下さい。"
+
+#: ../src/GenericConduit.cc:1347 ../src/GenericConduit.cc:1386
+#: ../src/GenericConduit.cc:1630 ../src/GenericConduit.cc:1680
+#: ../src/GenericConduit.cc:1846 ../src/GenericConduit.cc:2198
+#: ../src/GenericConduit.cc:2240
+#, c-format
+msgid "%s: Lost connection to Palm."
+msgstr "%s: Palm との接続が切れました。"
+
+#: ../src/config.c:721
+#, c-format
+msgid "%s: Missing mode string. This should never happen."
+msgstr "%s: モードがありません。これは絶対に発生してはいけないことです。"
+
+#: ../src/parser.y:351
+#, c-format
+msgid ""
+"%s: No `type:' line seen\n"
+"\tin definition of \"%s\"."
+msgstr ""
+"%s: \"%s\" の定義の中に\n"
+"'type:' の行が見あたりません。"
+
+#: ../src/conduit.c:1662
+#, c-format
+msgid "%s: No executable \"%s\" in $CONDUIT_PATH or $CONDUITDIR.\n"
+msgstr "%s: $CONDUIT_PATH または $CONDUITDIR 中には実行型式 \"%s\" がありません。\n"
+
+#: ../src/config.c:1100 ../src/config.c:1136 ../src/config.c:1158 lexer.l:704
+#: ../src/pref.c:234 ../src/pref.c:299
+#, c-format
+msgid "%s: Out of memory."
+msgstr "%s: メモリが足りません。"
+
+#: ../libpconn/dlp_cmd.c:1458 ../libpconn/dlp_cmd.c:1639
+#: ../libpconn/dlp_cmd.c:2513 ../libpconn/dlp_cmd.c:2832
+#: ../libpconn/dlp_cmd.c:3924 ../libpdb/pdb.c:965 ../libpdb/pdb.c:1036
+#: ../libpdb/pdb.c:1090 ../libpdb/pdb.c:1137 ../libpdb/pdb.c:1448
+#: ../libpdb/pdb.c:1563 ../libpdb/pdb.c:1676 ../libpdb/pdb.c:1840
+#: ../libpdb/pdb.c:1981 ../src/backup.c:138 ../src/backup.c:187
+#: ../src/backup.c:287 ../src/backup.c:333 ../src/backup.c:454
+#: ../src/backup.c:509
+#, c-format
+msgid "%s: Out of memory.\n"
+msgstr "%s: メモリが足りません。\n"
+
+#: ../src/conduit.c:361
+#, c-format
+msgid "%s: Too many file descriptors. Aborting."
+msgstr "%s: ファイル・デスクリプタが多すぎます。中止します。"
+
+#: ../src/GenericConduit.cc:1638 ../src/GenericConduit.cc:1688
+#: ../src/GenericConduit.cc:1854 ../src/GenericConduit.cc:2206
+#: ../src/GenericConduit.cc:2248
+#, c-format
+msgid "%s: Warning: Can't delete record 0x%08lx: %d."
+msgstr "%s: WARNNING: レコード 0x%08lx を削除できません: %d"
+
+#: ../libpconn/PConnection_usb.c:543
+#, c-format
+msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
+msgstr "%s: WARNING: 予想外の USB ベンダー ID %#x です。\n"
+
+#: ../libpconn/slp.c:250
+#, c-format
+msgid "%s: bad checksum: expected 0x%02x, got 0x%02x.\n"
+msgstr "%s: おかしなチェックサム: 期待値 0x%02x, 取得値 0x%02x\n"
+
+#: ../libpdb/pdb.c:991 ../libpdb/pdb.c:1061
+#, c-format
+msgid "%s: can't allocate data.\n"
+msgstr "%s: データを確保できません。\n"
+
+#: ../src/backup.c:55
+#, c-format
+msgid "%s: can't allocate pdb.\n"
+msgstr "%s: pdb データを確保できません。\n"
+
+#: ../libpdb/pdb.c:1106
+#, c-format
+msgid "%s: can't allocate record data for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" 用のレコード・データを確保できません。\n"
+
+#: ../libpdb/pdb.c:1152
+#, c-format
+msgid "%s: can't allocate resource data for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" 用のリソース・データを確保できません。\n"
+
+#: ../src/backup.c:557
+#, c-format
+msgid ""
+"%s: can't create new backup file %s.\n"
+"It may already exist."
+msgstr ""
+"%s: 新しいバックアップファイル %s を生成できません。\n"
+"既に存在しているようです。"
+
+#: ../src/backup.c:668
+#, c-format
+msgid "%s: can't write database \"%s\" to \"%s\"."
+msgstr "%s: データベース \"%s\" から \"%s\" に書き込めません。"
+
+#: ../libpdb/pdb.c:459
+#, c-format
+msgid "%s: can't write database header for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" のデータベース・ヘッダを書き込めません。\n"
+
+#: ../libpdb/pdb.c:479
+#, c-format
+msgid "%s: can't write record list header for \"%.*s\".\n"
+msgstr "%s: \"%.*s\" のレコード一覧ヘッダを書き込めません。\n"
+
+#: ../libpdb/pdb.c:1460
+#, c-format
+msgid "%s: error reading record index entry for \"%.*s\" (%d bytes): %d.\n"
+msgstr "%s: \"%.*s\" のレコード目録エントリ (%d バイト) を読み込めません: %d\n"
+
+#: ../src/conduit.c:942
+#, c-format
+msgid "%s: error sending SPC response header."
+msgstr "%s: SPC 応答ヘッダの送信でエラーが発生しました。"
+
+#: ../src/conduit.c:1672
+#, c-format
+msgid "%s: execvp(%s) failed and returned %d."
+msgstr "%s: execvp(%s) に失敗して %d が返されました。"
+
+#: ../src/config.c:1224 lexer.l:730
+#, c-format
+msgid "%s: realloc(%d) failed."
+msgstr "%s: realloc(%d) に失敗しました。"
+
+#: ../src/conduit.c:722
+#, c-format
+msgid "%s: select() returned 0. I'm puzzled."
+msgstr "%s: select() が 0 を返しました。不明な返り値です。"
+
+#: ../src/conduit.c:1795
+#, c-format
+msgid ""
+"%s: select() returned 0. This should never happen. Please notify the "
+"maintainer."
+msgstr "%s: select() が 0 を返しました。これは絶対に発生してはいけないことです。作者に連絡して下さい。"
+
+#: ../src/conduit.c:1752
+#, c-format
+msgid "%s: select() returned an unexpected error. This should never happen."
+msgstr "%s: select() が予想外のエラーを返しました。これは絶対に発生してはいけないことです。"
+
+#: ../src/config.c:1025
+#, c-format
+msgid "%s: socket() returned %d."
+msgstr "%s: socket() が %d を返しました。"
+
+#: ../libpconn/PConnection_usb.c:663
+#, c-format
+msgid "%s: unexpected response %d to GetBytesAvailable.\n"
+msgstr "%s: GetBytesAvailable に対する予想外の応答 %d です。\n"
+
+#: ../libpconn/PConnection.c:124
+#, c-format
+msgid "%s: unknown listen type %d.\n"
+msgstr "%s: 不明な監視する種類 %d です。\n"
+
+#: lexer.l:631
+#, c-format
+msgid ""
+"%s: unknown start state %d.\n"
+"Please tell the maintainer to fix `lexer.l'."
+msgstr ""
+"%s: 不明な起動状態 %d です。\n"
+"'lexer.l' を修正するよう作者に連絡して下さい。"
+
+#: ../src/GenericConduit.cc:250 ../src/GenericConduit.cc:303
+#: ../src/GenericConduit.cc:323 ../src/GenericConduit.cc:343
+#: ../src/GenericConduit.cc:423 ../src/GenericConduit.cc:452
+#: ../src/GenericConduit.cc:480 ../src/GenericConduit.cc:492
+msgid "(1st)"
+msgstr "(1番目)"
+
+#: ../src/coldsync.c:1089 ../src/coldsync.c:2678
+msgid "*Cancelled*\n"
+msgstr "*キャンセル*\n"
+
+#: ../libpconn/padp.c:676
+msgid "ACK Timeout. Attempting to resend.\n"
+msgstr "ACK がタイムアウトしました。再送してみます。\n"
+
+#: ../src/backup.c:549
+#, c-format
+msgid "Backing up \"%s\""
+msgstr "\"%s\" のバックアップ"
+
+#: ../src/backup.c:563 ../src/backup.c:581 ../src/backup.c:596
+#: ../src/backup.c:628 ../src/backup.c:655 ../src/backup.c:675
+#: ../src/backup.c:686 ../src/coldsync.c:1414
+msgid "Backup"
+msgstr "バックアップ"
+
+#: ../libpconn/palm_errno.c:48
+msgid "Bad file descriptor"
+msgstr "おかしなファイル・デスクリプタ"
+
+#: ../src/coldsync.c:897 ../src/coldsync.c:2501
+#, c-format
+msgid "CacheFromConduits() returned %d."
+msgstr "CacheFromConduits() が %d を返しました。"
+
+#: ../src/backup.c:396
+msgid "Can't allocate list of record IDs.\n"
+msgstr "レコード ID の一覧を確保できません。\n"
+
+#: ../src/config.c:467 ../src/config.c:508
+msgid "Can't allocate listen block."
+msgstr "監視ブロックを確保できません。"
+
+#: ../src/config.c:320
+msgid "Can't allocate new conduit block."
+msgstr "新しいコンジット・ブロックを確保できません。"
+
+#: ../src/config.c:297
+msgid "Can't allocate new configuration."
+msgstr "新しい設定を確保できません。"
+
+#: ../libpconn/PConnection.c:65
+msgid "Can't allocate new connection.\n"
+msgstr "新しい接続を確保できません。\n"
+
+#: ../src/coldsync.c:566 ../src/coldsync.c:1359 ../src/coldsync.c:1506
+#: ../src/coldsync.c:1649 ../src/coldsync.c:2102
+msgid "Can't allocate struct Palm."
+msgstr "Palm 構造体を確保できません。"
+
+#: ../src/coldsync.c:557 ../src/coldsync.c:1351 ../src/coldsync.c:1498
+#: ../src/coldsync.c:1641 ../src/coldsync.c:2093
+msgid "Can't connect to Palm."
+msgstr "Palm に接続できません。"
+
+#: ../libpconn/PConnection_net.c:407
+msgid "Can't connect to server.\n"
+msgstr "サーバに接続できません。\n"
+
+#: ../src/GenericConduit.cc:720 ../src/GenericConduit.cc:2085
+msgid "Can't copy a new record."
+msgstr "新しいレコードを複写できません。"
+
+#: ../src/coldsync.c:2298
+msgid "Can't copy config file name"
+msgstr "設定ファイル名を複写できません。"
+
+#: ../src/config.c:475 ../src/config.c:516
+msgid "Can't copy string."
+msgstr "文字列を複写できません。"
+
+#: ../src/GenericConduit.cc:2436
+#, c-format
+msgid "Can't create \"%s\"."
+msgstr "\"%s\" を生成できません。"
+
+#: ../src/config.c:1626
+#, c-format
+msgid "Can't create archive directory %s."
+msgstr "アーカイブ・ディレクトリ %s を生成できません。"
+
+#: ../src/config.c:1608
+#, c-format
+msgid "Can't create attic directory %s."
+msgstr "attic ディレクトリ %s を生成できません。"
+
+#: ../src/config.c:1590
+#, c-format
+msgid "Can't create backup directory %s."
+msgstr "バックアップ・ディレクトリ %s を生成できません。"
+
+#: ../src/config.c:1572
+#, c-format
+msgid "Can't create base sync directory %s."
+msgstr "同期ディレクトリ %s を確保できません。"
+
+#: ../src/coldsync.c:823 ../src/coldsync.c:2421
+msgid "Can't create connection to forwarding host."
+msgstr "ホストにフォワードする接続を確立できません。"
+
+#: ../src/config.c:1644
+#, c-format
+msgid "Can't create install directory %s."
+msgstr "インストール・ディレクトリ %s を生成できません。"
+
+#: ../src/backup.c:226
+msgid "Can't download record or resource index.\n"
+msgstr "レコードまたはリソース目録をダウンロードできません。\n"
+
+#: ../src/coldsync.c:461
+msgid "Can't dup(stderr)."
+msgstr "dup (標準エラー出力) できません。"
+
+#: ../src/coldsync.c:835 ../src/coldsync.c:2433
+msgid "Can't establish connection with forwarding host."
+msgstr "ホストにフォワードする接続を確立できません。"
+
+#: ../src/coldsync.c:974 ../src/coldsync.c:2567
+msgid "Can't fetch list of databases."
+msgstr "データベース一覧と同期できません。"
+
+#: ../src/coldsync.c:1194 ../src/coldsync.c:2774
+#, c-format
+msgid "Can't fetch preference 0x%08lx/%d."
+msgstr "設定 0x%08lx/%d を同期できません。"
+
+#: ../libpdb/pdb.c:1933
+#, c-format
+msgid "Can't find record %d in \"%.*s\".\n"
+msgstr "レコード %d が \"%.*s\" の中にありません。\n"
+
+#: ../libpdb/pdb.c:1801
+#, c-format
+msgid "Can't find resource %d in \"%.*s\".\n"
+msgstr "リソース %d が \"%.*s\" の中にありません。\n"
+
+#: ../libpdb/pdb.c:1596
+#, c-format
+msgid "Can't find the AppInfo block in \"%.*s\"!\n"
+msgstr "\"%.*s\" の中に AppInfo ブロックがありません。\n"
+
+#: ../libpdb/pdb.c:1709
+#, c-format
+msgid "Can't find the sort block in \"%.*s\"!\n"
+msgstr "\"%.*s\" の中にソート・ブロックがありません。\n"
+
+#: ../src/coldsync.c:173
+msgid "Can't get host ID."
+msgstr "ホスト ID を取得できません。"
+
+#: ../src/coldsync.c:783 ../src/coldsync.c:2382
+msgid "Can't get host addresses."
+msgstr "ホストのアドレスを取得できません。"
+
+#: ../src/config.c:899
+msgid "Can't get host name."
+msgstr "ホスト名を取得できません。"
+
+#: ../src/coldsync.c:908 ../src/coldsync.c:2512
+msgid "Can't get last sync PC from Palm"
+msgstr "Palm - PC 間で最後の同期が実行できません。"
+
+#: ../src/spalm.c:451
+msgid "Can't get location of serial number."
+msgstr "シリアル番号の場所を取得できません。"
+
+#: ../src/conduit.c:503
+msgid "Can't get preference item."
+msgstr "お気に入りのアイテムを取得できません。"
+
+#: ../src/spalm.c:224
+msgid "Can't get system info."
+msgstr "システム情報を取得できません。"
+
+#: ../src/coldsync.c:640 ../src/coldsync.c:1763
+msgid "Can't get user ID from Palm."
+msgstr "Palm からユーザ ID を取得できません。"
+
+#: ../src/config.c:373 ../src/spalm.c:324
+msgid "Can't get user info."
+msgstr "ユーザ情報を取得できません。"
+
+#: ../src/coldsync.c:693
+msgid "Can't get user name from Palm."
+msgstr "Palm からユーザ名を取得できません。"
+
+#: ../src/config.c:1798
+msgid "Can't get user's full name."
+msgstr "ユーザの氏名を取得できません。"
+
+#: ../src/coldsync.c:1009 ../src/coldsync.c:1228 ../src/coldsync.c:2602
+#: ../src/coldsync.c:2808
+msgid "Can't install new files."
+msgstr "新しいファイルをインストールできません。"
+
+#: ../src/coldsync.c:232 ../src/coldsync.c:2315
+msgid "Can't load configuration."
+msgstr "設定を読み込めません。"
+
+#: ../src/install.c:434
+msgid "Can't load header."
+msgstr "ヘッダを読み込めません。"
+
+#: ../libpdb/pdb.c:289
+msgid "Can't load header.\n"
+msgstr "ヘッダを読み込めません。\n"
+
+#: ../libpdb/pdb.c:297
+#, c-format
+msgid "Can't load record list header for \"%.*s\".\n"
+msgstr "\"%.*s\" のレコード一覧ヘッダを読み込めません。\n"
+
+#: ../src/coldsync.c:589
+msgid "Can't look up Palm."
+msgstr "Palm を検索できません。"
+
+#: ../src/config.c:908
+msgid "Can't look up my address."
+msgstr "自分のアドレスを検索できません。"
+
+#: ../src/restore.c:66
+#, c-format
+msgid "Can't open %s."
+msgstr "%s を開けません。"
+
+#: ../src/backup.c:593
+msgid "Can't open backup conduit."
+msgstr "バックアップ・コンジットを開けません。"
+
+#: ../src/install.c:84
+#, c-format
+msgid "Can't open conduit for \"%s\": %d.\n"
+msgstr "\"%s\" のコンジットを開けません: %d\n"
+
+#: ../src/coldsync.c:548 ../src/coldsync.c:1343 ../src/coldsync.c:1490
+#: ../src/coldsync.c:1633 ../src/coldsync.c:2084
+msgid "Can't open connection."
+msgstr "接続できません。"
+
+#: ../src/backup.c:624
+#, c-format
+msgid "Can't open database \"%s\"."
+msgstr "データベース \"%s\" を開けません。"
+
+#: ../src/coldsync.c:475
+#, c-format
+msgid "Can't open log file \"%s\"."
+msgstr "ログ・ファイル \"%s\" を開けません。"
+
+#: ../src/coldsync.c:489
+msgid "Can't open log file on stderr."
+msgstr "ログファイルを標準エラー出力に開けません。"
+
+#: ../src/coldsync.c:185
+msgid "Can't parse command-line arguments."
+msgstr "コマンドラインの引数を解析できません。"
+
+#: ../src/restore.c:75
+#, c-format
+msgid "Can't read %s."
+msgstr "%s が読めません。"
+
+#: ../libpdb/pdb.c:337
+#, c-format
+msgid "Can't read AppInfo block for \"%.*s\".\n"
+msgstr "\"%.*s\" の AppInfo ブロックが読めません。\n"
+
+#: ../src/spalm.c:300
+msgid "Can't read NetSync info."
+msgstr "NetSync 情報が読めません。"
+
+#: ../src/restore.c:227
+#, c-format
+msgid "Can't read contents of directory %s."
+msgstr "ディレクトリ %s の内容が読めません。"
+
+#: ../src/coldsync.c:1658
+msgid "Can't read length of serial number."
+msgstr "シリアル番号の長さが読めません。"
+
+#: ../libpdb/pdb.c:1990
+#, c-format
+msgid "Can't read record %d in \"%.*s\".\n"
+msgstr "レコード %d (\"%.*s\" 内の) が読めません。\n"
+
+#: ../src/backup.c:469
+#, c-format
+msgid "Can't read record %d: %d.\n"
+msgstr "レコード %d が読めません: %d\n"
+
+#: ../src/backup.c:421
+msgid "Can't read record ID list.\n"
+msgstr "レコード ID 一覧が読めません。\n"
+
+#: ../libpdb/pdb.c:320
+#, c-format
+msgid "Can't read record index for \"%.*s\".\n"
+msgstr "\"%.*s\" のレコード目録が読めません。\n"
+
+#: ../libpdb/pdb.c:370
+#, c-format
+msgid "Can't read records for \"%.*s\".\n"
+msgstr "\"%.*s\" のレコードが読めません。\n"
+
+#: ../libpdb/pdb.c:1849
+#, c-format
+msgid "Can't read resource %d in \"%.*s\".\n"
+msgstr "リソース %d (\"%.*s\" 内の) が読めません。\n"
+
+#: ../src/backup.c:302
+#, c-format
+msgid "Can't read resource %d: %d.\n"
+msgstr "リソース %d が読めません: %d\n"
+
+#: ../libpdb/pdb.c:310
+#, c-format
+msgid "Can't read resource index for \"%.*s\".\n"
+msgstr "\"%.*s\" のリソース目録が読めません。\n"
+
+#: ../libpdb/pdb.c:360
+#, c-format
+msgid "Can't read resources for \"%.*s\".\n"
+msgstr "\"%.*s\" のリソースが読めません。\n"
+
+#: ../src/coldsync.c:1670 ../src/spalm.c:484
+msgid "Can't read serial number."
+msgstr "シリアル番号が読めません。"
+
+#: ../libpdb/pdb.c:347
+#, c-format
+msgid "Can't read sort block for \"%.*s\".\n"
+msgstr "\"%.*s\" のソート・ブロックが読めません。\n"
+
+#: ../src/coldsync.c:156 ../src/coldsync.c:161 ../src/coldsync.c:166
+#, c-format
+msgid "Can't reserve file descriptor %d."
+msgstr "ファイル・デスクリプタ %d を予約できません。"
+
+#: ../src/spalm.c:1006
+msgid "Can't resize palm->dblist."
+msgstr "palm->dblist のサイズを変更できません。"
+
+#: ../src/coldsync.c:792 ../src/coldsync.c:2391
+msgid "Can't resolve forwarding address."
+msgstr "フォワードするアドレスが解決できません。"
+
+#: ../src/coldsync.c:1533 ../src/coldsync.c:1556
+msgid "Can't restore directory."
+msgstr "ディレクトリをリストアできません。"
+
+#: ../src/coldsync.c:2280
+msgid "Can't setuid"
+msgstr "setuid が実行できません。"
+
+#: ../src/coldsync.c:1160 ../src/coldsync.c:2740
+msgid "Can't write user info."
+msgstr "ユーザ情報を書き込めません。"
+
+#: ../src/backup.c:581 ../src/restore.c:181 ../src/GenericConduit.cc:250
+#: ../src/GenericConduit.cc:522 ../src/GenericConduit.cc:1019
+msgid "Cancelled"
+msgstr "キャンセル"
+
+#: ../src/backup.c:576 ../src/coldsync.c:1379 ../src/coldsync.c:1427
+#: ../src/coldsync.c:1526 ../src/coldsync.c:1549 ../src/conduit.c:1183
+#: ../src/conduit.c:1243 ../src/restore.c:274
+msgid "Cancelled by Palm."
+msgstr "Palm によってキャンセルされました。"
+
+#: ../src/config.c:850
+msgid "ColdSync homepage at http://www.ooblick.com/software/coldsync/\n"
+msgstr "ColdSync のホームページ → http://www.ooblick.com/software/coldsync/\n"
+
+#: ../src/config.c:856
+msgid "Compile-type options:\n"
+msgstr "コンパイル条件:\n"
+
+#: ../src/conduit.c:1189 ../src/conduit.c:1249
+#, c-format
+msgid "Conduit %s exited abnormally. Continuing."
+msgstr "コンジット %s が異常終了しました。続行します。"
+
+#: ../src/conduit.c:1169 ../src/conduit.c:1229
+#, c-format
+msgid "Conduit %s is not a %s conduit."
+msgstr "コンジット %s は %s コンジットではありません。"
+
+#: ../src/coldsync.c:1102 ../src/coldsync.c:2691
+msgid "Conduit failed for unknown reason."
+msgstr "不明な理由によりコンジットが終了しました。"
+
+#: ../src/config.c:384
+#, c-format
+msgid "Config file \"%s\" doesn't exist."
+msgstr "設定ファイル \"%s\" が存在しません。"
+
+#: ../src/coldsync.c:1243 ../src/coldsync.c:1453 ../src/coldsync.c:1574
+#: ../src/coldsync.c:1959 ../src/coldsync.c:2823
+msgid "Couldn't disconnect."
+msgstr "接続断できません。"
+
+#: ../src/config.c:336
+msgid "Couldn't initialize configuration."
+msgstr "設定を初期化できません。"
+
+#: ../src/config.c:359 ../src/config.c:418
+#, c-format
+msgid "Couldn't read configuration file \"%s\"."
+msgstr "設定ファイル \"%s\" が読めません。"
+
+#: ../src/conduit.c:619
+msgid "Couldn't send header to conduit."
+msgstr "コンジットに対するヘッダを送信できません。"
+
+#: ../src/backup.c:430
+msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
+msgstr "DlpReadRecordIDList() が 0 個のレコードを読みました。何が起こった？\n"
+
+#: ../libpconn/dlp_cmd.c:2069
+msgid "DlpWriteRecord: Can't allocate output buffer.\n"
+msgstr "DlpWriteRecord: 出力バッファを確保できません。\n"
+
+#: ../src/coldsync.c:1899 ../src/coldsync.c:3216
+#, c-format
+msgid "DlpWriteUserInfo failed: %d."
+msgstr "DlpWriteUserInfo に失敗しました: %d"
+
+#: ../src/coldsync.c:929 ../src/coldsync.c:933
+msgid "Doing a fast sync."
+msgstr "高速同期の実行中です。"
+
+#: ../src/coldsync.c:927 ../src/coldsync.c:931
+msgid "Doing a slow sync."
+msgstr "低速同期の実行中です。"
+
+#: ../libpconn/palm_errno.c:50
+msgid "End of file"
+msgstr "ファイルの最後 (EOF)"
+
+#: ../src/backup.c:563 ../src/backup.c:596 ../src/backup.c:628
+#: ../src/backup.c:655 ../src/backup.c:675 ../src/install.c:586
+#: ../src/install.c:618 ../src/install.c:730 ../src/restore.c:192
+#: ../src/GenericConduit.cc:303 ../src/GenericConduit.cc:323
+#: ../src/GenericConduit.cc:343 ../src/GenericConduit.cc:423
+#: ../src/GenericConduit.cc:452 ../src/GenericConduit.cc:481
+#: ../src/GenericConduit.cc:572 ../src/GenericConduit.cc:591
+#: ../src/GenericConduit.cc:612 ../src/GenericConduit.cc:723
+#: ../src/GenericConduit.cc:929 ../src/GenericConduit.cc:952
+#: ../src/GenericConduit.cc:978 ../src/GenericConduit.cc:1067
+#: ../src/GenericConduit.cc:1086 ../src/GenericConduit.cc:1127
+#: ../src/GenericConduit.cc:1229 ../src/GenericConduit.cc:1465
+#: ../src/GenericConduit.cc:1494 ../src/GenericConduit.cc:1521
+msgid "Error"
+msgstr "ERROR"
+
+#: ../src/install.c:338 ../src/install.c:359
+msgid "Error\n"
+msgstr "ERROR\n"
+
+#: ../src/coldsync.c:997 ../src/coldsync.c:1216 ../src/coldsync.c:2590
+#: ../src/coldsync.c:2796
+#, c-format
+msgid "Error %d running install conduits."
+msgstr "インストール・コンジットの実行中に %d 個のエラーが発生しました。"
+
+#: ../src/coldsync.c:1257 ../src/coldsync.c:2836
+#, c-format
+msgid "Error %d running post-dump conduits."
+msgstr "post-dump コンジットの実行中に %d 個のエラーが発生しました。"
+
+#: ../src/coldsync.c:1056 ../src/coldsync.c:2647
+#, c-format
+msgid "Error %d running pre-fetch conduits."
+msgstr "pre-fetch コンジットの起動中に %d 個のエラーが発生しました。"
+
+#: ../src/coldsync.c:1435
+#, c-format
+msgid "Error backing up \"%s\"."
+msgstr "\"%s\" のバックアップ中にエラーが発生しました。"
+
+#: ../src/install.c:106
+#, c-format
+msgid "Error creating database \"%s\": %d.\n"
+msgstr "データベース \"%s\" の生成中にエラーが発生しました: %d\n"
+
+#: ../src/install.c:751
+#, c-format
+msgid "Error deleting \"%s\"."
+msgstr "\"%s\" の削除中にエラーが発生しました。"
+
+#: ../src/coldsync.c:2903
+#, c-format
+msgid "Error during DlpEndOfSync: (%d) %s."
+msgstr "DlpEndOfSync 中にエラーが発生しました: (%d) %s"
+
+#: ../libpconn/cmp.c:141
+#, c-format
+msgid "Error during cmp_read: (%d) %s.\n"
+msgstr "cmp_read 中にエラーが発生しました: (%d) %s\n"
+
+#: ../libpconn/PConnection_serial.c:342
+msgid "Error establishing CMP connection.\n"
+msgstr "CMP 接続を確立中にエラーが発生しました。\n"
+
+#: ../libpconn/palm_errno.c:42
+msgid "Error in system call or library function"
+msgstr "システムコールまたはライブラリ関数の呼び出しでエラーが発生しました。"
+
+#: ../src/install.c:705
+#, c-format
+msgid "Error opening \"%s\"."
+msgstr "\"%s\" をオープン中にエラーが発生しました。"
+
+#: ../libpconn/netsync.c:467
+msgid "Error reading NetSync packet header.\n"
+msgstr "NetSync パケット・ヘッダの読み込み中にエラーが発生しました。\n"
+
+#: ../libpconn/netsync.c:588
+msgid "Error sending NetSync header.\n"
+msgstr "NetSync ヘッダの送信中にエラーが発生しました。\n"
+
+#: ../libpconn/PConnection_serial.c:378
+msgid "Error trying to set speed.\n"
+msgstr "速度をセットしょうとしたらエラーが発生しました。\n"
+
+#: ../src/GenericConduit.cc:888 ../src/GenericConduit.cc:1431
+#: ../src/GenericConduit.cc:1744 ../src/GenericConduit.cc:1889
+#: ../src/GenericConduit.cc:2055 ../src/GenericConduit.cc:2289
+#, c-format
+msgid "Error uploading record 0x%08lx: %d."
+msgstr "レコード 0x%08lx のアップロード中にエラーが発生しました: %d"
+
+#: ../src/misc.c:108
+msgid "Error: "
+msgstr "ERROR: "
+
+#: ../libpconn/PConnection_serial.c:612 ../libpconn/PConnection_usb.c:460
+#, c-format
+msgid "Error: Can't open \"%s\".\n"
+msgstr "ERROR: \"%s\" が開けません。\n"
+
+#: ../libpconn/PConnection_serial.c:368
+#, c-format
+msgid ""
+"Error: Palm suggested %ld bps, but the serial port can't go that fast.\n"
+msgstr "ERROR: Palm から %ld ビット/秒と報告されましたが、シリアルポートはそんなに速くありません。\n"
+
+#: ../libpconn/PConnection_serial.c:358
+#, c-format
+msgid "Error: Palm suggested unknown speed %ld\n"
+msgstr "ERROR: Palm から不明な速度 %ld が報告されました。\n"
+
+#: ../libpconn/PConnection.c:118
+msgid "Error: USB support not enabled.\n"
+msgstr "ERROR: USB サポートが有効になっていません。\n"
+
+#: ../libpconn/netsync.c:474
+#, c-format
+msgid "Error: only read %d bytes of NetSync packet header.\n"
+msgstr "ERROR: NetSync パケット・ヘッダの %d バイトのみ読み込みます。\n"
+
+#: ../libpdb/pdb.c:281
+msgid "File isn't seekable.\n"
+msgstr "ファイルがシーク可能ではありません。\n"
+
+#: ../libpdb/pdb.c:1893
+#, c-format
+msgid "Hey! I can't find the %dth record in \"%.*s\"!\n"
+msgstr "おいおい、%d 番目のレコードが \"%.*s\" の中にありませんよ！\n"
+
+#: ../libpdb/pdb.c:1755
+#, c-format
+msgid "Hey! I can't find the %dth resource in \"%.*s\"!\n"
+msgstr "おいおい、%d 番目のリソースが \"%.*s\" の中にありませんよ！\n"
+
+#: ../src/config.c:924
+msgid "Hey! This isn't an AF_INET address!"
+msgstr "おいおい、これは AF_INET アドレスではないですよ！"
+
+#: ../src/GenericConduit.cc:1200
+msgid ""
+"I have a new, deleted record that is neither archived nor expunged\n"
+"What am I supposed to do?"
+msgstr ""
+"新しい削除済みのレコードがあります。このレコードはアーカイブされてもなく\n"
+"削除もされていません。どのように扱いますか？"
+
+#: ../src/conduit.c:2169
+msgid "Inside run_DummyConduit.\n"
+msgstr "run_DummyConduit の内部です。\n"
+
+#: ../src/install.c:584 ../src/install.c:616 ../src/install.c:701
+#: ../src/install.c:709 ../src/install.c:728 ../src/install.c:733
+msgid "Install"
+msgstr "インストール"
+
+#: ../src/install.c:317
+msgid "Install "
+msgstr "インストール "
+
+#: ../libpconn/palm_errno.c:58
+msgid "Invalid argument ID"
+msgstr "不正な引数 ID"
+
+#: ../libpconn/palm_errno.c:54
+msgid "Invalid request ID"
+msgstr "不正な要求 ID"
+
+#: ../libpconn/palm_errno.c:56
+msgid "Invalid result ID"
+msgstr "不正な結果 ID"
+
+#: ../src/coldsync.c:500
+#, c-format
+msgid "Log started on %s"
+msgstr "%s にロギングの開始"
+
+#: ../src/coldsync.c:583 ../src/coldsync.c:634 ../src/coldsync.c:687
+#: ../src/coldsync.c:969 ../src/coldsync.c:1068 ../src/coldsync.c:1097
+#: ../src/coldsync.c:1124 ../src/coldsync.c:1190 ../src/coldsync.c:1266
+#: ../src/coldsync.c:1384 ../src/coldsync.c:1432 ../src/coldsync.c:1529
+#: ../src/coldsync.c:1552 ../src/coldsync.c:2563 ../src/coldsync.c:2659
+#: ../src/coldsync.c:2686 ../src/coldsync.c:2707 ../src/coldsync.c:2770
+#: ../src/coldsync.c:2845 ../src/conduit.c:500 ../src/restore.c:278
+msgid "Lost connection to Palm."
+msgstr "Palm との接続が切れました。"
+
+#: ../src/conduit.c:1186 ../src/conduit.c:1246
+msgid "Lost connection to Palm. Aborting."
+msgstr "Palm との接続が切れました。中止します。"
+
+#: ../src/config.c:263
+#, c-format
+msgid "Missing option argument after \"%s\"."
+msgstr "\"%s\" 以降のオプション引数がありません。"
+
+#: ../src/config.c:805
+msgid "Modes:\n"
+msgstr "モード:\n"
+
+#: ../src/coldsync.c:847 ../src/coldsync.c:2445
+msgid "Network sync forwarding failed."
+msgstr "NetSync のフォワードに失敗しました。"
+
+#: ../src/spalm.c:288
+msgid "No NetSync info.\n"
+msgstr "NetSync 情報がありません。\n"
+
+#: ../src/coldsync.c:1290
+msgid "No backup directory specified."
+msgstr "バックアップ・ディレクトリが指定されていません。"
+
+#: ../libpconn/palm_errno.c:40
+msgid "No error"
+msgstr "エラーなし"
+
+#: ../src/coldsync.c:2229
+#, c-format
+msgid "No matching entry in %s."
+msgstr "%s の中に一致するエントリはありません。"
+
+#: ../src/coldsync.c:529 ../src/coldsync.c:1325 ../src/coldsync.c:1472
+#: ../src/coldsync.c:1615 ../src/coldsync.c:2063
+msgid "No port specified."
+msgstr "ポートが指定されていません。"
+
+#: ../src/coldsync.c:1416
+msgid "No such database"
+msgstr "そのようなデータベースはありません。"
+
+#: ../src/coldsync.c:1411
+#, c-format
+msgid "No such database: \"%s\"."
+msgstr "そのようなデータベースはありません: \"%s\""
+
+#: ../src/coldsync.c:1315
+#, c-format
+msgid "No such directory: \"%s\"."
+msgstr "そのようなディレクトリはありません: \"%s\""
+
+#: ../src/backup.c:686 ../src/install.c:703 ../src/install.c:735
+#: ../src/restore.c:197 ../src/GenericConduit.cc:492
+#: ../src/GenericConduit.cc:989 ../src/GenericConduit.cc:1531
+msgid "OK"
+msgstr "OK"
+
+#: ../src/config.c:812
+msgid "Options:\n"
+msgstr "オプション:\n"
+
+#: ../libpconn/palm_errno.c:44
+msgid "Out of memory"
+msgstr "メモリが足りません"
+
+#: ../libpconn/PConnection_serial.c:653 ../libpconn/PConnection_usb.c:435
+msgid "Please press the HotSync button.\n"
+msgstr "HotSync ボタンを押して下さい。\n"
+
+#: ../src/install.c:711
+msgid "Problem"
+msgstr "問題"
+
+#: ../src/restore.c:181 ../src/restore.c:192 ../src/restore.c:197
+msgid "Restore"
+msgstr "リストア"
+
+#: ../src/restore.c:149
+#, c-format
+msgid "Restore: Can't delete database \"%s\": %d."
+msgstr "リストア: データベース \"%s\" を削除できません: %d"
+
+#: ../src/coldsync.c:1250
+msgid "Running Dump conduits"
+msgstr "ダンプ・コンジットが起動中です。"
+
+#: ../src/coldsync.c:1049
+msgid "Running Fetch conduits"
+msgstr "取得コンジットが起動中です。"
+
+#: ../src/coldsync.c:993 ../src/coldsync.c:1212 ../src/coldsync.c:2586
+#: ../src/coldsync.c:2792
+msgid "Running Install conduits"
+msgstr "インストール・コンジットが起動中です。"
+
+#: ../src/coldsync.c:1074
+msgid "Running Sync conduits"
+msgstr "同期コンジットが起動中です。"
+
+#: ../libpconn/slp.c:391
+#, c-format
+msgid "SLP: bad CRC: expected 0x%04x, got 0x%04x.\n"
+msgstr "SLP: おかしな CRC: 期待値 0x%04x, 取得値 0x%04x\n"
+
+#: ../src/coldsync.c:1854
+msgid "Set user ID"
+msgstr "ユーザ ID のセット"
+
+#: ../src/coldsync.c:1889
+msgid "Set username"
+msgstr "ユーザ名のセット"
+
+#: ../src/coldsync.c:1119
+msgid "Sync cancelled by Palm."
+msgstr "同期が Palm によってキャンセルされました。"
+
+#: ../src/coldsync.c:1088 ../src/coldsync.c:2677
+msgid "Sync cancelled."
+msgstr "同期がキャンセルされました。"
+
+#: ../src/coldsync.c:621
+#, c-format
+msgid "Sync for %s at %s"
+msgstr "%s の同期 (%s)"
+
+#: ../src/coldsync.c:648
+#, c-format
+msgid ""
+"This Palm has user ID %ld (I was expecting %ld).\n"
+"Syncing would most likely destroy valuable data. Please update your\n"
+"configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
+"before proceeding.\n"
+"\tYour configuration file should contain a PDA block that looks\n"
+"something like this:"
+msgstr ""
+"この Palm には既にユーザ ID %ld (予期した ID は %ld) があります。\n"
+"同期を行うと大切なデータを破壊するおそれがあります。\n"
+"お使いの設定ファイルを更新する [かつ/または] 先に進む前に\n"
+"この Palm を ('coldsync -mI' で) 初期化して下さい。\n"
+"\tお使いの設定ファイルには、次のような\n"
+"PDA ブロックを含めるようにして下さい:"
+
+#: ../src/coldsync.c:703
+#, c-format
+msgid ""
+"This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
+"Syncing would most likely destroy valuable data. Please update your\n"
+"configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
+"before proceeding.\n"
+"\tYour configuration file should contain a PDA block that looks\n"
+"something like this:"
+msgstr ""
+"この Palm には既にユーザ名 \"%.*s\" (予期した名前は \"%.*s\") があります。\n"
+"同期を行うと大切なデータを破壊するおそれがあります。\n"
+"お使いの設定ファイルを更新する [かつ/または] 先に進む前に\n"
+"この Palm を ('coldsync -mI' で) 初期化して下さい。\n"
+"\tお使いの設定ファイルには、次のような\n"
+"PDA ブロックを含めるようにして下さい:"
+
+#: ../src/config.c:945
+msgid "This host doesn't appear to have an IP address."
+msgstr "このホストは IP-アドレスを持っていないようです。"
+
+#: ../libpconn/palm_errno.c:46
+msgid "Timeout"
+msgstr "タイムアウト"
+
+#: ../src/parser.y:32
+msgid "Too many errors. Aborting."
+msgstr "エラーが多すぎます。中止します。"
+
+#: ../src/coldsync.c:3102
+#, c-format
+msgid "Too many files named \"%s\" in the attic."
+msgstr "attic の中に \"%s\" という名前のファイルが多すぎます。"
+
+#: ../libpconn/palm_errno.c:52
+msgid "Transfer aborted"
+msgstr "転送の中止"
+
+#: ../src/config.c:229
+#, c-format
+msgid "Unknown device type: \"%s\"."
+msgstr "不明なデバイスの種類: \"%s\""
+
+#: ../libpconn/palm_errno.c:64
+msgid "Unknown error"
+msgstr "不明なエラー"
+
+#: ../src/config.c:706
+#, c-format
+msgid "Unknown facility \"%s\"."
+msgstr "不明な機能 \"%s\" です。"
+
+#: ../src/config.c:755
+#, c-format
+msgid "Unknown mode: \"%s\"."
+msgstr "不明なモード: \"%s\""
+
+#: ../src/coldsync.c:345
+#, c-format
+msgid ""
+"Unknown mode: %d.\n"
+"This is a bug. Please report it to the maintainer."
+msgstr ""
+"不明なモード: %d\n"
+"これはバグです。作者に連絡して下さい。"
+
+#: ../src/config.c:242
+#, c-format
+msgid "Unknown protocol: \"%s\"."
+msgstr "不明なプロトコル: \"%s\""
+
+#: ../src/coldsync.c:2260
+#, c-format
+msgid "Unknown user/uid: \"%s\"."
+msgstr "不明なユーザ名/ユーザID: \"%s\""
+
+#: ../src/config.c:254
+#, c-format
+msgid "Unrecognized option: \"%s\"."
+msgstr "認識できないオプション: \"%s\""
+
+#: lexer.l:504
+#, c-format
+msgid "Unterminated string at line %d (string started on line %d)\n"
+msgstr "%d 行で文字列が終了していません (%d 行から文字列は開始)。\n"
+
+#: ../src/install.c:79
+#, c-format
+msgid "Upload of \"%s\" cancelled by Palm.\n"
+msgstr "\"%s\" のアップロードが Palm によってキャンセルされました。\n"
+
+#: ../src/restore.c:61
+#, c-format
+msgid "Uploading \"%s\""
+msgstr "\"%s\" のアップロード"
+
+#: ../src/config.c:834
+#, c-format
+msgid "Usage: %s [options] <mode> <mode args>\n"
+msgstr "用法: %s [オプション] <モード> <モードの引数>\n"
+
+#: ../src/misc.c:75
+msgid "Warning: "
+msgstr "WARNING: "
+
+#: ../libpdb/pdb.c:1580
+#, c-format
+msgid ""
+"Warning: AppInfo block in \"%.*s\" isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"WARNING: \"%.*s\" にある AppInfo ブロックは予期した場所にありません。\n"
+"期待値 0x%lx, 実際は 0x%lx にあります。\n"
+
+#: ../src/spalm.c:461
+#, c-format
+msgid ""
+"Warning: ROM serial number is %d characters long. Please notify the\n"
+"maintainer."
+msgstr ""
+"WARNING: ROM シリアル番号の長さは %d 文字です。\n"
+"作者に連絡して下さい。"
+
+#: ../libpconn/PConnection_serial.c:329
+#, c-format
+msgid ""
+"Warning: can't set the serial port to the speed you requested (%ld bps).\n"
+"Using default.\n"
+msgstr ""
+"WARNING: 指定した速度 (%ld バイト/秒) をシリアルポートにセットできません。\n"
+"デフォルトの速度を使用します。\n"
+
+#: ../libpconn/PConnection_serial.c:318
+#, c-format
+msgid ""
+"Warning: can't set the speed you requested (%ld bps).\n"
+"Using default.\n"
+msgstr ""
+"WARNING: 指定した速度 (%ld バイト/秒) をセットできません。\n"
+"デフォルトの速度を使用します。\n"
+
+#: ../libpconn/PConnection_serial.c:603
+#, c-format
+msgid "Warning: no device on %s. Sleeping\n"
+msgstr "WARNING: %s にデバイスがありません。スリープします。\n"
+
+#: ../libpdb/pdb.c:1916
+#, c-format
+msgid ""
+"Warning: record %d in \"%.*s\" isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"WARNING: レコード %d (\"%.*s\") が予期した場所にありません。\n"
+"期待値 0x%lx, 実際は 0x%lx にあります。\n"
+
+#: ../libpdb/pdb.c:1783
+#, c-format
+msgid ""
+"Warning: resource %d in \"%.*s\" isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"WARNING: リソース %d (\"%.*s\") が予期した場所にありません。\n"
+"期待値 0x%lx, 実際は 0x%lx にあります。\n"
+
+#: ../libpdb/pdb.c:1693
+#, c-format
+msgid ""
+"Warning: sort block in \"%.*s\" isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"WARNING: \"%.*s\" にあるソート・ブロックが予期した場所にありません。\n"
+"期待値 0x%lx, 実際は 0x%lx にあります。\n"
+
+#: ../libpconn/padp.c:647
+msgid "Write timeout. Attempting to resend.\n"
+msgstr "書き込みがタイムアウトしました。再送してみます。\n"
+
+#: ../libpconn/palm_errno.c:60
+msgid "XID on ACK doesn't match request"
+msgstr "ACK 上の XID が要求に一致しません。"
+
+#: ../src/spalm.c:563
+msgid ""
+"You have an old Palm, one that doesn't say how many\n"
+"databases it has. I can't cope with this."
+msgstr ""
+"古い Palm をお使いのようです。このような Palm ではデータベースの個数を返しません。\n"
+"このような Palm には対処できません。"
+
+#: ../src/config.c:728
+#, c-format
+msgid ""
+"You shouldn't specify two -m<mode> options.\n"
+"\tUsing -m%s."
+msgstr ""
+"二つの -m<mode> オプションを指定しないで下さい。\n"
+"\t-m%s を使用します。"
+
+#: ../src/config.c:269
+#, c-format
+msgid ""
+"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
+"to do with it. This is a bug. Please notify the maintainer."
+msgstr ""
+"明らかに正規のオプション (\"-%c\") を指定しましたが、まだ実装されていません。\n"
+"これはバグです。作者に連絡して下さい。"
+
+#: ../src/GenericConduit.cc:177
+msgid "[generic]: Aborting."
+msgstr "[generic]: 中止します。"
+
+#: ../libpconn/PConnection_usb.c:649
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable に失敗しました。"
+
+#: ../libpconn/PConnection_usb.c:586
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
+msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo に失敗しました。"
+
+#: ../src/GenericConduit.cc:340
+msgid "pdb_Download() failed."
+msgstr "pdb_Download() に失敗しました。"
+
+#: ../libpconn/PConnection_usb.c:181
+msgid "usb: trying to fill a non-empty buffer.\n"
+msgstr "USB: 空でないバッファを埋めてみます。\n"
