@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.30 2000-06-11 18:49:48 arensb Exp $
+ * $Id: config.c,v 1.31 2000-06-15 07:29:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -584,6 +584,7 @@ get_config(int argc, char *argv[])
 		for (c = config.conduits; c != NULL; c = c->next)
 		{
 			struct cond_header *hdr;
+			int i;
 
 			fprintf(stderr, "  Conduit:\n");
 			fprintf(stderr, "\tflavors: 0x%04x", c->flavors);
@@ -620,6 +621,26 @@ get_config(int argc, char *argv[])
 			{
 				fprintf(stderr, "\t  [%s]: [%s]\n",
 					hdr->name, hdr->value);
+			}
+			fprintf(stderr, "\tPreferences:\n");
+			for (i = 0; i < c->num_prefs; i++)
+			{
+				fprintf(stderr,
+					"\t  [%c%c%c%c] 0x%08lx / %d",
+					(char) ((c->prefs[i].creator >> 24) &
+						0xff),
+					(char) ((c->prefs[i].creator >> 16) &
+						0xff),
+					(char) ((c->prefs[i].creator >> 8) &
+						0xff),
+					(char) (c->prefs[i].creator & 0xff),
+					c->prefs[i].creator,
+					c->prefs[i].id);
+				if ((c->prefs[i].flags & PREFDFL_SAVED) != 0)
+					fprintf(stderr, " SAVED");
+				if ((c->prefs[i].flags & PREFDFL_UNSAVED) != 0)
+					fprintf(stderr, " UNSAVED");
+				fprintf(stderr, "\n");
 			}
 		}
 	}
@@ -1117,6 +1138,9 @@ new_conduit_block()
 	retval->flags = 0;
 	retval->path = NULL;
 	retval->headers = NULL;
+	retval->prefs = NULL;
+	retval->prefs_slots = 0;
+	retval->num_prefs = 0;
 
 	return retval;
 }
@@ -1142,6 +1166,10 @@ free_conduit_block(conduit_block *c)
 		next_hdr = hdr->next;
 		free(hdr);
 	}
+
+	/* Free the 'pref_desc' array */
+	if (c->prefs != NULL)
+		free(c->prefs);
 
 	free(c);
 }
@@ -1188,6 +1216,64 @@ free_pda_block(pda_block *p)
 	if (p->username != NULL)
 		free(p->username);
 	free(p);
+}
+
+/* append_pref_desc
+ * Appends a preference descriptor to the conduit_block 'cond'.
+ * Returns 0 if successful, a negative value otherwise.
+ */
+int
+append_pref_desc(conduit_block *cond,	/* Conduit block to add to */
+		 const udword creator,	/* Preference creator */
+		 const uword id,	/* Preference identifier */
+		 const char flags)	/* Preference flags (see PREFDFL_*) */
+{
+	/* Is this the first preference being added? */
+	if (cond->prefs == NULL)
+	{
+		/* Yes. Start by allocating size for 4 entries, for
+		 * starters.
+		 */
+		MISC_TRACE(7)
+			fprintf(stderr, "Allocating a new 'prefs' array.\n");
+		if ((cond->prefs = (struct pref_desc *)
+		     calloc(4, sizeof(struct pref_desc))) == NULL)
+		{
+			/* Can't allocate new array */
+			return -1;
+		}
+		cond->prefs_slots = 4;
+
+	} else if (cond->num_prefs >= cond->prefs_slots)
+	{
+		struct pref_desc *newprefs;
+
+		/* This is not the first preference, but the 'prefs' array
+		 * is full and needs to be extended. Double its length.
+		 */
+		MISC_TRACE(7)
+			fprintf(stderr, "Extending prefs array to %d\n",
+				cond->prefs_slots * 2);
+		if ((newprefs = (struct pref_desc *)
+		     realloc(cond->prefs, 2 * cond->prefs_slots *
+			     sizeof(struct pref_desc))) == NULL)
+		{
+			/* Can't extend array */
+			return -1;
+		}
+		cond->prefs = newprefs;
+		cond->prefs_slots *= 2;
+	}
+
+	/* If we get this far, then cond->prefs is long enough to hold the
+	 * new preference descriptor. Add it.
+	 */
+	cond->prefs[cond->num_prefs].creator = creator;
+	cond->prefs[cond->num_prefs].id = id;
+	cond->prefs[cond->num_prefs].flags = flags;
+	cond->num_prefs++;
+
+	return 0;		/* Success */
 }
 
 /* This is for Emacs's benefit:
