@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.6 1999-03-16 10:33:33 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.7 1999-03-16 11:41:10 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -858,12 +858,12 @@ extern int DlpWriteRecord(
 	udword *recid);
 extern int DlpDeleteRecord(
 	struct PConnection *pconn,
-	const ubyte dbid,
+	const ubyte handle,
 	const ubyte flags,
 	const udword recid);
 extern int DlpReadResourceByIndex(
 	struct PConnection *pconn,
-	const ubyte dbid,
+	const ubyte handle,
 	const uword index,
 	const uword offset,
 	const uword len,
@@ -871,7 +871,7 @@ extern int DlpReadResourceByIndex(
 	const ubyte **data);
 extern int DlpReadResourceByType(
 	struct PConnection *pconn,
-	const ubyte dbid,
+	const ubyte handle,
 	const udword type,
 	const uword id,
 	const uword offset,
@@ -880,23 +880,23 @@ extern int DlpReadResourceByType(
 	ubyte *data);
 extern int DlpWriteResource(
 	struct PConnection *pconn,
-	const ubyte dbid,
+	const ubyte handle,
 	const udword type,
 	const uword id,
 	const uword size,
 	const ubyte *data);
 extern int DlpDeleteResource(
 	struct PConnection *pconn,
-	const ubyte dbid,
+	const ubyte handle,
 	const ubyte flags,
 	const udword type,
 	const uword id);
 extern int DlpCleanUpDatabase(
 	struct PConnection *pconn,
-	const ubyte dbid);
+	const ubyte handle);
 extern int DlpResetSyncFlags(
 	struct PConnection *pconn,
-	const ubyte dbid);
+	const ubyte handle);
 /* XXX - DlpCallApplication: untested */
 extern int DlpCallApplication(
 	struct PConnection *pconn,
@@ -927,7 +927,7 @@ extern int DlpEndOfSync(
 	const ubyte status);
 extern int DlpResetRecordIndex(
 	struct PConnection *pconn,
-	const ubyte dbid);
+	const ubyte handle);
 extern int DlpReadRecordIDList(
 	struct PConnection *pconn,
 	const ubyte handle,
