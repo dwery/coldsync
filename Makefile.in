@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.5 1999-08-23 08:38:25 arensb Exp $
+# $Id: Makefile.in,v 1.6 1999-08-25 05:24:51 arensb Exp $
 
 # XXX - Should have two distributions: 'make dist' makes 'dist-src'
 # and 'dist-doc'. 'dist-src' contains all of the source necessary to
@@ -30,6 +30,7 @@ DISTFILES =	AUTHORS \
 		HACKING \
 		Makefile.in \
 		configure.in \
+		aclocal.m4 \
 		config.h.in \
 		TODO \
 		install-sh \
