@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.2 1999-11-04 11:14:06 arensb Exp $
+ * $Id: parser.y,v 2.3 1999-11-09 04:04:23 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -15,6 +15,9 @@
 #include <stdlib.h>		/* For malloc(), free() */
 #include <string.h>		/* For strncpy() et al. */
 #include "parser.h"
+
+int parse_trace = 0;		/* Debugging level for config file parser */
+#define PARSE_TRACE(n)	if (parse_trace >= (n))
 
 extern int yylex(void);
 extern int yyparse(void);
@@ -64,22 +67,34 @@ static struct config *file_config;	/* As the parser runs, it will fill
 
 %%
 file:	statements
-	{ fprintf(stderr, "Found a file\n"); }
+	{ PARSE_TRACE(1)
+		  fprintf(stderr, "Found a file\n");
+	}
 	;
 
 statements:	statements statement
-	{ fprintf(stderr, "Found a statement\n"); }
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a statement\n");
+	}
 	|	/* Empty */
-	{ fprintf(stderr, "Found an empty statement\n"); }
+	{ PARSE_TRACE(4)
+		  fprintf(stderr, "Found an empty statement\n");
+	}
 	;
 
 statement:
 	listen_stmt
-	{ fprintf(stderr, "Found a listen_stmt (statement)\n"); }
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a listen_stmt (statement)\n");
+	}
 	| conduit_stmt
-	{ fprintf(stderr, "Found a conduit_stmt\n"); }
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a conduit_stmt\n");
+	}
 	| ';'	/* Effectively empty */
-	{ fprintf(stderr, "Found an empty statement\n"); }
+	{ PARSE_TRACE(4)
+		  fprintf(stderr, "Found an empty statement\n");
+	}
 	;
 
 listen_stmt:
@@ -99,9 +114,13 @@ listen_stmt:
 	}
 	listen_block '}'
 	{
-		fprintf(stderr, "Found listen+listen_block:\n");
-		fprintf(stderr, "\tDevice: [%s]\n", cur_listen->device);
-		fprintf(stderr, "\tSpeed: [%d]\n", cur_listen->speed);
+		PARSE_TRACE(3)
+		{
+			fprintf(stderr, "Found listen+listen_block:\n");
+			fprintf(stderr, "\tDevice: [%s]\n",
+				cur_listen->device);
+			fprintf(stderr, "\tSpeed: [%d]\n", cur_listen->speed);
+		}
 
 		if (file_config->listen == NULL)
 		{
@@ -127,24 +146,32 @@ listen_stmt:
 	;
 
 listen_block:	listen_directives
-	{ fprintf(stderr, "Found a listen_block\n"); }
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a listen_block\n");
+	}
 	;
 
 listen_directives:
 	listen_directives listen_directive
-	{ fprintf(stderr, "Found a listen_directives\n"); }
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a listen_directives\n");
+	}
 	|	/* Empty */
 	;
 
 listen_directive:
 	DEVICE STRING ';'
 	{
-		fprintf(stderr, "Listen: device [%s]\n", $2);
+		PARSE_TRACE(4)
+			fprintf(stderr, "Listen: device [%s]\n", $2);
+
 		cur_listen->device = $2;
 	}
 	| SPEED NUMBER ';'
 	{
-		fprintf(stderr, "Listen: speed %d\n", $2);
+		PARSE_TRACE(4)
+			fprintf(stderr, "Listen: speed %d\n", $2);
+
 		cur_listen->speed = $2;
 	}
 	;
@@ -166,29 +193,37 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		cur_conduit->dbcreator = 0L;
 		cur_conduit->path = NULL;
 
-		fprintf(stderr, "Found start of conduit [");
+		PARSE_TRACE(4)
+			fprintf(stderr, "Found start of conduit [");
+
 		switch ($2)
 		{
 		    case Sync:
-			fprintf(stderr, "Sync");
+			PARSE_TRACE(4)
+				fprintf(stderr, "Sync");
 			break;
 		    case Fetch:
-			fprintf(stderr, "Fetch");
+			PARSE_TRACE(4)
+				fprintf(stderr, "Fetch");
 			break;
 		    case Dump:
-			fprintf(stderr, "Dump");
+			PARSE_TRACE(4)
+				fprintf(stderr, "Dump");
 			break;
 		    case Install:
-			fprintf(stderr, "Install");
+			PARSE_TRACE(4)
+				fprintf(stderr, "Install");
 			break;
 		    case Uninstall:
-			fprintf(stderr, "Uninstall");
+			PARSE_TRACE(4)
+				fprintf(stderr, "Uninstall");
 			break;
 		    default:
 			fprintf(stderr, "Unknown conduit flavor!");
 			YYERROR;
 		}
-		fprintf(stderr, "]\n");
+		PARSE_TRACE(4)
+			fprintf(stderr, "]\n");
 	}
 	conduit_block '}'
 	{
@@ -240,20 +275,35 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 
 conduit_flavor:
 	SYNC
-	{ fprintf(stderr, "Found a conduit_flavor: Sync\n");
-	  $$ = Sync; }
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Sync\n");
+		$$ = Sync;
+	}
 	| FETCH
-	{ fprintf(stderr, "Found a conduit_flavor: Fetch\n");
-	  $$ = Fetch; }
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Fetch\n");
+		$$ = Fetch;
+	}
 	| DUMP
-	{ fprintf(stderr, "Found a conduit_flavor: Dump\n");
-	  $$ = Dump; }
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Dump\n");
+		$$ = Dump;
+	}
 	| INSTALL
-	{ fprintf(stderr, "Found a conduit_flavor: Install\n");
-	  $$ = Install; }
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Install\n");
+		$$ = Install;
+	}
 	| UNINSTALL
-	{ fprintf(stderr, "Found a conduit_flavor: Uninstall\n");
-	  $$ = Uninstall; }
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Uninstall\n");
+		$$ = Uninstall;
+	}
 	;
 
 conduit_block:
@@ -311,8 +361,8 @@ conduit_directive:
 				(($4[2]) << 8) |
 				($4[3]);
 		}
-		fprintf(stderr, "Conduit type: [%s]/[%s]\n",
-			$2, $4);
+		PARSE_TRACE(4)
+			fprintf(stderr, "Conduit type: [%s]/[%s]\n", $2, $4);
 		free($2); $2 = NULL;
 		free($4); $4 = NULL;
 	}
@@ -326,7 +376,10 @@ conduit_directive:
 		 */
 		cur_conduit->path = $2;
 		$2 = NULL;
-		fprintf(stderr, "Conduit path: [%s]\n", cur_conduit->path);
+
+		PARSE_TRACE(4)
+			fprintf(stderr, "Conduit path: [%s]\n",
+				cur_conduit->path);
 	}
 	;
 
