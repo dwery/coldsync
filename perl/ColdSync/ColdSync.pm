@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.8.2.1 2000-08-31 15:31:47 arensb Exp $
+# $Id: ColdSync.pm,v 1.8.2.2 2000-09-01 06:00:26 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.8.2.1 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.8.2.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -85,13 +85,16 @@ multiple headers, or if the order in which the headers were received
 matters.
 
 =item %PREFERENCES
-Holds the preferences passed on STDIN. Actually, the keys of this
-hash are the creators of the preference items. Their values are again
-hashes of which the keys are the id's and the values the actual
-raw preference item. Thus $PREFERENCES{'creator'}{'id'} will contain
-the raw preference item from 'creator' with 'id' as identifier.
+
+Holds the preferences passed on STDIN. The keys of this hash are the
+creators of the preference items. Their values, in turn, are references to
+hashes whose key are the IDs, and whose values are the raw preference item.
+
+Thus C<$PREFERENCES{"mail"}{6}> contains the preference item whose creator
+is C<mail> and whose ID is 6.
 
 =cut
+#'
 
 $FLAVOR = undef;		# Flavor with which this conduit was invoked
 
@@ -248,7 +251,10 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
-	my(@preflist,$len,$i);		# Makes getting preferences easier
+	my @preflist;		# Makes getting preferences easier
+	my $len;
+	my $i;
+
 	while (<STDIN>)
 	{
 		chomp;
@@ -257,14 +263,19 @@ sub ReadHeaders
 		push @HEADERS, $_;
 
 		# Get the preference
-		if(/^Preference: (\w\w\w\w)\/(\d+)\/(\d+)/)
+		if(m{^Preference: (\w\w\w\w)/(\d+)/(\d+)})
 		{
 			# We temporarily save the length in the hash. Later
 			# on, we'll read the raw data from stdin.
+			# XXX - In the interest of readability, use a
+			# separate variable for the preference length.
 			$PREFERENCES{$1}{$2} = $3;
 
 			# The list is required so we know the order in which
 			# the items were specified.
+			# XXX - Might be easier to just
+			#	push @preflist, [ $1, $2, $3 ];
+			# to keep all the data together
 			push(@preflist,\$PREFERENCES{$1}{$2});
 			next;
 		}
@@ -282,12 +293,12 @@ sub ReadHeaders
 
 	# Now read all the raw preference items from STDIN
 	# They are being read in the same order as the items were specified
-	# XXX What happens if somehow less data is written to stdout?
+	# XXX - What happens if somehow less data is written to stdout?
 	# If we believe perlfunc, read is like fread so will simply read
 	# as much as possible, but less if not enough is provided, so that
 	# the conduit won't hang here, waiting for input. Not tested yet,
 	# however...
-	for($i = 0;$i < $#preflist; $i++)
+	for($i = 0; $i <= $#preflist; $i++)
 	{
 		$len = ${$preflist[$i]};
 		read(STDIN,${$preflist[$i]},$len);
