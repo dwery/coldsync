@@ -1,5 +1,6 @@
 "foo"				« foo »
 allocate			allouer
+backup
 block				block
   AppInfo block			  bloc AppInfo
   sort block			  bloc de tri
