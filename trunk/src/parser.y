@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.23 2000-05-21 08:08:02 arensb Exp $
+ * $Id: parser.y,v 2.24 2000-06-03 06:36:32 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -71,7 +71,9 @@ static struct config *file_config;	/* As the parser runs, it will fill
 
 %token <crea_type>	CREA_TYPE
 %token <integer>	NUMBER
+%token <integer>	USERID
 %token <string>		STRING
+%token <string>		USERNAME
 %token <string>		WORD
 %token ARGUMENTS
 %token CONDUIT
@@ -103,7 +105,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %type <flavor> conduit_flavor
 
 %union {
-	int integer;
+	long integer;
 	char *string;
 	conduit_flavor flavor;
 	comm_type commtype;
@@ -169,7 +171,7 @@ listen_stmt:
 			fprintf(stderr, "Found listen+listen_block:\n");
 			fprintf(stderr, "\tDevice: [%s]\n",
 				cur_listen->device);
-			fprintf(stderr, "\tSpeed: [%d]\n", cur_listen->speed);
+			fprintf(stderr, "\tSpeed: [%ld]\n", cur_listen->speed);
 		}
 
 		if (file_config->listen == NULL)
@@ -272,7 +274,7 @@ listen_directive:
 	| SPEED opt_colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: speed %d\n", $3);
+			fprintf(stderr, "Listen: speed %ld\n", $3);
 
 		if (cur_listen->speed != 0)
 		{
@@ -923,6 +925,44 @@ pda_directive:
 
 		cur_pda->directory = $4;
 		$4 = NULL;
+	}
+	| USERNAME opt_colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "Username \"%s\"\n", $4);
+
+		lex_expect(0);
+
+		if (cur_pda->username != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: username already "
+				  "defined.\n"),
+				conf_fname, lineno);
+			free(cur_pda->username);
+		}
+
+		cur_pda->username = $4;
+		$4 = NULL;
+	}
+	| USERID opt_colon NUMBER semicolon
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "UserID \"%ld\"\n", $3);
+
+		if (cur_pda->userid != 0)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: userid already "
+				  "defined.\n"),
+				conf_fname, lineno);
+		}
+
+		cur_pda->userid = $3;
 	}
 	| DEFAULT semicolon
 	{
