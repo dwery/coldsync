@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.71 2002-11-02 12:51:18 azummo Exp $
+ * $Id: parser.y,v 2.72 2002-11-05 20:54:17 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -362,7 +362,7 @@ listen_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Don't prompt for the HotSync button.\n");
 
-		cur_listen->flags &= ~(1L << LISTENFL_PROMPT);
+		cur_listen->flags &= ~LISTENFL_PROMPT;
 	}
 	| error
 	{
