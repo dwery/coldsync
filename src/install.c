@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.39 2002-10-16 18:59:32 azummo Exp $
+ * $Id: install.c,v 2.40 2002-11-27 23:10:33 azummo Exp $
  */
 
 #include "config.h"
@@ -291,13 +291,26 @@ install_file(PConnection *pconn,
 				pdb->name);
 		SYNC_TRACE(5)
 		{
+			fprintf(stderr, "  Existing version:   %ld\n",
+				dbinfo->version);
+			fprintf(stderr, "  New file's version: %ld\n",
+				pdb->version);
 			fprintf(stderr, "  Existing modnum:   %ld\n",
 				dbinfo->modnum);
 			fprintf(stderr, "  New file's modnum: %ld\n",
 				pdb->modnum);
 		}
 
-		if (pdb->modnum <= dbinfo->modnum)
+		if (pdb->version < dbinfo->version)
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr, "This isn't a new version\n");
+			free_pdb(pdb);
+			return -1;
+		}
+
+		if (pdb->version == dbinfo->version && 
+			pdb->modnum <= dbinfo->modnum)
 		{
 			SYNC_TRACE(4)
 				fprintf(stderr, "This isn't a new version\n");
