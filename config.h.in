@@ -19,20 +19,26 @@
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
 
+/* The number of bytes in a off_t.  */
+#undef SIZEOF_OFF_T
+
+/* The number of bytes in a uid_t.  */
+#undef SIZEOF_UID_T
+
 /* Define if you have the cfmakeraw function.  */
 #undef HAVE_CFMAKERAW
 
 /* Define if you have the select function.  */
 #undef HAVE_SELECT
 
-/* Define if you have the snprintf function.  */
-#undef HAVE_SNPRINTF
-
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
