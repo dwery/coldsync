@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.8 2000-05-19 12:02:27 arensb Exp $
+# $Id: Make.rules.in,v 1.9 2000-05-19 12:40:00 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -156,7 +156,13 @@ y.tab.c y.tab.h:	parser.y
 # Targets for building the distribution.
 # See the comment by ${RECURSIVE_TARGETS}::.
 distfiles-core::	${DISTFILES}
-	${MKDIR} ${SUBDIRS}
+	@subdirs="${SUBDIRS}"; \
+	for dir in "${subdirs}"; do \
+		if test ! -d "${TOPDISTDIR}/${SUBDIR}/$$dir"; then \
+			echo "mkdir ${TOPDISTDIR}/${SUBDIR}/$$dir"; \
+			${MKDIR} "${TOPDISTDIR}/${SUBDIR}/$$dir"; \
+		fi; \
+	done
 	@if test -n "${DISTFILES}"; then \
 		echo "cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}"; \
 		cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}; \
