@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.30 2000-02-07 01:46:23 arensb Exp $
+ * $Id: coldsync.c,v 1.31 2000-04-09 14:27:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,8 +48,11 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
  * fast the serial port can go). The reason there are two macros here is
  * that under Solaris, B19200 != 19200 for whatever reason.
  */
-/*  #define SYNC_RATE		57600 */
-/*  #define BSYNC_RATE		B57600 */
+/* These two macros specify the default sync rate. The reason it's so low
+ * is that the serial port on a Sun Ultra 1 doesn't want to go any faster.
+ * Of course, these are the same people who didn't define B38400 = 38400,
+ * so what did you expect?
+ */
 #define SYNC_RATE		38400
 #define BSYNC_RATE		B38400
 
@@ -92,6 +95,9 @@ static struct {
 #ifdef B28800
 	{ 28800,	B28800 },
 #endif	/* B28800 */
+#ifdef B19200
+	{ 19200,	B19200 },
+#endif	/* B19200 */
 #ifdef B14400
 	{ 14400,	B14400 },
 #endif	/* B14400 */
@@ -212,6 +218,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, _("Error: can't open connection.\n"));
 		exit(1);
 	}
+	pconn->speed = config.listen[0].speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -234,6 +241,79 @@ main(int argc, char *argv[])
 				 */
 		pconn = NULL;
 		exit(1);
+	}
+
+	/* Read the Palm's serial number, if possible. */
+	if (palm.sysinfo.rom_version < 0x03000000)
+	{
+		/* Can't just try to read the serial number and let the RPC
+		 * call fail: the PalmPilot(Pro) panics when you do that.
+		 */
+		SYNC_TRACE(1)
+			fprintf(stderr, "This Palm is too old to have a "
+				"serial number in ROM\n");
+
+		/* Set the serial number to the empty string */
+		palm.serial[0] = '\0';
+		palm.serial_len = 0;
+	} else {
+		/* The Palm's ROM is v3.0 or later, so it has a serial
+		 * number.
+		 */
+		udword snum_ptr;	/* Palm pointer to serial number */
+		uword snum_len;		/* Length of serial number string */
+		ubyte checksum;		/* Serial number checksum */
+
+		/* Get the location of the ROM serial number */
+		/* XXX - Move this into its own function? */
+		err = RDLP_ROMToken(pconn, CARD0, ROMToken_Snum,
+				    &snum_ptr, &snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't get location of "
+					  "serial number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			exit(1);
+		}
+
+		/* Sanity check: make sure we have space for the serial
+		 * number.
+		 */
+		if (snum_len > SNUM_MAX-1)
+		{
+			fprintf(stderr, _("Warning: ROM serial number is "
+					  "%d characters long. Please notify "
+					  "the\nmaintainer\n"),
+				snum_len);
+			snum_len = SNUM_MAX;
+		}
+
+		/* Read the serial number out of the location found above */
+		err = RDLP_MemMove(pconn, palm.serial, snum_ptr, snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't read serial "
+					  "number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			exit(1);
+		}
+		palm.serial[snum_len] = '\0';
+
+		/* Calculate the checksum for the serial number */
+		checksum = 0;
+		for (i = 0; i < snum_len; i++)
+		{
+			checksum += palm.serial[i];
+			checksum = (checksum << 1) |
+				(checksum & 0x80 ? 1 : 0);
+		}
+		checksum = (checksum >> 4) + (checksum & 0x0f) + 2;
+
+		SYNC_TRACE(1)
+			fprintf(stderr, "Serial number is \"%s-%c\"\n",
+				palm.serial,
+				((checksum < 10) ? (checksum + '0') :
+				 (checksum - 10 + 'A')));
 	}
 
 	/* Figure out which Palm we're dealing with, and load per-palm
@@ -564,6 +644,12 @@ Connect(struct PConnection *pconn)
 	int err;
 	struct slp_addr pcaddr;
 	struct cmp_packet cmpp;
+	udword bps = SYNC_RATE;		/* Connection speed, in bps */
+	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
+					 * (a necessary distinction because
+					 * some OSes (hint to Sun!) have
+					 * B19200 != 19200.
+					 */
 
 	pcaddr.protocol = SLP_PKTTYPE_PAD;	/* XXX - This ought to be
 						 * part of the initial
@@ -591,11 +677,68 @@ Connect(struct PConnection *pconn)
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Got a wakeup packet\n");
 
+	/* Find the speed at which to connect */
+	if (pconn->speed != 0)
+	{
+		/* The .coldsyncrc specifies a speed */
+		int i;
+
+		SYNC_TRACE(3)
+			fprintf(stderr, "pconn->speed == %d\n", pconn->speed);
+
+		/* Go through the speed table. Make sure the requested
+		 * speed appears in the table: this is to make sure that
+		 * there is a valid B* speed to pass to cfsetspeed().
+		 */
+		for (i = 0; i < num_speeds; i++)
+		{
+			SYNC_TRACE(7)
+				fprintf(stderr, "Comparing %ld ==? %d\n",
+					speeds[i].bps, pconn->speed);
+
+			if (speeds[i].bps == pconn->speed)
+			{
+				/* Found it */
+				SYNC_TRACE(7)
+					fprintf(stderr, "Found it\n");
+				bps = speeds[i].bps;
+				tcspeed = speeds[i].tcspeed;
+				break;
+			}
+		}
+
+		if (i >= num_speeds)
+		{
+			/* The requested speed wasn't found */
+			fprintf(stderr, _("Warning: can't set the speed you "
+					  "requested (%d bps).\nUsing "
+					  "default (%d bps)\n"),
+				pconn->speed,
+				SYNC_RATE);
+			pconn->speed = 0;
+		}
+	}
+
+	if (pconn->speed == 0)
+	{
+		/* Either the .coldsyncrc didn't specify a speed, or else
+		 * the one that was specified was bogus.
+		 */
+		SYNC_TRACE(2)
+			fprintf(stderr, "Using default speed (%d bps)\n",
+				SYNC_RATE);
+		bps = SYNC_RATE;
+		tcspeed = BSYNC_RATE;
+	}
+	SYNC_TRACE(2)
+		fprintf(stderr, "-> Setting speed to %ld (%d)\n",
+			bps, tcspeed);
+
 	/* Compose a reply */
 	cmpp.type = CMP_TYPE_INIT;
 	cmpp.ver_major = 1;	/* XXX - Should be constants in header file */
 	cmpp.ver_minor = 1;
-	cmpp.rate = SYNC_RATE;
+	cmpp.rate = bps;
 	cmpp.flags = CMP_IFLAG_CHANGERATE;
 
 	SYNC_TRACE(5)
@@ -608,7 +751,7 @@ Connect(struct PConnection *pconn)
 	/* Change the speed */
 	/* XXX - This probably goes in Pconn_accept() or something */
 
-	if ((err = (*pconn->io_setspeed)(pconn, BSYNC_RATE)) < 0)
+	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
 	{
 		fprintf(stderr, _("Error trying to set speed"));
 		return -1;
@@ -1048,7 +1191,7 @@ CheckLocalFiles(struct Palm *palm)
 	return 0;
 }
 
-/* GetUserSysInfo
+/* GetPalmInfo
  * Get system and user info from the Palm, and put it in 'palm'.
  */
 int
@@ -1358,6 +1501,7 @@ usage(int argc, char *argv[])
 		 "\t-f <file>:\tRead configuration from <file>.\n"
 		 "\t-b <dir>:\tPerform a backup to <dir>.\n"
 		 "\t-r <dir>:\tRestore from <dir>.\n"
+		 "\t-I:\t\tForce installation of new databases.\n"
 		 "\t-S:\t\tForce slow sync.\n"
 		 "\t-F:\t\tForce fast sync.\n"
 		 "\t-R:\t\tCheck ROM databases.\n"
