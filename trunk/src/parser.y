@@ -2,11 +2,11 @@
 /* parser.y
  * Config file parser.
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.36 2000-12-24 09:47:39 arensb Exp $
+ * $Id: parser.y,v 2.37 2001-01-09 16:19:33 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -29,7 +29,7 @@ int parse_trace = 0;		/* Debugging level for config file parser */
 #define ANOTHER_ERROR \
 	{ if (++num_errors > 10) \
 	  { \
-		  fprintf(stderr, _("Too many errors. Aborting.\n")); \
+		  Error(_("Too many errors. Aborting.\n")); \
 		  return -1; \
 	  } \
 	}
@@ -160,9 +160,8 @@ listen_stmt:
 		 */
 		if ((cur_listen = new_listen_block()) == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't allocate listen block\n"),
-				"yyparse");
+			Error(_("%s: Can't allocate listen block\n"),
+			      "yyparse");
 			return -1;
 		}
 		cur_listen->listen_type = $2;
@@ -230,13 +229,11 @@ comm_type:
 		ANOTHER_ERROR;
 		if (yytext[0] == '{')
 		{
-			fprintf(stderr,
-				_("\tMissing listen block type\n"));
+			Error(_("\tMissing listen block type\n"));
 		} else {
-			fprintf(stderr,
-				_("\tUnrecognized listen type "
-				  "\"%s\"\n"),
-				yytext);
+			Error(_("\tUnrecognized listen type "
+				"\"%s\"\n"),
+			      yytext);
 			yyclearin; 
 		}
 		$$ = LISTEN_SERIAL;
@@ -272,10 +269,8 @@ listen_directive:
 
 		if (cur_listen->device != NULL)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: device already "
-				  "defined.\n"),
-				conf_fname, lineno);
+			Error(_("%s: %d: Warning: device already defined.\n"),
+			      conf_fname, lineno);
 			free(cur_listen->device);
 		}
 		cur_listen->device = $4;
@@ -288,18 +283,16 @@ listen_directive:
 
 		if (cur_listen->speed != 0)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: speed already defined.\n"),
-				conf_fname, lineno);
+			Error(_("%s: %d: Warning: speed already defined.\n"),
+			      conf_fname, lineno);
 		}
 
 		cur_listen->speed = $3;
 	}
 	| error
 	{
-		fprintf(stderr,
-			_("\tError near \"%s\"\n"),
-			yytext);
+		Error(_("\tError near \"%s\"\n"),
+		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
 	}
@@ -311,9 +304,8 @@ conduit_stmt:	CONDUIT
 		cur_conduit = new_conduit_block();
 		if (cur_conduit == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't allocate conduit_block!\n"),
-				"yyparse");
+			Error(_("%s: Can't allocate conduit_block!\n"),
+			      "yyparse");
 			return -1;
 		}
 	} flavor_list '{'
@@ -324,11 +316,10 @@ conduit_stmt:	CONDUIT
 		/* Sanity check */
 		if (cur_conduit->num_ctypes == 0)
 		{
-			fprintf(stderr,
-				_("%s: Warning: no `type:' line seen\n"
-				  "\tin definition of \"%s\"\n"),
-				conf_fname,
-				cur_conduit->path);
+			Error(_("%s: Warning: no `type:' line seen\n"
+				"\tin definition of \"%s\"\n"),
+			      conf_fname,
+			      cur_conduit->path);
 		}
 
 		if (file_config->conduits == NULL)
@@ -388,9 +379,8 @@ flavor:
 	| error
 	{
 		ANOTHER_ERROR;
-		fprintf(stderr,
-			_("\tUnrecognized conduit flavor \"%s\"\n"),
-			yytext);
+		Error(_("\tUnrecognized conduit flavor \"%s\"\n"),
+		      yytext);
 		yyclearin;
 	}
 	;
@@ -418,7 +408,8 @@ conduit_directive:
 
 		PARSE_TRACE(4)
 		{
-			fprintf(stderr, "Conduit creator: 0x%08ld (%c%c%c%c)\n",
+			fprintf(stderr,
+				"Conduit creator: 0x%08ld (%c%c%c%c)\n",
 				$4.creator,
 				(char) (($4.creator >> 24) & 0xff),
 				(char) (($4.creator >> 16) & 0xff),
@@ -437,10 +428,9 @@ conduit_directive:
 		if ((err = append_crea_type(cur_conduit, $4.creator, $4.type))
 		    < 0)
 		{
-			fprintf(stderr,
-				_("%s: %d: Can't add creator-type pair to "
-				  "list. This is very bad.\n"),
-				conf_fname, lineno);
+			Error(_("%s: %d: Can't add creator-type pair to "
+				"list. This is very bad.\n"),
+			      conf_fname, lineno);
 			return -1;
 		}
 	}
@@ -454,9 +444,8 @@ conduit_directive:
 
 		if (cur_conduit->path != NULL)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: path already defined.\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: path already defined.\n"),
+			     conf_fname, lineno);
 			free(cur_conduit->path);
 		}
 
@@ -497,10 +486,9 @@ conduit_directive:
 			($5[3]);
 		if ((err = append_pref_desc(cur_conduit, creator, $8, $4)) < 0)
 		{
-			fprintf(stderr,
-				_("%s: %d: Can't add preference to list. "
-				  "This is very bad.\n"),
-				conf_fname, lineno);
+			Error(_("%s: %d: Can't add preference to list. "
+				"This is very bad.\n"),
+			      conf_fname, lineno);
 			free($5); $5 = NULL;
 			return -1;
 		}
@@ -530,9 +518,8 @@ conduit_directive:
 	}
 	| error
 	{
-		fprintf(stderr,
-			_("\tError near \"%s\"\n"),
-			yytext);
+		Error(_("\tError near \"%s\"\n"),
+		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
 	}
@@ -560,9 +547,9 @@ creator_type:	STRING '/' STRING
 			/* Stated creator */
 			if (strlen($1) != 4)
 			{
-				fprintf(stderr,
-					_("%s: %d: Bogus creator \"%s\"\n"),
-					conf_fname, lineno, $1);
+				Error(_("%s: %d: Bogus creator \"%s\"\n"),
+				      conf_fname, lineno,
+				      $1);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
 				ANOTHER_ERROR;
@@ -584,9 +571,9 @@ creator_type:	STRING '/' STRING
 			/* Stated type */
 			if (strlen($3) != 4)
 			{
-				fprintf(stderr,
-					_("%s: %d: Bogus type \"%s\"\n"),
-					conf_fname, lineno, $3);
+				Error(_("%s: %d: Bogus type \"%s\"\n"),
+				      conf_fname, lineno,
+				      $3);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
 				ANOTHER_ERROR;
@@ -654,9 +641,8 @@ header_list:	header_list
 		if ((new_hdr = (struct cond_header *)
 		     malloc(sizeof(struct cond_header))) == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't allocate conduit header\n"),
-				"yyparse");
+			Error(_("%s: Can't allocate conduit header\n"),
+			      "yyparse");
 			return -1;
 		}
 
@@ -697,8 +683,8 @@ header_list:	header_list
 	}
 	| header_list ':' error
 	{
-		fprintf(stderr, _("\tMissing argument name near \": %s\".\n"),
-			yytext);
+		Error(_("\tMissing argument name near \": %s\".\n"),
+		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
 		lex_expect(LEX_HEADER);
@@ -720,9 +706,8 @@ pda_stmt:	PDA
 		 */
 		if ((cur_pda = new_pda_block()) == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't allocate PDA block\n"),
-				"yyparse");
+			Error(_("%s: Can't allocate PDA block\n"),
+			      "yyparse");
 			return -1;
 		}
 
@@ -826,10 +811,9 @@ pda_directive:
 
 		if (cur_pda->snum != NULL)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: serial number already "
-				  "defined.\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: serial number already "
+			       "defined.\n"),
+			     conf_fname, lineno);
 			free(cur_pda->snum);
 		}
 
@@ -853,12 +837,11 @@ pda_directive:
 			 */
 			checksum = snum_checksum(cur_pda->snum,
 						 strlen(cur_pda->snum));
-			fprintf(stderr,
-				_("%s: %d: Warning: serial number \"%s\" "
-				  "has no checksum.\n"
-				  "You may want to rewrite it as \"%s-%c\"\n"),
-				conf_fname, lineno,
-				cur_pda->snum, cur_pda->snum, checksum);
+			Warn(_("%s: %d: Warning: serial number \"%s\" "
+			       "has no checksum.\n"
+			       "You may want to rewrite it as \"%s-%c\"\n"),
+			     conf_fname, lineno,
+			     cur_pda->snum, cur_pda->snum, checksum);
 		} else {
 			/* Checksum specified in the config file. Make sure
 			 * that it's correct. Warn the user if it isn't.
@@ -875,14 +858,13 @@ pda_directive:
 						 strlen(cur_pda->snum));
 			if (toupper(checksum) != toupper((int) *csum_ptr))
 			{
-				fprintf(stderr,
-					_("%s: %d: Warning: incorrect "
-					  "checksum\n"
-					  "for serial number \"%s-%c\". "
-					  "Should be \"%s-%c\"\n"),
-					conf_fname, lineno,
-					cur_pda->snum, *csum_ptr,
-					cur_pda->snum, checksum);
+				Warn(_("%s: %d: Warning: incorrect "
+				       "checksum\n"
+				       "for serial number \"%s-%c\". "
+				       "Should be \"%s-%c\"\n"),
+				     conf_fname, lineno,
+				     cur_pda->snum, *csum_ptr,
+				     cur_pda->snum, checksum);
 			}
 			/* XXX - If the checksum is invalid, then
 			 * presumably the serial number should be
@@ -907,10 +889,9 @@ pda_directive:
 
 		if (cur_pda->directory != NULL)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: directory already "
-				  "defined.\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: directory already "
+			       "defined.\n"),
+			     conf_fname, lineno);
 			free(cur_pda->directory);
 		}
 
@@ -930,10 +911,8 @@ pda_directive:
 
 		if (cur_pda->username != NULL)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: username already "
-				  "defined.\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: username already defined.\n"),
+			     conf_fname, lineno);
 			free(cur_pda->username);
 		}
 
@@ -947,10 +926,8 @@ pda_directive:
 
 		if (cur_pda->userid_given)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: userid already "
-				  "defined.\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: userid already defined.\n"),
+			     conf_fname, lineno);
 		}
 
 		cur_pda->userid_given = True;
@@ -1011,9 +988,8 @@ pda_directive:
 	}
 	| error
 	{
-		fprintf(stderr,
-			_("\tError near \"%s\"\n"),
-			yytext);
+		Error(_("\tError near \"%s\"\n"),
+		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
 	}
@@ -1034,13 +1010,12 @@ opt_colon:	':'
 	{
 		if (!warned_colon)
 		{
-			fprintf(stderr,
-				_("%s: %d: Warning: missing ':'\n"
-				  "\tColons are now required after most "
-				  "directives.\n"
-				  "\t(This warning will only be shown "
-				  "once.)\n"),
-				conf_fname, lineno);
+			Warn(_("%s: %d: Warning: missing ':'\n"
+			       "\tColons are now required after most "
+			       "directives.\n"
+			       "\t(This warning will only be shown "
+			       "once.)\n"),
+			     conf_fname, lineno);
 			warned_colon = True;
 		}
 	}
@@ -1050,7 +1025,7 @@ colon:	':'
 	| error
 	{
 		ANOTHER_ERROR;
-		fprintf(stderr, _("\tMissing ':'\n"));
+		Error(_("\tMissing ':'\n"));
 	}
 
 
@@ -1058,14 +1033,14 @@ open_brace:	'{'
 	| error
 	{
 		ANOTHER_ERROR;
-		fprintf(stderr, _("\tMissing '{'\n"));
+		Error(_("\tMissing '{'\n"));
 	}
 
 semicolon:	';'
 	| error
 	{
 		ANOTHER_ERROR;
-		fprintf(stderr, _("\tMissing ';'\n"));
+		Error(_("\tMissing ';'\n"));
 	}
 
 %%
@@ -1073,10 +1048,23 @@ semicolon:	';'
 /* yyerror
  * Print out an error message about the error that just occurred.
  */
+/* XXX - I18n is broken: yacc/bison's error messages aren't translated. The
+ * simple thing to do would be to get a list of all messages that appear in
+ * yacc/bison's generated grammars, and stick them in an array:
+ *	char *bison_msgs[] = {
+ *		N_("parser stack overflow"),
+ *		...
+ *	};
+ * Then stick this table in a file that won't be compiled, but which can be
+ * fed to 'i18n/xgettext'.
+ *
+ * The general case is impossible to fix, since bison with #define
+ * YYERROR_VERBOSE appearse to print messages with arbitrary contents.
+ */
 int
 yyerror(const char *msg)
 {
-	fprintf(stderr, "%s: %d: %s\n", conf_fname, lineno, _(msg));
+	Error("%s: %d: %s\n", conf_fname, lineno, _(msg));
 	return 1;
 }
 
@@ -1092,8 +1080,8 @@ int parse_config_file(const char *fname,
 
 	if ((infile = fopen(fname, "r")) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-			"parse_config_file", fname);
+		Error(_("%s: Can't open \"%s\"\n"),
+		      "parse_config_file", fname);
 		perror("fopen");
 		return -1;
 	}

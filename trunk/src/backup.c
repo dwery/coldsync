@@ -3,11 +3,11 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.26 2000-12-24 21:24:46 arensb Exp $
+ * $Id: backup.c,v 2.27 2001-01-09 16:19:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,11 +53,10 @@ backup(PConnection *pconn,
 		     O_WRONLY | O_CREAT | O_EXCL | O_BINARY, 0600);
 	if (bakfd < 0)
 	{
-		fprintf(stderr, _("%s: can't create new backup file "
-				  "%s\n"
-				  "It may already exist.\n"),
-			"Backup",
-			bakfname);
+		Error(_("%s: can't create new backup file %s\n"
+			"It may already exist.\n"),
+		      "backup",
+		      bakfname);
 		perror("open");
 		add_to_log(_("Error\n"));
 		return -1;
@@ -68,7 +67,7 @@ backup(PConnection *pconn,
 	err = DlpOpenConduit(pconn);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, _("Can't open backup conduit.\n"));
+		Error(_("Can't open backup conduit.\n"));
 		close(bakfd);
 		add_to_log(_("Error\n"));
 		return -1;
@@ -89,8 +88,8 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, _("Can't open database \"%s\"\n"),
-			dbinfo->name);
+		Error(_("Can't open database \"%s\"\n"),
+		      dbinfo->name);
 		close(bakfd);
 		add_to_log(_("Error\n"));
 		return -1;
@@ -122,10 +121,9 @@ backup(PConnection *pconn,
 	err = pdb_Write(pdb, bakfd);
 	if (err < 0)
 	{
-		fprintf(stderr, _("%s: can't write database \"%s\" "
-				  "to \"%s\"\n"),
-			"Backup",
-			dbinfo->name, bakfname);
+		Error(_("%s: can't write database \"%s\" to \"%s\"\n"),
+		      "backup",
+		      dbinfo->name, bakfname);
 		err = DlpCloseDB(pconn, dbh);
 		free_pdb(pdb);
 		close(bakfd);
@@ -168,9 +166,9 @@ full_backup(PConnection *pconn,
 		err = backup(pconn, cur_db, backupdir);
 		if (err < 0)
 		{
-			fprintf(stderr, "%s: Error backing up \"%s\"\n",
-				"full_backup",
-				cur_db->name);
+			Error(_("%s: Can't back up \"%s\"\n"),
+			      "full_backup",
+			      cur_db->name);
 
 			/* If the problem is that we've lost the connection
 			 * to the Palm, then abort. Otherwise, hope that

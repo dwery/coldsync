@@ -2,11 +2,11 @@
  *
  * Functions for installing new databases on the Palm.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.22 2000-12-24 21:24:52 arensb Exp $
+ * $Id: install.c,v 2.23 2001-01-09 16:19:26 arensb Exp $
  */
 
 #include "config.h"
@@ -65,9 +65,9 @@ install_file(PConnection *pconn,
 	/* Open the file, and load it as a Palm database */
 	if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
 	{
-		fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-			"install_file",
-			fname);
+		Error(_("%s: Can't open \"%s\"\n"),
+		      "install_file",
+		      fname);
 		return -1;
 	}
 
@@ -75,10 +75,9 @@ install_file(PConnection *pconn,
 	pdb = pdb_Read(fd);
 	if (pdb == NULL)
 	{
-		fprintf(stderr,
-			_("%s: Can't load database \"%s\"\n"),
-			"install_file",
-			fname);
+		Error(_("%s: Can't load database \"%s\"\n"),
+		      "install_file",
+		      fname);
 		close(fd);
 		return -1;
 	}
@@ -100,12 +99,12 @@ install_file(PConnection *pconn,
 				"Database \"%s\" already exists\n",
 				pdb->name);
 		SYNC_TRACE(5)
-			{
-				fprintf(stderr, "  Existing modnum:   %ld\n",
-					dbinfo->modnum);
-				fprintf(stderr, "  New file's modnum: %ld\n",
-					pdb->modnum);
-			}
+		{
+			fprintf(stderr, "  Existing modnum:   %ld\n",
+				dbinfo->modnum);
+			fprintf(stderr, "  New file's modnum: %ld\n",
+				pdb->modnum);
+		}
 
 		if (pdb->modnum <= dbinfo->modnum)
 		{
@@ -132,10 +131,9 @@ install_file(PConnection *pconn,
 		err = DlpDeleteDB(pconn, CARD0, pdb->name);
 		if (err < 0)
 		{
-			fprintf(stderr,
-				_("%s: Error deleting \"%s\"\n"),
-				"install_file",
-				pdb->name);
+			Error(_("%s: Error deleting \"%s\"\n"),
+			      "install_file",
+			      pdb->name);
 			add_to_log(_("Error\n"));
 			free_pdb(pdb);
 			return -1;
@@ -145,10 +143,9 @@ install_file(PConnection *pconn,
 	err = pdb_Upload(pconn, pdb);
 	if (err < 0)
 	{
-		fprintf(stderr,
-			_("%s: Error uploading \"%s\"\n"),
-			"install_file",
-			pdb->name);
+		Error(_("%s: Error uploading \"%s\"\n"),
+		      "install_file",
+		      pdb->name);
 		add_to_log(_("Error\n"));
 		free_pdb(pdb);
 		return -1;
@@ -193,9 +190,8 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 	{
 		if ((dir = opendir(installdir)) == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't open install directory\n"),
-				"NextInstallFile");
+			Error(_("%s: Can't open install directory\n"),
+			      "NextInstallFile");
 			perror("opendir");
 			return -1;
 		}
@@ -217,16 +213,16 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 		/* Open the file */
                 if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
                 {
-                        fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-                                "NextInstallFile",
-                                fname);
+                        Warn(_("%s: Can't open \"%s\"\n"),
+			     "NextInstallFile",
+			     fname);
                         continue;
                 }
 		
 		/* Load its header a Palm database */
 		if ((err = pdb_LoadHeader(fd, &pdb)) < 0)
 		{
-			fprintf(stderr, _("Can't load header\n"));
+			Error(_("Can't load header\n"));
 			continue;
 		}
 		
@@ -260,8 +256,8 @@ InstallNewFiles(PConnection *pconn,
 			newdir);
 	if ((dir = opendir(newdir)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't open install directory\n"),
-			"InstallNewFiles");
+		Error(_("%s: Can't open install directory\n"),
+		      "InstallNewFiles");
 		perror("opendir");
 		return -1;
 	}
@@ -310,9 +306,9 @@ InstallNewFiles(PConnection *pconn,
 		/* Open the file, and load it as a Palm database */
 		if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
 		{
-			fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-				"InstallNewFiles",
-				fname);
+			Error(_("%s: Can't open \"%s\"\n"),
+			      "InstallNewFiles",
+			      fname);
 			continue;
 		}
 
@@ -320,10 +316,9 @@ InstallNewFiles(PConnection *pconn,
 		pdb = pdb_Read(fd);
 		if (pdb == NULL)
 		{
-			fprintf(stderr,
-				_("%s: Can't load database \"%s\"\n"),
-				"InstallNewFiles",
-				fname);
+			Error(_("%s: Can't load database \"%s\"\n"),
+			      "InstallNewFiles",
+			      fname);
 			close(fd);
 			continue;
 		}
@@ -378,10 +373,9 @@ InstallNewFiles(PConnection *pconn,
 			err = DlpDeleteDB(pconn, CARD0, pdb->name);
 			if (err < 0)
 			{
-				fprintf(stderr,
-					_("%s: Error deleting \"%s\"\n"),
-					"InstallNewFiles",
-					pdb->name);
+				Error(_("%s: Error deleting \"%s\"\n"),
+				      "InstallNewFiles",
+				      pdb->name);
 				add_to_log(_("Error\n"));
 				free_pdb(pdb);
 				continue;
@@ -391,10 +385,9 @@ InstallNewFiles(PConnection *pconn,
 		err = pdb_Upload(pconn, pdb);
 		if (err < 0)
 		{
-			fprintf(stderr,
-				_("%s: Error uploading \"%s\"\n"),
-				"InstallNewFiles",
-				pdb->name);
+			Error(_("%s: Error uploading \"%s\"\n"),
+			      "InstallNewFiles",
+			      pdb->name);
 			add_to_log(_("Error\n"));
 			free_pdb(pdb);
 			continue;
@@ -468,8 +461,8 @@ InstallNewFiles(PConnection *pconn,
 				/* File already exists. This isn't a problem */
 				add_to_log(_("OK\n"));
 			} else {
-				fprintf(stderr, _("Error opening \"%s\"\n"),
-					bakfname);
+				Error(_("Error opening \"%s\"\n"),
+				      bakfname);
 				perror("open");
 				add_to_log(_("Problem\n"));
 				err = -1;	/* XXX */
@@ -505,8 +498,8 @@ InstallNewFiles(PConnection *pconn,
 			err = unlink(fname);
 			if (err < 0)
 			{
-				fprintf(stderr, _("Error deleting \"%s\"\n"),
-					fname);
+				Warn(_("Error deleting \"%s\"\n"),
+				     fname);
 				perror("unlink");
 			}
 		}
