@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.8 2003-06-26 21:01:07 azummo Exp $
+ * $Id: spalm.h,v 2.9 2003-10-05 17:49:47 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -124,6 +124,8 @@ extern const int palm_username_len(struct Palm *palm);
 extern const udword palm_userid(struct Palm *palm);
 extern const udword palm_viewerid(struct Palm *palm);
 extern const udword palm_lastsyncPC(struct Palm *palm);
+extern const int palm_dlp_ver_major(struct Palm *palm);
+extern const int palm_dlp_ver_minor(struct Palm *palm);
 /* XXX - lastgoodsync */
 /* XXX - lastsync */
 /* XXX - passwd */
