@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.2 1999-07-12 09:37:29 arensb Exp $
+ * $Id: coldsync.h,v 1.3 1999-08-01 08:03:33 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -89,6 +89,7 @@ struct debug_flags {
 	int dlp;		/* Data Link Protocol */
 	int dlpc;		/* DLP commands */
 	int sync;		/* General synchoronization */
+	int pdb;		/* Database functions */
 	int misc;		/* Anything that doesn't readily fall into
 				 * the above categories.
 				 */
@@ -103,6 +104,7 @@ extern struct debug_flags debug;
 #define DLP_TRACE(level)	TRACE(dlp,(level))
 #define DLPC_TRACE(level)	TRACE(dlpc,(level))
 #define SYNC_TRACE(level)	TRACE(sync,(level))
+#define PDB_TRACE(level)	TRACE(pdb,(level))
 #define MISC_TRACE(level)	TRACE(misc,(level))
 
 extern int need_slow_sync;
@@ -131,6 +133,8 @@ extern int HandleDB(struct PConnection *pconn, struct Palm *palm,
 		  struct dlp_dbinfo *dbinfo,
 		  char *bakfname);*/
 extern int Backup(struct PConnection *pconn,
+		  struct Palm *palm);
+extern int Restore(struct PConnection *pconn,
 		  struct Palm *palm);
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
 
