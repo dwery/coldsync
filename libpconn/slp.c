@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.14 2001-03-28 04:55:22 arensb Exp $
+ * $Id: slp.c,v 1.15 2001-03-30 06:29:35 arensb Exp $
  */
 
 #include "config.h"
@@ -164,6 +164,10 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in preamble\n");
+			close(pconn->fd);	/* Prevent others from
+						 * writing to this broken
+						 * file descriptor.
+						 */
 			pconn->fd = -1;
 			palm_errno = PALMERR_EOF;
 			return 0;
@@ -464,6 +468,11 @@ slp_write(PConnection *pconn,
 		{
 			perror("slp_write: write header");
 			palm_errno = PALMERR_SYSTEM;
+			close(pconn->fd);
+			pconn->fd = -1;		/* Prevent others from
+						 * writing to this broken
+						 * file descriptor.
+						 */
 			return -1;
 		}
 		sent += err;
