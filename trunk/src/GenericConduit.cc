@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.34 2000-06-18 08:00:34 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.35 2000-07-31 08:59:37 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1257,8 +1257,9 @@ GenericConduit::FastSync()
 			 * its corresponding version on the Palm is also
 			 * clean.
 			 */
-			SYNC_TRACE(5)
-				fprintf(stderr, "Record 0x%08lx is clean\n",
+			SYNC_TRACE(6)
+				fprintf(stderr,
+					"Local record 0x%08lx is clean\n",
 					localrec->id);
 		}
 	}
