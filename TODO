@@ -1,3 +1,6 @@
+- Consider adding a "transient" keyword to listen{} blocks, to
+  indicate that failed open()s mean that the Visor hasn't been plugged
+  in yet, so just sleep and retry until it's okay.
 - Robustness: if "get serial number" fails, make sure it's not because
   of an underlying problem (e.g., lost connection with Palm).
 	Probably need to go through each function and make sure it
