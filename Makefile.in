@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.4 1999-08-01 07:53:22 arensb Exp $
+# $Id: Makefile.in,v 1.5 1999-08-23 08:38:25 arensb Exp $
 
 # XXX - Should have two distributions: 'make dist' makes 'dist-src'
 # and 'dist-doc'. 'dist-src' contains all of the source necessary to
@@ -23,7 +23,7 @@ GZIP =		@GZIP@
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
 RECURSIVE_TARGETS = \
-		all depend clean distclean spotless distdir
+		all depend clean distclean spotless distdir install
 
 DISTFILES =	AUTHORS \
 		ChangeLog \
