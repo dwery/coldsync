@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.17 2000-02-07 19:08:42 arensb Exp $
+ * $Id: pdb.c,v 1.18 2000-02-07 19:14:02 arensb Exp $
  */
 
 #include "config.h"
@@ -110,7 +110,8 @@ void
 free_pdb(struct pdb *db)
 {
 	PDB_TRACE(7)
-		fprintf(stderr, "Inside free_pdb(0x%08lx)\n", db);
+		fprintf(stderr, "Inside free_pdb(0x%08lx)\n",
+			(unsigned long) db);
 
 	if (db == NULL)
 		/* Trivial case */
@@ -124,7 +125,7 @@ free_pdb(struct pdb *db)
 		struct pdb_resource *next;
 
 		PDB_TRACE(8)
-			fprintf(stderr, "Freeing resource list\n"):
+			fprintf(stderr, "Freeing resource list\n");
 
 		/* Walk the linked list, freeing as we go along */
 		for (rsrc = db->rec_index.rsrc;
@@ -147,7 +148,7 @@ free_pdb(struct pdb *db)
 		struct pdb_record *next;
 
 		PDB_TRACE(8)
-			fprintf(stderr, "Freeing record list\n"):
+			fprintf(stderr, "Freeing record list\n");
 
 		/* Walk the linked list, freeing as we go along */
 		for (rec = db->rec_index.rec;
