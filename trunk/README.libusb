@@ -1,0 +1,37 @@
+	Some notes on running ColdSync with libusb 
+
+$Id: README.libusb,v 1.1 2004-10-21 14:41:07 azummo Exp $
+
+
+	libusb is an USB abstraction library that's used
+	to write OS independent USB drivers/apps.
+
+	The correct way to use it with coldsync is with a
+	proper listen libusb block, just like this one:
+
+	listen libusb "myusb" {
+	}
+
+	Then just launch coldsync as usual:
+
+		coldsync --listen myusb
+
+	Under Linux, you sometimes have to disable the HotPlug
+	support in order to avoid conflicts.
+
+	The libusb support has been tested with the following
+	handhelds:
+
+	Aceeca MEZ-1000		4.1.2
+
+	Garmin iQue 3600	5.2.1r3
+
+	Handspring Visor	3.1H2
+	Handspring Treo 90	4.1H3
+	Handspring Treo 270	3.5.2H5.9
+
+	Palm m505		4.1
+	Palm Zire		4.1
+	Palm Zire 31		5.2.8
+	Palm Zire 72		5.2.8
+	
