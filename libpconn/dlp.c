@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.18 2002-11-03 14:12:11 azummo Exp $
+ * $Id: dlp.c,v 1.19 2003-01-21 02:01:43 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -262,6 +262,13 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	err = (*pconn->dlp.read)(pconn, &inbuf, &inlen);
 	if (err < 0)
 		return err;	/* Error */
+
+	if (inlen == 0)
+	{
+		fprintf(stderr,
+			_("##### Expected a DLP response (out of memory?)\n"));
+		return -1;
+	}	
 
 	DLP_TRACE(7)
 		debug_dump(stderr, "DLP<<<", inbuf, inlen);
