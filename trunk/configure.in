@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.33 1999-11-12 09:49:37 arensb Exp $
+dnl # $Id: configure.in,v 1.34 1999-11-20 04:57:57 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -12,8 +12,6 @@ dnl #	tar cf ${TARBALL} ${DISTDIR}
 dnl #	${COMPRESS} ${TARBALL}
 dnl # So also check for 'gzip'; if it doesn't exist, fall back on
 dnl # 'compress'
-
-dnl # XXX - Check for gettext library
 
 AC_INIT(src/coldsync.c)
 
@@ -38,6 +36,7 @@ AC_SUBST(EDITION)
 
 # This is almost certainly a Good Thing
 LDFLAGS="-L${prefix}/lib"
+CPPFLAGS="-I${prefix}/include"
 
 ## Checks for programs.
 
@@ -87,6 +86,16 @@ then
 fi
 AC_SUBST(LEXLIB)
 AC_SUBST(LEXARGS)		# Not defined by 'configure'. Just a hook.
+
+AC_CHECK_LIB(intl, gettext)	# Check for GNU gettext package
+if test "$ac_cv_lib_intl_gettext" = yes; then
+	# Found the GNU gettext package. See if the user specified a
+	# $LOCALEDIR. If not, use the default.
+	if test -z "${LOCALEDIR}"; then
+		LOCALEDIR="`eval echo \"${datadir}/locale\"`"
+	fi
+	AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
+fi
 
 # I'm not using AC_PROG_YACC here because that doesn't actually make
 # sure that there is a working yacc.
