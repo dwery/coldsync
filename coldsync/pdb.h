@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.8 1999-05-31 21:07:41 arensb Exp $
+ * $Id: pdb.h,v 1.9 1999-06-27 06:00:31 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -61,19 +61,22 @@
  * then both PDB_REC_DIRTY and PDB_REC_DELETED will be set.
  *
  * PDB_REC_DELETED is set on a record that has been deleted by the user
- * since the last sync.
+ * since the last sync. Unfortunately, it looks as if not all applications
+ * are polite enough to set this flag, so you have to go with
+ * PDB_REC_ARCHIVE and PDB_REC_EXPUNGED.
  *
  * If the user chose the "Save archive copy on PC" option when deleting a
- * record, then the PDB_REC_ARCHIVE bit will be set on the record (as will
- * PDB_REC_DELETED).
+ * record, then the PDB_REC_ARCHIVE bit will be set on the record (with any
+ * luck, so will PDB_REC_DELETED).
  *
  * If the user did not choose the "Save archive copy on PC" option when
  * deleting a record, the PDB_REC_EXPUNGED bit will be set on the record
- * (as will PDB_REC_DELETED). Apparently, what happens is this: when the
- * user deletes a record, a copy is left around so that HotSync will know
- * to delete this record. However, if the user chose not to keep a copy,
- * then, in order to conserve memory, the Palm will delete the record data,
- * although it will keep a copy of the record header for HotSync.
+ * (as will PDB_REC_DELETED, perhaps). Apparently, what happens is this:
+ * when the user deletes a record, a copy is left around so that HotSync
+ * will know to delete this record. However, if the user chose not to keep
+ * a copy, then, in order to conserve memory, the Palm will delete the
+ * record data, although it will keep a copy of the record header for
+ * HotSync.
  */
 #define PDB_REC_EXPUNGED	0x80	/* The contents of this record have
 					 * been deleted, leaving only the
@@ -192,12 +195,6 @@ struct pdb
 
 	/* Record/resource list. Each of these is actually a linked list,
 	 * to make it easy to insert and delete records.
-	 */
-	/* XXX - A lot of code is effectively duplicated for records and
-	 * resources. Would it be better to shift the 'union' down one
-	 * level (i.e., make 'rec_index' a linked list of unions, rather
-	 * than a union of linked lists), and coalesce a lot of this
-	 * duplicated code?
 	 */
 	union {
 		struct pdb_record *rec;
