@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.51 2000-02-03 02:49:07 arensb Exp $
+dnl # $Id: configure.in,v 1.52 2000-02-03 04:12:02 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -133,6 +133,48 @@ fi
 # AIX sucks so bad, it requires its own special check.
 AC_AIX
 
+## Test C++ compiler characteristics
+dnl # Save the current language
+AC_LANG_SAVE
+dnl # Make C++ the current language for testing programs
+AC_LANG_CPLUSPLUS
+
+# Make sure C++ compiler understands 'bool' (yes, I've gotten mail
+# from someone who complained that his compiler didn't understand it).
+AC_MSG_CHECKING([whether the C++ compiler understands 'bool'])
+AC_TRY_COMPILE([],
+	[bool foo; foo = true;],
+	AC_MSG_RESULT(yes),
+	AC_MSG_WARN([
+	Hrung! C++ compiler no understand 'bool' keyword.
+	You make ftp magic[,] install new version[,] make spirits happy.
+
+	(Translation: you seem to be using an ancient C++ compiler that
+	doesn't understand the 'bool' keyword. You need to upgrade to a
+	newer compiler.)])
+	EXIT_STATUS=1)
+dnl #'
+
+# Make sure C++ compiler understands new-style casts
+# ("static_cast<int>(foo)" rather than "(int) foo").
+
+AC_MSG_CHECKING([whether the C++ compiler understands new-style casts])
+AC_TRY_COMPILE([],
+	[int i; int *p = &i; i = static_cast<int>(p);],
+	AC_MSG_RESULT(yes),
+	AC_MSG_WARN([
+	Alack! This venerable compiler doth not understand the sweet
+	'static_cast'[,] of which the poet Meyers doth sing. An you heed
+	my advice[,] gentle[,] hie to the land of GNU[,] to fetch the compiler
+	thereof[,] and much merriment shall ensue.
+
+	(Translation: you need to install a C++ compiler that understands
+	new-style casts such as \"static_cast<int>(foo)\")])
+	EXIT_STATUS=1)
+
+dnl # Restore the old language
+AC_LANG_RESTORE
+
 # XXX - Fails due to -Wall
 dnl # AC_C_INLINE
 
@@ -206,7 +248,7 @@ if test "$ac_cv_lib_efence_malloc" = yes; then
 	AC_DEFINE_UNQUOTED(WITH_EFENCE)
 else
 	AC_MSG_WARN([Can't find ElectricFence library!])
-	#' # For Emacs
+dnl	#' # For Emacs
 fi])
 
 ## Checks for header files.
@@ -288,10 +330,19 @@ AC_DEFINE_UNQUOTED(SYSCONFDIR,"`eval echo \"${sysconfdir}\"`")
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT([Make.rules
 	doc/version.texi])
+if test x"$EXIT_STATUS" != x0; then
+	AC_MSG_WARN([
+	There were problems during configuration. This package may not
+	build properly. Please correct the errors reported above and
+	try again.])
+fi
+dnl #'
+
 # XXX - I'm not sure this is working quite right everywhere just yet
 #  AC_MSG_RESULT(dnl
 #  [
 #  	Don't forget to run \"make depend\"
 #  ])
 dnl #'	# For Emacs
+
 exit "$EXIT_STATUS"
