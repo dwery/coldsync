@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.64 2000-12-08 07:24:32 arensb Exp $
+ * $Id: coldsync.c,v 1.65 2000-12-10 00:28:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -376,6 +376,9 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Freeing pref_cache\n");
 		FreePrefList(pref_cache);
 	}
+
+	if (synclog != NULL)
+		free(synclog);
 
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
