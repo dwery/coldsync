@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.16 1999-11-28 15:41:02 arensb Exp $
+# $Id: Makefile.in,v 1.17 1999-12-01 06:15:13 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -72,6 +72,9 @@ DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
 		lexer.l parser.y \
 		Makefile.in
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES =
 
 CLEAN =		coldsync *.o *.ln *.bak *~ core *.core \
 		lex.yy.o lex.yy.c y.tab.o y.tab.c y.tab.h y.output
@@ -92,7 +95,7 @@ INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
 CXX_INCLUDEDIRS = \
 		-I/usr/include/c++ -I/usr/include/g++ \
 		-I${includedir}
-CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
 CFLAGS =	@CFLAGS@ ${CPPFLAGS}
 CXXFLAGS =	${CFLAGS}
 LEX =		@LEX@
@@ -132,11 +135,18 @@ install:	coldsync
 depend:
 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
-distdir:	${DISTFILES}
+distdir-core:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
 		mkdir ${DISTDIR}/${subdir}; \
 	fi
 	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	if test -s "${EXTRA_DISTFILES}"; then \
+		cp -p ${EXTRA_DISTFILES} ${DISTDIR}; \
+	fi
 
 clean::
 	-rm -f ${CLEAN}

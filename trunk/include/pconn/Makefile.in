@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.5 1999-11-12 09:48:09 arensb Exp $
+# $Id: Makefile.in,v 1.6 1999-12-01 06:14:49 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -40,6 +40,9 @@ HEADERS =	PConnection.h \
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
 		Makefile.in
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES =
 
 CLEAN =		*.o *.bak *~ core *.core
 DISTCLEAN =	Makefile .depend
@@ -52,7 +55,7 @@ CC =		@CC@
 CXX =		@CXX@
 DEFINES =	@DEFS@
 INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
-CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
 CFLAGS =	@CFLAGS@ ${CPPFLAGS}
 CXXFLAGS =	${CFLAGS}
 LIBS =		@LIBS@
@@ -80,11 +83,18 @@ install::	${HEADERS}
 
 depend::
 
-distdir::	${DISTFILES}
+distdir-core::	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
 		mkdir ${DISTDIR}/${subdir}; \
 	fi
 	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	if test -s "${EXTRA_DISTFILES}"; then \
+		cp -p ${EXTRA_DISTFILES} ${DISTDIR}; \
+	fi
 
 clean::
 	-rm -f ${CLEAN}
