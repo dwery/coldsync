@@ -5,13 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.13 2000-09-21 14:35:55 arensb Exp $
+# $Id: ColdSync.pm,v 1.14 2000-09-27 15:07:27 arensb Exp $
 package ColdSync;
 use strict;
 
-use vars qw( $VERSION );
+use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
+	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.13 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.14 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -294,14 +295,14 @@ sub ReadHeaders
 	# as much as possible, but less if not enough is provided, so that
 	# the conduit won't hang here, waiting for input. Not tested yet,
 	# however...
-	my $creator;		# Preference creator
-	my $pref_id;		# Preference ID
-	my $pref_len;		# Preference length
-
-	while (($creator, $pref_id, $pref_len) = @{shift @preflist})
+	while (@preflist)
 	{
-		my $data;
+		my $creator;		# Preference creator
+		my $pref_id;		# Preference ID
+		my $pref_len;		# Preference length
+		my $data;		# Preference value
 
+		($creator, $pref_id, $pref_len) = @{shift @preflist};
 		read STDIN, $data, $pref_len;
 		$PREFERENCES{$creator}{$pref_id} = $data;
 	}
