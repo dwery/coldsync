@@ -37,7 +37,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.8 2002-04-27 13:12:11 azummo Exp $
+ * $Id: netsync.h,v 1.9 2002-11-03 14:12:30 azummo Exp $
  */
 
 #ifndef _netsync_h_
@@ -77,7 +77,7 @@ struct netsync_header
 
 #define NETSYNC_HDR_LEN	6	/* Length of NetSync header */
 
-#define NETSYNC_WAIT_TIMEOUT	2	/* How long (in seconds) to wait
+#define NETSYNC_WAIT_TIMEOUT	20	/* How long (in seconds) to wait
 					 * for incoming data before timing
 					 * out.
 					 */
