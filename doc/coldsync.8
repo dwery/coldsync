@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.54 2002-07-04 21:23:11 azummo Exp $
+.\" $Id: coldsync.8,v 1.55 2002-11-13 12:10:20 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -811,7 +811,7 @@ option {
 	force_install:	no;
 	hostid: 0x1234abcd;
 
-	CONDUIT_PATH: "$(CONDUITDIR):$(HOME)/.palm/conduits";
+	CS_CONDUIT_PATH: "$(CS_CONDUITDIR):$(HOME)/.palm/conduits";
 	key:  "this is the value";
 }
 .Ed
@@ -858,30 +858,30 @@ option before you use it, coldsync will try to use your environment
 variables to set it. Options may only be used inside quoted strings.
 .Pp
 Two useful options are
-.Dv $(CONDUITDIR)
+.Dv $(CS_CONDUITDIR)
 and
-.Dv $(CONDUIT_PATH) .
-.Dv $(CONDUITDIR)
+.Dv $(CS_CONDUIT_PATH) .
+.Dv $(CS_CONDUITDIR)
 is the system-wide conduit directory. It defaults to the directory to
 which the standard conduits were installed when ColdSync was
 installed.
 .Pp
-.Dv $(CONDUIT_PATH)
+.Dv $(CS_CONDUIT_PATH)
 is a colon-separated path in which
 .Nm coldsync
 will look for conduits. If any element is empty, it will look in
 .Dq the usual places ,
 which currently defaults to
-.Dv $(CONDUITDIR) .
+.Dv $(CS_CONDUITDIR) .
 Thus, if you set
-.Dv $(CONDUIT_PATH)
+.Dv $(CS_CONDUIT_PATH)
 to
 .Li /foo::/bar ,
 .Nm coldsync
 will look for conduits in
 .Pa /foo ,
 then in
-.Dv $(CONDUITDIR) ,
+.Dv $(CS_CONDUITDIR) ,
 and finally in
 .Pa /bar .
 If you set it it to
@@ -907,7 +907,7 @@ value does not contain whitespace or punctuation that might confuse
 the parser.
 .Pp
 If a string is enclosed in double quotes, it may contain standard escape
-characters, or option substitution, such as $(CONDUITDIR). Options are set
+characters, or option substitution, such as $(CS_CONDUITDIR). Options are set
 in the 
 .Li options
 section mentioned above.

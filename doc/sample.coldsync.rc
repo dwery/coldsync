@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.9 2002-11-09 21:55:00 azummo Exp $
+# $Id: sample.coldsync.rc,v 1.10 2002-11-13 12:10:20 azummo Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -11,12 +11,12 @@
 ########################################
 # You may specify global options and variables here if you wish.
 # Useful options are:
-# CONDUITDIR: a colon separated list of directories, in which conduits may
+# CS_CONDUITDIR: a colon separated list of directories, in which conduits may
 #             be found.
-# LOGFILE:  the log file where information is printed. (If none is specified,
+# CS_LOGFILE:  the log file where information is printed. (If none is specified,
 #           logs go to stdandard error.)
 options {
-	CONDUITDIR: "$(CONDUITDIR):$(HOME)/.palm/conduits";
+	CS_CONDUITDIR: "$(CS_CONDUITDIR):$(HOME)/.palm/conduits";
 }
 ########################################
 ### Listen block
