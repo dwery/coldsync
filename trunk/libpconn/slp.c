@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.2 1999-11-04 10:45:52 arensb Exp $
+ * $Id: slp.c,v 1.3 1999-11-27 05:46:42 arensb Exp $
  */
 
 #include "config.h"
@@ -16,10 +16,15 @@
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
 #include <string.h>	/* For memset() */
-#include <pconn/palm_errno.h>
-#include <pconn/slp.h>
-#include <pconn/util.h>
-#include <pconn/PConnection.h>
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
+#include "pconn/palm_errno.h"
+#include "pconn/slp.h"
+#include "pconn/util.h"
+#include "pconn/PConnection.h"
 
 int slp_trace = 0;		/* Debugging level for SLP stuff */
 
@@ -228,7 +233,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 
 	if (checksum != header.checksum)
 	{
-		fprintf(stderr, "slp_read: bad checksum: expected 0x%02x, got 0x%02x\n",
+		fprintf(stderr, _("%s: bad checksum: expected 0x%02x, got 0x%02x\n"),
+			"slp_read",
 			checksum, header.checksum);
 		goto redo;		/* Drop the packet on the floor */
 	}
@@ -351,7 +357,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	if (my_crc != 0)
 	{
 		rptr = pconn->slp.crc_inbuf;
-		fprintf(stderr, "SLP: bad CRC: expected 0x%04x, got 0x%04x\n",
+		fprintf(stderr, _("SLP: bad CRC: expected 0x%04x, got 0x%04x\n"),
 			my_crc, peek_uword(rptr));
 		goto redo;
 	}
