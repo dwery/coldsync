@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.8 2000-10-20 20:22:50 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.9 2000-12-10 21:38:06 arensb Exp $
  */
 
 #include "config.h"
@@ -175,9 +175,139 @@ usb_write(struct PConnection *p, unsigned char *buf, int len)
 }
 
 static int
+usb_accept(struct PConnection *p)
+{
+	/* XXX - Perhaps most of this stuff ought to be moved into a new
+	 * function cmp_accept() or some such, which both
+	 * PConnection_serial and PConnection_usb can call.
+	 */
+	int err;
+	int i;
+	struct cmp_packet cmpp;
+	udword bps = SYNC_RATE;		/* Connection speed, in bps */
+	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
+					 * (a necessary distinction because
+					 * some OSes (hint to Sun!) have
+					 * B19200 != 19200.
+					 */
+
+	do {
+		IO_TRACE(5)
+			fprintf(stderr, "===== Waiting for wakeup packet\n");
+
+		err = cmp_read(pconn, &cmpp);
+		if (err < 0)
+		{
+			if (palm_errno == PALMERR_TIMEOUT)
+				continue;
+			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
+				palm_errno,
+				_(palm_errlist[palm_errno]));
+			exit(1); /* XXX */
+		}
+	} while (cmpp.type != CMP_TYPE_WAKEUP);
+
+	IO_TRACE(5)
+		fprintf(stderr, "===== Got a wakeup packet\n");
+
+	/* Find the speed at which to connect.
+	 * If the listen block in .coldsyncrc specifies a speed, use that.
+	 * If it doesn't (or the speed is set to 0), then go with what the
+	 * Palm suggests.
+	 */
+	if (pconn->speed == 0)
+		pconn->speed = cmpp.rate;
+
+	IO_TRACE(3)
+		fprintf(stderr, "pconn->speed == %ld\n",
+			pconn->speed);
+
+	/* Go through the speed table. Make sure the requested speed
+	 * appears in the table: this is to make sure that there is a valid
+	 * B* speed to pass to cfsetspeed().
+	 */
+	for (i = 0; i < num_speeds; i++)
+	{
+		IO_TRACE(7)
+			fprintf(stderr, "Comparing %ld ==? %ld\n",
+				speeds[i].bps, pconn->speed);
+
+		if (speeds[i].bps == pconn->speed)
+		{
+				/* Found it */
+			IO_TRACE(7)
+				fprintf(stderr, "Found it\n");
+			bps = speeds[i].bps;
+			tcspeed = speeds[i].tcspeed;
+			break;
+		}
+	}
+
+	if (i >= num_speeds)
+	{
+		/* The requested speed wasn't found */
+		fprintf(stderr, _("Warning: can't set the speed you "
+				  "requested (%ld bps).\nUsing "
+				  "default (%ld bps)\n"),
+			pconn->speed,
+			SYNC_RATE);
+		pconn->speed = 0L;
+	}
+
+	if (pconn->speed == 0)
+	{
+		/* Either the .coldsyncrc didn't specify a speed, or else
+		 * the one that was specified was bogus.
+		 */
+		IO_TRACE(2)
+			fprintf(stderr, "Using default speed (%ld bps)\n",
+				SYNC_RATE);
+		bps = SYNC_RATE;
+		tcspeed = BSYNC_RATE;
+	}
+	IO_TRACE(2)
+		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
+			(long) bps, (long) tcspeed);
+
+	/* Compose a reply */
+	/* XXX - This ought to be in a separate function in cmp.c */
+	cmpp.type = CMP_TYPE_INIT;
+	cmpp.ver_major = CMP_VER_MAJOR;
+	cmpp.ver_minor = CMP_VER_MINOR;
+	if (cmpp.rate != bps)
+	{
+		cmpp.rate = bps;
+		cmpp.flags = CMP_IFLAG_CHANGERATE;
+	}
+
+	IO_TRACE(5)
+		fprintf(stderr, "===== Sending INIT packet\n");
+	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
+
+	IO_TRACE(5)
+		fprintf(stderr, "===== Finished sending INIT packet\n");
+
+	/* Change the speed */
+	/* XXX - This probably goes in Pconn_accept() or something */
+
+	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
+	{
+		fprintf(stderr, _("Error trying to set speed"));
+		return -1;
+	}
+
+	return 0;
+}
+
+int
 usb_close(struct PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
+
+	/* Clean up the protocol stack elements */
+	dlp_tini(p);
+	padp_tini(p);
+	slp_tini(p);
 
 	free((void *)u);
 	return close(p->fd);
@@ -226,7 +356,7 @@ usb_drain(struct PConnection *p)
 }
 
 int
-pconn_usb_open(struct PConnection *p, char *device, int prompt)
+pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;
@@ -237,16 +367,45 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 	unsigned char usbresponse[50];
 	UsbConnectionInfoType ci;
 
-	p->io_read = &usb_read;
-	p->io_write = &usb_write;
-	p->io_close = &usb_close;
-	p->io_select = &usb_select;
-	p->io_setspeed = &usb_setspeed;
-	p->io_drain = &usb_drain;
+	/* Initialize the various protocols that the serial connection will
+	 * use.
+	 */
+	/* Initialize the SLP part of the PConnection */
+	if (slp_init(pconn) < 0)
+	{
+		free(pconn);
+		return -1;
+	}
 
-	u = p->io_private = malloc(sizeof(struct usb_data));
+	/* Initialize the PADP part of the PConnection */
+	if (padp_init(pconn) < 0)
+	{
+		padp_tini(pconn);
+		slp_tini(pconn);
+		return -1;
+	}
 
-	bzero(p->io_private, sizeof(struct usb_data));
+	/* Initialize the DLP part of the PConnection */
+	if (dlp_init(pconn) < 0)
+	{
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
+		return -1;
+	}
+
+	/* Set the methods used by the USB connection */
+	pconn->io_read = &usb_read;
+	pconn->io_write = &usb_write;
+	pconn->io_accept = &usb_accept;
+	pconn->io_close = &usb_close;
+	pconn->io_select = &usb_select;
+	pconn->io_setspeed = &usb_setspeed;
+	pconn->io_drain = &usb_drain;
+
+	u = pconn->io_private = malloc(sizeof(struct usb_data));
+
+	bzero(pconn->io_private, sizeof(struct usb_data));
 
 	/*
 	 *  Prompt for the Hot Sync button now, as the USB bus
@@ -483,9 +642,9 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 
 	sprintf(hotsync_ep_name, "%s.%d", device, hotsync_endpoint);
 
-	p->fd = open(hotsync_ep_name, O_RDWR, 0);
+	pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
 
-	if (p->fd < 0) {
+	if (pconn->fd < 0) {
 		fprintf(stderr, _("%s: Can't open %s\n"),
 			"pconn_usb_open", hotsync_ep_name);
 		perror("open");
@@ -495,19 +654,19 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 		return -1;	  
 	}
 
-	if ((i = fcntl(p->fd, F_GETFL, 0))!=-1) {
+	if ((i = fcntl(pconn->fd, F_GETFL, 0))!=-1) {
 		i &= ~O_NONBLOCK;
-		fcntl(p->fd, F_SETFL, i);
+		fcntl(pconn->fd, F_SETFL, i);
 	}
 
 	i = 1;
-	if (ioctl(p->fd, USB_SET_SHORT_XFER, &i) < 0)
+	if (ioctl(pconn->fd, USB_SET_SHORT_XFER, &i) < 0)
 		perror("ioctl(USB_SET_SHORT_XFER)");
   
 	free(hotsync_ep_name);
 
 	/* Make it so */
-	return p->fd;
+	return pconn->fd;
 }
 
 #endif	/* WITH_USB */
