@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.15 2002-04-27 18:36:31 azummo Exp $
+ * $Id: cmp.c,v 1.16 2003-02-24 23:58:06 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -139,9 +139,8 @@ cmp_accept(PConnection *pconn, udword bps)
 			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT)
 				continue;
 	
-			fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
-				(int) PConn_get_palmerrno(pconn),
-				_(palm_strerror(PConn_get_palmerrno(pconn))));
+			palm_perror("cmp_read", PConn_get_palmerrno(pconn));
+
 			return ~0;
 		}
 	} while (cmpp.type != (ubyte) CMP_TYPE_WAKEUP);
