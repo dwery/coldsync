@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.21 1999-08-25 04:11:51 arensb Exp $
+dnl # $Id: configure.in,v 1.22 1999-08-25 05:25:20 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -83,15 +83,17 @@ AC_SUBST(GZIP)
 
 dnl ## Checks for libraries.
 
+AC_CHECK_LIB(nsl,gethostbyname)
+
 # ElectricFence (optional)
 AC_ARG_WITH(efence,dnl
 [  --with-efence           Use Electric Fence memory checking library
                           (only desirable for developers).],dnl
 [AC_CHECK_LIB(efence,malloc)
 if test "$ac_cv_lib_efence_malloc" = yes; then
-echo "Setting WITH_EFENCE"
 	AC_DEFINE_UNQUOTED(WITH_EFENCE)
-	LIBS="$LIBS -lefence"
+else
+	AC_MSG_WARN([Can't find ElectricFence library!])
 fi])
 
 dnl ## Checks for header files.
