@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.127 2002-03-30 16:38:44 azummo Exp $
+ * $Id: coldsync.c,v 1.128 2002-03-30 17:21:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -704,17 +704,496 @@ forward(pda_block *pda, struct Palm *palm )
 	return 0;
 }
 
+static int
+conduits_install( struct Palm *palm )
+{
+	struct dlp_dbinfo dbinfo;
+	int err;
+	
+	/* Run any install conduits on the dbs in install directory
+	 * Notice that install conduits are *not* run on files
+	 * named for install on the command line.
+	 */
+	Verbose(1, _("Running Install conduits"));
 
+	while (NextInstallFile(&dbinfo)>=0) {
+		err = run_Install_conduits(&dbinfo);
+		if (err < 0) {
+			Error(_("Error %d running install "
+				"conduits."),
+			      err);
+			return -1;
+		}
+	}
+
+	err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
+	if (err < 0)
+	{
+		Error(_("Can't install new files."));
+		return -1;
+	}
+
+	return 0;
+}
 
 static int
-run_mode_Standalone(int argc, char *argv[])
+conduits_dump( struct Palm *palm )
+{
+	int err;
+	const struct dlp_dbinfo *cur_db;
+					/* Used when iterating over all
+					 * databases */
+
+
+	Verbose(1, _("Running Dump conduits"));
+
+	palm_resetdb(palm);
+
+	while ((cur_db = palm_nextdb(palm)) != NULL)
+	{
+		err = run_Dump_conduits(cur_db);
+		if (err < 0)
+		{
+			Error(_("Error %d running post-dump conduits."),
+			      err);
+			break;
+		}
+	}
+
+	return 0;	
+}
+
+static int
+conduits_fetch( struct Palm *palm )
+{
+	int err;
+	const struct dlp_dbinfo *cur_db;
+					/* Used when iterating over all
+					 * databases */
+
+	Verbose(1, _("Running Fetch conduits"));
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
+	{
+		err = run_Fetch_conduits(cur_db);
+		if (err < 0)
+		{
+			Error(_("Error %d running pre-fetch conduits."),
+			      err);
+			return -1;
+		}
+	}
+	
+	return 0;
+}
+
+static int
+do_sync( pda_block *pda, struct Palm *palm )
 {
 	int err;
 	struct pref_item *pref_cursor;
 	const struct dlp_dbinfo *cur_db;
 					/* Used when iterating over all
 					 * databases */
-	struct dlp_dbinfo dbinfo;	/* Used when installing files */
+
+
+	udword p_lastsyncPC;		/* Hostid of last host Palm synced
+					 * with */
+
+	/* XXX - If the PDA block has forwarding turned on, then see which
+	 * host to forward to (NULL == whatever the Palm wants). Check to
+	 * see if we're that host. If so, continue normally. Otherwise,
+	 * open a NetSync connection to that host and allow it to sync.
+	 * Then return from run_mode_Standalone().
+	 *
+	 * How to figure out whether this is the host to sync with:
+	 *	Get all of this host's addresses (get_hostaddrs()).
+	 *	gethostbyname(remotehost) to get all of the remote host's
+	 *	addresses.
+	 *	Compare each local address with each remote address. If
+	 *	there's a match, then localhost == remotehost.
+	 * The way to get the list of the local host's addresses is
+	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
+	 */
+	if ((pda != NULL) && pda->forward)
+	{
+		if( forward(pda, palm) == 0 )	
+		{
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+			return 0;
+		}
+		else
+		{
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+	}
+
+	/* Figure out what the base sync directory is */
+	if ((pda != NULL) && (pda->directory != NULL))
+	{
+		/* Use the directory specified in the config file */
+		strncpy(palmdir, pda->directory, MAXPATHLEN);
+	} else {
+		/* Either there is no applicable PDA, or else it doesn't
+		 * specify a directory. Use the default (~/.palm).
+		 */
+		strncpy(palmdir,
+			mkfname(userinfo.homedir, "/.palm", NULL),
+			MAXPATHLEN);
+	}
+	MISC_TRACE(3)
+		fprintf(stderr, "Base directory is [%s]\n", palmdir);
+
+	/* Make sure the sync directories exist */
+	err = make_sync_dirs(palmdir);
+	if (err < 0)
+	{
+		/* An error occurred while creating the sync directories */
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* XXX - In daemon mode, presumably load_palm_config() (or
+	 * something) should tell us which user to run as. Therefore fork()
+	 * an instance, have it setuid() to the appropriate user, and load
+	 * that user's configuration.
+	 */
+
+	/* Initialize (per-user) conduits */
+	MISC_TRACE(1)
+		fprintf(stderr, "Initializing conduits\n");
+
+	/* Initialize preference cache */
+	MISC_TRACE(1)
+		fprintf(stderr,"Initializing preference cache\n");
+	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
+	{
+		Error(_("CacheFromConduits() returned %d."), err);
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Find out whether we need to do a slow sync or not */
+	/* XXX - Actually, it's not as simple as this (see comment below) */
+	p_lastsyncPC = palm_lastsyncPC(palm);
+	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
+	{
+		Error(_("Can't get last sync PC from Palm"));
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	if (hostid == p_lastsyncPC)
+		/* We synced with this same machine last time, so we can do
+		 * a fast sync this time.
+		 */
+		need_slow_sync = 0;
+	else
+		/* The Palm synced with some other machine, the last time
+		 * it synced. We need to do a slow sync.
+		 */
+		need_slow_sync = 1;
+
+	/* Print verbose message here so it only gets printed once */
+	if (global_opts.force_slow)
+		Verbose(1, _("Doing a slow sync."));
+	else if (global_opts.force_fast)
+		Verbose(1, _("Doing a fast sync."));
+	else if (need_slow_sync)
+		Verbose(1, _("Doing a slow sync."));
+	else
+		Verbose(1, _("Doing a fast sync."));
+
+	/* XXX - The desktop needs to keep track of other hosts that it has
+	 * synced with, preferably on a per-database basis.
+	 * Scenario: I sync with the machine at home, whose hostID is 1.
+	 * While I'm driving in to work, the machine at home talks to the
+	 * machine at work, whose hostID is 2. I come in to work and sync
+	 * with the machine there. The machine there should realize that
+	 * even though the Palm thinks it has last synced with machine 1,
+	 * everything is up to date on machine 2, so it's okay to do a fast
+	 * sync.
+	 * This is actually a good candidate for optimization, since it
+	 * reduces the amount of time the user has to wait.
+	 */
+
+	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
+					 * of the databases on the Palm, so
+					 * make sure we get them all.
+					 */
+			/* XXX - Off hand, it looks as if fetching the list
+			 * of databases takes a long time (several
+			 * seconds). One way to "fix" this would be to get
+			 * each database in turn, then run its conduits.
+			 * The problems with this are that a) it doesn't
+			 * make things faster in the long run, and b) it
+			 * screws up the sequence of events documented in
+			 * the man page.
+			 * If it were possible to set the display on the
+			 * Palm to not just say "Identifying", it might
+			 * make things _appear_ significantly faster.
+			 */
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			palm_Free(palm);
+			return -1;
+
+		    default:
+			Error(_("Can't fetch list of databases."));
+			break;
+		}
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	MISC_TRACE(1)
+		fprintf(stderr, "Doing a sync.\n");
+
+
+	/* Install new databases before sync, if the config says so */
+	if (global_opts.install_first)
+	{
+		err = conduits_install( palm);
+		if (err < 0)
+		{
+			switch( cs_errno )
+			{
+				case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					palm_Free(palm);
+					return -1;
+		
+				default:
+					palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+					return -1;
+			}
+		}
+	}
+
+	/* XXX - It should be possible to specify a list of directories to
+	 * look in: that way, the user can put new databases in
+	 * ~/.palm/install, whereas in a larger site, the sysadmin can
+	 * install databases in /usr/local/stuff; they'll be uploaded from
+	 * there, but not deleted.
+	 * E.g.:
+	 *
+	 * err = InstallNewFiles(palm_pconn(palm), &palm, "/tmp/palm-install", False);
+	 */
+
+	/* For each database, walk config.fetch, looking for applicable
+	 * conduits for each database.
+	 */
+	/* XXX - This should be redone: run_Fetch_conduits should be run
+	 * _before_ opening the device. That way, they can be run even if
+	 * we don't intend to sync with an actual Palm. Presumably, the
+	 * Right Thing is to run the appropriate Fetch conduit for each
+	 * file in ~/.palm/backup.
+	 * OTOH, if you do it this way, then things won't work right the
+	 * first time you sync: say you have a .coldsyncrc that has
+	 * pre-fetch and post-dump conduits to sync with the 'kab'
+	 * addressbook; you're syncing for the first time, so there's no
+	 * ~/.palm/backup/AddressDB.pdb. In this case, the pre-fetch
+	 * conduit doesn't get run, and the post-dump conduit overwrites
+	 * the existing 'kab' database.
+	 * Perhaps do things this way: run the pre-fetch conduits for the
+	 * databases in ~/.palm/backup. Then, during the main sync, if a
+	 * new database needs to be created on the workstation, run its
+	 * pre-fetch conduit. (Or maybe this would be a good time to run
+	 * the install conduit.)
+	 */
+	err = conduits_fetch( palm );
+	if (err < 0)
+	{
+		switch( cs_errno )
+		{
+			case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				palm_Free(palm);
+				return -1;
+		
+			default:
+				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+				return -1;
+		}
+	}
+
+
+	/* Synchronize the databases */
+	Verbose(1, _("Running Sync conduits"));
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
+	{
+		/* Run the Sync conduits for this database. This includes
+		 * built-in conduits.
+		 */
+		Verbose(2, "Syncing %s", cur_db->name);
+		err = run_Sync_conduits(cur_db, palm_pconn(palm));
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_CANCEL:
+				Warn(_("Sync cancelled."));
+				va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
+					/* Doesn't really matter if it
+					 * fails, since we're terminating
+					 * anyway.
+					 */
+				break;
+
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				palm_Free(palm);
+				return -1;
+
+			    default:
+				Warn(_("Conduit failed for unknown "
+				       "reason."));
+				/* Continue, and hope for the best */
+				continue;
+			}
+
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		}
+	}
+
+
+	/* See how the above loop terminated */
+	switch (cs_errno)
+	{
+		case CSE_CANCEL:
+			Error(_("Sync cancelled by Palm."));
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+
+		case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			palm_Free(palm);
+			return -1;
+		default:
+			/* No error, nor not an important one */
+		break;
+	}
+
+	/* XXX - If it's configured to install new databases last, install
+	 * new databases now.
+	 */
+
+	/* Get list of local files: if there are any that aren't on the
+	 * Palm, it probably means that they existed once, but were deleted
+	 * on the Palm. Assuming that the user knew what he was doing,
+	 * these databases should be deleted. However, just in case, they
+	 * should be saved to an "attic" directory.
+	 */
+	err = CheckLocalFiles(palm);
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			palm_Free(palm);
+			return -1;
+		    default:
+			/* Hope for the best */
+			break;
+		}
+	}
+
+	/* XXX - Write updated NetSync info */
+	/* Write updated user info */
+	if ((err = UpdateUserInfo(palm_pconn(palm), palm, 1)) < 0)
+	{
+		Error(_("Can't write user info."));
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+		return -1;
+	}
+
+	/* There might still be pref items that are not yet cached.
+	 * The dump conduits are going to try to download them if not cached,
+	 * but with a closed connection, they are gonna fail. Although ugly,
+	 * we will manually fill the cache here.
+	 */
+	for (pref_cursor = pref_cache;
+	     pref_cursor != NULL;
+	     pref_cursor = pref_cursor->next)
+	{
+		MISC_TRACE(5)
+			fprintf(stderr, "Fetching preference 0x%08lx/%d\n",
+				pref_cursor->description.creator,
+				pref_cursor->description.id);
+
+		if (pref_cursor->contents_info == NULL &&
+		    palm_pconn(palm) == pref_cursor->pconn)
+		{
+			err = FetchPrefItem(palm_pconn(palm), pref_cursor);
+			if (err < 0)
+			{
+				switch (cs_errno)
+				{
+				    case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					palm_Free(palm);
+					return -1;
+				    default:
+					Warn(_("Can't fetch preference "
+					       "0x%08lx/%d."),
+					     pref_cursor->description.creator,
+					     pref_cursor->description.id);
+					/* Continue and hope for the best */
+					break;
+				}
+			}
+		}
+	}
+
+	/* Install new databases after sync */
+	if (!global_opts.install_first)
+	{
+		err = conduits_install( palm );
+		if (err < 0)
+		{
+			switch( cs_errno )
+			{
+				case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					palm_Free(palm);
+					return -1;
+		
+				default:
+					palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+					return -1;
+			}
+		}
+	}
+
+	/* Finally, close the connection */
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+
+	/* Run Dump conduits */
+	err = conduits_dump( palm);
+
+	/* XXX - Is this check still needed ? */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection to Palm."));
+		palm_Free(palm);
+		return -1;
+	}
+
+	palm_Free(palm);
+
+	return 0;
+}
+
+static int
+run_mode_Standalone(int argc, char *argv[])
+{
 	struct Palm *palm;
 	pda_block *pda;			/* The PDA we're syncing with. */
 	const char *p_username;		/* The username on the Palm */
@@ -723,8 +1202,6 @@ run_mode_Standalone(int argc, char *argv[])
 	udword p_userid;		/* The userid on the Palm */
 	udword want_userid;		/* The userid we expect to see on
 					 * the Palm. */
-	udword p_lastsyncPC;		/* Hostid of last host Palm synced
-					 * with */
 	time_t now;
 
 	/* Connect to the Palm */
@@ -898,431 +1375,7 @@ run_mode_Standalone(int argc, char *argv[])
 		return -1;
 	}
 
-	/* XXX - The rest of this function is the same as for daemon mode
-	 * after setuid(), so it should be abstracted into a separate
-	 * function.
-	 */
-
-	/* XXX - If the PDA block has forwarding turned on, then see which
-	 * host to forward to (NULL == whatever the Palm wants). Check to
-	 * see if we're that host. If so, continue normally. Otherwise,
-	 * open a NetSync connection to that host and allow it to sync.
-	 * Then return from run_mode_Standalone().
-	 *
-	 * How to figure out whether this is the host to sync with:
-	 *	Get all of this host's addresses (get_hostaddrs()).
-	 *	gethostbyname(remotehost) to get all of the remote host's
-	 *	addresses.
-	 *	Compare each local address with each remote address. If
-	 *	there's a match, then localhost == remotehost.
-	 * The way to get the list of the local host's addresses is
-	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
-	 */
-	if ((pda != NULL) && pda->forward)
-	{
-		if( forward(pda, palm) == 0 )	
-		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
-			return 0;
-		}
-		else
-		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* Figure out what the base sync directory is */
-	if ((pda != NULL) && (pda->directory != NULL))
-	{
-		/* Use the directory specified in the config file */
-		strncpy(palmdir, pda->directory, MAXPATHLEN);
-	} else {
-		/* Either there is no applicable PDA, or else it doesn't
-		 * specify a directory. Use the default (~/.palm).
-		 */
-		strncpy(palmdir,
-			mkfname(userinfo.homedir, "/.palm", NULL),
-			MAXPATHLEN);
-	}
-	MISC_TRACE(3)
-		fprintf(stderr, "Base directory is [%s]\n", palmdir);
-
-	/* Make sure the sync directories exist */
-	err = make_sync_dirs(palmdir);
-	if (err < 0)
-	{
-		/* An error occurred while creating the sync directories */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	/* Initialize (per-user) conduits */
-	MISC_TRACE(1)
-		fprintf(stderr, "Initializing conduits\n");
-
-	/* Initialize preference cache */
-	MISC_TRACE(1)
-		fprintf(stderr,"Initializing preference cache\n");
-	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
-	{
-		Error(_("CacheFromConduits() returned %d."), err);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	/* Find out whether we need to do a slow sync or not */
-	/* XXX - Actually, it's not as simple as this (see comment below) */
-	p_lastsyncPC = palm_lastsyncPC(palm);
-	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
-	{
-		Error(_("Can't get last sync PC from Palm"));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	if (hostid == p_lastsyncPC)
-		/* We synced with this same machine last time, so we can do
-		 * a fast sync this time.
-		 */
-		need_slow_sync = 0;
-	else
-		/* The Palm synced with some other machine, the last time
-		 * it synced. We need to do a slow sync.
-		 */
-		need_slow_sync = 1;
-
-	/* Print verbose message here so it only gets printed once */
-	if (global_opts.force_slow)
-		Verbose(1, _("Doing a slow sync."));
-	else if (global_opts.force_fast)
-		Verbose(1, _("Doing a fast sync."));
-	else if (need_slow_sync)
-		Verbose(1, _("Doing a slow sync."));
-	else
-		Verbose(1, _("Doing a fast sync."));
-
-	/* XXX - The desktop needs to keep track of other hosts that it has
-	 * synced with, preferably on a per-database basis.
-	 * Scenario: I sync with the machine at home, whose hostID is 1.
-	 * While I'm driving in to work, the machine at home talks to the
-	 * machine at work, whose hostID is 2. I come in to work and sync
-	 * with the machine there. The machine there should realize that
-	 * even though the Palm thinks it has last synced with machine 1,
-	 * everything is up to date on machine 2, so it's okay to do a fast
-	 * sync.
-	 * This is actually a good candidate for optimization, since it
-	 * reduces the amount of time the user has to wait.
-	 */
-
-	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
-					 * of the databases on the Palm, so
-					 * make sure we get them all.
-					 */
-			/* XXX - Off hand, it looks as if fetching the list
-			 * of databases takes a long time (several
-			 * seconds). One way to "fix" this would be to get
-			 * each database in turn, then run its conduits.
-			 * The problems with this are that a) it doesn't
-			 * make things faster in the long run, and b) it
-			 * screws up the sequence of events documented in
-			 * the man page.
-			 * If it were possible to set the display on the
-			 * Palm to not just say "Identifying", it might
-			 * make things _appear_ significantly faster.
-			 */
-	if (err < 0)
-	{
-		switch (cs_errno)
-		{
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Free(palm);
-			return -1;
-
-		    default:
-			Error(_("Can't fetch list of databases."));
-			break;
-		}
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	MISC_TRACE(1)
-		fprintf(stderr, "Doing a sync.\n");
-
-
-	/* Install new databases before sync, if the config says so */
-	if (global_opts.install_first)
-	{
-		/* Run any install conduits on the dbs in install directory
-		 * Notice that install conduits are *not* run on files
-		 * named for install on the command line.
-		 */
-		Verbose(1, _("Running Install conduits"));
-		while (NextInstallFile(&dbinfo)>=0) {
-			err = run_Install_conduits(&dbinfo);
-			if (err < 0) {
-				Error(_("Error %d running install "
-					"conduits."),
-				      err);
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-			}
-		}
-
-		err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
-		if (err < 0)
-		{
-			Error(_("Can't install new files."));
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* XXX - It should be possible to specify a list of directories to
-	 * look in: that way, the user can put new databases in
-	 * ~/.palm/install, whereas in a larger site, the sysadmin can
-	 * install databases in /usr/local/stuff; they'll be uploaded from
-	 * there, but not deleted.
-	 * E.g.:
-	 *
-	 * err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
-	 * 		      False);
-	 */
-
-	/* For each database, walk config.fetch, looking for applicable
-	 * conduits for each database.
-	 */
-	/* XXX - This should be redone: run_Fetch_conduits should be run
-	 * _before_ opening the device. That way, they can be run even if
-	 * we don't intend to sync with an actual Palm. Presumably, the
-	 * Right Thing is to run the appropriate Fetch conduit for each
-	 * file in ~/.palm/backup.
-	 * OTOH, if you do it this way, then things won't work right the
-	 * first time you sync: say you have a .coldsyncrc that has
-	 * pre-fetch and post-dump conduits to sync with the 'kab'
-	 * addressbook; you're syncing for the first time, so there's no
-	 * ~/.palm/backup/AddressDB.pdb. In this case, the pre-fetch
-	 * conduit doesn't get run, and the post-dump conduit overwrites
-	 * the existing 'kab' database.
-	 * Perhaps do things this way: run the pre-fetch conduits for the
-	 * databases in ~/.palm/backup. Then, during the main sync, if a
-	 * new database needs to be created on the workstation, run its
-	 * pre-fetch conduit. (Or maybe this would be a good time to run
-	 * the install conduit.)
-	 */
-	Verbose(1, _("Running Fetch conduits"));
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		err = run_Fetch_conduits(cur_db);
-		if (err < 0)
-		{
-			Error(_("Error %d running pre-fetch conduits."),
-			      err);
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
-	{
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	}
-
-	/* Synchronize the databases */
-	Verbose(1, _("Running Sync conduits"));
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		/* Run the Sync conduits for this database. This includes
-		 * built-in conduits.
-		 */
-		Verbose(2, "Syncing %s", cur_db->name);
-		err = run_Sync_conduits(cur_db, palm_pconn(palm));
-		if (err < 0)
-		{
-			switch (cs_errno)
-			{
-			    case CSE_CANCEL:
-				Warn(_("Sync cancelled."));
-				DlpAddSyncLogEntry(palm_pconn(palm), _("*Cancelled*\n"));
-					/* Doesn't really matter if it
-					 * fails, since we're terminating
-					 * anyway.
-					 */
-				break;
-
-			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
-				palm_Free(palm);
-				return -1;
-
-			    default:
-				Warn(_("Conduit failed for unknown "
-				       "reason."));
-				/* Continue, and hope for the best */
-				continue;
-			}
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
-
-			return -1;
-		}
-	}
-
-	/* See how the above loop terminated */
-	switch (cs_errno)
-	{
-	    case CSE_CANCEL:
-		Error(_("Sync cancelled by Palm."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	    case CSE_NOCONN:
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	    default:
-		/* No error, nor not an important one */
-		break;
-	}
-
-	/* XXX - If it's configured to install new databases last, install
-	 * new databases now.
-	 */
-
-	/* Get list of local files: if there are any that aren't on the
-	 * Palm, it probably means that they existed once, but were deleted
-	 * on the Palm. Assuming that the user knew what he was doing,
-	 * these databases should be deleted. However, just in case, they
-	 * should be saved to an "attic" directory.
-	 */
-	err = CheckLocalFiles(palm);
-	if (err < 0)
-	{
-		switch (cs_errno)
-		{
-		    case CSE_NOCONN:
-			palm_Free(palm);
-			return -1;
-		    default:
-			/* Hope for the best */
-			break;
-		}
-	}
-
-	/* XXX - Write updated NetSync info */
-	/* Write updated user info */
-	if ((err = UpdateUserInfo(palm_pconn(palm), palm, 1)) < 0)
-	{
-		Error(_("Can't write user info."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
-
-		return -1;
-	}
-
-	/* There might still be pref items that are not yet cached.
-	 * The dump conduits are going to try to download them if not cached,
-	 * but with a closed connection, they are gonna fail. Although ugly,
-	 * we will manually fill the cache here.
-	 */
-	for (pref_cursor = pref_cache;
-	     pref_cursor != NULL;
-	     pref_cursor = pref_cursor->next)
-	{
-		MISC_TRACE(5)
-			fprintf(stderr, "Fetching preference 0x%08lx/%d\n",
-				pref_cursor->description.creator,
-				pref_cursor->description.id);
-
-		if (pref_cursor->contents_info == NULL &&
-		    palm_pconn(palm) == pref_cursor->pconn)
-		{
-			err = FetchPrefItem(palm_pconn(palm), pref_cursor);
-			if (err < 0)
-			{
-				switch (cs_errno)
-				{
-				    case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
-					return -1;
-				    default:
-					Warn(_("Can't fetch preference "
-					       "0x%08lx/%d."),
-					     pref_cursor->description.creator,
-					     pref_cursor->description.id);
-					/* Continue and hope for the best */
-					break;
-				}
-			}
-		}
-	}
-
-	/* Install new databases after sync */
-	if (!global_opts.install_first)
-	{
-		/* Run any install conduits on the dbs in install directory
-		 * Notice that install conduits are *not* run on files
-		 * named for install on the command line.
-		 */
-		Verbose(1, _("Running Install conduits"));
-		while (NextInstallFile(&dbinfo)>=0) {
-			err = run_Install_conduits(&dbinfo);
-			if (err < 0) {
-				Error(_("Error %d running install "
-					"conduits."),
-				      err);
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-			}
-		}
-
-		err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
-		if (err < 0)
-		{
-			Error(_("Can't install new files."));
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-	}
-
-	/* Finally, close the connection */
-	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
-
-	/* Run Dump conduits */
-	Verbose(1, _("Running Dump conduits"));
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		err = run_Dump_conduits(cur_db);
-		if (err < 0)
-		{
-			Error(_("Error %d running post-dump conduits."),
-			      err);
-			break;
-		}
-	}
-
-	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
-	{
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	}
-
-	palm_Free(palm);
-
-	return 0;
+	return do_sync( pda, palm );
 }
 
 static int
@@ -1970,11 +2023,6 @@ static int
 run_mode_Daemon(int argc, char *argv[])
 {
 	int err;
-	struct pref_item *pref_cursor;
-	const struct dlp_dbinfo *cur_db;
-					/* Used when iterating over all
-					 * databases */
-	struct dlp_dbinfo dbinfo;	/* Used when installing files */
 	struct Palm *palm;
 	pda_block *pda;			/* The PDA we're syncing with. */
 	char *devname;			/* Name of device to open */
@@ -1986,8 +2034,7 @@ run_mode_Daemon(int argc, char *argv[])
 	struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
 	char *conf_fname = NULL;	/* Config file name from /etc/palms */
-	udword p_lastsyncPC;		/* Hostid of last host Palm synced
-					 * with */
+
 	SYNC_TRACE(3)
 		fprintf(stderr, "Inside run_mode_Daemon()\n");
 
@@ -2144,407 +2191,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Look up the PDA in the user's configuration */
 	pda = find_pda_block(palm, True);
 
-	/* XXX - If the PDA block has forwarding turned on, then see which
-	 * host to forward to (NULL == whatever the Palm wants). Check to
-	 * see if we're that host. If so, continue normally. Otherwise,
-	 * open a NetSync connection to that host and allow it to sync.
-	 * Then return from run_mode_Standalone().
-	 *
-	 * How to figure out whether this is the host to sync with:
-	 *	Get all of this host's addresses (get_hostaddrs()).
-	 *	gethostbyname(remotehost) to get all of the remote host's
-	 *	addresses.
-	 *	Compare each local address with each remote address. If
-	 *	there's a match, then localhost == remotehost.
-	 * The way to get the list of the local host's addresses is
-	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
-	 */
-
-	if ((pda != NULL) && pda->forward)
-	{
-		if( forward(pda, palm) == 0 )	
-		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
-			return 0;
-		}
-		else
-		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* Figure out what the base sync directory is */
-	if ((pda != NULL) && (pda->directory != NULL))
-	{
-		/* Use the directory specified in the config file */
-		strncpy(palmdir, pda->directory, MAXPATHLEN);
-	} else {
-		/* Either there is no applicable PDA, or else it doesn't
-		 * specify a directory. Use the default (~/.palm).
-		 */
-		strncpy(palmdir,
-			mkfname(userinfo.homedir, "/.palm", NULL),
-			MAXPATHLEN);
-	}
-	MISC_TRACE(3)
-		fprintf(stderr, "Base directory is [%s]\n", palmdir);
-
-	/* Make sure the sync directories exist */
-	err = make_sync_dirs(palmdir);
-	if (err < 0)
-	{
-		/* An error occurred while creating the sync directories */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	/* XXX - In daemon mode, presumably load_palm_config() (or
-	 * something) should tell us which user to run as. Therefore fork()
-	 * an instance, have it setuid() to the appropriate user, and load
-	 * that user's configuration.
-	 */
-
-	/* Initialize (per-user) conduits */
-	MISC_TRACE(1)
-		fprintf(stderr, "Initializing conduits\n");
-
-	/* Initialize preference cache */
-	MISC_TRACE(1)
-		fprintf(stderr,"Initializing preference cache\n");
-	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
-	{
-		Error(_("CacheFromConduits() returned %d."), err);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	/* Find out whether we need to do a slow sync or not */
-	/* XXX - Actually, it's not as simple as this (see comment below) */
-	p_lastsyncPC = palm_lastsyncPC(palm);
-	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
-	{
-		Error(_("Can't get last sync PC from Palm"));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	if (hostid == p_lastsyncPC)
-		/* We synced with this same machine last time, so we can do
-		 * a fast sync this time.
-		 */
-		need_slow_sync = 0;
-	else
-		/* The Palm synced with some other machine, the last time
-		 * it synced. We need to do a slow sync.
-		 */
-		need_slow_sync = 1;
-
-	/* XXX - The desktop needs to keep track of other hosts that it has
-	 * synced with, preferably on a per-database basis.
-	 * Scenario: I sync with the machine at home, whose hostID is 1.
-	 * While I'm driving in to work, the machine at home talks to the
-	 * machine at work, whose hostID is 2. I come in to work and sync
-	 * with the machine there. The machine there should realize that
-	 * even though the Palm thinks it has last synced with machine 1,
-	 * everything is up to date on machine 2, so it's okay to do a fast
-	 * sync.
-	 * This is actually a good candidate for optimization, since it
-	 * reduces the amount of time the user has to wait.
-	 */
-
-	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
-					 * of the databases on the Palm, so
-					 * make sure we get them all.
-					 */
-			/* XXX - Off hand, it looks as if fetching the list
-			 * of databases takes a long time (several
-			 * seconds). One way to "fix" this would be to get
-			 * each database in turn, then run its conduits.
-			 * The problems with this are that a) it doesn't
-			 * make things faster in the long run, and b) it
-			 * screws up the sequence of events documented in
-			 * the man page.
-			 * If it were possible to set the display on the
-			 * Palm to not just say "Identifying", it might
-			 * make things _appear_ significantly faster.
-			 */
-	if (err < 0)
-	{
-		switch (cs_errno)
-		{
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Free(palm);
-			return -1;
-		    default:
-			Error(_("Can't fetch list of databases."));
-			break;
-		}
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
-
-	MISC_TRACE(1)
-		fprintf(stderr, "Doing a sync.\n");
-
-
-	/* Install new databases before sync, if the config says so */
-	if (global_opts.install_first)
-	{
-		/* Run any install conduits on the dbs in install directory
-		 * Notice that install conduits are *not* run on files
-		 * named for install on the command line.
-		 */
-		Verbose(1, _("Running Install conduits"));
-		while (NextInstallFile(&dbinfo)>=0) {
-			err = run_Install_conduits(&dbinfo);
-			if (err < 0) {
-				Error(_("Error %d running install "
-					"conduits."),
-				      err);
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-			}
-		}
-
-		err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
-		if (err < 0)
-		{
-			Error(_("Can't install new files."));
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* XXX - It should be possible to specify a list of directories to
-	 * look in: that way, the user can put new databases in
-	 * ~/.palm/install, whereas in a larger site, the sysadmin can
-	 * install databases in /usr/local/stuff; they'll be uploaded from
-	 * there, but not deleted.
-	 * E.g.:
-	 * err = InstallNewFiles(palm_pconn(palm), &palm, "/tmp/palm-install",
-	 *		      False);
-	 */
-
-	/* For each database, walk config.fetch, looking for applicable
-	 * conduits for each database.
-	 */
-	/* XXX - This should be redone: run_Fetch_conduits should be run
-	 * _before_ opening the device. That way, they can be run even if
-	 * we don't intend to sync with an actual Palm. Presumably, the
-	 * Right Thing is to run the appropriate Fetch conduit for each
-	 * file in ~/.palm/backup.
-	 * OTOH, if you do it this way, then things won't work right the
-	 * first time you sync: say you have a .coldsyncrc that has
-	 * pre-fetch and post-dump conduits to sync with the 'kab'
-	 * addressbook; you're syncing for the first time, so there's no
-	 * ~/.palm/backup/AddressDB.pdb. In this case, the pre-fetch
-	 * conduit doesn't get run, and the post-dump conduit overwrites
-	 * the existing 'kab' database.
-	 * Perhaps do things this way: run the pre-fetch conduits for the
-	 * databases in ~/.palm/backup. Then, during the main sync, if a
-	 * new database needs to be created on the workstation, run its
-	 * pre-fetch conduit. (Or maybe this would be a good time to run
-	 * the install conduit.)
-	 */
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		err = run_Fetch_conduits(cur_db);
-		if (err < 0)
-		{
-			Error(_("Error %d running pre-fetch conduits."),
-			      err);
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
-	{
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	}
-
-	/* Synchronize the databases */
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		/* Run the Sync conduits for this database. This includes
-		 * built-in conduits.
-		 */
-		err = run_Sync_conduits(cur_db, palm_pconn(palm));
-		if (err < 0)
-		{
-			switch (cs_errno)
-			{
-			    case CSE_CANCEL:
-				Warn(_("Sync cancelled."));
-				va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
-					/* Doesn't really matter if it
-					 * fails, since we're terminating
-					 * anyway.
-					 */
-				break;
-
-			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
-				palm_Free(palm);
-				return -1;
-
-			    default:
-				Warn(_("Conduit failed for unknown "
-				       "reason."));
-				/* Continue, and hope for the best */
-				continue;
-			}
-
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
-
-			return -1;
-		}
-	}
-
-	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
-	{
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	}
-
-	/* XXX - If it's configured to install new databases last, install
-	 * new databases now.
-	 */
-
-	/* Get list of local files: if there are any that aren't on the
-	 * Palm, it probably means that they existed once, but were deleted
-	 * on the Palm. Assuming that the user knew what he was doing,
-	 * these databases should be deleted. However, just in case, they
-	 * should be saved to an "attic" directory.
-	 */
-	err = CheckLocalFiles(palm);
-	if (err < 0)
-	{
-		switch (cs_errno)
-		{
-		    case CSE_NOCONN:
-			palm_Free(palm);
-			return -1;
-		    default:
-			/* Hope for the best */
-			break;
-		}
-	}
-
-	/* XXX - Write updated NetSync info */
-	/* Write updated user info */
-	if ((err = UpdateUserInfo(palm_pconn(palm), palm, 1)) < 0)
-	{
-		Error(_("Can't write user info."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
-		return -1;
-	}
-
-	/* There might still be pref items that are not yet cached.
-	 * The dump conduits are going to try to download them if not cached,
-	 * but with a closed connection, they are gonna fail. Although ugly,
-	 * we will manually fill the cache here.
-	 */
-	for (pref_cursor = pref_cache;
-	     pref_cursor != NULL;
-	     pref_cursor = pref_cursor->next)
-	{
-		MISC_TRACE(5)
-			fprintf(stderr, "Fetching preference 0x%08lx/%d\n",
-				pref_cursor->description.creator,
-				pref_cursor->description.id);
-
-		if (pref_cursor->contents_info == NULL &&
-		    palm_pconn(palm) == pref_cursor->pconn)
-		{
-			err = FetchPrefItem(palm_pconn(palm), pref_cursor);
-			if (err < 0)
-			{
-				switch (cs_errno)
-				{
-				    case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
-					return -1;
-				    default:
-					Warn(_("Can't fetch preference "
-					       "0x%08lx/%d."),
-					     pref_cursor->description.creator,
-					     pref_cursor->description.id);
-					/* Continue and hope for the best */
-					break;
-				}
-			}
-		}
-	}
-
-	/* Install new databases after sync */
-	if (!global_opts.install_first)
-	{
-		/* Run any install conduits on the dbs in install directory
-		 * Notice that install conduits are *not* run on files
-		 * named for install on the command line.
-		 */
-		Verbose(1, _("Running Install conduits"));
-		while (NextInstallFile(&dbinfo)>=0) {
-			err = run_Install_conduits(&dbinfo);
-			if (err < 0) {
-				Error(_("Error %d running install "
-					"conduits."),
-				      err);
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-			}
-		}
-
-		err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
-		if (err < 0)
-		{
-			Error(_("Can't install new files."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-	}
-
-	/* Finally, close the connection */
-	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
-
-	/* Run Dump conduits */
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
-	{
-		err = run_Dump_conduits(cur_db);
-		if (err < 0)
-		{
-			Error(_("Error %d running post-dump conduits."),
-			      err);
-			break;
-		}
-	}
-
-	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
-	{
-		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
-		return -1;
-	}
-
-	palm_Free(palm);
-
-	return 0;
+	return do_sync( pda, palm );
 }
 
 /* Connect
