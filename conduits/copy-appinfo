@@ -4,12 +4,10 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: copy-appinfo,v 3.1 2001-06-04 01:40:39 arensb Exp $
+# $Id: copy-appinfo,v 3.2 2001-06-04 02:28:04 arensb Exp $
 
 # This conduit simply copies the AppInfo block from the database on the
 # Palm to the desktop.
-
-# XXX - Write POD
 
 use strict;
 use ColdSync;
@@ -42,6 +40,49 @@ $err = &dlp_CloseDB($dbh);
 # XXX - Error-checking
 
 EndConduit;
+
+__END__
+
+=head1 NAME
+
+copy-appinfo - ColdSync conduit to copy the AppInfo block (categories)
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: addr/DATA;
+		type: memo/DATA;
+		type: todo/DATA;
+		...
+		path: "<...>/todo-text";
+	}
+
+=head1 DESCRIPTION
+
+The C<copy-appinfo> conduit copies the AppInfo block (which contains
+information about categories and certain other application-specific data)
+from the Palm to the desktop.
+
+Since ColdSync's generic conduit does not touch the AppInfo block at all,
+you need to use C<copy-appinfo> or something like it to keep category data
+in sync.
+
+Note that this conduit only implements Palm-overwrites-desktop. If you
+modify any categories in the desktop copy of a database, those changes will
+be lost.
+
+=head1 BUGS
+
+None known.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
 
 # This is for Emacs's benefit:
 # Local Variables:	***
