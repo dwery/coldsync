@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.4 2000-11-19 00:12:16 arensb Exp $
+ * $Id: palm.c,v 2.5 2000-11-20 10:18:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -270,7 +270,7 @@ fetch_userinfo(struct Palm *palm)
 	}
 
 	/* Note that we've fetched this information */
-	palm->have_netsyncinfo_ = True;
+	palm->have_userinfo_ = True;
 
 	MISC_TRACE(3)
 	{
@@ -563,6 +563,63 @@ palm_rom_version(struct Palm *palm)
 	}
 
 	return palm->sysinfo_.rom_version;
+}
+
+/* palm_username
+ * Returns the username from the Palm.
+ */
+const char *palm_username(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch UserInfo if we haven't done so yet */
+	if (!palm->have_userinfo_)
+	{
+		if ((err = fetch_userinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return NULL;
+	}
+
+	return palm->userinfo_.username;
+}
+
+/* palm_userid
+ * Returns the user ID from the Palm.
+ * Arguably, the fact that this returns 0 upon error is a Bad Thing, but 0
+ * means "this is a fresh Palm", so I have no sympathy for any dumbass who
+ * sets it to 0 (e.g., by running ColdSync as root, or something).
+ */
+const udword palm_userid(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch UserInfo if we haven't done so yet */
+	if (!palm->have_userinfo_)
+	{
+		if ((err = fetch_userinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return 0;
+	}
+
+	return palm->userinfo_.userid;
+}
+
+/* palm_viewerid
+ * Returns the viewer ID (whateve that is) from the Palm.
+ */
+const udword palm_viewerid(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch UserInfo if we haven't done so yet */
+	if (!palm->have_userinfo_)
+	{
+		if ((err = fetch_userinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return 0;
+	}
+
+	return palm->userinfo_.viewerid;
 }
 
 /* palm_lastsyncPC
