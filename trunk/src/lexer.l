@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.24 2000-12-15 06:13:33 arensb Exp $
+ * $Id: lexer.l,v 2.25 2000-12-15 07:18:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -364,6 +364,17 @@ ID		[-a-zA-Z_0-9]
 				"(lex) Found none of the above: [%s]\n",
 				yytext);
 		return yytext[0];
+	}
+
+<<EOF>>	{
+	/* XXX - This will break if and when .coldsyncrc can include other
+	 * files. See flex(1), but bear in mind that its file-inclusion
+	 * example leaks memory at the end of the outermost file (it calls
+	 * yyterminate(), but not yy_delete_bufffer(YY_CURRENT_BUFFER);
+	 */
+	/* Free current buffer to avoid memory leak */
+	yy_delete_buffer(YY_CURRENT_BUFFER);
+	yyterminate();
 	}
 
 %%
