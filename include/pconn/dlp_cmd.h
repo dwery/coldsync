@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.25 2002-10-16 18:59:32 azummo Exp $
+ * $Id: dlp_cmd.h,v 1.26 2003-06-29 19:37:13 azummo Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -73,7 +73,11 @@ typedef enum {
 	/* DLP 1.2 functions (PalmOS v3.0) */
 	DLPCMD_FindDB			= 0x39,	/* Find a database given
 						 * creator/type or name */
-	DLPCMD_SetDBInfo		= 0x3a	/* Change database info */
+	DLPCMD_SetDBInfo		= 0x3a,	/* Change database info */
+	DLPCMD_LoopBackTest		= 0x3b, /* Perform a loopback test */
+	DLPCMD_ExpSlotEnumerate		= 0x3c, /* Get the number of slots on the device */
+	DLPCMD_ExpCardPresent		= 0x3d, /* Check if the card is present*/
+	DLPCMD_ExpCardInfo		= 0x3e  /* Get infos on the installed exp card*/
 } dlpc_op_t;
 
 /* dlp_time
@@ -814,6 +818,22 @@ struct dlp_finddb
 /** SetDBInfo **/
 /* XXX */
 
+/** ExpCardInfo **/
+#define DLPARG_ExpCardInfo_Req		DLPARG_BASE
+#define DLPARGLEN_ExpCardInfo_Req	2
+
+#define DLPRET_ExpCardInfo_Info		DLPRET_BASE
+#define DLPRETLEN_ExpCardInfo_Info	6
+
+struct dlp_expcardinfo
+{
+	udword	capabilities;
+	uword	nstrings;
+
+	char	*strings;
+};
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif	/* __cplusplus */
@@ -1056,7 +1076,11 @@ extern int DlpFindDB_ByTypeCreator(
 	const udword creator,
 	const udword type,
 	const ubyte newsearch);
-
+extern int DlpExpCardInfo(
+	PConnection *pconn,
+	const uword slotnum,
+	struct dlp_expcardinfo *info);
+		                
 #ifdef  __cplusplus
 }
 #endif	/* __cplusplus */
