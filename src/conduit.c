@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.65 2003-06-12 18:34:21 azummo Exp $
+ * $Id: conduit.c,v 2.66 2003-06-14 17:44:41 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -217,6 +217,96 @@ static char cond_stdin_buf[BUFSIZ];	/* Buffer for conduit's stdin */
 #endif	/* 0 */
 static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 
+/* Add a new header to list, allocating memory as needed, and copying the
+ * values passed in. Returns zero on success
+ */
+
+static int
+add_header(struct cond_header** headers,
+	unsigned int* num_headers,
+	unsigned int* max_headers,
+	const char* name,
+	const char* value)
+{
+	if (name == NULL || value == NULL)
+	{
+		return -1;
+	}
+
+	if (strlen(name) > COND_MAXHFIELDLEN)
+	{
+		Error(_("%s: Header '%s' is too long "),
+				"run_conduit", name);
+		return -1;
+	}
+
+	if (*headers == NULL)
+	{
+		*num_headers = 0;
+
+		/* Initialize max_headers high enough that we shouldn't have to
+		 * ever reallocate.
+		 */
+
+		*max_headers = 16;
+		*headers = calloc(*max_headers, sizeof(struct cond_header));
+
+	} else if (*num_headers >= *max_headers)
+	{
+		/* Double max_headers and realloc */
+
+		*max_headers *= 2;
+		*headers = realloc(*headers, *max_headers * sizeof(struct cond_header));
+	}
+
+	if (*headers == NULL) {
+		return -1;
+	}
+
+	if (*num_headers > 0)
+	{
+		/* Convert to linked list as we go */
+		(*headers)[*num_headers-1].next = &(*headers)[*num_headers];
+	}
+	(*headers)[*num_headers].name = strdup(name);
+	(*headers)[*num_headers].value = strdup(value);
+	(*headers)[*num_headers].next = NULL;
+
+	CONDUIT_TRACE(6)
+		fprintf(stderr, "Header[%d] %s:%s\n",
+			*num_headers,
+			(*headers)[*num_headers].name,
+			(*headers)[*num_headers].value);
+
+	*num_headers += 1;
+
+	return 0;
+}
+
+static void
+free_headers(struct cond_header** headers,
+	unsigned int* num_headers)
+{
+	unsigned int i;
+
+	if (*headers != NULL)
+	{
+		for (i = 0; i < *num_headers; i ++)
+		{
+			if ((*headers)[i].name != NULL)
+				free ((*headers)[i].name);
+
+			if ((*headers)[i].value != NULL)
+				free ((*headers)[i].value);
+		}
+		free (*headers);
+	}
+	*headers = NULL;
+	*num_headers = 0;
+}
+
+
+
 /* run_conduit
  * Run a single conduit, of the given flavor.
  * Returns a negative value in case of an error running the conduit.
@@ -233,11 +323,7 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 /* XXX - The 'flavor_mask' argument is rather ugly. Perhaps the best way to
  * get rid of it is to have the various run_*_conduit() functions generate
  * their own list of headers, and pass it to run_conduit().
- * Since the individual flavors have a pretty good idea how many headers
- * they generate, MAX_SYS_HEADERS could go away, too.
  */
-#define MAX_SYS_HEADERS	10		/* Size of the array holding system
-					 * headers */
 
 static int
 run_conduit(struct Palm *palm,
@@ -264,9 +350,9 @@ run_conduit(struct Palm *palm,
 				 */
 	struct cond_header *hdr;	/* User-supplied header */
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
-	struct cond_header headers[MAX_SYS_HEADERS];
-				/* System headers */
-	int last_header = 0;
+	struct cond_header* headers = NULL; /* System headers */
+	unsigned int num_headers = 0;		/* Number of headers in list */
+	unsigned int max_headers = 0;		/* Amount of room in list */
 	int spcpipe[2];		/* Pipe for SPC-based communication */
 	char spcnumbuf[4];	/* Buffer to hold the child's SPC file
 				 * descriptor number. This only goes up to
@@ -446,40 +532,21 @@ run_conduit(struct Palm *palm,
 	/* Initialize the standard header values */
 	block_sigchld(&sigmask);	/* Don't disturb me now */
 
-	/* Turn the array of system headers into a linked list. */
-	for (i = 0; i < MAX_SYS_HEADERS-1; i++)
-		headers[i].next = &(headers[i+1]);
-	headers[MAX_SYS_HEADERS-1].next = NULL;
-
-	last_header = 0;
-	headers[last_header].name = "Daemon";
-	headers[last_header].value = PACKAGE;
-
-	++last_header;
-	headers[last_header].name = "Version";
-	headers[last_header].value = VERSION;
-
-	++last_header;
-	headers[last_header].name = "SyncType";
-	headers[last_header].value = (char *) need_slow_sync ? "Slow" : "Fast";
-
-	++last_header;
-	headers[last_header].name = "PDA-Snum";
-	headers[last_header].value = (char *) palm_serial(palm);
-
-	++last_header;
-	headers[last_header].name = "PDA-Username";
-	headers[last_header].value = (char *) palm_username(palm);
+	add_header(&headers, &num_headers, &max_headers, "Daemon", PACKAGE);
+	add_header(&headers, &num_headers, &max_headers, "Version", VERSION);
+	add_header(&headers, &num_headers, &max_headers,
+		"SyncType", need_slow_sync ? "Slow" : "Fast");
+	add_header(&headers, &num_headers, &max_headers,
+		"PDA-Snum", palm_serial(palm));
+	add_header(&headers, &num_headers, &max_headers,
+		"PDA-Username", palm_username(palm));
 
 	if (pda)
 	{
-		++last_header;
-		headers[last_header].name = "PDA-Directory";
-		headers[last_header].value = pda->directory;
-
-		++last_header;
-		headers[last_header].name = "PDA-Default";
-		headers[last_header].value = (pda->flags & PDAFL_DEFAULT) ? "1" : "0";
+		add_header(&headers, &num_headers, &max_headers,
+			"PDA-Directory", pda->directory);
+		add_header(&headers, &num_headers, &max_headers,
+			"PDA-Default", (pda->flags & PDAFL_DEFAULT) ? "1" : "0");
 	}
 
 	if (dbinfo)
@@ -492,17 +559,8 @@ run_conduit(struct Palm *palm,
 			mkinstfname(dbinfo) :
 			mkbakfname(dbinfo);
 
-		++last_header;
-		headers[last_header].name = "InputDB";
-		headers[last_header].value = (char *) bakfname;
-					/* The cast is just to stop the compiler
-					 * from complaining. */
-
-		++last_header;
-		headers[last_header].name = "OutputDB";
-		headers[last_header].value = (char *) bakfname;
-					/* The cast is just to stop the compiler
-					 * from complaining. */
+		add_header(&headers, &num_headers, &max_headers, "InputDB", bakfname);
+		add_header(&headers, &num_headers, &max_headers, "OutputDB", bakfname);
 	}
 
 	/* Then we add the preference items as headers */
@@ -543,15 +601,11 @@ run_conduit(struct Palm *palm,
 			goto abort;
 		}
 
-		/* Set the header */
-		++last_header;
-		headers[last_header].name = "Preference";
-
 		/* Build the preference line with sprintf() because
 		 * snprintf() isn't portable.
 		 */
 		/* XXX - snprintf() is now included. */
-		sprintf(tmpvalue, "%c%c%c%c/%d/%d\n",
+		sprintf(tmpvalue, "%c%c%c%c/%d/%d",
 			(char) (conduit->prefs[i].creator >> 24) & 0xff,
 			(char) (conduit->prefs[i].creator >> 16) & 0xff,
 			(char) (conduit->prefs[i].creator >> 8) & 0xff,
@@ -559,11 +613,8 @@ run_conduit(struct Palm *palm,
 			conduit->prefs[i].id,
 			pref_list[i]->contents_info->len);
 
-		/* XXX - Bug! This always returns a pointer to the same
-		 * static buffer, so you can't have more than one
-		 * preference.
-		 */
-		headers[last_header].value = tmpvalue;
+		add_header(&headers, &num_headers, &max_headers,
+			"Preference", tmpvalue);
 	}
 
 	/* If the conduit might understand SPC, tell it what file
@@ -571,20 +622,21 @@ run_conduit(struct Palm *palm,
 	 */
 	if (with_spc)
 	{
-		++last_header;
-		headers[last_header].name = "SPCPipe";
-
 		sprintf(spcnumbuf, "%d", spcpipe[0]);
 				/* This will fail if spcpipe[0] > 999, but
 				 * we've checked for that already. */
-		headers[last_header].value = spcnumbuf;
+
+		add_header(&headers, &num_headers, &max_headers,
+			"SPCPipe", spcnumbuf);
 	}
 
 	/* Now append the user-supplied headers to the system headers. This
 	 * is a semi-ugly hack that allows us to treat the whole set of
 	 * headers as a single list.
+	 * XXX If add_header() wasn't as simple as it was, we'd be nuts
+	 * trying this.
 	 */
-	headers[last_header].next = conduit->headers;
+	headers[num_headers-1].next = conduit->headers;
 
 	unblock_sigchld(&sigmask);
 
@@ -673,10 +725,17 @@ run_conduit(struct Palm *palm,
 
 	/* Now write all the raw data to the child */
 	for(i = 0; i < conduit->num_prefs; i++)
-		fwrite(pref_list[i]->contents,
+	{
+		int rc = fwrite(pref_list[i]->contents,
 			1,
 			pref_list[i]->contents_info->len,
 			tochild);
+		if (rc != pref_list[i]->contents_info->len)
+		{
+			Error(_("Couldn't send preference to conduit."));
+			goto abort;
+		}
+	}
 	fflush(tochild);
 
 	/* Listen for the child to either a) print a status message on its
@@ -827,7 +886,7 @@ run_conduit(struct Palm *palm,
 				 * child.
 				 */
 				Error(_("%s: Error header wrong length %ld."),
-				      "run_conduit",err );
+				      "run_conduit",err);
 				Perror("read");
 				goto abort;
 			}
@@ -1123,6 +1182,8 @@ run_conduit(struct Palm *palm,
 	/* Let's not hog memory */
 	if (pref_list != NULL)
 		free(pref_list);
+
+	free_headers (&headers, &num_headers);
 
 	return laststatus;
 }
@@ -1783,21 +1844,21 @@ spawn_conduit(
 	if (cwd != NULL)
 	{
 		CONDUIT_TRACE(4)
-			fprintf( stderr, "Obeying to cwd param: %s\n", cwd );	
+			fprintf(stderr, "Obeying to cwd param: %s\n", cwd);	
 	
 		/* cwd to the directory in which the conduit resides */
 		if (strcmp(cwd, "conduit") == 0)
 		{
 			char *dpath;
 			
-			if ((dpath = strdup(path)) != NULL ) /* Preserve path since dirname will modify it */
+			if ((dpath = strdup(path)) != NULL) /* Preserve path since dirname will modify it */
 			{
 				char *newdir;
 			
-				if ((newdir = dirname(dpath)) != NULL )
-					mychdir( newdir );	
+				if ((newdir = dirname(dpath)) != NULL)
+					mychdir(newdir);	
 
-				free( dpath );
+				free(dpath);
 			}			
 		}
 		/* cwd to the user's home directory */
@@ -1813,11 +1874,11 @@ spawn_conduit(
 					mychdir(pw->pw_dir);
 				else
 					Error(_("%s: No home directory for %s."),
-						"spawn_conduit", pw->pw_name );
+						"spawn_conduit", pw->pw_name);
 			}
 			else
 			 	Error(_("%s: getpwuid(%d) failed."),
- 	        	 	      "spawn_conduit", uid );
+ 	        	 	      "spawn_conduit", uid);
 		}
 		else
 		/* cwd to cwd ;) */
