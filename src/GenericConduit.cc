@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.17 2000-01-27 02:38:33 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.18 2000-01-27 04:20:07 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -2008,9 +2008,7 @@ GenericConduit::archive_record(const struct pdb_record *rec)
 			SYNC_TRACE(2)
 				cerr << "Can't open \"" << _dbinfo->name
 				     << "\". Attempting to create" << endl;
-			if ((_archfd = arch_create(
-				_dbinfo->name,
-				_dbinfo)) < 0)
+			if ((_archfd = arch_create(_dbinfo)) < 0)
 			{
 				cerr << "Can't create \"" << _dbinfo->name
 				     << "\"" << endl;
