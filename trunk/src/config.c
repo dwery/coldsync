@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.76 2001-10-18 01:36:59 arensb Exp $
+ * $Id: config.c,v 1.77 2001-10-18 01:58:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1314,8 +1314,6 @@ name2listen_type(const char *str)
 		return LISTEN_NET;
 	if (strcasecmp(str, "usb") == 0)
 		return LISTEN_USB;
-	if (strcasecmp(str, "usb_m50x") == 0)
-		return LISTEN_USB_M50x;
 	return LISTEN_NONE;		/* None of the above */
 }
 
@@ -1331,8 +1329,7 @@ name2protocol(const char *str)
 		return PCONN_STACK_DEFAULT;
 	if (strcasecmp(str, "full") == 0)
 		return PCONN_STACK_FULL;
-	if ((strcasecmp(str, "simple") == 0) ||
-	    (strcasecmp(str, "m50x") == 0))
+	if (strcasecmp(str, "simple") == 0)
 		return PCONN_STACK_SIMPLE;
 	if (strcasecmp(str, "net") == 0)
 		return PCONN_STACK_NET;
