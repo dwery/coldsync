@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.31 2001-03-29 05:38:02 arensb Exp $
+ * $Id: install.c,v 2.32 2001-06-26 05:52:13 arensb Exp $
  */
 
 #include "config.h"
@@ -45,6 +45,194 @@
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */
 #include "cs_error.h"
+
+/* upload_database
+ * Upload 'db' to the Palm. This database must not exist (i.e., it's the
+ * caller's responsibility to delete it if necessary).
+ * When a record is uploaded, the Palm may assign it a new record number.
+ * upload_database() records this change in 'db', but it is the caller's
+ * responsibility to save this change to the appropriate file, if
+ * applicable.
+ */
+int
+upload_database(PConnection *pconn, struct pdb *db)
+{
+	int err;
+	ubyte dbh;			/* Database handle */
+	struct dlp_createdbreq newdb;	/* Argument for creating a new
+					 * database */
+
+	SYNC_TRACE(1)
+		fprintf(stderr, "Uploading \"%s\"\n", db->name);
+
+	/* Call OpenConduit to let the Palm (or the user) know that
+	 * something's going on. (Actually, I don't know that that's the
+	 * reason. I'm just imitating HotSync, here.
+	 */
+	err = DlpOpenConduit(pconn);
+	switch (err)
+	{
+	    case DLPSTAT_NOERR:		/* No error */
+		break;
+	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
+					 * by the user, on the Palm. */
+		fprintf(stderr, _("Upload of \"%s\" cancelled by Palm.\n"),
+			db->name);
+		cs_errno = CSE_CANCEL;
+		return -1;
+	    default:			/* All other errors */
+		fprintf(stderr, _("Can't open conduit for \"%s\": %d.\n"),
+			db->name, err);
+		cs_errno = CSE_OTHER;
+		return -1;
+	}
+
+	/* Create the database */
+	newdb.creator = db->creator;
+	newdb.type = db->type;
+	newdb.card = CARD0;
+	newdb.flags = db->attributes;
+			/* XXX - Is this right? This is voodoo code */
+	newdb.version = db->version;
+	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
+
+	err = DlpCreateDB(pconn, &newdb, &dbh);
+	/* XXX - Check err */
+	if (err != DLPSTAT_NOERR)
+	{
+		fprintf(stderr, _("Error creating database \"%s\": %d.\n"),
+			db->name, err);
+		return -1;
+	}
+
+	/* Upload the AppInfo block, if it exists */
+	if (db->appinfo_len > 0)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "Uploading AppInfo block\n");
+
+		err = DlpWriteAppBlock(pconn, dbh,
+				       db->appinfo_len,
+				       db->appinfo);
+		/* XXX - Check err */
+		if (err < 0)
+			return err;
+	}
+
+	/* Upload the sort block, if it exists */
+	if (db->sortinfo_len > 0)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "Uploading sort block\n");
+
+		err = DlpWriteSortBlock(pconn, dbh,
+					db->sortinfo_len,
+					db->sortinfo);
+		/* XXX - Check err */
+		if (err < 0)
+			return err;
+	}
+
+	/* Upload each record/resource in turn */
+	if (IS_RSRC_DB(db))
+	{
+		/* It's a resource database */
+		struct pdb_resource *rsrc;
+
+		SYNC_TRACE(4)
+			fprintf(stderr, "Uploading resources.\n");
+
+		for (rsrc = db->rec_index.rsrc;
+		     rsrc != NULL;
+		     rsrc = rsrc->next)
+		{
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Uploading resource 0x%04x\n",
+					rsrc->id);
+
+			err = DlpWriteResource(pconn,
+					       dbh,
+					       rsrc->type,
+					       rsrc->id,
+					       rsrc->data_len,
+					       rsrc->data);
+
+			/* XXX - Check err more thoroughly */
+			if (err != DLPSTAT_NOERR)
+			{
+				/* Close the database */
+				err = DlpCloseDB(pconn, dbh);
+				return -1;
+			}
+		}
+	} else {
+		/* It's a record database */
+		struct pdb_record *rec;
+
+		SYNC_TRACE(4)
+			fprintf(stderr, "Uploading records.\n");
+
+		for (rec = db->rec_index.rec;
+		     rec != NULL;
+		     rec = rec->next)
+		{
+			udword newid;		/* New record ID */
+
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Uploading record 0x%08lx\n",
+					rec->id);
+
+			/* XXX - Gross hack to avoid uploading zero-length
+			 * records (which shouldn't exist in the first
+			 * place).
+			 */
+			if (rec->data_len == 0)
+				continue;
+
+			err = DlpWriteRecord(pconn,
+					     dbh,
+					     0x80,	/* Mandatory magic */
+							/* XXX - Actually,
+							 * at some point
+							 * DlpWriteRecord
+							 * will get fixed
+							 * to make sure the
+							 * high bit is set,
+							 * at which point
+							 * this argument
+							 * will be allowed
+							 * to be 0.
+							 */
+					     rec->id,
+					     rec->flags,
+					     rec->category,
+					     rec->data_len,
+					     rec->data,
+					     &newid);
+
+			/* XXX - Check err more thoroughly */
+			if (err != DLPSTAT_NOERR)
+			{
+				/* Close the database */
+				err = DlpCloseDB(pconn, dbh);
+				return -1;
+			}
+
+			/* Update the ID assigned to this record */
+			rec->id = newid;
+		}
+	}
+
+	/* Clean up */
+	err = DlpCloseDB(pconn, dbh);
+	/* XXX - Check err */
+	if (err != DLPSTAT_NOERR)
+		return -1;
+
+	return 0;		/* Success */
+}
 
 #if 0
 /* install_file
@@ -150,7 +338,7 @@ install_file(PConnection *pconn,
 		}
 	}
 
-	err = pdb_Upload(pconn, pdb);
+	err = upload_database(pconn, pdb);
 	if (err < 0)
 	{
 		switch (palm_errno)
@@ -406,7 +594,7 @@ InstallNewFiles(PConnection *pconn,
 			}
 		}
 
-		err = pdb_Upload(pconn, pdb);
+		err = upload_database(pconn, pdb);
 		if (err < 0)
 		{
 			switch (palm_errno)
@@ -424,8 +612,11 @@ InstallNewFiles(PConnection *pconn,
 			add_to_log(_("Error\n"));
 
 			/* XXX - This is rather ugly, due in part to the
-			 * fact that pdb_Upload isn't in the main ColdSync
-			 * code (yet).
+			 * fact that pdb_Upload (upload_database) isn't in
+			 * the main ColdSync code (yet).
+			 */
+			/* XXX - So now that it is, what's to be done about
+			 * it?
 			 */
 			switch (cs_errno)
 			{
