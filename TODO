@@ -68,6 +68,7 @@
   plugged in yet: some of the structures are of the form <n>, <n-byte
   string>, which means that currently, you can't just have one
   function call to unpack a whole structure.
+	Just get rid of them.
 - Lock files while syncing.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -222,8 +223,11 @@
   $pdb->cmp($record1,$record2) to see if two records are equal.
 - Snapshots don't need to contain everything. Specifically, they don't
   need bulky .info and .ps files. Ditto for .mo files, presumably,
-  once i18n is fully implemented. Split "distdir" into "distdir" and
-  "distdir-lite" or something.
-- Finish i18n.
-- Translate everything to French.
+  once i18n is fully implemented. Split "distdir" into "distdir-core"
+  and "distdir". "distdir-core" includes only the bare minimum, that
+  which developers (as opposed to the guys who'll just build the port)
+  need.
 - Make i18n optional: --without-i18n
+- Find all of the messages of the form "<function-name>: <message>"
+  and print the function name as a separate argument. This should
+  reduce the number of messages to translate.
