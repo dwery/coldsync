@@ -63,6 +63,12 @@
 /* Define if you have the memcpy function */
 #undef HAVE_MEMCPY
 
+/* Define if you have the memset function */
+#undef HAVE_MEMSET
+
+/* Define if you have the bzero function */
+#undef HAVE_BZERO
+
 /* Define if you have the mkstemp function */
 #undef HAVE_MKSTEMP
 
@@ -158,6 +164,21 @@
 #if !HAVE_STRNCASECMP
 #  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
 #endif	/* HAVE_STRNCASECMP */
+
+/* Define bzero() in terms of memset() if necessary
+ * We use bzero() in this code because it's possible to define bzero() in
+ * terms of memset(), but not the reverse. Otherwise, we prefer the
+ * ISO-mandated mem*() functions.
+ *
+ * If this machine has neither bzero() nor memset(), then you're screwed.
+ * If this machine has both, then we trust that the OS's authors did
+ * something smart, and that both work.
+ */
+#if !HAVE_BZERO
+#  if HAVE_MEMSET
+#    define bzero(str, len)		memset((str), 0, (len))
+#  endif	/* HAVE_MEMSET */
+#endif	/* HAVE_BZERO */
 
 /* Define an empty fpurge() if it doesn't exist. It isn't critical, but
  * IMHO it's nice to have.
