@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.6.2.1 2001-06-30 07:46:59 arensb Exp $
+# $Id: AUTHORS,v 2.6.2.1.2.1 2001-07-26 03:33:04 arensb Exp $
 
 Authors and Contributors:
 
@@ -31,6 +31,7 @@ Ted Faber <faber@lunabase.org>.
 Zachary P. Landau <kapheine@hypa.net>: Added -z option.
 Mark Reed <markjreed@mail.com>.
 Alessandro Gatti <rigel@telemail.it>: Italian translation.
+Koen Deforche <kdf@irule.be>: support for Palm M50x series.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
