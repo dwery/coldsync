@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.114 2002-01-23 15:54:04 arensb Exp $
+ * $Id: coldsync.c,v 1.115 2002-03-10 23:44:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -27,7 +27,7 @@
 #  include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #  include <resolv.h>		/* For inet_ntop() under Solaris */
 #endif	/* HAVE_INET_NTOP */
-#include <unistd.h>		/* For sleep(), getopt() */
+#include <unistd.h>		/* For sleep() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
 #include <time.h>		/* For ctime() */
@@ -2428,6 +2428,9 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 
 		/* Establish a connection to the remote host */
+		/* XXX - This hangs forever if the remote host doesn't send
+		 * back a wakeup ACK.
+		 */
 		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
 		if (err < 0)
 		{
@@ -3512,6 +3515,10 @@ mkforw_addr(struct Palm *palm,
 	}
 
 	/* Nothing worked */
+	/* XXX - In this case, perhaps it'd be best to have a fallback
+	 * server. Presumably this should be defined in "coldsync.conf" or
+	 * something, and should default to "localhost".
+	 */
 	SYNC_TRACE(3)
 		fprintf(stderr, "Nothing worked. I give up.\n");
 
