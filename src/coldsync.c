@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.110 2001-11-12 05:49:52 arensb Exp $
+ * $Id: coldsync.c,v 1.111 2001-11-19 17:11:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -26,8 +26,10 @@
 /* XXX - Solaris 2.6, 7 appear to choke on these next two, at least when
  * there's no inet_ntop(). Make them conditional.
  */
-#include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
-#include <resolv.h>		/* For inet_ntop() under Solaris */
+#if HAVE_INET_NTOP
+#  include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
+#  include <resolv.h>		/* For inet_ntop() under Solaris */
+#endif	/* HAVE_INET_NTOP */
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
