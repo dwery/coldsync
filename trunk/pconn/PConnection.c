@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.1 1999-02-19 22:51:53 arensb Exp $
+ * $Id: PConnection.c,v 1.2 1999-02-21 08:53:51 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -66,10 +66,21 @@ new_PConnection(char *fname)
 		return -1;
 	}
 
+	/* Initialize the DLP part of the PConnection */
+	if (dlp_init(pconn) < 0)
+	{
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
+		return -1;
+	}
+
 	/* Open the file */
 	if ((pconn->fd = open(fname, O_RDWR)) < 0)
 	{
 		perror("open");
+		dlp_tini(pconn);
+		padp_tini(pconn);
 		slp_tini(pconn);
 		free(pconn);
 		return -1;
@@ -100,6 +111,9 @@ PConnClose(int fd)
 	/* Look up the PConnection */
 	if ((pconn = PConnLookup(fd)) == NULL)
 		return -1;	/* Couldn't find the PConnection */
+
+	/* Clean up the DLP part of the PConnection */
+	dlp_tini(pconn);
 
 	/* Clean up the PADP part of the PConnection */
 	padp_tini(pconn);
