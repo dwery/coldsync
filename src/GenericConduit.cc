@@ -2,11 +2,11 @@
  *
  * Methods and such for the generic conduit.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.13 2000-01-19 06:11:19 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.14 2000-01-22 05:12:35 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -452,6 +452,12 @@ GenericConduit::SlowSync()
 		return -1;
 	}
 
+	/* XXX - Check the AppInfo block. Since this is a slow sync, we
+	 * can't trust the Palm's PDB_ATTR_APPINFODIRTY flag if it's unset.
+	 * So assume that the Palm's AppInfo block is dirty and overwrite
+	 * the local one.
+	 */
+
 	/* Check each remote record in turn, and compare it to the
 	 * copy in the local database.
 	 */
@@ -841,14 +847,26 @@ GenericConduit::FastSync()
 		return -1;
 	}
 
+	/* XXX - Check the AppInfo block. Since this is a fast sync, we can
+	 * trust the PDB_ATTR_APPINFODIRTY flag. The four cases are as
+	 * follows:
+	 *
+	 *	Palm	local	Action
+	 *	----	-----	------
+	 *	clean	clean	Do nothing
+	 *	clean	dirty	Upload local AppInfo block to Palm
+	 *	dirty	clean	Download Palm's AppInfo block to local copy
+	 *	dirty	dirty	Conflict. Palm overwrites desktop (tie-breaker)
+	 */
+
 	/* Read each modified record in turn. */
 	while ((err = DlpReadNextModifiedRec(_pconn, dbh,
 					     &recinfo, &rptr))
 	       == DLPSTAT_NOERR)
 	{
 		/* Got the next modified record. Deal with it */
-		/* XXX - Get category */
 		remoterec = new_Record(recinfo.attributes,
+				       recinfo.category,
 				       recinfo.id,
 				       recinfo.size,
 				       rptr);
@@ -1552,8 +1570,9 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				cerr << "> Copying remote record to local database"
 				     << endl;
-			/* XXX - Get category */
 			newrec = new_Record(remoterec->attributes,
+					    remoterec->attributes,
+						/* XXX - Category. Sloppy */
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
@@ -1592,8 +1611,9 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				cerr << "> Copying remote record to local database"
 				     << endl;
-			/* XXX - Get category */
 			newrec = new_Record(remoterec->attributes,
+					    remoterec->attributes,
+						/* XXX - Category. Sloppy */
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
@@ -1695,7 +1715,12 @@ GenericConduit::SyncRecord(
 				/* First, make a copy (with clean flags) */
 				/* XXX - Get category */
 				newrec = new_Record(
-					remoterec->attributes & 0x0f,
+					remoterec->attributes &
+					~(PDB_REC_EXPUNGED|
+					  PDB_REC_DIRTY|
+					  PDB_REC_DELETED),
+					remoterec->attributes,
+						/* XXX - Category. Sloppy */
 					remoterec->id,
 					remoterec->data_len,
 					remoterec->data);
@@ -1740,8 +1765,9 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				cerr << "> Copying remote record to local database"
 				     << endl;
-			/* XXX - Get category */
 			newrec = new_Record(remoterec->attributes,
+					    remoterec->attributes,
+						/* XXX - Category. Sloppy. */
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
