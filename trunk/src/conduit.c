@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.13 2000-01-22 12:56:24 arensb Exp $
+ * $Id: conduit.c,v 1.14 2000-01-28 01:07:25 arensb Exp $
  */
 /* XXX - At some point, the API for built-in conduits should become much
  * simpler. A lot of the crap in this file will disappear, since it's
@@ -159,7 +159,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 
 	for (conduit = queue;
 	     conduit != NULL;
-	     conduit = queue->next)
+	     conduit = conduit->next)
 	{
 		pid_t pid;		/* Conduit's PID */
 		static char * argv[4];	/* Conduit's argv */
