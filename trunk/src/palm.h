@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.h,v 2.5 2000-11-20 10:19:11 arensb Exp $
+ * $Id: palm.h,v 2.6 2000-12-23 11:36:53 arensb Exp $
  */
 #ifndef _palm_h_
 #define _palm_h_
@@ -111,6 +111,8 @@ extern const struct dlp_dbinfo *palm_find_dbentry(struct Palm *palm,
 extern int palm_append_dbentry(struct Palm *palm,
 			       struct pdb *pdb);
 extern const char *palm_netsync_hostname(struct Palm *palm);
+extern const char *palm_netsync_hostaddr(struct Palm *palm);
+extern const char *palm_netsync_netmask(struct Palm *palm);
 
 #endif	/* _palm_h_ */
 

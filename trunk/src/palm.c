@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.9 2000-12-17 09:52:35 arensb Exp $
+ * $Id: palm.c,v 2.10 2000-12-23 11:36:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -899,6 +899,38 @@ palm_netsync_hostname(struct Palm *palm)
 	}
 
 	return palm->netsyncinfo_.hostname;
+}
+
+const char *
+palm_netsync_hostaddr(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch NetSync info if we haven't done so yet */
+	if (!palm->have_netsyncinfo_)
+	{
+		if ((err = fetch_netsyncinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return NULL;
+	}
+
+	return palm->netsyncinfo_.hostaddr;
+}
+
+const char *
+palm_netsync_netmask(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch NetSync info if we haven't done so yet */
+	if (!palm->have_netsyncinfo_)
+	{
+		if ((err = fetch_netsyncinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return NULL;
+	}
+
+	return palm->netsyncinfo_.hostnetmask;
 }
 
 /* This is for Emacs's benefit:
