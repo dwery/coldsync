@@ -1,7 +1,7 @@
 /*
  * PConnection_usbm50x.c - Koen Deforche <kdf@irule.be>
  *
- * $Id: PConnection_usbm50x.c,v 1.2 2001-07-26 07:01:28 arensb Exp $
+ * $Id: PConnection_usbm50x.c,v 1.3 2001-07-26 07:03:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -228,3 +228,9 @@ pconn_usbm50x_open(PConnection *pconn, char *device, Bool prompt)
 
 	return pconn->fd;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
