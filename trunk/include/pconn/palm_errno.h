@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.7 2002-04-27 18:00:07 azummo Exp $
+ * $Id: palm_errno.h,v 1.8 2003-03-02 12:24:07 azummo Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -33,7 +33,7 @@ typedef enum {
 
 
 extern const char *palm_strerror(const palmerrno_t palm_errno);
-
+extern void palm_perror(const char *preamble, const palmerrno_t palm_errno);
 #endif	/* _palm_errno_h_ */
 
 /* This is for Emacs's benefit:
