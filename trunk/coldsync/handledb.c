@@ -2,7 +2,7 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.5 1999-03-16 11:04:35 arensb Exp $
+ * $Id: handledb.c,v 1.6 1999-05-31 21:05:57 arensb Exp $
  */
 
 #include <stdio.h>
@@ -45,19 +45,7 @@ HandleDB(struct PConnection *pconn,
 	 * generic sync.
 	 */
 
-	/* XXX - 'cd' to the backup directory. Create it if it doesn't
-	 * exist. By default, the backup directory should be of the form
-	 * ~<user>/.palm/<palm ID>/backup or something.
-	 * <palm ID> should be the serial number for a Palm III, not sure
-	 * what for others. Perhaps 'ColdSync' could create a resource
-	 * database with this information?
-	 * XXX - For now, let it be ~/.palm/backup
-	 */
-	/* XXX - I'm not sure whether doing this in multiple stages like
-	 * this is a Good Thing or a Bad Thing. It's good in that it allows
-	 * us to create each directory as we go along. It's bad in that it
-	 * seems like too many steps. Plus, each
-	 */
+	/* XXX - Use 'backupdir', from coldsync.h */
 	if ((err = chdir(getenv("HOME"))) < 0)
 	{
 		fprintf(stderr, "Can't cd to home directory. Check $HOME.\n");
@@ -112,6 +100,12 @@ HandleDB(struct PConnection *pconn,
 	 * way as record files, and there's really no support for it; on
 	 * the other hand, it could be nifty, and ought to be done for
 	 * completeness.
+	 * Perhaps the sane way to do it is to check the database type: if
+	 * it's "appl", then it's an application, so don't sync it.
+	 * Otherwise, if the sync type is either "desktop overwrites
+	 * handheld" or "handheld overwrites desktop", then sync it that
+	 * way. Otherwise, if there's a conduit for that type of database,
+	 * use that conduit. Otherwise, just ignore it.
 	 */
 	/* XXX - For now, just ignore resource databases */
 	if (DBINFO_ISRSRC(dbinfo))
@@ -128,12 +122,14 @@ HandleDB(struct PConnection *pconn,
 		return -1;
 	}
 
-	/* XXX - See if the LastSyncPC matches our ID. If yes, do a fast
-	 * sync; if no, do a slow sync.
+	/* Do either a fast or a slow sync, as necessary.
+	 * XXX - This probably needs to be maintained for each database
+	 * separately.
 	 */
-	/* XXX - For now, just try a slow sync */
-/*  	err = SlowSync(pconn, dbinfo, localdb, bakfname); */
-	err = FastSync(pconn, dbinfo, localdb, bakfname);
+	if (need_slow_sync)
+		err = SlowSync(pconn, dbinfo, localdb, bakfname);
+	else
+		err = FastSync(pconn, dbinfo, localdb, bakfname);
 	if (err < 0)
 	{
 		fprintf(stderr, "### SlowSync returned %d\n", err);
