@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: sync.c,v 2.3 2002-09-04 14:19:09 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -966,12 +966,17 @@ do_sync(pda_block *pda, struct Palm *palm)
 		}
 	}
 
-	/* Finally, close the connection */
-	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+	/* Finally, close the connection (palm_Release doesn't free the
+	 * palm structure for us).
+	 */
+	palm_Release(palm, DLPCMD_SYNCEND_NORMAL);
 
 	/* Run Dump conduits */
 	err = conduits_dump(palm, pda);
 
+	/* Free palm! */
+	free_Palm(palm);
+	
 	/* XXX - Is this check still needed ? */
 	if (cs_errno == CSE_NOCONN)
 	{

@@ -5,7 +5,7 @@
  *      You may distribute this file under the terms of the Artistic
  *      License, as specified in the README file.
  *
- * $Id: palmconn.h,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: palmconn.h,v 2.3 2002-09-04 14:19:09 azummo Exp $
  */
 
 #ifndef _palmconn_h_
@@ -13,6 +13,7 @@
 
 extern struct Palm * palm_Connect(void);
 extern void palm_Disconnect(struct Palm *palm, ubyte status);
+extern void palm_Release(struct Palm *palm, ubyte status);
 extern void palm_CSDisconnect(struct Palm *palm);
 
 #endif
