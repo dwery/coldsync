@@ -134,16 +134,9 @@ Redhat Linux 6.1:
 
 	This can be ignored.
 
-Solaris 2.6:
-	(as of v1.2.0)
-	Compiles cleanly with gcc 2.8.1.
-
-	(as of ColdSync v1.1.4)
-	Compiles cleanly with gcc 2.8.1. Runs fine.
-
-	Doesn't compile with gcc 2.95.1, though that may just be a
-	problem with the installation on the machine where I tested
-	it.
+Solaris 2.5.1/2.7:
+	(as of v1.2.5)
+	Compiles with gcc 2.95.2.
 
 	ColdSync is known not to work with Sun's i18n utilities: in
 	particular, 'xgettext' only looks for `gettext("some string")'
