@@ -92,7 +92,7 @@ utility.
 
 COMPATIBILITY NOTES
 
-* ColdSync 1.1.0:
+* ColdSync 1.1.2:
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x, and compiles
@@ -124,7 +124,7 @@ Redhat Linux 6.1:
 	This can be ignored.
 
 Solaris 2.6:
-	(as of ColdSync v1.0.1)
+	(as of ColdSync v1.1.2)
 	Compiles cleanly with gcc 2.8.1. Runs fine.
 
 	Doesn't compile with gcc 2.95.1, though that may just be a
@@ -132,14 +132,14 @@ Solaris 2.6:
 	it.
 
 Digital Unix 4.0:
-	(as of ColdSync v1.0.1)
+	(as of ColdSync v1.1.2)
 	Compiles with gcc 2.7.2. Prints a warning about not being able
-	to find a prototoype for 'cfmakeraw()'. This function exists
-	in /usr/lib/libc.a, but I haven't been able to find a
-	prototype for it.
+	to find prototypes for 'cfmakeraw()' or 'lstat()'. These
+	function exist in /usr/lib/libc.a, but I haven't been able to
+	find a prototype for it.
 
 AIX 4.1:
-	(as of ColdSync v1.0.1)
+	(as of ColdSync v1.1.2)
 	Compiles with gcc 2.7.2, but when linking, complains that:
 
 		ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
