@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.18 2000-01-22 05:00:22 arensb Exp $
+ * $Id: coldsync.c,v 1.19 2000-01-22 05:36:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -509,20 +509,26 @@ main(int argc, char *argv[])
 	}
 	pconn = NULL;
 
-	/* Run the post-dump conduits.
+	/* XXX - The post-dump conduits should only be run if we're
+	 * actually doing a sync. Is there a better way of expressing this?
 	 */
-	for (i = 0; i < palm.num_dbs; i++)
+	if ((!global_opts.do_backup) &&
+	    (!global_opts.do_restore))
 	{
-		err = run_Dump_conduits(&(palm.dblist[i]));
-		if (err < 0)
+		/* Run the post-dump conduits. */
+		for (i = 0; i < palm.num_dbs; i++)
 		{
-			fprintf(stderr,
-				_("Error %d running post-dump conduits.\n"),
-				err);
-			break;
+			err = run_Dump_conduits(&(palm.dblist[i]));
+			if (err < 0)
+			{
+				fprintf(stderr,
+					_("Error %d running post-dump"
+					  " conduits.\n"),
+					err);
+				break;
+			}
 		}
 	}
-
 	/* XXX - Clean up conduits */
 	/* XXX - Is this still current, or is that left over from the old
 	 * conduit API?
