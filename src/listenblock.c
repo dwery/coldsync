@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: listenblock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: listenblock.c,v 2.3 2002-10-16 18:59:32 azummo Exp $
  */
 
 #include "config.h"
@@ -46,7 +46,11 @@ prepend_listen_block(char *devname, pconn_listen_t listen_type, pconn_proto_t pr
 			return -1;
 		}
 	}
-	
+
+	/* The default is LISTEN_SERIAL, set by new_listen_block(). So we 
+	 * should take care when changing it. 
+	 */
+	 	
 	if (listen_type != LISTEN_NONE)
 		l->listen_type = listen_type;
 
@@ -106,9 +110,6 @@ find_listen_block(char *name)
 			}
 		}
 
-		MISC_TRACE(2)
-		        fprintf(stderr, " failed.\n");
-
 		Error(_("Couldn't find the requested listen block: \"%s\""), name);
 		return NULL;
 	}
@@ -131,12 +132,12 @@ new_listen_block()
 		return NULL;
 
 	/* Initialize the new listen_block */
-	retval->next = NULL;
-	retval->listen_type = LISTEN_SERIAL;	/* By default */
-	retval->protocol = PCONN_STACK_DEFAULT;
-	retval->device = NULL;
-	retval->speed = 0L;
-	retval->flags = 0;
+	retval->next		= NULL;
+	retval->listen_type	= LISTEN_SERIAL;	/* By default */
+	retval->protocol	= PCONN_STACK_DEFAULT;
+	retval->device		= NULL;
+	retval->speed		= 0L;
+	retval->flags		= 0;
 
 	return retval;
 }

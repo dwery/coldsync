@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.38 2002-09-07 16:53:43 azummo Exp $
+ * $Id: install.c,v 2.39 2002-10-16 18:59:32 azummo Exp $
  */
 
 #include "config.h"
@@ -170,7 +170,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 				print_latest_dlp_error(pconn);
 
 				/* Close the database */
-				err = DlpCloseDB(pconn, dbh);
+				err = DlpCloseDB(pconn, dbh, 0);
 				return -1;
 			}
 		}
@@ -216,7 +216,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 				print_latest_dlp_error(pconn);
 
 				/* Close the database */
-				err = DlpCloseDB(pconn, dbh);
+				err = DlpCloseDB(pconn, dbh, 0);
 				return -1;
 			}
 
@@ -226,7 +226,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 	}
 
 	/* Clean up */
-	err = DlpCloseDB(pconn, dbh);
+	err = DlpCloseDB(pconn, dbh, 0);
 	if (err != (int) DLPSTAT_NOERR)
 	{
 		Error(_("DlpCloseDB failed."));

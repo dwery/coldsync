@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduitblock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: conduitblock.c,v 2.3 2002-10-16 18:59:32 azummo Exp $
  */
 
 #include "config.h"
@@ -35,18 +35,18 @@ new_conduit_block()
 		return NULL;
 
 	/* Initialize the new conduit_block */
-	retval->next = NULL;
-	retval->flavors = 0;
-	retval->ctypes = NULL;
-	retval->ctypes_slots = 0;
-	retval->num_ctypes = 0;
-	retval->flags = 0;
-	retval->path = NULL;
-	retval->cwd = NULL;
-	retval->headers = NULL;
-	retval->prefs = NULL;
-	retval->prefs_slots = 0;
-	retval->num_prefs = 0;
+	retval->next		= NULL;
+	retval->flavors		= 0;
+	retval->ctypes		= NULL;
+	retval->ctypes_slots	= 0;
+	retval->num_ctypes	= 0;
+	retval->flags		= 0;
+	retval->path		= NULL;
+	retval->cwd		= NULL;
+	retval->headers		= NULL;
+	retval->prefs		= NULL;
+	retval->prefs_slots	= 0;
+	retval->num_prefs	= 0;
 
 	return retval;
 }
@@ -70,6 +70,7 @@ free_conduit_block(conduit_block *c)
 		free(c->cwd);
 
 	/* Free the conduit headers */
+	/* XXX Is next_hdr = NULL necessary? */
 	for (hdr = c->headers, next_hdr = NULL; hdr != NULL; hdr = next_hdr)
 	{
 		next_hdr = hdr->next;
@@ -141,9 +142,9 @@ append_pref_desc(conduit_block *cond,	/* Conduit block to add to */
 	/* If we get this far, then cond->prefs is long enough to hold the
 	 * new preference descriptor. Add it.
 	 */
-	cond->prefs[cond->num_prefs].creator = creator;
-	cond->prefs[cond->num_prefs].id = id;
-	cond->prefs[cond->num_prefs].flags = flags;
+	cond->prefs[cond->num_prefs].id		= id;
+	cond->prefs[cond->num_prefs].flags	= flags;
+	cond->prefs[cond->num_prefs].creator	= creator;
 	cond->num_prefs++;
 
 	return 0;		/* Success */
@@ -204,9 +205,9 @@ append_crea_type(conduit_block *cond,	/* Conduit block to add to */
 	/* If we get this far, then cond->ctypes is long enough to hold the
 	 * new creator/type pair. Add it.
 	 */
-	cond->ctypes[cond->num_ctypes].creator = creator;
-	cond->ctypes[cond->num_ctypes].type = type;
-	cond->ctypes[cond->num_ctypes].flags = flags;
+	cond->ctypes[cond->num_ctypes].type	= type;
+	cond->ctypes[cond->num_ctypes].flags	= flags;
+	cond->ctypes[cond->num_ctypes].creator	= creator;
 	cond->num_ctypes++;
 
 	return 0;		/* Success */

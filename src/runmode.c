@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.4 2002-09-07 16:41:45 azummo Exp $
+ * $Id: runmode.c,v 2.5 2002-10-16 18:59:32 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -787,6 +787,11 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Check if this palm is uninitialized and if autoinit is true*/
 	if (palm_userid(palm) == 0 && global_opts.autoinit == True)
 	{
+		/* XXX If the palm hasn't a serial number autoinit will not work.
+		 * We may want to upload some special program (like ChangeName)
+		 * to allow the user to manually initialize his palm.
+		 */
+	
 		/* Yes, get the best match */
 		palment = lookup_palment(palm, PMATCH_SERIAL);
 

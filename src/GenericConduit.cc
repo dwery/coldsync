@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.62 2002-08-31 19:26:03 azummo Exp $
+ * $Id: GenericConduit.cc,v 1.63 2002-10-16 18:59:32 azummo Exp $
  */
 
 /* Note on I/O:
@@ -317,7 +317,7 @@ GenericConduit::FirstSync()
 	if (_remotedb == 0)
 	{
 		Error(_("pdb_Download() failed."));
-		err = DlpCloseDB(_pconn, dbh);	// Close the database
+		err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 		va_add_to_log(_pconn, "%s %s - %s\n",
 			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
@@ -395,7 +395,7 @@ GenericConduit::FirstSync()
 	{
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit");
-		err = DlpCloseDB(_pconn, dbh);	// Close the database
+		err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 		va_add_to_log(_pconn, "%s %s - %s\n",
 			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
@@ -416,7 +416,7 @@ GenericConduit::FirstSync()
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			print_latest_dlp_error(_pconn);
-			err = DlpCloseDB(_pconn, dbh);
+			err = DlpCloseDB(_pconn, dbh, 0);
 			va_add_to_log(_pconn, "%s %s - %s\n",
 				      _dbinfo->name, _("(1st)"), _("Error"));
 			return -1;
@@ -441,7 +441,7 @@ GenericConduit::FirstSync()
 
 			if (PConn_isonline(_pconn))
 			{
-				err = DlpCloseDB(_pconn, dbh);
+				err = DlpCloseDB(_pconn, dbh, 0);
 				va_add_to_log(_pconn, "%s %s - %s\n",
 					      _dbinfo->name,
 					      _("(1st)"),
@@ -452,7 +452,7 @@ GenericConduit::FirstSync()
 	}
 
 	/* Clean up */
-	err = DlpCloseDB(_pconn, dbh);	// Close the database
+	err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 
 	va_add_to_log(_pconn, "%s %s - %s\n",
 		      _dbinfo->name, _("(1st)"), _("OK"));
@@ -547,7 +547,7 @@ GenericConduit::SlowSync()
 	{
 		Error(_("%s: Can't download \"%s\"."),
 		      "GenericConduit", _dbinfo->name);
-		DlpCloseDB(_pconn, dbh);
+		DlpCloseDB(_pconn, dbh, 0);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -859,7 +859,7 @@ GenericConduit::SlowSync()
 	{
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit::SlowSync");
-		err = DlpCloseDB(_pconn, dbh);	// Close the database
+		err = DlpCloseDB(_pconn, dbh, 0); // Close the database
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -874,7 +874,7 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't clean up database: %d."),
 		      "GenericConduit", err);
 		print_latest_dlp_error(_pconn);
-		err = DlpCloseDB(_pconn, dbh);
+		err = DlpCloseDB(_pconn, dbh, 0);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -898,7 +898,7 @@ GenericConduit::SlowSync()
 
 			if (PConn_isonline(_pconn))
 			{
-				err = DlpCloseDB(_pconn, dbh);
+				err = DlpCloseDB(_pconn, dbh, 0);
 				va_add_to_log(_pconn, "%s - %s\n",
 					      _dbinfo->name, _("Error"));
 			}
@@ -907,7 +907,7 @@ GenericConduit::SlowSync()
 	}
 
 	/* Clean up */
-	err = DlpCloseDB(_pconn, dbh);	// Close the database
+	err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 
 	va_add_to_log(_pconn, "%s - %s\n",
 		      _dbinfo->name, _("OK"));
@@ -1029,7 +1029,7 @@ GenericConduit::FastSync()
 			      "GenericConduit");
 			this->close_archive();
 
-			DlpCloseDB(_pconn, dbh);
+			DlpCloseDB(_pconn, dbh, 0);
 			va_add_to_log(_pconn, "%s - %s\n",
 				      _dbinfo->name, _("Error"));
 			return -1;
@@ -1131,7 +1131,7 @@ GenericConduit::FastSync()
 				      err);
 				pdb_FreeRecord(remoterec);
 				remoterec = NULL;
-				DlpCloseDB(_pconn, dbh);
+				DlpCloseDB(_pconn, dbh, 0);
 				va_add_to_log(_pconn, "%s - %s\n",
 					      _dbinfo->name, _("Error"));
 				return -1;
@@ -1157,7 +1157,7 @@ GenericConduit::FastSync()
 			SYNC_TRACE(6)
 				fprintf(stderr, "GenericConduit Error: "
 					"SyncRecord returned %d\n", err);
-			DlpCloseDB(_pconn, dbh);
+			DlpCloseDB(_pconn, dbh, 0);
 
 			this->close_archive();
 			return -1;
@@ -1186,7 +1186,7 @@ GenericConduit::FastSync()
 				"DlpReadNextModifiedRec returned %d\n",
 				err);
 		print_latest_dlp_error(_pconn);
-		DlpCloseDB(_pconn, dbh);
+		DlpCloseDB(_pconn, dbh, 0);
 
 		this->close_archive();
 		return -1;
@@ -1347,7 +1347,7 @@ GenericConduit::FastSync()
 	{
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit::FastSync");
-		err = DlpCloseDB(_pconn, dbh);	// Close the database
+		err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -1368,7 +1368,7 @@ GenericConduit::FastSync()
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			print_latest_dlp_error(_pconn);
-			err = DlpCloseDB(_pconn, dbh);
+			err = DlpCloseDB(_pconn, dbh, 0);
 			va_add_to_log(_pconn, "%s - %s\n",
 				      _dbinfo->name, _("Error"));
 			return -1;
@@ -1393,7 +1393,7 @@ GenericConduit::FastSync()
 
 			if (PConn_isonline(_pconn))
 			{
-				err = DlpCloseDB(_pconn, dbh);
+				err = DlpCloseDB(_pconn, dbh, 0);
 				va_add_to_log(_pconn, "%s - %s\n",
 					      _dbinfo->name, _("Error"));
 			}
@@ -1402,7 +1402,7 @@ GenericConduit::FastSync()
 	}
 
 	/* Clean up */
-	err = DlpCloseDB(_pconn, dbh);	// Close the database
+	err = DlpCloseDB(_pconn, dbh, 0);	// Close the database
 
 	va_add_to_log(_pconn, "%s - %s\n", _dbinfo->name, _("OK"));
 	return 0;		// Success

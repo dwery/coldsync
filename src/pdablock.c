@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdablock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: pdablock.c,v 2.3 2002-10-16 18:59:32 azummo Exp $
  */
 
 #include "config.h"
@@ -274,17 +274,17 @@ new_pda_block()
 		return NULL;
 
 	/* Initialize the new pda_block */
-	retval->next = NULL;
-	retval->flags = 0;
-	retval->name = NULL;
-	retval->snum = NULL;
-	retval->directory = NULL;
-	retval->username = NULL;
-	retval->userid_given = False;
-	retval->userid = 0L;
-	retval->forward = False;
-	retval->forward_host = NULL;
-	retval->forward_name = NULL;
+	retval->next		= NULL;
+	retval->flags		= 0;
+	retval->name		= NULL;
+	retval->snum		= NULL;
+	retval->directory	= NULL;
+	retval->username	= NULL;
+	retval->userid_given	= False;
+	retval->userid		= 0L;
+	retval->forward		= False;
+	retval->forward_host	= NULL;
+	retval->forward_name	= NULL;
 
 	return retval;
 }
