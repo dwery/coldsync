@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.30 2002-11-04 00:08:55 azummo Exp $
+ * $Id: PConnection_net.c,v 1.31 2002-11-12 20:11:51 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,15 +14,6 @@
 #include <arpa/inet.h>		/* For inet_pton() */
 #include <netdb.h>		/* For getservbyname() */
 #include <string.h>		/* For memset() */
-
-#if !defined BYTE_ORDER
-#  if WORDS_BIGENDIAN
-#    define BYTE_ORDER BIG_ENDIAN
-#  else /* WORDS_BIGENDIAN */
-#    define BYTE_ORDER LITTLE_ENDIAN
-#  endif /* WORDS_BIGENDIAN */
-#endif /* BYTE_ORDER */
-
 #if HAVE_INET_NTOP
 #  include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #  include <resolv.h>		/* For inet_ntop() under Solaris */
