@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.29 2001-01-11 08:27:31 arensb Exp $
+ * $Id: lexer.l,v 2.30 2001-01-25 07:47:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -137,7 +137,7 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found header name [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		Error(_("%s: Can't make copy of string.\n"),
+		Error(_("%s: Can't make copy of string."),
 		      "yylex");
 		return -1;
 	}
@@ -150,7 +150,7 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found bareword string [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		Error(_("%s: Can't make copy of string.\n"),
+		Error(_("%s: Can't make copy of string."),
 		      "yylex");
 		return -1;
 	}
@@ -272,7 +272,7 @@ ID		[-a-zA-Z_0-9]
 
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		Error(_("%s: Can't make copy of string.\n"),
+		Error(_("%s: Can't make copy of string."),
 		      "yylex");
 		return -1;
 	}
@@ -300,7 +300,7 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found string [%s]\n", yytext);
 	if ((yylval.string = (char *) malloc(yyleng-1)) == NULL)
 	{
-		Error(_("%s: Can't malloc copy of string.\n"),
+		Error(_("%s: Can't malloc copy of string."),
 		      "yylex");
 		return -1;
 	}
@@ -350,7 +350,7 @@ ID		[-a-zA-Z_0-9]
 
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		Error(_("%s: Can't make copy of string.\n"),
+		Error(_("%s: Can't make copy of string."),
 		      "yylex");
 		return -1;
 	}
@@ -405,7 +405,7 @@ lex_expect(const int state)
 		break;
 	    default:
 		Error(_("%s: unknown start state %d.\n"
-			"Please tell the maintainer to fix `lexer.l'.\n"),
+			"Please tell the maintainer to fix `lexer.l'."),
 		      "lex_expect",
 		      state);
 	}

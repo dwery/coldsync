@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.28 2001-01-11 08:27:22 arensb Exp $
+ * $Id: backup.c,v 2.29 2001-01-25 07:47:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -54,7 +54,7 @@ backup(PConnection *pconn,
 	if (bakfd < 0)
 	{
 		Error(_("%s: can't create new backup file %s.\n"
-			"It may already exist.\n"),
+			"It may already exist."),
 		      "backup",
 		      bakfname);
 		perror("open");
@@ -67,7 +67,7 @@ backup(PConnection *pconn,
 	err = DlpOpenConduit(pconn);
 	if (err != DLPSTAT_NOERR)
 	{
-		Error(_("Can't open backup conduit.\n"));
+		Error(_("Can't open backup conduit."));
 		close(bakfd);
 		add_to_log(_("Error\n"));
 		return -1;
@@ -88,7 +88,7 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		Error(_("Can't open database \"%s\".\n"),
+		Error(_("Can't open database \"%s\"."),
 		      dbinfo->name);
 		close(bakfd);
 		add_to_log(_("Error\n"));
@@ -121,7 +121,7 @@ backup(PConnection *pconn,
 	err = pdb_Write(pdb, bakfd);
 	if (err < 0)
 	{
-		Error(_("%s: can't write database \"%s\" to \"%s\".\n"),
+		Error(_("%s: can't write database \"%s\" to \"%s\"."),
 		      "backup",
 		      dbinfo->name, bakfname);
 		err = DlpCloseDB(pconn, dbh);
@@ -166,7 +166,7 @@ full_backup(PConnection *pconn,
 		err = backup(pconn, cur_db, backupdir);
 		if (err < 0)
 		{
-			Error(_("%s: Can't back up \"%s\".\n"),
+			Error(_("%s: Can't back up \"%s\"."),
 			      "full_backup",
 			      cur_db->name);
 

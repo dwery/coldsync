@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.14 2001-01-11 08:27:34 arensb Exp $
+ * $Id: palm.c,v 2.15 2001-01-25 07:47:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -174,7 +174,7 @@ fetch_sysinfo(struct Palm *palm)
 	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
 	{
 		/* XXX - This message doesn't really belong here */
-		Error(_("Can't get system info.\n"));
+		Error(_("Can't get system info."));
 		return -1;
 	}
 	MISC_TRACE(3)
@@ -241,7 +241,7 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		Error(_("Can't read NetSync info.\n"));
+		Error(_("Can't read NetSync info."));
 		return -1;
 	}
 
@@ -265,7 +265,7 @@ fetch_userinfo(struct Palm *palm)
 	/* Get user information from the Palm */
 	if ((err = DlpReadUserInfo(palm->pconn_, &(palm->userinfo_))) < 0)
 	{
-		Error(_("Can't get user info.\n"));
+		Error(_("Can't get user info."));
 		return -1;
 	}
 
@@ -366,7 +366,7 @@ fetch_serial(struct Palm *palm)
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
-		Error(_("Can't get location of serial number.\n"));
+		Error(_("Can't get location of serial number."));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -378,7 +378,7 @@ fetch_serial(struct Palm *palm)
 	{
 		Error(_("Warning: ROM serial number is %d characters long. "
 			"Please notify the\n"
-			"maintainer.\n"),
+			"maintainer."),
 		      snum_len);
 		snum_len = SNUM_MAX;
 	}
@@ -390,7 +390,7 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
-		Error(_("Can't read serial number.\n"));
+		Error(_("Can't read serial number."));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -439,7 +439,7 @@ ListDBs(struct Palm *palm)
 			Error(_("You have an old Palm, one that "
 				"doesn't say how many\n"
 				"databases it has. I can't cope with "
-				"this.\n"));
+				"this."));
 			return -1;
 		}
 
@@ -874,7 +874,7 @@ palm_append_dbentry(struct Palm *palm,
 			    sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
-		Error(_("Can't resize palm->dblist.\n"));
+		Error(_("Can't resize palm->dblist."));
 		return -1;
 	}
 	palm->dblist_ = newdblist;

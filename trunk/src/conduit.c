@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.28 2001-01-11 08:27:26 arensb Exp $
+ * $Id: conduit.c,v 2.29 2001-01-25 07:47:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -374,13 +374,12 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			Error(_("%s: I just got file descriptor %d. "
 				"There appears to be a file\n"
 				"descriptor leak. Please notify the "
-				"maintainer.\n"),
+				"maintainer."),
 			      "run_conduit", spcpipe[1]);
 		}
 		if (spcpipe[0] > 999)
 		{
-			Error(_("%s: Too many file descriptors. "
-				"Aborting.\n"),
+			Error(_("%s: Too many file descriptors. Aborting."),
 			      "run_conduit");
 			return 502;
 		}
@@ -392,7 +391,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	old_sigchld = signal(SIGCHLD, sigchld_handler);
 	if (old_sigchld == SIG_ERR)
 	{
-		Error(_("%s: Can't set signal handler.\n"),
+		Error(_("%s: Can't set signal handler."),
 		      "run_conduit");
 		perror("signal");
 		return 503;
@@ -446,7 +445,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			    NULL);
 	if (pid < 0)
 	{
-		Error(_("%s: Can't spawn conduit.\n"),
+		Error(_("%s: Can't spawn conduit."),
 		      "run_conduit");
 
 		/* Let's hope that this isn't a fatal problem */
@@ -612,7 +611,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			if (err < 0)
 			{
 				/* An error occurred */
-				Error(_("Couldn't send header to conduit.\n"));
+				Error(_("Couldn't send header to conduit."));
 				perror("write");
 				goto abort;
 			}
@@ -673,7 +672,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				Error(_("%s: Conduit handler is in "
 					"an inconsistent state at\n"
 					"%s, line %d. Please notify the "
-					"maintainer.\n"),
+					"maintainer."),
 				      "run_conduit", __FILE__, __LINE__);
 				goto abort;
 			}
@@ -701,7 +700,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		{
 			if (errno != EINTR)
 			{
-				Error(_("%s: Error in select().\n"),
+				Error(_("%s: Error in select()."),
 				      "run_conduit");
 				perror("select");
 
@@ -715,7 +714,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		if (err == 0)
 		{
 			/* This should never happen */
-			Warn(_("%s: select() returned 0. I'm puzzled.\n"),
+			Warn(_("%s: select() returned 0. I'm puzzled."),
 			     "run_conduit");
 			continue;
 		}
@@ -768,7 +767,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			if (err < 0)
 			{
 				Error(_("%s: Error reading SPC request "
-					"from conduit.\n"),
+					"from conduit."),
 				      "run_conduit");
 				perror("read");
 				/* XXX - What now? Abort? */
@@ -837,7 +836,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				if (err < 0)
 				{
 					Error(_("%s: Error reading SPC "
-						"request.\n"),
+						"request."),
 					      "run_conduit");
 					perror("read");
 					/* XXX - What now? Abort or
@@ -914,7 +913,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			if (err != SPC_HEADER_LEN)
 			{
 				Error(_("%s: error sending SPC response "
-					"header.\n"),
+					"header."),
 				      "run_conduit");
 				if (err < 0)
 					perror("write");
@@ -947,7 +946,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				if (err < 0)
 				{
 					Error(_("%s: Error sending SPC "
-						"response data.\n"),
+						"response data."),
 					      "run_conduit");
 					perror("write");
 					/* XXX - What now? Abort? */
@@ -1140,7 +1139,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			/* Make sure the flavor is okay. */
 			if ((flavor_mask & builtin->flavors) == 0)
 			{
-				Error(_("Conduit %s is not a %s conduit.\n"),
+				Error(_("Conduit %s is not a %s conduit."),
 				      builtin->name, flavor);
 				continue;
 			}
@@ -1183,7 +1182,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			/* Make sure the flavor is okay. */
 			if ((flavor_mask & builtin->flavors) == 0)
 			{
-				Error(_("Conduit %s is not a %s conduit.\n"),
+				Error(_("Conduit %s is not a %s conduit."),
 				      builtin->name, flavor);
 				return -1;
 			}
@@ -1333,7 +1332,7 @@ spawn_conduit(
 
 	if ((fh = fdopen(inpipe[1], "wb")) == NULL)
 	{
-		Error(_("%s: Can't create file handle to child's stdin.\n"),
+		Error(_("%s: Can't create file handle to child's stdin."),
 		      "spawn_conduit");
 		perror("fdopen");
 
@@ -1361,7 +1360,7 @@ spawn_conduit(
 
 	if ((fh = fdopen(outpipe[0], "rb")) == NULL)
 	{
-		Error(_("%s: Can't create file handle to child's stdout.\n"),
+		Error(_("%s: Can't create file handle to child's stdout."),
 		      "spawn_conduit");
 		perror("fdopen");
 
@@ -1379,7 +1378,7 @@ spawn_conduit(
 	err = setvbuf(fh, cond_stdout_buf, _IOLBF, sizeof(cond_stdout_buf));
 	if (err < 0)
 	{
-		Error(_("%s: Can't make child's stdout be line-buffered.\n"),
+		Error(_("%s: Can't make child's stdout be line-buffered."),
 		      "spawn_conduit");
 		perror("setvbuf");
 
@@ -1454,7 +1453,7 @@ spawn_conduit(
 	err = execvp(path, argv);
 
 	/* If we ever get to this point, then something went wrong */
-	Error(_("%s: execvp(%s) failed and returned %d.\n"),
+	Error(_("%s: execvp(%s) failed and returned %d."),
 	      "spawn_conduit",
 	      path, err);
 	perror("execvp");
@@ -1536,7 +1535,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 				 */
 				Error(_("%s: select() returned an "
 					"unexpected error. This should "
-					"never happen.\n"),
+					"never happen."),
 				      "cond_readline");
 				perror("select");
 				return -1;
@@ -1578,7 +1577,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 			 * out.
 			 */
 			Error(_("%s: select() returned 0. This should never "
-				"happen. Please notify the maintainer.\n"),
+				"happen. Please notify the maintainer."),
 			      "cond_sendline");
 			return -1;
 		}
@@ -1634,13 +1633,13 @@ cond_readline(char *buf,	/* Buffer to read into */
 		Error(_("%s: Conduit is running happily, but hasn't printed "
 			"anything.\n"
 			"And yet, I was notified. This is a bug. Please "
-			"notify the maintainer.\n"),
+			"notify the maintainer."),
 		      "cond_readline");
 	}
 
   abort:
 	/* The conduit is dead. This is bad. */
-	Error(_("%s: Conduit exited unexpectedly.\n"),
+	Error(_("%s: Conduit exited unexpectedly."),
 	      "cond_sendline");
 
 	SYNC_TRACE(2)
@@ -1815,7 +1814,7 @@ sigchld_handler(int sig)
 	p = waitpid(conduit_pid, &conduit_status, WNOHANG);
 	if (p < 0)
 	{
-		Error(_("%s: Can't get child process status.\n"),
+		Error(_("%s: Can't get child process status."),
 		      "sigchld_handler");
 		perror("waitpid");
 
