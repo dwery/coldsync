@@ -1,6 +1,10 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.22 2001-11-19 17:08:06 arensb Exp $
+ *	Copyright (C) 2000-2001, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: PConnection_net.c,v 1.23 2002-01-23 15:51:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
