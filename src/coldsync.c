@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.72 2000-12-24 09:50:55 arensb Exp $
+ * $Id: coldsync.c,v 1.73 2000-12-24 20:56:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2290,6 +2290,11 @@ forward_netsync(struct PConnection *local,
 		if (FD_ISSET(local->fd, &in_fds))
 		{
 			err = (*local->dlp.read)(local, &inbuf, &inlen);
+			if (err < 0)
+			{
+				perror("read local");
+				break;
+			}
 			SYNC_TRACE(5)
 				fprintf(stderr,
 					"Read %d-byte message from local. "
@@ -2297,14 +2302,26 @@ forward_netsync(struct PConnection *local,
 					inlen, err);
 
 			err = (*remote->dlp.write)(remote, inbuf, inlen);
+			if (err < 0)
+			{
+				perror("read local");
+				break;
+			}
 			SYNC_TRACE(5)
 				fprintf(stderr,
 					"Wrote %d-byte message to remote. "
 					"err == %d\n",
 					inlen, err);
-		} else if (FD_ISSET(remote->fd, &in_fds))
+		}
+
+		if (FD_ISSET(remote->fd, &in_fds))
 		{
 			err = (*remote->dlp.read)(remote, &inbuf, &inlen);
+			if (err < 0)
+			{
+				perror("read local");
+				break;
+			}
 			SYNC_TRACE(5)
 				fprintf(stderr,
 					"Read %d-byte message from remote. "
@@ -2312,6 +2329,11 @@ forward_netsync(struct PConnection *local,
 					inlen, err);
 
 			err = (*local->dlp.write)(local, inbuf, inlen);
+			if (err < 0)
+			{
+				perror("read local");
+				break;
+			}
 			SYNC_TRACE(5)
 				fprintf(stderr,
 					"Wrote %d-byte message to local. "
