@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.6 1999-03-11 03:30:48 arensb Exp $
+ * $Id: pdb.c,v 1.7 1999-03-11 04:15:15 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -411,9 +411,6 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			wptr = recbuf;
 			put_udword(&wptr, offset);
 			put_ubyte(&wptr, db->rec_index.rec[i].attributes);
-/*  			put_ubyte(&wptr, db->rec_index.rec[i].uniqueID[0]); */
-/*  			put_ubyte(&wptr, db->rec_index.rec[i].uniqueID[1]); */
-/*  			put_ubyte(&wptr, db->rec_index.rec[i].uniqueID[2]); */
 			put_ubyte(&wptr,
 				  (char) ((db->rec_index.rec[i].uniqueID >> 16)
 					  & 0xff));
@@ -972,9 +969,6 @@ pdb_LoadRecIndex(int fd,
 		rptr = inbuf;
 		db->rec_index.rec[i].offset = get_udword(&rptr);
 		db->rec_index.rec[i].attributes = get_ubyte(&rptr);
-/*  		db->rec_index.rec[i].uniqueID[0] = get_ubyte(&rptr); */
-/*  		db->rec_index.rec[i].uniqueID[1] = get_ubyte(&rptr); */
-/*  		db->rec_index.rec[i].uniqueID[2] = get_ubyte(&rptr); */
 		db->rec_index.rec[i].uniqueID =
 			((udword) (get_ubyte(&rptr) << 16)) |
 			((udword) (get_ubyte(&rptr) << 8)) |
@@ -988,9 +982,6 @@ printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, uniqueID 0x%08lx\n",
        i,
        db->rec_index.rec[i].offset,
        db->rec_index.rec[i].attributes,
-/*         db->rec_index.rec[i].uniqueID[0], */
-/*         db->rec_index.rec[i].uniqueID[1], */
-/*         db->rec_index.rec[i].uniqueID[2]); */
        db->rec_index.rec[i].uniqueID;
 #endif	/* 0 */
 	}
@@ -1627,12 +1618,6 @@ fprintf(stderr, "\tcategory: %d\n", recinfo.category);
 		db->rec_index.rec[i].offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
 		db->rec_index.rec[i].attributes = recinfo.attributes;
-/*  		db->rec_index.rec[i].uniqueID[0] = */
-/*  			(ubyte) ((recinfo.id >> 16) & 0xff); */
-/*  		db->rec_index.rec[i].uniqueID[1] = */
-/*  			(ubyte) ((recinfo.id >> 8) & 0xff); */
-/*  		db->rec_index.rec[i].uniqueID[2] = */
-/*  			(ubyte) (recinfo.id & 0xff); */
 		db->rec_index.rec[i].uniqueID = recinfo.id;
 
 		/* Fill in the data size entry */

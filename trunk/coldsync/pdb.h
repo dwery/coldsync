@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.1 1999-03-11 03:27:51 arensb Exp $
+ * $Id: pdb.h,v 1.2 1999-03-11 04:15:29 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -107,8 +107,6 @@ struct pdb_record
 {
 	localID offset;			/* Offset of record in file */
 	ubyte attributes;		/* Record attributes */
-/*	ubyte uniqueID[3];*/		/* Record's unique ID. Legal records
-					 * do not have an ID of 0. */
 	udword uniqueID;		/* Record's unique ID. Actually,
 					 * only the bottom 3 bytes are
 					 * stored in the file, but for
