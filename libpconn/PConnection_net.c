@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>		/* For socket() */
 #include <netinet/in.h>		/* For sockaddr_in, htonl() etc. */
-#include <string.h>		/* For memset() */
+#include <string.h>		/* For bzero() */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
