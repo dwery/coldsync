@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.14 2000-01-22 05:12:35 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.15 2000-01-23 21:20:31 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -800,7 +800,8 @@ GenericConduit::FastSync()
 	if (err != DLPSTAT_NOERR)
 	{
 		SYNC_TRACE(4)
-			cerr << "GenericConduit::FastSync: DlpOpenConduit() returned "
+			cerr << "GenericConduit::FastSync: DlpOpenConduit()"
+			        " returned "
 			     << err << endl;
 		add_to_log("Error\n");
 		return -1; 
@@ -865,6 +866,7 @@ GenericConduit::FastSync()
 	       == DLPSTAT_NOERR)
 	{
 		/* Got the next modified record. Deal with it */
+		/* XXX - Apparently dumps core for Justin Hawkins */
 		remoterec = new_Record(recinfo.attributes,
 				       recinfo.category,
 				       recinfo.id,
@@ -881,7 +883,8 @@ GenericConduit::FastSync()
 			return -1;
 		}
 		SYNC_TRACE(5)
-		cerr << "Created new record from downloaded record" << endl;
+			cerr << "Created new record from downloaded record"
+			     << endl;
 
 		/* Look up the modified record in the local database
 		 * Contract: 'localrec', here, is effectively
