@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.25 2000-11-10 03:45:46 arensb Exp $
+.\" $Id: coldsync.8,v 1.26 2000-11-17 07:15:09 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -16,51 +16,66 @@
 .Nd synchronize files between a Palm and a workstation.
 .Sh SYNOPSIS
 .Nm coldsync
-.Op Fl hVSFRI
-.Op Fl p Ar device
-.Op Fl t Ar type
-.Op Fl d Ar debug
-.Op Fl u Ar user|uid
-.Op Fl f Ar config_file
+.Op Ar options
+.Op Fl ms
 .Nm coldsync
-.Op Fl FSR
-.Op Fl p Ar device
-.Op Fl t Ar type
-.Op Fl d Ar debug
-.Fl b Ar dir
+.Op Ar options
+.Fl mb
+.Ar dir
+.Op database...
 .Nm coldsync
-.Op Fl FSR
-.Op Fl p Ar device
-.Op Fl t Ar type
-.Op Fl d Ar debug
-.Fl r Ar dir
+.Op Ar options
+.Fl mr
+.Ar file|dir...
+.Nm coldsync
+.Fl V
+.Nm coldsync
+.Fl h
 .Sh DESCRIPTION
 .Nm coldsync
-synchronizes databases between a Palm device and a workstation (see
-OVERVIEW, below). If the
-.Fl b Ar directory
-option is specified,
-.Nm coldsync
-performs a full backup of the Palm to
-.Ar directory .
-When the
-.Fl r Ar directory
-option is specified,
-.Nm coldsync
-restores files from
-.Ar directory
-to the Palm. By default,
-.Nm coldsync
-performs a full sync (see below) with a Palm device listening on the
-device given by the
-.Fl p
-option. Normally, the only reason to do a backup is to save the
-contents of your Palm before doing something that might cause you to
-lose data, or when you want to transfer the contents of one Palm to
-another.
+synchronizes databases between a Palm Computing device and a
+workstation (see OVERVIEW, below). By default, it performs a full
+sync, copying records from the Palm to the desktop and vice-versa
+until both contain the same set of records.
 .Pp
-The following options are available:
+In backup mode,
+.Nm coldsync
+downloads databases from the Palm to a user-specified directory on the
+workstation.
+.Pp
+In restore mode,
+.Nm coldsync
+uploads database files from the workstation to the Palm. This can be
+used either to restore files after a backup, or to install new
+databases on the Palm.
+.Sh OPTIONS
+.Ss Modes
 .Bl -tag -width indent
+.It Fl ms
+Sync mode (or Standalone mode). This is the default mode, in which
+.Nm coldsync
+performs a full sync (see
+.Sx OVERVIEW ,
+below).
+.It Fl mb
+Backup mode, in which
+.Nm coldsync
+downloads databases from the Palm. The first argument is a directory
+in which to write the files. Any subsequent arguments are the names of
+databases to back up. If no databases are specified,
+.Nm coldsync
+does a full backup of the Palm.
+.It Fl mr
+Restore mode (or Install mode), in which
+.Nm coldsync
+installs the files given as arguments on the Palm. Each argument is
+processed in turn; if it is a file, then that file is uploaded. If the
+argument is a directory, then all files in that directory will be
+uploaded (this is not recursive). If a database of the same name
+exists on the Palm, that database is deleted.
+.El
+.Ss Common Options
+.Bl -tag -width -indent
 .It Fl h
 (Help) Print a usage message and exit.
 .It Fl V
@@ -102,19 +117,6 @@ option. Legal values are
 .Dv serial
 and
 .Dv usb .
-.It Fl b Ar directory
-Perform a full backup of the Palm, and put the files in
-.Ar directory .
-.Em NB:
-This will not overwrite any existing files: if a backup file for a
-database already exists in the backup directory, that database will
-simply be skipped.
-.It Fl r Ar directory
-Restore files from
-.Ar directory .
-.Em Warning:
-If you restore a database that already exists on the Palm, that
-database will be overwritten.
 .It Fl d Ar debug
 Set debugging level. The argument
 .Ar debug
@@ -150,6 +152,27 @@ file,
 will print a summary of what
 .Nm ColdSync
 thinks your configuration file contains.
+.It Fl b Ar directory
+.Em This option is deprecated. Please use
+.Fl mb
+.Em instead.
+.Pp
+Perform a full backup of the Palm, and put the files in
+.Ar directory .
+.Em NB:
+This will not overwrite any existing files: if a backup file for a
+database already exists in the backup directory, that database will
+simply be skipped.
+.It Fl r Ar directory
+.Em This option is deprecated. Please use
+.Fl mr
+.Em instead.
+.Pp
+Restore files from
+.Ar directory .
+.Em Warning:
+If you restore a database that already exists on the Palm, that
+database will be overwritten.
 .El
 .Sh OVERVIEW
 To sync,
@@ -183,16 +206,27 @@ The Palm announces itself to
 queries the Palm to find out what databases it has, who owns it, etc.
 .It
 .Nm coldsync
+runs Install conduits on any files in the install directory (
+.Pa ~/.palm/install
+by default), then uploads to the Palm any files still in the install
+directory after the Install conduits have run.
+.It
+.Nm coldsync
 runs the Fetch conduits, to create the desktop copies of the
 databases.
 .It
 The main sync:
 .Nm coldsync
-synchronizes the databases on the Palm with those on the desktop, so
-that they contain the same information. It also runs Sync conduits.
+runs the Sync conduits for all databases on the Palm. By default,
+.Nm coldsync
+only runs the 
+.Li [generic]
+conduit, which synchronizes the database on the Palm with a backup
+file on the workstation. This can be overridden, however.
 .It
 The main sync ends. The Palm displays the message
 .Dq HotSync complete.
+You may remove the Palm from its cradle.
 .It
 .Nm coldsync
 runs the Dump conduits. These can export the updated databases to
@@ -201,13 +235,15 @@ other formats.
 .Pp
 When possible,
 .Nm ColdSync
-tries to be smart about how it syncs databases, and only transfers
-those records that have changed since the last sync. At the same time,
-it tries to be cautious, and never deletes anything that it isn't sure
-should be deleted. For instance, if a record has changed both on the
-Palm and on the desktop, ColdSync will create two records, one with
-each version of the record, rather than risk deleting the wrong
-record.
+(specifically, the
+.Li [generic]
+Sync conduit) tries to be smart about how it syncs databases, and only
+transfers those records that have changed since the last sync. At the
+same time, it tries to be cautious, and never deletes anything that it
+isn't sure should be deleted. For instance, if a record has changed
+both on the Palm and on the desktop, ColdSync will create two records,
+one with each version of the record, rather than risk deleting the
+wrong record.
 .Pp
 By itself,
 .Nm ColdSync
@@ -226,6 +262,7 @@ file. If you'll look back at the sequence of events, above, you'll see
 how this works.
 .Pp
 Currently, the only conduit flavors are
+.Dq Install ,
 .Dq Fetch ,
 .Dq Dump ,
 and
@@ -261,9 +298,10 @@ where
 .Li <type>
 is either
 .Li serial
-for a serial connection (PalmPilot, Palm V, etc.), or
+for a serial connection (PalmPilot, Palm V, Visor under Linux, etc.),
+or
 .Li usb
-for a USB connection (Visor);
+for a USB connection (Visor under FreeBSD);
 .Pa /dev/palm
 is the pathname to your serial or USB device. Currently, only one
 device may be specified.
@@ -274,6 +312,10 @@ to specify
 as
 .Li serial ,
 since IrCOMM effectively makes an infrared port emulate a serial port.
+.Pp
+The
+.Li usb
+listen type is only used under *BSD.
 .Pp
 For serial devices, the
 .Li listen
@@ -288,7 +330,9 @@ will use the default speed, 38400 bps. You will generally want to set
 this to the highest speed supported by both your Palm and your
 machine's serial port.
 .Pp
-If a device was specified on the command line,
+If a device was specified on the command line with the
+.Fl p
+option,
 .Nm ColdSync
 ignores the one specified in the configuration file. If no device was
 specified either on the command line or in the configuration file,
@@ -328,11 +372,6 @@ after the dash is the checksum. If you omit the checksum,
 .Nm ColdSync
 will calculate it for you and suggest that you add it to your
 .Pa .coldsyncrc .
-If you specify an incorrect checksum,
-.Nm ColdSync
-will ignore the
-.Li snum
-directive entirely.
 .Pp
 The
 .Li directory
@@ -419,11 +458,14 @@ conduit <flavor-list> {
 	type: <creator>/<type>;
 	preference: <pref-creator>/<pref-id>;
 	<flags>;
+    arguments:
+	<conduit-specific arguments>
 }
 .Ed
 where
 .Li <flavor-list>
 is a comma-separated list of conduit flavors. Allowable conduit flavors are
+.Li install ,
 .Li fetch ,
 .Li dump ,
 and
@@ -525,7 +567,7 @@ and
 The
 .Li default
 flag indicates that this is a default conduit, and should be run only
-if no better conduit is specified later on. The
+if no other matching conduit is specified later on. The
 .Li default
 flag works in conjunction with the
 .Li type
@@ -569,6 +611,23 @@ will be run for databases with creator
 and type
 .Li DATA ,
 even though the second conduit block also applies.
+.Pp
+A conduit block may also contain conduit-specific arguments, e.g.,
+.Bd -literal -offset indent
+conduit dump {
+	path: /usr/bin/send-mail
+	type: mail/DATA;
+    arguments:
+	Sendmail: /usr/sbin/sendmail;
+	Signature: /home/arensb/.palm-signature;
+	DSN: return-receipt;
+}
+.Ed
+All of the lines following the
+.Li arguments:
+line are passed to the conduit, and may be used to modify its
+behavior. These arguments are conduit-dependent, and thus will be
+described in the documentation for each conduit.
 .Ss Built-In Conduit
 Instead of a pathname to a program or script, you may also specify the
 string
@@ -612,7 +671,7 @@ may say
 .Ed
 or
 .Bd -literal -offset indent
-	pda "MyPalm" {
+	pda "My Palm" {
 .Ed
 but not
 .Bd -literal -offset indent
@@ -642,7 +701,7 @@ simply sync with the new one: you will lose all of your old data.
 .Pp
 Instead, make a backup of your old Palm:
 .Dl % mkdir palm-backup
-.Dl % coldsync -b palm-backup
+.Dl % coldsync -mb palm-backup
 Then copy the contents of
 .Pa palm-backup
 to
@@ -677,9 +736,9 @@ Every so often, Palm announces a PalmOS upgrade. Some of these
 upgrades are simple and consist of a
 .Pa .prc
 file that you need to upload. It's probably safe to apply this upgrade
-by putting the
+by copying the
 .Pa .prc
-file in
+file to
 .Pa ~/.palm/install
 and syncing.
 .Pp
@@ -733,7 +792,7 @@ serial number.
 .Sh BUGS
 When syncing a Handpring Visor under Linux,
 .Nm ColdSync
-spits out copious amounts of "Bad CRC" messages.
+often spits out copious amounts of "Bad CRC" messages.
 .Pp
 .Nm ColdSync
 does not deal with categories.
