@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.4 1999-02-24 13:28:46 arensb Exp $
+dnl # $Id: configure.in,v 1.5 1999-03-11 03:46:56 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -8,14 +8,17 @@ dnl #	test "$var1" = value && var2=true
 dnl # Berkeley 'make' copes quite well with the equivalent
 dnl #	if test "$var1" = value; then var2=true; fi
 
+dnl # XXX - Test to see whether cpp accepts macro definitions with
+dnl # "..." as argument.
+
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.1.2)
+AM_INIT_AUTOMAKE(coldsync, 0.1.4)
 AM_CONFIG_HEADER(config.h)
 
 dnl # XXX - Without this, the Makefile contains
 dnl #	SHELL = @SHELL@
 dnl # but 'configure' doesn't substitute @SHELL@.
-SHELL=sh
+SHELL=/bin/sh
 AC_SUBST(SHELL)
 
 dnl # Checks for programs.
