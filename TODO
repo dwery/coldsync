@@ -1,3 +1,9 @@
+- Perhaps initialize $CONDUIT_PATH to $PATH (from the environment).
+- Test $CONDUIT_PATH, $CONDUITDIR stuff.
+- Document $CONDUIT_PATH.
+- It'd be nice to add types to distinguish between bytes and letters,
+  and between arrays of arbitrary data and strings of characters. This
+  is for i18n and for the benefit of Japanese users and such.
 - It'd be nice to add types to distinguish between bytes and letters,
   and between arrays of arbitrary data and strings of characters. This
   is for i18n and for the benefit of Japanese users and such.
