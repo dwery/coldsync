@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.134 2002-04-27 17:25:48 azummo Exp $
+ * $Id: coldsync.c,v 1.135 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -534,7 +534,7 @@ palm_Connect( void )
 	if ((pconn = new_PConnection(listen->device,
 				     listen->listen_type,
 				     listen->protocol,
-				     PCONNFL_PROMPT |
+				     PCONNFL_PROMPTAFTER |
 				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)
@@ -567,52 +567,22 @@ palm_Connect( void )
 	return palm;
 }
 
-/* XXX - Remove those sanity if (palm == NULL) checks. */
-
 static void
 palm_Disconnect(struct Palm *palm, ubyte status)
 {
 	int err;
-
-	if (palm == NULL)
-		fprintf(stderr, "Undefined palm * passed to palm_Disconnect\n");
 
 	/* Close the connection */
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
 
-	/* ... only if the last error wan't CSE_NOCONN */
+	if((err = Disconnect(palm_pconn(palm), status)) < 0)
+		Error(_("Couldn't disconnect."));
 
-	if (cs_errno != CSE_NOCONN)
-	{
-		if((err = Disconnect(palm_pconn(palm), status)) < 0)
-			Error(_("Couldn't disconnect."));
-	}
-	else
-	{
-		Error(_("Lost connection to Palm."));
-	}
+	free_Palm(palm);
 }
 
-static void
-palm_Free(struct Palm *palm)
-{
-	if (palm)
-		free_Palm( palm );
-	else
-		fprintf(stderr, "Undefined palm * passed to palm_Free\n");
-}
-
-static void
-palm_DisconnectAndFree(struct Palm *palm, ubyte status)
-{
-	if (palm == NULL)
-		fprintf(stderr, "Undefined palm * passed to palm_DisconnectAndFree\n");
-
-	palm_Disconnect(palm, status);
-	palm_Free(palm);
-}
 
 static int
 forward(pda_block *pda, struct Palm *palm )
@@ -688,7 +658,7 @@ forward(pda_block *pda, struct Palm *palm )
 		Error(_("Can't create connection to forwarding "
 			"host."));
 		free(sa);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -699,7 +669,7 @@ forward(pda_block *pda, struct Palm *palm )
 	 * Palm cancelling the sync while this handshaking is going
 	 * on.
 	 */
-	err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
+	err = PConn_connect(pconn_forw, sa, sa_len);
 	if (err < 0)
 	{
 		Error(_("Can't establish connection with forwarding "
@@ -910,14 +880,22 @@ do_sync(pda_block *pda, struct Palm *palm)
 	 */
 	if ((pda != NULL) && pda->forward)
 	{
-		if (forward(pda, palm) == 0)	
+		err = forward(pda, palm);
+
+		/* The remote host will send the Palm the DlpEndOfSync
+		 * command and the local connection gets closed.
+		 * We must avoid any further communication if the sync
+		 * succeeded.
+		 */ 
+
+		if (err == 0)
 		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+			PConn_set_status(palm_pconn(palm), PCONNSTAT_CLOSED);
 			return 0;
 		}
-		else
+		if (err < 0)
 		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -944,7 +922,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	if (err < 0)
 	{
 		/* An error occurred while creating the sync directories */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -965,7 +943,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
 	{
 		Error(_("CacheFromConduits() returned %d."), err);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -975,7 +953,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
 	{
 		Error(_("Can't get last sync PC from Palm"));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1035,14 +1013,14 @@ do_sync(pda_block *pda, struct Palm *palm)
 		{
 		    case CSE_NOCONN:
 			Error(_("Lost connection to Palm."));
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
 		    default:
 			Error(_("Can't fetch list of databases."));
 			break;
 		}
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1054,7 +1032,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	{
 		if ((err = conduits_install(palm, pda)) < 0)
 		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -1093,7 +1071,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 
 	if ((err = conduits_fetch(palm, pda)) < 0)
 	{
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1108,16 +1086,16 @@ do_sync(pda_block *pda, struct Palm *palm)
 				 * fails, since we're terminating
 				 * anyway.
 				 */
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 
 		    case CSE_NOCONN:
 			Error(_("Lost connection to Palm."));
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
 		    default:
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		}
 	}
@@ -1139,7 +1117,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 		switch (cs_errno)
 		{
 		    case CSE_NOCONN:
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		    default:
 			/* Hope for the best */
@@ -1152,7 +1130,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	if ((err = UpdateUserInfo(palm, 1)) < 0)
 	{
 		Error(_("Can't write user info."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 		return -1;
 	}
 
@@ -1180,7 +1158,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 				{
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
+					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Warn(_("Can't fetch preference "
@@ -1199,7 +1177,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	{
 		if ((err = conduits_install(palm, pda)) < 0)
 		{
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -1214,11 +1192,8 @@ do_sync(pda_block *pda, struct Palm *palm)
 	if (cs_errno == CSE_NOCONN)
 	{
 		Error(_("Lost connection to Palm."));
-		palm_Free(palm);
 		return -1;
 	}
-
-	palm_Free(palm);
 
 	return 0;
 }
@@ -1254,15 +1229,12 @@ run_mode_Standalone(int argc, char *argv[])
 
 		    case CSE_NOCONN:
 			Error(_("Lost connection to Palm."));
-			/* Don't even try to palm_Disconnect(), since that tries
-			 * to talk to the Palm.
-			 */
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
 		    default:
 			Error(_("Can't look up Palm."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -1309,15 +1281,12 @@ run_mode_Standalone(int argc, char *argv[])
 
 		    case CSE_NOCONN:
 			Error(_("Lost connection to Palm."));
-			/* Don't even try to Disconnect(), since that tries
-			 * to talk to the Palm.
-			 */
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
 		    default:
 			Error(_("Can't get user ID from Palm."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -1349,7 +1318,7 @@ run_mode_Standalone(int argc, char *argv[])
 				 * we're about to abort anyway.
 				 */
 
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1364,15 +1333,12 @@ run_mode_Standalone(int argc, char *argv[])
 
 		    case CSE_NOCONN:
 			Error(_("Lost connection to Palm."));
-			/* Don't even try to Disconnect(), since that tries
-			 * to talk to the Palm.
-			 */
-			palm_Free(palm);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
 		    default:
 			Error(_("Can't get user name from Palm."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 	}
@@ -1403,7 +1369,7 @@ run_mode_Standalone(int argc, char *argv[])
 				 * we're about to abort anyway.
 				 */
 
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1479,7 +1445,7 @@ run_mode_Backup(int argc, char *argv[])
 
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
-				palm_Free(palm);
+				palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 				return -1;
 			    default:
 				break;
@@ -1528,7 +1494,7 @@ run_mode_Backup(int argc, char *argv[])
 
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
+					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Warn(_("Error backing up \"%s\"."),
@@ -1541,7 +1507,7 @@ run_mode_Backup(int argc, char *argv[])
 
   done:
 
-	palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
 
 	return 0;
 }
@@ -1577,14 +1543,14 @@ run_mode_Restore(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to "
 						"Palm."));
-					palm_Free(palm);
+					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Error(_("Can't restore "
 						"directory."));
 					break;
 				}
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+				palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 				return -1;
 			}
 		} else {
@@ -1600,14 +1566,14 @@ run_mode_Restore(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to "
 						"Palm."));
-					palm_Free(palm);
+					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Error(_("Can't restore "
 						"directory."));
 					break;
 				}
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+				palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 				return -1;
 			}
 		}
@@ -1615,7 +1581,7 @@ run_mode_Restore(int argc, char *argv[])
 
   done:
 
-	palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL );
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL );
 
 	return 0;
 }
@@ -1655,7 +1621,7 @@ run_mode_Init(int argc, char *argv[])
 	if (p_snum_len < 0)
 	{
 		Error(_("Can't read length of serial number."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 	if (p_snum_len > 0)
@@ -1667,7 +1633,7 @@ run_mode_Init(int argc, char *argv[])
 		if (p_snum == NULL)
 		{
 			Error(_("Can't read serial number."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 
@@ -1695,7 +1661,7 @@ run_mode_Init(int argc, char *argv[])
 	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
 	{
 		/* Something went wrong */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1759,7 +1725,7 @@ run_mode_Init(int argc, char *argv[])
 	{
 		/* Something went wrong */
 		Error(_("Can't get user ID from Palm."));
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1858,20 +1824,13 @@ run_mode_Init(int argc, char *argv[])
 		err = UpdateUserInfo2(palm, &uinfo);
 		if (err != (int) DLPSTAT_NOERR)
 		{
+			/* XXX - This message doesn't belog here. */
 			Warn(_("DlpWriteUserInfo failed: %d."),
 			     err);
 
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				palm_Free(palm);
-				return -1;
-			    default:
-				break;
-			}
+			update_cs_errno(palm);
 
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		}
 
@@ -1911,7 +1870,7 @@ run_mode_Init(int argc, char *argv[])
 
 	/* Finally, close the connection */
 
-	palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
 
 	return 0;
 }
@@ -2112,10 +2071,6 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Check if this palm is uninitialized and if autoinit is true*/
 	if( palm_userid(palm) == 0 && global_opts.autoinit == True)
 	{
-		SYNC_TRACE(3)
-			fprintf(stderr, "Found UserID = 0, trying autoinit.\n");
-	
-	
 		/* Yes, get the best match */
 		palment = lookup_palment(palm, PMATCH_SERIAL);
 
@@ -2127,33 +2082,14 @@ run_mode_Daemon(int argc, char *argv[])
 			newinfo.userid	 = palment->userid;
 			
 			err = UpdateUserInfo2(palm, &newinfo); 
-			if (err != (int) DLPSTAT_NOERR)
-			{
-				Warn(_("DlpWriteUserInfo failed: %d."),
-				     err);
-
-				switch (palm_errno)
-				{
-				    case PALMERR_TIMEOUT:
-					cs_errno = CSE_NOCONN;
-					palm_Free(palm);
-					return -1;
-				    default:
-					break;
-				}
-
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
-				return -1;
-			}
-
-			/* Force a reload */
+			
 			err = palm_reload(palm);		
 		}
 		else
 		{
 			Error(_("No matching entry in %s, couldn't autoinit."), _PATH_PALMS);
 
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1; 
 		}
 	}
@@ -2164,7 +2100,7 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("No matching entry in %s."), _PATH_PALMS);
 		/* XXX - Write reason to Palm log */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1; 
 	}
 
@@ -2178,7 +2114,7 @@ run_mode_Daemon(int argc, char *argv[])
 
 		/* XXX - Write reason to Palm log */
 
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -2189,7 +2125,7 @@ run_mode_Daemon(int argc, char *argv[])
 		Error(_("Can't setuid"));
 		Perror("setuid");
 		/* XXX - Write reason to Palm log */
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -2205,7 +2141,7 @@ run_mode_Daemon(int argc, char *argv[])
 		{
 			Error(_("Can't copy config file name"));
 			/* XXX - Write reason to Palm log */
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
 		global_opts.conf_fname = conf_fname;
@@ -2223,7 +2159,7 @@ run_mode_Daemon(int argc, char *argv[])
 		/* XXX - Write reason to Palm log */
 		if (conf_fname != NULL)
 			free(conf_fname);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -2254,16 +2190,9 @@ Connect(PConnection *pconn)
 					 */
 	pcaddr.port = (ubyte) SLP_PORT_DLP;
 	PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
-	if ((*pconn->io_accept)(pconn) < 0)
+	if (PConn_accept(pconn) < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno_p(pconn);
 		return -1;
 	}
 
@@ -2273,33 +2202,26 @@ Connect(PConnection *pconn)
 static int
 Disconnect(PConnection *pconn, const ubyte status)
 {
-	int err;
+	int err = 0;
 
-	/* Terminate the sync */
-	err = DlpEndOfSync(pconn, status);
-	if (err < 0)
+	/* Terminate the sync, but check if we still have a connection */
+	if (PConn_isonline(pconn))
 	{
-		switch (palm_errno)
+		err = DlpEndOfSync(pconn, status);
+		if (err < 0)
 		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
+			Error(_("Error during DlpEndOfSync: (%d) %s."),
+			      (int) PConn_get_palmerrno(pconn),
+			      _(palm_strerror(PConn_get_palmerrno(pconn))));
 		}
-
-		Error(_("Error during DlpEndOfSync: (%d) %s."),
-		      (int) palm_errno,
-		      _(palm_strerror(palm_errno)));
-		PConnClose(pconn);
-		return err;
 	}
+
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Finished syncing\n");
 
 	PConnClose(pconn);		/* Close the connection */
 
-	return 0;
+	return err;
 }
 
 /* CheckLocalFiles
@@ -2674,14 +2596,7 @@ UpdateUserInfo(const struct Palm *palm,
 			       &uinfo);
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		Error(_("DlpWriteUserInfo failed: %d."), err);
 		return -1;
@@ -2997,7 +2912,7 @@ mkforw_addr(struct Palm *palm,
 int
 forward_netsync(PConnection *local, PConnection *remote)
 {
-	int err;
+	int err = 0;
 	int maxfd;
 	fd_set in_fds;
 	fd_set out_fds;
@@ -3040,16 +2955,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
-
-				switch (palm_errno)
-				{
-				    case PALMERR_TIMEOUT:
-					cs_errno = CSE_NOCONN;
-					break;
-				    default:
-					break;
-				}
-
+				update_cs_errno_p(remote);
 				break;
 			}
 			SYNC_TRACE(5)
@@ -3077,16 +2983,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
-
-				switch (palm_errno)
-				{
-				    case PALMERR_TIMEOUT:
-					cs_errno = CSE_NOCONN;
-					break;
-				    default:
-					break;
-				}
-
+				update_cs_errno_p(local);
 				break;
 			}
 			SYNC_TRACE(5)

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.6 2001-12-09 22:40:53 arensb Exp $
+ * $Id: palm_errno.h,v 1.7 2002-04-27 18:00:07 azummo Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -29,11 +29,10 @@ typedef enum {
 	PALMERR_BADRESID,		/* Invalid result ID */
 	PALMERR_BADARGID,		/* Invalid argument ID */
 	PALMERR_ACKXID			/* XID on ACK doesn't match request */
-} palmerr_t;
+} palmerrno_t;
 
-extern palmerr_t palm_errno;		/* Error code */
 
-extern const char *palm_strerror(const palmerr_t palm_errno);
+extern const char *palm_strerror(const palmerrno_t palm_errno);
 
 #endif	/* _palm_errno_h_ */
 

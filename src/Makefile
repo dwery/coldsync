@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.27 2002-03-30 16:12:18 azummo Exp $
+# $Id: Makefile,v 2.28 2002-04-27 18:00:07 azummo Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -22,7 +22,8 @@ C_SRCS =	coldsync.c \
 		spc.c \
 		symboltable.c \
 		net_compat.c \
-		ap_snprintf.c
+		ap_snprintf.c \
+		cs_error.c
 C_OBJS =	${C_SRCS:.c=.o}
 
 CXX_SRCS =	GenericConduit.cc

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 2.5 2001-03-27 14:10:58 arensb Exp $
+ * $Id: pref.c,v 2.6 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -138,14 +138,7 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_SAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				break;
-			    default:
-				break;
-			}
+			update_cs_errno_p(pconn);
 
 			prefitem->description.flags = flags;
 			return err;
@@ -172,14 +165,7 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_UNSAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				break;
-			    default:
-				break;
-			}
+			update_cs_errno_p(pconn);
 
 			prefitem->description.flags = flags;
 			return err;
@@ -257,14 +243,7 @@ DownloadPrefItem(PConnection *pconn,
 		/* If there was no error, contents_info doesn't exist,
 		 * because the preference was simply not found.
 		 */
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno_p(pconn);
 
 		free(contents_info);
 		return err;
@@ -313,18 +292,11 @@ DownloadPrefItem(PConnection *pconn,
 
 	if (err < 0)
 	{
-	    switch (palm_errno)
-	    {
-	        case PALMERR_TIMEOUT:
-		    cs_errno = CSE_NOCONN;
-		    break;
-		default:
-		    break;
-	    }
+		update_cs_errno_p(pconn);
 
-	    free(contents_info);
-	    free(contents);
-	    return err;
+		free(contents_info);
+		free(contents);
+		return err;
 	}
 
 	MISC_TRACE(3)
