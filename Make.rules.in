@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.7 2000-05-06 11:18:16 arensb Exp $
+# $Id: Make.rules.in,v 1.8 2000-05-19 12:02:27 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -63,7 +63,7 @@ TEXI2DVI =	@TEXI2DVI@
 TEXI2HTML =	@TEXI2HTML@
 DVIPS =		@DVIPS@
 MKID =		@MKID@
-# XXX - MKDIR
+MKDIR =		${TOP}/mkinstalldirs
 
 # I18n-related utilities
 XGETTEXT =	@XGETTEXT@
@@ -77,7 +77,7 @@ TARBALL =	${TOPDISTDIR}.tar.gz
 
 INSTALL =	@INSTALL@
 INSTALL_PROGRAM =	@INSTALL_PROGRAM@ -m 555
-INSTALL_SCRIPT =	@INSTALL_SCRIPT@ -m 555
+INSTALL_SCRIPT =	@INSTALL_SCRIPT@
 INSTALL_DATA =		@INSTALL_DATA@
 INSTALL_MAN =		${INSTALL_DATA}
 
@@ -156,13 +156,7 @@ y.tab.c y.tab.h:	parser.y
 # Targets for building the distribution.
 # See the comment by ${RECURSIVE_TARGETS}::.
 distfiles-core::	${DISTFILES}
-	@subdirs="${SUBDIRS}"; \
-	for dir in "${subdirs}"; do \
-		if test ! -d "${TOPDISTDIR}/${SUBDIR}/$$dir"; then \
-			echo "mkdir ${TOPDISTDIR}/${SUBDIR}/$$dir"; \
-			mkdir "${TOPDISTDIR}/${SUBDIR}/$$dir"; \
-		fi; \
-	done
+	${MKDIR} ${SUBDIRS}
 	@if test -n "${DISTFILES}"; then \
 		echo "cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}"; \
 		cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}; \
