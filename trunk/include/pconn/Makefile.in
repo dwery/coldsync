@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.2 1999-10-23 04:47:07 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-11-02 03:34:26 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -81,8 +81,8 @@ install::	${HEADERS}
 	else \
 		mkdir "${INCLUDEDIR}/pconn"; \
 	fi
-	for i in ${HEADERS}; do
-		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/pconn/"$$i";
+	for i in ${HEADERS}; do \
+		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/pconn/"$$i"; \
 	done
 
 depend::
