@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.44 2000-01-25 11:25:40 arensb Exp $
+dnl # $Id: configure.in,v 1.45 2000-01-26 11:26:32 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -277,17 +277,12 @@ fi
 AC_DEFINE_UNQUOTED(SYSCONFDIR,"`eval echo \"${sysconfdir}\"`")
 
 AC_CONFIG_HEADER(config.h)
-AC_OUTPUT([Makefile
-	src/Makefile
-	libpconn/Makefile
-	libpdb/Makefile
-	include/Makefile
-	include/pconn/Makefile
-	doc/Makefile
+AC_OUTPUT([Make.vars
 	doc/version.texi])
-AC_MSG_RESULT(dnl
-[
-	Don't forget to run \"make depend\"
-])
+# XXX - I'm not sure this is working quite right everywhere just yet
+#  AC_MSG_RESULT(dnl
+#  [
+#  	Don't forget to run \"make depend\"
+#  ])
 dnl #'	# For Emacs
 exit "$EXIT_STATUS"
