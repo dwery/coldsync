@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.19 2002-11-09 21:04:36 azummo Exp $
+# $Id: SPC.pm,v 1.20 2003-06-14 17:43:56 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.19 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.20 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -225,6 +225,10 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_DeleteAllRecords
 	dlp_WriteRecord
 	dlp_SetDBInfo
+	dlp_ReadNextRecInCategory
+	dlp_ReadNextModifiedRec
+	dlp_ReadNextModifiedRecInCategory
+	dlp_ReadDBList
 );
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
@@ -297,9 +301,9 @@ sub spc_recv
 
 #	print "spc_recv, reading $wlen bytes\n";
 
-	while( $rlen < $wlen )
+	while($rlen < $wlen)
 	{
-		my ($status, $buf, $len) = spc_req( SPCOP_DLPC );
+		my ($status, $buf, $len) = spc_req(SPCOP_DLPC);
 
 #		print " - $len, $rlen\n";
 
@@ -314,7 +318,7 @@ sub spc_send
 {
 	my $data = shift;
 
-	spc_req( SPCOP_DLPC, $data );
+	spc_req(SPCOP_DLPC, $data);
 }
 
 =head1 FUNCTIONS
@@ -842,10 +846,10 @@ sub dlp_CleanUpDatabase
 
 =head2 dlp_AddSyncLogEntry
 
-	dlp_AddSyncLogEntry($dbh);
+	dlp_AddSyncLogEntry($text);
 
-Adds an entry in the sync log for the database associated with the
-database handle C<$dbh>.
+Adds the entry C<$text> in the sync log for the database currently being
+synched.
 
 =cut
 #'
@@ -1116,6 +1120,51 @@ sub dlp_DeleteAllRecords
 				# XXX - YAHC, Yet Another Hard coded Constant
 }
 
+# unpack a record received by all the various dlp_Read*
+# and setup the attributes hash
+sub _unpackRecord {
+	my $retval = {};
+	for (@_) {
+		if ($_->{'id'} == dlpFirstArgID) {
+			@$retval{
+			 'id',
+			 'index',
+			 'size',
+			 'attrs',
+			 'category',
+			 'data',
+			} = unpack("N n n C C a*", $_->{'data'});
+
+			$retval->{'attributes'}{'deleted'} =
+				$retval->{'attrs'} & 0x80 ? 1 : 0;
+
+			$retval->{'attributes'}{'dirty'} =
+				$retval->{'attrs'} & 0x40 ? 1 : 0;
+
+			$retval->{'attributes'}{'busy'} =
+				$retval->{'attrs'} & 0x20 ? 1 : 0;
+
+			$retval->{'attributes'}{'secret'} =
+				$retval->{'attrs'} & 0x10 ? 1 : 0;
+
+			$retval->{'attributes'}{'archived'} =
+				$retval->{'attrs'} & 0x08 ? 1 : 0;
+
+			my $recsize = length($retval->{'data'});
+
+			# XXX - This is untested. 
+
+#			die("dlp_ReadRecord: Bad record size. Expected: $retval->{'size'}, Got: $recsize .\n")
+#				unless $retval->{'size'} == $recsize;
+		}
+	}
+
+	# needed by the dlp_ReadNext* methods
+	return undef unless defined $retval->{id};
+
+	return $retval;
+}
+
 =head2 dlp_ReadRecordById
 
 	$record = dlp_ReadRecordById($dbh, $recordid, $offset, $numbytes);
@@ -1195,8 +1244,6 @@ sub dlp_ReadRecordByIndex
 	return _dlp_ReadRecord(0, $dbh, $index, $offset, $numbytes);
 }
 
-
-
 sub _dlp_ReadRecord
 {
 	my $readbyid	= shift;	# Read record (1: by id, 0: by index)
@@ -1225,59 +1272,86 @@ sub _dlp_ReadRecord
 	# (Should be implemented coherently in every dlp
 	# function) - az.
 
-	my $retval = {};
-
-	for (@argv)
-	{
-		if ($_->{id} == dlpFirstArgID)
-		{
-			@$retval{
-			 'id',
-			 'index',
-			 'size',
-			 'attrs',
-			 'category',
-			 'data',
-			} = unpack("N n n C C a*", $_->{'data'});
-
-			# XXX - I used the names in DLCommon.h for the
-			# attributes. This leads to an incompatibility
-			# if someone wants to do something like this:
-			#
-			# $r = dlp_ReadRecordByIndex($dbh, $index);
-			#
-			# my $record = $pdb->ParseRecord(%{$r}});
-			# $pdb->append_Record($record);
-			#
-			# What should we do ?
-
-			$retval->{'attributes'}{'deleted'} =
-				$retval->{'attrs'} & 0x80 ? 1 : 0;
-
-			$retval->{'attributes'}{'dirty'} =
-				$retval->{'attrs'} & 0x40 ? 1 : 0;
-
-			$retval->{'attributes'}{'busy'} =
-				$retval->{'attrs'} & 0x20 ? 1 : 0;
-
-			$retval->{'attributes'}{'secret'} =
-				$retval->{'attrs'} & 0x10 ? 1 : 0;
-
-			$retval->{'attributes'}{'archived'} =
-				$retval->{'attrs'} & 0x08 ? 1 : 0;
-
-			my $recsize = length($retval->{'data'});
-
-			# XXX - This is untested. 
-
-#			die("dlp_ReadRecord: Bad record size. Expected: $retval->{'size'}, Got: $recsize .\n")
-#				unless $retval->{'size'} == $recsize;
-		}
-	}
-
-	return $retval;
+	return _unpackRecord(@argv);
 }
 
+=head2 dlp_ReadNextModifiedRec
+
+	$record = dlp_ReadNextModifiedRec($dbh);
+
+Returns a reference to a hash containing information about the next
+modified record in the database (since last sync). Fields returned
+are the same as dlp_ReadRecord. Returns undef when no more modified records
+are available.
+
+=cut
+#'
+sub dlp_ReadNextModifiedRec($) {
+	my $dbh = shift;
+	my ($err, @argv) = dlp_req(DLPCMD_ReadNextModifiedRec,
+		{
+			'id' => dlpFirstArgID,
+			'data' => pack("C", $dbh),
+		});
+
+	# err is non zero when we reach the last record
+	return undef unless defined $err;
+	return undef unless $err != 0;
+
+	return _unpackRecord(@argv);
+}
+
+=head2 dlp_ReadNextRecInCategory
+
+	$record = dlp_ReadNextRecInCategory($dbh,$catno);
+
+Returns a reference to a hash containing information about the next
+record in the database matching the specified category.
+Fields returned are the same as dlp_ReadRecord. Returns undef when no
+more records are available.
+
+=cut
+#'
+sub dlp_ReadNextRecInCategory($$) {
+	my ($dbh,$catno) = @_;
+	my ($err, @argv) = dlp_req(DLPCMD_ReadNextRecInCategory,
+		{
+			'id' => dlpFirstArgID,
+			'data'  => pack("C C", $dbh, $catno)
+		});
+
+	# err is non zero when we reach the last record
+	return undef unless defined $err;
+	return undef unless $err != 0;
+
+	return _unpackRecord(@argv);
+}
+
+=head2 dlp_ReadNextModifiedRecInCategory
+
+	$record = dlp_ReadNextModifiedRecInCategory($dbh,$catno);
+
+Returns a reference to a hash containing information about the next
+modified record in the database matching the specified category.
+Fields returned are the same as dlp_ReadRecord. Returns undef when no
+more modified records are available.
+
+=cut
+#'
+sub dlp_ReadNextModifiedRecInCategory($$) {
+	my ($dbh,$catno) = @_;
+	my ($err, @argv) = dlp_req(DLPCMD_ReadNextModifiedRecInCategory,
+		{
+			'id' => dlpFirstArgID,
+			'data'  => pack("C C", $dbh, $catno)
+		});
+
+	# err is non zero when we reach the last record
+	return undef unless defined $err;
+	return undef unless $err != 0;
+
+	return _unpackRecord(@argv);
+}
 
 
 sub dlp_WriteRecord
@@ -1554,6 +1628,110 @@ sub dlp_SetDBInfo
 
 	# No return arguments to parse
 	return $err;
+}
+
+=head2 dlp_ReadDBList
+
+  my $start = 0;
+  while(my $dbinfo = dlp_ReadDBList($card, $flags, $start)) {
+    print $dbinfo->{'name'}, "\n";
+    $start = $dbinfo->{'last_index'} + 1;
+  }
+
+Get the database list from the Palm. C<$card> indicates the card from which
+to get the list. C<$start> indicates the index at which to start. C<$flags>
+indicates where to get the database. It's a bitwise mask of the following:
+
+	0x80 from RAM
+	0x40 from ROM
+
+The multi mask (0x20) is not supported.
+
+The function is called repeatedly, each time adjusting C<$start> to the
+next value after the C<last_index> field of the returned hash reference.
+When no more databases are available, undef is returned.
+
+Successful calls return a hash reference containing:
+
+	$dbinfo->{size}
+	$dbinfo->{misc_flags}
+	$dbinfo->{db_flags}
+	$dbinfo->{type}
+	$dbinfo->{creator}
+	$dbinfo->{version}
+	$dbinfo->{modnum}
+	%{$dbinfo->{ctime}}
+	%{$dbinfo->{mtime}}
+	%{$dbinfo->{baktime}}
+	$dbinfo->{db_index}
+	$dbinfo->{name}
+
+Note that this is a fairly expensive function in terms of communications
+time. It should be used sparingly and the results, where possible, should
+be cached.
+
+=cut
+sub dlp_ReadDBList($$$)
+{
+	my ($card, $flags, $start) = @_;
+	my $retval = {};
+
+	# XXX - need to filter out multi. While there's no reason it shouldn't
+	# work, it doesn't seem to fit into the existing
+	# return-one-object-at-a-time API.
+	# XXX - and get rid of the magic constants
+	$flags &= 0x40|0x80;
+
+	my ($err, @argv) = dlp_req(DLPCMD_ReadDBList,
+		{
+			'id' => dlpFirstArgID,
+			'data' => pack("C C n", $flags, $card, $start),
+		});
+	return undef unless defined $err or $err != 0;
+
+	foreach (@argv) {
+		if($_->{'id'} == dlpFirstArgID) {
+			next unless length $_->{'data'} > 10;	# arbitrary, but enough
+			my $num = 0;
+			($retval->{last_index},
+			 $retval->{oflags},
+			 $num,
+			 $retval->{size},
+			 $retval->{misc_flags},
+			 $retval->{db_flags},
+			 $retval->{type},
+			 $retval->{creator},
+			 $retval->{version},
+			 $retval->{modnum},
+			 $retval->{ctime}{year},
+			 $retval->{ctime}{month},
+			 $retval->{ctime}{day},
+			 $retval->{ctime}{hour},
+			 $retval->{ctime}{minute},
+			 $retval->{ctime}{second},
+			 $retval->{mtime}{year},
+			 $retval->{mtime}{month},
+			 $retval->{mtime}{day},
+			 $retval->{mtime}{hour},
+			 $retval->{mtime}{minute},
+			 $retval->{mtime}{second},
+			 $retval->{baktime}{year},
+			 $retval->{baktime}{month},
+			 $retval->{baktime}{day},
+			 $retval->{baktime}{hour},
+			 $retval->{baktime}{minute},
+			 $retval->{baktime}{second},
+			 $retval->{db_index},
+			 $retval->{name},
+			) = unpack("n C C C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n a*",
+				$_->{'data'});
+
+			warn "multiple entries from ReadDBList" if $num > 1;
+		}
+	}
+
+	return undef unless exists $retval->{'name'};
+	return $retval;
 }
 
 1;
