@@ -27,7 +27,9 @@ make
 
 %install
 cd $RPM_BUILD_DIR/coldsync-3.0
-make DESTDIR=$RPM_BUILD_ROOT install buildfiles
+make DESTDIR=$RPM_BUILD_ROOT install
+cd $RPM_BUILD_ROOT
+find . -type f |sed s/^\.//g > $RPM_BUILD_DIR/coldsync-3.0/buildfiles
 
 %clean
 rm -rf $RPM_BUILD_ROOT
