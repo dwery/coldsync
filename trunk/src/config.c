@@ -6,14 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * XXX - This is all rather rough and unfinished, mainly because I'm
- * not entirely sure how to do things. For now, I'm (sorta) assuming
- * one user, one Palm, one machine, but this is definitely going to
- * change: a user might have several Palms; a machine can sync any
- * Palm; and, of course, a machine has any number of users.
- * Hence, the configuration is (will be) somewhat complicated.
- *
- * $Id: config.c,v 1.22 2000-04-10 09:57:24 arensb Exp $
+ * $Id: config.c,v 1.23 2000-05-06 11:42:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -51,6 +44,11 @@ extern void debug_dump(FILE *outfile, const char *prefix,
 		       const ubyte *buf, const udword len);
 
 int sys_maxfds;			/* Size of file descriptor table */
+	/* XXX - What is this used for? Can it (and get_maxfds()) be
+	 * deleted? Is this a remnant from some earlier thoughts about
+	 * closing off unneeded file descriptors when fork()ing off a
+	 * conduit?
+	 */
 
 /* XXX - This should probably be hidden inside a "struct config{..}" or
  * something. I don't like global variables.
@@ -342,6 +340,9 @@ get_config(int argc, char *argv[])
 	/* Sanity checks */
 
 	/* Can't back up and restore at the same time */
+	/* XXX - This should be replaced with "-mb" (backup), "-mr"
+	 * (restore), "-ms" (sync/standalone) and "-md" (daemon).
+	 */
 	if (global_opts.do_backup &&
 	    global_opts.do_restore)
 	{
@@ -577,6 +578,8 @@ get_config(int argc, char *argv[])
 		fprintf(stderr, "Sync conduits:\n");
 		for (c = config.sync_q; c != NULL; c = c->next)
 		{
+			struct cond_header *hdr;
+
 			fprintf(stderr, "  Conduit:\n");
 			if (c->flavor != Sync)
 				fprintf(stderr, "Error: wrong conduit flavor. "
@@ -595,11 +598,19 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
 		}
 		
 		fprintf(stderr, "Fetch conduits:\n");
 		for (c = config.fetch_q; c != NULL; c = c->next)
 		{
+			struct cond_header *hdr;
+
 			fprintf(stderr, "  Conduit:\n");
 			if (c->flavor != Fetch)
 				fprintf(stderr, "Error: wrong conduit flavor. "
@@ -618,11 +629,19 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
 		}
 		
 		fprintf(stderr, "Dump conduits:\n");
 		for (c = config.dump_q; c != NULL; c = c->next)
 		{
+			struct cond_header *hdr;
+
 			fprintf(stderr, "  Conduit:\n");
 			if (c->flavor != Dump)
 				fprintf(stderr, "Error: wrong conduit flavor. "
@@ -641,11 +660,19 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
 		}
 		
 		fprintf(stderr, "Install conduits:\n");
 		for (c = config.install_q; c != NULL; c = c->next)
 		{
+			struct cond_header *hdr;
+
 			fprintf(stderr, "  Conduit:\n");
 			if (c->flavor != Install)
 				fprintf(stderr, "Error: wrong conduit flavor. "
@@ -665,11 +692,19 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
 		}
 		
 		fprintf(stderr, "Uninstall conduits:\n");
 		for (c = config.uninstall_q; c != NULL; c = c->next)
 		{
+			struct cond_header *hdr;
+
 			fprintf(stderr, "  Conduit:\n");
 			if (c->flavor != Uninstall)
 				fprintf(stderr, "Error: wrong conduit flavor. "
@@ -689,6 +724,12 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
 		}
 	}
 
@@ -1194,6 +1235,7 @@ new_conduit_block()
 	retval->dbcreator = 0L;
 	retval->flags = 0;
 	retval->path = NULL;
+	retval->headers = NULL;
 
 	return retval;
 }
@@ -1207,8 +1249,19 @@ new_conduit_block()
 void
 free_conduit_block(conduit_block *c)
 {
+	struct cond_header *hdr;
+	struct cond_header *next_hdr;
+
 	if (c->path != NULL)
 		free(c->path);
+
+	/* Free the conduit headers */
+	for (hdr = c->headers, next_hdr = NULL; hdr != NULL; hdr = next_hdr)
+	{
+		next_hdr = hdr->next;
+		free(hdr);
+	}
+
 	free(c);
 }
 
@@ -1227,6 +1280,7 @@ new_pda_block()
 
 	/* Initialize the new pda_block */
 	retval->next = NULL;
+	retval->name = NULL;
 	retval->snum = NULL;
 	retval->directory = NULL;
 
@@ -1242,6 +1296,8 @@ new_pda_block()
 void
 free_pda_block(pda_block *p)
 {
+	if (p->name != NULL)
+		free(p->name);
 	if (p->snum != NULL)
 		free(p->snum);
 	if (p->directory != NULL)
