@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.h,v 2.2 2000-08-07 00:44:14 arensb Exp $
+ * $Id: spc.h,v 2.3 2000-09-04 05:22:53 arensb Exp $
  *
  * Structure of an SPC request:
  *	[request header] [data]
@@ -36,9 +36,6 @@ struct spc_hdr {
 
 /* SPC opcodes. The response opcodes have the same values as the request
  * opcodes, but with the high bit set.
- */
-/* XXX - Would it be better to return the status in the opcode slot? After
- * all, the client knows what response it sent.
  */
 #define SPCOP_NOP	0	/* Do nothing. */
 #define SPCOP_DBINFO	1	/* Request information about current
