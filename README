@@ -103,7 +103,7 @@ so fix it.
 
 	       ----------------------------------------
 
-COMPATIBILITY NOTES:
+COMPATIBILITY NOTES (as of version 0.4.6):
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x, and compiles
