@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.40 2000-06-23 11:34:30 arensb Exp $
+ * $Id: coldsync.c,v 1.41 2000-07-01 19:59:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -360,14 +360,6 @@ main(int argc, char *argv[])
 	MISC_TRACE(1)
 		fprintf(stderr, "Initializing conduits\n");
 
-	if ((err = init_conduits(&palm)) < 0)
-	{
-		fprintf(stderr, _("Can't initialize conduits\n"));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		exit(1);
-	}
-
 	if ((err = GetMemInfo(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
@@ -545,6 +537,12 @@ main(int argc, char *argv[])
 		/* Synchronize the databases */
 		for (i = 0; i < palm.num_dbs; i++)
 		{
+			/* XXX - First draft: run sync conduits for this
+			 * database.
+			 */
+			err = run_Sync_conduits(&(palm.dblist[i]));
+			/* XXX - Error-checking */
+
 			err = HandleDB(pconn, &palm, i);
 			if (err < 0)
 			{
@@ -645,17 +643,6 @@ main(int argc, char *argv[])
 				break;
 			}
 		}
-	}
-	/* XXX - Clean up conduits */
-	/* XXX - Is this still current, or is that left over from the old
-	 * conduit API?
-	 */
-	MISC_TRACE(3)
-		fprintf(stderr, "Cleaning up conduits\n");
-	if ((err = tini_conduits()) < 0)
-	{
-		fprintf(stderr, _("Error cleaning up conduits\n"));
-		exit(1);
 	}
 
 	MISC_TRACE(1)
