@@ -13,7 +13,7 @@ extern int slp_debug;
 extern int padp_debug;
 extern int cmp_debug;
 extern int dlp_debug;
-extern int dlpcmd_debug;
+extern int dlpc_debug;
 
 int
 main(int argc, char *argv[])
@@ -35,7 +35,8 @@ main(int argc, char *argv[])
 	ubyte dbh;		/* Database handle */
 	struct dlp_appblock appblock;
 	struct dlp_sortblock sortblock;
-	struct dlp_opendbinfo dbinfo;
+	struct dlp_dbinfo dbinfo;
+	struct dlp_opendbinfo opendbinfo;
 	struct dlp_idlistreq idreq;
 	uword numrecs;
 	udword recid;
@@ -50,6 +51,9 @@ main(int argc, char *argv[])
 	struct dlp_apppref pref;
 	struct dlp_appcall appcall;
 	struct dlp_appresult appresult;
+	ubyte last_card;
+	ubyte more;
+	struct dlp_cardinfo cardinfo;
 
 	if (argc != 2)
 	{
@@ -76,7 +80,7 @@ slp_debug = 100;
 padp_debug = 6/*100*/;
 cmp_debug = 100;
 dlp_debug = 100;
-dlpcmd_debug = 100;
+dlpc_debug = 100;
 	printf("===== Waiting for wakeup packet\n");
 	do {
 		err = cmp_read(fd, &cmpp);
@@ -206,7 +210,7 @@ dlpcmd_debug = 100;
 /*  	DlpSetSysDateTime(fd, &ptime); */
 	printf("===== Set the time\n");
 
-	err = DlpReadStorageInfo(fd, 0);
+	err = DlpReadStorageInfo(fd, 0, &last_card, &more, &cardinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadStorageInfo: (%d) %s\n",
@@ -222,7 +226,17 @@ dlpcmd_debug = 100;
 /*  dlp_debug = 0; */
 	i = 0;
 	do {
-		err = DlpReadDBList(fd, 0xc0 /* ROM + RAM */, 0, i);
+		uword last_index;
+		ubyte oflags;
+		ubyte num;
+
+/*  		err = DlpReadDBList(fd, 0xc0 (ROM + RAM), 0, i); */
+		err = DlpReadDBList(fd,
+				    DLPCMD_READDBLFLAG_RAM |
+				    DLPCMD_READDBLFLAG_ROM,
+				    0, i,
+				    &last_index, &oflags, &num,
+				    &dbinfo);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadDBList: (%d) %s\n",
@@ -317,7 +331,7 @@ dlpcmd_debug = 100;
 #endif	/* 0 */
 
 	/* Get the number of records in the database */
-	err = DlpReadOpenDBInfo(fd, dbh, &dbinfo);
+	err = DlpReadOpenDBInfo(fd, dbh, &opendbinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadOpenDBInfo: (%d) %s\n",
@@ -326,7 +340,7 @@ dlpcmd_debug = 100;
 		exit(1);
 	}
 	fprintf(stderr, "===== Got open DB info\n");
-	fprintf(stderr, "There are %d records\n", dbinfo.numrecs);
+	fprintf(stderr, "There are %d records\n", opendbinfo.numrecs);
 
 	/* Get the record IDs */
 	idreq.dbid = dbh;
@@ -353,7 +367,7 @@ dlpcmd_debug = 100;
 slp_debug = 100;
 padp_debug = 100;
 dlp_debug = 100;
-dlpcmd_debug = 100;
+dlpc_debug = 100;
 	fprintf(stderr, "+++++ Reading database by record IDs\n");
 	for (i = 0; i < numrecs; i++)
 	{
