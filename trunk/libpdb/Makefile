@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.5 2000-11-10 03:36:19 arensb Exp $
+# $Id: Makefile,v 1.6 2001-06-26 05:47:56 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
 
 LIBNAME =	pdb
 
-LIBSRCS =	pdb.c
+LIBSRCS =	pdb.c util.c
 LIBOBJS =	${LIBSRCS:.c=.o}
 
 CLEAN =		${LIBOBJS} ${LIBRARY} \
