@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.20 2000-05-20 23:23:33 arensb Exp $
+ * $Id: parser.y,v 2.21 2000-05-20 23:57:47 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -448,11 +448,11 @@ conduit_directives:
 	;
 
 conduit_directive:
-	TYPE opt_colon
+	TYPE
 	{
 		lex_expect(LEX_CTPAIR);
 	}
-	creator_type semicolon
+	opt_colon creator_type semicolon
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
@@ -685,8 +685,14 @@ header_list:	header_list
 	';'
 	;
 
-pda_stmt:	PDA opt_name '{'
+pda_stmt:	PDA
 	{
+		lex_expect(LEX_BSTRING);
+	}
+	opt_name '{'
+	{
+		lex_expect(0);
+
 		/* Create a new PDA block. Subsequent rules that parse
 		 * substatements inside a 'pda' block will fill in fields
 		 * in this struct.
@@ -700,8 +706,8 @@ pda_stmt:	PDA opt_name '{'
 		}
 
 		/* Initialize the name */
-		cur_pda->name = $2;
-		$2 = NULL;
+		cur_pda->name = $3;
+		$3 = NULL;
 
 		PARSE_TRACE(2)
 		{
