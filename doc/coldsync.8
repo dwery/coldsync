@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.22 2000-09-03 09:37:18 arensb Exp $
+.\" $Id: coldsync.8,v 1.23 2000-09-17 21:18:53 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -568,6 +568,28 @@ will be run for databases with creator
 and type
 .Li DATA ,
 even though the second conduit block also applies.
+.Ss Built-In Conduit
+Instead of a pathname to a program or script, you may also specify the
+string
+.Li [generic]
+(with the brackets) to specify that you want to use the built-in
+generic conduit:
+.Bd -literal -offset indent
+conduit sync {
+	type: */*;
+	path: [generic];
+	default;
+}
+.Ed
+.Pp
+The generic conduit is a Sync conduit. By default, it handles every
+database unless that database has another Sync conduit specified. If
+you wish to run another Sync conduit on a database, you will need to
+specify explicitly in your
+.Pa .coldsyncrc
+whether you want it to run before or after the generic conduit, or
+whether the generic conduit should be run at all.
+.Pp
 .Ss Quoting
 Values on the right side of a colon may be enclosed in double quotes.
 That is you can write either
@@ -709,6 +731,9 @@ is because the Visor does not appear to have a software-readable
 serial number.
 .Sh BUGS
 .Pp
+.Nm ColdSync
+does not deal with categories.
+.Pp
 In the
 .Pa .coldsyncrc
 file, file and directory names must be specified as absolute
@@ -733,5 +758,8 @@ All network addresses are assumed to be IPv4 addresses.
 .Pp
 It is not possible to reliably specify a conduit argument whose value
 begins with whitespace.
+.Pp
+It appears that syncing with a machine other than that with which you
+normally sync might cause a database to lose its category information.
 .Pp
 Probably many others.
