@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.10 2000-01-22 05:11:24 arensb Exp $
+ * $Id: pdb.c,v 1.11 2000-01-22 05:36:06 arensb Exp $
  */
 
 #include "config.h"
@@ -2255,8 +2255,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	}
 
 	/* Read the list of record IDs. DlpReadRecordIDList() might not be
-	 * able to read all of them at once, so we might need to read them
-	 * a chunk at a time.
+	 * able to read all of them at once (it seems to have a limit of
+	 * 500 or so), so we might need to read them a chunk at a time.
 	 */
 	numrecs = 0;
 	while (numrecs < totalrecs)
@@ -2342,6 +2342,14 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		rec->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
 		rec->attributes = recinfo.attributes;
+		if ((recinfo.attributes & PDB_REC_DELETED) == 0)
+			/* XXX - Is this the right test? */
+		{
+			/* Add the category (unless the record has been
+			 * deleted)
+			 */
+			rec->attributes |= (recinfo.category & 0x0f);
+		}
 		rec->id = recinfo.id;
 
 		/* Fill in the data size entry */
