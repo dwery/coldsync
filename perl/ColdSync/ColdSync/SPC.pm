@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.5 2000-09-17 21:22:53 arensb Exp $
+# $Id: SPC.pm,v 1.6 2001-02-23 13:52:26 arensb Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.5 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.6 $ ' =~ m{(\d+)\.(\d+)};
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
 	dlp_req
@@ -61,6 +61,8 @@ $VERSION = sprintf "%d.%03d", '$Revision: 1.5 $ ' =~ m{(\d+)\.(\d+)};
 	dlp_CloseDB
 	dlp_ReadAppBlock
 	dlp_WriteAppBlock
+	dlp_GetSysDateTime
+	dlp_SetSysDateTime
 );
 
 # Various useful constants
@@ -78,6 +80,8 @@ use constant DLPCMD_OpenDB		=> 0x17;
 use constant DLPCMD_CloseDB		=> 0x19;
 use constant DLPCMD_ReadAppBlock	=> 0x1b;
 use constant DLPCMD_WriteAppBlock	=> 0x1c;
+use constant DLPCMD_GetSysDateTime      => 0x13;
+use constant DLPCMD_SetSysDateTime      => 0x14;
 
 # spc_init
 # Initialize a conduit for SPC.
@@ -652,6 +656,67 @@ sub dlp_WriteAppBlock
 	# No return arguments to parse
 
 	return $err;
+}
+
+=head2 dlp_GetSysDateTime
+
+	$datetime = &dlp_GetSysDateTime();
+
+Reads the date and time from the Palm.  Returns a reference to a hash
+containing the date, with fields
+"year","month","day","hour","minute","second".
+
+=cut
+
+sub dlp_GetSysDateTime
+{
+  my $errno;
+  my @argv;
+  my $retval;
+
+  ($errno, @argv) = &dlp_req(DLPCMD_GetSysDateTime);
+
+  $retval = {};
+  foreach my $arg (@argv) {
+    if ($arg->{id} == 0x20) {
+      @$retval{"year","month","day","hour","minute","second"}=
+	unpack("nC5",$arg->{data});
+    }
+  }
+
+  return $retval;
+}
+
+=head2 dlp_SetSysDateTime
+
+	$err = &dlp_SetSysDateTime($year,$mon,$day,$hour,$min,$sec);
+
+Sets the time on the Palm as indicated.  Make sure C<$year> is a 4
+digit number, and is not 1900 subtracted, as returned from
+localtime().  Also ensure C<$mon> is 1 offset (January=1).
+
+Returns the DLP error code.
+
+=cut
+
+sub dlp_SetSysDateTime
+{
+
+  my($year,$mon,$day,$hour,$min,$sec)=@_;
+  my $err;
+  my @argv;
+
+  print STDERR "Setting Date To: $mon/$day/$year $hour:$min:$sec\n";
+
+  ($err, @argv)=&dlp_req(DLPCMD_SetSysDateTime,
+			 {
+			  id   => 0x20,
+			  data => pack("nC5x",$year,$mon,$day,$hour,$min,$sec)
+			 }
+			);
+  # No return arguments to parse
+  print STDERR "ERROR: $err\n";
+  return $err;
 }
 
 1;
