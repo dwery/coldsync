@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.4 1999-02-04 10:01:03 arensb Exp $
-@c $Revision: 1.4 $
+@c $Id: libpalm.texi,v 1.5 1999-02-04 10:19:30 arensb Exp $
+@c $Revision: 1.5 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -33,8 +33,10 @@
 @tex
 % Set the manual edition number to the RCS revision number, and have it
 % be automatically generated, just to keep things simple.
-@xdef@setedition$Revision: 1.4 ${#1}
-@xdef@edition{@setedition$Revision: 1.4 $}
+% This is rather kludgy, actually: argument #1 is the colon from the RCS
+% string. It's only there so that RCS/CVS won't expand the wrong thing.
+@xdef@seteditionone$Revision#1 #2 ${#2}
+@xdef@edition{@seteditionone$Revision: 1.5 $}
 @end tex
 @c %** End of header
 
