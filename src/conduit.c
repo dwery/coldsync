@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.44 2002-03-10 12:20:27 azummo Exp $
+ * $Id: conduit.c,v 2.45 2002-03-11 23:12:14 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -74,6 +74,7 @@ static int run_conduits(const struct dlp_dbinfo *dbinfo,
 			PConnection *pconn);
 static const char *find_in_path(const char *conduit);
 static pid_t spawn_conduit(const char *path,
+                           const char *cwd,
 			   char * const argv[],
 			   FILE **tochild,
 			   FILE **fromchild,
@@ -419,6 +420,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	argv[3] = NULL;			/* Terminator */
 
 	pid = spawn_conduit(conduit->path,
+			    conduit->cwd,				
 			    argv,
 			    &tochild, &fromchild,
 			    NULL);
@@ -1504,6 +1506,7 @@ find_in_path(const char *conduit)
 static pid_t
 spawn_conduit(
 	const char *path,	/* Path to program to run */
+	const char *cwd,	/* Conduit working directory */
 	char * const argv[],	/* Child's command-line arguments */
 	FILE **tochild,		/* File descriptor to child's stdin */
 	FILE **fromchild,	/* File descriptor to child's stdout */
@@ -1518,6 +1521,7 @@ spawn_conduit(
 	sigset_t sigmask;	/* Mask of signals to block. Used by
 				 * {,un}block_sigchld() */
 	const char *fname;	/* (Usually full) pathname to conduit */
+	char *dpath;		/* Path to the directory part of the conduit's path */
 
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
@@ -1664,6 +1668,14 @@ spawn_conduit(
 		      "spawn_conduit", path);
 		exit(1);
 	}
+	
+	if (cwd != NULL)
+	{
+		if (chdir(cwd) != 0)
+			Error(_("%s: Couldn't change directory to \"%s\"\n"),
+			      "spawn_conduit", cwd);
+	}
+
 	err = execv(fname, argv);
 				/* Use execv(), not execvp(): don't look in
 				 * $PATH. We've already checked. */

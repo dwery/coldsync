@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.86 2002-03-10 23:39:35 arensb Exp $
+ * $Id: config.c,v 1.87 2002-03-11 23:12:14 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1873,6 +1873,7 @@ new_conduit_block()
 	retval->num_ctypes = 0;
 	retval->flags = 0;
 	retval->path = NULL;
+	retval->cwd = NULL;
 	retval->headers = NULL;
 	retval->prefs = NULL;
 	retval->prefs_slots = 0;
@@ -1895,6 +1896,9 @@ free_conduit_block(conduit_block *c)
 
 	if (c->path != NULL)
 		free(c->path);
+
+	if (c->cwd != NULL)
+		free(c->cwd);
 
 	/* Free the conduit headers */
 	for (hdr = c->headers, next_hdr = NULL; hdr != NULL; hdr = next_hdr)
