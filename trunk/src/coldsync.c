@@ -1,6 +1,10 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.6 1999-08-23 08:52:47 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: coldsync.c,v 1.7 1999-09-04 20:57:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -11,8 +15,14 @@
 #include <termios.h>		/* Experimental */
 #include <dirent.h>		/* For opendir(), readdir(), closedir() */
 #include <string.h>		/* For strrchr() */
+
+#if HAVE_STRINGS_H
+#  include <strings.h>		/* For strcasecmp() under AIX */
+#endif	/* HAVE_STRINGS_H */
+
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
+#include <errno.h>		/* For errno. Duh. */
 #include "palm_errno.h"
 #include "PConnection.h"
 #include "cmp.h"
@@ -41,7 +51,7 @@
 
 extern int load_config();
 extern int load_palm_config(struct Palm *palm);
-/*  int listlocalfiles(struct PConnection *pconn); */
+int CheckLocalFiles(struct Palm *palm);
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
@@ -255,8 +265,6 @@ main(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-/*  listlocalfiles(pconn); */
-
 	/* Get a list of all databases on the Palm */
 	if ((err = ListDBs(pconn, &palm)) < 0)
 	{
@@ -334,18 +342,9 @@ main(int argc, char *argv[])
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a sync.\n");
 
-		/* XXX - Get list of local files: if there are any that
-		 * aren't on the Palm, it probably means that they existed
-		 * once, but were deleted on the Palm. Assuming that the
-		 * user knew what he was doing, these databases should be
-		 * deleted. However, just in case, they should be save to
-		 * an "attic" directory.
-		 */
-
 		/* XXX - If it's configured to install new databases first,
 		 * install new databases now.
 		 */
-#if 0
 		err = InstallNewFiles(pconn, &palm);
 		if (err < 0)
 		{
@@ -353,7 +352,6 @@ main(int argc, char *argv[])
 			/* XXX - Clean up */
 			exit(1);
 		}
-#endif	/* 0 */
 
 		/* Synchronize the databases */
 		for (i = 0; i < palm.num_dbs; i++)
@@ -371,6 +369,15 @@ main(int argc, char *argv[])
 		/* XXX - If it's configured to install new databases last,
 		 * install new databases now.
 		 */
+
+		/* XXX - Get list of local files: if there are any that
+		 * aren't on the Palm, it probably means that they existed
+		 * once, but were deleted on the Palm. Assuming that the
+		 * user knew what he was doing, these databases should be
+		 * deleted. However, just in case, they should be saved to
+		 * an "attic" directory.
+		 */
+		err = CheckLocalFiles(&palm);
 
 		/* XXX - Write updated NetSync info */
 		/* Write updated user info */
@@ -692,53 +699,257 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 	return 0;
 }
 
-#if 0
+
+/* CheckLocalFiles
+ * Clean up the backup directory: if there are any database files in it
+ * that aren't installed on the Palm, move them to the attic directory, out
+ * of the way, where they won't cause confusion.
+ * Presumably, these files are databases that were deleted on the Palm. We
+ * don't want to just delete them, because they may have been deleted
+ * accidentally (for instance, the user may have synced with a fresh new
+ * Palm), or they may still be valuable. Better to just move them out of
+ * the way and let the user delete them manually.
+ */
 int
-listlocalfiles(struct PConnection *pconn)
+CheckLocalFiles(struct Palm *palm)
 {
 	int err;
 	DIR *dir;
 	struct dirent *file;
-	char *lastdot;
-	struct pdb *db;
-	char fnamebuf[MAXPATHLEN];
 
-	/* XXX - Use 'installdir' from coldsync.h */ 
-	printf("Listing directory \"%s\"\n", INSTALL_DIR);
-	dir = opendir(INSTALL_DIR);
-	if (dir == NULL)
+	MISC_TRACE(2)
+		fprintf(stderr,
+			"Checking for extraneous local files in \"%s\".\n",
+			backupdir);
+
+	if ((dir = opendir(backupdir)) == NULL)
 	{
+		fprintf(stderr, "CheckLocalFiles: can't open \"%s/\"\n",
+			backupdir);
 		perror("opendir");
-		exit(1);
+		return -1;
 	}
 
+	/* Check each file in the directory in turn */
 	while ((file = readdir(dir)) != NULL)
 	{
+		char *lastdot;		/* Pointer to last dot in filename */
+		struct dlp_dbinfo *db;
+		static char dbname[DLPCMD_DBNAME_LEN+1];
+		static char fromname[MAXPATHLEN+1];
+					/* Full pathname of the database */
+		static char toname[MAXPATHLEN+1];
+					/* Pathname to which we'll move the
+					 * database.
+					 */
+		struct stat statbuf;	/* Used to see if a file exists */
+		int n;
+
+
+		MISC_TRACE(4)
+			fprintf(stderr,
+				"CheckLocalFiles: Checking file \"%s\"\n",
+				file->d_name);
+
+		/* Check the extension, if any, on the filename.
+		 * The only files we care about here are those that end in
+		 * ".pdb" or ".prc". Anything other than these files is
+		 * unlikely to be taken for a database and erroneously
+		 * uploaded or something.
+		 */
 		lastdot = strrchr(file->d_name, '.');
 		if (lastdot == NULL)
-		{
+			/* No extension. Ignore this file */
 			continue;
-		}
-		if (strcasecmp(lastdot, ".pdb") == 0)
+
+		if ((strcasecmp(lastdot, ".pdb") != 0) &&
+		    (strcasecmp(lastdot, ".prc") != 0))
+			/* The file doesn't have a database extension.
+			 * Ignore it.
+			 */
+			continue;
+
+		MISC_TRACE(5)
+			fprintf(stderr,
+				"Found a database: \"%s\"\n",
+				file->d_name);
+
+		/* See if a database by this name exists on the Palm. */
+
+		/* Extract the database name. Try not to overflow the
+		 * buffer
+		 */
+		if ((lastdot - file->d_name) >= DLPCMD_DBNAME_LEN)
 		{
-			/* Do nothing. Fall through */
-		} else if (strcasecmp(lastdot, ".prc") == 0)
-		{
-			/* Do nothing. Fall through */
+			strncpy(dbname, file->d_name,
+				DLPCMD_DBNAME_LEN);
+			dbname[DLPCMD_DBNAME_LEN] = '\0';
 		} else {
-			printf("\tI don't know this file type\n");
-			continue;
+			strncpy(dbname, file->d_name,
+				lastdot - file->d_name);
+			dbname[lastdot - file->d_name] = '\0';
 		}
-		/* XXX - Possible buffer overflow */
-		sprintf(fnamebuf, "%s/%s", INSTALL_DIR, file->d_name);
-		db = pdb_Read(fnamebuf);
-		err = UploadDatabase(pconn, db);
-		fprintf(stderr, "UploadDatabase returned %d\n", err);
-		if (err != 0) return err;
+
+		/* See if this database exists on the Palm */
+		MISC_TRACE(4)
+			fprintf(stderr,
+				"Checking for \"%s\" on the Palm\n",
+				dbname);
+		if ((db = find_dbentry(palm, dbname)) != NULL)
+				/* It exists. Ignore it */
+			continue;
+
+		/* XXX - Might be a good idea to move this into its own
+		 * function in "util.c": cautious_mv(from,to);
+		 */
+		/* This database doesn't exist on the Palm. Presumably, it
+		 * was deleted on the Palm; hence, we should move it
+		 * locally to the Attic directory, where it won't cause
+		 * confusion. If the user didn't mean to delete the file,
+		 * he can always move it from there to the install
+		 * directory and reinstall.
+		 */
+		MISC_TRACE(3)
+			fprintf(stderr,
+				"Moving \"%s\" to the attic.\n",
+				file->d_name);
+
+		/* Come up with a unique filename to which to move the
+		 * database.
+		 */
+
+		/* Get the database's current full pathname */
+		strncpy(fromname, backupdir, MAXPATHLEN);
+		strncat(fromname, "/", MAXPATHLEN - strlen(fromname));
+		strncat(fromname, file->d_name,
+			MAXPATHLEN - strlen(fromname));
+
+		/* First try at a destination pathname:
+		 * <atticdir>/<filename>.
+		 */
+		strncpy(toname, atticdir, MAXPATHLEN);
+		strncat(toname, "/", MAXPATHLEN - strlen(toname));
+		strncat(toname, file->d_name,
+			MAXPATHLEN - strlen(toname));
+
+		/* Check to see if the destination filename exists. We use
+		 * lstat() because, although we don't care if it's a
+		 * symlink, we don't want to clobber that symlink if it
+		 * exists.
+		 */
+		err = lstat(toname, &statbuf);
+		if (err < 0)
+		{
+			/* If stat() failed because the file doesn't exist,
+			 * that's good. Anything else is a genuine error,
+			 * and is bad.
+			 */
+			if (errno != ENOENT)
+			{
+				fprintf(stderr, "CheckLocalFiles: Error in checking for \"%s\"\n",
+					toname);
+				perror("stat");
+				closedir(dir);
+				return -1;
+			}
+
+			/* stat() failed because the file doesn't exist.
+			 * Move the database to the attic.
+			 */
+			MISC_TRACE(5)
+				fprintf(stderr,
+					"Renaming \"%s\" to \"%s\"\n",
+					fromname, toname);
+			err = rename(fromname, toname);
+			if (err < 0)
+			{
+				fprintf(stderr, "CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n",
+					fromname, toname);
+				perror("rename");
+				closedir(dir);
+				return -1;
+			}
+
+			continue;	/* Go on to the next database. */
+		}
+
+		/* The proposed destination filename already exists. Try
+		 * appending "~N" to the destination filename, where N is
+		 * some number. Set 100 as the upper limit for N.
+		 */
+		for (n = 0; n < 100; n++)
+		{
+			static char nbuf[5];
+
+			/* Write out the new extension */
+			sprintf(nbuf, "~%d", n);
+
+			/* Construct the proposed destination name:
+			 * <atticdir>/<filename>~<n>
+			 */
+			strncpy(toname, atticdir, MAXPATHLEN);
+			strncat(toname, "/",
+				MAXPATHLEN - strlen(toname));
+			strncat(toname, file->d_name,
+				MAXPATHLEN - strlen(toname));
+			strncat(toname, nbuf,
+				MAXPATHLEN - strlen(toname));
+
+			/* Check to see whether this file exists */
+			err = lstat(toname, &statbuf);
+			if (err == 0)
+				/* The file exists */
+				continue;
+
+			/* If stat() failed because the file doesn't exist,
+			 * that's good. Anything else is a genuine error,
+			 * and is bad.
+			 */
+			if (errno != ENOENT)
+			{
+				fprintf(stderr,
+					"CheckLocalFiles: Error in checking for \"%s\"\n",
+					toname);
+				perror("stat");
+				closedir(dir);
+				return -1;
+			}
+
+			/* stat() failed because the file doesn't exist.
+			 * Move the database to the attic.
+			 */
+			MISC_TRACE(5)
+				fprintf(stderr,
+					"Renaming \"%s\" to \"%s\"\n",
+					fromname, toname);
+			err = rename(fromname, toname);
+			if (err < 0)
+			{
+				fprintf(stderr, "CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n",
+					fromname, toname);
+				perror("rename");
+				closedir(dir);
+				return -1;
+			}
+
+			break;	/* Go on to the next database */
+		}
+
+		if (n >= 100)
+		{
+			/* Gah. All of the files "foo", "foo~0", "foo~1",
+			 * through "foo~99" are all taken. This is bad, but
+			 * there's nothing we can do about that right now.
+			 */
+			fprintf(stderr,
+				"Too many files named \"%s\" in the attic.\n",
+				file->d_name);
+		}
 	}
+	closedir(dir);
+
 	return 0;
 }
-#endif	/* 0 */
 
 /* GetUserSysInfo
  * Get system and user info from the Palm, and put it in 'palm'.
@@ -1040,7 +1251,7 @@ parse_args(int argc, char *argv[])
 				 * uid <uid>.
 				 */
 			printf("User \"%s\"\n", optarg);
-			if (isalpha(optarg[0]))
+			if (isalpha((int) optarg[0]))
 				/* User specified as username */
 				global_opts.username = optarg;
 			else
@@ -1267,6 +1478,33 @@ print_version(void)
 "        to case, whenever possible.\n"
 #endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
 	       );
+}
+
+/* find_dbinfo
+ * XXX - This really doesn't belong in this file.
+
+ * Look through the list of databases in 'palm' and try to find the one
+ * named 'name'. Returns a pointer to its entry in 'palm->dblist' if it
+ * exists, or NULL otherwise.
+ */
+struct dlp_dbinfo *
+find_dbentry(struct Palm *palm,
+	     const char *name)
+{
+	int i;
+
+	if (palm == NULL)
+		return NULL;		/* Paranoia */
+
+	for (i = 0; i < palm->num_dbs; i++)
+	{
+		if (strncmp(name, palm->dblist[i].name,
+			    DLPCMD_DBNAME_LEN) == 0)
+			/* Found it */
+			return &(palm->dblist[i]);
+	}
+
+	return NULL;		/* Couldn't find it */
 }
 
 /* This is for Emacs's benefit:
