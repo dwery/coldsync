@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.21 2000-05-20 23:57:47 arensb Exp $
+ * $Id: parser.y,v 2.22 2000-05-21 03:59:05 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -257,12 +257,29 @@ listen_directive:
 			fprintf(stderr, "Listen: device [%s]\n", $4);
 
 		lex_expect(0);
+
+		if (cur_listen->device != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: device already "
+				  "defined.\n"),
+				conf_fname, lineno);
+			free(cur_listen->device);
+		}
 		cur_listen->device = $4;
+		$4 = NULL;
 	}
 	| SPEED opt_colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: speed %d\n", $3);
+
+		if (cur_listen->speed != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: speed already defined.\n"),
+				conf_fname, lineno);
+		}
 
 		cur_listen->speed = $3;
 	}
@@ -323,8 +340,8 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			PARSE_TRACE(4)
 				fprintf(stderr, "Uninstall");
 			fprintf(stderr,
-				_("%s: %d: Warning: Uninstall conduits are not "
-				  "implemented.\n"),
+				_("%s: %d: Warning: Uninstall conduits are "
+				  "not implemented.\n"),
 				conf_fname, lineno);
 			break;
 		    default:
@@ -475,6 +492,17 @@ conduit_directive:
 
 		lex_expect(0);
 
+		if ((cur_conduit->dbcreator != 0L) ||
+		    (cur_conduit->dbtype != 0L))
+		{
+			/* XXX - This doesn't work if the previous
+			 * creator/type definition was "* / *".
+			 */
+			fprintf(stderr,
+				_("%s: %d: Warning: type already defined.\n"),
+				conf_fname, lineno);
+		}
+
 		cur_conduit->dbcreator = $4.creator;
 		cur_conduit->dbtype = $4.type;
 	}
@@ -485,6 +513,14 @@ conduit_directive:
 	STRING semicolon
 	{
 		lex_expect(0);
+
+		if (cur_conduit->path != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: path already defined.\n"),
+				conf_fname, lineno);
+			free(cur_conduit->path);
+		}
 
 		/* Path to the conduit program. If this is a relative
 		 * pathname, look for it in the path.
@@ -803,6 +839,15 @@ pda_directive:
 
 		lex_expect(0);
 
+		if (cur_pda->snum != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: serial number already "
+				  "defined.\n"),
+				conf_fname, lineno);
+			free(cur_pda->snum);
+		}
+
 		cur_pda->snum = $4;
 		$4 = NULL;
 
@@ -866,6 +911,15 @@ pda_directive:
 			fprintf(stderr, "Directory \"%s\"\n", $4);
 
 		lex_expect(0);
+
+		if (cur_pda->directory != NULL)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: directory already "
+				  "defined.\n"),
+				conf_fname, lineno);
+			free(cur_pda->directory);
+		}
 
 		cur_pda->directory = $4;
 		$4 = NULL;
