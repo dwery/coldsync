@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.20 2001-06-26 05:47:32 arensb Exp $
+ * $Id: padp.c,v 1.21 2001-09-07 23:50:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -183,7 +183,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			   inlen-PADP_HEADER_LEN);
 
 	/* See what type of packet this is */
-	switch (header.type)
+	switch ((padp_frag_t) header.type)
 	{
 	    case PADP_FRAGTYPE_DATA:
 		/* It's a data fragment. This is what we wanted */
@@ -207,6 +207,11 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 	    case PADP_FRAGTYPE_ABORT:
 		palm_errno = PALMERR_ABORT;
 		return -1;
+
+	    case PADP_FRAGTYPE_NAK:
+		/* No longer used. Silently ignore this */
+		goto retry;
+
 	    default:
 		/* XXX */
 		fprintf(stderr, _("##### Unexpected packet type %d.\n"),
@@ -225,7 +230,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		/* Send an ACK */
 		/* Construct an output packet header and put it in 'outbuf' */
 		wptr = outbuf;
-		put_ubyte(&wptr, PADP_FRAGTYPE_ACK);
+		put_ubyte(&wptr, (ubyte) PADP_FRAGTYPE_ACK);
 		put_ubyte(&wptr, header.flags);
 		put_uword(&wptr, header.size);
 		/* Set the transaction ID that the SLP layer will use when
@@ -239,7 +244,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			fprintf(stderr,
 				"Sending ACK: type %d, flags 0x%02x, "
 				"size %d, xid 0x%02x\n",
-				PADP_FRAGTYPE_ACK,
+				(int) PADP_FRAGTYPE_ACK,
 				header.flags,
 				header.size,
 				pconn->padp.xid);
@@ -326,7 +331,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		/* Send an ACK for the first fragment */
 		/* Construct an output packet header and put it in 'outbuf' */
 		wptr = outbuf;
-		put_ubyte(&wptr, PADP_FRAGTYPE_ACK);
+		put_ubyte(&wptr, (ubyte) PADP_FRAGTYPE_ACK);
 		put_ubyte(&wptr, header.flags);
 		put_uword(&wptr, header.size);
 		/* Set the transaction ID that the SLP layer will use when
@@ -340,7 +345,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			fprintf(stderr,
 				"Sending ACK: type %d, flags 0x%02x, "
 				"size %d, xid 0x%02x\n",
-				PADP_FRAGTYPE_ACK,
+				(int) PADP_FRAGTYPE_ACK,
 				header.flags,
 				header.size,
 				pconn->padp.xid);
@@ -421,7 +426,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 					   inlen-PADP_HEADER_LEN);
 
 			/* See what type of packet this is */
-			switch (header.type)
+			switch ((padp_frag_t) header.type)
 			{
 			    case PADP_FRAGTYPE_DATA:
 				/* It's a data fragment. This is what we
@@ -502,7 +507,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			 * 'outbuf'
 			 */
 			wptr = outbuf;
-			put_ubyte(&wptr, PADP_FRAGTYPE_ACK);
+			put_ubyte(&wptr, (ubyte) PADP_FRAGTYPE_ACK);
 			put_ubyte(&wptr, header.flags);
 			put_uword(&wptr, header.size);
 			/* Set the transaction ID that the SLP layer will
@@ -516,7 +521,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				fprintf(stderr,
 					"Sending ACK: type %d, "
 					"flags 0x%02x, size %d, xid 0x%02x\n",
-					PADP_FRAGTYPE_ACK,
+					(int) PADP_FRAGTYPE_ACK,
 					header.flags,
 					header.size,
 					pconn->padp.xid);
@@ -602,8 +607,8 @@ padp_write(PConnection *pconn,
 
 		/* Construct a header in 'outbuf' */
 		wptr = outbuf;
-		put_ubyte(&wptr, PADP_FRAGTYPE_DATA);	/* type */
-		put_ubyte(&wptr, frag_flags);		/* flags */
+		put_ubyte(&wptr, (ubyte) PADP_FRAGTYPE_DATA);	/* type */
+		put_ubyte(&wptr, frag_flags);			/* flags */
 		if (frag_flags & PADP_FLAG_FIRST)
 			put_uword(&wptr, len);
 		else
@@ -613,7 +618,7 @@ padp_write(PConnection *pconn,
 		PADP_TRACE(5)
 			fprintf(stderr, "Sending type %d, flags 0x%02x, "
 				"size %d, xid 0x%02x\n",
-				PADP_FRAGTYPE_DATA,
+				(int) PADP_FRAGTYPE_DATA,
 				frag_flags,
 				frag_len,
 				pconn->padp.xid);
@@ -696,7 +701,7 @@ padp_write(PConnection *pconn,
 					    */
 					   PADP_HEADER_LEN);
 
-			switch (ack_header.type)
+			switch ((padp_frag_t) ack_header.type)
 			{
 			    case PADP_FRAGTYPE_DATA:
 				/* This might happen if:
@@ -729,12 +734,13 @@ padp_write(PConnection *pconn,
 						"sending ACK: type %d, flags "
 						"0x%02x, size 0x%02x, xid "
 						"0x%02x\n",
-						PADP_FRAGTYPE_ACK,
+						(int) PADP_FRAGTYPE_ACK,
 						ack_header.flags,
 						ack_header.size,
 						pconn->slp.last_xid);
 				ackoutptr = ackout;
-				put_ubyte(&ackoutptr, PADP_FRAGTYPE_ACK);
+				put_ubyte(&ackoutptr,
+					  (ubyte) PADP_FRAGTYPE_ACK);
 				put_ubyte(&ackoutptr, ack_header.flags);
 				put_uword(&ackoutptr, ack_header.size);
 				pconn->padp.xid = pconn->slp.last_xid;
@@ -773,6 +779,11 @@ padp_write(PConnection *pconn,
 			    case PADP_FRAGTYPE_ABORT:
 				palm_errno = PALMERR_ABORT;
 				return -1;
+
+			    case PADP_FRAGTYPE_NAK:
+				/* No longer used. Silently ignore it. */
+				goto mpretry;
+
 			    default:
 				/* XXX */
 				fprintf(stderr,
