@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.2 1999-03-11 04:15:29 arensb Exp $
+ * $Id: pdb.h,v 1.3 1999-03-11 05:21:24 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -45,8 +45,8 @@
 #define PDB_ATTR_OPEN		0x0040	/* Database is open */
 
 /* Record attributes */
-#define PDB_REC_DELETE		0x80	/* Delete this record next sync */
-#define PDB_REC_ARCHIVE		0x40	/* Archive this record next sync */
+#define PDB_REC_DELETED		0x80	/* Delete this record next sync */
+#define PDB_REC_DIRTY		0x40	/* Record has been modified */
 #define PDB_REC_BUSY		0x20	/* Record is currently in use */
 #define PDB_REC_PRIVATE		0x10	/* Record is private: don't show to
 					 * anyone without asking for a
@@ -105,6 +105,7 @@ struct pdb_recordlist_header
  */
 struct pdb_record
 {
+	/* XXX - Add 'next' field, for linked list */
 	localID offset;			/* Offset of record in file */
 	ubyte attributes;		/* Record attributes */
 	udword uniqueID;		/* Record's unique ID. Actually,
@@ -114,11 +115,7 @@ struct pdb_record
 					 * easier to just consider this a
 					 * 32-bit integer.
 					 */
-		/* XXX - This 3-byte array is brain-damaged. Yeah, I know
-		 * this is how it comes from the Palm, but for everything
-		 * else it's a PITA. Just make it a 'udword' and make
-		 * reading and writing a separate case.
-		 */
+	/* XXX - Should include record length and data */
 };
 #define PDB_RECORDIX_LEN	8	/* Size of a pdb_record in a file */
 
@@ -129,9 +126,11 @@ struct pdb_record
  */
 struct pdb_resource
 {
+	/* XXX - Add 'next' field, for linked list */
 	udword type;			/* Resource type */
 	uword id;			/* Resource ID */
 	localID offset;			/* Offset of resource in file */
+	/* XXX - Should include resource length and data */
 };
 #define PDB_RESOURCEIX_LEN	10	/* Size of a pdb_resource in a file */
 
@@ -142,6 +141,9 @@ struct pdb_resource
 struct pdb
 {
 	long file_size;			/* Total length of file */
+	/* XXX - These two structs ought to just get merged into the body
+	 * of this struct. It doesn't make sense to keep them separate.
+	 */
 	struct pdb_header header;	/* Database header */
 	struct pdb_recordlist_header reclist_header;
 					/* Record list header */
@@ -163,6 +165,9 @@ struct pdb
 					 * become a linked list, for the
 					 * same reasons as above.
 					 */
+				/* XXX - Actually, just stick these fields
+				 * into 'pdb_record' and 'pdb_resource'
+				 */
 };
 
 /* Convenience macros */
@@ -182,6 +187,9 @@ extern struct pdb_record *pdb_FindRecordByID(
 extern struct pdb_record *pdb_FindRecordByIndex(
 	const struct pdb *db,
 	const uword index);
+extern int pdb_DeleteRecordByID(
+	const struct pdb *db,
+	const udword id);
 extern int UploadDatabase(struct PConnection *pconn, const struct pdb *db);
 
 /* XXX - Functions to write:
