@@ -19,6 +19,20 @@
 #include "pconn/netsync.h"
 #include "pconn/util.h"
 
+/* XXX - This is just for debugging, I think */
+/* INET_NTOP
+ * This is a hack, intended to support both those systems that have
+ * inet_ntop() and those that don't. Note that the second argument is not a
+ * pointer. In one case, the macro uses &(addr), in the other it doesn't.
+ */
+#if HAVE_INET_NTOP
+#  define INET_NTOP(af, addr, buf, buflen) \
+	inet_ntop((af), &(addr), (buf), (buflen))
+#else
+#  define INET_NTOP(af, addr, buf, buflen) \
+	inet_ntoa(addr)
+#endif	/* HAVE_INET_NTOP */
+
 static int net_udp_listen(
 	PConnection *pconn,
 	struct netsync_wakeup *wakeup_pkt,
@@ -242,8 +256,8 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 		char namebuf[128];
 
 		fprintf(stderr, "Inside net_connect(%s), port %d\n",
-			inet_ntop(servaddr.sin_family,
-				  &(servaddr.sin_addr),
+			INET_NTOP(servaddr.sin_family,
+				  servaddr.sin_addr,
 				  namebuf, 128),
 			ntohs(servaddr.sin_port));
 	}
@@ -289,18 +303,19 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 		char namebuf[128];
 
 		fprintf(stderr,
-			"Got datagram from host 0x%08lx (%d.%d.%d.%d), port %d, length %d\n",
+			"Got datagram from host 0x%08lx (%d.%d.%d.%d), "
+			"port %d, length %ld\n",
 			(unsigned long) servaddr.sin_addr.s_addr,
 			(int)  (servaddr.sin_addr.s_addr	& 0xff),
 			(int) ((servaddr.sin_addr.s_addr >>  8) & 0xff),
 			(int) ((servaddr.sin_addr.s_addr >> 16) & 0xff),
 			(int) ((servaddr.sin_addr.s_addr >> 24) & 0xff),
 			servaddr.sin_port,
-			servaddr_len);
+			(long) servaddr_len);
 		debug_dump(stderr, "UDP", inbuf, len);
 		fprintf(stderr, "servaddr says host [%s]\n",
-			inet_ntop(servaddr.sin_family,
-				  &(servaddr.sin_addr),
+			INET_NTOP(servaddr.sin_family,
+				  servaddr.sin_addr,
 				  namebuf, 128));
 	}
 
@@ -410,8 +425,8 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 			char namebuf[128];
 
 			fprintf(stderr, "connecting to [%s], port %d\n",
-				inet_ntop(servaddr.sin_family,
-					  &(servaddr.sin_addr),
+				INET_NTOP(servaddr.sin_family,
+					  servaddr.sin_addr,
 					  namebuf, 128),
 				ntohs(servaddr.sin_port));
 		}
@@ -621,14 +636,15 @@ net_udp_listen(PConnection *pconn,
 		goto retry;
 	} else {
 		fprintf(stderr,
-			"Got datagram from host 0x%08lx (%d.%d.%d.%d), port %d, length %d\n",
+			"Got datagram from host 0x%08lx (%d.%d.%d.%d), "
+			"port %d, length %ld\n",
 			(unsigned long) cliaddr->sin_addr.s_addr,
 			(int)  (cliaddr->sin_addr.s_addr	& 0xff),
 			(int) ((cliaddr->sin_addr.s_addr >>  8) & 0xff),
 			(int) ((cliaddr->sin_addr.s_addr >> 16) & 0xff),
 			(int) ((cliaddr->sin_addr.s_addr >> 24) & 0xff),
 			cliaddr->sin_port,
-			*cliaddr_len);
+			(long) *cliaddr_len);
 		debug_dump(stderr, "UDP", buf, len);
 	}
 
