@@ -14,6 +14,8 @@ ColdSync 3.0
 	  (DLP >= 1.2).
 	- "type: none;" conduits, to allow conduits to run without an
 	  associated database.
+	- "enabled: yes|no;" to allow administrator to keep around conduit
+	  blocks that aren't actually in use.
 	- Improved error detection and reporting.
 	- Improved syntax:
 		'coldsync -m install' to quickly install new files.
@@ -24,3 +26,4 @@ ColdSync 3.0
 	- Configuration files moved to /etc/coldsync .
 	- More sample conduits
 	- VFS and ExpSlot support in the perl modules
+	- many more DLP calls for perl sync conduits
