@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.54 2001-11-10 03:13:36 arensb Exp $
+ * $Id: parser.y,v 2.55 2001-11-12 01:11:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -65,9 +65,11 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %}
 
 %token <crea_type>	CREA_TYPE
+%token <boolean>	FALSE
 %token <integer>	NUMBER
 %token <integer>	USERID
 %token <string>		STRING
+%token <boolean>	TRUE
 %token <string>		USERNAME
 %token <string>		WORD
 %token ARGUMENTS
@@ -98,6 +100,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token FULL
 %token SIMPLE
 
+%type <boolean> boolean
 %type <commtype> comm_type
 %type <crea_type> creator_type
 %type <string> opt_name
@@ -117,6 +120,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 	pconn_listen_t commtype;
 	pconn_proto_t proto_type;
 	crea_type_pair crea_type;
+	Bool boolean;
 }
 
 %%
@@ -757,37 +761,30 @@ options_list: options_list option
 	| /* Empty */
 	;
 
-option:	FORCE_INSTALL ';'
+option:	FORCE_INSTALL colon boolean ';'
 	{
-		/* XXX - Allow an optional value: "true", "false", "yes",
-		 * or "no".
-		 */
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found force_install.\n");
-		/* XXX - This is bogus: it overrides the command line.
-		 * Perhaps better to define a struct for the parser, with
-		 * this option as a three-way boolean:
-		 * true/false/undefined, with undefined as the default.
-		 * Then set 'global_opts.force_install' only if the user
-		 * hasn't specified -I on the command line.
-		 */
-		global_opts.force_install = True;
+
+		file_config->options.force_install = $3;
+	}
+	| FORCE_INSTALL ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found force_install.\n");
+		file_config->options.force_install = True3;
+	}
+	| INSTALL_FIRST colon boolean ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found install_first.\n");
+		file_config->options.install_first = $3;
 	}
 	| INSTALL_FIRST ';'
 	{
-		/* XXX - Allow an optional value: "true", "false", "yes",
-		 * or "no".
-		 */
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found install_first.\n");
-		/* XXX - This is bogus: it overrides the command line.
-		 * Perhaps better to define a struct for the parser, with
-		 * this option as a three-way boolean:
-		 * true/false/undefined, with undefined as the default.
-		 * Then set 'global_opts.force_install' only if the user
-		 * hasn't specified -z on the command line.
-		 */
-		global_opts.install_first = True;
+		file_config->options.install_first = True3;
 	}
 	/* XXX - This is still broken: it accepts assignments of the form
 	 *	options {
@@ -1132,6 +1129,17 @@ opt_string:	STRING
 	{
 		$$ = NULL;
 	}
+	;
+
+boolean:	TRUE
+	{
+		$$ = True;
+	}
+	| FALSE
+	{
+		$$ = False;
+	}
+	;
 
 colon:	':'
 	| error
@@ -1139,6 +1147,7 @@ colon:	':'
 		ANOTHER_ERROR;
 		Error(_("\tMissing ':'."));
 	}
+	;
 
 
 open_brace:	'{'
@@ -1147,6 +1156,7 @@ open_brace:	'{'
 		ANOTHER_ERROR;
 		Error(_("\tMissing '{'."));
 	}
+	;
 
 semicolon:	';'
 	| error
@@ -1154,6 +1164,7 @@ semicolon:	';'
 		ANOTHER_ERROR;
 		Error(_("\tMissing ';'."));
 	}
+	;
 
 %%
 
