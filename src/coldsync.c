@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.44 2000-08-07 00:37:36 arensb Exp $
+ * $Id: coldsync.c,v 1.45 2000-08-29 11:16:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -565,7 +565,9 @@ main(int argc, char *argv[])
 					fprintf(stderr,
 						_("Conduit failed for unknown "
 						  "reason\n"));
-					break;
+					/* Continue, and hope for the best */
+					/*  break; */
+					continue;
 				}
 
 				Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
