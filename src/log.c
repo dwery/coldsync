@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.23 2001-10-06 22:13:45 arensb Exp $
+ * $Id: log.c,v 1.24 2001-10-12 03:59:40 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -54,3 +54,9 @@ va_add_to_log(PConnection *pconn, const char *fmt, ...)
 	/* Send the message to the Palm */
 	return DlpAddSyncLogEntry(pconn, buf);
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
+ */
