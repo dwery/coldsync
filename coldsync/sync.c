@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.9 1999-06-04 00:53:32 arensb Exp $
+ * $Id: sync.c,v 1.10 1999-06-27 06:04:40 arensb Exp $
  */
 
 #include <stdio.h>
@@ -26,7 +26,7 @@ int sync_debug = 0;
 		fprintf(stderr, "SYNC:" format);
 #endif	/* SYNC_DEBUG */
 
-static int SyncRecord(struct PConnection *pconn,
+int SyncRecord(struct PConnection *pconn,
 		      ubyte dbh,
 		      struct pdb *localdb,
 		      struct pdb_record *localrec,
@@ -180,7 +180,7 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 	/* Read the database on the Palm to an in-memory copy */
 	if ((remotedb = pdb_Download(pconn, remotedbinfo, dbh)) == NULL)
 	{
-		fprintf(stderr, "Can't downlod \"%s\"\n",
+		fprintf(stderr, "Can't download \"%s\"\n",
 			remotedbinfo->name);
 		DlpCloseDB(pconn, dbh);
 		return -1;
@@ -408,12 +408,6 @@ fprintf(stderr, "SyncRecord returned %d\n", err);
 		return -1;
 	}
 
-#if 0
-if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
-{
-	fprintf(stderr, "File is open. Not cleaning up, not resetting flags\n");
-} else {
-#endif	/* 0 */
 fprintf(stderr, "### Cleaning up database\n");
 	err = DlpCleanUpDatabase(pconn, dbh);
 	if (err != DLPSTAT_NOERR)
@@ -432,9 +426,6 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 		free_pdb(remotedb);
 		return -1;
 	}
-#if 0
-}
-#endif	/* 0 */
 
 	/* Clean up */
 	free_pdb(remotedb);
@@ -553,10 +544,8 @@ SYNC_TRACE(5, "localrec == NULL\n");
 			 * file.
 			 */
 
-			/* Clear the flags in localrec: it's fresh and new. */
-			/* XXX - The comment says local, the code says
-			 * remote. Which one is wrong?
-			 */
+			/* Clear the flags in remoterec before adding it to
+			 * the local database: it's fresh and new. */
 			remoterec->attributes &= 0x0f;
 				/* XXX - Presumably, this should just
 				 * become a zero assignment, when/if
@@ -665,7 +654,7 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 /* pdb_SyncRecord
  * Sync a record.
  */
-static int
+int
 SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 	   ubyte dbh,			/* Database handle */
 	   struct pdb *localdb,		/* Local database */
@@ -699,6 +688,10 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 	 *	This record hasn't changed.
 	 * All other flag combinations are either absurd or redundant. They
 	 * should probably be flagged.
+	 */
+	/* XXX - Apparently, not all applications are polite enough to set
+	 * the DELETED flag when a record is deleted, so just check ARCHIVE
+	 * and EXPUNGE.
 	 */
 	if (DELETED(remoterec) && ARCHIVE(remoterec))
 	{
