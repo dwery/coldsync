@@ -7,8 +7,9 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.2 1999-07-12 09:22:14 arensb Exp $
+ * $Id: dlp.c,v 1.3 1999-08-01 08:05:38 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For calloc() */
 #include <string.h>		/* For memcpy() et al. */
@@ -66,15 +67,60 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 {
 	int i;
 	int err;
-	static ubyte outbuf[2048];	/* Outgoing request buffer */
-					/* XXX - Fixed size: bad */
+	ubyte *outbuf;			/* Outgoing request buffer */
+	long buflen;			/* Length of outgoing request */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	palm_errno = PALMERR_NOERR;
 
-	/* XXX - Ought to figure out the total length of the request
-	 * and allocate a buffer for it.
-	 */
+	/* Calculate size of outgoing request */
+	DLP_TRACE(6)
+		fprintf(stderr,
+			"dlp_send_req: Calculating outgoing request buffer\n");
+
+	buflen = 2L;		/* Request id and argc */
+	for (i = 0; i < header->argc; i++)
+	{
+		if (argv[i].size <= DLP_TINYARG_MAXLEN)
+		{
+			/* Tiny argument */
+			buflen += 2 + argv[i].size;
+					/* 2 bytes for id and 1-byte size */
+			DLP_TRACE(7)
+				fprintf(stderr, "Tiny argument: %ld bytes, "
+					"buflen == %ld\n",
+					argv[i].size, buflen);
+		} else if (argv[i].size <= DLP_SMALLARG_MAXLEN)
+		{
+			/* Small argument */
+			buflen += 4 + argv[i].size;
+					/* 4 bytes for id, unused, and
+					 * 2-byte size */
+			DLP_TRACE(7)
+				fprintf(stderr, "Small argument: %ld bytes, "
+					"buflen == %ld\n",
+					argv[i].size, buflen);
+		} else {
+			/* Long argument */
+			buflen += 6 + argv[i].size;
+					/* 6 bytes: 2-byte id and 4-byte
+					 * size */
+			DLP_TRACE(7)
+				fprintf(stderr, "Long argument: %ld bytes, "
+					"buflen == %ld\n",
+					argv[i].size, buflen);
+		}
+	}
+
+	/* Allocate a buffer of the proper length */
+	outbuf = (ubyte *) malloc(buflen);
+	if (outbuf == NULL)
+	{
+		fprintf(stderr,
+			"dlp_send_req: Can't allocate %ld-byte buffer\n",
+			buflen);
+		return -1;
+	}
 
 	/* Construct a DLP request header in the output buffer */
 	wptr = outbuf;
@@ -95,7 +141,8 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 			/* Tiny argument */
 			DLP_TRACE(10)
 				fprintf(stderr,
-					"Tiny argument %d, id 0x%02x, size %ld\n",
+					"Tiny argument %d, id 0x%02x, "
+					"size %ld\n",
 					i, argv[i].id, argv[i].size);
 			put_ubyte(&wptr, argv[i].id & 0x3f);
 					/* Make sure the high two bits are
@@ -108,7 +155,8 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 			/* Small argument */
 			DLP_TRACE(10)
 				fprintf(stderr,
-					"Small argument %d, id 0x%02x, size %ld\n",
+					"Small argument %d, id 0x%02x, "
+					"size %ld\n",
 					i, argv[i].id, argv[i].size);
 			put_ubyte(&wptr, (argv[i].id & 0x3f) | 0x80);
 					/* Make sure the high two bits are
@@ -135,7 +183,6 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 		}
 
 		/* Append the argument data to the header */
-		/* XXX - Potential buffer overrun */
 		memcpy(wptr, argv[i].data, argv[i].size);
 		wptr += argv[i].size;
 	}
@@ -144,15 +191,11 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 	err = padp_write(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
-		/* XXX - (After the outgoing buffer is dynamically
-		 * allocated): free the outgoing buffer.
-		 */
+		free(outbuf);
 		return err;
 	}
 
-	/* XXX - (After the outgoing buffer is dynamically
-	 * allocated): free the outgoing buffer.
-	 */
+	free(outbuf);
 	return 0;		/* Success */
 }
 
