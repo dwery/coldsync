@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.70 2000-12-16 23:00:07 arensb Exp $
+ * $Id: coldsync.c,v 1.71 2000-12-16 23:22:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -318,7 +318,7 @@ main(int argc, char *argv[])
 		exit(-err);
 	exit(0);
 
-	/* NOTREACHED */
+	/*NOTREACHED*/
 }
 
 static int
