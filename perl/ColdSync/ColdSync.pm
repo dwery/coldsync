@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.23 2002-11-07 20:46:52 azummo Exp $
+# $Id: ColdSync.pm,v 1.24 2003-04-05 01:32:26 azummo Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.23 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.24 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -219,6 +219,12 @@ sub DumpConfig
 sub ParseArgs
 {
 	my @flavors = @_;
+
+	if (not defined $ARGV[0])
+	{
+		print STDOUT "402 Missing conduit argument\n";
+		exit 1;
+	}
 
 	if ($ARGV[0] ne "conduit")
 	{
