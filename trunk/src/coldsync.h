@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.69 2002-10-26 12:05:12 azummo Exp $
+ * $Id: coldsync.h,v 1.70 2002-10-31 15:29:07 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -258,6 +258,7 @@ typedef struct conduit_block
 #define FLAVORFL_DUMP		(1 << 1)
 #define FLAVORFL_SYNC		(1 << 2)
 #define FLAVORFL_INSTALL	(1 << 3)
+#define FLAVORFL_INIT		(1 << 4)
 
 /* pda_block
  * The information specified in a 'pda' block in the config file: the

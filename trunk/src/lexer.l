@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.52 2002-10-26 12:05:12 azummo Exp $
+ * $Id: lexer.l,v 2.53 2002-10-31 15:29:07 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -220,6 +220,7 @@ QSTR		[^\\\$\"\n]
 "dump"		{ KEYWORD(DUMP);	}
 "post-dump"	{ KEYWORD(DUMP);	/* Synonym */	}
 "install"	{ KEYWORD(INSTALL);	}
+"init"		{ KEYWORD(INIT);	}
 
  /* Conduit options */
 "final"		{ KEYWORD(FINAL);	}
