@@ -53,6 +53,9 @@ depend::
 
 include ../Make.rules
 
+install::	${CXXPROG}
+	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR} ${BINDIR}/${CXXPROG}
+
 # Additional dependencies, maintained by hand 'cos I don't know how
 # else to do it
 coldsync:	${TOP}/libpconn/libpconn.a
