@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000-04-09 13:54:24 arensb Exp $
+# $Id: Makefile,v 1.6 2000-05-19 12:06:54 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -52,9 +52,7 @@ ${POFILES}:	messages.po
 install-i18n::	${MOFILES}
 	langs="${LANGS}"; \
 	for lang in $$langs; do \
-		if [ ! -d "${LOCALEDIR}/$$lang" ]; then \
-			mkdir "${LOCALEDIR}/$$lang"; \
-		fi; \
+		${MKDIR} "${LOCALEDIR}/$$lang"; \
 		${INSTALL_DATA} "$$lang.mo" \
 			"${LOCALEDIR}/$$lang/LC_MESSAGES/${PACKAGE}.mo"; \
 	done

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2000-05-06 11:19:46 arensb Exp $
+# $Id: Makefile,v 1.2 2000-05-19 12:03:55 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -21,9 +21,7 @@ include ${TOP}/Make.rules
 # XXX - Should extract documentation from PODs and install with man
 # pages.
 install::	${CONDUITS}
-	if test ! -d ${CONDUITDIR}; then \
-		mkdir ${CONDUITDIR}; \
-	fi
+	${MKDIR} ${CONDUITDIR}
 	for i in ${CONDUITS}; do \
 		${INSTALL_SCRIPT} $$i ${CONDUITDIR}/$$i; \
 	done
