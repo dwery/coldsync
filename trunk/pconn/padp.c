@@ -8,7 +8,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.4 1999-02-24 13:09:45 arensb Exp $
+ * $Id: padp.c,v 1.5 1999-03-11 03:17:20 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
@@ -117,7 +117,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	 * nothing comes in in time, conclude that the connection is dead,
 	 * and time out.
 	 */
-	timeout.tv_sec = pconn->padp.read_timeout / 10;
+	timeout.tv_sec = pconn->padp.read_timeout;
 	timeout.tv_usec = 0L;		/* Set the timeout */
 
 	FD_ZERO(&readfds);		/* Set of file descriptors to
@@ -478,15 +478,12 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 }
 
 /* padp_write
- * Write the contents of 'buf', of length 'len' bytes, to the file
- * descriptor 'fd'.
- * If successful, returns a non-negative value. In case of error, returns a
- * negative value and sets 'palm_errno' to indicate the error.
+ * Write a (possibly multi-fragment) message.
  */
 int
-padp_write(struct PConnection *pconn,		/* Connection to Palm */
-	   ubyte *buf,		/* Data to write */
-	   uword len)		/* Length of data */
+padp_write(struct PConnection *pconn,
+		 ubyte *buf,
+		 uword len)
 {
 	int err;
 	static ubyte outbuf[PADP_HEADER_LEN+PADP_MAX_PACKET_LEN];
@@ -503,48 +500,61 @@ padp_write(struct PConnection *pconn,		/* Connection to Palm */
 	fd_set writefds;	/* File descriptors to write to, for
 				 * select() */
 	struct timeval timeout;	/* Timeout length, for select() */
+	uword offset;		/* Current offset */
 
 	palm_errno = PALMERR_NOERR;
 
-	/* XXX - Retries & timeouts */
-	/* XXX - Fragmentation of long messages */
-	/* XXX - Look at the length of the packet and see if it's
-	 * longer than 1024 bytes. If so, send it as a multi-fragment
-	 * message.
-	 */
-/* XXX - For now, just refuse to handle messages >= 1024 bytes */
-if (len >= 1024)
-{
-	fprintf(stderr, "+++++ I don't know how to send packets > 1024 bytes.\nDying at %s:%d\n",
-		__FILE__,__LINE__);
-	return -1;
-}
+	bump_xid(pconn);	/* Pick a new transmission ID */
 
-	bump_xid(pconn);		/* Pick a new transaction ID */
-
-	/* Construct a header in 'outbuf' */
-	wptr = outbuf;
-	put_ubyte(&wptr, PADP_FRAGTYPE_DATA);	/* type */
-	put_ubyte(&wptr, PADP_FLAG_FIRST |	/* flags */
-		  PADP_FLAG_LAST);
-		/* XXX - These flags are bogus for multi-fragment
-		 * packets. */
-	put_uword(&wptr, len);			/* size */
-	PADP_TRACE(5, "Sending type %d, flags 0x%02x, size %d, xid 0x%02x\n",
-		   PADP_FRAGTYPE_DATA,
-		   PADP_FLAG_FIRST | PADP_FLAG_LAST,
-		   len,
-		   pconn->padp.xid);
-
-	/* Append the caller's data to 'outbuf' */
-	memcpy(outbuf+PADP_HEADER_LEN, buf, len);
-fprintf(stderr, "After memcpy\n");
-
-	/* Set the timeout length, for select() */
-	timeout.tv_sec = PADP_ACK_TIMEOUT;
-	timeout.tv_usec = 0L;
-	for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
+	for (offset = 0; offset < len; offset += PADP_MAX_PACKET_LEN)
 	{
+		ubyte frag_flags;	/* Flags for this fragment */
+		uword frag_len;		/* Length of this fragment */
+
+		PADP_TRACE(6, "offset == %d (of %d)\n", offset, len);
+		frag_flags = 0;
+
+		if (offset == 0)
+		{
+			/* It's the first fragment */
+			frag_flags |= PADP_FLAG_FIRST;
+		}
+
+		if ((len - offset) <= PADP_MAX_PACKET_LEN)
+		{
+			/* It's the last fragment */
+			frag_flags |= PADP_FLAG_LAST;
+			frag_len = len - offset;
+		} else {
+			/* It's not the last fragment */
+			frag_len = PADP_MAX_PACKET_LEN;
+		}
+		PADP_TRACE(7, "frag_flags == 0x%02x, frag_len == %d\n",
+	frag_flags, frag_len);
+
+		/* Construct a header in 'outbuf' */
+		wptr = outbuf;
+		put_ubyte(&wptr, PADP_FRAGTYPE_DATA);	/* type */
+		put_ubyte(&wptr, frag_flags);		/* flags */
+		if (frag_flags & PADP_FLAG_FIRST)
+			put_uword(&wptr, len);
+		else
+			put_uword(&wptr, offset);
+		memcpy(outbuf+PADP_HEADER_LEN, buf+offset, frag_len);
+
+		PADP_TRACE(5, "Sending type %d, flags 0x%02x, size %d, "
+			   "xid 0x%02x\n",
+			   PADP_FRAGTYPE_DATA,
+			   frag_flags,
+			   frag_len,
+			   pconn->padp.xid);
+
+		/* Set the timeout length, for select() */
+		timeout.tv_sec = PADP_ACK_TIMEOUT;
+		timeout.tv_usec = 0L;
+
+		for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
+		{
 FD_ZERO(&writefds);
 FD_SET(pconn->fd, &writefds);
 err = select(pconn->fd+1, NULL, &writefds, NULL, &timeout);
@@ -554,107 +564,105 @@ if (err == 0)
 	fprintf(stderr, "Write timeout. Attempting to resend\n");
 	continue;
 }
-fprintf(stderr, "about to slp_write()\n");
-		/* Send 'outbuf' as a SLP packet */
-		err = slp_write(pconn, outbuf, PADP_HEADER_LEN+len);
-fprintf(stderr, "slp_write returned %d\n", err);
-		if (err < 0)
-			return err;		/* Error */
+			PADP_TRACE(6, "about to slp_write()\n");
 
-		/* Get an ACK */
-		/* Use select() to wait for the file descriptor to become
-		 * readable. If nothing comes in, time out and retry.
-		 */
-fprintf(stderr, "Waiting to read\n");
-		FD_ZERO(&readfds);
-		FD_SET(pconn->fd, &readfds);
-		err = select(pconn->fd+1, &readfds, NULL, NULL, &timeout);
-		if (err == 0)
-		{
-			/* select() timed out */
-			fprintf(stderr, "Timeout. Attempting to resend\n");
-			continue;
-		}
-		err = slp_read(pconn, &ack_buf, &ack_len);
-		if (err == 0)
-		{
-			/* End of file */
-			palm_errno = PALMERR_EOF;
-			return -1;
-		}
-		if (err < 0)
-			return err;		/* Error */
+			/* Send 'outbuf' as a SLP packet */
+			err = slp_write(pconn, outbuf,
+					PADP_HEADER_LEN+frag_len);
+			if (err < 0)
+				return err;		/* Error */
 
-		/* Parse the ACK packet */
-		rptr = ack_buf;
-		ack_header.type = get_ubyte(&rptr);
-		ack_header.flags = get_ubyte(&rptr);
-		ack_header.size = get_uword(&rptr);
-
-		switch (ack_header.type)
-		{
-		    case PADP_FRAGTYPE_DATA:
-			fprintf(stderr, "##### Got an unexpected data packet. I'm confused!\n");
-			return -1;
-		    case PADP_FRAGTYPE_ACK:
-			/* An ACK. Just what we wanted */
-			break;
-		    case PADP_FRAGTYPE_TICKLE:
-			/* Tickle packets aren't acknowledged, but the connection doesn't
-			 * time out as long as they keep coming in. Just ignore it.
+			/* Get an ACK */
+			/* Use select() to wait for the file descriptor to
+			 * become readable. If nothing comes in, time out
+			 * and retry.
 			 */
-			attempt--;	/* XXX - Hack! */
-			continue;
-		    case PADP_FRAGTYPE_ABORT:
-			palm_errno = PALMERR_ABORT;
-			return -1;
-		    default:
-			/* XXX */
-			fprintf(stderr, "##### Unexpected packet type %d\n", ack_header.type);
-			return -1;
-		};
+			FD_ZERO(&readfds);
+			FD_SET(pconn->fd, &readfds);
+			err = select(pconn->fd+1,
+				     &readfds, NULL, NULL,
+				     &timeout);
+			if (err == 0)
+			{
+				/* select() timed out */
+				fprintf(stderr, "Timeout. Attempting to resend\n");
+				continue;
+			}
+			err = slp_read(pconn, &ack_buf, &ack_len);
+			if (err == 0)
+			{
+				/* End of file */
+				palm_errno = PALMERR_EOF;
+				return -1;
+			}
+			if (err < 0)
+				return err;		/* Error */
 
-		/* XXX - Presumably, if the XID on the received ACK doesn't
-		 * match the XID of the packet we sent, then we need to
-		 * resend the original packet.
-		 */
-		if (pconn->slp.last_xid != pconn->padp.xid)
+			/* Parse the ACK packet */
+			rptr = ack_buf;
+			ack_header.type = get_ubyte(&rptr);
+			ack_header.flags = get_ubyte(&rptr);
+			ack_header.size = get_uword(&rptr);
+
+			switch (ack_header.type)
+			{
+			    case PADP_FRAGTYPE_DATA:
+				fprintf(stderr, "##### Got an unexpected data packet. I'm confused!\n");
+				return -1;
+			    case PADP_FRAGTYPE_ACK:
+				/* An ACK. Just what we wanted */
+				break;
+			    case PADP_FRAGTYPE_TICKLE:
+				/* Tickle packets aren't acknowledged, but
+				 * the connection doesn't time out as long
+				 * as they keep coming in. Just ignore it.
+				 */
+				attempt--;	/* XXX - Hack! */
+				continue;
+			    case PADP_FRAGTYPE_ABORT:
+				palm_errno = PALMERR_ABORT;
+				return -1;
+			    default:
+				/* XXX */
+				fprintf(stderr, "##### Unexpected packet type %d\n",
+					ack_header.type);
+				return -1;
+			};
+
+			/* XXX - Presumably, if the XID on the received ACK
+			 * doesn't match the XID of the packet we sent,
+			 * then we need to resend the original packet.
+			 */
+			if (pconn->slp.last_xid != pconn->padp.xid)
+			{
+				fprintf(stderr, "##### Expected XID 0x%02x, "
+					"got 0x%02x\n",
+					pconn->padp.xid, pconn->slp.last_xid);
+				return -1;
+			}
+			PADP_TRACE(5, "Got an ACK: type %d, flags 0x%02x, "
+				   "size %d, xid 0x%02x\n",
+				   ack_header.type,
+				   ack_header.flags,
+				   ack_header.size,
+				   pconn->slp.last_xid);
+			/* XXX - If it's not an ACK packet, assume that the
+			 * ACK was sent and lost in transit, and that this
+			 * is the response to the query we just sent.
+			 */
+
+			break;			/* Successfully got an ACK */
+		}
+
+		if (attempt >= PADP_MAX_RETRIES)
 		{
-			fprintf(stderr, "##### Expected XID 0x%02x, got 0x%02x\n",
-				pconn->padp.xid, pconn->slp.last_xid);
+			PADP_TRACE(5, "PADP: Reached retry limit. Abandoning.\n");
+			palm_errno = PALMERR_TIMEOUT;
 			return -1;
 		}
-		PADP_TRACE(5, "Got an ACK: type %d, flags 0x%02x, size %d, xid 0x%02x\n",
-			   ack_header.type,
-			   ack_header.flags,
-			   ack_header.size,
-			   pconn->slp.last_xid);
-		/* XXX - If it's not an ACK packet, assume that the ACK was
-		 * sent and lost in transit, and that this is the response
-		 * to the query we just sent.
-		 */
-		/* XXX - This whole section needs a lot of work. Need
-		 * timeouts, retries, etc.
-		 * One problem with the above code is the fixed-sized
-		 * buffer. This will be a problem if we send a data packet,
-		 * and the Palm sends an ACK, but the ACK gets lost on the
-		 * way. In this case, the next PADP packet we receive will
-		 * be a data packet. This implies that our ACK was received
-		 * normally, so we should act as if we got the ACK in the
-		 * first place. This means that we need to un-read the
-		 * packet that just came in, return sucess, and get on with
-		 * life.
-		 */
-
-		return 0;		/* Successfully got an ACK */
+		PADP_TRACE(7, "Bottom of offset-loop\n");
 	}
-
-	if (attempt >= PADP_MAX_RETRIES)
-	{
-		PADP_TRACE(5, "PADP: Reached retry limit. Abandoning.\n");
-		palm_errno = PALMERR_TIMEOUT;
-		return -1;
-	}
+	PADP_TRACE(7, "After offset-loop\n");
 
 	return 0;
 }
