@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.1 2001-06-26 06:18:52 arensb Exp $
+ * $Id: spalm.h,v 2.2 2002-03-29 18:20:17 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -87,6 +87,7 @@ extern struct Palm *new_Palm(PConnection *pconn);
 extern void free_Palm(struct Palm *palm);
 
 /* Accessors. One for each datum one might want to get */
+extern PConnection *palm_pconn(struct Palm *palm);
 extern const udword palm_rom_version(struct Palm *palm);
 extern const int palm_serial_len(struct Palm *palm);
 extern const char *palm_serial(struct Palm *palm);
