@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.98.2.2 2001-10-11 06:34:22 arensb Exp $
+ * $Id: coldsync.c,v 1.98.2.3 2001-10-11 07:18:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,7 +57,7 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 				 * rant in "log.c".
 				 */
 
-static int open_log_file();
+static int open_log_file(void);
 static int Connect(PConnection *pconn);
 static int Disconnect(PConnection *pconn, const ubyte status);
 static int run_mode_Standalone(int argc, char *argv[]);
@@ -101,6 +101,7 @@ main(int argc, char *argv[])
 	global_opts.devtype		= -1;
 	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
+	global_opts.log_fname		= NULL;
 	global_opts.do_backup		= False;
 	global_opts.backupdir		= NULL;
 	global_opts.do_restore		= False;
@@ -199,10 +200,26 @@ main(int argc, char *argv[])
 	if (global_opts.use_syslog)
 	{
 		openlog(PACKAGE, LOG_PID, LOG_LOCAL0);
-		                /* XXX - Perhaps the facility should be
+				/* XXX - Perhaps the facility should be
 				 * configurable at configure-time.
 				 */
 	}
+
+	/* Open the log file here (though we might reopen it later): for
+	 * one thing, there might be errors from parsing the config
+	 * file(s), and we want those to go to the Right Place.
+	 *
+	 * For another thing, command line overrides config file. If the
+	 * log file is set only in the config file, then parsing errors go
+	 * to stderr, and once the config file has been parsed, further
+	 * errors go to the file specified in the config file.
+	 *
+	 * If the config file is set both on the command line and in the
+	 * config file, then all errors go to the one specified on the
+	 * command line.
+	 */
+	if (open_log_file() < 0)
+		goto done;
 
 	/* Load the configuration: in daemon mode, just load the global
 	 * configuration from /etc/coldsync.conf. In other modes, read the
@@ -218,10 +235,11 @@ main(int argc, char *argv[])
 		goto done;
 	}
 
-	/* Log file is opened after config file is read, since it can be set
-	   there */
-	if(open_log_file() ) goto done;
-
+	/* Log file is (re)opened after config file is read, since it can
+	 * be set there.
+	 */
+	if (open_log_file() < 0)
+		goto done;
 
 	MISC_TRACE(1)
 		/* So I'll know what people are running when they send me
@@ -369,8 +387,13 @@ main(int argc, char *argv[])
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
 
-	/* Write a timestamp to the log file */
-	if (strcmp("", get_symbol("LOGFILE")) ) 
+	/* Write a timestamp to the log file.
+	 * The condition may be non-obvious: the idea is that we don't log
+	 * this timestamp to stderr, only to a file specified with the "-l
+	 * logfile" option, or $LOGFILE variable. If we opened a separate
+	 * log file, then 'oldstderr' was set to the old stderr.
+	 */
+	if (oldstderr != NULL)
 	{
 		time_t now;
 
@@ -388,18 +411,43 @@ main(int argc, char *argv[])
 
 	/*NOTREACHED*/
 }
+
+/* open_log_file
+ * Open a log file to which error messages will be sent. This is pretty
+ * much equivalent to
+ *	exec 3>&2 2>logfile
+ * in the Bourne shell.
+ *
+ * If a log file has been specified on the command line, use that.
+ * Otherwise, if the symbol "LOGFILE" is defined, use that. Otherwise, just
+ * have error messages go to stderr.
+ *
+ * Returns 0 if successful, or -1 in case of error.
+ */
 static int
-open_log_file() {
-	const char *filename = get_symbol("LOGFILE");
+open_log_file(void)
+{
+	const char *filename;	/* Log file pathname */
 	int stderr_copy;	/* File descriptor of copy of stderr */
-	int log_fd;		/* Temporary file descriptor for
-				 * logfile */
-	int log_fd2;		/* Temporary file descriptor for
-				 * logfile */
+	int log_fd;		/* Temporary file descriptor for logfile */
+	int log_fd2;		/* Temporary file descriptor for logfile */
 	time_t now;		/* For timestamp */
 
+	/* Figure out where to log: try command line, then config file,
+	 * then environment variable (implied).
+	 */
+	if (global_opts.log_fname != NULL)
+		filename = global_opts.log_fname;
+	else {
+		filename = get_symbol("LOGFILE");
+		if ((filename == NULL) || (filename[0] == '\0'))
+			/* No log file, or empty log file specified. Don't
+			 * do anything. */
+			return 0;
+	}
+
 	/* Open the logfile, if requested.
-	 * This block opens the log file given by the "-l" option, then
+	 * This next bit opens the log file given by 'filename', then
 	 * redirects stderr to it. We also keep a copy of the original
 	 * stderr as 'oldstderr', in case we ever need it.
 	 * I think this is almost equivalent to
@@ -412,23 +460,26 @@ open_log_file() {
 	 * getty and inetd don't give us a Bourne shell with which to do
 	 * this.
 	 */
-
-	if (strcmp("", filename) == 0) return 0;
 	MISC_TRACE(1)
 		fprintf(stderr,
 			"Redirecting stderr to \"%s\"\n",
 			filename);
-	
-	/* Make a copy of the old stderr, in case we need it later. */
-	stderr_copy = dup(STDERR_FILENO);
-	if (stderr_copy < 0)
+
+	/* Make a copy of the old stderr, in case we need it later. But
+	 * only if we haven't done so yet.
+	 */
+	if (oldstderr == NULL)
 	{
-		Error(_("Can't dup(stderr)."));
-		Perror("dup");
-		return 1;
+		stderr_copy = dup(STDERR_FILENO);
+		if (stderr_copy < 0)
+		{
+			Error(_("Can't dup(stderr)."));
+			Perror("dup");
+			return -1;
+		}
+		oldstderr = fdopen(stderr_copy, "a");
 	}
-	oldstderr = fdopen(stderr_copy, "a");
-	
+
 	/* Open log file (with permissions that are either fascist
 	 * or privacy-enhancing, depending on your point of view).
 	 */
@@ -439,11 +490,13 @@ open_log_file() {
 		Error(_("Can't open log file \"%s\"."),
 		      filename);
 		Perror("open");
-		return 1;
+		return -1;
 	}
-	
-	/* Move the log file from whichever file descriptor it's on
-	 * now, to stderr's.
+
+	/* Move the log file from whichever file descriptor it's on now, to
+	 * stderr's. If file descriptor 2 was already open, dup2() closes
+	 * it first. This means that if open_log_file() is called twice, it
+	 * does the Right Thing.
 	 */
 	log_fd2 = dup2(log_fd, STDERR_FILENO);
 	if (log_fd2 < 0)
@@ -451,12 +504,12 @@ open_log_file() {
 		Error(_("Can't open log file on stderr."));
 		Perror("dup2");
 		close(log_fd);
-		return 1;
+		return -1;
 	}
-	
+
 	/* Get rid of the now-unneeded duplicate log file descriptor */
 	close(log_fd);
-	
+
 	/* Write a timestamp to the log file */
 	now = time(NULL);
 	fprintf(stderr, _("Log started on %s"), ctime(&now));
