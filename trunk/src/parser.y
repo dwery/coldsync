@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.56 2001-11-12 05:50:51 arensb Exp $
+ * $Id: parser.y,v 2.57 2001-12-09 19:51:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -80,6 +80,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token FINAL
 %token FORCE_INSTALL
 %token FORWARD
+%token HOSTID
 %token INSTALL_FIRST
 %token LISTEN
 %token OPTIONS
@@ -794,6 +795,13 @@ option:	FORCE_INSTALL colon boolean ';'
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found install_first.\n");
 		file_config->options.install_first = True3;
+	}
+	| HOSTID colon NUMBER semicolon
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found hostid: [%lu]\n",
+				$3);
+		hostid = $3;
 	}
 	/* XXX - This is still broken: it accepts assignments of the form
 	 *	options {
