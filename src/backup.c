@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.24 2000-12-09 10:38:22 arensb Exp $
+ * $Id: backup.c,v 2.25 2000-12-10 00:27:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -127,6 +127,7 @@ backup(struct PConnection *pconn,
 			"Backup",
 			dbinfo->name, bakfname);
 		err = DlpCloseDB(pconn, dbh);
+		free_pdb(pdb);
 		close(bakfd);
 		add_to_log(_("Error\n"));
 		return -1;
@@ -136,6 +137,7 @@ backup(struct PConnection *pconn,
 			dbinfo->name, bakfname);
 
 	err = DlpCloseDB(pconn, dbh);
+	free_pdb(pdb);
 	close(bakfd);
 	add_to_log(_("OK\n"));
 	return 0;
