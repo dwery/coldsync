@@ -1,9 +1,9 @@
 # ColdSync.pm
 # A module to simplify writing ColdSync conduits.
 #
-# $Id: ColdSync.pm,v 1.1 2000-02-07 00:59:36 arensb Exp $
+# $Id: ColdSync.pm,v 1.2 2000-02-07 04:45:33 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.1 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -126,7 +126,7 @@ sub DumpConfig
 		foreach $type (keys %{$Palm::PDB::PDBHandlers{$creator}})
 		{
 			push @typestrings,
-				"\"$creator\"/\"$type\"";
+				"$creator/$type";
 		}
 	}
 
