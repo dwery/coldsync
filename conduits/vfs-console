@@ -1,12 +1,11 @@
 #!/usr/bin/perl -w
 
-# vfs-console 0.9
+# vfs-console 1.0
 #
-# Copyright (c) 2003 Tower Technologies s.r.l., All Rights Reserved
+# Copyright (c) 2003-04 Tower Technologies s.r.l., All Rights Reserved
 #
-# Author:	ALessandro Zummo
+# Author:	Alessandro Zummo
 # License:	GPL
-
 
 use strict;
 
@@ -27,44 +26,61 @@ my $volume = undef;
 
 StartConduit('sync');
 
+	my $listen_addr = $HEADERS{'addr'} || '127.0.0.1';
+	my $listen_port = $HEADERS{'port'} || 12345;
+
 	my $io = new IO::Socket::INET (
-				'LocalAddr'	=> '127.0.0.1',
-				'LocalPort'	=> 12345,
-				'Type'		=> SOCK_STREAM,
-				'Listen'	=> 1,
-				'Proto'		=> 'tcp',
-				'ReuseAddr'	=> 1,
+
+		'LocalAddr'	=> $listen_addr,
+		'LocalPort'	=> $listen_port,
+		'Type'		=> SOCK_STREAM,
+		'Listen'	=> 1,
+		'Proto'		=> 'tcp',
+		'ReuseAddr'	=> 1,
 	);
 
 	# Wait for connection
 
-	print "vfs-console: awaiting connection...\n";
+	print "vfs-console: awaiting connection on $listen_addr port $listen_port\n";
 
 	if (defined $io)
 	{
 		if (my $client = $io->accept)
 		{
-			print $client "vfs-console 0.9 - Copyright (c) 2003 Tower Technologies\n";
+			print $client "vfs-console 1.0 - Copyright (c) 2003-04 Tower Technologies\n";
 			print $client "In case of panic, enter 'help'.\n";
+
 			print $client "vfs> ";
 
 			while (my $cmd = $client->getline)
 			{
+				my $rc = 0;
+				my $arg;
+
 				$cmd =~ s|[\n\r]||g;
 				$cmd =~ m|(\w+)(.*)|;
 
 				$cmd = $1;
-				my $arg = $2;
+				$arg = $2;
 
 				$arg =~ s|^(\s+)||;
 
+				print "Got command: -$cmd-\n";
+				print "   with arg: -$arg-\n"
+					if defined $arg and $arg ne "";
+
 				last if $cmd eq 'quit';
 
-				cmd_enum($client)	if $cmd eq 'enum';
-				cmd_info($client)	if $cmd eq 'info';
-				cmd_ls($client, $arg)	if $cmd eq 'ls';
-				cmd_get($client, $arg)	if $cmd eq 'get';
-				cmd_help($client, $arg)	if $cmd eq 'help';
+				$rc = cmd_enum($client)		if $cmd eq 'enum';
+				$rc = cmd_info($client)		if $cmd eq 'info';
+				$rc = cmd_help($client, $arg)	if $cmd eq 'help';
+				$rc = cmd_log($client, $arg)	if $cmd eq 'log';
+				$rc = cmd_get($client, $arg)	if $cmd eq 'get';
+				$rc = cmd_ls($client, $arg)	if $cmd eq 'ls';
+				$rc = cmd_rm($client, $arg)	if $cmd eq 'rm';
+
+				print $client "Unknown command '$cmd'.\n"
+					if $rc eq 0;
 
 				print $client "vfs> ";
 			}
@@ -75,8 +91,9 @@ StartConduit('sync');
 	}
 	else
 	{
-		print "Couldn't create socket\n";
+		print "Couldn't create socket: $@\n";
 	}
+
 EndConduit();
 
 sub cmd_help
@@ -85,13 +102,18 @@ sub cmd_help
 
 	print $client <<EOF;
 
-enum			Enumerate volumes (INVOKE THIS FIRST!)
-info			Show colume infos
-ls	[path]		Guess what?
-get	<file>		Download a file (complete path, please)
-help			This text	
+enum				Enumerate volumes (INVOKE THIS FIRST!)
+info				Show volumes info
+ls	[path]			List directory contents
+get	<file>			Download a file (complete path, please)
+put	<file> <vfs path>	Upload a file
+rm	<file>			Remove a file
+log	some text		Add 'some text' to the HotSync's log	
+help				This text	
 
 EOF
+
+	return 1;
 }
 
 sub cmd_enum
@@ -104,6 +126,8 @@ sub cmd_enum
 
 	# Save first volRef
 	$volume = ${$volumes->{'volumes'}}[0];
+
+	return 1;
 }
 
 				
@@ -121,6 +145,8 @@ sub cmd_info
 	}
 
 	print $client "\n";
+
+	return 1;
 }
 
 sub cmd_ls
@@ -128,26 +154,28 @@ sub cmd_ls
 	my $client = shift;
 	my $path = shift || '/';
 
-	print $client "Reading $path on volume $volume...\n\n";
+	print $client "VFS[$volume]:$path\n\n";
 
 	my $dirRef = dlp_VFSFileOpen($volume, vfsModeRead, $path);
 
 	if (defined $dirRef)
 	{
-               	my $dir = dlp_VFSDirEntryEnumerate($dirRef,
-							0,
-							10000);
+               	my $dir = dlp_VFSDirEntryEnumerate($dirRef, 0, 10000);
 
 		foreach my $entry ( @{$dir->{'entries'}} )
 		{
-			print $client "[DIR] "
+			print $client " [DIR]"
 				if $entry->{'attribute'}{'Directory'}; 
 
-			print $client $entry->{'name'} . "\n";
+			print $client " $entry->{'name'}\n";
 		}		
 
 		dlp_VFSFileClose($dirRef);
 	}
+
+	print $client "\n";
+
+	return 1;
 }
 
 sub fdump
@@ -211,4 +239,32 @@ sub cmd_get
 
 		print $client "done.\n";
 	}
+
+	return 1;
+}
+
+sub cmd_rm
+{
+	my $client = shift;
+	my $path = shift;
+
+	print $client "Removing $path...\n";
+
+	dlp_VFSFileDelete($volume, $path);
+
+	print $client "done.\n";
+
+	return 1;
+}
+
+sub cmd_log
+{
+	my $client = shift;
+	my $text = shift;
+
+	dlp_AddSyncLogEntry($text);
+
+	print $client "done.\n";
+
+	return 1;
 }
