@@ -1,7 +1,7 @@
 /*
  * PConnection_usbm50x.c - Koen Deforche <kdf@irule.be>
  *
- * $Id: PConnection_usbm50x.c,v 1.4 2001-07-30 07:31:13 arensb Exp $
+ * $Id: PConnection_usbm50x.c,v 1.5 2001-09-07 10:04:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -98,7 +98,7 @@ usbm50x_drain(PConnection *p)
 int
 pconn_usbm50x_open(PConnection *pconn,
 		   const char *device,
-		   const int protocol,
+		   const pconn_proto_t protocol,
 		   const Bool prompt)
 {
 	struct termios term;
