@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.147 2002-11-13 22:42:21 azummo Exp $
+ * $Id: coldsync.c,v 1.148 2002-11-24 11:40:44 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -330,6 +330,7 @@ main(int argc, char *argv[])
 	MISC_TRACE(3)
 	{
 		fprintf(stderr, "\nDebugging levels:\n");
+		fprintf(stderr, "\tNET:     %d\n", net_trace);
 		fprintf(stderr, "\tSLP:     %d\n", slp_trace);
 		fprintf(stderr, "\tCMP:     %d\n", cmp_trace);
 		fprintf(stderr, "\tPADP:    %d\n", padp_trace);
