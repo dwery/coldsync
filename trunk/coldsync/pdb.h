@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.7 1999-03-16 11:56:44 arensb Exp $
+ * $Id: pdb.h,v 1.8 1999-05-31 21:07:41 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -164,9 +164,6 @@ struct pdb
 			 * Does it get incremented each time you make any
 			 * kind of change to the database?
 			 */
-	/* XXX - These two should probably be called something like
-	 * appinfo_offset and sortinfo_offset, since "ID" is misleading.
-	 */
 	localID appinfo_offset;		/* Offset of AppInfo block in the
 					 * file */
 	localID sortinfo_offset;	/* Offset of sort block in the file */
