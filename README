@@ -139,6 +139,12 @@ Redhat Linux 6.1:
 	This can be ignored.
 
 Solaris 2.6:
+	(as of v1.1.8)
+	Compiles cleanly with gcc 2.8.1.
+
+	Doesn't compile with 'lex'. Compiles cleanly with 'flex',
+	though.
+
 	(as of ColdSync v1.1.4)
 	Compiles cleanly with gcc 2.8.1. Runs fine.
 
