@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.c,v 1.3 2002-11-05 21:32:46 azummo Exp $
+ * $Id: symboltable.c,v 1.4 2002-11-05 21:37:51 azummo Exp $
  *
  * This file implements the symbol table, as used in the .coldsyncrc
  * parser. No, it's not terribly sophisticated, because we're likely
@@ -220,14 +220,17 @@ put_symbol(const char *name, const char *value)
 	} else {
 		/* Replace existing symbol */
 	
+		newsym->next = oldsym->next;
+
 		if (last != NULL)
 		{
 			last->next = newsym;
-			newsym->next = oldsym->next;
 		}
 		else
-		/* We are replacing the head */
+		{
+			/* We are replacing the head */
 			symtab = newsym;
+		}
 
 		free_symbol(oldsym);
 	}
