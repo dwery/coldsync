@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.41 2000-01-22 12:50:13 arensb Exp $
+dnl # $Id: configure.in,v 1.42 2000-01-23 21:19:21 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -183,8 +183,10 @@ dnl ## Checks for libraries.
 # XXX - RedHat 6.0 has gethostbyname() in libnsl, but also has it in
 # libc. This test adds "-lnsl" to $LIBS, even though it isn't
 # required.
-AC_CHECK_LIB(nsl,gethostbyname)
-
+AC_CHECK_LIB(nsl,gethostbyname,
+	LIBS="$LIBS -lnsl",
+	# Under UnixWare 7.1.0, gethostbyname() is in libsocket.
+	AC_CHECK_LIB(socket,gethostbyname))
 AC_CHECK_LIB(y, yyerror, LIBYACC="-ly")
 AC_SUBST(LIBYACC)
 
