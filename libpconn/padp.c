@@ -12,12 +12,25 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.5 2000-01-25 11:28:44 arensb Exp $
+ * $Id: padp.c,v 1.6 2000-03-04 12:05:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 
 #include <stdlib.h>			/* For free() */
+
+#if STDC_HEADERS
+# include <string.h>		/* For memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
