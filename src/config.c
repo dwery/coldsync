@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.58 2001-01-11 09:25:31 arensb Exp $
+ * $Id: config.c,v 1.59 2001-01-25 07:52:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,11 +14,16 @@
 #include <stdlib.h>		/* For atoi(), getenv() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
 #include <sys/stat.h>		/* For mkdir() */
-#include <sys/ioctl.h>		/* For ioctl() and ioctl values */
+/*#include <sys/ioctl.h>*/		/* For ioctl() and ioctl values */
 #include <pwd.h>		/* For getpwuid() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <netdb.h>		/* For gethostbyname2() */
 #include <sys/socket.h>		/* For socket() */
+
+#if HAVE_SYS_SOCKIO_H
+#  include <sys/sockio.h>	/* For SIOCGIFCONF under Solaris */
+#endif	/* HAVE_SYS_SOCKIO_H */
+
 #include <net/if.h>		/* For struct ifreq */
 #include <netinet/in.h>		/* For struct sockaddr_in */
 #include <arpa/inet.h>		/* For inet_ntop() and friends */
@@ -118,7 +123,7 @@ parse_args(int argc, char *argv[])
 	 */
 
 	/* Read command-line options. */
-	while ((arg = getopt(argc, argv, ":hVSFRIzf:m:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRIszf:m:b:r:p:t:d:")) != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
 		 */
@@ -160,6 +165,10 @@ parse_args(int argc, char *argv[])
 			global_opts.conf_fname_given = True;
 			break;
 
+		    case 's':	/* -s: Use syslog for error messages */
+			global_opts.use_syslog = True;
+			break;
+
 #if 0
 		    case 'l':	/* -l <file>: Write debugging log to
 				 * <file>.
@@ -183,7 +192,7 @@ parse_args(int argc, char *argv[])
 			 */
 			Warn(_("The \"-b <dir>\" option is obsolete. "
 			       "Please use \"-mb <dir>\"\n"
-			       "instead.\n"));
+			       "instead."));
 			global_opts.mode = mode_Backup;
 			global_opts.do_backup = True;
 			global_opts.backupdir = optarg;
@@ -195,7 +204,7 @@ parse_args(int argc, char *argv[])
 			 */
 			Warn(_("The \"-r <dir>\" option is obsolete. "
 			       "Please use \"-mr <dir>\"\n"
-			       "instead.\n"));
+			       "instead."));
 			global_opts.mode = mode_Restore;
 			global_opts.do_restore = True;
 			global_opts.restoredir = optarg;
@@ -213,7 +222,7 @@ parse_args(int argc, char *argv[])
 			global_opts.devtype = name2listen_type(optarg);
 			if (global_opts.devtype < 0)
 			{
-				Error(_("Unknown device type: \"%s\".\n"),
+				Error(_("Unknown device type: \"%s\"."),
 				      optarg);
 				usage(argc, argv);
 				return -1;
@@ -225,7 +234,7 @@ parse_args(int argc, char *argv[])
 			break;
 
 		    case '?':	/* Unknown option */
-			Error(_("Unrecognized option: \"%s\".\n"),
+			Error(_("Unrecognized option: \"%s\"."),
 				argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
@@ -234,7 +243,7 @@ parse_args(int argc, char *argv[])
 				 * was given (e.g., "-u" instead of "-u
 				 * daemon").
 				 */
-			Error(_("Missing option argument after \"%s\".\n"),
+			Error(_("Missing option argument after \"%s\"."),
 			      argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
@@ -243,7 +252,7 @@ parse_args(int argc, char *argv[])
 			Warn(_("You specified an apparently legal option "
 			       "(\"-%c\"), but I don't know what\n"
 			       "to do with it. This is a bug. Please "
-			       "notify the maintainer.\n"),
+			       "notify the maintainer."),
 			     arg);
 			return -1;
 			break;
@@ -267,7 +276,7 @@ load_config()
 	/* Allocate a place to put the user's configuration */
 	if ((sync_config = new_sync_config()) == NULL)
 	{
-		Error(_("Can't allocate new configuration.\n"));
+		Error(_("Can't allocate new configuration."));
 		return -1;
 	}
 
@@ -285,7 +294,7 @@ load_config()
 		/* Allocate a new conduit block */
 		if ((fallback = new_conduit_block()) == NULL)
 		{
-			Error(_("Can't allocate new conduit block.\n"));
+			Error(_("Can't allocate new conduit block."));
 			free_sync_config(sync_config);
 			sync_config = NULL;
 			return -1;
@@ -301,7 +310,7 @@ load_config()
 		if (fallback->path == NULL)
 		{
 			/* strdup() failed */
-			Error(_("Couldn't initialize configuration.\n"));
+			Error(_("Couldn't initialize configuration."));
 			perror("strdup");
 
 			free_conduit_block(fallback);
@@ -324,7 +333,7 @@ load_config()
 		err = parse_config_file(DEFAULT_GLOBAL_CONFIG, sync_config);
 		if (err < 0)
 		{
-			Error(_("Couldn't read configuration file \"%s\".\n"),
+			Error(_("Couldn't read configuration file \"%s\"."),
 			      DEFAULT_GLOBAL_CONFIG);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -338,7 +347,7 @@ load_config()
 		err = get_userinfo(&userinfo);
 		if (err < 0)
 		{
-			Error(_("Can't get user info.\n"));
+			Error(_("Can't get user info."));
 			return -1;
 		}
 
@@ -349,7 +358,7 @@ load_config()
 			 * but it doesn't exist. Warn and continue with the
 			 * defaults.
 			 */
-			Error(_("Config file \"%s\" doesn't exist.\n"),
+			Error(_("Config file \"%s\" doesn't exist."),
 			      global_opts.conf_fname);
 
 			return -1;
@@ -373,7 +382,7 @@ load_config()
 		err = parse_config_file(global_opts.conf_fname, sync_config);
 		if (err < 0)
 		{
-			Error(_("Couldn't read configuration file \"%s\".\n"),
+			Error(_("Couldn't read configuration file \"%s\"."),
 			      global_opts.conf_fname);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -399,7 +408,7 @@ load_config()
 
 		if ((l = new_listen_block()) == NULL)
 		{
-			Error(_("Can't allocate listen block.\n"));
+			Error(_("Can't allocate listen block."));
 			free_sync_config(sync_config);
 			sync_config = NULL;
 			return -1;
@@ -407,7 +416,7 @@ load_config()
 
 		if ((l->device = strdup(global_opts.devname)) == NULL)
 		{
-			Error(_("Can't copy string.\n"));
+			Error(_("Can't copy string."));
 			free_listen_block(l);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -438,7 +447,7 @@ load_config()
 
 		if ((l = new_listen_block()) == NULL)
 		{
-			Error(_("Can't allocate listen block.\n"));
+			Error(_("Can't allocate listen block."));
 			free_sync_config(sync_config);
 			sync_config = NULL;
 			return -1;
@@ -446,7 +455,7 @@ load_config()
 
 		if ((l->device = strdup(PALMDEV)) == NULL)
 		{
-			Error(_("Can't copy string.\n"));
+			Error(_("Can't copy string."));
 			free_listen_block(l);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -631,7 +640,7 @@ set_debug_level(const char *str)
 	else if (strncasecmp(str, "net", 3) == 0)
 		net_trace = lvl;
 	else {
-		Error(_("Unknown facility \"%s\".\n"), str);
+		Error(_("Unknown facility \"%s\"."), str);
 	}
 }
 
@@ -646,8 +655,7 @@ set_mode(const char *str)
 	if (str == NULL)	/* Sanity check */
 	{
 		/* This should never happen */
-		Error(_("%s: Missing mode string. This should never "
-			"happen.\n"),
+		Error(_("%s: Missing mode string. This should never happen."),
 		      "set_mode");
 		return -1;
 	}
@@ -655,7 +663,7 @@ set_mode(const char *str)
 	/* Sanity check: if the user specifies the mode twice, complain. */
 	if (global_opts.mode != mode_None)
 		Warn(_("You shouldn't specify two -m<mode> options.\n"
-		       "\tUsing -m%s.\n"),
+		       "\tUsing -m%s."),
 		     str);
 
 	switch (str[0])
@@ -687,7 +695,7 @@ set_mode(const char *str)
 #endif	/* 0 */
 
 	    default:
-		Error(_("Unknown mode: \"%s\".\n"), str);
+		Error(_("Unknown mode: \"%s\"."), str);
 		return -1;
 	}
 }
@@ -781,7 +789,7 @@ get_hostinfo()
 	/* Get the hostname */
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
-		Error(_("Can't get host name.\n"));
+		Error(_("Can't get host name."));
 		perror("gethostname");
 		return -1;
 	}
@@ -790,7 +798,7 @@ get_hostinfo()
 
 	if ((myaddr = gethostbyname2(hostname, AF_INET)) == NULL)
 	{
-		Error(_("Can't look up my address.\n"));
+		Error(_("Can't look up my address."));
 		perror("gethostbyname");
 		return -1;
 	}
@@ -806,7 +814,7 @@ get_hostinfo()
 	 */
 	if (myaddr->h_addrtype != AF_INET)
 	{
-		Error(_("Hey! This isn't an AF_INET address!\n"));
+		Error(_("Hey! This isn't an AF_INET address!"));
 		return -1;
 	}
 
@@ -827,7 +835,7 @@ get_hostinfo()
 	/* Make sure there's at least one address */
 	if (myaddr->h_addr_list[0] == NULL)
 	{
-		Error(_("This host doesn't appear to have an IP address.\n"));
+		Error(_("This host doesn't appear to have an IP address."));
 		return -1;
 	}
 
@@ -907,7 +915,7 @@ get_hostaddrs()
 
 	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		Error(_("%s: socket() returned %d.\n"),
+		Error(_("%s: socket() returned %d."),
 		      "get_hostaddrs",
 		      sock);
 		perror("socket");
@@ -982,7 +990,7 @@ get_hostaddrs()
 	if ((hostaddrs = (struct sockaddr **)
 	     malloc(hostaddrs_size * sizeof(struct sockaddr *))) == NULL)
 	{
-		Error(_("%s: Out of memory.\n"),
+		Error(_("%s: Out of memory."),
 		      "get_hostaddrs");
 		free(buf);
 		return -1;
@@ -1018,7 +1026,7 @@ get_hostaddrs()
 			temp = realloc(hostaddrs, hostaddrs_size);
 			if (temp == NULL)
 			{
-				Error(_("%s: Out of memory.\n"),
+				Error(_("%s: Out of memory."),
 				      "get_hostaddrs");
 				free(hostaddrs);
 				hostaddrs = NULL;
@@ -1040,7 +1048,7 @@ get_hostaddrs()
 				if ((addr = (struct sockaddr *)
 				     malloc(sa_len)) == NULL)
 				{
-					Error(_("%s: Out of memory.\n"),
+					Error(_("%s: Out of memory."),
 					      "get_hostaddrs");
 					free(hostaddrs);
 					hostaddrs = NULL;
@@ -1106,7 +1114,7 @@ switch (ifreq->ifr_addr.sa_family)
 				num_hostaddrs * sizeof(struct sockaddr *));
 		if (temp == NULL)
 		{
-			Error(_("%s: realloc(%d) failed.\n"),
+			Error(_("%s: realloc(%d) failed."),
 			      "get_hostaddrs",
 			      num_hostaddrs * sizeof(struct sockaddr *));
 			free(hostaddrs);
@@ -1382,7 +1390,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(basedir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create base sync directory.\n"));
+			Error(_("Can't create base sync directory."));
 			perror("mkdir");
 			return -1;
 		}
@@ -1399,7 +1407,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create backup directory.\n"));
+			Error(_("Can't create backup directory."));
 			perror("mkdir");
 			return -1;
 		}
@@ -1416,7 +1424,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create attic directory.\n"));
+			Error(_("Can't create attic directory."));
 			perror("mkdir");
 			return -1;
 		}
@@ -1433,7 +1441,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create archive directory.\n"));
+			Error(_("Can't create archive directory."));
 			perror("mkdir");
 			return -1;
 		}
@@ -1450,7 +1458,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create install directory.\n"));
+			Error(_("Can't create install directory."));
 			perror("mkdir");
 			return -1;
 		}
@@ -1615,7 +1623,7 @@ get_userinfo(struct userinfo *userinfo)
 	if (get_fullname(userinfo->fullname, sizeof(userinfo->fullname),
 			 pwent) < 0)
 	{
-		Error(_("Can't get user's full name.\n"));
+		Error(_("Can't get user's full name."));
 		return -1;
 	}
 
