@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.90 2002-03-28 23:14:27 azummo Exp $
+ * $Id: config.c,v 1.91 2002-03-29 17:26:00 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -140,7 +140,7 @@ parse_args(int argc, char *argv[])
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
-	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:p:t:P:d:"))
+	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:p:t:P:d:n:"))
 	       != -1)
 	{
 		switch (arg)
@@ -542,6 +542,7 @@ load_config(const Bool read_user_config)
 		for (l = sync_config->listen; l != NULL; l = l->next)
 		{
 			fprintf(stderr, "Listen:\n");
+			fprintf(stderr, "\tName: %s\n", l->name ? l->name : "(unnamed)");
 			fprintf(stderr, "\tType: %d\n", (int) l->listen_type);
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
 			fprintf(stderr, "\tSpeed: %ld\n", l->speed);

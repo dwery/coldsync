@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.117 2002-03-28 23:14:27 azummo Exp $
+ * $Id: coldsync.c,v 1.118 2002-03-29 17:26:00 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -504,6 +504,35 @@ open_log_file(void)
 	return 0;
 }
 
+static listen_block *
+find_listen_block( char *name )
+{
+	if (name)
+	{
+		listen_block *l;
+	
+		SYNC_TRACE(2)
+		        fprintf(stderr, "Searching for listen block: %s\n",
+	        	        name);   
+
+		for (l = sync_config->listen; l != NULL; l = l->next)
+	        {
+			if (l->name == NULL)
+				continue;
+
+			if (strcmp(l->name, name) == 0)
+			{
+				SYNC_TRACE(2)
+				        fprintf(stderr, " found.\n");
+				return l;
+			}
+	 	}
+	}
+
+	/* Fall back */
+	return sync_config->listen;	
+}
+
 static int
 run_mode_Standalone(int argc, char *argv[])
 {
@@ -526,8 +555,10 @@ run_mode_Standalone(int argc, char *argv[])
 					 * with */
 	time_t now;
 
+	listen_block *listen;
+
 	/* Get listen block */
-	if (sync_config->listen == NULL)
+	if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
 	{
 		Error(_("No port specified."));
 		return -1;
@@ -535,14 +566,14 @@ run_mode_Standalone(int argc, char *argv[])
 
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
-			sync_config->listen->device);
+			listen->device);
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type,
-				     sync_config->listen->protocol,
+	if ((pconn = new_PConnection(listen->device,
+				     listen->listen_type,
+				     listen->protocol,
 				     PCONNFL_PROMPT |
-				     (sync_config->listen->flags &
+				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)
 		     ))
@@ -552,7 +583,7 @@ run_mode_Standalone(int argc, char *argv[])
 		/* XXX - Say why */
 		return -1;
 	}
-	pconn->speed = sync_config->listen->speed;
+	pconn->speed = listen->speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -1284,6 +1315,7 @@ run_mode_Backup(int argc, char *argv[])
 	const char *backupdir = NULL;	/* Where to put backup */
 	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
+	listen_block *listen;
 
 	/* Parse arguments:
 	 *	dir		- Dump everything to <dir>
@@ -1324,7 +1356,7 @@ run_mode_Backup(int argc, char *argv[])
 	}
 
 	/* Get listen block */
-	if (sync_config->listen == NULL)
+	if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
 	{
 		Error(_("No port specified."));
 		return -1;
@@ -1332,14 +1364,14 @@ run_mode_Backup(int argc, char *argv[])
 
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
-			sync_config->listen->device);
+			listen->device);
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type,
-				     sync_config->listen->protocol,
+	if ((pconn = new_PConnection(listen->device,
+				     listen->listen_type,
+				     listen->protocol,
 				     PCONNFL_PROMPT |
-				     (sync_config->listen->flags &
+				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)))
 	    == NULL)
@@ -1347,7 +1379,7 @@ run_mode_Backup(int argc, char *argv[])
 		Error(_("Can't open connection."));
 		return -1;
 	}
-	pconn->speed = sync_config->listen->speed;
+	pconn->speed = listen->speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -1469,9 +1501,10 @@ run_mode_Restore(int argc, char *argv[])
 	int i;
 	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
+	listen_block *listen;
 
 	/* Get listen block */
-	if (sync_config->listen == NULL)
+	if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
 	{
 		Error(_("No port specified."));
 		return -1;
@@ -1479,14 +1512,14 @@ run_mode_Restore(int argc, char *argv[])
 
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
-			sync_config->listen->device);
+			listen->device);
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type,
-				     sync_config->listen->protocol,
+	if ((pconn = new_PConnection(listen->device,
+				     listen->listen_type,
+				     listen->protocol,
 				     PCONNFL_PROMPT |
-				     (sync_config->listen->flags &
+				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)))
 	    == NULL)
@@ -1494,7 +1527,7 @@ run_mode_Restore(int argc, char *argv[])
 		Error(_("Can't open connection."));
 		return -1;
 	}
-	pconn->speed = sync_config->listen->speed;
+	pconn->speed = listen->speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -1612,9 +1645,10 @@ run_mode_Init(int argc, char *argv[])
 	udword p_userid;		/* Userid on the Palm */
 	udword new_userid = 0;		/* What the userid should be */
 	int p_snum_len;			/* Length of serial number on Palm */
+	listen_block *listen;
 
 	/* Get listen block */
-	if (sync_config->listen == NULL)
+        if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
 	{
 		Error(_("No port specified."));
 		return -1;
@@ -1622,14 +1656,14 @@ run_mode_Init(int argc, char *argv[])
 
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
-			sync_config->listen->device);
+			listen->device);
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type,
-				     sync_config->listen->protocol,
+	if ((pconn = new_PConnection(listen->device,
+				     listen->listen_type,
+				     listen->protocol,
 				     PCONNFL_PROMPT |
-				     (sync_config->listen->flags &
+				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)))
 	    == NULL)
@@ -1637,7 +1671,7 @@ run_mode_Init(int argc, char *argv[])
 		Error(_("Can't open connection."));
 		return -1;
 	}
-	pconn->speed = sync_config->listen->speed;
+	pconn->speed = listen->speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -1997,6 +2031,7 @@ run_mode_Daemon(int argc, char *argv[])
 	udword p_userid;		/* User ID on Palm */
 	udword p_lastsyncPC;		/* Hostid of last host Palm synced
 					 * with */
+	listen_block *listen;
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "Inside run_mode_Daemon()\n");
@@ -2059,17 +2094,18 @@ run_mode_Daemon(int argc, char *argv[])
 		/* No port specified on command line. Get listen block from
 		 * coldsyncrc.
 		 */
+
 		SYNC_TRACE(3)
 			fprintf(stderr, "Using port from config file.\n");
 
-		if (sync_config->listen == NULL)
+		if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
 		{
 			Error(_("No port specified."));
 			return -1;
 		}
-		devname = sync_config->listen->device;
-		devtype = sync_config->listen->listen_type;
-		protocol = sync_config->listen->protocol;
+		devname = listen->device;
+		devtype = listen->listen_type;
+		protocol = listen->protocol;
 
 		SYNC_TRACE(3)
 		{
@@ -2080,7 +2116,7 @@ run_mode_Daemon(int argc, char *argv[])
 
 	/* Set up a PConnection to the Palm */
 	if ((pconn = new_PConnection(devname, devtype, protocol,
-				     sync_config->listen->flags &
+				     listen->flags &
 				     LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				     0))
 	    == NULL)
@@ -2089,7 +2125,9 @@ run_mode_Daemon(int argc, char *argv[])
 		/* XXX - Say why */
 		return -1;
 	}
-	pconn->speed = sync_config->listen->speed;
+	
+	/* XXX - listen may be uninitialized here */
+	pconn->speed = listen->speed;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
