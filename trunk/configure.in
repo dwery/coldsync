@@ -3,8 +3,10 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.116 2001-01-30 08:14:02 arensb Exp $
+dnl # $Id: configure.in,v 1.117 2001-02-20 12:35:49 arensb Exp $
 dnl #
+
+dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
 
@@ -23,6 +25,8 @@ dnl # turn off NetSync if they don't exist.
 dnl # XXX - Check for setvbuf(). Not sure what to do if it doesn't
 dnl # exist, though. #define setvbuf() out of existence and hope for
 dnl # the best?
+
+dnl # XXX - It should be possible to specify the syslog facility.
 
 AC_INIT(src/coldsync.c)
 
