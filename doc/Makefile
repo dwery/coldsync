@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2000-07-31 08:56:39 arensb Exp $
+# $Id: Makefile,v 1.9 2000-11-10 03:35:50 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -48,3 +48,8 @@ dvi:	${DVIFILES}
 ps:	${PSFILES}
 html:	${HTMLFILES}
 pdf:	${PDFFILES}
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
