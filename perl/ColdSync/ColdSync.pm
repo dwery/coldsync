@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.8.2.2 2000-09-01 06:00:26 arensb Exp $
+# $Id: ColdSync.pm,v 1.8.2.3 2000-09-03 04:43:08 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.8.2.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.8.2.3 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -251,7 +251,9 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
-	my @preflist;		# Makes getting preferences easier
+	my @preflist;		# List of preferences to read from STDIN:
+				# Each element is an anonymous array:
+				#	[ creator, ID, length ]
 	my $len;
 	my $i;
 
@@ -265,18 +267,9 @@ sub ReadHeaders
 		# Get the preference
 		if(m{^Preference: (\w\w\w\w)/(\d+)/(\d+)})
 		{
-			# We temporarily save the length in the hash. Later
-			# on, we'll read the raw data from stdin.
-			# XXX - In the interest of readability, use a
-			# separate variable for the preference length.
-			$PREFERENCES{$1}{$2} = $3;
-
-			# The list is required so we know the order in which
-			# the items were specified.
-			# XXX - Might be easier to just
-			#	push @preflist, [ $1, $2, $3 ];
-			# to keep all the data together
-			push(@preflist,\$PREFERENCES{$1}{$2});
+			# Put the creator, ID, and length in an anonymous
+			# array, and save it for later.
+			push @preflist, [$1, $2, $3];
 			next;
 		}
 
@@ -298,10 +291,16 @@ sub ReadHeaders
 	# as much as possible, but less if not enough is provided, so that
 	# the conduit won't hang here, waiting for input. Not tested yet,
 	# however...
-	for($i = 0; $i <= $#preflist; $i++)
+	my $creator;		# Preference creator
+	my $pref_id;		# Preference ID
+	my $pref_len;		# Preference length
+
+	while (($creator, $pref_id, $pref_len) = @{shift @preflist})
 	{
-		$len = ${$preflist[$i]};
-		read(STDIN,${$preflist[$i]},$len);
+		my $data;
+
+		read STDIN, $data, $pref_len;
+		$PREFERENCES{$creator}{$id} = $data;
 	}
 
 	# Make sure all of the mandatory headers are there.
