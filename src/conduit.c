@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.1 2000-07-03 07:46:02 arensb Exp $
+ * $Id: conduit.c,v 2.2 2000-07-03 07:57:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -40,18 +40,6 @@
 #endif	/* WCOREDUMP */
 
 #include "conduit.h"
-
-/* These ought to be defined in <unistd.h>, but just in case */
-/* XXX - Take these out and see if there are any OSes that don't define them */
-#ifndef STDIN_FILENO
-#  define STDIN_FILENO	0
-#endif	/* STDIN_FILENO */
-#ifndef STDOUT_FILENO
-#  define STDOUT_FILENO	1
-#endif	/* STDOUT_FILENO */
-#ifndef STDERR_FILENO
-#  define STDERR_FILENO	2
-#endif	/* STDERR_FILENO */
 
 typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
@@ -177,9 +165,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		goto abort;
 	}
 
-	canjump = 1;		/* Tell the SIGCHLD signal handler that it
-				 * can call siglongjmp().
-				 */
+	canjump = 1;			/* Tell the SIGCHLD signal handler
+					 * that it can call siglongjmp().
+					 */
 
 	argv[0] = conduit->path;	/* Path to conduit */
 	argv[1] = "conduit";		/* Mandatory argument */
@@ -231,7 +219,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 
 	/* Send an empty line to the child (end of input) */
 	fprintf(tochild, "\n");
-		/* XXX - Error-checking */
 	fflush(tochild);
 
 	/* Read from the child's stdout.
@@ -240,8 +227,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	 * descriptor (for Sync conduits). This time around, the select()
 	 * should block on input.
 	 */
-	while ((fromchild != NULL) &&
-	       (err = cond_readstatus(fromchild)) > 0)
+	while ((err = cond_readstatus(fromchild)) > 0)
 	{
 		SYNC_TRACE(2)
 			fprintf(stderr,
@@ -1040,7 +1026,6 @@ sigchld_handler(int sig)
 		 * I guess this might happen if a conduit spawns a
 		 * background process, then exits, and then the background
 		 * process exits.
-		 * XXX - Actually, will ignoring it create zombies?
 		 */
 		MISC_TRACE(5)
 			fprintf(stderr,
@@ -1068,8 +1053,8 @@ sigchld_handler(int sig)
 	}
 
 	/* Find out whether the conduit process is still running */
-	/* XXX - If WUNTRACED is determined to be a good thing, we'll need
-	 * to check WIFSTOPPED here as well.
+	/* XXX - If WUNTRACED is deemed to be a good thing, we'll need to
+	 * check WIFSTOPPED here as well.
 	 */
 	if (WIFEXITED(conduit_status) ||
 	    WIFSIGNALED(conduit_status))
