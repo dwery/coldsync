@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.23 2000-04-09 14:23:11 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.24 2000-04-10 09:56:37 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1923,7 +1923,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				fprintf(stderr,
-					_("%s: Warning: can't delete record "
+					_("%s: Warning: Can't delete record "
 					  "0x%08lx: %d\n"),
 					"SlowSync",
 					localrec->id, err);
@@ -1950,7 +1950,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				fprintf(stderr,
-					_("%s: Warning: can't delete record "
+					_("%s: Warning: Can't delete record "
 					  "0x%08lx: %d\n"),
 					"SlowSync",
 					remoterec->id, err);
