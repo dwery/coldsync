@@ -274,3 +274,15 @@
   follows: if the APPINFO_DIRTY flag is set on the local PDB, its
   AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
   AppInfo block gets downloaded to the desktop.
+- "ElectricFence Exiting: mmap() failed: Cannot allocate memory"
+	while doing a backup of PalmV (and doing some other stuff).
+  Did it really run out of memory? Is there a memory leak?
+- Work on archive2pdb
+	Figure out why it insists on writing the .pdb as "MemoDB" and
+  not "MemoDB.pdb".
+	Add lots of command-line options to set output file, select
+  which records will be restored, etc.
+	Ought to be able to delete records.
+	A GUI front end would be nice.
+- Grab "mkinstalldirs" from Emacs distro. Use it to create any
+  necessary installation directories.
