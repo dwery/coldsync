@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.5 2000-08-13 10:27:58 arensb Exp $
+# $Id: send-mail,v 1.6 2000-09-27 15:04:20 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -15,13 +15,14 @@ use Text::Wrap;
 	"Sendmail"	=> "/usr/sbin/sendmail",
 	"My-Address"	=> (getpwuid($>))[0],
 	"Wrap"		=> 74,
+	"Outbox-name"	=> "Outbox",	# Name of category for outgoing mail
 
 	# XXX - There's no good way to set these to non-default values
 	"Paragraph"	=> "",		# Paragraph indent
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.5 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.6 $ ))[1];	# Conduit version
 
 StartConduit("dump");
 
@@ -29,9 +30,9 @@ $Text::Wrap::columns = $HEADERS{Wrap};
 my $record;
 foreach $record (@{$PDB->{records}})
 {
-	# Skip everything excep the Outbox folder
-	next unless $PDB->{appinfo}{categories}[$record->{category}]
-		eq "Outbox";
+	# Skip everything except the Outbox folder
+	next unless $PDB->{appinfo}{categories}[$record->{category}]{name}
+		eq $HEADERS{"Outbox-name"};
 
 	my $whoami = $HEADERS{"My-Address"};
 	my @sm_args;		# Sendmail command-line arguments
@@ -46,7 +47,7 @@ foreach $record (@{$PDB->{records}})
 	}
 
 	open SENDMAIL, "| $HEADERS{Sendmail} @sm_args" or
-		die "502 Can't run $HEADERS{SENDMAIL}: $!\n";
+		die "502 Can't run $HEADERS{Sendmail}: $!\n";
 	select SENDMAIL;
 
 	# XXX - Some of these headers are bogus. In particular, a "to"
@@ -101,6 +102,7 @@ send-mail - ColdSync conduit to send Palm mail
       arguments:
         Sendmail:	/path/to/sendmail;
         My-Address:	user@my.dom.ain;
+        Outbox-name:	Outbox;
     }
 
 =head1 DESCRIPTION
@@ -131,6 +133,11 @@ first user with your uid).
 
 Specifies the column at which to wrap long lines. Defaults to 74. A
 value of 0 specifies that text should not be wrapped.
+
+=item C<Outbox-name>
+
+Specifies the category where outgoing messages are stored.
+If omitted, the default F<Outbox> is used. For German use F<Ausgang>.
 
 =head1 BUGS
 
