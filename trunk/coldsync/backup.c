@@ -3,7 +3,7 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 1.6 1999-03-11 04:13:40 arensb Exp $
+ * $Id: backup.c,v 1.7 1999-07-04 02:30:37 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ printf("--> Backing up database %s to %s\n",
 	/* XXX - Card #0 shouldn't be hardwired. It probably ought to be a
 	 * field in dlp_dbinfo or something.
 	 */
-	err = DlpOpenDB(pconn, 0, dbinfo->name,
+	err = DlpOpenDB(pconn, CARD0, dbinfo->name,
 			DLPCMD_MODE_READ |
 			(dbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
 			 0 :
@@ -90,7 +90,7 @@ printf("--> Backing up database %s to %s\n",
 	}
 
 	/* XXX - Error-checking */
-	pdb_Write(db, bakfname);
+/*  	pdb_Write(db, bakfname); */	/* XXX - Rewrite to use pdb_Save() */
 
 	/* XXX - I'm not sure about the relative order of cleaning the
 	 * database and resetting the sync flags. HotSync appears to do
