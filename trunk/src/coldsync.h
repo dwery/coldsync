@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.66 2002-07-04 21:23:11 azummo Exp $
+ * $Id: coldsync.h,v 1.67 2002-07-18 16:43:16 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -362,6 +362,8 @@ extern struct sync_config *new_sync_config(void);
 extern void free_sync_config(struct sync_config *config);
 extern listen_block *new_listen_block(void);
 extern void free_listen_block(listen_block *l);
+extern int prepend_listen_block(char *devname, pconn_listen_t listen_type, pconn_proto_t protocol);
+extern pconn_listen_t name2listen_type(const char *str);
 extern conduit_block *new_conduit_block(void);
 extern void free_conduit_block(conduit_block *c);
 extern pda_block *new_pda_block(void);

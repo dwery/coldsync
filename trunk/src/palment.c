@@ -6,16 +6,20 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.5 2002-07-04 21:03:27 azummo Exp $
+ * $Id: palment.c,v 2.6 2002-07-18 16:43:16 azummo Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For strtoul() */
+#include <stdbool.h>		/* bool, true, false */
 #include <limits.h>		/* For strtoul() */
 #include <string.h>		/* For strchr() */
+#include <sys/types.h>		/* For getpwent() */
+#include <pwd.h>		/* For getpwent() */
 #include "coldsync.h"
 #include "palment.h"
+#include "cs_error.h"
 
 /* The functions in this file try to look like the getpwent(),
  * getgrent(), getnetent(), get*ent() ... families of functions, and
@@ -188,10 +192,64 @@ endpalment(void)
 }
 
 
+const bool
+is_wildcard(const char *s)
+{
+	if (s == NULL)
+		return true;
+		
+	if (s[0] == '\0')
+		return true;
+		
+	if (s[0] == '*' && s[1] == '\0')
+		return true; 
+
+	return false;
+} 
+ 
+const bool
+match_serial(const struct palment *palment, const char *p_snum)
+{
+	char entserial[SNUM_MAX];	/* Serial number from
+					 * /etc/palms, but without
+					 * the checksum.
+					 */
+	char *dashp;			/* Pointer to "-" */
+
+	/* Get the serial number, but without the checksum */
+	/* XXX - Actually, this should look for the pattern
+	 *	/-[A-Z]$/
+	 * since in the future, there might be a special serial
+	 * number like "*Visor-Plus*" which would match.
+	 */
+
+	/* Do we really have a serial number on the palm? */
+	if (palment->serial != NULL)
+	{
+		/* Yes, copy into entserial */
+		strncpy(entserial, palment->serial, SNUM_MAX);
+
+		/* Get a pointer to the dash */
+		dashp = strrchr(entserial, '-');
+
+		/* If found, truncate entserial there */
+		if (dashp != NULL)
+			*dashp = '\0';
+
+		/* Now let's compare them */
+
+		if (strncasecmp(entserial, p_snum, SNUM_MAX) == 0)
+			return true;
+	}
+
+	return false;
+} 
+ 
 /* find_palment
  * When given a serial numer, an username and an userid, this routine
  * tries to find a matching palment entry.
  */
+
 const struct palment *
 find_palment(const char *p_snum, const char *p_username, const udword p_userid, const ubyte match_type)
 {
@@ -199,27 +257,9 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 
 	while ((palment = getpalment()) != NULL)
 	{
-		char entserial[SNUM_MAX];	/* Serial number from
-						 * /etc/palms, but without
-						 * the checksum.
-						 */
-		char *dashp;			/* Pointer to "-" */
-
-		/* Get the serial number, but without the checksum */
-		/* XXX - Actually, this should look for the pattern
-		 *	/-[A-Z]$/
-		 * since in the future, there might be a special serial
-		 * number like "*Visor-Plus*" which would match.
+		/* XXX the following fprintf assumes that serial and username
+		 * are valid pointers. Is this always true?
 		 */
-		if (palment->serial != NULL)
-		{
-			strncpy(entserial, palment->serial, SNUM_MAX);
-			dashp = strrchr(entserial, '-');
-			if (dashp != NULL)
-				*dashp = '\0';
-		} else {
-			entserial[0] = '\0';
-		}
 
 		SYNC_TRACE(3)
 			fprintf(stderr,
@@ -228,26 +268,36 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 				palment->serial, palment->username,
 				palment->userid);
 
+
 		if (match_type & PMATCH_SERIAL)
 		{
-			/* NULL or "*" matches any entry 
-			 * but only if there's another match critera
-			 * - ok, lots of negatives in this logic, but it works!
-			 */
-			if ((
-				 (PMATCH_SERIAL == match_type) || (
-				  (entserial[0] != '\0') &&
-				  (strncasecmp(entserial, "*", SNUM_MAX) != 0)
-				 )
-				) && (strncasecmp(entserial, p_snum, SNUM_MAX) != 0))
+			/* If we have another match type we can test
+			 * for wildcards and eventually skip to the username test.
+			 */	
+		
+			if (match_type != PMATCH_SERIAL)
 			{
-				SYNC_TRACE(4)
-					fprintf(stderr,
-						" Serial number [%s] doesn't match with [%s].\n",
-						palment->serial, p_snum);
-				continue;
+				if (is_wildcard(palment->serial))
+				{
+					SYNC_TRACE(5)
+						fprintf(stderr, " Wildcard match for serial number [%s].\n",
+							palment->serial);
+				
+					goto test_username;
+				}
 			}
 
+			/* If doesn't match, iterate. */
+			
+			if ( ! match_serial(palment, p_snum) )
+			{
+				SYNC_TRACE(5)
+					fprintf(stderr, " Serial number [%s] doesn't match with [%s].\n",
+						palment->serial, p_snum);
+
+				continue;
+			}
+			
 			SYNC_TRACE(5)
 				fprintf(stderr, " Serial number [%s] matches with [%s].\n",
 					palment->serial, p_snum);
@@ -256,6 +306,7 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 			SYNC_TRACE(5)
 				fprintf(stderr, " serial match not required.\n");
 
+test_username:
 		if (match_type & PMATCH_USERNAME)
 		{
 			/* NULL or "*" matches any entry */
@@ -321,6 +372,103 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 	endpalment();
 
 	return palment;
+}
+
+/* lookup_palment
+ * This routine will ask the Palm for its username, userid and serial number
+ * and will call find_palment with the proper values.  
+ */
+const struct palment *
+lookup_palment(struct Palm *palm, ubyte match_type)
+{
+	const char *p_username;		/* Username on Palm */
+	const char *p_snum;		/* Serial number on Palm */
+	udword p_userid;		/* User ID on Palm */
+
+	/* Get username */
+	p_username = palm_username(palm);
+	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		return NULL;
+	}
+
+	/* Get userid */
+	p_userid = palm_userid(palm);
+	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		return NULL;
+	}
+
+	/* Get serial number */
+	p_snum = palm_serial(palm);
+	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		return NULL;
+	}
+
+	SYNC_TRACE(3)
+	{
+		fprintf(stderr, "Looking for PDA in [" _PATH_PALMS "]\n");
+		fprintf(stderr,
+			"Want serial [%s], username [%s], userid %lu\n",
+			p_snum, p_username,
+			p_userid);
+	}
+
+	return find_palment(p_snum, p_username, p_userid, match_type);
+}
+
+/* getpasswd_from_palment
+ * Given a palment structure tries to find a matching passwd.
+ */
+struct passwd *
+getpasswd_from_palment(const struct palment *palment)
+{	
+	struct passwd *pwent = getpwnam(palment->luser);
+
+	if (pwent == NULL)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "User name [%s] not found, checking if it's numeric.\n",
+				palment->luser);
+
+		/* See if it's a numeric uid */
+		if (strspn(palment->luser, "0123456789")
+		    == strlen(palment->luser))
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, " Yes.\n");
+
+			pwent = getpwuid(strtoul(palment->luser, NULL, 10));
+			if (pwent == NULL)
+			{
+				SYNC_TRACE(3)
+					fprintf(stderr,
+						"Numeric uid [%s] not found\n",
+						palment->luser);
+			}
+		}
+		else
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, " No.\n");
+		}
+	}
+
+	/* If found, dump some useful values. */
+	if (pwent)
+	{
+		SYNC_TRACE(3)
+		{
+			fprintf(stderr, "pw_name: [%s]\n", pwent->pw_name);
+			fprintf(stderr, "pw_uid: [%ld]\n", (long) pwent->pw_uid);
+		}
+	}
+
+	return pwent;
 }
 
 /* This is for Emacs's benefit:

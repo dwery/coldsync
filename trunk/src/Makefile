@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.28 2002-04-27 18:00:07 azummo Exp $
+# $Id: Makefile,v 2.29 2002-07-18 16:43:16 azummo Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -23,7 +23,15 @@ C_SRCS =	coldsync.c \
 		symboltable.c \
 		net_compat.c \
 		ap_snprintf.c \
-		cs_error.c
+		cs_error.c \
+		listenblock.c \
+		pdablock.c \
+		conduitblock.c \
+		netsync.c \
+		palmconn.c \
+		runmode.c \
+		sync.c
+
 C_OBJS =	${C_SRCS:.c=.o}
 
 CXX_SRCS =	GenericConduit.cc
@@ -43,6 +51,7 @@ HEADERS =	archive.h \
 		spc.h \
 		pref.h \
 		net_compat.h \
+		trace.h \
 		GenericConduit.hh
 
 OBJS =		${C_OBJS} ${CXX_OBJS} \
