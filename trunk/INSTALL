@@ -1,4 +1,91 @@
-$Id: INSTALL,v 1.2 1999-09-09 05:44:23 arensb Exp $
+$Id: INSTALL,v 1.3 2000-05-19 11:59:20 arensb Exp $
+
+The latter part of this file is the standard GNU tool installation
+instructions. Skip them if you're used to building GNU packages.
+
+Requirements
+============
+
+	To install Coldsync, you will need:
+	- An ANSI-compliant C compiler
+	- An ANSI-compliant C++ compiler
+	- Perl 5
+	- flex
+	- yacc or bison
+
+You may also want:
+
+	- The GNU libintl library, for internationalization
+	- TeX and makeinfo, for building the documentation
+	- xcopilot can be very useful if you plan to write conduits
+	- ElectricFence. This is mainly useful for development and
+	  debugging, though.
+
+Simple Installation
+====== ============
+
+	You should be able to just say
+
+	./configure
+	make
+	make install
+
+You can specify different run-time and install-time prefixes. For
+instance, if you use 'stow', you might want to install ColdSync in
+/stow/ColdSync, then make /usr/local/bin/coldsync a symlink to
+/stow/ColdSync/bin/coldsync. In this case, you would specify:
+
+	./configure --prefix=/usr/local		# Run-time prefix
+	make
+	make install PREFIX=/stow/ColdSync	# Install-time prefix
+
+If you do this, bear in mind that the .packlist created for the
+ColdSync.pm package will contain pathnames based on the install-time
+prefix. This may or may not be correct for what you're doing.
+
+Running ColdSync
+======= ========
+
+	Do not run ColdSync as root!
+	Aside from the fact that running untrusted binaries as root is
+a security no-no, there's also the fact that root's UID is zero.
+ColdSync records the user's UID on the Palm, and uses zero as a
+special value meaning "this Palm does not have a user associated with
+it."
+
+	To run ColdSync, you only need permission to read and write to
+the appropriate serial (or USB) port.
+	You can 'chown 666 /dev/ttya' to give everyone in the world
+read-write permission on serial port /dev/ttya. This is obviously a
+sub-optimal solution.
+	Alternately, you can make the serial port(s) owned by whoever
+is logged in on the console. Under FreeBSD and SunOS, edit /etc/fbtab
+appropriately. Under Linux, edit /etc/security/console.perms .
+	If you log in through a display manager such as `xdm', you'll
+need to edit the appropriate startup script, e.g.,
+/usr/X11R6/lib/X11/xdm/GiveConsole .
+
+Internationalization
+====================
+
+	ColdSync is internationalized. Unfortunately, only the GNU
+`libintl' package is known to work.
+
+	Solaris's `xgettext' utility is known not to work with
+ColdSync. On a Sun, you'll need to configure with "--without-i18n".
+
+Documentation
+=============
+
+	Start by reading the man page.
+	"doc/sample.coldsync.rc" lists a lot of examples of what you
+might want to put in your configuration file.
+	The two info files cover more advanced topics. They should be
+interesting mainly if you plan on writing conduits.
+
+GENERIC INSTALLATION INSTRUCTIONS:
+
+	The rest of this file contains generic instructions:
 
 Basic Installation
 ==================
