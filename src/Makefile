@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.15 2000-11-18 10:47:15 arensb Exp $
+# $Id: Makefile,v 2.16 2000-12-13 16:31:00 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -59,6 +59,11 @@ include ${TOP}/Make.rules
 install::	${CXXPROG}
 	${MKDIR} ${BINDIR}
 	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR}/${CXXPROG}
+
+#manifest:
+#	@for i in ${DISTFILES}; do \
+#		echo "${SUBDIR}/$$i"; \
+#	done
 
 # Additional dependencies, maintained by hand 'cos I don't know how
 # else to do it
