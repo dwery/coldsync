@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.9 2002-03-18 08:05:50 arensb Exp $
+  $Id: HACKING,v 1.10 2002-05-03 00:13:28 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -120,3 +120,10 @@
 	if (foo)
   and not
 	if( foo )
+
+- In the "AUTHORS" file, when adding the name of a far-eastern
+  (Japanese, Chinese, Korean, ...) contributor, give the family name
+  in all capitals.
+	A lot of round-eyes (your humble author included) cannot
+  distinguish Japanese personal names from family names. This
+  convention helps reduce confusion on the author's part.
