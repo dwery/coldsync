@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.82 2001-01-28 22:42:50 arensb Exp $
+ * $Id: coldsync.c,v 1.83 2001-01-30 08:10:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2190,7 +2190,7 @@ mkforw_addr(struct Palm *palm,
 			return -1;
 
 		/* Fill in the new sockaddr */
-		bzero(sa6, sizeof(struct sockaddr_in6));
+		bzero((void *) sa6, sizeof(struct sockaddr_in6));
 		sa6->sin6_family = AF_INET6;
 		sa6->sin6_port = wakeup_port;
 		memcpy(&sa6->sin6_addr,
@@ -2234,7 +2234,7 @@ mkforw_addr(struct Palm *palm,
 			return -1;
 
 		/* Fill in the new sockaddr */
-		bzero(sa4, sizeof(struct sockaddr_in));
+		bzero((void *) sa4, sizeof(struct sockaddr_in));
 		sa4->sin_family = AF_INET;
 		sa4->sin_port = wakeup_port;
 		memcpy(&sa4->sin_addr,
@@ -2294,7 +2294,7 @@ mkforw_addr(struct Palm *palm,
 				return -1;
 
 			/* Fill in the new sockaddr */
-			bzero(sa6, sizeof(struct sockaddr_in6));
+			bzero((void *) sa6, sizeof(struct sockaddr_in6));
 			sa6->sin6_family = AF_INET6;
 			sa6->sin6_port = wakeup_port;
 			memcpy(&sa6->sin6_addr, &addr6,
@@ -2338,7 +2338,7 @@ mkforw_addr(struct Palm *palm,
 				return -1;
 
 			/* Fill in the new sockaddr */
-			bzero(sa4, sizeof(struct sockaddr_in));
+			bzero((void *) sa4, sizeof(struct sockaddr_in));
 			sa4->sin_family = AF_INET;
 			sa4->sin_port = wakeup_port;
 			memcpy(&sa4->sin_addr, &addr4,
