@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2002-07-13 19:30:03 arensb Exp $
+# $Id: Makefile,v 1.19 2002-12-18 00:23:28 azummo Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -48,7 +48,9 @@ INPUTFILES =	\
 	${TOP}/src/spalm.c \
 	${TOP}/src/spc.c \
 	${TOP}/src/net_compat.c \
-	${TOP}/src/GenericConduit.cc
+	${TOP}/src/conduits/generic.cc
+
+# XXX there are a lot of files to be added here.
 
 DISTFILES =	Makefile \
 		messages.po \
