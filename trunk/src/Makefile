@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.4 2000-02-05 06:08:33 arensb Exp $
+# $Id: Makefile,v 2.5 2000-02-06 22:14:14 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -17,7 +17,7 @@ C_SRCS =	coldsync.c \
 C_OBJS =	${C_SRCS:.c=.o}
 
 CXX_SRCS =	GenericConduit.cc
-CXX_OBJS =	${CXX_SRCS:.cc:=.o}
+CXX_OBJS =	${CXX_SRCS:.cc=.o}
 
 SRCS =		${C_SRCS} ${CXX_SRCS}
 
