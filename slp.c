@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.1 1999-01-22 18:13:12 arensb Exp $
+ * $Id: slp.c,v 1.2 1999-01-23 22:56:43 arensb Exp $
  */
 
 #include "slp.h"
@@ -22,8 +22,6 @@ int slp_debug = 0;
 
 #endif	/* SLP_DEBUG */
 
-static uword slp_crc(uword sofar, uword len, const ubyte *data);
-				/* Calculate CRC */
 static uword
 palm_crc(uword sofar, uword len, const ubyte *data)
 {
@@ -43,36 +41,6 @@ static const ubyte magic_preamble[] = {
 static const ubyte preamble_checksum = 0x9a;
 	/* Sum of the preamble elements, mod 0xff */
 static const uword preamble_crc = 0xc9f1;	/* CRC of the preamble */
-
-/* slp_crc
- * Calculate the CRC of a data packet. Shamelessly stolen from the
- * pilot-link package.
- */
-static uword
-slp_crc(uword sofar,	/* The CRC so far. This allows us to calculate
-			 * a CRC of multiple disparate fragments. For
-			 * new CRCs, this should be 0. */
-	uword len,	/* Length of data */
-	const ubyte *data)	/* The data itself */
-{
-	uword retval = sofar;
-
-	for (; len > 0; len--)
-	{
-		int i;
-
-		retval ^= (((uword) *data) << 8);
-		data++;
-		for (i = 0; i < 8; i++)
-			if (retval & 0x8000)
-			{
-				retval <<= 1;
-				retval ^= 0x1021;
-			} else
-				retval <<= 1;
-	}
-	return retval;
-}
 
 /* slp_recv
  * Receive a SLP packet for protocol 'protocol'.
