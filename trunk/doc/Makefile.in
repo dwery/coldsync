@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.7 1999-11-12 09:47:51 arensb Exp $
+# $Id: Makefile.in,v 1.8 1999-12-01 06:13:07 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -28,17 +28,17 @@ DVIFILES =	libpalm.dvi \
 PSFILES =	libpalm.ps \
 		pdb.ps
 
-EXTRA_DISTFILES = \
-		${INFOFILES} \
-		${PSFILES}
-
 DISTFILES =	Makefile.in \
 		libpalm.texi \
 		pdb.texi \
 		version.texi.in \
 		texinfo.tex \
-		coldsync.8 \
-		${EXTRA_DISTFILES}
+		coldsync.8
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES = \
+		${INFOFILES} \
+		${PSFILES}
 
 CLEAN =		${INFOFILES} ${DVIFILES} ${PSFILES} \
 		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr \
@@ -76,11 +76,16 @@ install::	coldsync.8
 	fi
 	${INSTALL} ${INSTALLARGS} coldsync.8 ${MAN8DIR}
 
-distdir:	${DISTFILES}
+distdir-core:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
 		mkdir ${DISTDIR}/${subdir}; \
 	fi
 	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	cp -p ${EXTRA_DISTFILES} ${DISTDIR}/${subdir}
 
 clean:
 	-rm -f ${CLEAN}
