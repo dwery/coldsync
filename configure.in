@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.106 2000-12-17 09:09:48 arensb Exp $
+dnl # $Id: configure.in,v 1.107 2000-12-17 09:45:11 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -375,17 +375,31 @@ AC_MSG_RESULT([no])
 
 # Optional USB support
 # (Only works under FreeBSD 4.x, for now)
+
+# The --with(out)-usb option only indicates the user's desire. Even if
+# it's turned on, 'configure' still checks to see whether it's
+# possible to use the USB code. IOW, "--without-i18n" allows the user
+# to turn off USB under *BSD, but that's it.
 AC_ARG_WITH(usb,dnl
-[  --with-usb              Enable USB support for Visor (FreeBSD 4.x only).],
-	# XXX - Should check to see whether /sys/dev/usb/usb.h exists,
-	# whether it contains 'struct usb_device_info', whether that
-	# struct contains a "release" field, and whether the cpp
-	# symbol UT_READ_VECTOR_ENDPOINT is defined.
-	WITH_USB="$withval"
-	if test x"$WITH_USB" != xno; then
-		AC_DEFINE_UNQUOTED(WITH_USB)
-	fi
-)
+[  --without-usb           Disable USB support for Visor (FreeBSD 4.x only).],
+	[WITH_USB="$withval"],[WITH_USB="yes"])
+
+if test x"$WITH_USB" != xno; then
+	AC_MSG_CHECKING([for BSD USB support])
+
+	# This code snippet checks several things:
+	#   1) <dev/usb/usb.h> exists
+	#   2) It contains 'struct usb_device_info'
+	#   3) That struct contains a 'vendorNo' field.
+	# All three conditions must be true for USB support to be enabled
+	AC_TRY_COMPILE(dnl
+		[#include <dev/usb/usb.h>],dnl
+		[struct usb_device_info udi;
+		 udi.vendorNo = 0x082d;],dnl
+		[AC_DEFINE_UNQUOTED(WITH_USB)
+		AC_MSG_RESULT(yes)],dnl
+		[AC_MSG_RESULT(no)])
+fi
 
 ## Developer-only options
 AC_DIVERT_PUSH(AC_DIVERSION_NOTICE)dnl
