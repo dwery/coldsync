@@ -1,0 +1,215 @@
+#!/usr/bin/perl -w
+
+# vfs-console 0.9
+#
+# Copyright (c) 2003 Tower Technologies s.r.l., All Rights Reserved
+#
+# Author:	ALessandro Zummo
+# License:	GPL
+
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::VFS qw(:DEFAULT :vfs_opentags);
+
+use IO::File;
+use IO::Socket::INET;
+
+use Data::Dumper;
+use File::Basename;
+
+$| = 1;
+
+my $volumes = undef;
+my $volume = undef;
+
+StartConduit('sync');
+
+	my $io = new IO::Socket::INET (
+				'LocalAddr'	=> '127.0.0.1',
+				'LocalPort'	=> 12345,
+				'Type'		=> SOCK_STREAM,
+				'Listen'	=> 1,
+				'Proto'		=> 'tcp',
+				'ReuseAddr'	=> 1,
+	);
+
+	# Wait for connection
+
+	print "vfs-console: awaiting connection...\n";
+
+	if (defined $io)
+	{
+		if (my $client = $io->accept)
+		{
+			print $client "vfs-console 0.9 - Copyright (c) 2003 Tower Technologies\n";
+			print $client "In case of panic, enter 'help'.\n";
+			print $client "vfs> ";
+
+			while (my $cmd = $client->getline)
+			{
+				chomp($cmd);
+
+				$cmd =~ m|(\w+)(.*)|;
+
+				$cmd = $1;
+				my $arg = $2;
+
+				$arg =~ s|^(\s+)||;
+
+				last if $cmd eq 'quit';
+
+				cmd_enum($client)	if $cmd eq 'enum';
+				cmd_info($client)	if $cmd eq 'info';
+				cmd_ls($client, $arg)	if $cmd eq 'ls';
+				cmd_get($client, $arg)	if $cmd eq 'get';
+				cmd_help($client, $arg)	if $cmd eq 'help';
+
+				print $client "vfs> ";
+			}
+			print $client "goodbye.\n";
+
+			$client->close;
+		}
+	}
+	else
+	{
+		print "Couldn't create socket\n";
+	}
+EndConduit();
+
+sub cmd_help
+{
+	my $client = shift;
+
+	print $client <<EOF;
+
+enum			Enumerate volumes (INVOKE THIS FIRST!)
+info			Show colume infos
+ls	[path]		Guess what?
+get	<file>		Download a file (complete path, please)
+help			This text	
+
+EOF
+}
+
+sub cmd_enum
+{
+	my $client = shift;
+
+	print $client "Enumerating VFS volumes...\n";
+	$volumes = dlp_VFSVolumeEnumerate();
+	print $client " found $volumes->{'numVolumes'}.\n";
+
+	# Save first volRef
+	$volume = ${$volumes->{'volumes'}}[0];
+}
+
+				
+sub cmd_info
+{
+	my $client = shift;
+
+	print $client "\nDumping volume(s) info..\n";
+
+	foreach my $vol ( @{$volumes->{'volumes'}} )
+	{
+		my $info = dlp_VFSVolumeInfo($vol);
+	
+		print $client "\nVolume $vol: " . Data::Dumper->Dump( [ $info ] );
+	}
+
+	print $client "\n";
+}
+
+sub cmd_ls
+{
+	my $client = shift;
+	my $path = shift || '/';
+
+	print $client "Reading $path on volume $volume...\n\n";
+
+	my $dirRef = dlp_VFSFileOpen($volume, vfsModeRead, $path);
+
+	if (defined $dirRef)
+	{
+               	my $dir = dlp_VFSDirEntryEnumerate($dirRef,
+							0,
+							10000);
+
+		foreach my $entry ( @{$dir->{'entries'}} )
+		{
+			print $client "[DIR] "
+				if $entry->{'attribute'}{'Directory'}; 
+
+			print $client $entry->{'name'} . "\n";
+		}		
+
+		dlp_VFSFileClose($dirRef);
+	}
+}
+
+sub fdump
+{
+	my ($file, $data) = @_;
+
+	my $fh = new IO::File;
+
+	if ($fh->open(">$file"))
+	{
+		print $fh $data;
+
+		$fh->close;
+	}
+}
+
+sub cmd_get
+{
+	my $client = shift;
+	my $path = shift;
+
+	my $fileRef = dlp_VFSFileOpen($volume, vfsModeRead, $path);
+
+	if(defined $fileRef)
+	{
+		print $client "File opened\n";
+
+		my ($err, $res, $fileSize) = dlp_VFSFileSize($fileRef);
+
+		print $client "Size: $fileSize\n";
+
+		my $data = "";
+
+		# Tested with different values, no real
+		# advantage in using a bigger block size.
+		my $blockSize = 65536;
+
+		while ($fileSize > 0)
+		{
+			if ($fileSize < $blockSize)
+			{
+				$blockSize = $fileSize;
+			}
+
+			($err, $res) = dlp_VFSFileRead($fileRef, $blockSize);
+
+			print $client "Read: $res->{'numBytes'}, $fileSize to go.\n";
+	
+			$data .= $res->{'data'};
+
+			$fileSize -= $blockSize;
+		}
+		
+		dlp_VFSFileClose($fileRef);
+
+		my $outfile = "/tmp/" . fileparse($path);
+	
+		print $client "Writing to $outfile...\n";
+
+		fdump($outfile, $data);
+
+		print $client "done.\n";
+	}
+}
