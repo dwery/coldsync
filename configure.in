@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.97 2000-11-28 01:43:33 arensb Exp $
+dnl # $Id: configure.in,v 1.98 2000-12-10 01:06:46 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -268,18 +268,6 @@ AC_CHECK_LIB(nsl,gethostbyname,
 AC_CHECK_LIB(y, yyerror, LIBYACC="-ly")
 AC_SUBST(LIBYACC)
 
-# ElectricFence (optional)
-AC_ARG_WITH(efence,dnl
-[  --with-efence           Use Electric Fence memory checking library
-                            (only desirable for developers).],dnl
-[AC_CHECK_LIB(efence,malloc)
-if test "$ac_cv_lib_efence_malloc" = yes; then
-	AC_DEFINE_UNQUOTED(WITH_EFENCE)
-else
-	AC_MSG_WARN([Can't find ElectricFence library!])
-dnl	#' # For Emacs
-fi])
-
 ## Checks for header files.
 
 AC_HEADER_STDC
@@ -357,6 +345,29 @@ AC_ARG_WITH(usb,dnl
 	if test x"$WITH_USB" != xno; then
 		AC_DEFINE_UNQUOTED(WITH_USB)
 	fi
+)
+
+## Developer-only options
+AC_DIVERT_PUSH(AC_DIVERSION_NOTICE)dnl
+ac_help="$ac_help
+[Options for developers:]"
+AC_DIVERT_POP()dnl
+
+# ElectricFence (optional)
+AC_ARG_WITH(efence,dnl
+[  --with-efence           Use Electric Fence memory checking library],dnl
+[AC_CHECK_LIB(efence,malloc)
+if test "$ac_cv_lib_efence_malloc" = yes; then
+	AC_DEFINE_UNQUOTED(WITH_EFENCE)
+else
+	AC_MSG_WARN([Can't find ElectricFence library!])
+dnl	#' # For Emacs
+fi])
+
+# Primitive memory leak detection
+AC_ARG_WITH(leak-detection,dnl
+[  --with-leak-detection   Enable (very primitive) memory leak detection],dnl
+	AC_DEFINE_UNQUOTED(WITH_LEAK_DETECTION)
 )
 
 # Print error messages for various required bits that couldn't be found.
