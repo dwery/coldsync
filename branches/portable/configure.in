@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.17 1999-07-12 08:21:20 arensb Exp $
+dnl # $Id: configure.in,v 1.17.2.1 1999-07-14 13:33:27 arensb Exp $
 dnl #
 
 dnl # XXX - Test to see whether cpp accepts macro definitions with
@@ -60,6 +60,9 @@ AC_SUBST(CFLAGS)
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 
+# AIX sucks so bad, it requires its own special check.
+AC_AIX
+
 # Find a tool with which to build dependencies
 # XXX - Fix dependencies under 'makedepend' (C++ doesn't work right)
 AC_CHECK_PROGS(MKDEP,[mkdep makedepend true])
@@ -82,8 +85,10 @@ dnl # XXX - I believe some OSes require <string.h>, while some
 AC_HEADER_STDC
 AC_CHECK_HEADERS([\
 	fcntl.h \
+	strings.h \
 	termios.h \
 	unistd.h \
+	sys/select.h \
 	sys/time.h \
 	sys/types.h
 ])
