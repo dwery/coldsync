@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pconn.h,v 1.5 2001-01-09 16:36:10 arensb Exp $
+ * $Id: pconn.h,v 1.6 2001-07-06 05:44:33 arensb Exp $
  */
 #ifndef __pconn_h__
 #define __pconn_h__
@@ -40,5 +40,7 @@ extern int dlpc_trace;		/* Debugging level for Desktop Link
 #include <pconn/dlp_rpc.h>
 #include <pconn/netsync.h>
 #include <pconn/util.h>
+
+extern uword crc16(const ubyte *buf, uword len, const uword start);
 
 #endif	/* __pconn_h__ */
