@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.31 2001-02-20 12:39:36 arensb Exp $
+ * $Id: conduit.c,v 2.32 2001-02-21 11:20:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1090,7 +1090,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		{
 			SYNC_TRACE(5)
 				fprintf(stderr, "  Flavor set 0x%02x doesn't "
-					"match 0x%x\n\t=>Not applicable.\n",
+					"match %#x\n\t=>Not applicable.\n",
 					conduit->flavors,
 					flavor_mask);
 			continue;

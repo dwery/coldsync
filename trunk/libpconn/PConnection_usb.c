@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.19 2001-01-11 08:27:06 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.20 2001-02-21 11:19:25 arensb Exp $
  */
 
 #include "config.h"
@@ -417,7 +417,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 
 	if (udi.vendorNo != HANDSPRING_VENDOR_ID) {
 		fprintf(stderr,
-			_("%s: Warning: Unexpected USB vendor ID 0x%x.\n"),
+			_("%s: Warning: Unexpected USB vendor ID %#x.\n"),
 			"pconn_usb_open", udi.vendorNo);
 	}
 
