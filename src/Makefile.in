@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.10 1999-10-23 04:49:05 arensb Exp $
+# $Id: Makefile.in,v 1.11 1999-10-24 19:54:33 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -20,20 +20,14 @@ curdir =	${top_srcdir}/${subdir}
 prefix =	@prefix@
 exec_prefix =	@exec_prefix@
 BINDIR =	@bindir@
+includedir =	@includedir@
 
 INSTALL =	@INSTALL@
 INSTALLARGS =	-c -m 555
 
 MKDEP =		@MKDEP@
 
-# Compatibility functions, included for systems that don't have them.
-# XXX - Bleah. This probably needs to be broken up into individual
-# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
-# the like.
-COMPAT =	@COMPAT@
-COMPATOBJS =	@COMPATOBJS@
-
-SRCS =		coldsync.c \
+C_SRCS =	coldsync.c \
 		archive.c \
 		backup.c \
 		restore.c \
@@ -41,9 +35,11 @@ SRCS =		coldsync.c \
 		config.c \
 		handledb.c \
 		log.c \
-		conduit.c \
-		GenericConduit.cc \
-		${COMPAT}
+		conduit.c
+
+CXX_SRCS =	GenericConduit.cc
+
+SRCS =		${C_SRCS} ${CXX_SRCS}
 
 OBJS =		coldsync.o \
 		archive.o \
@@ -56,17 +52,17 @@ OBJS =		coldsync.o \
 		conduit.o \
 		GenericConduit.o \
 		lex.yy.o \
-		y.tab.o \
-		${COMPATOBJS}
+		y.tab.o
 
 HEADERS =	coldsync.h \
 		archive.h \
 		conduit.h \
+		parser.h \
 		GenericConduit.hh
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
-		parser.l parser.y \
+		lexer.l parser.y \
 		Makefile.in
 
 CLEAN =		coldsync *.o *.bak *~ core *.core \
@@ -86,15 +82,19 @@ CC =		@CC@
 CXX =		@CXX@
 DEFINES =	@DEFS@
 INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+# This is nothing more than some educated guesses, really
+CXX_INCLUDEDIRS = \
+		-I/usr/include/c++ -I/usr/include/g++ \
+		-I${includedir}
 CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
 CFLAGS =	@CFLAGS@ ${CPPFLAGS}
 CXXFLAGS =	${CFLAGS}
 LEX =		@LEX@
 LEXARGS =	@LEXARGS@
 LIBLEX =	@LEXLIB@
-YACC =		@YACC@ -d
-YACCARGS =	@YACCARGS@
-LIBYACC =	-ly
+YACC =		@YACC@
+YACCARGS =	@YACCARGS@ -d
+LIBYACC =	@LIBYACC@
 LIBS =		@LIBS@ ${LIBPCONN} ${LIBPDB} ${LIBYACC} ${LIBLEX}
 LDFLAGS =	@LDFLAGS@ ${LIBS}
 
@@ -121,7 +121,7 @@ install:	coldsync
 # C_SRCS and CXX_SRCS.
 
 depend:
-	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
+	${MKDEP} ${DEFS} ${INCLUDES} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
 distdir:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
