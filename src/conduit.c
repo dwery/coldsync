@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.22 2000-11-20 05:26:04 arensb Exp $
+ * $Id: conduit.c,v 2.23 2000-11-24 22:56:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -274,8 +274,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	pid_t pid;		/* Conduit's PID */
 	FILE *fromchild = NULL;	/* File handle to child's stdout */
 	FILE *tochild = NULL;	/* File handle to child's stdin */
-	const volatile char *bakfname;
-				/* Path to backup file (backup or install) */
+	const char *bakfname;	/* Path to backup file (backup or install) */
 	volatile int laststatus = 501;
 				/* The last status code printed by the
 				 * child. This is used as its exit status.

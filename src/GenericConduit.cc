@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.44 2000-11-20 05:22:39 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.45 2000-11-24 22:55:27 arensb Exp $
  */
 
 /* Note on I/O:
@@ -155,11 +155,11 @@ GenericConduit::run()
 	 */
 	if (DBINFO_ISRSRC(_dbinfo))
 	{
-		const volatile char *bakfname;
+		const char *bakfname;
 
 		/* See if the backup file exists */
 		bakfname = mkbakfname(_dbinfo);
-		if (!lexists(const_cast<const char *>(bakfname)))
+		if (!lexists(bakfname))
 		{
 			SYNC_TRACE(2)
 				fprintf(stderr, "%s doesn't exist. Doing a "
@@ -2170,13 +2170,13 @@ GenericConduit::close_archive()
 int
 GenericConduit::read_backup()
 {
-	const volatile char *bakfname;		// Backup filename
+	const char *bakfname;		// Backup filename
 
 	bakfname = mkbakfname(_dbinfo);
 			/* Construct the full pathname of the backup file */
 
 	/* See if the backup file exists */
-	if (!exists(const_cast<const char *>(bakfname)))
+	if (!exists(bakfname))
 	{
 		/* The backup file doesn't exist. This isn't technically an
 		 * error.
@@ -2187,8 +2187,7 @@ GenericConduit::read_backup()
 
 	/* Load backup file to _localdb */
 	int infd;		// File descriptor for backup file
-	if ((infd = open(const_cast<const char *>(bakfname),
-			 O_RDONLY | O_BINARY)) < 0)
+	if ((infd = open(bakfname, O_RDONLY | O_BINARY)) < 0)
 	{
 		fprintf(stderr, _("%s error: Can't open \"%s\"\n"),
 			"read_backup", bakfname);
@@ -2228,7 +2227,7 @@ GenericConduit::write_backup(struct pdb *db)
 
 	/* Construct the full pathname of the backup file */
 	strncpy(bakfname,
-		const_cast<const char *>(mkbakfname(_dbinfo)),
+		mkbakfname(_dbinfo),
 		MAXPATHLEN);
 	bakfname[MAXPATHLEN] = '\0';	// Terminate pathname, just in case
 
