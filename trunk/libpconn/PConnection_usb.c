@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.24 2001-06-26 05:47:09 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.25 2001-07-28 19:19:42 arensb Exp $
  */
 
 #include "config.h"
@@ -143,11 +143,8 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 		if (u->iobuflen > 0) {
 			copy_len = (len > u->iobuflen) ? u->iobuflen : len;
 
-			bcopy(u->iobufp, buf, copy_len);
+			memcpy(buf, u->iobufp, copy_len);
 				/* XXX - Potential buffer overflow? */
-				/* XXX - IIRC memcpy() is more "standard"
-				 * than bcopy().
-				 */
 			u->iobufp += copy_len;
 			u->iobuflen -= copy_len;
 			buf += copy_len;
