@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.h,v 2.6 2000-12-23 11:36:53 arensb Exp $
+ * $Id: palm.h,v 2.7 2000-12-24 21:24:55 arensb Exp $
  */
 #ifndef _palm_h_
 #define _palm_h_
@@ -54,7 +54,7 @@
  */
 struct Palm
 {
-	struct PConnection *pconn_;	/* Connection to the Palm */
+	PConnection *pconn_;		/* Connection to the Palm */
 	Bool have_sysinfo_;		/* Have we gotten system info yet? */
 	Bool have_userinfo_;		/* Have we gotten user info yet? */
 	Bool have_netsyncinfo_;		/* Have we gotten NetSync info yet? */
@@ -83,7 +83,7 @@ struct Palm
 };
 
 /* Constructor, destructor */
-extern struct Palm *new_Palm(struct PConnection *pconn);
+extern struct Palm *new_Palm(PConnection *pconn);
 extern void free_Palm(struct Palm *palm);
 
 /* Accessors. One for each datum one might want to get */
@@ -101,7 +101,7 @@ extern const udword palm_lastsyncPC(struct Palm *palm);
 /* XXX - passwd */
 
 /* XXX - This needs to be redone as a whole set of accessors */
-/*  extern int ListDBs(struct PConnection *pconn, struct Palm *palm); */
+/*  extern int ListDBs(PConnection *pconn, struct Palm *palm); */
 extern int palm_fetch_all_DBs(struct Palm *palm);
 extern const int palm_num_dbs(struct Palm *palm);
 extern void palm_resetdb(struct Palm *palm);

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.5 2000-12-13 16:28:53 arensb Exp $
+ * $Id: cmp.c,v 1.6 2000-12-24 21:24:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -24,7 +24,7 @@ int cmp_trace = 0;		/* Debugging level for CMP */
 #define CMP_TRACE(n)	if (cmp_trace >= (n))
 
 int
-cmp_read(struct PConnection *pconn,
+cmp_read(PConnection *pconn,
 	 struct cmp_packet *packet)
 {
 	int err;
@@ -73,7 +73,7 @@ cmp_read(struct PConnection *pconn,
 }
 
 int
-cmp_write(struct PConnection *pconn,			/* File descriptor */
+cmp_write(PConnection *pconn,			/* File descriptor */
 	  const struct cmp_packet *packet)	/* The packet to send */
 {
 	int err;
@@ -123,7 +123,7 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
  * both serial and USB connections.
  */
 udword
-cmp_accept(struct PConnection *pconn, udword bps)
+cmp_accept(PConnection *pconn, udword bps)
 {
 	int err;
 	struct cmp_packet cmpp;

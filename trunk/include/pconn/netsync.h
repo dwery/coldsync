@@ -58,7 +58,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.1 2000-12-10 21:25:27 arensb Exp $
+ * $Id: netsync.h,v 1.2 2000-12-24 21:24:26 arensb Exp $
  */
 #ifndef _netsync_h_
 #define _netsync_h_
@@ -106,12 +106,12 @@ struct netsync_header
 #define NETSYNC_HDR_LEN	6	/* Length of NetSync header */
 
 /* Protocol functions */
-extern int netsync_init(struct PConnection *pconn);
-extern int netsync_tini(struct PConnection *pconn);
-extern int netsync_read(struct PConnection *pconn,
+extern int netsync_init(PConnection *pconn);
+extern int netsync_tini(PConnection *pconn);
+extern int netsync_read(PConnection *pconn,
 			const ubyte **buf,
 			uword *len);
-extern int netsync_write(struct PConnection *pconn,
+extern int netsync_write(PConnection *pconn,
 			 const ubyte *buf,
 			 const uword len);
 

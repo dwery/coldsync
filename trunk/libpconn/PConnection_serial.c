@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.17 2000-12-24 09:44:32 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.18 2000-12-24 21:24:30 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -36,7 +36,7 @@ extern void cfmakeraw(struct termios *t);
 
 static int find_available_speeds(int fd);
 static inline int bps_entry(const udword bps);
-static int setspeed(struct PConnection *pconn, int speed);
+static int setspeed(PConnection *pconn, int speed);
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -233,7 +233,7 @@ bps_entry(const udword bps)
 }
 
 static int
-serial_bind(struct PConnection *pconn,
+serial_bind(PConnection *pconn,
 	    const void *addr,
 	    const int addrlen)
 {
@@ -241,13 +241,13 @@ serial_bind(struct PConnection *pconn,
 }
 
 static int
-serial_read(struct PConnection *p, unsigned char *buf, int len)
+serial_read(PConnection *p, unsigned char *buf, int len)
 {
 	return read(p->fd, buf, len);
 }
 
 static int
-serial_write(struct PConnection *p, unsigned char *buf, int len)
+serial_write(PConnection *p, unsigned char *buf, int len)
 {
 	return write(p->fd, buf, len);
 }
@@ -260,7 +260,7 @@ serial_write(struct PConnection *p, unsigned char *buf, int len)
  * the highest speed that the Palm can handle.
  */
 static int
-serial_accept(struct PConnection *pconn)
+serial_accept(PConnection *pconn)
 {
 	int err;
 	int speed_ix;			/* Index into 'speeds[]' */
@@ -323,13 +323,13 @@ serial_accept(struct PConnection *pconn)
 }
 
 static int
-serial_connect(struct PConnection *p, const void *addr, const int addrlen)
+serial_connect(PConnection *p, const void *addr, const int addrlen)
 {
 	return -1;		/* Not applicable to serial connection */
 }
 
 static int
-serial_drain(struct PConnection *p)
+serial_drain(PConnection *p)
 {
 	int err = 0;
 
@@ -345,7 +345,7 @@ serial_drain(struct PConnection *p)
 }
 
 static int
-serial_close(struct PConnection *p)
+serial_close(PConnection *p)
 {
 	/* Clean up the protocol stack elements */
 	dlp_tini(p);
@@ -356,7 +356,7 @@ serial_close(struct PConnection *p)
 }
 
 static int
-serial_select(struct PConnection *p,
+serial_select(PConnection *p,
 	      pconn_direction which,
 	      struct timeval *tvp) {
 	fd_set fds;
@@ -369,7 +369,7 @@ serial_select(struct PConnection *p,
 }
 
 int
-pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
+pconn_serial_open(PConnection *pconn, char *device, int prompt)
 {
 	struct termios term;
 
@@ -457,7 +457,7 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
  * new name. Is it worth keeping this as a separate function?
  */
 static int
-setspeed(struct PConnection *pconn, int speed)
+setspeed(PConnection *pconn, int speed)
 {
 	int err;
 	struct termios term;

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 2.1 2000-09-03 05:06:50 arensb Exp $
+ * $Id: pref.c,v 2.2 2000-12-24 21:24:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -25,7 +25,7 @@ extern struct pref_item *pref_cache;
 /* Creates the pref_cache from a given conduit block */
 int
 CacheFromConduits(const conduit_block *conduits,
-		  struct PConnection *pconn)
+		  PConnection *pconn)
 {
 	const conduit_block *conduit_cursor;
 	pref_item *pref_cursor;
@@ -99,7 +99,7 @@ CacheFromConduits(const conduit_block *conduits,
  * found. Returns 0 upon success.
  */
 int
-FetchPrefItem(struct PConnection *pconn,
+FetchPrefItem(PConnection *pconn,
 	      struct pref_item *prefitem)
 {
 	ubyte flags;
@@ -194,7 +194,7 @@ FetchPrefItem(struct PConnection *pconn,
  * first time is worse with larger buffers.
  */
 int
-DownloadPrefItem(struct PConnection *pconn,
+DownloadPrefItem(PConnection *pconn,
 		 struct pref_item *prefitem)
 {
 	struct dlp_apppref *contents_info;

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.13 2000-12-24 09:38:51 arensb Exp $
+ * $Id: PConnection.h,v 1.14 2000-12-24 21:24:22 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -50,7 +50,7 @@ typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
  * unlikely that this will ever become a real, honest-to-God socket type in
  * the kernel.
  */
-struct PConnection
+typedef struct PConnection
 {
 	/* Common part */
 	int fd;				/* File descriptor */
@@ -165,12 +165,12 @@ struct PConnection
 				 * SLP and PADP are so closely tied.
 				 */
 	} slp;
-};
+} PConnection;
 
-extern struct PConnection *new_PConnection(char *fname, int listenType,
-					   int prompt_for_hotsync);
-extern int PConnClose(struct PConnection *pconn);
-extern int PConn_bind(struct PConnection *pconn,
+extern PConnection *new_PConnection(char *fname, int listenType,
+				    int prompt_for_hotsync);
+extern int PConnClose(PConnection *pconn);
+extern int PConn_bind(PConnection *pconn,
 		      const void *addr,
 		      const int addrlen);
 

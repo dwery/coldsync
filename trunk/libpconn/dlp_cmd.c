@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.13 2000-12-18 06:20:00 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.14 2000-12-24 21:24:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -80,7 +80,7 @@ dlpcmd_puttime(ubyte **wptr, const struct dlp_time *t)
  * filled with this information.
  */
 int
-DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
+DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 		struct dlp_userinfo *userinfo)
 				/* Will be filled in with user information. */
 {
@@ -212,7 +212,7 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 }
 
 int
-DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
+DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 		 const struct dlp_setuserinfo *userinfo)
 				/* Bits of user information to set */
 {
@@ -314,7 +314,7 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 
 /* XXX - Add v1.2 support: tell which version of DLP we're using */
 int
-DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
+DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 	       struct dlp_sysinfo *sysinfo)
 				/* Will be filled in with system
 				 * information */
@@ -418,7 +418,7 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 }
 
 int
-DlpGetSysDateTime(struct PConnection *pconn,
+DlpGetSysDateTime(PConnection *pconn,
 		  struct dlp_time *ptime)
 {
 	int i;
@@ -485,7 +485,7 @@ DlpGetSysDateTime(struct PConnection *pconn,
 }
 
 int
-DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
+DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 		  const struct dlp_time *ptime)	/* Time to set */
 {
 	int i;
@@ -560,7 +560,7 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 }
 
 int
-DlpReadStorageInfo(struct PConnection *pconn,
+DlpReadStorageInfo(PConnection *pconn,
 		   const ubyte card,
 		   ubyte *last_card,
 		   ubyte *more,
@@ -733,7 +733,7 @@ DlpReadStorageInfo(struct PConnection *pconn,
 }
 
 int
-DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
+DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 	      const ubyte iflags,	/* Search flags */
 	      const int card,		/* Card number */
 	      const uword start,	/* Database index to start at */
@@ -930,7 +930,7 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
  * Open a database.
  */
 int
-DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
+DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 	  int card,		/* Memory card */
 	  const char *name,	/* Database name */
 	  ubyte mode,		/* Open mode */
@@ -1032,7 +1032,7 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
  * Puts a handle for the newly-created database in 'handle'.
  */
 int
-DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
+DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 	    const struct dlp_createdbreq *newdb,
 				/* Describes the database to create */
 	    ubyte *handle)	/* Database handle will be put here */
@@ -1135,8 +1135,8 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
  * DLPCMD_CLOSEALLDBS, then all open databases will be closed.
  */
 int
-DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
-	   ubyte handle)	/* Handle of database to delete */
+DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
+	   ubyte handle)	/* Handle of database to close */
 {
 	int i;
 	int err;
@@ -1211,7 +1211,7 @@ DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
  * Deletes a database. The database must be closed.
  */
 int
-DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
+DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 	    const int card,	/* Memory card */
 	    const char *name)	/* Name of the database */
 {
@@ -1292,13 +1292,12 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
  * Read the AppInfo block for a database.
  */
 int
-DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
+DlpReadAppBlock(PConnection *pconn,	/* Connection */
 		const ubyte handle,	/* Database handle */
 		const uword offset,	/* Where to start reading */
 		const uword len,	/* Max # bytes to read */
-		uword *size,	/* # bytes read returned here */
-		const ubyte **data)
-				/* Set to the data read */
+		uword *size,		/* # bytes read returned here */
+		const ubyte **data)	/* Set to the data read */
 {
 	int i;
 	int err;
@@ -1389,7 +1388,7 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
  * Write the AppInfo block for a database.
  */
 int
-DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
+DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 		 const ubyte handle,	/* Database handle */
 		 const uword len,	/* Length of data */
 		 const ubyte *data)	/* The data to write */
@@ -1481,7 +1480,7 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
  * XXX - Not terribly well-tested.
  */
 int
-DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
+DlpReadSortBlock(PConnection *pconn,	/* Connection */
 		 const ubyte handle,	/* Database handle */
 		 const uword offset,	/* Where to start reading */
 		 const uword len,	/* Max # bytes to read */
@@ -1570,7 +1569,7 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
  * XXX - Not terribly well-tested.
  */
 int
-DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
+DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 		  const ubyte handle,	/* Database handle */
 		  const uword len,	/* Length of data */
 		  const ubyte *data)	/* The data to write */
@@ -1664,7 +1663,7 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
  */
 int
 DlpReadNextModifiedRec(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	struct dlp_recinfo *recinfo,	/* Record will be put here */
 	const ubyte **data)		/* Record data returned here */
@@ -1759,7 +1758,7 @@ DlpReadNextModifiedRec(
 }
 
 int
-DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
+DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 		  const ubyte handle,	/* Database handle */
 		  const udword id,	/* ID of record to read */
 		  const uword offset,	/* Where to start reading */
@@ -1882,7 +1881,7 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
  */
 int
 DlpReadRecordByIndex(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const uword index,		/* Record index */
 	struct dlp_recinfo *recinfo)
@@ -1988,7 +1987,7 @@ DlpReadRecordByIndex(
  * Write a record.
  */
 int
-DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
+DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 	       const ubyte handle,	/* Database handle */
 	       const ubyte flags,
 	       const udword id,		/* Record ID */
@@ -2120,7 +2119,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
  * DeleteAllRecords, and DeleteRecordsByCategory.
  */
 int
-DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
+DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 		const ubyte handle,	/* Database handle */
 		const ubyte flags,	/* Flags */
 		const udword recid)	/* Unique record ID */
@@ -2196,7 +2195,7 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 int
 DlpReadResourceByIndex(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const uword index,		/* Resource index */
 	const uword offset,		/* Offset into resource */
@@ -2302,7 +2301,7 @@ DlpReadResourceByIndex(
 
 int
 DlpReadResourceByType(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const udword type,		/* Resource type */
 	const uword id,			/* Resource ID */
@@ -2412,7 +2411,7 @@ DlpReadResourceByType(
 }
 
 int
-DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
+DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 		 const ubyte handle,	/* Database handle */
 		 const udword type,	/* Resource type */
 		 const uword id,	/* Resource ID */
@@ -2515,7 +2514,7 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 }
 
 int
-DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
+DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 		  const ubyte handle,	/* Database handle */
 		  const ubyte flags,	/* Request flags */
 		  const udword type,	/* Resource type */
@@ -2604,7 +2603,7 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
  */
 int
 DlpCleanUpDatabase(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle)		/* Database handle */
 {
 	int i;
@@ -2668,7 +2667,7 @@ DlpCleanUpDatabase(
  * Reset any dirty flags on the database.
  */
 int
-DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
+DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 		  const ubyte handle)		/* Database handle */
 {
 	int i;
@@ -2733,7 +2732,7 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 /* XXX - The API probably could use some work */
 int
 DlpCallApplication(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const udword version,		/* OS version, used for determining
 					 * how to phrase the DLP call. */
 	const struct dlp_appcall *appcall,
@@ -2888,7 +2887,7 @@ DlpCallApplication(
  * Indicate that the Palm needs to be reset at the end of the sync.
  */
 int
-DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
+DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 {
 	int i;
 	int err;
@@ -2956,7 +2955,7 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
  * OS-dependent).
  */
 int
-DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
+DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 		   const char *msg)		/* Log message */
 {
 	int i;
@@ -3030,7 +3029,7 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
  * Read information about an open database.
  */
 int
-DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
+DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 		  ubyte handle,			/* Database handle */
 		  struct dlp_opendbinfo *dbinfo)
 						/* Info about database */
@@ -3099,7 +3098,7 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
 }
 
 int
-DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
+DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 		const ubyte handle,	/* Database handle */
 		const ubyte from,	/* ID of source category */
 		const ubyte to)		/* ID of destination category */
@@ -3179,7 +3178,7 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
  * Sent before each conduit is opened by the desktop.
  */
 int
-DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
+DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 {
 	int i;
 	int err;
@@ -3235,7 +3234,7 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 }
 
 int
-DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
+DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 	     const ubyte status)	/* Exit status, reason for
 					 * termination */
 {
@@ -3307,7 +3306,7 @@ DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
  */
 int
 DlpResetRecordIndex(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle)		/* Database handle */
 {
 	int i;
@@ -3395,7 +3394,7 @@ DlpResetRecordIndex(
  */
 int
 DlpReadRecordIDList(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const ubyte flags,
 	const uword start,
@@ -3500,7 +3499,7 @@ DlpReadRecordIDList(
  */
 int
 DlpReadNextRecInCategory(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
@@ -3609,7 +3608,7 @@ DlpReadNextRecInCategory(
  */
 int
 DlpReadNextModifiedRecInCategory(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
@@ -3718,7 +3717,7 @@ DlpReadNextModifiedRecInCategory(
  */
 int
 DlpReadAppPreference(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const udword creator,		/* Application creator */
 	const uword id,			/* Preference ID */
 	const uword len,		/* Max # bytes to return */
@@ -3828,7 +3827,7 @@ DlpReadAppPreference(
  */
 int
 DlpWriteAppPreference(
-	struct PConnection *pconn,	/* Connection to Palm */
+	PConnection *pconn,		/* Connection to Palm */
 	const udword creator,		/* Application creator */
 	const uword id,			/* Preference ID */
 	const ubyte flags,		/* Flags */
@@ -3926,7 +3925,7 @@ DlpWriteAppPreference(
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpReadNetSyncInfo(struct PConnection *pconn,
+DlpReadNetSyncInfo(PConnection *pconn,
 		   struct dlp_netsyncinfo *netsyncinfo)
 {
 	int i;
@@ -4042,7 +4041,7 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
  * XXX - This API sucks. Needs to be redone.
  */
 int
-DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
+DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 		    const struct dlp_writenetsyncinfo *netsyncinfo)
 {
 	int i;
@@ -4150,7 +4149,7 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
+DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 	       const udword creator,	/* Feature creator */
 	       const word featurenum,	/* Number of feature to read */
 	       udword *value)		/* Value of feature returned here */

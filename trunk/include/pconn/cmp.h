@@ -41,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.4 2000-12-13 16:20:12 arensb Exp $
+ * $Id: cmp.h,v 1.5 2000-12-24 21:24:23 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
@@ -92,6 +92,8 @@ struct cmp_packet
 	uword reserved;		/* Reserved. Must always be 0 */
 	udword rate;		/* How fast to communicate (bps) */
 };
+
+struct PConnection;		/* Forward declaration */
 
 extern int cmp_read(struct PConnection *pconn, struct cmp_packet *packet);
 extern int cmp_write(struct PConnection *pconn,

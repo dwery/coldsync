@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.hh,v 1.9 2000-11-04 07:44:17 arensb Exp $
+ * $Id: GenericConduit.hh,v 1.10 2000-12-24 21:24:44 arensb Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
@@ -16,7 +16,7 @@ extern "C" {
 }
 
 extern "C" {
-extern int run_GenericConduit(struct PConnection *pconn,
+extern int run_GenericConduit(PConnection *pconn,
 			      const struct dlp_dbinfo *db,
 			      const conduit_block *block);
 }
@@ -24,7 +24,7 @@ extern int run_GenericConduit(struct PConnection *pconn,
 class GenericConduit
 {
     public:
-	GenericConduit(struct PConnection *pconn,
+	GenericConduit(PConnection *pconn,
 		       const struct dlp_dbinfo *db);
 	virtual ~GenericConduit(void);
 	virtual int run(void);
@@ -36,7 +36,7 @@ class GenericConduit
 				const struct pdb_record *rec2);
 
     protected:
-	struct PConnection *_pconn;
+	PConnection *_pconn;
 	const struct dlp_dbinfo *_dbinfo;
 	struct pdb *_localdb;		// Local database (from backup dir)
 	struct pdb *_remotedb;		// Remote database (from Palm)

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.4 2000-11-28 01:41:50 arensb Exp $
+ * $Id: spc.c,v 2.5 2000-12-24 21:25:00 arensb Exp $
  */
 
 #include "config.h"
@@ -59,7 +59,7 @@ static void pack_dbinfo(const struct dlp_dbinfo *dbinfo,
  */
 int
 spc_send(struct spc_hdr *header,		/* SPC header */
-	 struct PConnection *pconn,		/* Connection to Palm */
+	 PConnection *pconn,			/* Connection to Palm */
 	 const struct dlp_dbinfo *dbinfo,	/* Current database */
 	 const unsigned char *inbuf,		/* Request data */
 	 unsigned char **outbuf)		/* Response data (allocated) */

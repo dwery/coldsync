@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.4 2000-12-13 16:59:05 arensb Exp $
+ * $Id: netsync.c,v 1.5 2000-12-24 21:24:38 arensb Exp $
  */
 
 #include "config.h"
@@ -39,7 +39,7 @@ int net_trace = 0;		/* Debugging level for NetSync */
  * libpconn/padp.c for an example).
  */
 static void
-bump_xid(struct PConnection *pconn)
+bump_xid(PConnection *pconn)
 {
 	pconn->net.xid++;		/* Increment the current xid */
 }
@@ -48,7 +48,7 @@ bump_xid(struct PConnection *pconn)
  * Initialize the NetSync part of a PConnection.
  */
 int
-netsync_init(struct PConnection *pconn)
+netsync_init(PConnection *pconn)
 {
 	/* Set the functions to send and receive DLP packets */
 	pconn->dlp.read = netsync_read;
@@ -61,7 +61,7 @@ netsync_init(struct PConnection *pconn)
  * Clean up the NetSync part of a PConnection that's being closed.
  */
 int
-netsync_tini(struct PConnection *pconn)
+netsync_tini(PConnection *pconn)
 {
 	if (pconn == NULL)
 		return 0;
@@ -81,7 +81,7 @@ netsync_tini(struct PConnection *pconn)
  * negative value and sets 'palm_errno' to indicate the error.
  */
 int
-netsync_read(struct PConnection *pconn,	/* Connection to Palm */
+netsync_read(PConnection *pconn,	/* Connection to Palm */
 	     const ubyte **buf,		/* Buffer to put the packet in */
 	     uword *len)		/* Length of received message */
 					/* XXX - Is a uword enough? */
@@ -173,7 +173,7 @@ netsync_read(struct PConnection *pconn,	/* Connection to Palm */
  * Write a NetSync message.
  */
 int
-netsync_write(struct PConnection *pconn,
+netsync_write(PConnection *pconn,
 	      const ubyte *buf,
 	      const uword len)		/* XXX - Is this enough? */
 {

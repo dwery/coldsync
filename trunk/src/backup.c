@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.25 2000-12-10 00:27:58 arensb Exp $
+ * $Id: backup.c,v 2.26 2000-12-24 21:24:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -26,7 +26,7 @@
 /* XXX - Temporary name */
 /* Back up a single file */
 int
-backup(struct PConnection *pconn,
+backup(PConnection *pconn,
        const struct dlp_dbinfo *dbinfo,
        const char *dirname)		/* Directory to back up to */
 {
@@ -148,7 +148,7 @@ backup(struct PConnection *pconn,
  * 'global_opts.backupdir'.
  */
 int
-full_backup(struct PConnection *pconn,
+full_backup(PConnection *pconn,
 	    struct Palm *palm,
 	    const char *backupdir)
 {
