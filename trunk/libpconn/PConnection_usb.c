@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.9 2000-12-10 21:38:06 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.10 2000-12-11 09:07:28 arensb Exp $
  */
 
 #include "config.h"
@@ -43,6 +43,8 @@
 
 #include "pconn/PConnection.h"
 #include "pconn/palm_types.h"
+#include "pconn/palm_errno.h"
+#include "pconn/cmp.h"			/* XXX - This ought to go away */
 
 struct usb_data {
 	unsigned char iobuf[1024];	/* XXX - Is there anything
@@ -175,131 +177,25 @@ usb_write(struct PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-usb_accept(struct PConnection *p)
+usb_accept(struct PConnection *pconn)
 {
-	/* XXX - Perhaps most of this stuff ought to be moved into a new
-	 * function cmp_accept() or some such, which both
-	 * PConnection_serial and PConnection_usb can call.
-	 */
-	int err;
-	int i;
-	struct cmp_packet cmpp;
-	udword bps = SYNC_RATE;		/* Connection speed, in bps */
-	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
-					 * (a necessary distinction because
-					 * some OSes (hint to Sun!) have
-					 * B19200 != 19200.
+	udword newspeed;		/* Not really a speed; this is just
+					 * used for the return value from
+					 * cmp_accept().
 					 */
 
-	do {
-		IO_TRACE(5)
-			fprintf(stderr, "===== Waiting for wakeup packet\n");
-
-		err = cmp_read(pconn, &cmpp);
-		if (err < 0)
-		{
-			if (palm_errno == PALMERR_TIMEOUT)
-				continue;
-			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
-				palm_errno,
-				_(palm_errlist[palm_errno]));
-			exit(1); /* XXX */
-		}
-	} while (cmpp.type != CMP_TYPE_WAKEUP);
-
-	IO_TRACE(5)
-		fprintf(stderr, "===== Got a wakeup packet\n");
-
-	/* Find the speed at which to connect.
-	 * If the listen block in .coldsyncrc specifies a speed, use that.
-	 * If it doesn't (or the speed is set to 0), then go with what the
-	 * Palm suggests.
+	/* Negotiate a CMP connection.
+	 * Since this is USB, the speed is meaningless: it'll just go
+	 * however fast it can.
 	 */
-	if (pconn->speed == 0)
-		pconn->speed = cmpp.rate;
-
-	IO_TRACE(3)
-		fprintf(stderr, "pconn->speed == %ld\n",
-			pconn->speed);
-
-	/* Go through the speed table. Make sure the requested speed
-	 * appears in the table: this is to make sure that there is a valid
-	 * B* speed to pass to cfsetspeed().
-	 */
-	for (i = 0; i < num_speeds; i++)
-	{
-		IO_TRACE(7)
-			fprintf(stderr, "Comparing %ld ==? %ld\n",
-				speeds[i].bps, pconn->speed);
-
-		if (speeds[i].bps == pconn->speed)
-		{
-				/* Found it */
-			IO_TRACE(7)
-				fprintf(stderr, "Found it\n");
-			bps = speeds[i].bps;
-			tcspeed = speeds[i].tcspeed;
-			break;
-		}
-	}
-
-	if (i >= num_speeds)
-	{
-		/* The requested speed wasn't found */
-		fprintf(stderr, _("Warning: can't set the speed you "
-				  "requested (%ld bps).\nUsing "
-				  "default (%ld bps)\n"),
-			pconn->speed,
-			SYNC_RATE);
-		pconn->speed = 0L;
-	}
-
-	if (pconn->speed == 0)
-	{
-		/* Either the .coldsyncrc didn't specify a speed, or else
-		 * the one that was specified was bogus.
-		 */
-		IO_TRACE(2)
-			fprintf(stderr, "Using default speed (%ld bps)\n",
-				SYNC_RATE);
-		bps = SYNC_RATE;
-		tcspeed = BSYNC_RATE;
-	}
-	IO_TRACE(2)
-		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
-			(long) bps, (long) tcspeed);
-
-	/* Compose a reply */
-	/* XXX - This ought to be in a separate function in cmp.c */
-	cmpp.type = CMP_TYPE_INIT;
-	cmpp.ver_major = CMP_VER_MAJOR;
-	cmpp.ver_minor = CMP_VER_MINOR;
-	if (cmpp.rate != bps)
-	{
-		cmpp.rate = bps;
-		cmpp.flags = CMP_IFLAG_CHANGERATE;
-	}
-
-	IO_TRACE(5)
-		fprintf(stderr, "===== Sending INIT packet\n");
-	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
-
-	IO_TRACE(5)
-		fprintf(stderr, "===== Finished sending INIT packet\n");
-
-	/* Change the speed */
-	/* XXX - This probably goes in Pconn_accept() or something */
-
-	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
-	{
-		fprintf(stderr, _("Error trying to set speed"));
+	newspeed = cmp_accept(pconn, 0);
+	if (newspeed == 0)
 		return -1;
-	}
 
 	return 0;
 }
 
-int
+static int
 usb_close(struct PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
