@@ -91,6 +91,9 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if you have the GNU gettext package */
+#undef HAVE_LIBINTL
+
 /* Defined if the package was compiled with the ElectricFence library */
 #undef WITH_EFENCE
 
@@ -99,8 +102,20 @@
 
 #undef SYSCONFDIR
 
+#undef LOCALEDIR
+
 /* Version number of package */
 #undef VERSION
+
+/* The internationalizable strings in the source are enclosed in _(), e.g.,
+ * _("Hello, world!"). That way, they can be looked up by whichever i18n
+ * package you happen to be using. (Only GNU gettext support is foreseen.)
+ */
+#if HAVE_LIBINTL
+#  define _(str)	gettext(str)
+#else	/* HAVE_LIBINTL */
+#  define _(str)	str
+#endif	/* HAVE_LIBINTL */
 
 #if __GNUC__
 
