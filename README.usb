@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.6 2004-06-06 00:07:47 christophe Exp $
+$Id: README.usb,v 1.7 2004-06-06 16:12:07 christophe Exp $
 
 Linux
 =====
@@ -63,7 +63,7 @@ Place the following script at /etc/hotplug/usb/visor:
 	then
 		# the sync port is the second tty defined for the device, although
 		# supposedly some Sony's might use the first port.
-		PORT=`/bin/ls /sys/${DEVPATH}/|/bin/grep ttyUSB|/bin/tail -1`
+		PORT=`/bin/ls /sys/${DEVPATH}/|/bin/grep ttyUSB|/usr/bin/tail -1`
 		export PORT="/dev/usb/${PORT}"
 
 		logger "visor: running coldsync on ${PORT}"
