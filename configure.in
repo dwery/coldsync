@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.1 1999-02-19 22:38:36 arensb Exp $
+dnl # $Id: configure.in,v 1.2 1999-02-19 23:45:43 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -9,7 +9,7 @@ dnl # Berkeley 'make' copes quite well with the equivalent
 dnl #	if test "$var1" = value; then var2=true; fi
 
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.0.3)
+AM_INIT_AUTOMAKE(coldsync, 0.0.4)
 AM_CONFIG_HEADER(config.h)
 
 dnl # XXX - Without this, the Makefile contains
@@ -21,23 +21,43 @@ AC_SUBST(SHELL)
 dnl # Checks for programs.
 
 AC_PROG_CC
-AC_PROG_RANLIB
 
-dnl # XXX - This should check to make sure CC is 'gcc'.
-CPPFLAGS="-g -Wall -ansi -pedantic"
+# I know how to be pedantic with gcc. Other compilers, I'm not sure.
+if test x"$GCC" = x"yes" ; then
+	CFLAGS="-g -Wall -ansi -pedantic"
+else
+	AC_MSG_RESULT(dnl
+[	You don't seem to be using gcc, so various anal-retentive
+	compiler options won't be turned on. If you know what they
+	are for your compiler, you may wish to turn them on, e.g.
+		CFLAGS=\"-Wall -ansi -pedantic\" ./configure])
+fi
+
+AC_PROG_RANLIB
 
 dnl # Checks for libraries.
 
 dnl # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
+dnl # echo "HAVE_FCNTL == $ac_cv_header_fcntl_h"
 
 dnl # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_HEADER_TIME
 
 dnl # Checks for library functions.
-AC_CHECK_FUNCS(select)
+AC_CHECK_FUNCS(select \
+	cfsetspeed \
+	cfmakeraw)
+
+dnl # Should print out an error if one or more required components
+dnl # couldn't be found. Use AC_MSG_WARN([message])
+
+#if test x"$ac_cv_header_sys_frobozz_h" = x"no" ; then
+#	AC_MSG_WARN([<frobozz.h> could not be found. This package may not
+#	compile properly])
+#fi
 
 AC_OUTPUT([Makefile
 	palm/Makefile
