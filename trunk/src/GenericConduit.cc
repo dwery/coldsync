@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.60 2002-04-27 18:00:07 azummo Exp $
+ * $Id: GenericConduit.cc,v 1.61 2002-05-04 21:23:49 arensb Exp $
  */
 
 /* Note on I/O:
@@ -73,6 +73,11 @@ static inline bool ARCHIVE(const struct pdb_record *r)
 
 static inline bool PRIVATE(const struct pdb_record *r)
 { return (r->flags & PDB_REC_PRIVATE) != 0; }
+
+// CLEAR_STATUS_FLAGS: Clear status flags, but don't touch the "private"
+// flag.
+static inline void CLEAR_STATUS_FLAGS(struct pdb_record *r)
+{ r->flags &= (PDB_REC_PRIVATE); }
 
 int
 run_GenericConduit(
@@ -370,8 +375,7 @@ GenericConduit::FirstSync()
 		    ((ARCHIVE(remoterec) ||
 		     (!EXPUNGED(remoterec)))))
 		{
-			// Clear flags
-			remoterec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(remoterec);
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -387,8 +391,7 @@ GenericConduit::FirstSync()
 		} else {
 			SYNC_TRACE(5)
 				fprintf(stderr, "Need to save this record\n");
-			// Clear flags
-			remoterec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(remoterec);
 		}
 	}
 
@@ -632,7 +635,7 @@ GenericConduit::SlowSync()
 				 * least not explicitly marked as expunged.
 				 * So archive it.
 				 */
-				remoterec->flags &= PDB_REC_PRIVATE;
+				CLEAR_STATUS_FLAGS(remoterec);
 
 				// Archive this record
 				SYNC_TRACE(5)
@@ -660,7 +663,7 @@ GenericConduit::SlowSync()
 				 * dirty flags it might have, and add it to
 				 * the local database.
 				 */
-				remoterec->flags &= PDB_REC_PRIVATE;
+				CLEAR_STATUS_FLAGS(remoterec);
 
 				// First, make a copy
 				newrec = pdb_CopyRecord(_remotedb, remoterec);
@@ -743,7 +746,7 @@ GenericConduit::SlowSync()
 			fprintf(stderr, "SyncRecord returned %d\n ", err);
 
 		/* Mark the remote record as clean for the next phase */
-		remoterec->flags &= PDB_REC_PRIVATE;
+		CLEAR_STATUS_FLAGS(remoterec);
 	}
 
 	/* Look up each record in the local database and see if it exists
@@ -786,7 +789,7 @@ GenericConduit::SlowSync()
 			/* The local record was deleted, and needs to be
 			 * archived.
 			 */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -810,7 +813,7 @@ GenericConduit::SlowSync()
 			/* This record is merely new. Clear any dirty flags
 			 * it might have, and upload it to the Palm.
 			 */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Sending local record "
@@ -1082,7 +1085,7 @@ GenericConduit::FastSync()
 						"New archived record: "
 						"0x%08lx\n",
 						remoterec->id);
-				remoterec->flags &= PDB_REC_PRIVATE;
+				CLEAR_STATUS_FLAGS(remoterec);
 
 				SYNC_TRACE(5)
 					fprintf(stderr,
@@ -1131,7 +1134,7 @@ GenericConduit::FastSync()
 			 * it to the local database: it's fresh and
 			 * new.
 			 */
-			remoterec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(remoterec);
 
 			/* Add the new record to localdb */
 			if ((err = pdb_AppendRecord(_localdb, remoterec)) < 0)
@@ -1229,7 +1232,7 @@ GenericConduit::FastSync()
 			/* The local record was deleted, and needs to be
 			 * archived.
 			 */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -1311,7 +1314,7 @@ GenericConduit::FastSync()
 			/* This record is merely new. Clear any dirty flags
 			 * it might have, and upload it to the Palm.
 			 */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Sending local record (ID "
@@ -1603,8 +1606,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			this->archive_record(remoterec);
 
-			/* Fix flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
@@ -1671,8 +1673,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr,
 					"Local:  deleted, archived\n");
 
-			/* Fix flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -1739,8 +1740,7 @@ GenericConduit::SyncRecord(
 				     remoterec->id, err);
 			}
 
-			/* Fix flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
@@ -1809,8 +1809,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr,
 					"Local:  deleted, archived\n");
 
-			/* Fix flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -1835,8 +1834,7 @@ GenericConduit::SyncRecord(
 				return -1;
 			}
 
-			/* Fix flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			pdb_AppendRecord(localdb, newrec);
 
@@ -1873,8 +1871,7 @@ GenericConduit::SyncRecord(
 				return -1;
 			}
 
-			/* Fix remote flags */
-			newrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(newrec);
 
 			pdb_AppendRecord(localdb, newrec);
 
@@ -1891,7 +1888,7 @@ GenericConduit::SyncRecord(
 				 * Reset localrec's flags to clean, but
 				 * otherwise do nothing.
 				 */
-				localrec->flags &= PDB_REC_PRIVATE;
+				CLEAR_STATUS_FLAGS(localrec);
 			} else {
 				/* The records have both been modified, but
 				 * in different ways.
@@ -1899,8 +1896,7 @@ GenericConduit::SyncRecord(
 				udword newID;	/* ID of uploaded record */
 				struct pdb_record *newrec;
 
-				/* Fix flags on localrec */
-				localrec->flags &= PDB_REC_PRIVATE;
+				CLEAR_STATUS_FLAGS(localrec);
 
 				/* Upload localrec to Palm */
 				SYNC_TRACE(6)
@@ -2000,8 +1996,7 @@ GenericConduit::SyncRecord(
 				return -1;
 			}
 
-			/* Fix flags */
-			newrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(newrec);
 
 			err = pdb_InsertRecord(localdb, localrec, newrec);
 			if (err < 0)
@@ -2032,8 +2027,7 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(5)
 				fprintf(stderr, "Local:  deleted, archived\n");
 
-			/* Fix local flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -2124,8 +2118,7 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(5)
 				fprintf(stderr, "Local:  dirty\n");
 
-			/* Fix local flags */
-			localrec->flags &= PDB_REC_PRIVATE;
+			CLEAR_STATUS_FLAGS(localrec);
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
