@@ -1,14 +1,16 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.1 2000-01-22 05:03:38 arensb Exp $
+@c $Id: conduits.texi,v 1.2 2000-01-22 12:55:09 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
 @settitle ColdSync Conduits
+@dircategory ColdSync Documentation
+@direntry
+* Conduits: (conduits.info).    Extending ColdSync through conduits.
+@end direntry
 @setchapternewpage odd
 @c %**end of header
-
-@c XXX - Cross-references
 
 @include version.texi
 
@@ -32,10 +34,14 @@ are preserved on all copies.
 @page
 @vskip 0pt plus 1filll
 Copyright @copyright 2000 Andrew Arensburger.
-n
+
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
 are preserved on all copies.
+
+For external use only. Do not attempt to read this manual while
+operating a motor vehicle, or on a date.
+
 @end titlepage
 
 @node Top, Overview, (dir), (dir)
@@ -65,6 +71,7 @@ substitute for the source, but is probably easier to read.
 * Overview::                    
 * Tutorial::                    
 * Specification::               
+* Glossary::                    
 * Index::                       
 
 @detailmenu
@@ -72,20 +79,31 @@ substitute for the source, but is probably easier to read.
 
 Overview
 
-* Kinds of Databases::          
-* Creators and Types::          
-* Overview-Flavors::            
+* Kinds of Databases::          prc and .pdb explained.
+* Creators and Types::          What is this database? Which application
+				 does it go with?
+* Overview-Flavors::            What the different flavors of conduit do.
 
 Tutorial
 
-* todo-dump::                   
-* Style and Warnings::          
+* todo-dump::                   A simple conduit.
+* Style and Warnings::          Tips on writing good conduits.
 
 Specification
 
-* Conduit Flavors::             The different types of conduit
-* Conduit Input::               What ColdSync sends to the conduit
-* Conduit Output::              What the conduit may send to ColdSync
+* Conduit Input::               What ColdSync sends to the conduit.
+* Conduit Output::              What the conduit may send to ColdSync.
+* Conduit Flavors::             The different types of conduit.
+* Status Codes::                Numerical error codes and thier meanings.
+
+Standard Input
+
+* Predefined Headers::          Headers with standard meanings
+
+Conduit Flavors
+
+* Fetch Conduits::              Conduits that run before the main sync
+* Dump Conduits::               Conduits that run after the main sync
 
 @end detailmenu
 @end menu
@@ -107,12 +125,14 @@ ColdSync's behavior.
 	ColdSync is a generalist: it doesn't know a Calendar from a
 MineSweeper, so it has to treat all applications and their data in a
 fairly generic manner. Conduits, then, are specialists: they usually
-know all about one particular type of application and nothing else.
+know all about one particular type of application and nothing else. This
+allows them to do the Right Thing for that particular application.
 
 @menu
-* Kinds of Databases::          
-* Creators and Types::          
-* Overview-Flavors::            
+* Kinds of Databases::          prc and .pdb explained.
+* Creators and Types::          What is this database? Which application
+				 does it go with?
+* Overview-Flavors::            What the different flavors of conduit do.
 @end menu
 
 @node Kinds of Databases, Creators and Types, Overview, Overview
@@ -140,13 +160,17 @@ application.
 @cindex Resource type
 @cindex Resource identifier
 	Resource databases are a bit more organized: each entry has a
-four-letter type and a numerical identifier. Most resource databases are
-applications, containing one or more @samp{code} entries, perhaps a few
-@samp{Tbmp} (bitmap image) entries, and so forth. The types are
+four-letter, type and a numerical identifier. Most resource databases
+are applications, containing one or more @samp{code} entries, perhaps a
+few @samp{Tbmp} (bitmap image) entries, and so forth. The types are
 documented strings that indicate what the resource is: @samp{code}
 resources contain executable code, @samp{Tbmp} resources are always
 bitmap images, and so forth. The numerical identifiers serve to tell
 resources of the same type apart.
+
+@cindex Macintosh
+	Not coincidentally, resource databases are very similar to the
+resource fork in MacOS files.
 
 @cindex E-mail
 @cindex Signature, e-mail
@@ -165,22 +189,23 @@ lend themselves well to syncing, and ColdSync pretty much ignores them.
 
 @cindex Database creator
 @cindex Database type
-	Each database also has a four-letter type and a four-letter
-creator. Each PalmOS application has a unique creator string. Every
-database that it creates has the the same creator string as the
-application. For example, the built-in Datebook application has the
-creator @samp{date}. The record database that contains the Datebook
+	Each database also has a four-letter @emph{type} and a
+four-letter @emph{creator}. Each PalmOS application has a unique creator
+string. Every database that it creates has the the same creator string
+as the application. For example, the built-in Datebook application has
+the creator @samp{date}. The record database that contains the Datebook
 entries also has the creator @samp{date}.
 
-@cindex Beer
 	An application can potentially create several databases to
-represent different kinds of data. For instance, a pub-crawl application
-might have one database to list bars, and another to list beers. The
-application could set the first database's type to @samp{BARS} and the
-second one's type to @samp{Beer}, to indicate the different kinds of
-data that each one holds.
+represent different kinds of data. The built-in To Do application
+creates three separate record databases: @file{ExpenseDB}, with creator
+@code{exps} and type @code{DATA}; @file{CitiesDB}, with creator
+@code{exps} and type @code{city}; @file{VendorsDB}, with creator
+@code{exps} and type @code{vend}. All of these databases have the same
+creator field as the application that created them, but have different
+types, since they contain different kinds of information.
 
-@cindex .coldsyncrc
+@cindex @file{.coldsyncrc}
 @cindex @code{kab}
 	Since each conduit typically handles only one specific kind of
 database, you have to tell ColdSync what it is. For instance, to run the
@@ -223,7 +248,7 @@ In this case, the conduit will be run for every database.
 	ColdSync defines several @emph{flavors} of conduits. Each flavor
 performs a different function and is designed for a different purpose.
 Currently, only two flavors are implemented. More flavors are planned,
-but these two should be enough for most purposes.
+but these two should be sufficient for many purposes.
 
 @cindex Flavor, Fetch
 @cindex Fetch
@@ -250,8 +275,8 @@ several conduits. Bear in mind, however, that they may interfere.
 purpose of a Dump conduit is to read its database after ColdSync is done
 with it, and copy its contents to some other file, in some other format.
 For instance, if you have made changes to your address list on the Palm,
-ColdSync will make sure that the Address Book database on the Palm
-contains the same information as the backup copy in your home directory.
+ColdSync will make sure that the backup copy in your home directory
+contains the same information as the Address Book database on the Palm.
 After that's done, a conduit can export this list in your favorite
 address book application's format.
 
@@ -283,7 +308,6 @@ yet.}
 @node Tutorial, Specification, Overview, Top
 @comment  node-name,  next,  previous,  up
 @chapter Tutorial
-@c XXX - Tutorial on writing conduits
 
 @cindex Programming languages
 	This chapter shows, by example, how to write ColdSync conduits.
@@ -297,8 +321,8 @@ To run it, you will need the @code{p5-Palm} Perl module from@*
 @uref{http://www.ooblick.com/software/coldsync/}.
 
 @menu
-* todo-dump::                   
-* Style and Warnings::          
+* todo-dump::                   A simple conduit.
+* Style and Warnings::          Tips on writing good conduits.
 @end menu
 
 @node todo-dump, Style and Warnings, Tutorial, Tutorial
@@ -449,10 +473,10 @@ OutputDB: /homes/arensb/.palm/backup/ToDoDB.pdb
 Phase-of-the-Moon: lunar eclipse
 @end example
 
-@cindex .coldsyncrc
-	Some headers have standard meanings. Others are specified in
-@file{.coldsyncrc} and are passed to the conduit as-is.
-@footnote{This is not yet implemented.}
+@cindex @file{.coldsyncrc}
+	Some headers have standard meanings (@pxref{Predefined
+Headers}). Others are specified in @file{.coldsyncrc} and are passed to
+the conduit as-is. @footnote{This is not yet implemented.}
 
 @cindex @code{Daemon} header
 @cindex @code{Version} header
@@ -476,8 +500,11 @@ write. It is always passed to Fetch conduits.
 	Note that it can make sense for a conduit to modify its input
 file. For instance, a Dump conduit for the Mail application might read
 the ``Outbox'' records from the database, mail them, then delete them
-from the database. Such a conduit acts like a Unix filter, and should
-write the modified database to the file given by @code{OutputDB}.
+from the database. Such a conduit acts like a Unix filter, which reads
+its standard input and writes to standard output. By analogy, it is
+considered good form to write the modified database to the file
+specified by @code{OutputDB}. In most cases, this will be the same file
+as the one specified by @code{InputDB}, but it might not be.
 
 	A blank line indicates the end of the headers.
 
@@ -492,9 +519,9 @@ if (!defined($HEADERS@{"InputDB"@}))
 @end cartouche
 @end example
 
-	It is allowable to die in the middle of reading the headers, but
-this seems silly. It makes more sense to just read all of the headers at
-once, and put all of the sanity checks in one place.
+	It is allowable to @code{die} in the middle of reading the
+headers, but this seems silly. It makes more sense to just read all of
+the headers at once, and put all of the sanity checks in one place.
 
 	Now we can read the To Do database:
 
@@ -556,7 +583,7 @@ exit 0;
 	The conduit protocol requires the conduit to print a status code
 before exiting. A status code in the range 200-299 indicates success.
 400-599 indicates failure.
-@c XXX - Xref with spec
+@xref{Status Codes}.
 
 @node Style and Warnings,  , todo-dump, Tutorial
 @comment  node-name,  next,  previous,  up
@@ -575,7 +602,7 @@ records.
 
 	However, if the input file doesn't exist, then it's probably a
 bad idea to delete all of the records in the backup database. In this
-case, it's probably best to just abort: most likely, the file was
+case, it's probably best just to abort: most likely, the file was
 accidentally deleted, or else it's on an NFS partition and the remote
 host is down, or the file is supposed to be generated by a Dump conduit
 that hasn't been run yet.
@@ -593,9 +620,9 @@ way that fast syncs work. Use @code{$pdb->deleteRecord($record)} or
 being dirty (modified). Likewise, when you delete a record on the Palm,
 it is not actually deleted; rather, it is simply marked as being
 deleted.
-@footnote{If you check the ``Save archive copy on PC'' box, the data in
-the record will be deleted to save space, but the Palm will still save
-the record header until the next sync.}
+@footnote{If you uncheck the ``Save archive copy on PC'' box, the data
+in the record will be deleted to save space, but the Palm will still
+save the record header until the next sync.}
 This way, ColdSync needn't bother downloading the entire database from
 the Palm to see which records have changed: it simply asks the Palm for
 a list of records that have been modified and/or deleted.
@@ -620,17 +647,17 @@ distinguish between home and work telephone numbers. On the other hand,
 it allows you to specify a person's URL, which the Palm Address Book
 does not directly support.
 
-	When converting from one format to the other, keep these
-differences in mind, or you'll risk losing information. One approach is
-to read both the source and destination files, modify the records as
-required, and then write the resulting file. That way, if a person's
-e-mail address has changed on the Palm, you can update this information
-in the @code{kab} file without erasing the person's URL.
+	Keep these sorts of differences in mind, or you'll risk losing
+information. One approach is to start by reading both the source and
+destination files, modify the records as necessary, and then write the
+resulting file. That way, if the output file has a field that doesn't
+correspond to anything on the Palm (like URLs in @code{kab} files,
+above), you won't delete those fields.
 
 	An additional benefit of this approach is that if you encounter
 a fatal error in the middle of processing, you can simply abort without
-writing the output file. This way, the information in the output file
-will be out of date, but at least it won't be lost.
+writing the output file. The information in the output file will be out
+of date, but at least it won't be lost.
 
 @item
 If you want to implement two-way syncing by having both Fetch and Dump
@@ -682,39 +709,559 @@ case, it would probably be best to consider only addresses in the
 
 @end itemize
 
-@node Specification, Index, Tutorial, Top
+@node Specification, Glossary, Tutorial, Top
 @comment  node-name,  next,  previous,  up
 @chapter Specification
-@c XXX - Formal specification of what conduits send and receive
 
-@c XXX - What the various status codes mean
+@cindex Conduits
+	ColdSync allows the user to extend its functionality by means of
+@emph{conduits}. A conduit is a program that is run from ColdSync, and
+which interacts with ColdSync according to a well-defined protocol.
+
+@cindex Flavors
+	Conduits come in multiple @emph{flavors}. ColdSync runs conduits
+at several points during its execution. The flavor of a conduit
+indicates the intended purpose of the conduit.
+See @ref{Conduit Flavors}.
+
+	ColdSync communicates with conduits by sending information to
+the conduit's standard input (@pxref{Conduit Input}), and by reading
+results from the conduit's standard output (@pxref{Conduit Output}).
+This information is in human-readable text form.
+
+@c XXX - Define "backup directory".
+
+@cindex Sync overview
+@cindex Timeline
+	A sync consists of the following phases:
+
+@enumerate
+@item Initialization
+
+	ColdSync starts up, reads its configuration file, and performs
+basic initialization.
+
+@item User presses HotSync button
+
+	This indicates the beginning of the sync.
+
+@item Gather information
+
+	ColdSync gathers information from the Palm, such as the list of
+databases.
+
+@item Install new databases
+
+	If there are any databases in the install directory, ColdSync
+uploads them to the Palm. If the upload was successful, ColdSync deletes
+the file from the install directory, and adds an entry for the new
+database to its list of databases installed on the Palm.
+
+@item Run Fetch conduits
+
+	For each database on the Palm (including ones that have just
+been installed), ColdSync runs its Fetch conduits. Fetch conduits are
+expected to create or modify the databases in the backup directory.
+See @ref{Fetch Conduits}.
+
+@item Main sync
+
+	ColdSync synchronizes the databases on the Palm with the ones in
+the backup directory. As each database is synchronized, the message
+``Synchronizing @var{Database}'' appears on the Palm. If no backup file
+exists, ColdSync creates one by downloading the database.
+
+	ColdSync then checks all of the files in the backup directory:
+if a file does not correspond to any database on the Palm, that file is
+moved to the Attic directory.
+
+	Once this is done, the message ``HotSync complete'' appears on
+the Palm. The user may remove it from the cradle.
+
+@item Run Dump conduits
+
+	For each database on the Palm (including the ones that were just
+installed), ColdSync runs its Dump conduits. Dump conduits are expected
+to read the databases in the backup directory.
+See @ref{Dump Conduits}.
+
+@item Clean up
+
+	ColdSync cleans up and terminates.
+
+@end enumerate
+
+	If the configuration file calls for more than one conduit of the
+same flavor to be run for the same database, the conduits will be run in
+the order in which they are listed in the configuration file.
+
+	ColdSync makes no guarantees as to the order in which different
+databases' will conduits will be run, nor is there any guarantee that
+all of the conduits for one database will be run befor the first conduit
+of another database.
 
 @menu
-* Conduit Flavors::             The different types of conduit
-* Conduit Input::               What ColdSync sends to the conduit
-* Conduit Output::              What the conduit may send to ColdSync
+* Conduit Input::               What ColdSync sends to the conduit.
+* Conduit Output::              What the conduit may send to ColdSync.
+* Conduit Flavors::             The different types of conduit.
+* Status Codes::                Numerical error codes and thier meanings.
 @end menu
 
-@node Conduit Flavors, Conduit Input, Specification, Specification
-@comment  node-name,  next,  previous,  up
-@section Conduit Flavors
-@c XXX - Which flavors exist, what they do
-
-@node Conduit Input, Conduit Output, Conduit Flavors, Specification
+@node Conduit Input, Conduit Output, Specification, Specification
 @comment  node-name,  next,  previous,  up
 @section Conduit Input
-@c XXX - What conduits may expect on stdin
 
-@node Conduit Output,  , Conduit Input, Specification
+@cindex Headers
+	ColdSync passes information to conduits in two ways: as
+command-line arguments, and in a series of @emph{headers} on standard
+input. In future versions, ColdSync may allow other means of
+communication (e.g., environment variables or pre-opened file
+descriptors).
+
+@subsection Command-line Arguments
+@cindex Command-line arguments
+	A conduit is invoked with two command-line arguments. The first
+is the string @code{conduit}. This argument will always be present when
+the conduit is run from ColdSync.
+
+	The second argument is either the string @file{fetch}, for Fetch
+conduits, or the string @code{dump}, for Dump conduits (@pxref{Conduit
+Flavors}).
+
+@subsection Standard Input
+@cindex Standard input
+@cindex Stdin
+@cindex Headers
+	ColdSync writes a series of @emph{headers} to the conduit's
+standard input. Each header is a line of the form
+@example
+@var{Field}: @var{Value}
+@end example
+
+	@var{Field} is a string indicating a particular type of header.
+It may consist of upper- and lower-case letters, digits, hyphens, and
+underscores. The first character may only be a letter or an underscore.
+The length of @var{Field} may not exceed 32 characters. Fields are
+case-sensitive: @code{Foo} is not the same as @code{FOO}.
+
+	The field is followed by a colon, a space, the @var{Value}
+string, and a newline character. The entire line may not be more than
+255 characters in length, including the field, but not including the
+terminating newline character.
+
+	@var{Value} is a string. It may not contain any newline
+characters. No other restrictions are placed upon its contents, although
+conduit writers are encouraged to use human-readable strings.
+
+@cindex Multi-line header
+	There is currently no provision for multi-line header lines, nor
+for encoding methods such as ``Quoted-printable.''
+
+@cindex End of header
+@cindex Blank line
+	The end of the header is indicated by a blank line, i.e., two
+newlines in a row.
+
+@menu
+* Predefined Headers::          Headers with standard meanings
+@end menu
+
+@node Predefined Headers,  , Conduit Input, Conduit Input
+@comment  node-name,  next,  previous,  up
+@subsection Predefined Headers
+
+	Certain header fields have predefined meanings:
+
+@table @code
+
+@item Daemon
+
+	The @code{Daemon} header identifies the program that ran the
+conduit. ColdSync uses the string @code{coldsync} as the value.
+
+	According to the terms of the Artistic License, a person may
+modify ColdSync. If the modified version is incompatible with the
+Standard Distribution of ColdSync, it should use some string other than
+@code{coldsync} to identify itself.
+
+@item Version
+
+	The @code{Version} header specifies the version of the program
+identified by @code{Daemon}.
+
+@item InputDB
+
+	The @code{InputDB} header specifies the full pathname to the
+database file that the conduit should use as its input. This header is
+mandatory for Dump conduits, and is optional for Fetch conduits.
+
+	The file specified by @code{InputDB} might not exist, and might
+not be readable by the conduit. In such cases, the conduit should fail
+gracefully.
+@c XXX - Exit status
+
+@item OutputDB
+
+	The @code{OutputDB} header specifies the full pathname to the
+database file that the conduit should use as its output. This header is
+mandatory for Fetch conduits, and is optional for Dump conduits.
+
+	The file specified by @code{OutputDB} might not exist, in which
+case the conduit may create it.
+@c XXX - Exit status
+
+@end table
+
+	Other headers may be passed to the conduit, so the conduit
+should be prepared to handle them.
+
+@cindex Headers, repeated
+@cindex Repeated headers 
+	If multiple @code{InputDB} or @code{OutputDB} headers are sent
+to a conduit, the last value sent is the authoritative one. It is an
+error to send more than one @code{Daemon} or @code{Version} header.
+
+@node Conduit Output, Conduit Flavors, Conduit Input, Specification
 @comment  node-name,  next,  previous,  up
 @section Conduit Output
-@c XXX - What conduits may print to stdout
 
-@node Index,  , Specification, Top
+@cindex Status code
+@cindex Status message
+	A conduit may write lines to standard output. Each line should
+be of the form
+@example
+@var{NNN} @var{Message}
+@end example
+where @var{NNN} is a three-digit status code (@pxref{Status Codes}), and
+@var{Message} is a human-readable string. A single space separates the
+status code from the message.
+
+	Each line may be up to 255 characters in length, counting the
+status code, but not counting the terminating newline. There is
+currently no provision for multi-line messages.
+
+	The three-digit status code indicates some condition that the
+conduit wishes to report to ColdSync, such as successful or unsuccessful
+termination, a warning, or an informational progress report. The
+meanings of various status codes are defined in @ref{Status Codes}.
+
+	ColdSync does not attempt to parse the message string. It is
+intended solely for human readers.
+
+@cindex Exit status
+	A conduit may print any number of lines. The status code of the
+last line printed by the conduit before it exits indicates the final
+exit status of the conduit, i.e., success or failure.
+
+	Only 2@i{yz}, 4@i{yz}, and 5@i{yz} status codes may be used for
+the exit status.
+
+@node Conduit Flavors, Status Codes, Conduit Output, Specification
+@comment  node-name,  next,  previous,  up
+@section Conduit Flavors
+
+	There are currently two conduit flavors: Fetch and Dump.
+
+@menu
+* Fetch Conduits::              Conduits that run before the main sync
+* Dump Conduits::               Conduits that run after the main sync
+@end menu
+
+@node Fetch Conduits, Dump Conduits, Conduit Flavors, Conduit Flavors
+@comment  node-name,  next,  previous,  up
+@subsection Fetch Conduits
+
+@cindex Fetch conduits
+	@emph{Fetch conduits} run before the main sync. The purpose of a
+Fetch conduit is to create or modify the backup copy of a database
+before ColdSync compares it to the copy on the Palm. The conduit may,
+for instance, add new records to be uploaded to the Palm.
+
+@node Dump Conduits,  , Fetch Conduits, Conduit Flavors
+@comment  node-name,  next,  previous,  up
+@subsection Dump Conduits
+
+@cindex Dump conduits
+	@emph{Dump conduits} run after the main sync. The purpose of a
+Dump conduit is to examine a database in the backup directory after it
+has been synchronized with the copy on the Palm. Usually, a Dump conduit
+will write the contents of the database in some other format, e.g., that
+of some other application.
+
+	In most cases, a Dump conduit will only need to read its
+database. If necessary, however, it may modify the database. For
+instance, a Dump conduit for the Palm Mail application may send out
+every message in the Outbox, then delete it from the database.
+
+@node Status Codes,  , Conduit Flavors, Specification
+@comment  node-name,  next,  previous,  up
+@section Status Codes
+
+@cindex Status code
+@cindex Code, status
+	The status codes that a conduit sends to ColdSync should be of
+the form of a three-digit decimal integer @i{xyz}.
+
+@cindex Message class
+	The first digit, @i{x}, indicates a general message class
+(success, failure, informational message, etc).
+
+@cindex Message category
+	The second digit, @i{y}, represents a category within the
+message class (file error, system error, etc.)
+
+	The third digit, @i{z}, indicates a specific condition (out of
+memory, no such file, etc.)
+
+	The precise meaning of most status codes is still undefined.
+Only the following classes have been defined:
+
+@table @asis
+@item 0@i{yz}
+@cindex Debugging messages
+@cindex Messages, debugging
+Debugging messages. These will normally not be shown to the user. The
+precise circumstances under which they will be shown to the user have
+yet to be defined.
+
+@c XXX - What if this is the last status code printed to stdout?
+
+@item 1@i{yz}
+@cindex Informational messages
+@cindex Messages, informational
+Informational messages. These will normally be shown to the user, but do
+not indicate that anything is wrong.
+
+	In future versions of ColdSync, certain 1@i{yz} codes may
+acquire standard meanings, and their associated text strings will have a
+recommended format. This should allow real-time updates of the form
+``NN% complete'' that can be displayed on the user's desktop.
+
+@c XXX - What if this is the last status code printed to stdout?
+
+@item 2@i{yz}
+@cindex Success messages
+@cindex Messages, success
+Successful completion.
+
+	There might conceivably be multiple forms of success. In the
+meantime, the recommended code for a plain, ordinary success is 202.
+
+@item 3@i{yz}
+@cindex Warning messages
+@cindex Messages, warning
+Warning. The 3@i{yz} status codes indicate that something is wrong, but
+that the conduit has managed to recover.
+
+@c XXX - What if this is the last status code printed to stdout?
+
+@item 4@i{yz}
+@cindex Error messages
+@cindex Messages, error
+@cindex Caller error
+@cindex ColdSync error
+ColdSync (caller) error. A 4@i{yz} code indicates that the conduit has
+failed because it was given improper input, e.g., invalid or missing
+command-line arguments, nonexistent @code{InputDB} file, unsupported
+version of ColdSync, and so forth.
+
+@item 5@i{yz}
+@cindex Error messages
+@cindex Messages, error
+@cindex Conduit error
+Conduit error. A 5@i{yz} code indicates that the conduit should have
+been able to perform its function, but couldn't. Reasons include running
+out of memory, segmentation violation, inability to parse an
+apparently-correct @code{InputDB} file, etc.
+
+@item 6@i{yz}-9@i{yz}
+These error codes are currently undefined, but may be used in future
+versions. Until then, they should not be used.
+
+@end table
+
+@cindex Exit status
+	The last status code sent by the conduit before exiting gives
+the exit status of the conduit as a whole. That is, if a conduit exits
+successfully, the last thing it prints should be a 2@i{yz} status code.
+
+	Only 2@i{yz}, 4@i{yz}, and 5@i{yz} status codes may be used for
+the final exit status.
+
+@node Glossary, Index, Specification, Top
+@comment  node-name,  next,  previous,  up
+@unnumbered Glossary
+
+@table @asis
+
+@item @file{.coldsyncrc}
+
+	The per-user configuration file for ColdSync. Specifies the
+serial device to which the cradle is attached, and the list of conduits
+to run for each database.
+
+@item Archive file
+
+	A file containing records that have been deleted, but which were
+marked for archival, usually by checking the ``Save archive copy on PC''
+box.
+
+@item Archive directory
+
+	The directory in which ColdSync stores archive files.
+@code{~/.palm/archive} by default.
+
+@item Archived record
+
+	A record that has been deleted on the Palm, but saved in an
+archive file on the workstation.
+
+@item Attic directory
+
+	When ColdSync finds a file in the backup directory that has no
+corresponding database on the Palm, it moves the file to the attic
+directory, in case the database was deleted by mistake. The attic
+directory is @code{~/.palm/backup/Attic} by default.
+
+@item Backup
+
+	A file in the user's home directory, containing a copy of a Palm
+database.
+
+@item Backup directory
+
+	The directory in which ColdSync keeps backups of the databases
+on the Palm. @code{~/.palm/backup} by default.
+
+@item Conduit
+
+	An external program, run at specific times by ColdSync, which
+provides a ``hook'' by which the user may extend ColdSync's
+functionality.
+
+@item Database
+PalmOS's equivalent of files. Often used interchangeably with `files',
+if the database in question has been downloaded to a file on a
+workstation.
+
+@item Database creator
+
+	A four-letter string that identifies the application that
+created a database. Each application has a unique creator string.
+
+@item Database type
+
+	Either `record database' or `resource database'.
+
+@item Deleted record
+
+	A record that has been marked for deletion. Deleted records are
+not removed from a database until a sync.
+
+@item Dump conduit
+
+	A conduit that runs after the main sync.
+
+@item Export
+
+	To convert a Palm database into another format, often one
+readable by another application.
+
+@item Expunged record
+
+	A deleted record that need not be archived, usually because the
+``Save archive copy on PC'' box was left unchecked when the record was
+deleted.
+
+	The data portion of an expunged record is immediately reclaimed.
+The header, however, is not deleted until a sync.
+
+@item Fetch conduit
+
+	A conduit that runs before the main sync.
+
+@item Flavor
+
+	One of several types of conduit. Each flavor serves a different
+purpose.
+
+@item Header
+
+	A set of input values that ColdSync passes a conduit on standard
+input.
+
+@item Header field
+
+	The identifier on a header line, as opposed to the header value.
+
+@item Import
+
+	To convert a file, typically one generated by another
+application, to Palm database format.
+
+@item Install directory
+
+	A directory in which ColdSync looks for new databases to upload
+to the Palm. @code{~/.palm/install} by default.
+
+@item Main sync
+
+	The phase of a sync during which ColdSync compares the databases
+on the Palm with their backups in the backup directory.
+
+@item Record database
+
+	A database that contains data records, as opposed to a resource
+database. Almost all of the ``useful information'' on a Palm is stored
+in record databases. Record database files have a @code{.pdb} extension.
+
+@item Record identifier
+
+	An integer that uniquely identifies a record in a record
+database.
+
+@item Resource database
+
+	A database that contains resources, as opposed to a record
+database. Resource databases tend to have a static structure. Palm
+applications are resource databases. Resource databases have a
+@code{.pdb} extension.
+
+@item Resource identifier
+
+	An integer that uniquely identifies a resource among all of the
+other resource of the same type in a resource database. The resource
+identifier is chosen by the application programmer, and remains
+constant.
+
+@item Resource type
+
+	A four-letter string that identifies the type of data contained
+in a resource, e.g. executable code, bitmap images, menu entries, etc.
+
+@item Status code
+
+	A three-digit integer by which a conduit can keep ColdSync
+informed of its situation, e.g., whether a conduit has succeeded or
+failed.
+
+@item Sync
+
+	@i{vi}. To compare the databases on a Palm with those in a
+backup directory, and make whatever changes are necessary so that the
+two copies have identical contents.
+
+	@i{n}. The process of syncing.
+
+@end table
+
+@node Index,  , Glossary, Top
 @comment  node-name,  next,  previous,  up
 @unnumbered Index
 
 @printindex cp
+
+@cindex Self-reference
 
 @contents
 @bye
