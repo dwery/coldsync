@@ -1,0 +1,2041 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ColdSync 1.1.4\n"
+"POT-Creation-Date: 2001-05-24 01:42-0400\n"
+"PO-Revision-Date: 2000-03-27 16:57+02:00\n"
+"Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
+"Language-Team:  de <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8-bit\n"
+
+#: ../src/parser.y:293 ../src/parser.y:520 ../src/parser.y:993
+#, c-format
+msgid "\tError near \"%s\"."
+msgstr "\tFehler bei \"%s\"."
+
+#: ../src/parser.y:1029
+msgid "\tMissing ':'."
+msgstr "\tFehlender ':'."
+
+#: ../src/parser.y:1044
+msgid "\tMissing ';'."
+msgstr "\tFehlendes ';'."
+
+#: ../src/parser.y:1037
+msgid "\tMissing '{'."
+msgstr "\tFehlende '{'."
+
+#: ../src/parser.y:685
+#, fuzzy, c-format
+msgid "\tMissing argument name near \": %s\"."
+msgstr "\tFehlendes Argument nach \": %s\"."
+
+#: ../src/parser.y:232
+msgid "\tMissing listen block type."
+msgstr "\tFehlender Typ im 'listen' Abschnitt."
+
+#: ../src/parser.y:381
+#, c-format
+msgid "\tUnrecognized conduit flavor \"%s\"."
+msgstr "\tUnbekannter Conduit Typ \"%s\"."
+
+#: ../src/parser.y:234
+#, c-format
+msgid "\tUnrecognized listen type \"%s\"."
+msgstr "\tUnbekannter 'listen' Typ \"%s\"."
+
+#: ../src/config.c:796
+#, c-format
+msgid ""
+"\n"
+"    Default global configuration file: %s\n"
+msgstr ""
+"\n"
+"Voreingestellte globale Konfigurationsdatei: %s\n"
+
+#: ../src/coldsync.c:438
+#, c-format
+msgid ""
+"\n"
+"Log closed on %s"
+msgstr ""
+
+#: ../src/coldsync.c:1863
+msgid ""
+"\n"
+"This Palm already has user information that matches neither what's in your\n"
+"configuration file, nor the defaults. Please edit your .coldsyncrc and\n"
+"reinitialize.\n"
+"\n"
+"Your .coldsyncrc should contain something like the following:\n"
+"\n"
+msgstr ""
+
+#: ../src/config.c:792
+msgid ""
+"    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
+"        to case, whenever possible.\n"
+msgstr ""
+"HAVE_STRCASECMP, HAVE_STRNCASECMP: Zeichenketten werden wenn möglich\n"
+"ohne Berücksichtigung von Groß-/Kleinschreibung verglichen.\n"
+
+#: ../src/config.c:787
+msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
+msgstr "    WITH_EFENCE: Puffer-Überläufe lösen Schutzverletzungen aus.\n"
+
+#: ../src/config.c:783
+msgid "    WITH_USB: USB support.\n"
+msgstr "    WITH_USB: Mit USB-Unterstützung\n"
+
+#: ../src/GenericConduit.cc:242
+msgid " (1st) - "
+msgstr " (1.) - "
+
+#: ../src/coldsync.c:1283
+#, fuzzy, c-format
+msgid "\"%s\" exists, but is not a directory."
+msgstr "%s: Kann Installationsverzeichnis nicht öffnen.\n"
+
+#: ../src/restore.c:101
+#, fuzzy, c-format
+msgid "\"%s\" is a read-only database. Not uploading."
+msgstr "\"%s\" kann nur gelesen werden, wird nicht hinaufgeladen.\n"
+
+#: ../libpconn/dlp_cmd.c:1491 ../libpconn/dlp_cmd.c:1580
+#: ../libpconn/dlp_cmd.c:1671 ../libpconn/dlp_cmd.c:1773
+#: ../libpconn/dlp_cmd.c:2323 ../libpconn/dlp_cmd.c:2761
+#: ../libpconn/dlp_cmd.c:2915 ../libpconn/dlp_cmd.c:2974
+#: ../libpconn/dlp_cmd.c:3057 ../libpconn/dlp_cmd.c:3129
+#: ../libpconn/dlp_cmd.c:3206 ../libpconn/dlp_cmd.c:3265
+#: ../libpconn/dlp_cmd.c:3333 ../libpconn/dlp_cmd.c:3400
+#: ../libpconn/dlp_cmd.c:3524 ../libpconn/dlp_cmd.c:3633
+#: ../libpconn/dlp_cmd.c:3744 ../libpconn/dlp_cmd.c:3851
+#: ../libpconn/dlp_cmd.c:3948 ../libpconn/dlp_cmd.c:4060
+#: ../libpconn/dlp_cmd.c:4173
+#, c-format
+msgid "##### %s: Unknown argument type: 0x%02x\n"
+msgstr "##### %s: Unbekannter Argumenttyp: 0x%02x\n"
+
+#: ../libpconn/dlp_cmd.c:205 ../libpconn/dlp_cmd.c:308
+#: ../libpconn/dlp_cmd.c:415 ../libpconn/dlp_cmd.c:484
+#: ../libpconn/dlp_cmd.c:562 ../libpconn/dlp_cmd.c:699
+#: ../libpconn/dlp_cmd.c:932 ../libpconn/dlp_cmd.c:1034
+#: ../libpconn/dlp_cmd.c:1140 ../libpconn/dlp_cmd.c:1219
+#: ../libpconn/dlp_cmd.c:1302 ../libpconn/dlp_cmd.c:1400
+#: ../libpconn/dlp_cmd.c:1887 ../libpconn/dlp_cmd.c:2003
+#: ../libpconn/dlp_cmd.c:2132 ../libpconn/dlp_cmd.c:2217
+#: ../libpconn/dlp_cmd.c:2436 ../libpconn/dlp_cmd.c:2540
+#: ../libpconn/dlp_cmd.c:2627 ../libpconn/dlp_cmd.c:2695
+#: ../libpconn/dlp_cmd.c:4269
+#, c-format
+msgid "##### %s: Unknown argument type: 0x%02x.\n"
+msgstr "##### %s: Unbekannter Argumenttyp: 0x%02x.\n"
+
+#: ../libpconn/padp.c:479
+#, c-format
+msgid "##### Bad offset: wanted %d, got %d.\n"
+msgstr "##### Falscher Offset: erwartet %d, gefunden %d.\n"
+
+#: ../libpconn/dlp.c:286
+#, c-format
+msgid "##### Bad response ID: expected 0x%02x, got 0x%02x.\n"
+msgstr "##### Falsche Antwort-ID: erwartet 0x%02x, gefunden 0x%02x.\n"
+
+#: ../libpconn/padp.c:791
+#, c-format
+msgid "##### Expected XID 0x%02x, got 0x%02x.\n"
+msgstr "##### Erwartete XID 0x%02x, gefunden 0x%02x.\n"
+
+#: ../libpconn/dlp.c:277
+msgid "##### Expected a DLP response, but this isn't one!\n"
+msgstr "##### DLP-Antwort erwartet, aber das ist keine!\n"
+
+#: ../libpconn/padp.c:724
+#, fuzzy
+msgid "##### Got an unexpected data packet. Sending an ACK to shut it up.\n"
+msgstr "##### Unerwartetes Datenpaket empfangen.\n"
+
+#: ../libpconn/padp.c:198 ../libpconn/padp.c:441
+msgid "##### I just got an unexpected ACK. I'm confused!\n"
+msgstr "##### Unerwartete Bestätigung (»ACK«) empfangen.\n"
+
+#: ../libpconn/padp.c:466
+msgid "##### I wasn't expecting a new fragment. I'm confused!\n"
+msgstr "##### Kein neues Fragment erwartet.\n"
+
+#: ../libpconn/padp.c:212 ../libpconn/padp.c:456 ../libpconn/padp.c:779
+#, c-format
+msgid "##### Unexpected packet type %d.\n"
+msgstr "##### Unerwarteter Pakettyp %d.\n"
+
+#: ../libpdb/pdb.c:510
+#, c-format
+msgid "%s record 0x%08lx has length 0.\n"
+msgstr "%s Datensatz 0x%08lx hat Länge 0.\n"
+
+#: ../src/config.c:768
+#, c-format
+msgid "%s version %s.\n"
+msgstr "%s Version %s.\n"
+
+#: ../src/parser.y:549
+#, c-format
+msgid "%s: %d: Bogus creator \"%s\"."
+msgstr "%s: %d: Falscher Creator \"%s\"."
+
+#: ../src/parser.y:573
+#, c-format
+msgid "%s: %d: Bogus type \"%s\"."
+msgstr "%s: %d: Falscher Typ \"%s\"."
+
+#: ../src/parser.y:430
+#, c-format
+msgid "%s: %d: Can't add creator-type pair to list. This is very bad."
+msgstr "%s: %d: Kann kein Erzeuger-Typ-Paar der Liste hinzufügen."
+
+#: ../src/parser.y:488
+#, fuzzy, c-format
+msgid "%s: %d: Can't add preference to list. This is very bad."
+msgstr "%s: %d: Kann keine Einstellungen der Liste hinzufügen.\n"
+
+#: ../src/parser.y:271
+#, c-format
+msgid "%s: %d: Device already defined."
+msgstr "%s: %d: Warnung: Das Gerät ist schon definiert."
+
+#: ../src/parser.y:895
+#, fuzzy, c-format
+msgid "%s: %d: Directory already defined."
+msgstr "%s: %d: Warnung: Das Verzeichnis wird schon benutzt.\n"
+
+#: ../src/parser.y:865
+#, c-format
+msgid ""
+"%s: %d: Incorrect checksum\n"
+"for serial number \"%s-%c\". Should be \"%s-%c\"."
+msgstr ""
+"%s: %d: Warnung: Ignoriere Prüfsumme\n"
+"für Seriennummer \"%s-%c\". Sollte \"%s-%c\" sein."
+
+#: ../src/parser.y:1015
+#, c-format
+msgid ""
+"%s: %d: Missing ':'\n"
+"\tColons are now required after most directives.\n"
+"\t(This warning will only be shown once.)"
+msgstr ""
+"%s: %d: Warnung: Fehlender ':'\n"
+"\tDoppelpunkte sind nach den meisten Verzeichnissen erforderlich.\n"
+"\t(Diese Warnung wird nur einmal angezeigt.)"
+
+#: ../src/parser.y:446
+#, fuzzy, c-format
+msgid "%s: %d: Path already defined."
+msgstr "%s: %d: Warnung: Das Verzeichnis wird schon benutzt.\n"
+
+#: ../src/parser.y:844
+#, c-format
+msgid ""
+"%s: %d: Serial number \"%s\" has no checksum.\n"
+"You may want to rewrite it as \"%s-%c\"."
+msgstr ""
+"%s: %d: Warnung: Seriennummer \"%s\" hat keine Prüfsumme.\n"
+"Es sollte \"%s-%c\" heißen."
+
+#: ../src/parser.y:813
+#, c-format
+msgid "%s: %d: Serial number already defined."
+msgstr "%s: %d: Warnung: Die Seriennummer erscheint mehrfach."
+
+#: ../src/parser.y:285
+#, c-format
+msgid "%s: %d: Speed already defined."
+msgstr "%s: %d: Warnung: Mehrfache Angabe der Geschwindigkeit."
+
+#: ../src/parser.y:931
+#, c-format
+msgid "%s: %d: Userid already defined."
+msgstr "%s: %d: Warnung: Mehrfache Angabe der Benutzerkennung."
+
+#: ../src/parser.y:916
+#, c-format
+msgid "%s: %d: Username already defined."
+msgstr "%s: %d: Warnung: Mehrfache Angabe des Benutzernamens."
+
+#: ../libpconn/dlp.c:152
+#, c-format
+msgid "%s: Can't allocate %ld-byte buffer.\n"
+msgstr "%s: Kann keinen %ld Byte großen Puffer anlegen.\n"
+
+#: ../src/parser.y:708
+#, c-format
+msgid "%s: Can't allocate PDA block."
+msgstr "%s: Kann keinen PDA block anlegen."
+
+#: ../src/parser.y:643
+#, c-format
+msgid "%s: Can't allocate conduit header."
+msgstr "%s: Kann keinen Conduit-Kopf anlegen."
+
+#: ../src/parser.y:306
+#, c-format
+msgid "%s: Can't allocate conduit_block!"
+msgstr "%s: Kann keinen conduit_block anlegen!"
+
+#: ../src/parser.y:163
+#, c-format
+msgid "%s: Can't allocate listen block."
+msgstr "%s: Kann keinen listen block anlegen."
+
+#: ../src/GenericConduit.cc:1106
+#, c-format
+msgid "%s: Can't allocate new record."
+msgstr "%s Fehler: Kann keinen neuen Datensatz erzeugen."
+
+#: ../src/GenericConduit.cc:1205
+#, c-format
+msgid "%s: Can't append new record to database: %d."
+msgstr "%s: Kann keinen neuen Datensatz an die Datenbank anhängen: %d."
+
+#: ../src/backup.c:210
+#, fuzzy, c-format
+msgid "%s: Can't back up \"%s\"."
+msgstr "%s: Kann \"%s\" nicht öffnen.\n"
+
+#: ../src/GenericConduit.cc:446 ../src/GenericConduit.cc:936
+#: ../src/GenericConduit.cc:1472
+#, c-format
+msgid "%s: Can't clean up database: %d."
+msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d."
+
+#: ../src/GenericConduit.cc:1940 ../src/GenericConduit.cc:1978
+#: ../src/GenericConduit.cc:2112
+#, c-format
+msgid "%s: Can't copy record."
+msgstr "%s: Kann Datensatz nicht kopieren."
+
+#: ../src/conduit.c:1386
+#, fuzzy, c-format
+msgid "%s: Can't create file handle to child's stdin."
+msgstr "%s: Kann keine Datei mit Standardeingabe des Kindprozesses verbinden\n"
+
+#: ../src/conduit.c:1414
+#, fuzzy, c-format
+msgid "%s: Can't create file handle to child's stdout."
+msgstr "%s: Kann keine Datei mit Standardausgabe des Kindprozesses verbinden\n"
+
+#: ../src/coldsync.c:3763 ../src/coldsync.c:3783
+#, c-format
+msgid "%s: Can't create staging file \"%s\"."
+msgstr "%s: Kann temporäre Datei \"%s\" nicht erzeugen."
+
+#: ../src/coldsync.c:3773
+#, c-format
+msgid "%s: Can't create staging file name."
+msgstr "%s: Kann den Namen der temporären Datei nicht erzeugen."
+
+#: ../src/GenericConduit.cc:601
+#, c-format
+msgid "%s: Can't download \"%s\"."
+msgstr "%s: Kann \"%s\" nicht herunterladen."
+
+#: ../src/conduit.c:1868
+#, c-format
+msgid "%s: Can't get child process status."
+msgstr "%s: Kann den Status des Kindprozesses nicht feststellen."
+
+#: ../libpconn/PConnection_usb.c:389
+#, c-format
+msgid "%s: Can't get information about USB device.\n"
+msgstr "%s: Kann keine Informationen über USB-Gerät bekommen.\n"
+
+#: ../src/GenericConduit.cc:2074 ../src/GenericConduit.cc:2123
+#, c-format
+msgid "%s: Can't insert record 0x%08lx."
+msgstr "%s: Kann Datensatz 0x%08lx nicht einfügen."
+
+#: ../src/GenericConduit.cc:2456
+#, c-format
+msgid "%s: Can't load \"%s\"."
+msgstr "%s: Kann \"%s\" nicht laden."
+
+#: ../src/install.c:79 ../src/install.c:335
+#, c-format
+msgid "%s: Can't load database \"%s\"."
+msgstr "%s: Kann Datenbank \"%s\" nicht laden."
+
+#: ../src/conduit.c:1432
+#, c-format
+msgid "%s: Can't make child's stdout be line-buffered."
+msgstr ""
+"%s: Kann Standardausgabe des Kindprozesses nicht auf line-buffered setzen."
+
+#: lexer.l:120 lexer.l:133 lexer.l:255 lexer.l:333
+#, c-format
+msgid "%s: Can't make copy of string."
+msgstr "%s: Kann Zeichenkette nicht kopieren."
+
+#: lexer.l:283
+#, c-format
+msgid "%s: Can't malloc copy of string."
+msgstr "%s: Kann Zeichenkette nicht anlegen."
+
+#: ../src/GenericConduit.cc:2446 ../src/archive.c:68 ../src/archive.c:127
+#: ../src/install.c:69 ../src/install.c:234 ../src/install.c:325
+#: ../src/parser.y:1084
+#, c-format
+msgid "%s: Can't open \"%s\"."
+msgstr "%s: Kann \"%s\" nicht öffnen."
+
+#: ../libpconn/PConnection_usb.c:584
+#, c-format
+msgid "%s: Can't open \"%s\".\n"
+msgstr "%s: Kann \"%s\" nicht öffnen.\n"
+
+#: ../src/GenericConduit.cc:300 ../src/GenericConduit.cc:319
+#: ../src/GenericConduit.cc:563 ../src/GenericConduit.cc:581
+#: ../src/GenericConduit.cc:1050 ../src/GenericConduit.cc:1068
+#, c-format
+msgid "%s: Can't open \"%s\": %d."
+msgstr "%s: Kann \"%s\" nicht öffnen: %d: %d."
+
+#: ../libpconn/PConnection_usb.c:375
+#, c-format
+msgid "%s: Can't open USB device.\n"
+msgstr "%s: Kann USB-Gerät nicht öffnen.\n"
+
+#: ../src/coldsync.c:3024
+#, fuzzy, c-format
+msgid "%s: Can't open directory \"%s\"."
+msgstr "%s: Kann Datei \"%s\" nicht öffnen\n"
+
+#: ../src/install.c:212 ../src/install.c:277
+#, c-format
+msgid "%s: Can't open install directory."
+msgstr "%s: Kann Installationsverzeichnis nicht öffnen."
+
+#: ../src/GenericConduit.cc:195
+#, c-format
+msgid "%s: Can't read %s backup file."
+msgstr "%s Fehler: Kann Backup-Datei %s nicht lesen."
+
+#: ../libpdb/pdb.c:754
+#, c-format
+msgid "%s: Can't read AppInfo block for %s: %d.\n"
+msgstr "%s: Kann AppInfo-Block für %s nicht lesen: %d.\n"
+
+#: ../libpdb/pdb.c:702
+#, c-format
+msgid "%s: Can't read database info: %d.\n"
+msgstr "%s: Kann Datenbank-Info nicht lesen: %d.\n"
+
+#: ../libpdb/pdb.c:791
+#, c-format
+msgid "%s: Can't read sort block for %s: %d.\n"
+msgstr "%s: Kann Sort-Block für %s nicht lesen: %d.\n"
+
+#: ../src/coldsync.c:3129 ../src/coldsync.c:3167
+#, c-format
+msgid "%s: Can't rename \"%s\" to \"%s\"."
+msgstr "%s: Kann \"%s\" nich zu \"%s\" umbenennen."
+
+#: ../src/GenericConduit.cc:2515
+#, c-format
+msgid ""
+"%s: Can't rename staging file.\n"
+"Backup left in \"%s\", hopefully."
+msgstr ""
+"%s: Kann temporäre Datei nicht umbenennen.\n"
+"Backup liegt hoffentlich in \"%s\"."
+
+#: ../src/GenericConduit.cc:465 ../src/GenericConduit.cc:954
+#: ../src/GenericConduit.cc:1491
+#, c-format
+msgid "%s: Can't reset sync flags: %d."
+msgstr "%s: Kann Synchronisierungsmarken nicht zurücksetzen: %d."
+
+#: ../src/restore.c:140
+#, c-format
+msgid "%s: Can't restore %s: it is opened by another application."
+msgstr ""
+"%s: Kann %s nicht wiederherstellen: Ein anderes Programm hat es geöffnet."
+
+#: ../src/archive.c:138
+#, c-format
+msgid "%s: Can't seek to end of file."
+msgstr "%s: Kann nicht auf Ende der Datei positionieren."
+
+#: ../src/conduit.c:371
+#, c-format
+msgid "%s: Can't set signal handler."
+msgstr "%s: Kann Signal-Handler nicht setzen."
+
+#: ../src/conduit.c:425
+#, fuzzy, c-format
+msgid "%s: Can't spawn conduit."
+msgstr "Fehler: Conduit %s ist kein %s Conduit\n"
+
+#: ../libpdb/pdb.c:556
+#, c-format
+msgid "%s: Can't write AppInfo block.\n"
+msgstr "%s: Kann AppInfo-Block nicht schreiben.\n"
+
+#: ../src/archive.c:89
+#, c-format
+msgid "%s: Can't write archive file header."
+msgstr "%s: Kann Kopf der Archivdatei nicht schreiben."
+
+#: ../src/GenericConduit.cc:418 ../src/GenericConduit.cc:914
+#: ../src/GenericConduit.cc:1444
+#, c-format
+msgid "%s: Can't write backup file."
+msgstr "%s: Kann Backup-Datei nicht schreiben."
+
+#: ../libpdb/pdb.c:612
+#, fuzzy, c-format
+msgid "%s: Can't write record data.\n"
+msgstr "%s: Kann Datensatz nicht schreiben.\n"
+
+#: ../libpdb/pdb.c:526
+#, c-format
+msgid "%s: Can't write record index entry.\n"
+msgstr "%s: Kann keinen Indexeintrag für Datensatz erzeugen.\n"
+
+#: ../libpdb/pdb.c:593
+#, c-format
+msgid "%s: Can't write resource data.\n"
+msgstr "%s: Kann Ressource-Daten nicht schreiben.\n"
+
+#: ../libpdb/pdb.c:479
+#, fuzzy, c-format
+msgid "%s: Can't write resource index entry.\n"
+msgstr "%s: Kann Indexeintrag für Ressource nicht schreiben.\n"
+
+#: ../libpdb/pdb.c:569
+#, c-format
+msgid "%s: Can't write sort block.\n"
+msgstr "%s: Kann Sort-Block nicht schreiben.\n"
+
+#: ../src/GenericConduit.cc:2503
+#, c-format
+msgid "%s: Can't write staging file \"%s\"."
+msgstr "%s: Kann temporäre Datei \"%s\" nicht schreiben."
+
+#: ../libpdb/pdb.c:544
+#, c-format
+msgid "%s: Can't write the two useless NULs.\n"
+msgstr "%s: Kann die zwei nutzlosen NULlen nicht schreiben.\n"
+
+#: ../src/conduit.c:1693
+#, c-format
+msgid "%s: Conduit exited unexpectedly."
+msgstr "%s: Conduit unerwartet beendet."
+
+#: ../src/conduit.c:675
+#, fuzzy, c-format
+msgid ""
+"%s: Conduit handler is in an inconsistent state at\n"
+"%s, line %d. Please notify the maintainer."
+msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: Error: conduit handler is in an inconsistent state at\n"
+"%s, line %d.\n"
+
+# Again, send original message to the maintainer
+#: ../src/conduit.c:1684
+#, fuzzy, c-format
+msgid ""
+"%s: Conduit is running happily, but hasn't printed anything.\n"
+"And yet, I was notified. This is a bug. Please notify the maintainer."
+msgstr ""
+"Dieser Fehler sollte nicht auftreten. Bitte schicken Sie die folgende "
+"Meldung\n"
+"an den Entwickler des Programms.\n"
+"%s: Conduit is running happily, but hasn't printed anything. \n"
+"And yet, I was notified. This is a bug. Please notify the maintainer.\n"
+
+#: ../libpconn/PConnection_usb.c:503
+#, c-format
+msgid "%s: Could not find HotSync endpoint on Visor.\n"
+msgstr "%s: Konnte keinen Endpunkt für HotSync auf dem Visor finden.\n"
+
+#: ../src/restore.c:129
+#, c-format
+msgid "%s: Database %s doesn't exist, yet it is open. Huh?"
+msgstr "%s: Die Datenbank %s existiert nicht, ist aber geöffnet."
+
+#: ../src/install.c:144 ../src/install.c:392
+#, c-format
+msgid "%s: Error deleting \"%s\"."
+msgstr "%s: Fehler beim Löschen von \"%s\"."
+
+#: ../src/GenericConduit.cc:1338 ../src/GenericConduit.cc:1377
+#, c-format
+msgid "%s: Error deleting record 0x%08lx: %d."
+msgstr "%s: Fehler beim Löschen des Satzes 0x%08lx: %d."
+
+#: ../libpconn/dlp_rpc.c:447
+#, c-format
+msgid "%s: Error in DlpRPC().\n"
+msgstr "%s: Fehler in DlpRPC().\n"
+
+#: ../src/conduit.c:706
+#, c-format
+msgid "%s: Error in select()."
+msgstr "%s: Fehler in select()."
+
+#: ../src/conduit.c:772
+#, c-format
+msgid "%s: Error reading SPC request from conduit."
+msgstr "%s: Fehler beim Lesen der SPC Anfrage vom Conduit."
+
+#: ../src/conduit.c:841
+#, c-format
+msgid "%s: Error reading SPC request."
+msgstr "%s: Fehler beim Lesen der SPC Anfrage."
+
+#: ../src/conduit.c:966
+#, c-format
+msgid "%s: Error sending SPC response data."
+msgstr "%s: Fehler beim Senden der SPC Antwortsdaten."
+
+#: ../libpconn/padp.c:751
+#, fuzzy, c-format
+msgid "%s: Error sending dummy ACK. This is serious.\n"
+msgstr "%s: Fehler beim Sender des SPC Antwortkopfes.\n"
+
+#: ../src/install.c:165 ../src/install.c:421
+#, c-format
+msgid "%s: Error uploading \"%s\"."
+msgstr "%s: Fehler beim Heraufladen von \"%s\"."
+
+#: ../libpconn/dlp_rpc.c:171
+#, fuzzy, c-format
+msgid "%s: Error: dlp.write returned %d.\n"
+msgstr "%s: Fehler beim Löschen von \"%s\"\n"
+
+#: ../src/conduit.c:351
+#, fuzzy, c-format
+msgid ""
+"%s: I just got file descriptor %d. There appears to be a file\n"
+"descriptor leak. Please notify the maintainer."
+msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: I just got file descriptor %d. There appears to be a file\n"
+"descriptor leak.\n"
+
+#: ../src/GenericConduit.cc:1330 ../src/GenericConduit.cc:1369
+#: ../src/GenericConduit.cc:1610 ../src/GenericConduit.cc:1660
+#: ../src/GenericConduit.cc:1826 ../src/GenericConduit.cc:2178
+#: ../src/GenericConduit.cc:2220
+#, fuzzy, c-format
+msgid "%s: Lost connection to Palm."
+msgstr "%s: Keine Verbindung zum Palm."
+
+#: ../src/config.c:690
+#, c-format
+msgid "%s: Missing mode string. This should never happen."
+msgstr ""
+
+#: ../src/parser.y:318
+#, c-format
+msgid ""
+"%s: No `type:' line seen\n"
+"\tin definition of \"%s\"."
+msgstr ""
+"%s: Warnung: Keine 'type:' Zeile\n"
+"in der Definition von \"%s\"."
+
+#: ../src/config.c:1022 ../src/config.c:1058 ../src/config.c:1080
+#: ../src/log.c:72 ../src/pref.c:234 ../src/pref.c:299
+#, c-format
+msgid "%s: Out of memory."
+msgstr "%s: Kein Speicher mehr."
+
+#: ../libpconn/dlp_cmd.c:1432 ../libpconn/dlp_cmd.c:1613
+#: ../libpconn/dlp_cmd.c:2483 ../libpconn/dlp_cmd.c:2801
+#: ../libpconn/dlp_cmd.c:3886 ../libpdb/pdb.c:728 ../libpdb/pdb.c:774
+#: ../libpdb/pdb.c:1305 ../libpdb/pdb.c:1376 ../libpdb/pdb.c:1430
+#: ../libpdb/pdb.c:1475 ../libpdb/pdb.c:1779 ../libpdb/pdb.c:1892
+#: ../libpdb/pdb.c:2001 ../libpdb/pdb.c:2157 ../libpdb/pdb.c:2291
+#: ../libpdb/pdb.c:2368 ../libpdb/pdb.c:2412 ../libpdb/pdb.c:2531
+#: ../libpdb/pdb.c:2584
+#, c-format
+msgid "%s: Out of memory.\n"
+msgstr "%s: Kein Speicher mehr.\n"
+
+#: ../src/conduit.c:359
+#, c-format
+msgid "%s: Too many file descriptors. Aborting."
+msgstr "%s: Zu viele offene Dateien. Abbruch."
+
+#: ../src/GenericConduit.cc:1618 ../src/GenericConduit.cc:1668
+#: ../src/GenericConduit.cc:1834 ../src/GenericConduit.cc:2186
+#: ../src/GenericConduit.cc:2228
+#, c-format
+msgid "%s: Warning: Can't delete record 0x%08lx: %d."
+msgstr "%s: Warnung: Kann Datensatz 0x%08lx nicht löschen: %d."
+
+#: ../libpconn/PConnection_usb.c:420
+#, c-format
+msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
+msgstr "%s: Warnung: Unbekannter USB-Hersteller ID %#x.\n"
+
+#: ../libpconn/slp.c:248
+#, c-format
+msgid "%s: bad checksum: expected 0x%02x, got 0x%02x.\n"
+msgstr "%s: fehlerhafte Prüfsumme. Erwartet 0x%02x, gefunden 0x%02x.\n"
+
+#: ../libpdb/pdb.c:1331 ../libpdb/pdb.c:1401
+#, c-format
+msgid "%s: can't allocate data.\n"
+msgstr "%s: Kann keine Daten allokieren.\n"
+
+#: ../libpdb/pdb.c:648
+#, c-format
+msgid "%s: can't allocate pdb.\n"
+msgstr "%s: Kann PDB nicht allokieren.\n"
+
+#: ../libpdb/pdb.c:1446
+#, c-format
+msgid "%s: can't allocate record data.\n"
+msgstr "%s: Kann Datensatz nicht allokieren\n"
+
+#: ../libpdb/pdb.c:1490
+#, c-format
+msgid "%s: can't allocate resource data.\n"
+msgstr "%s: Kann Ressource-Daten nicht allokieren.\n"
+
+#: ../src/backup.c:58
+#, c-format
+msgid ""
+"%s: can't create new backup file %s.\n"
+"It may already exist."
+msgstr ""
+"%s: Kann neue Backup-Datei %s nicht erzeugen.\n"
+"Existiert die Datei schon?"
+
+#: ../src/backup.c:164
+#, c-format
+msgid "%s: can't write database \"%s\" to \"%s\"."
+msgstr "%s: Kann Datenbank \"%s\" nicht nach \"%s\" schreiben."
+
+#: ../libpdb/pdb.c:429
+#, c-format
+msgid "%s: can't write database header.\n"
+msgstr "%s: Kann Datenbank-Kopf nicht schreiben.\n"
+
+#: ../libpdb/pdb.c:447
+#, fuzzy, c-format
+msgid "%s: can't write record list header.\n"
+msgstr "%s. Kann Kopf der Datensätze nicht schreiben.\n"
+
+#: ../libpdb/pdb.c:1791
+#, c-format
+msgid "%s: error reading record index entry (%d bytes): %d.\n"
+msgstr "%s: Fehler beim Lesen der Indexeintrags (%d Bytes): %d.\n"
+
+#: ../src/conduit.c:933
+#, c-format
+msgid "%s: error sending SPC response header."
+msgstr "%s: Fehler beim Sender des SPC Antwortkopfes."
+
+#: ../src/conduit.c:1507
+#, c-format
+msgid "%s: execvp(%s) failed and returned %d."
+msgstr "%s: excevp(%s) gescheitert, Rückgabewert %d."
+
+#: ../src/config.c:1146 ../src/log.c:101
+#, c-format
+msgid "%s: realloc(%d) failed."
+msgstr "%s: realloc gescheitert."
+
+#: ../src/conduit.c:720
+#, c-format
+msgid "%s: select() returned 0. I'm puzzled."
+msgstr "%s: select() lieferte 0."
+
+#: ../src/conduit.c:1630
+#, fuzzy, c-format
+msgid ""
+"%s: select() returned 0. This should never happen. Please notify the "
+"maintainer."
+msgstr ""
+"Dieser Fehler sollte nicht auftreten. Bitte schicken Sie die folgende "
+"Meldung\n"
+"an den Entwickler des Programms.\n"
+"%s: select() returned 0. This should never happen. Please notify the "
+"maintainer."
+
+#: ../src/conduit.c:1587
+#, c-format
+msgid "%s: select() returned an unexpected error. This should never happen."
+msgstr "%s: select() gabe einen unerwarteten Fehler zurück."
+
+#: ../src/config.c:947
+#, fuzzy, c-format
+msgid "%s: socket() returned %d."
+msgstr "%s: Fehler beim Löschen von \"%s\"\n"
+
+#: ../libpconn/PConnection_usb.c:540
+#, c-format
+msgid "%s: unexpected response %d to GetBytesAvailable.\n"
+msgstr "%s: Unerwartete Antwort %d auf GetBytesAvailable.\n"
+
+#: ../libpconn/PConnection.c:110
+#, c-format
+msgid "%s: unknown listen type %d.\n"
+msgstr "%s: Unbekannter «listen type» %d.\n"
+
+#: lexer.l:394
+#, fuzzy, c-format
+msgid ""
+"%s: unknown start state %d.\n"
+"Please tell the maintainer to fix `lexer.l'."
+msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: unknown start state %d\n"
+"Fix 'lexer.l'."
+
+#: ../src/coldsync.c:1022 ../src/coldsync.c:2733
+msgid "*Cancelled*\n"
+msgstr "*Abgebrochen*\n"
+
+#: ../libpconn/padp.c:671
+#, fuzzy
+msgid "ACK Timeout. Attempting to resend.\n"
+msgstr "Zeit abgelaufen. Neuer Sendeversuch.\n"
+
+#: ../src/backup.c:50
+#, c-format
+msgid "Backing up \"%s\""
+msgstr ""
+
+#: ../src/backup.c:43 ../src/coldsync.c:1379
+msgid "Backup "
+msgstr "Backup "
+
+#: ../libpconn/palm_errno.c:32
+msgid "Bad file descriptor"
+msgstr "Fehlerhafter Dateideskriptor"
+
+#: ../src/coldsync.c:830 ../src/coldsync.c:2556
+#, c-format
+msgid "CacheFromConduits() returned %d."
+msgstr "CacheFromConduits() lieferte %d zurück."
+
+#: ../libpdb/pdb.c:2475
+msgid "Can't allocate list of record IDs.\n"
+msgstr "Kann Liste der Datensatz-IDs nicht anlegen.\n"
+
+#: ../src/config.c:443 ../src/config.c:482
+msgid "Can't allocate listen block."
+msgstr "Kann «listen block» nicht anlegen."
+
+#: ../src/config.c:317
+msgid "Can't allocate new conduit block."
+msgstr "Kann keinen neuen conduit_block anlegen."
+
+#: ../src/config.c:298
+msgid "Can't allocate new configuration."
+msgstr "Kann keine neue Konfiguration erzeugen."
+
+#: ../libpconn/PConnection.c:49
+#, fuzzy
+msgid "Can't allocate new connection.\n"
+msgstr "Kann keine neue Verbindung anlegen.\n"
+
+#: ../src/coldsync.c:507 ../src/coldsync.c:1325 ../src/coldsync.c:1495
+#: ../src/coldsync.c:1688 ../src/coldsync.c:2160
+msgid "Can't allocate struct Palm."
+msgstr ""
+
+#: ../src/coldsync.c:498 ../src/coldsync.c:1317 ../src/coldsync.c:1487
+#: ../src/coldsync.c:1680 ../src/coldsync.c:2151
+#, fuzzy
+msgid "Can't connect to Palm."
+msgstr "Keine Verbindung zum Palm\n"
+
+#: ../libpconn/PConnection_net.c:457
+msgid "Can't connect to server.\n"
+msgstr ""
+
+#: ../src/GenericConduit.cc:712 ../src/GenericConduit.cc:2065
+msgid "Can't copy a new record."
+msgstr "Kann neuen Datensatz nicht kopieren."
+
+#: ../src/coldsync.c:2356
+#, fuzzy
+msgid "Can't copy config file name"
+msgstr "Fehler: Kann %s nicht öffnen.\n"
+
+#: ../src/config.c:451 ../src/config.c:490
+msgid "Can't copy string."
+msgstr "Kann Zeichenkette nicht kopieren."
+
+#: ../src/GenericConduit.cc:2387
+#, c-format
+msgid "Can't create \"%s\"."
+msgstr "Kann \"%s\" nicht erzeugen."
+
+#: ../src/config.c:1522
+#, fuzzy, c-format
+msgid "Can't create archive directory %s."
+msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
+
+#: ../src/config.c:1504
+#, fuzzy, c-format
+msgid "Can't create attic directory %s."
+msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
+
+#: ../src/config.c:1486
+#, fuzzy, c-format
+msgid "Can't create backup directory %s."
+msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
+
+#: ../src/config.c:1468
+#, fuzzy, c-format
+msgid "Can't create base sync directory %s."
+msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
+
+#: ../src/coldsync.c:756 ../src/coldsync.c:2476
+msgid "Can't create connection to forwarding host."
+msgstr ""
+
+#: ../src/config.c:1540
+#, fuzzy, c-format
+msgid "Can't create install directory %s."
+msgstr "Kann Installationsverzeichnis %s nicht öffnen.\n"
+
+#: ../libpdb/pdb.c:810
+#, fuzzy
+msgid "Can't download record or resource index.\n"
+msgstr "Kann Daten- oder Ressource-Index nicht übertragen.\n"
+
+#: ../src/coldsync.c:234
+msgid "Can't dup(stderr)."
+msgstr ""
+
+#: ../src/coldsync.c:768 ../src/coldsync.c:2488
+msgid "Can't establish connection with forwarding host."
+msgstr ""
+
+#: ../src/coldsync.c:907 ../src/coldsync.c:2622
+msgid "Can't fetch list of databases."
+msgstr ""
+
+#: ../src/coldsync.c:1156 ../src/coldsync.c:2857
+#, c-format
+msgid "Can't fetch preference 0x%08lx/%d."
+msgstr ""
+
+#: ../libpdb/pdb.c:2245
+#, fuzzy, c-format
+msgid "Can't find record %d.\n"
+msgstr "Kann Datensatz %d nicht finden.\n"
+
+#: ../libpdb/pdb.c:2120
+#, c-format
+msgid "Can't find resource %d.\n"
+msgstr "Kann Ressource %d nicht finden.\n"
+
+#: ../libpdb/pdb.c:1923
+msgid "Can't find the AppInfo block!\n"
+msgstr "Kann AppInfo-Block nicht finden.\n"
+
+#: ../libpdb/pdb.c:2032
+msgid "Can't find the sort block!\n"
+msgstr "Kann Sort-Block nicht finden.\n"
+
+#: ../src/coldsync.c:172
+msgid "Can't get host ID."
+msgstr ""
+
+#: ../src/coldsync.c:719 ../src/coldsync.c:2440
+msgid "Can't get host addresses."
+msgstr ""
+
+#: ../src/config.c:821
+#, fuzzy
+msgid "Can't get host name."
+msgstr "Kann Rechnernamen nicht bestimmen."
+
+#: ../src/coldsync.c:841 ../src/coldsync.c:2567
+#, fuzzy
+msgid "Can't get last sync PC from Palm"
+msgstr "Kann Benutzerdaten nicht bekommen.\n"
+
+#: ../src/palm.c:447
+msgid "Can't get location of serial number."
+msgstr "Kann die Position der Seriennummer nicht finden."
+
+#: ../src/conduit.c:501
+#, fuzzy
+msgid "Can't get preference item."
+msgstr "Kann Benutzerdaten nicht bekommen."
+
+#: ../src/palm.c:220
+#, fuzzy
+msgid "Can't get system info."
+msgstr "Kann System-Daten nicht bekommen."
+
+#: ../src/coldsync.c:576 ../src/coldsync.c:1802
+#, fuzzy
+msgid "Can't get user ID from Palm."
+msgstr "Kann Benutzerdaten nicht bekommen."
+
+#: ../src/config.c:370 ../src/palm.c:320
+#, fuzzy
+msgid "Can't get user info."
+msgstr "Kann Benutzerdaten nicht bekommen."
+
+#: ../src/coldsync.c:629
+#, fuzzy
+msgid "Can't get user name from Palm."
+msgstr "Kann Benutzerdaten nicht bekommen."
+
+#: ../src/config.c:1694
+#, fuzzy
+msgid "Can't get user's full name."
+msgstr "Kann Benutzernamen nicht bekommen."
+
+#: ../src/coldsync.c:942 ../src/coldsync.c:1190 ../src/coldsync.c:2657
+#: ../src/coldsync.c:2891
+#, fuzzy
+msgid "Can't install new files."
+msgstr "Fehler beim Installieren neuer Dateien."
+
+#: ../src/coldsync.c:2373
+#, fuzzy
+msgid "Can't load configuration"
+msgstr "Kann keine neue Konfiguration erzeugen."
+
+#: ../src/coldsync.c:283
+#, fuzzy
+msgid "Can't load configuration."
+msgstr "Kann keine neue Konfiguration erzeugen."
+
+#: ../src/install.c:243
+msgid "Can't load header."
+msgstr "Kann Kopfteil nicht laden."
+
+#: ../libpdb/pdb.c:273 ../libpdb/pdb.c:281
+msgid "Can't load header.\n"
+msgstr "Kann Kopfteil nicht laden.\n"
+
+#: ../src/coldsync.c:530
+#, fuzzy
+msgid "Can't look up Palm."
+msgstr "Kann eigene Adresse nicht finden."
+
+#: ../src/config.c:830
+#, fuzzy
+msgid "Can't look up my address."
+msgstr "Kann eigene Adresse nicht finden."
+
+#: ../src/restore.c:66
+#, c-format
+msgid "Can't open %s."
+msgstr "Kann %s nicht öffnen."
+
+#: ../src/backup.c:92
+msgid "Can't open backup conduit."
+msgstr "Kann Backup-Conduit nicht öffnen."
+
+#: ../libpdb/pdb.c:867
+#, fuzzy, c-format
+msgid "Can't open conduit for \"%s\": %d.\n"
+msgstr "Kann Conduit für \"%s\" nicht öffnen, Fehler == %d.\n"
+
+#: ../src/coldsync.c:489 ../src/coldsync.c:1309 ../src/coldsync.c:1479
+#: ../src/coldsync.c:1672 ../src/coldsync.c:2142
+#, fuzzy
+msgid "Can't open connection."
+msgstr "Fehler: Kann Verbindung nicht öffnen."
+
+#: ../src/backup.c:122
+#, c-format
+msgid "Can't open database \"%s\"."
+msgstr "Kann Datenbank \"%s\" nicht öffnen."
+
+#: ../src/coldsync.c:247
+#, fuzzy, c-format
+msgid "Can't open log file \"%s\"."
+msgstr "Kann %s nicht öffnen."
+
+#: ../src/coldsync.c:259
+msgid "Can't open log file on stderr."
+msgstr ""
+
+#: ../src/coldsync.c:181
+msgid "Can't parse command-line arguments."
+msgstr ""
+
+#: ../src/restore.c:75
+#, fuzzy, c-format
+msgid "Can't read %s."
+msgstr "Kann %s nicht lesen."
+
+#: ../libpdb/pdb.c:315
+msgid "Can't read AppInfo block.\n"
+msgstr "Kann AppInfo-Block nicht lesen.\n"
+
+#: ../src/palm.c:296
+#, fuzzy
+msgid "Can't read NetSync info."
+msgstr "Fehler beim Lesen der NetSync-Informationen."
+
+#: ../src/restore.c:247
+#, fuzzy, c-format
+msgid "Can't read contents of directory %s."
+msgstr "Kann Verzeichnis %s nicht lesen."
+
+#: ../src/coldsync.c:1697
+#, fuzzy
+msgid "Can't read length of serial number."
+msgstr "Fehler: Kann die Seriennummer nicht lesen."
+
+#: ../libpdb/pdb.c:2300
+#, c-format
+msgid "Can't read record %d.\n"
+msgstr "Kann Datensatz %d nicht lesen.\n"
+
+#: ../libpdb/pdb.c:2545
+#, c-format
+msgid "Can't read record %d: %d.\n"
+msgstr "Kann Datensatz %d nicht lesen: %d.\n"
+
+#: ../libpdb/pdb.c:2499
+msgid "Can't read record ID list.\n"
+msgstr "Kann Liste der Datensatz-IDs nicht lesen.\n"
+
+#: ../libpdb/pdb.c:300
+#, fuzzy
+msgid "Can't read record index.\n"
+msgstr "Kann Index nicht lesen.\n"
+
+#: ../libpdb/pdb.c:342
+msgid "Can't read records.\n"
+msgstr "Kann Datensätze nicht lesen.\n"
+
+#: ../libpdb/pdb.c:2166
+#, c-format
+msgid "Can't read resource %d.\n"
+msgstr "Kann Ressource %d nicht lesen.\n"
+
+#: ../libpdb/pdb.c:2381
+#, c-format
+msgid "Can't read resource %d: %d.\n"
+msgstr "Kann Ressource %d nicht lesen: %d.\n"
+
+#: ../libpdb/pdb.c:292
+msgid "Can't read resource index.\n"
+msgstr "Kann Ressource-Index nicht lesen.\n"
+
+#: ../libpdb/pdb.c:334
+msgid "Can't read resources.\n"
+msgstr "Kann Ressourcen nicht lesen.\n"
+
+#: ../src/coldsync.c:1709 ../src/palm.c:480
+msgid "Can't read serial number."
+msgstr "Kann die Seriennummer nicht lesen."
+
+#: ../libpdb/pdb.c:323
+msgid "Can't read sort block.\n"
+msgstr "Kann Sort-Block nicht lesen.\n"
+
+#: ../src/coldsync.c:155 ../src/coldsync.c:160 ../src/coldsync.c:165
+#, fuzzy, c-format
+msgid "Can't reserve file descriptor %d."
+msgstr "Fehler: Kann Dateidescriptor %d nicht belegen."
+
+#: ../src/palm.c:1002
+#, fuzzy
+msgid "Can't resize palm->dblist."
+msgstr "Fehler beim Anpassen von palm->dblist."
+
+#: ../src/coldsync.c:728 ../src/coldsync.c:2449
+msgid "Can't resolve forwarding address."
+msgstr ""
+
+#: ../src/coldsync.c:1521 ../src/coldsync.c:1547 ../src/coldsync.c:1571
+msgid "Can't restore directory."
+msgstr ""
+
+#: ../src/coldsync.c:2338
+msgid "Can't setuid"
+msgstr ""
+
+#: ../src/coldsync.c:1094 ../src/coldsync.c:2796
+#, fuzzy
+msgid "Can't write user info."
+msgstr "Kann Benutzerdaten nicht schreiben."
+
+#: ../src/GenericConduit.cc:253 ../src/GenericConduit.cc:517
+#: ../src/GenericConduit.cc:1006 ../src/backup.c:80 ../src/restore.c:203
+msgid "Cancelled\n"
+msgstr "Abgebrochen\n"
+
+#: ../src/backup.c:76 ../src/coldsync.c:1345 ../src/coldsync.c:1393
+#: ../src/coldsync.c:1515 ../src/coldsync.c:1540 ../src/coldsync.c:1564
+#: ../src/conduit.c:1174 ../src/conduit.c:1232 ../src/restore.c:294
+#, fuzzy
+msgid "Cancelled by Palm."
+msgstr "Abgebrochen."
+
+#: ../src/config.c:773
+msgid "ColdSync homepage at http://www.ooblick.com/software/coldsync/\n"
+msgstr "ColdSync Seite bei http://www.ooblick.com/software/coldsync/\n"
+
+#: ../src/config.c:779
+msgid "Compile-type options:\n"
+msgstr "Übersetzer-Optionen:\n"
+
+#: ../src/conduit.c:1180 ../src/conduit.c:1238
+#, c-format
+msgid "Conduit %s exited abnormally. Continuing."
+msgstr ""
+
+#: ../src/conduit.c:1160 ../src/conduit.c:1218
+#, c-format
+msgid "Conduit %s is not a %s conduit."
+msgstr "Conduit %s ist kein %s Conduit."
+
+#: ../src/coldsync.c:1036 ../src/coldsync.c:2747
+msgid "Conduit failed for unknown reason."
+msgstr "Das Conduit aus unbekannten Gründen fehl."
+
+#: ../src/config.c:381
+#, fuzzy, c-format
+msgid "Config file \"%s\" doesn't exist."
+msgstr ""
+"Warnung: Konfigurationsdatei \"%s\" existiert nicht. Voreinstellungen werden "
+"benutzt.\n"
+
+#: ../src/coldsync.c:1205 ../src/coldsync.c:1447 ../src/coldsync.c:1618
+#: ../src/coldsync.c:2030 ../src/coldsync.c:2906
+#, fuzzy
+msgid "Couldn't disconnect."
+msgstr "Fehler beim Trennen der Verbindung."
+
+#: ../src/config.c:333
+msgid "Couldn't initialize configuration."
+msgstr "Fehler beim Laden der Konfiguration."
+
+#: ../src/config.c:356 ../src/config.c:415
+#, c-format
+msgid "Couldn't read configuration file \"%s\"."
+msgstr "Fehler beim Lesen der Konfigurationsdatei \"%s\"."
+
+#: ../src/conduit.c:617
+msgid "Couldn't send header to conduit."
+msgstr "Fehler beim Senden des Kopfes zum Conduit."
+
+#: ../src/coldsync.c:1109 ../src/coldsync.c:1418 ../src/coldsync.c:1592
+#: ../src/coldsync.c:2003 ../src/coldsync.c:2811
+msgid "Couldn't write sync log."
+msgstr "Fehler beim Schreiben des Sync-Log."
+
+#: ../libpdb/pdb.c:2507
+msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
+msgstr "DlpReadRecordIDList() hat keine Datensätze gelesen.\n"
+
+#: ../libpconn/dlp_cmd.c:2041
+msgid "DlpWriteRecord: Can't allocate output buffer.\n"
+msgstr "DlpWriteRecord: Kann keine Puffer anlegen.\n"
+
+#: ../src/coldsync.c:1941 ../src/coldsync.c:3299
+#, c-format
+msgid "DlpWriteUserInfo failed: %d."
+msgstr "DlpWriteUserInfo gescheitert: %d."
+
+#: ../src/coldsync.c:862 ../src/coldsync.c:866
+msgid "Doing a fast sync."
+msgstr ""
+
+#: ../src/coldsync.c:860 ../src/coldsync.c:864
+msgid "Doing a slow sync."
+msgstr ""
+
+#: ../libpconn/palm_errno.c:33
+msgid "End of file"
+msgstr "Dateiende"
+
+#: ../src/GenericConduit.cc:304 ../src/GenericConduit.cc:323
+#: ../src/GenericConduit.cc:342 ../src/GenericConduit.cc:421
+#: ../src/GenericConduit.cc:449 ../src/GenericConduit.cc:475
+#: ../src/GenericConduit.cc:566 ../src/GenericConduit.cc:584
+#: ../src/GenericConduit.cc:604 ../src/GenericConduit.cc:713
+#: ../src/GenericConduit.cc:917 ../src/GenericConduit.cc:939
+#: ../src/GenericConduit.cc:964 ../src/GenericConduit.cc:1053
+#: ../src/GenericConduit.cc:1071 ../src/GenericConduit.cc:1111
+#: ../src/GenericConduit.cc:1212 ../src/GenericConduit.cc:1447
+#: ../src/GenericConduit.cc:1475 ../src/GenericConduit.cc:1501
+#: ../src/backup.c:63 ../src/backup.c:94 ../src/backup.c:125
+#: ../src/backup.c:151 ../src/backup.c:170 ../src/install.c:147
+#: ../src/install.c:168 ../src/install.c:395 ../src/install.c:424
+#: ../src/install.c:524 ../src/restore.c:213
+msgid "Error\n"
+msgstr "Fehler\n"
+
+#: ../src/coldsync.c:930 ../src/coldsync.c:1178 ../src/coldsync.c:2645
+#: ../src/coldsync.c:2879
+#, fuzzy, c-format
+msgid "Error %d running install conduits."
+msgstr "Fehler %d beim Ausführen der Post-Dump Conduits."
+
+#: ../src/coldsync.c:1219 ../src/coldsync.c:2919
+#, c-format
+msgid "Error %d running post-dump conduits."
+msgstr "Fehler %d beim Ausführen der Post-Dump Conduits."
+
+#: ../src/coldsync.c:989 ../src/coldsync.c:2702
+#, c-format
+msgid "Error %d running pre-fetch conduits."
+msgstr "Fehler %d beim Ausführen der Pre-Fetch Conduits."
+
+#: ../src/coldsync.c:1401
+#, fuzzy, c-format
+msgid "Error backing up \"%s\"."
+msgstr "Fehler beim Heraufladen von \"%s\"."
+
+#: ../libpdb/pdb.c:884
+#, fuzzy, c-format
+msgid "Error creating database \"%s\": %d.\n"
+msgstr "Fehler beim Anlegen der Datenbank \"%s\", Fehler == %d.\n"
+
+#: ../src/install.c:542
+#, fuzzy, c-format
+msgid "Error deleting \"%s\"."
+msgstr "Fehler beim Löschen von \"%s\".\n"
+
+#: ../src/coldsync.c:2986
+#, c-format
+msgid "Error during DlpEndOfSync: (%d) %s."
+msgstr "Fehler während DlpEndOfSync: (%d) %s."
+
+#: ../libpconn/cmp.c:141
+#, c-format
+msgid "Error during cmp_read: (%d) %s.\n"
+msgstr "Fehler während cmp_read: (%d) %s.\n"
+
+#: ../libpconn/PConnection_serial.c:320
+msgid "Error establishing CMP connection.\n"
+msgstr ""
+
+#: ../libpconn/palm_errno.c:29
+msgid "Error in system call or library function"
+msgstr "Fehler in Systemaufruf oder Bibliotheksfunktion."
+
+#: ../src/install.c:505
+#, c-format
+msgid "Error opening \"%s\"."
+msgstr "Fehler beim Öffnen von \"%s\"."
+
+#: ../libpconn/netsync.c:103
+#, fuzzy
+msgid "Error reading NetSync packet header.\n"
+msgstr "Fehler beim Lesen der NetSync-Informationen.\n"
+
+#: ../libpconn/netsync.c:209
+#, fuzzy
+msgid "Error sending NetSync header.\n"
+msgstr "Fehler beim Lesen der NetSync-Informationen.\n"
+
+#: ../libpconn/PConnection_serial.c:333
+#, fuzzy
+msgid "Error trying to set speed.\n"
+msgstr "Fehler beim Setzen der Geschwindigkeit.\n"
+
+#: ../src/GenericConduit.cc:877 ../src/GenericConduit.cc:1414
+#: ../src/GenericConduit.cc:1724 ../src/GenericConduit.cc:1869
+#: ../src/GenericConduit.cc:2035 ../src/GenericConduit.cc:2269
+#, fuzzy, c-format
+msgid "Error uploading record 0x%08lx: %d."
+msgstr "Fehler beim Übertragen von Datensatz 0x%08lx: %d."
+
+#: ../src/misc.c:103
+msgid "Error: "
+msgstr "Fehler: "
+
+#: ../libpconn/PConnection_serial.c:473 ../libpconn/PConnection_usb.c:344
+#, c-format
+msgid "Error: Can't open \"%s\".\n"
+msgstr "Fehler: Kann \"%s\" nicht öffnen.\n"
+
+#: ../libpconn/PConnection.c:104
+msgid "Error: USB support not enabled.\n"
+msgstr ""
+
+#: ../libpconn/netsync.c:109
+#, c-format
+msgid "Error: only read %d bytes of NetSync packet header.\n"
+msgstr ""
+
+#: ../libpdb/pdb.c:265
+msgid "File isn't seekable.\n"
+msgstr "Datei kann nicht positioniert werden.\n"
+
+#: ../libpdb/pdb.c:2207
+#, c-format
+msgid "Hey! I can't find the %dth record!\n"
+msgstr "Kann den %d-ten Datensatz nicht finden.\n"
+
+#: ../libpdb/pdb.c:2076
+#, c-format
+msgid "Hey! I can't find the %dth resource!\n"
+msgstr "Kann die %d-te Ressource nicht finden.\n"
+
+#: ../src/config.c:846
+msgid "Hey! This isn't an AF_INET address!"
+msgstr "Das ist keine AF_INET Adresse."
+
+#: ../src/GenericConduit.cc:1184
+msgid ""
+"I have a new, deleted record that is neither archived nor expunged\n"
+"What am I supposed to do?"
+msgstr ""
+
+#: ../src/conduit.c:2002
+msgid "Inside run_DummyConduit.\n"
+msgstr ""
+
+#: ../src/install.c:126 ../src/install.c:383
+msgid "Install "
+msgstr "Installiere "
+
+#: ../libpconn/palm_errno.c:37
+msgid "Invalid argument ID"
+msgstr "Ungültige Argument-ID"
+
+#: ../libpconn/palm_errno.c:35
+msgid "Invalid request ID"
+msgstr "Ungültige Request-ID"
+
+#: ../libpconn/palm_errno.c:36
+msgid "Invalid result ID"
+msgstr "Ungültige Ergebnis-ID"
+
+#: ../src/coldsync.c:270
+#, c-format
+msgid "Log started on %s"
+msgstr ""
+
+#: ../src/coldsync.c:524 ../src/coldsync.c:570 ../src/coldsync.c:623
+#: ../src/coldsync.c:902 ../src/coldsync.c:1001 ../src/coldsync.c:1031
+#: ../src/coldsync.c:1058 ../src/coldsync.c:1152 ../src/coldsync.c:1228
+#: ../src/coldsync.c:1350 ../src/coldsync.c:1398 ../src/coldsync.c:1518
+#: ../src/coldsync.c:1543 ../src/coldsync.c:1567 ../src/coldsync.c:2618
+#: ../src/coldsync.c:2714 ../src/coldsync.c:2742 ../src/coldsync.c:2763
+#: ../src/coldsync.c:2853 ../src/coldsync.c:2928 ../src/conduit.c:498
+#: ../src/restore.c:298
+#, fuzzy
+msgid "Lost connection to Palm."
+msgstr "Keine Verbindung zum Palm."
+
+#: ../src/conduit.c:1177 ../src/conduit.c:1235
+#, fuzzy
+msgid "Lost connection to Palm. Aborting."
+msgstr "Keine Verbindung zum Palm. Abbruch."
+
+#: ../src/config.c:264
+#, fuzzy, c-format
+msgid "Missing option argument after \"%s\"."
+msgstr "Fehlendes Argument nach \"%s\"."
+
+#: ../src/coldsync.c:780 ../src/coldsync.c:2500
+msgid "Network sync forwarding failed."
+msgstr ""
+
+#: ../src/palm.c:284
+msgid "No NetSync info.\n"
+msgstr "Kein NetSyn-Info.\n"
+
+#: ../src/coldsync.c:1260
+msgid "No backup directory specified."
+msgstr ""
+
+#: ../libpconn/palm_errno.c:28
+msgid "No error"
+msgstr "Kein Fehler"
+
+#: ../src/coldsync.c:2287
+#, c-format
+msgid "No matching entry in %s."
+msgstr ""
+
+#: ../src/coldsync.c:476 ../src/coldsync.c:1296 ../src/coldsync.c:1466
+#: ../src/coldsync.c:1659 ../src/coldsync.c:2126
+msgid "No port specified."
+msgstr "Kein Port angegeben."
+
+#: ../src/coldsync.c:1382
+msgid "No such database\n"
+msgstr ""
+
+#: ../src/coldsync.c:1377
+#, fuzzy, c-format
+msgid "No such database: \"%s\"."
+msgstr "Kann Datenbank \"%s\" nicht öffnen."
+
+#: ../src/coldsync.c:1286
+#, fuzzy, c-format
+msgid "No such directory: \"%s\"."
+msgstr "%s: Fehler beim Prüfen auf \"%s\"."
+
+#: ../src/GenericConduit.cc:485 ../src/GenericConduit.cc:974
+#: ../src/GenericConduit.cc:1511 ../src/backup.c:180 ../src/install.c:503
+#: ../src/install.c:526 ../src/restore.c:217
+msgid "OK\n"
+msgstr "OK\n"
+
+#: ../libpconn/palm_errno.c:30
+msgid "Out of memory"
+msgstr "Kein Speicher mehr"
+
+#: ../libpconn/PConnection_serial.c:510 ../libpconn/PConnection_usb.c:321
+msgid "Please press the HotSync button.\n"
+msgstr "Bitte starten Sie den HotSync auf dem Palm.\n"
+
+#: ../src/install.c:508
+msgid "Problem\n"
+msgstr "Problem\n"
+
+#: ../src/GenericConduit.cc:143
+msgid "ROM\n"
+msgstr "ROM\n"
+
+#: ../src/restore.c:177
+msgid "Restore "
+msgstr "Restore"
+
+#: ../src/restore.c:169
+#, c-format
+msgid "Restore: Can't delete database \"%s\": %d."
+msgstr "Restore: Kann Datenbank \"%s\" nicht löschen. Fehler: %d."
+
+#: ../src/coldsync.c:1212
+msgid "Running Dump conduits"
+msgstr ""
+
+#: ../src/coldsync.c:982
+msgid "Running Fetch conduits"
+msgstr ""
+
+#: ../src/coldsync.c:926 ../src/coldsync.c:1174 ../src/coldsync.c:2641
+#: ../src/coldsync.c:2875
+msgid "Running Install conduits"
+msgstr ""
+
+#: ../src/coldsync.c:1007
+msgid "Running Sync conduits"
+msgstr ""
+
+#: ../libpconn/slp.c:389
+#, c-format
+msgid "SLP: bad CRC: expected 0x%04x, got 0x%04x.\n"
+msgstr "SLP: Fehlerhafte CRC. Erwartet 0x%04x, gefunden 0x%04x.\n"
+
+#: ../src/coldsync.c:1894
+msgid "Set user ID: "
+msgstr ""
+
+#: ../src/coldsync.c:1930
+msgid "Set username: "
+msgstr ""
+
+#: ../src/coldsync.c:1053
+#, fuzzy
+msgid "Sync cancelled by Palm."
+msgstr "Abgebrochen\n"
+
+#: ../src/coldsync.c:1021 ../src/coldsync.c:2732
+msgid "Sync cancelled."
+msgstr "Sync abgebrochen."
+
+#: ../src/config.c:211
+msgid ""
+"The \"-b <dir>\" option is obsolete. Please use \"-mb <dir>\"\n"
+"instead."
+msgstr ""
+
+#: ../src/config.c:223
+msgid ""
+"The \"-r <dir>\" option is obsolete. Please use \"-mr <dir>\"\n"
+"instead."
+msgstr ""
+
+#: ../src/coldsync.c:584
+#, c-format
+msgid ""
+"This Palm has user ID %ld (I was expecting %ld).\n"
+"Syncing would most likely destroy valuable data. Please update your\n"
+"configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
+"before proceeding.\n"
+"\tYour configuration file should contain a PDA block that looks\n"
+"something like this:"
+msgstr ""
+
+#: ../src/coldsync.c:639
+#, c-format
+msgid ""
+"This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
+"Syncing would most likely destroy valuable data. Please update your\n"
+"configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
+"before proceeding.\n"
+"\tYour configuration file should contain a PDA block that looks\n"
+"something like this:"
+msgstr ""
+
+#: ../src/config.c:867
+msgid "This host doesn't appear to have an IP address."
+msgstr "Dieser Rechner hat anscheinend keine IP-Adresse."
+
+#: ../libpconn/palm_errno.c:31
+msgid "Timeout"
+msgstr "Zeit abgelaufen"
+
+#: ../src/coldsync.c:3185
+#, c-format
+msgid "Too many files named \"%s\" in the attic."
+msgstr "Zu viele Dateien heißen \"%s\"."
+
+#: ../libpconn/palm_errno.c:34
+msgid "Transfer aborted"
+msgstr "Übertragung abgebrochen."
+
+#: ../src/config.c:243
+#, c-format
+msgid "Unknown device type: \"%s\"."
+msgstr "Unbekannter Gerätetyp: \"%s\"."
+
+#: ../src/config.c:675
+#, c-format
+msgid "Unknown facility \"%s\"."
+msgstr "Unbekannter Debug-Schalter \"%s\"."
+
+#: ../src/config.c:724
+#, fuzzy, c-format
+msgid "Unknown mode: \"%s\"."
+msgstr "Fehler bei \"%s\"."
+
+#: ../src/coldsync.c:399
+#, c-format
+msgid ""
+"Unknown mode: %d.\n"
+"This is a bug. Please report it to the maintainer."
+msgstr ""
+
+#: ../src/coldsync.c:2318
+#, fuzzy, c-format
+msgid "Unknown user/uid: \"%s\"."
+msgstr "Fehler bei \"%s\""
+
+#: ../src/config.c:255
+#, c-format
+msgid "Unrecognized option: \"%s\"."
+msgstr "Option \"%s\" nicht erkannt."
+
+#: ../libpdb/pdb.c:851
+#, c-format
+msgid "Upload of \"%s\" cancelled by Palm.\n"
+msgstr ""
+
+#: ../src/restore.c:61
+#, fuzzy, c-format
+msgid "Uploading \"%s\""
+msgstr "Fehler beim Heraufladen von \"%s\""
+
+#: ../src/config.c:736
+#, fuzzy, c-format
+msgid ""
+"Usage: %s [options] <mode> <mode args>\n"
+"Modes:\n"
+"\t-ms:\tSynchronize (default).\n"
+"\t-mI:\tInitialize.\n"
+"\t-mb <dir> [database...]\n"
+"\t\tPerform a backup to <dir>.\n"
+"\t-mr <file|dir>...\n"
+"\t\tRestore or install new databases.\n"
+"Options:\n"
+"\t-h:\t\tPrint this help message and exit.\n"
+"\t-V:\t\tPrint version and exit.\n"
+"\t-f <file>:\tRead configuration from <file>\n"
+"\t-z:\t\tInstall databases after sync.\n"
+"\t-I:\t\tForce installation of new databases.\n"
+"\t-S:\t\tForce slow sync.\n"
+"\t-F:\t\tForce fast sync.\n"
+"\t-R:\t\tCheck ROM databases.\n"
+"\t-p <port>:\tListen on device <port>.\n"
+"\t-t <devtype>:\tPort type [serial|usb|tcp].\n"
+"\t-s:\t\tLog error messages to syslog.\n"
+"\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
+"\t-v:\t\tIncrease verbosity.\n"
+"\t-d <fac[:level]>:\tSet debugging level.\n"
+msgstr ""
+"Verwendung: %s [Optionen] ((<mode> <mode args>))\n"
+"((Modes:\n"
+"\t-ms:\tSynchronize (default).\n"
+"\t-mI:\tInitialize.\n"
+"\t-mb <dir> [database...]\n"
+"\t\tPerform a backup to <dir>.\n"
+"\t-mr <file|dir>...\n"
+"\t\tRestore or install new databases.))\n"
+"Optionen:\n"
+"\t-h:\t\tDiese Hilfe ausgeben und Programm beenden.\n"
+"\t-V:\t\tVersionsnummer ausgeben und Programm beenden.\n"
+"\t-f <datei>:\tKonfiguration von <datei> lesen.\n"
+"((\t-z:\t\tInstall databases after sync.))\n"
+"\t-I:\t\tInstallation neuer Datenbanken erzwingen.\n"
+"\t-S:\t\t\"Slow sync\" erzwingen.\n"
+"\t-F:\t\t\"Fast sync\" erzwingen.\n"
+"\t-R:\t\tDatenbanken im ROM prüfen..\n"
+"\t-p <port>:\tGerät <port> benutzen.\n"
+"\t-t <devtype>:\tArt des Geräts [serial|usb|tcp].\n"
+"((\t-s:\t\tLog error messages to syslog.))\n"
+"((\t-l: <file>:\tWrite error/debugging messages to <file>.))\n"
+"((\t-v:\t\tIncrease verbosity.))\n"
+"\t-d <fac[:level]>:\tDebug-Ausgabe einstellen\n"
+
+#: ../src/misc.c:70
+msgid "Warning: "
+msgstr ""
+
+#: ../libpdb/pdb.c:1909
+#, c-format
+msgid ""
+"Warning: AppInfo block isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"Warnung: AppInfo-Block nicht an der erwarteten Stelle gefunden.\n"
+"Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx.\n"
+
+#: ../src/palm.c:457
+#, fuzzy, c-format
+msgid ""
+"Warning: ROM serial number is %d characters long. Please notify the\n"
+"maintainer."
+msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"Warning: ROM serial number is %d characters long."
+
+#: ../libpconn/PConnection_serial.c:309
+#, fuzzy, c-format
+msgid ""
+"Warning: can't set the speed you requested (%ld bps).\n"
+"Using default.\n"
+msgstr ""
+"Warnung: Kann die gewünschte Geschwindigkeit %ld bps nicht setzen.\n"
+"Benutzte Standart.\n"
+
+#: ../libpconn/PConnection_serial.c:465
+#, c-format
+msgid "Warning: no device on %s. Sleeping\n"
+msgstr ""
+
+#: ../libpdb/pdb.c:2229
+#, c-format
+msgid ""
+"Warning: record %d isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"Warnung: Datensatz %d nicht an der erwarteten Stelle gefunden.\n"
+"Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx.\n"
+
+#: ../libpdb/pdb.c:2103
+#, c-format
+msgid ""
+"Warning: resource %d isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"Warnung: Ressource %d nicht an der erwarteten Stelle gefunden.\n"
+"Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx.\n"
+
+#: ../libpdb/pdb.c:2018
+#, c-format
+msgid ""
+"Warning: sort block isn't where I thought it would be.\n"
+"Expected 0x%lx, but we're at 0x%lx.\n"
+msgstr ""
+"Warnung: Sortblock nicht an der erwarteten Stelle gefunden.\n"
+"Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx.\n"
+
+#: ../libpconn/padp.c:642
+msgid "Write timeout. Attempting to resend.\n"
+msgstr "Zeitablauf beim Schreiben. Neuer Sendeversuch.\n"
+
+#: ../src/palm.c:559
+msgid ""
+"You have an old Palm, one that doesn't say how many\n"
+"databases it has. I can't cope with this."
+msgstr ""
+"Sie haben einen alten Palm, der nicht verrät, wieviele\n"
+"Datenbanken er hat. Damit kann dieses Programm nicht umgehen."
+
+#: ../src/config.c:697
+#, c-format
+msgid ""
+"You shouldn't specify two -m<mode> options.\n"
+"\tUsing -m%s."
+msgstr ""
+
+#: ../src/config.c:270
+#, c-format
+msgid ""
+"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
+"to do with it. This is a bug. Please notify the maintainer."
+msgstr ""
+"Sie haben eine scheinbar zulässige Option angegeben (\"-%c\"), aber das "
+"Programm\n"
+"kann damit nichts anfangen. Das ist ein Fehler. Bitte informieren Sie den\n"
+"Entwickler."
+
+#: ../src/GenericConduit.cc:178
+#, fuzzy
+msgid "[generic]: Aborting."
+msgstr "[generic]: Abbruch."
+
+#: ../libpconn/PConnection_usb.c:526
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+
+#: ../libpconn/PConnection_usb.c:463
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
+msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
+
+#: ../src/GenericConduit.cc:340
+msgid "pdb_Download() failed."
+msgstr "Fehler in pdb_Download()."
+
+#: ../libpconn/PConnection_usb.c:164
+msgid "usb: trying to fill a non-empty buffer.\n"
+msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
+
+#, fuzzy
+#~ msgid "Lost connection with Palm."
+#~ msgstr "Keine Verbindung zum Palm\n"
+
+#, fuzzy
+#~ msgid "Lost connection to Palm"
+#~ msgstr "Keine Verbindung zum Palm\n"
+
+#, fuzzy
+#~ msgid "Can't open log file \"%s\".\n"
+#~ msgstr "Fehler: Kann %s nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "DlpWriteUserInfo failed: %d.\n"
+#~ msgstr "DlpWriteUserInfo gescheitert: %d\n"
+
+#, fuzzy
+#~ msgid "%s: realloc(%d) failed.\n"
+#~ msgstr "%s: realloc gescheitert\n"
+
+#, fuzzy
+#~ msgid "Can't reserve file descriptor %d.\n"
+#~ msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
+
+#, fuzzy
+#~ msgid "%s: Can't open \"%s\": %d.\n"
+#~ msgstr "%s: Kann \"%s\" nicht öffnen: %d\n"
+
+#, fuzzy
+#~ msgid "%s: Warning: Can't delete record 0x%08lx: %d.\n"
+#~ msgstr "%s: Warnung: Kann Datensatz 0x%08lx nicht löschen: %d\n"
+
+#, fuzzy
+#~ msgid "%s: Can't open install directory.\n"
+#~ msgstr "%s: Kann Installationsverzeichnis nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "no port specified.\n"
+#~ msgstr "Fehler: Kein Port angegeben.\n"
+
+#, fuzzy
+#~ msgid "%s: can't open \"%s/\".\n"
+#~ msgstr "%s: Kann \"%s\" nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "%s error: Can't clean up database: %d.\n"
+#~ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d\n"
+
+#, fuzzy
+#~ msgid "%s error: Can't open \"%s\".\n"
+#~ msgstr "%s Fehler: Kann \"%s\" nicht öffnen\n"
+
+#~ msgid "%s error: Can't write backup file.\n"
+#~ msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
+
+#~ msgid "%s error: can't clean up database: %d\n"
+#~ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d\n"
+
+#~ msgid "%s: Can't open %s\n"
+#~ msgstr "%s: Kann %s nicht öffnen\n"
+
+#~ msgid "%s: realloc failed\n"
+#~ msgstr "%s: realloc gescheitert\n"
+
+#, fuzzy
+#~ msgid "Error: Can't open \"%s\"\n"
+#~ msgstr "Fehler: Kann %s nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "can't open connection.\n"
+#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "Warning: Error backing up \"%s\".\n"
+#~ msgstr "\"%s: Fehler beim Heraufladen von \"%s\"\n"
+
+#, fuzzy
+#~ msgid "Error loading configuration.\n"
+#~ msgstr "Fehler beim Laden der Konfiguration.\n"
+
+#~ msgid "Error reading %s\n"
+#~ msgstr "Fehler beim Lesen %s\n"
+
+#~ msgid "Error writing user info\n"
+#~ msgstr "Fehler beim Schreiben der Benutzerdaten.\n"
+
+#~ msgid "Error: Can't open %s\n"
+#~ msgstr "Fehler: Kann %s nicht öffnen.\n"
+
+#~ msgid "Error: can't open connection.\n"
+#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+
+#~ msgid "Error: no port specified.\n"
+#~ msgstr "Fehler: Kein Port angegeben.\n"
+
+#, fuzzy
+#~ msgid "parse error"
+#~ msgstr "Kein Fehler"
+
+#, fuzzy
+#~ msgid "syntax error: cannot back up"
+#~ msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
+
+#, fuzzy
+#~ msgid "Can't copy a new record\n"
+#~ msgstr "Kann neuen Datensatz nicht kopieren.\n"
+
+#, fuzzy
+#~ msgid "Error: Unknown host: \"%s\"\n"
+#~ msgstr "Fehler bei \"%s\"\n"
+
+#, fuzzy
+#~ msgid "%s: Out of memory"
+#~ msgstr "%s: Kein Speicher mehr.\n"
+
+#~ msgid ""
+#~ "Warning: can't set the speed you requested (%ld bps).\n"
+#~ "Using default (%ld bps)\n"
+#~ msgstr ""
+#~ "Warnung: Kann die gewünschte Geschwindigkeit %ld bps nicht setzen.\n"
+#~ "Benutzte Standart (%ld bps)\n"
+
+#~ msgid "%s: error opening port \"%s\"\n"
+#~ msgstr "%s: Fehler beim Öffnen von Port \"%s\"\n"
+
+#~ msgid "Can't get per-Palm config.\n"
+#~ msgstr "Kann die Palm-spezifischen Einstellungen nicht bekommen.\n"
+
+#, fuzzy
+#~ msgid "Error: incorrect userid on Palm.\n"
+#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+
+#, fuzzy
+#~ msgid "Error: incorrect username on Palm.\n"
+#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+
+#~ msgid "Can't get system/user/NetSync info\n"
+#~ msgstr "Kann System/Benutzer/NetSync-Information nicht bekommen.\n"
+
+#~ msgid "Error: Can't force slow and fast sync at the same time.\n"
+#~ msgstr ""
+#~ "Fehler: Man kann nicht gleichzeitig schnell und langsam synchronisieren.\n"
+
+#~ msgid "Error: Can't specify backup and restore at the same time.\n"
+#~ msgstr ""
+#~ "Fehler: Man kann nicht gleichzeitig \"backup\" und \"restore\" angeben.\n"
+
+#~ msgid "GetMemInfo() returned %d\n"
+#~ msgstr "GetMemInfo() lieferte %d zurück.\n"
+
+#~ msgid "ListDBs returned %d\n"
+#~ msgstr "ListDBs lieferte %d zurück.\n"
+
+#~ msgid "My canonical name is \"%s\"\n"
+#~ msgstr "Mein kanonischer Name ist \"%s\"\n"
+
+#~ msgid "Can't read the useless two bytes\n"
+#~ msgstr "Kann die beiden NUL-Bytes nicht lesen.\n"
+
+#~ msgid ""
+#~ "The useless two bytes contain 0x%02x%02x instead of NULs. This is "
+#~ "unexpected.\n"
+#~ msgstr ""
+#~ "Die beiden unbenutzten Bytes enthalten 0x%02x%02x statt NUL. Das ist nicht "
+#~ "vorgesehen.\n"
+
+#~ msgid "I don't deal with resource databases.\n"
+#~ msgstr "Dieses Programm verarbeitet keine Ressource-Datenbanken.\n"
+
+#~ msgid "Not synced\n"
+#~ msgstr "Nicht synchronisiert\n"
+
+#, fuzzy
+#~ msgid "%s: error sending SPC response to conduit.\n"
+#~ msgstr "Fehler beim Aufräumen der Conduits.\n"
+
+# Message deliberately not translated. This is intended for the maintainer, and 
+# he should be receiving the *original* message
+#~ msgid ""
+#~ "%s: Conduit is running happily, but hasn't printed anything, and \n"
+#~ "isn't ready to read. And yet, I was notified. This is a bug. Please\n"
+#~ "notify the maintainer.\n"
+#~ msgstr ""
+#~ "Dieser Fehler sollte nicht auftreten. Bitte schicken Sie die folgende "
+#~ "Meldung\n"
+#~ "an den Entwickler des Programms.\n"
+#~ "%s: Conduit is running happily, but hasn't printed anything, and \n"
+#~ "isn't ready to read. And yet, I was notified. This is a bug. Please\n"
+#~ "notify the maintainer.\n"
+
+#~ msgid "%s: header cannot be longer than %d characters long\n"
+#~ msgstr "%s: Kopfteil kann nicht länger als %d Zeichen sein.\n"
+
+#~ msgid "%s: write() failed\n"
+#~ msgstr "%s: write() gescheitert\n"
+
+#~ msgid "Can't initialize conduits\n"
+#~ msgstr "Kann Conduits nicht initialisieren.\n"
+
+#, fuzzy
+#~ msgid "%s: %d: Unknown conduit flavor %d\n"
+#~ msgstr "%s: Zeile %d: Unbekannter Conduit-Typ %d\n"
+
+#, fuzzy
+#~ msgid "\tMangled header near \"%s\"\n"
+#~ msgstr "Fehlendes Argument nach \"%s\"\n"
+
+#, fuzzy
+#~ msgid "\tMalformed conduit argument near \"%s\".\n"
+#~ msgstr "Option \"%s\" nicht erkannt.\n"
+
+#~ msgid "Unknown conduit flavor: %d"
+#~ msgstr "Unbekannter Conduit-Flavor: %d"
+
+#~ msgid "Yacc error: \"%s\" at line %d\n"
+#~ msgstr "Yacc-Fehler: \"%s\" in Zeile %d\n"
+
+#~ msgid "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"
+#~ msgstr "!!! Ein Conduit hat nicht funktioniert! Programmabbruch\n"
+
+#, fuzzy
+#~ msgid "%s: Error deleting record 0x%08x: %d\n"
+#~ msgstr "Fehler beim Übertragen von Datensatz 0x%08lx: %d\n"
