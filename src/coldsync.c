@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.115 2002-03-10 23:44:10 arensb Exp $
+ * $Id: coldsync.c,v 1.116 2002-03-18 08:31:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -358,6 +358,8 @@ main(int argc, char *argv[])
 		free_sync_config(sync_config);
 		sync_config = NULL;
 	}
+
+	symboltable_tini();	/* Clean up parser symbol table */
 
 	if (pref_cache != NULL)
 	{
@@ -2430,6 +2432,9 @@ run_mode_Daemon(int argc, char *argv[])
 		/* Establish a connection to the remote host */
 		/* XXX - This hangs forever if the remote host doesn't send
 		 * back a wakeup ACK.
+		 * XXX - Also, should be able to handle the case of the
+		 * Palm cancelling the sync while this handshaking is going
+		 * on.
 		 */
 		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
 		if (err < 0)
