@@ -1,14 +1,17 @@
-# $Id: Makefile,v 1.7 2001-10-12 02:19:00 arensb Exp $
+# $Id: Makefile,v 1.8 2001-11-12 04:31:25 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
 
 LIBNAME =	pdb
+SHLIB_MAJOR =	0
+SHLIB_MINOR =	0
 
 LIBSRCS =	pdb.c util.c
 LIBOBJS =	${LIBSRCS:.c=.o}
+SHLIBOBJS =	${LIBSRCS:.c=.So}
 
-CLEAN =		${LIBOBJS} ${LIBRARY} \
+CLEAN =		${LIBOBJS} ${SHLIBOBJS} ${LIBRARY} \
 		*.ln *.bak *~ core *.core .depend
 DISTCLEAN =
 SPOTLESS =

@@ -1,9 +1,11 @@
-# $Id: Makefile,v 1.10 2001-10-18 01:58:20 arensb Exp $
+# $Id: Makefile,v 1.11 2001-11-12 04:31:24 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
 
 LIBNAME =	pconn
+SHLIB_MAJOR =	0
+SHLIB_MINOR =	0
 
 LIBSRCS =	cfmakeraw.c \
 		crc.c \
@@ -23,8 +25,9 @@ LIBSRCS =	cfmakeraw.c \
 		spc_client.c 
 
 LIBOBJS =	${LIBSRCS:.c=.o}
+SHLIBOBJS =	${LIBSRCS:.c=.So}
 
-CLEAN =		${LIBOBJS} ${LIBRARY} \
+CLEAN =		${LIBOBJS} ${SHLIBOBJS} ${LIBRARY} \
 		*.ln *.bak *~ core *.core .depend
 DISTCLEAN =
 SPOTLESS =
@@ -44,6 +47,17 @@ all::	${LIBRARY}
 # people can write other programs that communicate with the Palm, but
 # not just yet.
 # install::
+
+# XXX - Building shared libraries:
+#  FreeBSD:
+#	${CC} -fpic -DPIC ${CFLAGS} -c foo.c -o foo.So
+#	ld -o foo.So.tmp -x -r foo.So
+#	mv foo.So.tmp foo.So
+#
+#	rm -f libfoo.so.1 libfoo.so
+#	ln -sf libfoo.so.1 libfoo.so
+#	${CC} -shared -Wl,-x -o libfoo.so.1 -Wl,-soname,libfoo.so.1 \
+#		`lorder *.So | tsort -q`
 
 # This is for Emacs's benefit:
 # Local Variables:	***
