@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.19 2000-01-22 12:55:36 arensb Exp $
+# $Id: Makefile.in,v 1.20 2000-01-25 10:28:00 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -19,7 +19,10 @@ BINDIR =	@bindir@
 includedir =	@includedir@
 
 INSTALL =	@INSTALL@
-INSTALLARGS =	-m 555 -s
+# For now, don't strip the executable, otherwise core files will be
+# meaningless.
+#INSTALLARGS =	-m 555 -s
+INSTALLARGS =	-m 555
 
 MKDEP =		@MKDEP@
 
