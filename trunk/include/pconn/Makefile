@@ -1,8 +1,9 @@
+# $Id: Makefile,v 1.2 2000-02-03 02:53:01 arensb Exp $
+
 TOP =		../..
 SUBDIR =	include/pconn
 
-DISTFILES =	Makefile \
-		PConnection.h \
+HEADERS =	PConnection.h \
 		cmp.h \
 		dlp.h \
 		dlp_cmd.h \
@@ -12,6 +13,9 @@ DISTFILES =	Makefile \
 		pconn.h \
 		slp.h \
 		util.h
+
+DISTFILES =	Makefile \
+		${HEADERS}
 
 all::
 
