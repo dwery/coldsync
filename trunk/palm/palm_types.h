@@ -26,7 +26,7 @@ typedef udword chunkID;			/* Those IDs made up of four
  * signedness above are true.
  */
 
-typedef enum { false = 0, true = 1 } bool;
+typedef enum { False = 0, True = 1 } Bool;
 
 #endif	/* _palm_types_h_ */
 
