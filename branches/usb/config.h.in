@@ -103,6 +103,9 @@
 /* Defined if the package was compiled with the ElectricFence library */
 #undef WITH_EFENCE
 
+/* Define if you want USB support for the Handspring Visor */
+#undef WITH_USB
+
 /* Name of package */
 #undef PACKAGE
 
