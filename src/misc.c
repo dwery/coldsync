@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.2 2000-10-22 08:39:32 arensb Exp $
+ * $Id: misc.c,v 2.3 2000-11-14 16:37:21 arensb Exp $
  */
 
 #include "config.h"
@@ -134,6 +134,20 @@ mkbakfname(const struct dlp_dbinfo *dbinfo)
 	return mkfname(backupdir, dbinfo, True);
 }
 
+/* mkinstfname
+ * Similar to mkbakfname(), but constructs a filename in the install
+ * directory (~/.palm/install by default).
+ */
+const char *
+mkinstfname(const struct dlp_dbinfo *dbinfo)
+{
+	return mkfname(installdir, dbinfo, True);
+}
+
+/* mkarchfname
+ * Similar to mkbakfname(), but constructs a filename in the archive
+ * directory (~/.palm/archive by default).
+ */
 const char *
 mkarchfname(const struct dlp_dbinfo *dbinfo)
 {
@@ -337,6 +351,39 @@ is_directory(const char *fname)
 
 	/* See if the file is a directory */
 	return S_ISDIR(statbuf.st_mode) ? True : False;
+}
+
+/* is_database_name
+ * Returns True iff 'fname' is a valid name for a Palm database, i.e., if
+ * it ends in ".pdb", ".prc", or ".pqa".
+ */
+const Bool
+is_database_name(const char *fname)
+{
+	const char *lastdot;		/* Pointer to last dot in file name */
+
+	if (fname == NULL)
+		/* Trivial case */
+		return False;
+
+	/* Find the last dot in the file name */
+	lastdot = strrchr(fname, '.');
+
+	if (lastdot == NULL)
+		/* No dot, hence no extension, hence it's not a valid
+		 * database name.
+		 */
+		return False;
+
+	/* Test for the various legal extensions */
+	if (strcasecmp(lastdot, ".pdb") == 0)
+		return True;
+	if (strcasecmp(lastdot, ".prc") == 0)
+		return True;
+	if (strcasecmp(lastdot, ".pqa") == 0)
+		return True;
+
+	return False;		/* None of the above */
 }
 
 /* This is for Emacs's benefit:
