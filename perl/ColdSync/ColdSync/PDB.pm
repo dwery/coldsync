@@ -8,7 +8,7 @@ use Palm::PDB;
 use Palm::StdAppInfo();
 use ColdSync::SPC;
 
-$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.3 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.4 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -393,7 +393,13 @@ sub nextRecInCategory($$)
 	my $recordraw = dlp_ReadNextRecInCategory($self->{'dbhandle'}, $catno);
 	return undef unless defined $recordraw;
 
-	return $self->{'helper'}->ParseRecord(%$recordraw);
+	my $rec = $self->{'helper'}->ParseRecord(%$recordraw);
+	return $rec if defined $rec;
+
+	# we got a raw record, but it wasn't parsable by the helper.
+	# We can either die, or keep going until we're done or find
+	# the next "good" record.
+	return $self->nextRecInCategory( $catno );
 }
 
 =head2 nextModifiedRec
@@ -430,7 +436,13 @@ sub nextModifiedRec($@)
 	}
 	return undef unless defined $recordraw;
 
-	return $self->{'helper'}->ParseRecord(%$recordraw);
+	my $rec = $self->{'helper'}->ParseRecord(%$recordraw);
+	return $rec if defined $rec;
+
+	# we got a raw record, but it wasn't parsable by the helper.
+	# We can either die, or keep going until we're done or find
+	# the next "good" record.
+	return $self->nextModifiedRec( $catno );
 }
 
 =head2 resetIndex
