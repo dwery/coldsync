@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.48 2000-12-11 09:09:51 arensb Exp $
+ * $Id: config.c,v 1.49 2000-12-13 16:32:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -935,6 +935,10 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 
 			continue;
 		}
+
+		/* XXX - Ought to see if the serial number is a real one,
+		 * or if it's binary bogosity (on the Visor).
+		 */
 
 		/* Check the username and userid, if asked */
 		if (check_user)
