@@ -28,6 +28,7 @@ extern int dlpc_trace;		/* Debugging level for Desktop Link
 #include <pconn/palm_errno.h>
 #include <pconn/cmp.h>
 #include <pconn/dlp_cmd.h>
+#include <pconn/dlp_rpc.h>
 #include <pconn/util.h>
 
 #endif	/* __pconn_h__ */
