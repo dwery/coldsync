@@ -204,8 +204,14 @@
 /* Defined if memory leak detection was enabled */
 #undef WITH_LEAK_DETECTION
 
-/* Define if you want USB support for the Handspring Visor */
+/* Define if you want USB support (FreeBSD only, at this point) */
 #undef WITH_USB
+
+/* Under FreeBSD 4.5 and later, the fields in 'struct usb_device_info' have
+ * a "udi_" prefix. That is, udi.vendorNo became udi.udi_vendorNo, and so
+ * forth.
+ */
+#undef WITH_UDI_PREFIX
 
 /* Name of package */
 #undef PACKAGE
