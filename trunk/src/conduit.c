@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.32 2001-02-21 11:20:25 arensb Exp $
+ * $Id: conduit.c,v 2.33 2001-02-23 14:15:40 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -203,34 +203,6 @@ poll_fd(const int fd, const Bool for_writing)
 	if (err < 0)	return -1;	/* An error occurred */
 	if (err == 0)	return  0;	/* File descriptor not readable */
 	return 1;			/* File descriptor is readable */
-}
-
-/* format_header
- * A convenience function. Takes a buffer, a header name, and a header
- * value. Writes the header to 'buf', making sure that the result obeys the
- * rules for conduit headers:
- *	- Header name (the part before the colon) has no more than
- *	  COND_MAXHFIELDLEN characters.
- *	- The entire line, not counting the \n at the end or the
- *	  terminating NUL, is no more than COND_MAXLINELEN characters.
- */
-static INLINE void
-format_header(char *buf,
-	      const char *name,
-	      const char *value)
-{
-		/* XXX - Replace with snprintf() (but make sure neither the
-		 * header name nor total length exceed their respective
-		 * limits.
-		 */
-		strncpy(buf, name,  COND_MAXHFIELDLEN);
-		strncat(buf, ": ",  COND_MAXLINELEN - strlen(buf));
-		strncat(buf, value, COND_MAXLINELEN - strlen(buf));
-		strncat(buf, "\n",  COND_MAXLINELEN - strlen(buf));
-
-		/* Make sure it's terminated properly */
-		buf[COND_MAXLINELEN] = '\n';
-		buf[COND_MAXLINELEN] = '\0';
 }
 
 /* The following two variables are for setvbuf's benefit, for when we make
@@ -525,6 +497,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		/* Build the preference line with sprintf() because
 		 * snprintf() isn't portable.
 		 */
+		/* XXX - snprintf() is now included. */
 		sprintf(tmpvalue, "%c%c%c%c/%d/%d\n",
 			(char) (conduit->prefs[i].creator >> 24) & 0xff,
 			(char) (conduit->prefs[i].creator >> 16) & 0xff,
@@ -570,8 +543,15 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				 */
 		int len;	/* How many bytes of 'bufp' to write */
 
-		/* Create the header line */
-		format_header(buf, hdr->name, hdr->value);
+		/* Create the header line. Make sure that the entire line
+		 * is no more than COND_MAXLINELEN characters in length
+		 * (not counting the \n at the end), and that the header
+		 * name is no more than COND_MAXHFIELDLEN characters in
+		 * length.
+		 */
+		snprintf(buf, COND_MAXLINELEN+1, "%.*s: %s\n",
+			 COND_MAXHFIELDLEN, hdr->name,
+			 hdr->value);
 		bufp = buf;
 		len = strlen(bufp);
 
