@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.26 2001-03-30 06:26:15 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.27 2001-04-15 04:37:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -246,7 +246,7 @@ serial_read(PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-serial_write(PConnection *p, unsigned char *buf, int len)
+serial_write(PConnection *p, unsigned const char *buf, const int len)
 {
 	return write(p->fd, buf, len);
 }
@@ -266,8 +266,9 @@ serial_accept(PConnection *pconn)
 	udword newspeed;
 	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
 					 * (a necessary distinction because
-					 * some OSes (hint to Sun!) have
-					 * B19200 != 19200.
+					 * some OSes (*cough*Sun*cough*
+					 * *Linux*cough*) have B19200 !=
+					 * 19200.
 					 */
 
 	/* Find the speed at which to connect.
@@ -486,8 +487,8 @@ pconn_serial_open(PConnection *pconn, char *device, Bool prompt)
 	cfmakeraw(&term);		/* Make it raw */
 	/* XXX - Error-checking */
 	tcsetattr(pconn->fd, TCSANOW, &term);
-					/* Make it so */
 	/* XXX - Error-checking */
+					/* Make it so */
 
 	if (prompt)
 		printf(_("Please press the HotSync button.\n"));
@@ -542,7 +543,7 @@ setspeed(PConnection *pconn, int speed)
 	 * On the other hand, I've gotten reports that this is also
 	 * necessary under Linux.
 	 */
-	sleep(1);
+	usleep(50000);
 
 	return 0;
 }
