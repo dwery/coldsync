@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.1 2002-04-24 13:28:10 azummo Exp $
+# $Id: VFS.pm,v 1.2 2002-05-03 17:31:31 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.1 $ ' =~ m{(\d+)\.(\d+)};
+$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.2 $ ' =~ m{(\d+)\.(\d+)};
 
 
 
@@ -70,8 +70,12 @@ use constant vfsFileAttrLink		=> 0x00000040;
 use constant vfsFileAttrAll             => 0x0000007F;
 
 
-# Volume Attributes
+# For dlp_VFSDirEntryEnumerate
+use constant vfsIteratorStart		=> 0x00000000;
+use constant vfsIteratorStop		=> 0xFFFFFFFF;
 
+
+# Volume Attributes
 use constant vfsVolumeAttrSlotBased	=> 0x00000001;	# Reserved
 use constant vfsVolumeAttrReadOnly	=> 0x00000002;  # Volume is read only
 use constant vfsVolumeAttrHidden	=> 0x00000004;	# Volume is not user visible
@@ -90,7 +94,47 @@ use constant vfsFileDateAccessed	=> 3;
 	dlp_VFSVolumeGetLabel
 	dlp_VFSVolumeSetLabel
 	dlp_VFSVolumeGetSize
+	dlp_VFSFileOpen
+	dlp_VFSFileClose
+	dlp_VFSFileRead
+	dlp_VFSFileWrite
+	dlp_VFSFileSize
+	dlp_VFSDirEntryEnumerate
+	dlp_VFSGetFile
+	dlp_VFSPutFile
 );
+
+%ColdSync::SPC::VFS::EXPORT_TAGS = (
+
+	'vfs_opentags' => [ qw (
+
+		vfsModeExclusive
+		vfsModeRead
+		vfsModeWrite
+		vfsModeCreate
+		vfsModeTruncate
+		vfsModeReadWrite
+		vfsModeLeaveOpen
+	) ],
+
+	'vfs_fileattrs' => [ qw (
+
+		vfsFileAttrReadOnly
+		vfsFileAttrHidden
+		vfsFileAttrSystem
+		vfsFileAttrVolumeLabel
+		vfsFileAttrDirectory
+		vfsFileAttrArchive
+		vfsFileAttrLink
+		vfsFileAttrAll
+	) ],
+);
+
+Exporter::export_ok_tags('vfs_opentags','vfs_fileattrs');
+
+
+
+
 
 
 sub dlp_VFSVolumeEnumerate
@@ -233,6 +277,232 @@ sub dlp_VFSVolumeGetSize
 
 	return $retval;
 }
+
+sub dlp_VFSFileOpen
+{
+	my $volRefNum	= shift;	# Volume refNum
+	my $openMode	= shift;	# Open mode
+	my $path	= shift;	# File path
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileOpen,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("n n Z*", $volRefNum, $openMode, $path),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			$retval->{'fileRef'} = unpack("N",$arg->{data});
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_VFSFileClose
+{
+	my $fileRef	= shift;	# file refNum
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileClose,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N", $fileRef),
+				 }
+				 );
+
+	# No return arguments to parse
+	return $err;
+}
+
+sub dlp_VFSDirEntryEnumerate
+{
+	my $dirRefNum		= shift;	# directory refnum, as
+						# obtained from dlp_VFSFileOpen
+	my $dirEntryIterator	= shift;	# 
+	my $bufferSize		= shift;	# 
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSDirEntryEnumerate,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N N N", $dirRefNum, $dirEntryIterator, $bufferSize),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			my $data;
+
+			# Fetch header
+			
+			( @$retval{
+				'dirEntryIterator',
+				'numEntries'
+			}, $data ) = unpack("N N a*",$arg->{data});
+
+
+			# Fetch directory entries
+
+			$retval->{'entries'} = [];
+
+			for ( my $i = 0; $i < $retval->{'numEntries'}; $i++ )
+			{
+				my ( $attrs, $name );
+
+				( $attrs, $data ) = unpack( "N a*", $data );
+
+				# Split out the first string.
+				( $name, $data ) = split( /\0/, $data, 2 );
+
+				# Discard the pad byte if the string ( +
+				# null terminator) has an odd length. 
+
+				$data = substr($data, 1)
+					if ((length($name) % 2) == 0);
+
+				
+				my $attr = {};
+
+				my $entry = {
+
+					'attributes'	=> $attrs,
+					'attribute'	=> $attr,
+					'name'		=> $name
+				};
+
+				# Parse attributes
+
+				$attr->{'ReadOnly'}	= $attrs & vfsFileAttrReadOnly		? 1 : 0;
+				$attr->{'Hidden'}	= $attrs & vfsFileAttrHidden		? 1 : 0;
+				$attr->{'System'}	= $attrs & vfsFileAttrSystem		? 1 : 0;
+				$attr->{'VolumeLabel'}	= $attrs & vfsFileAttrVolumeLabel	? 1 : 0;
+				$attr->{'Directory'}	= $attrs & vfsFileAttrDirectory 	? 1 : 0;
+				$attr->{'Archive'}	= $attrs & vfsFileAttrArchive		? 1 : 0;
+				$attr->{'Link'}		= $attrs & vfsFileAttrLink		? 1 : 0;
+
+				push( @{$retval->{'entries'}}, $entry);
+			}			
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_VFSFileRead
+{
+	my $fileRef	= shift;	# fileRef
+	my $numBytes	= shift;	# bytes to read
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileRead,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N N", $fileRef, $numBytes),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'numBytes',
+			} = unpack("N",$arg->{data});
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_VFSFileSize
+{
+	my $fileRef	= shift;	# fileRef
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileSize,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N", $fileRef),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'fileSize',
+			} = unpack("N",$arg->{data});
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_VFSGetFile
+{
+	my $volRefNum	= shift;
+	my $name	= shift;
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSGetFile,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("n Z*", $volRefNum, $name, $name),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'test',
+			} = unpack("a*",$arg->{data});
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_VFSPutFile
+{
+	my $fileRef	= shift;	# fileRef
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSPutFile,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N", $fileRef),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'test',
+			} = unpack("a*",$arg->{data});
+		}
+	}
+
+	return $retval;
+}
+
+
 
 
 1;
