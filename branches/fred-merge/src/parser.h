@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.9 2001-01-09 16:28:14 arensb Exp $
+ * $Id: parser.h,v 2.9.10.1 2001-10-11 10:18:03 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -23,6 +23,7 @@
 #define LEX_BSTRING	2	/* "Bareword" (unquoted) string */
 #define LEX_CTPAIR	3	/* Creator/type pair */
 #define LEX_ID4		4	/* 4-character identifier */
+#define LEX_VAR		5	/* Variable name */
 
 /* crea_type_pair
  * A convenience struct that holds a creator-type pair, as long ints.
@@ -36,6 +37,7 @@ extern int parse_trace;		/* Debugging level for config file parser */
 extern int lineno;		/* Line number */
 
 extern void lex_expect(const int state);
+extern void lex_tini(void);	/* Lexer cleanup */
 
 #endif	/* _parser_h_ */
 
