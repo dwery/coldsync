@@ -1,3 +1,5 @@
+- Move CRC-related stuff out of lib*/util.c and into its own file.
+  libpdb doesn't use it.
 - Redo error return status in {upload,download}_database() and
   friends, as per XXX comments.
 - Separate i18n stuff for libpconn/libpdb into separate files. Figure
@@ -54,8 +56,11 @@
   connection we can't offer. Besides, this is probably closer to what
   happens with inetd, where by the time the program is launched, inetd
   has already done most of the work of accepting the connection.
-- Assume that snprintf() is available. This can be used to replace the
-  various mk*fname() functions.
+	Actually, it looks as if the UDP stuff is part of a completely
+  different (name resolution? Windows?) protocol. If so, then ColdSync
+  should only pay attention to the TCP stuff. The UDP name
+  resolution(?) can be handled by a separate program, e.g. the one in
+  pilot-link.
 - Init mode should set the NetSync host and mask, if they're set in
   the pda block.
 - "forward:" line in pda block: this is of the form
@@ -211,15 +216,6 @@
 	Until this gets fixed, I don't want to use 'automake'.
 - Should all of the library .h files be lumped under #include
   <palm/foo.h> ?
-- Add Makefile stuff for rerunning 'autoconf' when necessary. See node
-  "Automatic Remaking" in "autoconf.info".
-- Add a "group" field to the listen and conduit blocks, of the form
-	group "admin";
-  If a conduit belongs to a certain group, it will only be invoked if
-  the current listening device is also in the same group. This way,
-  the site administrator can define certain conduits that will only be
-  run on a privileged cradle. This should be useful for things like
-  setting up a new user's Palm.
 - In daemon mode, when setting the UID, use setuid() to set both the
   real and effective UID: once it is determined that this is
   "arensb"'s Palm, we want to relinquish all of our root-ly powers and
@@ -328,8 +324,6 @@
   false, don't bother writing the database to disk.
 - libpdb and libpconn are useful in their own right. Turn them into
   standalone packages. At least libpdb.
-- Fix the libpdb error messages to say which database (preferably,
-  which file) they apply to.
 - Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
   'rpcgen' looked like just the thing, but DLP packets are not a
   subset of XDR, so there are too many niggling problems.
