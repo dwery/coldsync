@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.7 2001-02-24 17:08:18 arensb Exp $
+  $Id: HACKING,v 1.8 2002-03-08 02:44:22 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -45,6 +45,10 @@
 
 - Don't name any files "errs.*". They'll get clobbered by "make
   spotless".
+
+- Remember: NUL (one ell) is the ASCII character \0. NULL (two ells)
+  is the pointer that always looks like 0. NULL is a bigger zero than
+  NUL.
 
 - Portability: On some OSes, printf() checks to see whether the
   argument to a %s is NULL. On others, it doesn't. Always check.
@@ -105,3 +109,9 @@
 
 - When making changes to a file, respect the existing indentation
   style.
+
+- "if", "while", "for", etc. are not functions. So don't make them
+  look like functions. Use
+	if (foo)
+  and not
+	if( foo )
