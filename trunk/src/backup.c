@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.12 2000-05-21 07:59:43 arensb Exp $
+ * $Id: backup.c,v 2.13 2000-09-03 07:31:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,7 +48,7 @@ int backup(struct PConnection *pconn,
 
 	/* Create and open the backup file */
 	/* XXX - Is the O_EXCL flag desirable? */
-	bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
+	bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY, 0600);
 	if (bakfd < 0)
 	{
 		fprintf(stderr, _("%s: can't create new backup file "

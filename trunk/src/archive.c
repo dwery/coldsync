@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.13 2000-05-21 07:59:38 arensb Exp $
+ * $Id: archive.c,v 1.14 2000-09-03 07:31:13 arensb Exp $
  */
 
 #include "config.h"
@@ -61,7 +61,8 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 	 * Create it with fascist permissions, since presumably
 	 * this'll contain private information.
 	 */
-	if ((fd = open(archfname, O_RDWR | O_CREAT | O_TRUNC, 0600)) < 0)
+	if ((fd = open(archfname, O_RDWR | O_CREAT | O_TRUNC | O_BINARY,
+		       0600)) < 0)
 	{
 		fprintf(stderr, _("%s: Can't open file \"%s\"\n"),
 			"arch_create",

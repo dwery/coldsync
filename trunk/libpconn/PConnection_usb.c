@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.6 2000-05-21 07:58:51 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.7 2000-09-03 07:30:47 arensb Exp $
  */
 
 #include "config.h"
@@ -265,7 +265,14 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 	 */
 
 	for (i = 0; i < 30; i++) {
-		if ((usb_ep0 = open(device, O_RDWR)) >= 0) 
+		if ((usb_ep0 = open(device, O_RDWR | O_BINARY)) >= 0) 
+				/* The O_BINARY flag is rather bogus, since
+				 * the only relevant platform that uses it
+				 * is Windows, and this USB code only works
+				 * under FreeBSD. But hey, it doesn't cost
+				 * anything, and it makes things
+				 * consistent.
+				 */
 			break;
 
 		IO_TRACE(1)
