@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.32 2001-11-12 01:02:48 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.33 2001-11-12 05:48:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -590,6 +590,11 @@ pconn_serial_open(PConnection *pconn,
 
 			switch (errno)
 			{
+			    case ENOENT:
+				if ((flags & PCONNFL_TRANSIENT) == 0)
+					goto abort;
+				/* If PCONNFL_TRANSIENT is set, fall
+				 * through */
 			    case ENODEV:
 				fprintf(stderr,
 					_("Warning: no device on %s. "
@@ -599,6 +604,7 @@ pconn_serial_open(PConnection *pconn,
 				continue;
 
 			    default:
+			    abort:
 				fprintf(stderr,
 					_("Error: Can't open \"%s\".\n"),
 					device);
