@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.50 2001-12-07 14:51:48 arensb Exp $
+.\" $Id: coldsync.8,v 1.51 2001-12-09 19:57:51 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -794,6 +794,7 @@ directives are of the form
 option {
 	install_first:	true;
 	force_install:	no;
+	hostid: 0x1234abcd;
 
 	CONDUIT_PATH: "$(CONDUITDIR):$(HOME)/.palm/conduits";
 	key:  "this is the value";
@@ -827,6 +828,14 @@ is equivalent to specifying
 .Fl I
 on the command line, except that the command line takes precedence
 over the configuration file.
+.Pp
+The
+.Dv hostid
+directive sets this host's ID, for purposes of syncing. The host ID is
+a 32-bit integer, and may be specified in decimal (3232264158), octal
+(030052067736), or hexadecimal format (0xc0a86fde), using C-like
+syntax. If this directive is omitted, the host ID defaults to the
+host's IPv4 address.
 .Pp
 All other options behave like shell variables, in that you may use
 them later on in the configuration file. In fact, if you do not set an
