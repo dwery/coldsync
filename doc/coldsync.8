@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.36 2001-01-14 12:19:31 arensb Exp $
+.\" $Id: coldsync.8,v 1.37 2001-01-25 16:36:00 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -866,5 +866,9 @@ begins with whitespace.
 .Pp
 It appears that syncing with a machine other than that with which you
 normally sync might cause a database to lose its category information.
+.Pp
+Under FreeBSD, if you have both a Visor and another device plugged
+into the USB port, ColdSync might not be able to find the Visor
+correctly.
 .Pp
 Probably many others.
