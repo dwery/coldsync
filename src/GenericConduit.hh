@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.hh,v 1.6 2000-08-07 00:31:41 arensb Exp $
+ * $Id: GenericConduit.hh,v 1.7 2000-09-08 15:55:54 arensb Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
@@ -17,7 +17,8 @@ extern "C" {
 
 extern "C" {
 extern int run_GenericConduit(struct PConnection *pconn,
-			      struct dlp_dbinfo *db);
+			      struct dlp_dbinfo *db,
+			      const conduit_block *block);
 }
 
 class GenericConduit
