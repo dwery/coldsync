@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.6 2000-08-07 00:35:29 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.7 2000-08-07 01:05:11 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -50,11 +50,6 @@
 #define DLPCMD_MoveCategory		0x2c	/* Move records in a
 						 * category */
 #define DLPCMD_ProcessRPC		0x2d	/* Remote Procedure Call */
-						/* XXX - Unimplemented:
-						 * this looks very cool,
-						 * but I don't know where
-						 * to begin.
-						 */
 #define DLPCMD_OpenConduit		0x2e	/* Say a conduit is open */
 #define DLPCMD_EndOfSync		0x2f	/* Terminate the sync */
 #define DLPCMD_ResetRecordIndex		0x30	/* Reset "modified" index */
