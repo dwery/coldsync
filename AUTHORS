@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.1 2000-11-14 16:21:00 arensb Exp $
+# $Id: AUTHORS,v 2.2 2000-12-17 09:35:33 arensb Exp $
 
 Authors and Contributors:
 
@@ -32,3 +32,8 @@ Philipp Matthias Hahn <pmhahn@titan.lahn.de>: Updated German
 authors of the pilot-link code, for providing a reference
 implementation.
 
+	This product includes software developed by the University of
+California, Berkeley and its contributors.
+
+(Specifically, the "cfmakeraw()" function in libpconn/cfmakeraw.c was
+taken from FreeBSD 4.0.)
