@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.24 2000-01-27 03:55:36 arensb Exp $
+ * $Id: coldsync.c,v 1.25 2000-01-27 04:18:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -908,6 +908,9 @@ CheckLocalFiles(struct Palm *palm)
 
 		/* Come up with a unique filename to which to move the
 		 * database.
+		 * We don't use mkbakfname() because we already know that
+		 * this database doesn't exist on the Palm, so we don't
+		 * really care if bogus characters are escaped or not.
 		 */
 
 		/* Get the database's current full pathname */
