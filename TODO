@@ -1,6 +1,4 @@
-- Apply M50x patch.
-	Rename the usb_m50x listen type.
-	Add stuff to parser as well.
+- Rename the usb_m50x listen type.
 - netsync_read()/netsync_write() appear to be used only for sending
   ritual packets back and forth.
 - netsync_read() should use (*io_read), just as netsync_write usees
