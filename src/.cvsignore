@@ -3,3 +3,5 @@ y.tab.h
 y.tab.c
 lex.yy.c
 .depend
+coldsync
+conduits.h
