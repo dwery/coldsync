@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.36 2001-03-27 14:05:43 arensb Exp $
+ * $Id: pdb.c,v 1.37 2001-03-29 05:35:45 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -20,6 +20,10 @@
  * Add 'int pdb_errno'; define error numbers and error messages that go
  * with them.
  * Debugging messages should go to 'FILE *pdb_logfile'.
+ */
+/* XXX - When the pdb_{Up,Down}load() functions get moved to the main
+ * ColdSync body, will need to redo error-reporting, both in these
+ * functions and in their callers (and their callers, etc.).
  */
 
 #include "config.h"
@@ -821,6 +825,7 @@ pdb_Download(PConnection *pconn,
  * responsibility to save this change to the appropriate file, if
  * applicable.
  */
+/* XXX - Probably best to move this to the main ColdSync tree */
 int
 pdb_Upload(PConnection *pconn, struct pdb *db)
 {
@@ -837,8 +842,28 @@ pdb_Upload(PConnection *pconn, struct pdb *db)
 	 * reason. I'm just imitating HotSync, here.
 	 */
 	err = DlpOpenConduit(pconn);
-	if (err != DLPSTAT_NOERR)
+	switch (err)
 	{
+	    case DLPSTAT_NOERR:		/* No error */
+		break;
+	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
+					 * by the user, on the Palm. */
+		fprintf(stderr, _("Upload of \"%s\" cancelled by Palm.\n"),
+			db->name);
+		/* XXX - Error-reporting: this function is nominally in
+		 * libpdb, so it shouldn't really be allowed to touch
+		 * either palm_errno or cs_errno. So can't follow the rules
+		 * and also report the fact that the upload was cancelled.
+		 * So we cheat. Massively.
+		 * This ugliness will go away once this function is moved
+		 * out of libpdb and into the main body of ColdSync.
+		 */
+		{
+			extern int cs_errno;
+			cs_errno = 1;	/* XXX - CSE_CANCEL */
+		}
+		return -1;
+	    default:			/* All other errors */
 		fprintf(stderr, _("Can't open conduit for \"%s\": %d.\n"),
 			db->name, err);
 		return -1;
