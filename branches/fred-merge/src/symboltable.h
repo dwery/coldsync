@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.h,v 1.1.4.2 2001-10-12 02:35:39 arensb Exp $
+ * $Id: symboltable.h,v 1.1.4.3 2001-10-12 04:05:44 arensb Exp $
  */
 
 #ifdef __cplusplus
@@ -22,9 +22,15 @@ extern char *get_symbol_n(const char *name, int len);
 extern void put_symbol(const char *name, const char *value);
 			/* Put a symbol onto the table. (name is the
 			 * key, value is the value.) */
-extern void symboltable_init();
+extern void symboltable_init(void);
 			/* Initialize the symbol table based on the
 			 * arguments. */
 #ifdef __cplusplus
 };
 #endif	/* __cplusplus */
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
+ */
