@@ -6,14 +6,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.38 2000-10-22 03:25:19 arensb Exp $
+ * $Id: config.c,v 1.39 2000-11-04 23:14:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
 #include <stdlib.h>		/* For atoi(), getenv() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
-#include <sys/stat.h>		/* For stat() */
+#include <sys/stat.h>		/* For mkdir() */
 #include <pwd.h>		/* For getpwuid() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <netdb.h>		/* For gethostbyname() */
@@ -66,13 +66,17 @@ char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
+char conf_fname[MAXPATHLEN+1];	/* ~/.coldsyncrc */
+
 struct userinfo userinfo;	/* Information about the Palm's owner */
+	/* XXX - Probably should go in sync_config */
 
 static int name2listen_type(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
 
+#if 0
 /* get_config
  * Get the initial configuration: parse command-line arguments and load the
  * configuration file, if any.
@@ -87,19 +91,10 @@ get_config(int argc, char *argv[])
 					 * which argument was bogus, and
 					 * thereby print descriptive error
 					 * messages. */
-	int arg;			/* Current option */
-	char *config_fname = NULL;	/* Name of config file to read */
 	static char fname_buf[MAXPATHLEN];
 					/* Buffer in which to construct the
 					 * config file path, if not given.
 					 */
-	Bool config_fname_given;	/* Whether the user specified a
-					 * config file on the command line.
-					 */
-	struct stat statbuf;		/* For stat() */
-	char *devname = NULL;		/* Name of device to listen on */
-	int devtype = -1;		/* type of device to listen on */
-
 	struct config *user_config = NULL;
 					/* Configuration read from config
 					 * file (as opposed to what was
@@ -111,6 +106,10 @@ get_config(int argc, char *argv[])
 
 	/* Initialize the global options to sane values */
 	global_opts.mode		= mode_None;
+	global_opts.conf_fname		= NULL;
+	global_opts.conf_fname_given	= False;
+	global_opts.devname		= NULL;
+	global_opts.devtype		= -1;
 	global_opts.do_backup		= False;
 	global_opts.backupdir		= NULL;
 	global_opts.do_restore		= False;
@@ -133,6 +132,11 @@ get_config(int argc, char *argv[])
 					 */
 
 	/* By default, the host ID is its IP address. */
+	/* XXX - Write a separate function to return the host ID.
+	 * Under *BSD, might want to use sysctl(CTL_KERN, KERN_HOSTID) (or
+	 * whatever) to get a hostid. Then again, on my machine, the hostid
+	 * is 0, so that's probably a bad idea.
+	 */
 	/* Get the hostname */
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
@@ -177,141 +181,10 @@ get_config(int argc, char *argv[])
 	MISC_TRACE(2)
 		fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
 
-	/* XXX - Any other system-dependent values that should be
-	 * determined at runtime?
-	 */
-
 	/* Start by reading command-line options. */
-	config_fname_given = False;
-	while ((arg = getopt(argc, argv, ":hVSFRIf:m:b:r:p:t:d:")) != -1)
-		/* XXX - The "-b" and "-r" options are obsolete, and should
-		 * be removed some time after v1.4.6.
-		 */
-	{
-		switch (arg)
-		{
-		    case 'h':	/* -h: Print usage message and exit */
-			usage(argc,argv);
-			return -1;	/* XXX - Returning -1 causes main()
-					 * to print an error message. This
-					 * shouldn't happen.
-					 */
-
-		    case 'V':	/* -V: Print version number and exit */
-			print_version();
-			return -1;
-
-		    case 'S':	/* -S: Force slow sync */
-			global_opts.force_slow = True;
-			break;
-
-		    case 'F':	/* -F: Force fast sync */
-			global_opts.force_fast = True;
-			break;
-
-		    case 'R':	/* -R: Consider ROM databases */
-			global_opts.check_ROM = True;
-			break;
-
-		    case 'I':	/* -I: Install younger databases */
-			global_opts.force_install = True;
-			break;
-
-		    case 'f':	/* -f <file>: Read configuration from
-				 * <file>.
-				 */
-			config_fname = optarg;
-			config_fname_given = True;
-			break;
-
-		    case 'm':	/* -m <mode>: Run in the given mode */
-			err = set_mode(optarg);
-			if (err < 0)
-			{
-				usage(argc, argv);
-				return -1;
-			}
-			break;
-
-		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
-			/* XXX - This option is obsolete. Remove it some
-			 * time after v1.4.6.
-			 */
-			fprintf(stderr,
-				_("Warning: The \"-b <dir>\" option is "
-				  "obsolete. Please use \"-mb <dir>\"\n"
-				  "instead.\n"));
-			global_opts.mode = mode_Backup;
-			global_opts.do_backup = True;
-			global_opts.backupdir = optarg;
-			break;
-
-		    case 'r':	/* -r <dir>: Do a restore from <dir> */
-			/* XXX - This option is obsolete. Remove it some
-			 * time after v1.4.6.
-			 */
-			fprintf(stderr,
-				_("Warning: The \"-r <dir>\" option is "
-				  "obsolete. Please use \"-mr <dir>\"\n"
-				  "instead.\n"));
-			global_opts.mode = mode_Restore;
-			global_opts.do_restore = True;
-			global_opts.restoredir = optarg;
-			break;
-
-		    case 'p':	/* -p <device>: Listen on serial port
-				 * <device>
-				 */
-			devname = optarg;
-			break;
-
-		    case 't':	/* -t <device type>: Listen on port device
-				 * of type <device type>
-				 */
-			devtype = name2listen_type(optarg);
-			if (devtype < 0)
-			{
-				fprintf(stderr,
-					_("Unknown device type: \"%s\"\n"),
-					optarg);
-				usage(argc, argv);
-				return -1;
-			}
-			break;
-
-		    case 'd':	/* -d <fac>:<n>: Debugging level */
-			set_debug_level(optarg);
-			break;
-
-		    case '?':	/* Unknown option */
-			fprintf(stderr, _("Unrecognized option: \"%s\"\n"),
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    case ':':	/* An argument required an option, but none
-				 * was given (e.g., "-u" instead of "-u
-				 * daemon").
-				 */
-			fprintf(stderr, _("Missing option argument after "
-					  "\"%s\"\n"),
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    default:
-			fprintf(stderr,
-				_("You specified an apparently legal option "
-				  "(\"-%c\"), but I don't know what\n"
-				  "to do with it. This is a bug. Please "
-				  "notify the maintainer.\n"),
-				arg);
-			return -1;
-			break;
-		}
-
-		oldoptind = optind;	/* Update for next iteration */
-	}
+	err = parse_args(argc, argv);
+	if (err < 0)
+		return err;
 
 	/* Default to standalone mode if no mode specified */
 	if (global_opts.mode == mode_None)
@@ -394,7 +267,7 @@ get_config(int argc, char *argv[])
 	 * The exception is that the sysadmin must be able to forbid
 	 * certain things, e.g., ve may mandate a set of conduits.
 	 */
-	if (config_fname == NULL)
+	if (global_opts.conf_fname == NULL)
 	{
 		/* No config file specified on the command line. Construct
 		 * the full pathname to ~/.coldsyncrc in 'fname_buf'.
@@ -402,11 +275,11 @@ get_config(int argc, char *argv[])
 		strncpy(fname_buf, userinfo.homedir, MAXPATHLEN);
 		strncat(fname_buf, "/.coldsyncrc",
 			MAXPATHLEN - strlen(fname_buf));
-		config_fname = fname_buf;
+		global_opts.conf_fname = fname_buf;
 	}
 	MISC_TRACE(2)
 		fprintf(stderr, "Reading configuration from \"%s\"\n",
-			config_fname);
+			global_opts.conf_fname);
 
 	/* Allocate a place to put the user's configuration */
 	if ((user_config = new_config()) == NULL)
@@ -449,29 +322,29 @@ get_config(int argc, char *argv[])
 	/* Make sure this file exists. If it doesn't, fall back on
 	 * defaults.
 	 */
-	if (stat(config_fname, &statbuf) < 0)
+	if (!exists(global_opts.conf_fname))
 	{
 		/* The file doesn't exist */
-		if (config_fname_given)
+		if (global_opts.conf_fname_given)
 		{
 			/* The user explicitly said to use this file, but
 			 * it doesn't exist. Give a warning.
 			 */
 			fprintf(stderr, _("Warning: config file \"%s\" "
 				"doesn't exist. Using defaults.\n"),
-				config_fname);
+				global_opts.conf_fname);
 		}
-		config_fname = NULL;
+		global_opts.conf_fname = NULL;
 	}
 
-	if (config_fname != NULL)
+	if (global_opts.conf_fname != NULL)
 	{
 		/* Config file exists. Read it */
-		if (parse_config(config_fname, user_config) < 0)
+		if (parse_config(global_opts.conf_fname, user_config) < 0)
 		{
 			fprintf(stderr, _("Error reading configuration file "
 				"\"%s\"\n"),
-				config_fname);
+				global_opts.conf_fname);
 			free_config(user_config);
 			return -1;
 		}
@@ -491,7 +364,7 @@ get_config(int argc, char *argv[])
 		MISC_TRACE(4)
 			fprintf(stderr,
 				"Device specified on command line: \"%s\"\n", 
-				devname);
+				global_opts.devname);
 
 		if ((l = new_listen_block()) == NULL)
 		{
@@ -500,7 +373,7 @@ get_config(int argc, char *argv[])
 			return -1;
 		}
 
-		if ((l->device = strdup(devname)) == NULL)
+		if ((l->device = strdup(global_opts.devname)) == NULL)
 		{
 			fprintf(stderr, _("Can't copy string.\n"));
 			free_listen_block(l);
@@ -508,8 +381,8 @@ get_config(int argc, char *argv[])
 			return -1;
 		}
 
-		if (devtype >= 0)
-			l->listen_type = devtype;
+		if (global_opts.devtype >= 0)
+			l->listen_type = global_opts.devtype;
 
 		/* Make the new listen block be the one for the main
 		 * configuration.
@@ -686,6 +559,480 @@ get_config(int argc, char *argv[])
 		free_config(user_config);
 
 	return 0;
+}
+#endif	/* 0 */
+
+/* parse_args
+ * Parse command-line arguments.
+ * Returns -1 on error. Returns 0 if the program should stop now ("-h" and
+ * "-V" options). If successful, returns the number of arguments parsed.
+ */
+int
+parse_args(int argc, char *argv[])
+{
+	int err;
+	int oldoptind;			/* Previous value of 'optind', to
+					 * allow us to figure out exactly
+					 * which argument was bogus, and
+					 * thereby print descriptive error
+					 * messages. */
+	int arg;			/* Current option */
+
+	oldoptind = optind;		/* Initialize "last argument"
+					 * index.
+					 */
+
+	/* Read command-line options. */
+	while ((arg = getopt(argc, argv, ":hVSFRIf:m:b:r:p:t:d:")) != -1)
+		/* XXX - The "-b" and "-r" options are obsolete, and should
+		 * be removed some time after v1.4.6.
+		 */
+	{
+		switch (arg)
+		{
+		    case 'h':	/* -h: Print usage message and exit */
+			usage(argc, argv);
+			return 0;
+
+		    case 'V':	/* -V: Print version number and exit */
+			print_version();
+			return 0;
+
+		    case 'S':	/* -S: Force slow sync */
+			global_opts.force_slow = True;
+			break;
+
+		    case 'F':	/* -F: Force fast sync */
+			global_opts.force_fast = True;
+			break;
+
+		    case 'R':	/* -R: Consider ROM databases */
+			global_opts.check_ROM = True;
+			break;
+
+		    case 'I':	/* -I: Install younger databases */
+			global_opts.force_install = True;
+			break;
+
+		    case 'f':	/* -f <file>: Read configuration from
+				 * <file>.
+				 */
+			global_opts.conf_fname = optarg;
+			global_opts.conf_fname_given = True;
+			break;
+
+		    case 'm':	/* -m <mode>: Run in the given mode */
+			err = set_mode(optarg);
+			if (err < 0)
+			{
+				usage(argc, argv);
+				return -1;
+			}
+			break;
+
+		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
+			/* XXX - This option is obsolete. Remove it some
+			 * time after v1.4.6.
+			 */
+			fprintf(stderr,
+				_("Warning: The \"-b <dir>\" option is "
+				  "obsolete. Please use \"-mb <dir>\"\n"
+				  "instead.\n"));
+			global_opts.mode = mode_Backup;
+			global_opts.do_backup = True;
+			global_opts.backupdir = optarg;
+			break;
+
+		    case 'r':	/* -r <dir>: Do a restore from <dir> */
+			/* XXX - This option is obsolete. Remove it some
+			 * time after v1.4.6.
+			 */
+			fprintf(stderr,
+				_("Warning: The \"-r <dir>\" option is "
+				  "obsolete. Please use \"-mr <dir>\"\n"
+				  "instead.\n"));
+			global_opts.mode = mode_Restore;
+			global_opts.do_restore = True;
+			global_opts.restoredir = optarg;
+			break;
+
+		    case 'p':	/* -p <device>: Listen on serial port
+				 * <device>
+				 */
+			global_opts.devname = optarg;
+			break;
+
+		    case 't':	/* -t <device type>: Listen on port device
+				 * of type <device type>
+				 */
+			global_opts.devtype = name2listen_type(optarg);
+			if (global_opts.devtype < 0)
+			{
+				fprintf(stderr,
+					_("Unknown device type: \"%s\"\n"),
+					optarg);
+				usage(argc, argv);
+				return -1;
+			}
+			break;
+
+		    case 'd':	/* -d <fac>:<n>: Debugging level */
+			set_debug_level(optarg);
+			break;
+
+		    case '?':	/* Unknown option */
+			fprintf(stderr, _("Unrecognized option: \"%s\"\n"),
+				argv[oldoptind]);
+			usage(argc, argv);
+			return -1;
+
+		    case ':':	/* An argument required an option, but none
+				 * was given (e.g., "-u" instead of "-u
+				 * daemon").
+				 */
+			fprintf(stderr, _("Missing option argument after "
+					  "\"%s\"\n"),
+				argv[oldoptind]);
+			usage(argc, argv);
+			return -1;
+
+		    default:
+			fprintf(stderr,
+				_("You specified an apparently legal option "
+				  "(\"-%c\"), but I don't know what\n"
+				  "to do with it. This is a bug. Please "
+				  "notify the maintainer.\n"),
+				arg);
+			return -1;
+			break;
+		}
+
+		oldoptind = optind;	/* Update for next iteration */
+	}
+
+	return optind;
+}
+
+/* load_config
+ * Load the global configuration file /etc/coldsync.conf. If we're
+ * not running in daemon mode, load the user's .coldsyncrc as well.
+ */
+int
+load_config()
+{
+	int err;
+
+	/* Allocate a place to put the user's configuration */
+	if ((sync_config = new_sync_config()) == NULL)
+	{
+		fprintf(stderr, _("Can't allocate new configuration.\n"));
+		return -1;
+	}
+
+	/* Add a default conduit to the head of the queue, equivalent
+	 * to:
+	 * 	conduit sync {
+	 *		type: * / *;
+	 *		path: [generic];
+	 *	}
+	 */
+	{
+		conduit_block *fallback;	/* The generic default
+						 * conduit */
+
+		/* Allocate a new conduit block */
+		if ((fallback = new_conduit_block()) == NULL)
+		{
+			fprintf(stderr,
+				_("Can't allocate new conduit block.\n"));
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		/* Initialize the fallback conduit. */
+		fallback->flavors = FLAVORFL_SYNC;	/* Sync flavor */
+		append_crea_type(fallback, 0x0000, 0x0000);
+					/* Handles all creators and types */
+		fallback->flags |= CONDFL_DEFAULT;
+					/* This is a default conduit */
+		fallback->path = strdup("[generic]");
+		if (fallback->path == NULL)
+		{
+			/* strdup() failed */
+			fprintf(stderr,
+				_("Error initializing configuration.\n"));
+			perror("strdup");
+
+			free_conduit_block(fallback);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		/* Append this conduit to the (empty) conduit queue */
+		sync_config->conduits = fallback;
+	}
+
+	/* Read /etc/coldsync.conf */
+	if (exists(DEFAULT_GLOBAL_CONFIG))
+	{
+		MISC_TRACE(3)
+			fprintf(stderr, "Reading \"%s\"\n",
+				DEFAULT_GLOBAL_CONFIG);
+
+		err = parse_config_file(DEFAULT_GLOBAL_CONFIG, sync_config);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error reading configuration file \"%s\"\n"),
+				DEFAULT_GLOBAL_CONFIG);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+	}
+
+	/* Read ~/.coldsyncrc */
+	if (global_opts.mode != mode_Daemon)
+	{
+		struct userinfo userinfo;	/* User's /etc/passwd entry */
+
+		if (global_opts.conf_fname_given &&
+		    !exists(global_opts.conf_fname))
+		{
+			/* A config file was specified on the command line,
+			 * but it doesn't exist. Warn and continue with the
+			 * defaults.
+			 */
+			fprintf(stderr,
+				_("Error: config file \"%s\" doesn't "
+				  "exist.\n"),
+				global_opts.conf_fname);
+
+			return -1;
+		}
+
+		if (global_opts.conf_fname == NULL)
+		{
+			err = get_userinfo(&userinfo);
+			if (err < 0)
+			{
+				fprintf(stderr, _("Can't get user info\n"));
+				return -1;
+			}
+
+			/* Construct the full pathname to ~/.coldsyncrc in
+			 * 'conf_fname'.
+			 */
+			strncpy(conf_fname, userinfo.homedir, MAXPATHLEN);
+			strncat(conf_fname, "/.coldsyncrc",
+				MAXPATHLEN - strlen(conf_fname));
+			global_opts.conf_fname = conf_fname;
+		}
+
+		MISC_TRACE(3)
+			fprintf(stderr, "Reading \"%s\"\n",
+				global_opts.conf_fname);
+
+		err = parse_config_file(global_opts.conf_fname, sync_config);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error reading configuration file \"%s\"\n"),
+				global_opts.conf_fname);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+	}
+
+	/* Make sure there's at least one listen block: if a port was
+	 * specified on the command line, use that. If nothing was
+	 * specified on the command line or in the config files, create a
+	 * default listen block.
+	 */
+	/* XXX - This is a hack */
+	if (global_opts.devname != NULL)
+	{
+		/* A device was specified on the command line */
+		listen_block *l;
+
+		MISC_TRACE(4)
+			fprintf(stderr,
+				"Device specified on command line: \"%s\"\n", 
+				global_opts.devname);
+
+		if ((l = new_listen_block()) == NULL)
+		{
+			fprintf(stderr, _("Can't allocate listen block.\n"));
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		if ((l->device = strdup(global_opts.devname)) == NULL)
+		{
+			fprintf(stderr, _("Can't copy string.\n"));
+			free_listen_block(l);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		if (global_opts.devtype >= 0)
+			l->listen_type = global_opts.devtype;
+
+		/* Prepend the new listen block to the list of listen blocks */
+		l->next = sync_config->listen;
+		sync_config->listen = l;
+		l = NULL;
+	}
+
+	if (sync_config->listen == NULL)
+	{
+		/* No device specified either on the command line or in the
+		 * config files. Create a new, default listen block.
+		 */
+		listen_block *l;
+
+		MISC_TRACE(4)
+			fprintf(stderr, "No device specified on the "
+				"command line or in config file.\n"
+				"Using default: \""
+				PALMDEV "\"\n");
+
+		if ((l = new_listen_block()) == NULL)
+		{
+			fprintf(stderr,
+				_("Can't allocate listen block.\n"));
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		if ((l->device = strdup(PALMDEV)) == NULL)
+		{
+			fprintf(stderr, _("Can't copy string.\n"));
+			free_listen_block(l);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+
+		/* Make the new listen block be the one for the main
+		 * configuration.
+		 */
+		sync_config->listen = l;
+		l = NULL;
+	}
+
+	SYNC_TRACE(4)
+	{
+		/* Dump a summary of the config file */
+		listen_block *l;
+		pda_block *p;
+		conduit_block *c;
+
+		fprintf(stderr, "Summary of sync configuration:\n");
+		for (l = sync_config->listen; l != NULL; l = l->next)
+		{
+			fprintf(stderr, "Listen:\n");
+			fprintf(stderr, "\tType: %d\n", l->listen_type);
+			fprintf(stderr, "\tDevice: [%s]\n", l->device);
+			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
+		}
+
+		fprintf(stderr, "Known PDAs:\n");
+		for (p = sync_config->pda; p != NULL; p = p->next)
+		{
+			fprintf(stderr, "PDA:\n");
+			fprintf(stderr, "\tSerial number: [%s]\n",
+				(p->snum == NULL ? "(null)" : p->snum));
+			fprintf(stderr, "\tDirectory: [%s]\n",
+				(p->directory == NULL ? "(null)" :
+				 p->directory));
+			fprintf(stderr, "\tUsername: [%s]\n",
+				(p->username == NULL ? "(null)" :
+				 p->username));
+			fprintf(stderr, "\tUserID: %ld\n",
+				p->userid);
+			fprintf(stderr, "\tFlags:");
+			if ((p->flags & PDAFL_DEFAULT) != 0)
+				fprintf(stderr, " DEFAULT");
+			fprintf(stderr, "\n");
+		}
+
+		fprintf(stderr, "The queue of conduits:\n");
+		for (c = sync_config->conduits; c != NULL; c = c->next)
+		{
+			struct cond_header *hdr;
+			int i;
+
+			fprintf(stderr, "  Conduit:\n");
+			fprintf(stderr, "\tflavors: 0x%04x", c->flavors);
+			if (c->flavors & FLAVORFL_FETCH)
+				fprintf(stderr, " FETCH");
+			if (c->flavors & FLAVORFL_DUMP)
+				fprintf(stderr, " DUMP");
+			if (c->flavors & FLAVORFL_SYNC)
+				fprintf(stderr, " SYNC");
+			fprintf(stderr, "\n");
+			fprintf(stderr, "\tCreator/Types:\n");
+			for (i = 0; i < c->num_ctypes; i++)
+			{
+				register udword crea = c->ctypes[i].creator;
+				register udword type = c->ctypes[i].type;
+
+				fprintf(stderr,
+					"\t  [%c%c%c%c/%c%c%c%c] "
+					"(0x%08lx/0x%08lx)\n",
+					(char) ((crea >> 24) & 0xff),
+					(char) ((crea >> 16) & 0xff),
+					(char) ((crea >> 8) & 0xff),
+					(char) (crea & 0xff),
+					(char) ((type >> 24) & 0xff),
+					(char) ((type >> 16) & 0xff),
+					(char) ((type >> 8) & 0xff),
+					(char) (type & 0xff),
+					crea,
+					type);
+			}
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
+			fprintf(stderr, "\tHeaders:\n");
+			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
+			{
+				fprintf(stderr, "\t  [%s]: [%s]\n",
+					hdr->name, hdr->value);
+			}
+			fprintf(stderr, "\tPreferences:\n");
+			for (i = 0; i < c->num_prefs; i++)
+			{
+				fprintf(stderr,
+					"\t  [%c%c%c%c] 0x%08lx / %d",
+					(char) ((c->prefs[i].creator >> 24) &
+						0xff),
+					(char) ((c->prefs[i].creator >> 16) &
+						0xff),
+					(char) ((c->prefs[i].creator >> 8) &
+						0xff),
+					(char) (c->prefs[i].creator & 0xff),
+					c->prefs[i].creator,
+					c->prefs[i].id);
+				if ((c->prefs[i].flags & PREFDFL_SAVED) != 0)
+					fprintf(stderr, " SAVED");
+				if ((c->prefs[i].flags & PREFDFL_UNSAVED) != 0)
+					fprintf(stderr, " UNSAVED");
+				fprintf(stderr, "\n");
+			}
+		}
+	}
+
+	return 0; 
 }
 
 /* set_debug_level
@@ -917,7 +1264,6 @@ load_palm_config(struct Palm *palm)
 	int err;
 	uid_t uid;		/* UID of user running 'coldsync' */
 	struct passwd *pwent;	/* /etc/passwd entry for current user */
-	struct stat statbuf;	/* For checking for files and directories */
 	pda_block *pda;		/* Description of the current PDA */
 
 	/* Try to find a pda_block for the current PDA */
@@ -930,7 +1276,7 @@ load_palm_config(struct Palm *palm)
 
 		pda = NULL;
 		default_pda = NULL;
-		for (cur = config.pda; cur != NULL; cur = cur->next)
+		for (cur = sync_config->pda; cur != NULL; cur = cur->next)
 		{
 			/* See if this pda_block has a serial number and if
 			 * so, whether it matches the one we read off of
@@ -1060,7 +1406,7 @@ load_palm_config(struct Palm *palm)
 		fprintf(stderr, "Base directory is [%s]\n", palmdir);
 
 	/* ~/.palm */
-	if (stat(palmdir, &statbuf) < 0)
+	if (!is_directory(palmdir))
 	{
 		/* ~/.palm doesn't exist. Create it */
 		if ((err = mkdir(palmdir, DIR_MODE)) < 0)
@@ -1075,7 +1421,7 @@ load_palm_config(struct Palm *palm)
 	strncpy(backupdir, palmdir, MAXPATHLEN);
 	strncat(backupdir, "/backup", MAXPATHLEN - strlen(palmdir));
 
-	if (stat(backupdir, &statbuf) < 0)
+	if (!is_directory(backupdir))
 	{
 		/* ~/.palm/backup doesn't exist. Create it */
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
@@ -1090,7 +1436,7 @@ load_palm_config(struct Palm *palm)
 	strncpy(atticdir, backupdir, MAXPATHLEN);
 	strncat(atticdir, "/Attic", MAXPATHLEN - strlen(backupdir));
 
-	if (stat(atticdir, &statbuf) < 0)
+	if (!is_directory(atticdir))
 	{
 		/* ~/.palm/backup/Attic doesn't exist. Create it */
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
@@ -1106,7 +1452,7 @@ load_palm_config(struct Palm *palm)
 	strncpy(archivedir, palmdir, MAXPATHLEN);
 	strncat(archivedir, "/archive", MAXPATHLEN - strlen(palmdir));
 
-	if (stat(archivedir, &statbuf) < 0)
+	if (!is_directory(archivedir))
 	{
 		/* ~/.palm/archive doesn't exist. Create it */
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
@@ -1121,7 +1467,7 @@ load_palm_config(struct Palm *palm)
 	strncpy(installdir, palmdir, MAXPATHLEN);
 	strncat(installdir, "/install", MAXPATHLEN - strlen(palmdir));
 
-	if (stat(installdir, &statbuf) < 0)
+	if (!is_directory(installdir))
 	{
 		/* ~/.palm/install doesn't exist. Create it */
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
@@ -1196,31 +1542,35 @@ get_fullname(char *buf,
 	return 0;
 }
 
-/* new_config
- * Allocate a new configuration.
+/* new_sync_config
+ * Allocate a new sync configuration.
  */
-struct config *
-new_config()
+struct sync_config *
+new_sync_config()
 {
-	struct config *retval;
+	struct sync_config *retval;
 
-	retval = (struct config *) malloc(sizeof(struct config));
+	retval = (struct sync_config *) malloc(sizeof(struct sync_config));
 	if (retval == NULL)
 		return NULL;		/* Out of memory */
 
 	/* Initialize fields */
 	retval->listen		= NULL;
 	retval->pda		= NULL;
-	retval->conduits		= NULL;
+	retval->conduits	= NULL;
 
 	MISC_TRACE(5)
 		fprintf(stderr,
-			"Allocated config 0x%08lx\n", (unsigned long) retval);
+			"Allocated sync_config 0x%08lx\n",
+			(unsigned long) retval);
 	return retval;
 }
 
+/* free_sync_config
+ * Free a sync configuration.
+ */
 void
-free_config(struct config *config)
+free_sync_config(struct sync_config *config)
 {
 	listen_block *l;
 	listen_block *nextl;
@@ -1230,7 +1580,7 @@ free_config(struct config *config)
 	conduit_block *nextc;
 
 	MISC_TRACE(5)
-		fprintf(stderr, "Freeing config 0x%08lx\n",
+		fprintf(stderr, "Freeing sync_config 0x%08lx\n",
 			(unsigned long) config);
 
 	/* Free the listen blocks */
