@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.126 2002-03-30 16:11:43 azummo Exp $
+ * $Id: coldsync.c,v 1.127 2002-03-30 16:38:44 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -597,6 +597,116 @@ palm_DisconnectAndFree( struct Palm *palm, ubyte status )
 }
 
 static int
+forward(pda_block *pda, struct Palm *palm )
+{
+	/* XXX - Need to figure out if remote address is really
+	 * local, in which case we really need to continue doing a
+	 * normal sync.
+	 */
+	struct sockaddr *sa;
+	socklen_t sa_len;
+	PConnection *pconn_forw;
+	int err;
+
+	SYNC_TRACE(2)
+		fprintf(stderr,
+			"I ought to forward this sync to \"%s\" "
+			"(%s)\n",
+			(pda->forward_host == NULL ? "<whatever>" :
+			 pda->forward_host),
+			(pda->forward_name == NULL ? "(null)" :
+			 pda->forward_name));
+
+	/* Get list of addresses corresponding to this host. We do
+	 * this now and not during initialization because in this
+	 * age of dynamic DNS and whatnot, you can't assume that a
+	 * machine will have the same addresses all the time.
+	 */
+	/* XXX - OTOH, most machines don't change addresses that
+	 * quickly. So perhaps it'd be better to call
+	 * get_hostaddrs() earlier, in case there are errors. Then,
+	 * if the desired address isn't found, rerun
+	 * get_hostaddrs() and see if that address has magically
+	 * appeared.
+	 */
+	if ((err = get_hostaddrs()) < 0)
+	{
+		Error(_("Can't get host addresses."));
+		return -1;
+	}
+
+	err = mkforw_addr(palm, pda, &sa, &sa_len);
+	if (err < 0)
+	{
+		Error(_("Can't resolve forwarding address."));
+		return -1;
+	}
+
+	SYNC_TRACE(3)
+	{
+		char namebuf[128];
+
+		fprintf(stderr, "Forwarding to host [%s]\n",
+			inet_ntop(sa->sa_family,
+				  &(((struct sockaddr_in *) sa)->sin_addr),
+				  namebuf, 128));
+	}
+
+	/* XXX - Check whether *sa is local. If it is, just do a
+	 * local sync, normally.
+	 */
+
+	/* XXX - Perhaps the rest of this block should be put in
+	 * forward_netsync()?
+	 */
+	/* Create a new PConnection for talking to the remote host */
+	if ((pconn_forw = new_PConnection(NULL,
+					  LISTEN_NET,
+					  PCONN_STACK_DEFAULT,
+					  0))
+	    == NULL)
+	{
+		Error(_("Can't create connection to forwarding "
+			"host."));
+		free(sa);
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Establish a connection to the remote host */
+	/* XXX - This hangs forever if the remote host doesn't send
+	 * back a wakeup ACK.
+	 * XXX - Also, should be able to handle the case of the
+	 * Palm cancelling the sync while this handshaking is going
+	 * on.
+	 */
+	err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
+	if (err < 0)
+	{
+		Error(_("Can't establish connection with forwarding "
+			"host."));
+			free(sa);
+		PConnClose(pconn_forw);
+		return -1;
+	}
+
+	err = forward_netsync(palm_pconn(palm), pconn_forw);
+	if (err < 0)
+	{
+		Error(_("Network sync forwarding failed."));
+		free(sa);
+		PConnClose(pconn_forw);
+		return -1;
+	}
+
+	free(sa);
+	PConnClose(pconn_forw);
+	return 0;
+}
+
+
+
+static int
 run_mode_Standalone(int argc, char *argv[])
 {
 	int err;
@@ -810,108 +920,16 @@ run_mode_Standalone(int argc, char *argv[])
 	 */
 	if ((pda != NULL) && pda->forward)
 	{
-		/* XXX - Need to figure out if remote address is really
-		 * local, in which case we really need to continue doing a
-		 * normal sync.
-		 */
-		struct sockaddr *sa;
-		socklen_t sa_len;
-		PConnection *pconn_forw;
-
-		SYNC_TRACE(2)
-			fprintf(stderr,
-				"I ought to forward this sync to \"%s\" "
-				"(%s)\n",
-				(pda->forward_host == NULL ? "<whatever>" :
-				 pda->forward_host),
-				(pda->forward_name == NULL ? "(null)" :
-				 pda->forward_name));
-
-		/* Get list of addresses corresponding to this host. We do
-		 * this now and not during initialization because in this
-		 * age of dynamic DNS and whatnot, you can't assume that a
-		 * machine will have the same addresses all the time.
-		 */
-		/* XXX - OTOH, most machines don't change addresses that
-		 * quickly. So perhaps it'd be better to call
-		 * get_hostaddrs() earlier, in case there are errors. Then,
-		 * if the desired address isn't found, rerun
-		 * get_hostaddrs() and see if that address has magically
-		 * appeared.
-		 */
-		if ((err = get_hostaddrs()) < 0)
+		if( forward(pda, palm) == 0 )	
 		{
-			Error(_("Can't get host addresses."));
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+			return 0;
+		}
+		else
+		{
 			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
-
-		err = mkforw_addr(palm, pda, &sa, &sa_len);
-		if (err < 0)
-		{
-			Error(_("Can't resolve forwarding address."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-		SYNC_TRACE(3)
-		{
-			char namebuf[128];
-
-			fprintf(stderr, "Forwarding to host [%s]\n",
-				inet_ntop(sa->sa_family,
-					  &(((struct sockaddr_in *) sa)->sin_addr),
-					  namebuf, 128));
-		}
-					  
-
-		/* XXX - Check whether *sa is local. If it is, just do a
-		 * local sync, normally.
-		 */
-
-		/* XXX - Perhaps the rest of this block should be put in
-		 * forward_netsync()?
-		 */
-		/* Create a new PConnection for talking to the remote host */
-		if ((pconn_forw = new_PConnection(NULL,
-						  LISTEN_NET,
-						  PCONN_STACK_DEFAULT,
-						  0))
-		    == NULL)
-		{
-			Error(_("Can't create connection to forwarding "
-				"host."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-		/* Establish a connection to the remote host */
-		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
-		if (err < 0)
-		{
-			Error(_("Can't establish connection with forwarding "
-				"host."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			PConnClose(pconn_forw);
-			return -1;
-		}
-
-		err = forward_netsync( palm_pconn(palm), pconn_forw);
-		if (err < 0)
-		{
-			Error(_("Network sync forwarding failed."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			PConnClose(pconn_forw);
-			return -1;
-		}
-
-		free(sa);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-		PConnClose(pconn_forw);
-		return 0;
 	}
 
 	/* Figure out what the base sync directory is */
@@ -2141,115 +2159,19 @@ run_mode_Daemon(int argc, char *argv[])
 	 * The way to get the list of the local host's addresses is
 	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
 	 */
+
 	if ((pda != NULL) && pda->forward)
 	{
-		/* XXX - Need to figure out if remote address is really
-		 * local, in which case we really need to continue doing a
-		 * normal sync.
-		 */
-		struct sockaddr *sa;
-		socklen_t sa_len;
-		PConnection *pconn_forw;
-
-		SYNC_TRACE(2)
-			fprintf(stderr,
-				"I ought to forward this sync to \"%s\" "
-				"(%s)\n",
-				(pda->forward_host == NULL ? "<whatever>" :
-				 pda->forward_host),
-				(pda->forward_name == NULL ? "(null)" :
-				 pda->forward_name));
-
-		/* Get list of addresses corresponding to this host. We do
-		 * this now and not during initialization because in this
-		 * age of dynamic DNS and whatnot, you can't assume that a
-		 * machine will have the same addresses all the time.
-		 */
-		/* XXX - OTOH, most machines don't change addresses that
-		 * quickly. So perhaps it'd be better to call
-		 * get_hostaddrs() earlier, in case there are errors. Then,
-		 * if the desired address isn't found, rerun
-		 * get_hostaddrs() and see if that address has magically
-		 * appeared.
-		 */
-		if ((err = get_hostaddrs()) < 0)
+		if( forward(pda, palm) == 0 )	
 		{
-			Error(_("Can't get host addresses."));
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
+			return 0;
+		}
+		else
+		{
 			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
-
-		err = mkforw_addr(palm, pda, &sa, &sa_len);
-		if (err < 0)
-		{
-			Error(_("Can't resolve forwarding address."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-		SYNC_TRACE(3)
-		{
-			char namebuf[128];
-
-			fprintf(stderr, "Forwarding to host [%s]\n",
-				inet_ntop(sa->sa_family,
-					  &(((struct sockaddr_in *) sa)->sin_addr),
-					  namebuf, 128));
-		}
-
-		/* XXX - Check whether *sa is local. If it is, just do a
-		 * local sync, normally.
-		 */
-
-		/* XXX - Perhaps the rest of this block should be put in
-		 * forward_netsync()?
-		 */
-		/* Create a new PConnection for talking to the remote host */
-		if ((pconn_forw = new_PConnection(NULL,
-						  LISTEN_NET,
-						  PCONN_STACK_DEFAULT,
-						  0))
-		    == NULL)
-		{
-			Error(_("Can't create connection to forwarding "
-				"host."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-
-		/* Establish a connection to the remote host */
-		/* XXX - This hangs forever if the remote host doesn't send
-		 * back a wakeup ACK.
-		 * XXX - Also, should be able to handle the case of the
-		 * Palm cancelling the sync while this handshaking is going
-		 * on.
-		 */
-		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
-		if (err < 0)
-		{
-			Error(_("Can't establish connection with forwarding "
-				"host."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			PConnClose(pconn_forw);
-			return -1;
-		}
-
-		err = forward_netsync(palm_pconn(palm), pconn_forw);
-		if (err < 0)
-		{
-			Error(_("Network sync forwarding failed."));
-			free(sa);
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			PConnClose(pconn_forw);
-			return -1;
-		}
-
-		free(sa);
-		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
-		PConnClose(pconn_forw);
-		return 0;
 	}
 
 	/* Figure out what the base sync directory is */
