@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.35 2001-01-14 12:13:26 arensb Exp $
+.\" $Id: coldsync.8,v 1.36 2001-01-14 12:19:31 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -125,10 +125,10 @@ does not install databases if doing so would overwrite an existing
 database with a higher modification number. This flag overrides this
 behavior.
 .It Fl z
-Install new databases after the main sync. Normally databases in
+Install new databases (and run Install conduits) after the main sync.
+Normally databases in
 .Pa ~/.palm/install
-are installed before the main sync. Use this if you do not want the
-new files synced this time around.
+are installed (and Install conduits run) before the main sync.
 .It Fl R
 Consider read-only (ROM) databases when syncing or doing a backup or
 restore. Normally, these are ignored.
@@ -262,8 +262,9 @@ If the
 .Fl z
 option was given,
 .Nm coldsync
-runs Install conduits on any files in the install directory as mentioned
-in step 5
+runs Install conduits on any files in the install directory as
+mentioned in step 5, then installs any databases left in the install
+directory.
 .It
 The main sync ends. The Palm displays the message
 .Dq HotSync complete.
