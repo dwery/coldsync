@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.24 2001-01-11 08:27:29 arensb Exp $
+ * $Id: install.c,v 2.25 2001-01-14 12:16:59 arensb Exp $
  */
 
 #include "config.h"
@@ -173,7 +173,7 @@ install_file(PConnection *pconn,
 
 /* NextInstallFile
  * Read the next valid install database in the .palm/install directory and
- * returns it's header info (only -- no data) in the struct dlp_dbinfo
+ * returns its header info (only -- no data) in the struct dlp_dbinfo
  * provided.  Returns a negative number when there are no more valid
  * databases.
  */
