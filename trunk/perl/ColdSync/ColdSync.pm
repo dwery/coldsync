@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.18 2002-04-02 15:33:04 azummo Exp $
+# $Id: ColdSync.pm,v 1.19 2002-10-16 18:39:20 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.18 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.19 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -153,6 +153,7 @@ sub DumpConfig
 	my $type;
 	my @typestrings = ();
 	my $typestring;
+	my $path = $0;
 
 	foreach $creator (keys %Palm::PDB::PDBHandlers)
 	{
@@ -169,7 +170,13 @@ sub DumpConfig
 	print "conduit ", join(",", @flavors), " {\n";
 			# Print the "conduit" directive and the list of
 			# flavors
-	print "\tpath: \"$0\";\n";
+
+	# Check $path for leading ./
+
+	$path =~ s|^(\.)/|$ENV{'PWD'}/|;
+
+
+	print "\tpath: \"$path\";\n";
 			# Print path to the conduit
 
 	# Print the list of types that this conduit supports.
