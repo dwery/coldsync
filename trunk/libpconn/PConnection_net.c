@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.21 2001-11-12 01:02:21 arensb Exp $
+ * $Id: PConnection_net.c,v 1.22 2001-11-19 17:08:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -10,9 +10,10 @@
 #include <arpa/inet.h>		/* For inet_pton() */
 #include <netdb.h>		/* For getservbyname() */
 #include <string.h>		/* For memset() */
-/* XXX - Solaris 2.6 and 7 choke on these next two when !INET_NTOP */
-#include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
-#include <resolv.h>		/* For inet_ntop() under Solaris */
+#if HAVE_INET_NTOP
+#  include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
+#  include <resolv.h>		/* For inet_ntop() under Solaris */
+#endif	/* HAVE_INET_NTOP */
 
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For bzero() */
@@ -196,7 +197,9 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 
 	IO_TRACE(3)
 	{
+#if HAVE_INET_NTOP
 		char namebuf[128];
+#endif	/* HAVE_INET_NTOP */
 
 		fprintf(stderr, "Inside net_connect(%s), port %d\n",
 			INET_NTOP(servaddr.sin_family,
@@ -243,7 +246,9 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 		perror("recvfrom");
 		goto retry;
 	} else {
+#if HAVE_INET_NTOP
 		char namebuf[128];
+#endif	/* HAVE_INET_NTOP */
 
 		fprintf(stderr,
 			"Got datagram from host 0x%08lx (%d.%d.%d.%d), "
@@ -365,7 +370,9 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	{
 		IO_TRACE(3)
 		{
+#if HAVE_INET_NTOP
 			char namebuf[128];
+#endif	/* HAVE_INET_NTOP */
 
 			fprintf(stderr, "connecting to [%s], port %d\n",
 				INET_NTOP(servaddr.sin_family,
