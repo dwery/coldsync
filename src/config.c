@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.26 2000-05-25 12:09:24 arensb Exp $
+ * $Id: config.c,v 1.27 2000-06-03 06:35:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -570,7 +570,7 @@ get_config(int argc, char *argv[])
 			fprintf(stderr, "Listen:\n");
 			fprintf(stderr, "\tType: %d\n", l->listen_type);
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
-			fprintf(stderr, "\tSpeed: %d\n", l->speed);
+			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
 		}
 
 		fprintf(stderr, "Known PDAs:\n");
@@ -582,8 +582,15 @@ get_config(int argc, char *argv[])
 			fprintf(stderr, "\tDirectory: [%s]\n",
 				(p->directory == NULL ? "(null)" :
 				 p->directory));
+			fprintf(stderr, "\tUsername: [%s]\n",
+				(p->username == NULL ? "(null)" :
+				 p->username));
+			fprintf(stderr, "\tUserID: %ld\n",
+				p->userid);
+			fprintf(stderr, "\tFlags:");
 			if ((p->flags & PDAFL_DEFAULT) != 0)
-				fprintf(stderr, "\tDEFAULT\n");
+				fprintf(stderr, " DEFAULT");
+			fprintf(stderr, "\n");
 		}
 
 		fprintf(stderr, "Sync conduits:\n");
@@ -905,7 +912,29 @@ load_palm_config(struct Palm *palm)
 		fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
 	}
 
-	user_uid = pwent->pw_uid;	/* Get the user's UID */
+	/* See if the PDA block has overridden the default user name.
+	 */
+	if ((pda != NULL) && (pda->username != NULL))
+	{
+		MISC_TRACE(4)
+			fprintf(stderr, "Overriding user name: [%s]\n",
+				pda->username);
+		strncpy(userinfo.fullname, pda->username,
+			sizeof(userinfo.fullname));
+	}
+
+	/* See if the PDA block has overridden the user ID */
+	if ((pda != NULL) && (pda->userid != 0))
+	{
+		/* Use the UID supplied by the PDA block */
+		MISC_TRACE(4)
+			fprintf(stderr, "Overriding user ID: %ld\n",
+				pda->userid);
+		user_uid = pda->userid;
+	} else {
+		/* Use the current user's UID */
+		user_uid = pwent->pw_uid;	/* Get the user's UID */
+	}
  
 	/* Make sure the various directories (~/.palm/...) exist, and create
 	 * them if necessary.
@@ -1228,7 +1257,7 @@ new_listen_block()
 	retval->next = NULL;
 	retval->listen_type = LISTEN_SERIAL;	/* By default */
 	retval->device = NULL;
-	retval->speed = 0;
+	retval->speed = 0L;
 
 	return retval;
 }
@@ -1314,6 +1343,8 @@ new_pda_block()
 	retval->name = NULL;
 	retval->snum = NULL;
 	retval->directory = NULL;
+	retval->username = NULL;
+	retval->userid = 0L;
 
 	return retval;
 }
@@ -1333,6 +1364,8 @@ free_pda_block(pda_block *p)
 		free(p->snum);
 	if (p->directory != NULL)
 		free(p->directory);
+	if (p->username != NULL)
+		free(p->username);
 	free(p);
 }
 
