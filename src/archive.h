@@ -9,17 +9,15 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.h,v 1.4 1999-09-09 05:50:35 arensb Exp $
+ * $Id: archive.h,v 1.5 1999-11-04 10:48:50 arensb Exp $
  */
 #ifndef _archive_h_
 #define _archive_h_
 
 #include "config.h"
 #include <fcntl.h>		/* For mode_t */
-/*  #include "palm_types.h" */	/* XXX */
+#include "pconn/pconn.h"
 #include "pdb.h"
-/*#include "dlp_cmd.h"*/
-#include <pconn/pconn.h>	/* XXX - Clean this up */
 
 #define ARCH_MAGIC_LEN	8		/* Length of magic string */
 #define ARCH_MAGIC	"ColdArch"	/* Magic string that goes at the

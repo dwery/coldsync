@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.5 1999-09-09 05:51:27 arensb Exp $
+ * $Id: handledb.c,v 1.6 1999-11-04 10:52:56 arensb Exp $
  */
 
 #include "config.h"
@@ -18,8 +18,7 @@
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
 #include "coldsync.h"
-/*  #include "dlp_cmd.h" */
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+#include "pconn/pconn.h"
 #include "pdb.h"
 #include "conduit.h"
 

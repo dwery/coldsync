@@ -4,15 +4,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.hh,v 1.4 1999-09-09 05:49:50 arensb Exp $
+ * $Id: GenericConduit.hh,v 1.5 1999-11-04 10:47:46 arensb Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
 
 extern "C" {
 #include "config.h"
-//  #include "dlp_cmd.h"
-#include <pconn/pconn.h>	// XXX - Clean this up
+#include "pconn/pconn.h"
 #include "coldsync.h"
 }
 
