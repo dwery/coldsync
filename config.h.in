@@ -40,6 +40,9 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
+/* Define if <errno.h> defines ENODEV */
+#undef HAVE_ENODEV
+
 /* Define if your OS distinguishes between text and binary files, _and_
  * your compiler defines O_BINARY (for use with open()).
  */
