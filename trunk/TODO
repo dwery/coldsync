@@ -1,11 +1,6 @@
 - It should be possible to set the hostid in a config file. If it's
   set in /etc/coldsync.conf, then obviously it shouldn't be possible
   to override it in ~/.coldsyncrc .
-- Bug: 'hostid' doesn't get set. This was done by get_config() in
-  src/config.c before it was nuked. Reinstate this soonest. See
-  differences between v1.41, 1.42.
-	Add a get_hostid() to config.c, call it in main() before the
-  various run_mode_*() functions.
 - Log for a full backup can exceed maximum size for logs. Find out
   what this limit is (under 2311 bytes, I think). What to do if the
   sync log exceeds this size? Send the first N bytes? The last N bytes
