@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.32 2002-12-10 12:07:27 azummo Exp $
+# $Id: Makefile,v 2.33 2002-12-10 14:31:46 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -77,13 +77,13 @@ DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
 		lexer.l parser.y
 
+include ${TOP}/Make.rules
+
 all::		conduits.h ${CXXPROG} ${CPROG}
 
 depend::	lex.yy.c
 depend::
 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
-
-include ${TOP}/Make.rules
 
 install::	${CXXPROG}
 	${MKDIR} ${BINDIR}
