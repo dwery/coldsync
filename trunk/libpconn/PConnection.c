@@ -6,12 +6,21 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.19 2001-02-20 12:36:38 arensb Exp $
+ * $Id: PConnection.c,v 1.20 2001-06-30 17:59:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#if  HAVE_SYS_SELECT_H
+#  include <sys/select.h>		/* To make select() work rationally
+					 * under AIX */
+#endif	/* HAVE_SYS_SELECT_H */
+
+#if HAVE_STRINGS_H
+#  include <strings.h>			/* For bzero() under AIX */
+#endif	/* HAVE_STRINGS_H */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
