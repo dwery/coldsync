@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.21 2000-05-06 11:37:00 arensb Exp $
+ * $Id: coldsync.h,v 1.22 2000-06-03 06:33:10 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -152,7 +152,7 @@ typedef struct listen_block
 				 * constants above.
 				 */
 	char *device;		/* Device to listen on */
-	int speed;		/* How fast to sync */
+	long speed;
 } listen_block;
 
 /* conduit_flavor
@@ -243,6 +243,8 @@ typedef struct pda_block
 					 * "backup", "archive" etc.
 					 * directories will be created.
 					 */
+	char *username;			/* Owner's full name */
+	udword userid;			/* Owner's user ID */
 	unsigned char flags;		/* PDAFL_* flags */
 } pda_block;
 
