@@ -1,3 +1,5 @@
+- Move the ritual_{stmt,resp} constants from "netsync.h" back to
+  "netsync.c", since that's the only place they're used.
 - Document the -P <protocol> option. Add it to the usage string.
 - Rename the usb_m50x listen type.
 - Use iconv(3) to convert command-line arguments to the appropriate
