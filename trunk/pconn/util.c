@@ -8,7 +8,7 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.4 1999-03-11 03:13:38 arensb Exp $
+ * $Id: util.c,v 1.5 1999-03-28 09:59:38 arensb Exp $
  */
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
@@ -132,7 +132,6 @@ time_dlp2time_t(const struct dlp_time *dlpt)
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 	tm.tm_isdst = 0;
-/* XXX - FreeBSD has this, Solaris doesn't. Detect it, or do without */
 #if HAVE_TM_ZONE
 	tm.tm_gmtoff = 0;
 	tm.tm_zone = NULL;
@@ -165,7 +164,6 @@ time_dlp2palmtime(const struct dlp_time *dlpt)
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 	tm.tm_isdst = 0;
-/* XXX - FreeBSD has this, Solaris doesn't. Detect it, or do without */
 #if HAVE_TM_ZONE
 	tm.tm_gmtoff = 0;
 	tm.tm_zone = NULL;
