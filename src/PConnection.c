@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.5 1999-08-26 14:24:31 arensb Exp $
+ * $Id: PConnection.c,v 1.6 1999-09-05 03:26:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -66,6 +66,8 @@ new_PConnection(char *fname)
 	/* Open the file */
 	if ((pconn->fd = open(fname, O_RDWR)) < 0)
 	{
+		fprintf(stderr, "new_PConnection: error opening port \"%s\"\n",
+			fname);
 		perror("open");
 		dlp_tini(pconn);
 		padp_tini(pconn);
