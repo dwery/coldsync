@@ -3,7 +3,7 @@
  * Structures and definitions and such for Palm's Desktop Link
  * Protocol (DLP).
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -57,7 +57,7 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.3 2000-12-08 07:24:07 arensb Exp $
+ * $Id: dlp.h,v 1.4 2001-01-09 16:32:35 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
