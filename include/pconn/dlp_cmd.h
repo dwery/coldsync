@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.21 2001-07-11 04:33:30 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.22 2001-09-07 10:40:07 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -18,58 +18,63 @@
  * they just be nuked?
  */
 
-/* DLP command codes */
-/* 1.0 functions */
-#define DLPCMD_ReadUserInfo		0x10	/* Get user info */
-#define DLPCMD_WriteUserInfo		0x11	/* Set user info */
-#define DLPCMD_ReadSysInfo		0x12	/* Get system info */
-#define DLPCMD_GetSysDateTime		0x13	/* Get the time on the Palm */
-#define DLPCMD_SetSysDateTime		0x14	/* Set time on the Palm */
-#define DLPCMD_ReadStorageInfo		0x15	/* Get memory info */
-#define DLPCMD_ReadDBList		0x16	/* Read database list */
-#define DLPCMD_OpenDB			0x17	/* Open a database */
-#define DLPCMD_CreateDB			0x18	/* Create a new database */
-#define DLPCMD_CloseDB			0x19	/* Close database(s) */
-#define DLPCMD_DeleteDB			0x1a	/* Delete a database */
-#define DLPCMD_ReadAppBlock		0x1b	/* Read AppInfo block */
-#define DLPCMD_WriteAppBlock		0x1c	/* Write AppInfo block */
-#define DLPCMD_ReadSortBlock		0x1d	/* Read app sort block */
-#define DLPCMD_WriteSortBlock		0x1e	/* Write app sort block */
-#define DLPCMD_ReadNextModifiedRec	0x1f	/* Read next modified record */
-#define DLPCMD_ReadRecord		0x20	/* Read a record */
-#define DLPCMD_WriteRecord		0x21	/* Write a record */
-#define DLPCMD_DeleteRecord		0x22	/* Delete records */
-#define DLPCMD_ReadResource		0x23	/* Read a resource */
-#define DLPCMD_WriteResource		0x24	/* Write a resource */
-#define DLPCMD_DeleteResource		0x25	/* Delete a resource */
-#define DLPCMD_CleanUpDatabase		0x26	/* Purge deleted records */
-#define DLPCMD_ResetSyncFlags		0x27	/* Reset dirty flags */
-#define DLPCMD_CallApplication		0x28	/* Call an application */
-#define DLPCMD_ResetSystem		0x29	/* Reset at end of sync */
-#define DLPCMD_AddSyncLogEntry		0x2a	/* Write the sync log */
-#define DLPCMD_ReadOpenDBInfo		0x2b	/* Get info about an open DB */
-#define DLPCMD_MoveCategory		0x2c	/* Move records in a
+/* DLP command codes
+ * These enum elements are all given explicit values because they're
+ * externally defined by Palm, and the values have to match up.
+ */
+typedef enum {
+	/* 1.0 functions */
+	DLPCMD_ReadUserInfo		= 0x10,	/* Get user info */
+	DLPCMD_WriteUserInfo		= 0x11,	/* Set user info */
+	DLPCMD_ReadSysInfo		= 0x12,	/* Get system info */
+	DLPCMD_GetSysDateTime		= 0x13,	/* Get the time on the Palm */
+	DLPCMD_SetSysDateTime		= 0x14,	/* Set time on the Palm */
+	DLPCMD_ReadStorageInfo		= 0x15,	/* Get memory info */
+	DLPCMD_ReadDBList		= 0x16,	/* Read database list */
+	DLPCMD_OpenDB			= 0x17,	/* Open a database */
+	DLPCMD_CreateDB			= 0x18,	/* Create a new database */
+	DLPCMD_CloseDB			= 0x19,	/* Close database(s) */
+	DLPCMD_DeleteDB			= 0x1a,	/* Delete a database */
+	DLPCMD_ReadAppBlock		= 0x1b,	/* Read AppInfo block */
+	DLPCMD_WriteAppBlock		= 0x1c,	/* Write AppInfo block */
+	DLPCMD_ReadSortBlock		= 0x1d,	/* Read app sort block */
+	DLPCMD_WriteSortBlock		= 0x1e,	/* Write app sort block */
+	DLPCMD_ReadNextModifiedRec	= 0x1f,	/* Read next modified record */
+	DLPCMD_ReadRecord		= 0x20,	/* Read a record */
+	DLPCMD_WriteRecord		= 0x21,	/* Write a record */
+	DLPCMD_DeleteRecord		= 0x22,	/* Delete records */
+	DLPCMD_ReadResource		= 0x23,	/* Read a resource */
+	DLPCMD_WriteResource		= 0x24,	/* Write a resource */
+	DLPCMD_DeleteResource		= 0x25,	/* Delete a resource */
+	DLPCMD_CleanUpDatabase		= 0x26,	/* Purge deleted records */
+	DLPCMD_ResetSyncFlags		= 0x27,	/* Reset dirty flags */
+	DLPCMD_CallApplication		= 0x28,	/* Call an application */
+	DLPCMD_ResetSystem		= 0x29,	/* Reset at end of sync */
+	DLPCMD_AddSyncLogEntry		= 0x2a,	/* Write the sync log */
+	DLPCMD_ReadOpenDBInfo		= 0x2b,	/* Get info about an open DB */
+	DLPCMD_MoveCategory		= 0x2c,	/* Move records in a
 						 * category */
-#define DLPCMD_ProcessRPC		0x2d	/* Remote Procedure Call */
-#define DLPCMD_OpenConduit		0x2e	/* Say a conduit is open */
-#define DLPCMD_EndOfSync		0x2f	/* Terminate the sync */
-#define DLPCMD_ResetRecordIndex		0x30	/* Reset "modified" index */
-#define DLPCMD_ReadRecordIDList		0x31	/* Get list of record IDs */
-/* DLP 1.1 functions */
-#define DLPCMD_ReadNextRecInCategory	0x32	/* Next record in category */
-#define DLPCMD_ReadNextModifiedRecInCategory	0x33
+	DLPCMD_ProcessRPC		= 0x2d,	/* Remote Procedure Call */
+	DLPCMD_OpenConduit		= 0x2e,	/* Say a conduit is open */
+	DLPCMD_EndOfSync		= 0x2f,	/* Terminate the sync */
+	DLPCMD_ResetRecordIndex		= 0x30,	/* Reset "modified" index */
+	DLPCMD_ReadRecordIDList		= 0x31,	/* Get list of record IDs */
+	/* DLP 1.1 functions */
+	DLPCMD_ReadNextRecInCategory	= 0x32,	/* Next record in category */
+	DLPCMD_ReadNextModifiedRecInCategory	= 0x33,
 						/* Next modified record in
 						 * category */
-#define DLPCMD_ReadAppPreference	0x34	/* Read app preference */
-#define DLPCMD_WriteAppPreference	0x35	/* Write app preference */
-#define DLPCMD_ReadNetSyncInfo		0x36	/* Read NetSync info */
-#define DLPCMD_WriteNetSyncInfo		0x37	/* Write NetSync info */
-#define DLPCMD_ReadFeature		0x38	/* Read a feature */
+	DLPCMD_ReadAppPreference	= 0x34,	/* Read app preference */
+	DLPCMD_WriteAppPreference	= 0x35,	/* Write app preference */
+	DLPCMD_ReadNetSyncInfo		= 0x36,	/* Read NetSync info */
+	DLPCMD_WriteNetSyncInfo		= 0x37,	/* Write NetSync info */
+	DLPCMD_ReadFeature		= 0x38,	/* Read a feature */
 
-/* DLP 1.2 functions (PalmOS v3.0) */
-#define DLPCMD_FindDB			0x39	/* Find a database given
+	/* DLP 1.2 functions (PalmOS v3.0) */
+	DLPCMD_FindDB			= 0x39,	/* Find a database given
 						 * creator/type or name */
-#define DLPCMD_SetDBInfo		0x3a	/* Change database info */
+	DLPCMD_SetDBInfo		= 0x3a	/* Change database info */
+} dlpc_op_t;
 
 /* dlp_time
  * Structure for giving date and time. If the year is zero, then this is a
