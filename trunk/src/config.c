@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.96 2002-04-17 23:18:34 azummo Exp $
+ * $Id: config.c,v 1.97 2002-04-18 21:31:45 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <netdb.h>		/* For gethostbyname2() */
 #include <sys/socket.h>		/* For socket() */
+#include <getopt.h>
 
 #if HAVE_STROPTS_H
 #  include <stropts.h>		/* For ioctl() under DU */
@@ -127,6 +128,30 @@ parse_args(int argc, char *argv[])
 					 * messages. */
 	int arg;			/* Current option */
 
+	/* Options: */
+	
+	static struct option longopts[] =
+	{
+		{"mode", 		required_argument, 	NULL, 'm'},
+		{"help", 		no_argument,		NULL, 'h'},
+		{"version",		no_argument,		NULL, 'V'},
+		{"verbose",		no_argument,		NULL, 'v'},
+		{"config",		required_argument,	NULL, 'f'},
+		{"slow-sync",		no_argument,		NULL, 'S'},
+		{"fast-sync",		no_argument,		NULL, 'F'},
+		{"force-install",	no_argument,		NULL, 'I'},
+		{"install-first",	no_argument,		NULL, 'z'},
+		{"consider-readonly",	no_argument,		NULL, 'R'},
+		{"device",		required_argument,	NULL, 'p'},
+		{"device-type",		required_argument,	NULL, 't'},
+		{"protocol",		required_argument,	NULL, 'P'},
+		{"use-syslog",		no_argument,		NULL, 's'},
+		{"logfile",		required_argument,	NULL, 'l'},
+		{"debug",		no_argument,		NULL, 'd'},
+		{"auto-init",		no_argument,		NULL, 'a'},
+	};	 
+
+	 
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
 					 */
@@ -136,11 +161,13 @@ parse_args(int argc, char *argv[])
 	 * "coldrestore"	-> mode_Restore
 	 * "coldinstall"	-> mode_Restore
 	 */
+	 
 
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
-	while ((arg = getopt(argc, argv, ":hvVSFRIaszf:l:m:p:t:P:d:n:"))
+	while ((arg = getopt_long(argc, argv, ":hvVSFRIaszf:l:m:p:t:P:d:n:",
+			&longopts[0], NULL))
 	       != -1)
 	{
 		switch (arg)
