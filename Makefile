@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.6 2000-01-26 11:26:31 arensb Exp $
+# $Id: Makefile,v 1.7 2000-01-27 01:47:52 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -24,8 +24,7 @@ DISTFILES =	README \
 		ChangeLog.0 \
 		HACKING \
 		Makefile \
-		Make.rules \
-		Make.vars.in \
+		Make.rules.in \
 		configure.in \
 		aclocal.m4 \
 		config.h.in \
@@ -39,15 +38,14 @@ EXTRA_DISTFILES =
 # Files to delete when making `clean', `distclean' and `spotless',
 # respectively. Each one deletes the ones before.
 CLEAN =		core *.core *.bak *~ errs errs.*
-DISTCLEAN =	config.cache Make.vars config.h config.log config.status ID \
+DISTCLEAN =	config.cache Make.rules config.h config.log config.status ID \
 		.depend
 SPOTLESS =	configure
 
-all::		Make.vars
+all::		Make.rules
 
 # Rebuild the `configure' stuff, if necessary.
-# XXX - Ought to make the source rebuild itself if `config.h' has changed.
-Make.vars config.h:	configure
+Make.rules config.h:	configure
 	./config.status
 
 configure:	configure.in
