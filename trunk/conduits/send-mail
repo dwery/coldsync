@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.6 2000-09-27 15:04:20 arensb Exp $
+# $Id: send-mail,v 1.7 2001-03-16 03:47:53 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -22,7 +22,7 @@ use Text::Wrap;
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.6 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.7 $ ))[1];	# Conduit version
 
 StartConduit("dump");
 
@@ -97,8 +97,8 @@ send-mail - ColdSync conduit to send Palm mail
 =head1 SYNOPSIS
 
     conduit dump {
-        type mail/DATA;
-        path "<...>/send-mail";
+        type: mail/DATA;
+        path: "<...>/send-mail";
       arguments:
         Sendmail:	/path/to/sendmail;
         My-Address:	user@my.dom.ain;
