@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.28 2000-06-03 07:02:43 arensb Exp $
+ * $Id: config.c,v 1.29 2000-06-11 06:58:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -535,25 +535,13 @@ get_config(int argc, char *argv[])
 	config.pda = user_config->pda;
 	user_config->pda = NULL;
 
-	/* Set up the conduit lists in the main configuration */
+	/* Set up the conduit list in the main configuration */
 	if (user_config == NULL)
 	{
-		config.sync_q		= NULL;
-		config.fetch_q		= NULL;
-		config.dump_q		= NULL;
-		config.install_q	= NULL;
-		config.uninstall_q	= NULL;
+		config.the_q = NULL;
 	} else {
-		config.sync_q		= user_config->sync_q;
-		user_config->sync_q	= NULL;
-		config.fetch_q		= user_config->fetch_q;
-		user_config->fetch_q	= NULL;
-		config.dump_q		= user_config->dump_q;
-		user_config->dump_q	= NULL;
-		config.install_q	= user_config->install_q;
-		user_config->install_q	= NULL;
-		config.uninstall_q	= user_config->uninstall_q;
-		user_config->uninstall_q	= NULL;
+		config.the_q		= user_config->the_q;
+		user_config->the_q	= NULL;
 	}
 
 	SYNC_TRACE(4)
@@ -592,158 +580,24 @@ get_config(int argc, char *argv[])
 			fprintf(stderr, "\n");
 		}
 
-		fprintf(stderr, "Sync conduits:\n");
-		for (c = config.sync_q; c != NULL; c = c->next)
+		fprintf(stderr, "The queue of conduits:\n");
+		for (c = config.the_q; c != NULL; c = c->next)
 		{
 			struct cond_header *hdr;
 
 			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Sync)
+			fprintf(stderr, "\tflavors: 0x%04x", c->flavors);
+			if (c->flavors & FLAVORFL_FETCH)
+				fprintf(stderr, " FETCH");
+			if (c->flavors & FLAVORFL_DUMP)
+				fprintf(stderr, " DUMP");
+			if (c->flavors & FLAVORFL_SYNC)
+				fprintf(stderr, " SYNC");
+			fprintf(stderr, "\n");
+			/* if (c->flavor != Sync)
 				fprintf(stderr, "Error: wrong conduit flavor. "
 					"Expected %d (Sync), but this is %d\n",
-					Sync, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-			if ((c->flags & CONDFL_DEFAULT) != 0)
-				fprintf(stderr, "\tDEFAULT\n");
-			if ((c->flags & CONDFL_FINAL) != 0)
-				fprintf(stderr, "\tFINAL\n");
-			fprintf(stderr, "\tHeaders:\n");
-			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
-			{
-				fprintf(stderr, "\t  [%s]: [%s]\n",
-					hdr->name, hdr->value);
-			}
-		}
-		
-		fprintf(stderr, "Fetch conduits:\n");
-		for (c = config.fetch_q; c != NULL; c = c->next)
-		{
-			struct cond_header *hdr;
-
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Fetch)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Fetch), but this is %d\n",
-					Fetch, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-			if ((c->flags & CONDFL_DEFAULT) != 0)
-				fprintf(stderr, "\tDEFAULT\n");
-			if ((c->flags & CONDFL_FINAL) != 0)
-				fprintf(stderr, "\tFINAL\n");
-			fprintf(stderr, "\tHeaders:\n");
-			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
-			{
-				fprintf(stderr, "\t  [%s]: [%s]\n",
-					hdr->name, hdr->value);
-			}
-		}
-		
-		fprintf(stderr, "Dump conduits:\n");
-		for (c = config.dump_q; c != NULL; c = c->next)
-		{
-			struct cond_header *hdr;
-
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Dump)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Dump), but this is %d\n",
-					Dump, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-			if ((c->flags & CONDFL_DEFAULT) != 0)
-				fprintf(stderr, "\tDEFAULT\n");
-			if ((c->flags & CONDFL_FINAL) != 0)
-				fprintf(stderr, "\tFINAL\n");
-			fprintf(stderr, "\tHeaders:\n");
-			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
-			{
-				fprintf(stderr, "\t  [%s]: [%s]\n",
-					hdr->name, hdr->value);
-			}
-		}
-		
-		fprintf(stderr, "Install conduits:\n");
-		for (c = config.install_q; c != NULL; c = c->next)
-		{
-			struct cond_header *hdr;
-
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Install)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Install), but this is "
-					"%d\n",
-					Install, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-			if ((c->flags & CONDFL_DEFAULT) != 0)
-				fprintf(stderr, "\tDEFAULT\n");
-			if ((c->flags & CONDFL_FINAL) != 0)
-				fprintf(stderr, "\tFINAL\n");
-			fprintf(stderr, "\tHeaders:\n");
-			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
-			{
-				fprintf(stderr, "\t  [%s]: [%s]\n",
-					hdr->name, hdr->value);
-			}
-		}
-		
-		fprintf(stderr, "Uninstall conduits:\n");
-		for (c = config.uninstall_q; c != NULL; c = c->next)
-		{
-			struct cond_header *hdr;
-
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Uninstall)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Uninstall), but this is "
-					"%d\n",
-					Uninstall, c->flavor);
+					Sync, c->flavor); */
 			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
 				(char) ((c->dbcreator >> 24) & 0xff),
 				(char) ((c->dbcreator >> 16) & 0xff),
@@ -1107,11 +961,7 @@ new_config()
 	retval->mode = Standalone;
 	retval->listen		= NULL;
 	retval->pda		= NULL;
-	retval->sync_q		= NULL;
-	retval->fetch_q		= NULL;
-	retval->dump_q		= NULL;
-	retval->install_q	= NULL;
-	retval->uninstall_q	= NULL;
+	retval->the_q		= NULL;
 
 	MISC_TRACE(5)
 		fprintf(stderr,
@@ -1147,36 +997,8 @@ free_config(struct config *config)
 		free_pda_block(p);
 	}
 
-	/* Free sync_q */
-	for (c = config->sync_q, nextc = NULL; c != NULL; c = nextc)
-	{
-		nextc = c->next;
-		free_conduit_block(c);
-	}
-
-	/* Free fetch_q */
-	for (c = config->fetch_q, nextc = NULL; c != NULL; c = nextc)
-	{
-		nextc = c->next;
-		free_conduit_block(c);
-	}
-
-	/* Free dump_q */
-	for (c = config->dump_q, nextc = NULL; c != NULL; c = nextc)
-	{
-		nextc = c->next;
-		free_conduit_block(c);
-	}
-
-	/* Free install_q */
-	for (c = config->install_q, nextc = NULL; c != NULL; c = nextc)
-	{
-		nextc = c->next;
-		free_conduit_block(c);
-	}
-
-	/* Free uninstall_q */
-	for (c = config->uninstall_q, nextc = NULL; c != NULL; c = nextc)
+	/* Free the_q */
+	for (c = config->the_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
 		free_conduit_block(c);
@@ -1289,7 +1111,7 @@ new_conduit_block()
 
 	/* Initialize the new conduit_block */
 	retval->next = NULL;
-	retval->flavor = Sync;
+	retval->flavors = 0;
 	retval->dbtype = 0L;
 	retval->dbcreator = 0L;
 	retval->flags = 0;
