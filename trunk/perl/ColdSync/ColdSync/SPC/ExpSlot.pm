@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.4 2002-11-07 20:40:02 azummo Exp $
+# $Id: ExpSlot.pm,v 1.5 2003-06-24 14:49:45 azummo Exp $
 
 # XXX - Write POD
 
@@ -38,7 +38,7 @@ use Exporter;
 
 
 @ColdSync::SPC::ExpSlot::ISA	 = qw( Exporter );
-$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.4 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.5 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 @ColdSync::SPC::ExpSlot::EXPORT = qw( 
@@ -134,17 +134,28 @@ sub dlp_ExpCardInfo
 		if ($arg->{id} == dlpFirstArgID)
 		{
 			my $data;
-			my $numstrings;
 
 			(
 				$retval->{'capabilities'},
-				$numstrings,
+				$retval->{'numstrings'},
 				$data
 			) = unpack("N n a*",$arg->{data});
 
+			# Workaround for buggy 5.x devices: returned values
+			# are in little-endian byte sex ;)
+			# (confirmed on TT and Zire71).
+
+			if ($retval->{'numstrings'} eq 1024)
+			{
+				(
+					$retval->{'capabilities'},
+					$retval->{'numstrings'},
+					$data
+				) = unpack("V v a*",$arg->{data});
+			}
 
 			# Retrieve the strings
-			my @s = unpack("(Z*)$numstrings", $data);
+			my @s = unpack("(Z*)$retval->{'numstrings'}", $data);
 
 			# Store them
 			$retval->{'strings'} = \@s;
