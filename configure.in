@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.104 2000-12-16 20:25:40 arensb Exp $
+dnl # $Id: configure.in,v 1.105 2000-12-16 23:21:25 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -12,9 +12,6 @@ dnl #	tar cf ${TARBALL} ${DISTDIR}
 dnl #	${COMPRESS} ${TARBALL}
 dnl # So also check for 'gzip'; if it doesn't exist, fall back on
 dnl # 'compress'
-
-dnl # XXX - Check for memset() and bzero(). Might need to define one
-dnl # in terms of the other.
 
 dnl # XXX - Might want to check for socket(), <netinet/in.h> etc., and
 dnl # turn off NetSync if they don't exist.
@@ -163,6 +160,11 @@ with_i18n=yes
 #	xgettext -V 1>&2 | grep GNU >/dev/null
 # and check the exit status.
 
+# XXX - Need further refinement: i18n/*.po are part of the (full)
+# distribution, and that ought to be sufficient to build the .mo files
+# (or whatever the local equivalent is), even if the machine doesn't
+# have the GNU libintl tools.
+
 if test x"$with_i18n" = x"no"; then
 	# Do-nothing defaults, in case the user doesn't want i18n.
 	XGETTEXT=true
@@ -182,16 +184,32 @@ else
 	fi
 
 	# I18n-related utilities
-	AC_CHECK_PROGS(XGETTEXT, xgettext, true)
-	AC_CHECK_PROGS(GETTEXT, gettext, true)
-	AC_CHECK_PROGS(MSGMERGE, msgmerge, true)
-	AC_CHECK_PROGS(MSGFMT, msgfmt, true)
+	# Since the GNU utilities have quite useful extensions, we
+	# check to see whether these programs are GNU or not.
+	CS_CHECK_GNU_PROGS(XGETTEXT, xgettext, true)
+	if test "$ac_cv_have_gnu_xgettext" = no; then
+		AC_MSG_WARN([
+	The $XGETTEXT program is not GNU xgettext. This isn't critical,
+	but it means that if you add strings to the source, they will not
+	be added to the message catalog.
+	(If this message didn't make sense, ignore it)])
+		XGETTEXT=true
+	fi
+	CS_CHECK_GNU_PROGS(GETTEXT, gettext, true)
+	CS_CHECK_GNU_PROGS(MSGMERGE, msgmerge, true)
+	CS_CHECK_GNU_PROGS(MSGFMT, msgfmt, true)
+	if test "$ac_cv_have_gnu_msgfmt" = yes; then
+		EXTRA_MSGFMT_ARGS="--statistics --strict"
+	else
+		EXTRA_MSGFMT_ARGS=""
+	fi
 fi
 
 AC_SUBST(XGETTEXT)
 AC_SUBST(GETTEXT)
 AC_SUBST(MSGMERGE)
 AC_SUBST(MSGFMT)
+AC_SUBST(EXTRA_MSGFMT_ARGS)
 
 # See if the user specified a $LOCALEDIR. If not, use the default.
 if test -z "${LOCALEDIR}"; then
@@ -308,6 +326,11 @@ AC_TYPE_UID_T
 AC_HEADER_TIME
 dnl AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
+
+CS_CHECK_TYPE(socklen_t,int,[#include <sys/socket.h>])
+
+# socklen_t is defined (if it's defined) in <sys/socket.h>, so can't
+# use AC_CHECK_TYPE.
 
 ## Checks for library functions.
 AC_CHECK_FUNCS(fpurge \
