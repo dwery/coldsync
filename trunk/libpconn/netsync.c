@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.2 2000-12-11 09:08:42 arensb Exp $
+ * $Id: netsync.c,v 1.3 2000-12-13 16:30:10 arensb Exp $
  */
 
 #include "config.h"
@@ -26,23 +26,23 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-/*  #include "pconn/palm_types.h" */
-/*  #include "pconn/palm_errno.h" */
-/*  #include "pconn/slp.h" */
-/*  #include "pconn/padp.h" */
-/*  #include "pconn/util.h" */
 #include "pconn/PConnection.h"
 #include "pconn/netsync.h"
 
 int net_trace = 0;		/* Debugging level for NetSync */
 #define NET_TRACE(n)	if (net_trace >= (n))
 
-extern int sockfd;		/* XXX - This is very bogus */
-extern int data_sock;		/* XXX - This should be PConnection->fd */
-static ubyte xid;		/* XXX - This goes in struct PConnection */
-ubyte *inbuf;			/* XXX - Input buffer. This should be
-				 * in PConnection.
-				 */
+/* bump_xid
+ * Pick a new NetSync transaction ID by incrementing the existing one.
+ * XXX - If, in fact, NetSync uses PADP, then there might be reserved XIDs,
+ * in which case this function will have to be updated to cope (see
+ * libpconn/padp.c for an example).
+ */
+static void
+bump_xid(struct PConnection *pconn)
+{
+	pconn->net.xid++;		/* Increment the current xid */
+}
 
 /* netsync_init
  * Initialize the NetSync part of a PConnection.
@@ -93,7 +93,7 @@ netsync_read(struct PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "Inside netsync_read()\n");
 
 	/* Read packet header */
-	err = read(data_sock, hdr_buf, NETSYNC_HDR_LEN);
+	err = read(pconn->fd, hdr_buf, NETSYNC_HDR_LEN);
 	if (err < 0)
 	{
 		fprintf(stderr, _("Error reading NetSync packet header.\n"));
@@ -121,13 +121,15 @@ netsync_read(struct PConnection *pconn,	/* Connection to Palm */
 
 	/* XXX - What to do if cmd != 1? */
 
-	/* XXX - Allocate space for the payload */
-	if (inbuf == NULL)
+	/* Allocate space for the payload */
+	if (pconn->net.inbuf == NULL)
 	{
-		inbuf = (ubyte *) malloc(hdr.len);
+		pconn->net.inbuf = (ubyte *) malloc(hdr.len);
 		/* XXX - Error-checking */
 	} else {
-		inbuf = (ubyte *) realloc(inbuf, hdr.len);
+		pconn->net.inbuf = (ubyte *)
+			realloc(pconn->net.inbuf, hdr.len);
+		/* XXX - Error-checking */
 	}
 
 	/* Read the payload */
@@ -137,7 +139,7 @@ netsync_read(struct PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = read(data_sock, inbuf+got, want-got);
+		err = read(pconn->fd, pconn->net.inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("netsync_read: read");
@@ -155,12 +157,12 @@ netsync_read(struct PConnection *pconn,	/* Connection to Palm */
 	}
 
 	NET_TRACE(6)
-		debug_dump(stderr, "NET <<<", inbuf, got);
+		debug_dump(stderr, "NET <<<", pconn->net.inbuf, got);
 
-	*buf = inbuf;		/* Tell caller where to find the data */
-	*len = hdr.len;		/* And how much of it there was */
+	*buf = pconn->net.inbuf;	/* Tell caller where to find the data */
+	*len = hdr.len;			/* And how much of it there was */
 
-	return 1;		/* Success */
+	return 1;			/* Success */
 }
 
 /* netsync_write
@@ -181,10 +183,10 @@ netsync_write(struct PConnection *pconn,
 		fprintf(stderr, "Inside netsync_write()\n");
 
 	/* Construct the NetSync header */
-	xid++;				/* Increment the XID for new request */
+	bump_xid(pconn);		/* Increment the XID for new request */
 	wptr = out_hdr;
 	put_ubyte(&wptr, 1);
-	put_ubyte(&wptr, xid);
+	put_ubyte(&wptr, pconn->net.xid);
 	put_udword(&wptr, len);
 
 	/* Send the NetSync header */
@@ -195,7 +197,7 @@ netsync_write(struct PConnection *pconn,
 		debug_dump(stderr, "NET >>>", out_hdr, NETSYNC_HDR_LEN);
 	}
 
-	err = write(data_sock, out_hdr, NETSYNC_HDR_LEN);
+	err = write(pconn->fd, out_hdr, NETSYNC_HDR_LEN);
 	NET_TRACE(7)
 		fprintf(stderr, "write() returned %d\n", err);
 	if (err < 0)
@@ -209,7 +211,7 @@ netsync_write(struct PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = write(data_sock, buf+sent, want-sent);
+		err = write(pconn->fd, buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("netsync_write: write");
