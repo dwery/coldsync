@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.16 2003-02-24 23:58:06 azummo Exp $
+ * $Id: cmp.c,v 1.17 2003-11-30 17:19:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -176,6 +176,63 @@ cmp_accept(PConnection *pconn, udword bps)
 		fprintf(stderr, "Initialized CMP, returning speed %ld\n",
 			cmpp.rate);
 	return cmpp.rate;
+}
+
+/* cmp_wakeup
+ * Negotiate the CMP part of establishing a connection with the Desktop.
+ * 'bps' gives the desired connection speed. 0 means "default to 57600".
+ * Returns the speed in bps if successful, or ~0 in case of error.
+*/
+
+udword
+cmp_wakeup(PConnection *pconn, udword bps)
+{
+    int err;
+    struct cmp_packet cmpp;
+    
+    do {
+	/* Compose a wakeup message */
+	cmpp.type = (ubyte) CMP_TYPE_WAKEUP;
+	cmpp.ver_major = CMP_VER_MAJOR;
+	cmpp.ver_minor = CMP_VER_MINOR;
+	cmpp.flags = 0;
+	
+	if (bps != 0){
+	    cmpp.rate = bps;
+	}
+	else{
+	    /* this is what my old Palm Pilot Pro suggests */
+	    
+	    cmpp.rate = 57600;
+	}
+	
+	CMP_TRACE(5)
+	    fprintf(stderr, "===== Sending WAKEUP packet\n");
+	
+	err = cmp_write(pconn, &cmpp);
+	if (err < 0)
+	    return ~0;
+	
+    	CMP_TRACE(5)
+	    fprintf(stderr, "===== Waiting for INIT packet\n");
+	
+	err = cmp_read(pconn, &cmpp);
+	if (err < 0){
+	    if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT)
+		continue;
+	    
+	    fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
+		    (int) PConn_get_palmerrno(pconn),
+		    _(palm_strerror(PConn_get_palmerrno(pconn))));
+	    return ~0;
+	}
+    } while (cmpp.type != (ubyte) CMP_TYPE_INIT);
+    
+    CMP_TRACE(4)
+	fprintf(stderr, "Initialized CMP, returning speed %ld\n",
+		cmpp.rate);
+    
+    return cmpp.rate;
 }
 
 /* This is for Emacs's benefit:

@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.19 2003-01-21 02:01:43 azummo Exp $
+ * $Id: dlp.c,v 1.20 2003-11-30 17:19:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -369,6 +369,259 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	*argv = pconn->dlp.argv;
 	return 0;
 }
+
+
+/* dlp_recv_req
+ * Receive a DLP request from the Desktop. The header will be put in
+ * 'header', and the arguments will be written to 'argv'. No more than
+ * 'argc' arguments will be written.
+ * Returns 0 if successful. In case of error, returns a negative
+ * value; 'palm_errno' is set to indicate the error.
+ */
+
+int
+dlp_recv_req(PConnection *pconn,	/* Connection to Desktop */
+	     struct dlp_req_header *header,
+	     const struct dlp_arg **argv)
+{
+	int i;
+	int err;
+	const ubyte *inbuf;	/* Input data (from PADP or NetSync) */
+	uword inlen;		/* Length of input data */
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	
+	/* Read the request */
+	err = (*pconn->dlp.read)(pconn, &inbuf, &inlen);
+	if (err < 0)
+	    return err;	/* Error */
+	
+	DLP_TRACE(7)
+	    debug_dump(stderr, "DLP<<<", inbuf, inlen);
+	
+	/* Parse the request header */
+	rptr = inbuf;
+	header->id = get_ubyte(&rptr);
+	header->argc = get_ubyte(&rptr);
+
+	DLP_TRACE(6)
+	    fprintf(stderr, "Got request, id 0x%02x, argc %d\n",
+		    header->id, header->argc);
+	
+	/* Make sure there's room for all of the arguments */
+	if (header->argc > pconn->dlp.argv_len){
+	    struct dlp_arg *eptr;	/* Pointer to reallocated argv */
+	    
+	    /* Grow argv. Use the temporary variable 'eptr' in case
+	     * realloc() fails.
+	     */
+	    eptr = (struct dlp_arg *)
+		realloc(pconn->dlp.argv,
+			sizeof(struct dlp_arg) * header->argc);
+	    if (eptr == NULL){
+		/* Reallocation failed */
+		/* XXX - Set an error code */
+		return -1;
+	    }
+	    /* Update the new argv */
+	    pconn->dlp.argv = eptr;
+	    pconn->dlp.argv_len = header->argc;
+	}
+	
+	/* Parse the arguments */
+	for (i = 0; i < header->argc; i++){
+	    
+	    /* See if it's a tiny, small or long argument */
+	    switch (*rptr & 0xc0){
+		
+	    case 0xc0:		/* Long argument */
+		DLP_TRACE(5)
+		    fprintf(stderr, "Arg %d is long\n", i);
+		pconn->dlp.argv[i].id = get_uword(&rptr);
+		pconn->dlp.argv[i].id &= 0x3f;
+		/* Strip off the size bits */
+		pconn->dlp.argv[i].size = get_udword(&rptr);
+		break;
+	    case 0x80:		/* Small argument */
+		DLP_TRACE(5)
+		    fprintf(stderr, "Arg %d is small\n", i);
+		pconn->dlp.argv[i].id = get_ubyte(&rptr);
+		pconn->dlp.argv[i].id &= 0x3f;
+		/* Strip off the size bits */
+		get_ubyte(&rptr);	/* Skip over padding */
+		pconn->dlp.argv[i].size = get_uword(&rptr);
+		break;
+	    default:		/* Tiny argument */
+		DLP_TRACE(5)
+		    fprintf(stderr, "Arg %d is tiny\n", i);
+		pconn->dlp.argv[i].id = get_ubyte(&rptr);
+		pconn->dlp.argv[i].id &= 0x3fff;
+		/* Strip off the size bits */
+		pconn->dlp.argv[i].size = get_ubyte(&rptr);
+		break;
+	    }
+	    DLP_TRACE(6)
+		fprintf(stderr, "Got arg %d, id 0x%02x, size %ld\n",
+			i, pconn->dlp.argv[i].id,
+			pconn->dlp.argv[i].size);
+	    pconn->dlp.argv[i].data = (ubyte *) rptr;
+	    rptr += pconn->dlp.argv[i].size;
+	}
+	
+	*argv = pconn->dlp.argv;
+	return 0;
+}
+
+
+/* dlp_send_resp
+ * Send the DLP response defined by 'header' to the Desktop. 'argv' is
+ * the list of arguments.
+ * Returns 0 if successful. In case of error, returns a negative
+ * value. 'palm_errno' is set to indicate the error.
+ */
+
+int
+dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
+	      const struct dlp_resp_header *header,
+	      const struct dlp_arg argv[])
+{
+    int i;
+    int err;
+    ubyte *outbuf;			/* Outgoing response buffer */
+    long buflen;			/* Length of outgoing request */
+    ubyte *wptr;			/* Pointer into buffers (for writing) */
+
+    PConn_set_palmerrno(pconn, PALMERR_NOERR);
+    
+    /* Calculate size of outgoing request */
+    DLP_TRACE(6)
+	fprintf(stderr,
+		"dlp_send_resp: Calculating outgoing request buffer\n");
+    
+    buflen = 2L;		/* Request id and argc */
+    for (i = 0; i < header->argc; i++){
+	
+	if (argv[i].size <= DLP_TINYARG_MAXLEN){
+	    /* Tiny argument */
+	    buflen += 2 + argv[i].size;
+	    /* 2 bytes for id and 1-byte size */
+	    DLP_TRACE(7)
+		fprintf(stderr, "Tiny argument: %ld bytes, "
+			"buflen == %ld\n",
+			argv[i].size, buflen);
+	}
+	else if (argv[i].size <= DLP_SMALLARG_MAXLEN){
+	    /* Small argument */
+	    buflen += 4 + argv[i].size;
+	    /* 4 bytes for id, unused, and
+	     * 2-byte size */
+	    DLP_TRACE(7)
+		fprintf(stderr, "Small argument: %ld bytes, "
+			"buflen == %ld\n",
+			argv[i].size, buflen);
+	}
+	else {
+	    /* Long argument */
+	    buflen += 6 + argv[i].size;
+	    /* 6 bytes: 2-byte id and 4-byte
+	     * size */
+	    DLP_TRACE(7)
+		fprintf(stderr, "Long argument: %ld bytes, "
+			"buflen == %ld\n",
+			argv[i].size, buflen);
+	}
+    }
+    
+    /* Allocate a buffer of the proper length */
+    outbuf = (ubyte *) malloc(buflen);
+    if (outbuf == NULL){
+	fprintf(stderr,
+		_("%s: Can't allocate %ld-byte buffer.\n"),
+		"dlp_send_req",
+		buflen);
+	return -1;
+    }
+    
+    /* Construct a DLP response header in the output buffer */
+    wptr = outbuf;
+    put_ubyte(&wptr, header->id | 0x80); /* ensure response flag is set */
+    put_ubyte(&wptr, header->argc);
+    put_uword(&wptr, header->error);
+    
+    DLP_TRACE(5)
+	fprintf(stderr, ">>> response id 0x%02x, %d args, errno %d\n",
+		header->id, header->argc, header->error);
+    
+    /* Append the response headers to the output buffer */
+    for (i = 0; i < header->argc; i++){
+	/* See whether this argument ought to be tiny, small
+	 * or large, and construct an appropriate header.
+	 */
+	if (argv[i].size <= DLP_TINYARG_MAXLEN){
+	    /* Tiny argument */
+	    DLP_TRACE(10)
+		fprintf(stderr,
+			"Tiny argument %d, id 0x%02x, "
+			"size %ld\n",
+			i, argv[i].id, argv[i].size);
+	    put_ubyte(&wptr, argv[i].id & 0x3f);
+	    /* Make sure the high two bits are
+	     * 00, since this is a tiny
+	     * argument.
+	     */
+	    put_ubyte(&wptr, argv[i].size);
+	}
+	else if (argv[i].size <= DLP_SMALLARG_MAXLEN){
+	    /* Small argument */
+	    DLP_TRACE(10)
+		fprintf(stderr,
+			"Small argument %d, id 0x%02x, "
+			"size %ld\n",
+			i, argv[i].id, argv[i].size);
+	    put_ubyte(&wptr, (argv[i].id & 0x3f) | 0x80);
+	    /* Make sure the high two bits are
+	     * 10, since this is a small
+	     * argument.
+	     */
+	    put_ubyte(&wptr, 0);		/* Padding */
+	    put_uword(&wptr, argv[i].size);
+	}
+	else {
+	    /* Long argument */
+	    /* XXX - Check to make sure the comm. protocol
+	     * supports long arguments.
+	     */
+	    DLP_TRACE(10)
+		fprintf(stderr,
+			"Long argument %d, id 0x%04x, "
+			"size %ld\n",
+			i, argv[i].id, argv[i].size);
+	    put_uword(&wptr, (argv[i].id & 0x3fff) | 0xc000);
+	    /* Make sure the high two bits are
+	     * 11, since this is a long
+	     * argument.
+	     */
+	    put_udword(&wptr, argv[i].size);
+	}
+	
+	/* Append the argument data to the header */
+	memcpy(wptr, argv[i].data, argv[i].size);
+	wptr += argv[i].size;
+    }
+    
+    /* Send the response */
+    DLP_TRACE(7)
+	debug_dump(stderr, "DLP>>>", outbuf, wptr-outbuf);
+    
+    err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
+    if (err < 0){
+	free(outbuf);
+	return err;
+    }
+    
+    free(outbuf);
+    return 0;		/* Success */
+}
+
 
 /* dlp_dlpc_req
  * Send a DLP command, and receive a response. If there's a timeout waiting

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.43 2002-11-02 21:34:46 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.44 2003-11-30 17:19:33 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -338,9 +338,17 @@ serial_accept(PConnection *pconn)
 				pconn->speed = 0L;
 			}
 		}
-
-
-		newspeed = cmp_accept(pconn, pconn->speed);
+		
+		if (pconn->flags & PCONNFL_EMULATEPALM){
+		    IO_TRACE(5)
+			fprintf(stderr, "Emulating a Palm device.\n");
+		    
+		    newspeed = cmp_wakeup(pconn, pconn->speed);
+		}
+		else{
+		    newspeed = cmp_accept(pconn, pconn->speed);
+		}
+		
 		if (newspeed == ~0)
 		{
 			fprintf(stderr,
@@ -389,6 +397,11 @@ serial_accept(PConnection *pconn)
 			IO_TRACE(5)
 				fprintf(stderr, "This is a modem, so not changing speed.\n");
 		} else {
+		    	if (pconn->flags & PCONNFL_EMULATEPALM){
+				/* let the serial device finish */
+			    	usleep(50000);
+		    	}
+			
 			if ((err = setspeed(pconn, tcspeed)) < 0)
 			{
 				fprintf(stderr, _("Error trying to set speed.\n"));
