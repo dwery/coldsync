@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.34.2.1 2001-10-09 01:41:27 arensb Exp $
+ * $Id: lexer.l,v 2.34.2.2 2001-10-11 05:52:41 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -45,6 +45,10 @@ int lineno;
 
 /* This is used in QSTRING, to keep track of the buffer size, which is
    the string length + 1 (for null terminal).  */
+/* XXX - Perhaps just define a type QString, with functions new_qstring(),
+ * free_qstring(), qstring_append(char *, len), qstring_len(),
+ * qstring_value(), etc.
+ */
 static int string_size = 0;
 
 static Bool have_nextstate = False;
@@ -98,6 +102,7 @@ ID1		[a-zA-Z_]
 ID		[-a-zA-Z_0-9]
 
 %%
+
 %{
 #ifdef YY_FLEX_LEX_COMPAT
 	/* This is just to trick the compiler into thinking that this
@@ -278,28 +283,70 @@ ID		[-a-zA-Z_0-9]
 	return STRING;
 	}
 
+ /* XXX - How does iconv() figure into all this? It'd be nice to allow
+  * Japanese users to enter strings in Japanese (EUC?). With any luck, the
+  * various committees were smart and defined encodings that wouldn't
+  * horribly break legacy C code (like this).
+  * The main things to watch out for, AFAICT are:
+  *
+  * 1) Are non-ASCII characters (>= 0x80) even handled properly by 'flex'?
+  *
+  * 2) Stray NULs: if 0x1200 maps to some significant character in some
+  * language, the 0x00 will be interpreted as a terminating NUL in many
+  * places. This should probably be handled here.
+  *
+  * 3) "Puns": If the character 0x2233 is a real character in some
+  * character set, the initial 0x22 might be interpreted as a double-quote
+  * (since '"' == 0x22).
+  *
+  * With any luck, the various committees were smart enough to foresee and
+  * avoid these problems.
+  * If other character sets are compatible with plain ASCII, and allow us
+  * to process things "naively", then presumably the Right Thing to do is
+  * to call iconv() at the end.
+  */
+ /* XXX - Shouldn't allow unescaped <return> inside strings, to guard
+  * against accidentally-unterminated strings. That is, backslash-return
+  * append a \n to the string, whereas <return> should generate a "runaway
+  * string" error.
+  */
  /* Note that this accepts escaped double-quotes in strings */
 \"[^\"$\\]* {
-	PARSE_TRACE(5) fprintf(stderr, "Started string [%s]\n", yytext);
+	PARSE_TRACE(5)
+		fprintf(stderr, "Started string [%s]\n", yytext);
 	string_size = yyleng;	/* the initial length. */
-	if((yylval.string = (char *)malloc(string_size)) == NULL )
+	if((yylval.string = (char *) malloc(string_size)) == NULL)
 	{
 		Error(_("%s: Can't malloc copy of string."),
 		      "yylex");
 		return -1;
 	}
 	strncpy(yylval.string, yytext+1, yyleng-1);
-	yylval.string[yyleng-1] = 0;
+	yylval.string[yyleng-1] = '\0';
 	BEGIN QSTRING;
         }
 
 
  /* escaped characters: $, \", \n, \t, \r.
-  *   XXX - Allow octal/hex numbers: \0123, \xf3 and so forth.
+  * XXX - Allow octal/hex numbers: \0123, \xf3 and so forth (do this in a
+  * separate rule)
+
+  * XXX - Actually, this should allow a backslash followed by any
+  * character: for \n, \t, and other special characters, perform the
+  * appropriate conversion. Otherwise, just use the character's value. That
+  * is, "\z" just becomes "z".
   */
 <QSTRING>\\[\\$\"nrt] {
 	PARSE_TRACE(5)
 		fprintf(stderr, "escaped string character [%s]\n", yytext);
+	/* XXX - Don't fuck around realloc()ing for just one byte: if
+	 * you're going to realloc(), at least increase the string's length
+	 * by 1024 or something. This also requires keeping track of the
+	 * string's length (# of characters in it) vs. its size (amount of
+	 * storage currently allocated for it).
+	 * Can probably crib a lot of code from the old version of
+	 * "src/log.c".
+	 */
 	string_size++;
 	if((yylval.string = (char *)realloc(yylval.string, string_size))
 	   == NULL )
@@ -325,13 +372,25 @@ ID		[-a-zA-Z_0-9]
         }
 
  /* Variables that were defined elsewhere:  $(WORD).  */
+ /* XXX - Should this allow ${WORD} as well? */
+ /* XXX - This RE accepts too much: it should only match valid identifiers:
+  * [_A-Za-z][_A-Za-z0-9]*
+  * There should also be a rule to check for malformed variables. Thus,
+  *	foo $(VAR/bar
+  * should generate an error (and perhaps be replaced by "foo <value of
+  * VAR>/bar").
+  * Perhaps by reading an arbitrary character (.|\n) after the identifier,
+  * and checking to make sure that it's a ")". If it isn't, unput() it and
+  * complain.
+  */
 <QSTRING>$\([^\)]+\) {
 	char *value = get_symbol_n(yytext + 2 , yyleng - 3);
 	int len = strlen(value);
 
-	PARSE_TRACE(5) fprintf(stderr, "variable [%s] -> [%s]\n", yytext, value);
-	if((yylval.string = (char *)realloc(yylval.string,
-					    string_size + len)) == NULL )
+	PARSE_TRACE(5)
+		fprintf(stderr, "variable [%s] -> [%s]\n", yytext, value);
+	if ((yylval.string = (char *) realloc(yylval.string,
+					      string_size + len)) == NULL)
 	{
 		Error(_("%s: Can't malloc copy of string."),
 		      "yylex");
@@ -342,10 +401,12 @@ ID		[-a-zA-Z_0-9]
 	free(value);
         }
 
+ /* String of ordinary characters */
 <QSTRING>[^\"$\\]+ {
-	PARSE_TRACE(5) fprintf(stderr, "more string [%s]\n", yytext);
-	if((yylval.string = (char *)realloc(yylval.string,
-					    string_size + yyleng)) == NULL )
+	PARSE_TRACE(5)
+		fprintf(stderr, "more string [%s]\n", yytext);
+	if ((yylval.string = (char *) realloc(yylval.string,
+					      string_size + yyleng)) == NULL)
 	{
 		Error(_("%s: Can't malloc copy of string."),
 		      "yylex");
@@ -358,8 +419,9 @@ ID		[-a-zA-Z_0-9]
  /* End quote of string. */
 <QSTRING>\" {
 	BEGIN INITIAL;
-	yylval.string[string_size-1] = 0;
-	PARSE_TRACE(2) fprintf(stderr, "finished string [%s]\n", yylval.string);
+	yylval.string[string_size-1] = '\0';
+	PARSE_TRACE(2)
+		fprintf(stderr, "finished string [%s]\n", yylval.string);
 	return STRING;
         }
 
@@ -420,7 +482,6 @@ ID		[-a-zA-Z_0-9]
 				yytext);
 		return yytext[0];
 	}
-
 
 %%
 
