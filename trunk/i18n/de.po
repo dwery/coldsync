@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 1.1.4\n"
-"POT-Creation-Date: 2001-05-06 02:13-0400\n"
+"POT-Creation-Date: 2001-05-24 01:42-0400\n"
 "PO-Revision-Date: 2000-03-27 16:57+02:00\n"
 "Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
 "Language-Team:  de <de@li.org>\n"
@@ -186,12 +186,12 @@ msgstr "%s Version %s.\n"
 #: ../src/parser.y:549
 #, c-format
 msgid "%s: %d: Bogus creator \"%s\"."
-msgstr "%s: %d: Falscher Creator \"%s\".\n"
+msgstr "%s: %d: Falscher Creator \"%s\"."
 
 #: ../src/parser.y:573
 #, c-format
 msgid "%s: %d: Bogus type \"%s\"."
-msgstr "%s: %d: Falscher Typ \"%s\".\n"
+msgstr "%s: %d: Falscher Typ \"%s\"."
 
 #: ../src/parser.y:430
 #, c-format
@@ -372,7 +372,8 @@ msgstr "%s: Kann Datenbank \"%s\" nicht laden."
 #: ../src/conduit.c:1432
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered."
-msgstr "%s: Kann Standardausgabe des Kindprozesses nicht auf line-buffered setzen."
+msgstr ""
+"%s: Kann Standardausgabe des Kindprozesses nicht auf line-buffered setzen."
 
 #: lexer.l:120 lexer.l:133 lexer.l:255 lexer.l:333
 #, c-format
@@ -461,7 +462,8 @@ msgstr "%s: Kann Synchronisierungsmarken nicht zurücksetzen: %d."
 #: ../src/restore.c:140
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application."
-msgstr "%s: Kann %s nicht wiederherstellen: Ein anderes Programm hat es geöffnet."
+msgstr ""
+"%s: Kann %s nicht wiederherstellen: Ein anderes Programm hat es geöffnet."
 
 #: ../src/archive.c:138
 #, c-format
@@ -764,9 +766,11 @@ msgid ""
 "%s: select() returned 0. This should never happen. Please notify the "
 "maintainer."
 msgstr ""
-"Dieser Fehler sollte nicht auftreten. Bitte schicken Sie die folgende Meldung\n"
+"Dieser Fehler sollte nicht auftreten. Bitte schicken Sie die folgende "
+"Meldung\n"
 "an den Entwickler des Programms.\n"
-"%s: select() returned 0. This should never happen. Please notify the maintainer."
+"%s: select() returned 0. This should never happen. Please notify the "
+"maintainer."
 
 #: ../src/conduit.c:1587
 #, c-format
@@ -1629,7 +1633,7 @@ msgstr ""
 
 #: ../src/coldsync.c:2318
 #, fuzzy, c-format
-msgid "Unknown user/uid: \"%s\""
+msgid "Unknown user/uid: \"%s\"."
 msgstr "Fehler bei \"%s\""
 
 #: ../src/config.c:255
@@ -1786,7 +1790,8 @@ msgid ""
 "You specified an apparently legal option (\"-%c\"), but I don't know what\n"
 "to do with it. This is a bug. Please notify the maintainer."
 msgstr ""
-"Sie haben eine scheinbar zulässige Option angegeben (\"-%c\"), aber das Programm\n"
+"Sie haben eine scheinbar zulässige Option angegeben (\"-%c\"), aber das "
+"Programm\n"
 "kann damit nichts anfangen. Das ist ein Fehler. Bitte informieren Sie den\n"
 "Entwickler."
 
