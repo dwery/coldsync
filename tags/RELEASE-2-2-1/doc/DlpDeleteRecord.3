@@ -1,0 +1,84 @@
+.\" DlpDeleteRecord.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpDeleteRecord.3,v 1.1 2001-09-05 07:29:02 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpDeleteRecord 3
+.Sh NAME
+.Nm DlpDeleteRecord ,
+.Nm DlpDeleteResource
+.Nd delete a record or resource from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpDeleteRecord "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const udword recid"
+.Ft int
+.Fn DlpDeleteResource "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const udword type" "const uword id"
+.Sh DESCRIPTION
+.Nm DlpDeleteRecord
+deletes a record in a database. The database must already be open for
+writing.
+.Pp
+.Fa handle
+specifies the database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+.Fa recid
+specifies the ID of the record to delete; this identifier is usually
+gotten with
+.Fn DlpReadRecordIDList .
+.Pp
+.Fa flags
+specifies flags:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPCMD_DELRECFLAG_ALL
+Deletes all records in the database.
+.Fa recid
+is ignored.
+.It Dv DLPCMD_DELRECFLAG_CATEGORY
+Deletes all records in a given category. The least-significant byte of
+.Fa recid
+specifies the category ID.
+.El
+.Pp
+.Nm DlpDeleteResource
+deletes a resource in a database. The database must already be open
+for writing.
+.Pp
+.Fa handle
+specifies the database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+.Fa type
+and
+.Fa id
+specify the type and ID, respectively, of the resource to delete.
+.Pp
+.Fa flags
+specifies flags. The only useful flag is
+.Dv DLPCMD_DELRSRCFLAG_ALL .
+When this flag is specified, the
+.Fa type
+and
+.Fa id
+arguments are ignored, and
+.Nm DlpDeleteResource
+deletes all resources in the database.
+.Sh RETURN VALUE
+.Nm DlpDeleteRecord
+and
+.Nm DlpDeleteResource
+return 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB .

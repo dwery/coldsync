@@ -1,0 +1,89 @@
+.\" DlpReadUserInfo.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadUserInfo.3,v 1.1 2001-09-05 07:29:30 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadUserInfo 3
+.Sh NAME
+.Nm DlpReadUserInfo ,
+.Nm DlpWriteUserInfo
+.Nd read and write user information to/from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadUserInfo "PConnection *pconn" "struct dlp_userinfo *userinfo"
+.Ft int
+.Fn DlpWriteUserInfo "PConnection *pconn" "const struct dlp_setuserinfo *userinfo"
+.Sh DESCRIPTION
+.Fn DlpReadUserInfo
+reads user information from
+.Fa pconn
+and stores it in
+.Fa userinfo .
+The
+.Ft dlp_userinfo
+structure is defined in
+.Pa <pconn/dlp_cmd.h>
+as
+.Bd -literal -offset indent
+struct dlp_userinfo
+{
+	udword userid;
+	udword viewerid;
+	udword lastsyncPC;
+	struct dlp_time lastgoodsync;
+	struct dlp_time lastsync;
+	ubyte usernamelen;
+	ubyte passwdlen;
+	char username[DLPCMD_USERNAME_LEN];
+	ubyte passwd[256];
+};
+.Ed
+.Pp
+.Fn DlpWriteUserInfo
+writes user information to the Palm. The
+.Ft dlp_setuserinfo
+structure is defined as
+.Bd -literal -offset indent
+struct dlp_setuserinfo
+{
+	udword userid;
+	udword viewerid;
+	udword lastsyncPC;
+	struct dlp_time lastsync;
+	ubyte modflags;
+	ubyte usernamelen;
+	const char *username;
+};
+.Ed
+.Pp
+The
+.Fa modflags
+field specifies which fields contain values and should therefore be
+uploaded. It should be the bitwise-or of zero or more of the
+following:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPCMD_MODUIFLAG_USERID
+.It Dv DLPCMD_MODUIFLAG_SYNCPC
+.It Dv DLPCMD_MODUIFLAG_SYNCDATE
+.It Dv DLPCMD_MODUIFLAG_USERNAME
+.It Dv DLPCMD_MODUIFLAG_VIEWERID
+.El
+.Sh RETURN VALUE
+.Fn DlpReadUserInfo
+and
+.Fn DlpWriteUserInfo
+return 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .

@@ -1,0 +1,42 @@
+.\" DlpReadFeature.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadFeature.3,v 1.1 2001-09-05 07:29:18 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadFeature 3
+.Sh NAME
+.Nm DlpReadFeature
+.Nd read a feature from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadFeature "PConnection *pconn" "const udword creator" "const word featurenum" "udword *value"
+.Sh DESCRIPTION
+.Nm
+reads a feature from the Feature Manager. It is not clear what this
+means.
+.Pp
+.Fa creator
+specifies the four-character feature creator.
+.Pp
+.Fa featurenum
+specifies the feature number.
+.Pp
+.Fa value
+is filled in with the feature data. It must point to a buffer of
+sufficient size.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 .
