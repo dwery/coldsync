@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.29 2000-02-06 22:18:03 arensb Exp $
+ * $Id: coldsync.c,v 1.30 2000-02-07 01:46:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -35,13 +35,6 @@
 #include "pdb.h"
 #include "conduit.h"
 #include "parser.h"
-
-#if !HAVE_STRCASECMP
-#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
-#endif	/* HAVE_STRCASECMP */
-#if !HAVE_STRNCASECMP
-#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
-#endif	/* HAVE_STRNCASECMP */
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
@@ -1369,6 +1362,7 @@ usage(int argc, char *argv[])
 		 "\t-F:\t\tForce fast sync.\n"
 		 "\t-R:\t\tCheck ROM databases.\n"
 		 "\t-p <port>:\tListen on device <port>\n"
+		 "\t-t <devtype>:\tPort type [serial|usb]\n"
 		 "\t-d <fac[:level]>:\tSet debugging level.\n")
 	       ,
 	       argv[0]);
