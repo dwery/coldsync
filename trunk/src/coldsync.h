@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.30 2000-10-22 03:13:02 arensb Exp $
+ * $Id: coldsync.h,v 1.31 2000-10-22 03:23:33 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -287,9 +287,6 @@ struct config
 	conduit_block *conduits;	/* List of all conduits */
 };
 
-extern int sys_maxfds;			/* Max # of file descriptors
-					 * allowed for this process.
-					 */
 extern int need_slow_sync;
 extern udword hostid;			/* This host's ID */
 					/* XXX - This shouldn't be global */
