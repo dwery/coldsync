@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.57 2001-01-11 08:27:28 arensb Exp $
+ * $Id: config.c,v 1.58 2001-01-11 09:25:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -118,7 +118,7 @@ parse_args(int argc, char *argv[])
 	 */
 
 	/* Read command-line options. */
-	while ((arg = getopt(argc, argv, ":hVSFRIf:m:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRIzf:m:b:r:p:t:d:")) != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
 		 */
@@ -147,6 +147,10 @@ parse_args(int argc, char *argv[])
 
 		    case 'I':	/* -I: Install younger databases */
 			global_opts.force_install = True;
+			break;
+
+		    case 'z':	/* -z: Install databases after main sync */
+			global_opts.install_first = False;
 			break;
 
 		    case 'f':	/* -f <file>: Read configuration from
@@ -707,6 +711,7 @@ usage(int argc, char *argv[])
 		 "\t-h:\t\tPrint this help message and exit.\n"
 		 "\t-V:\t\tPrint version and exit.\n"
 		 "\t-f <file>:\tRead configuration from <file>\n"
+		 "\t-z:\t\tInstall databases after sync.\n"
 		 "\t-I:\t\tForce installation of new databases.\n"
 		 "\t-S:\t\tForce slow sync.\n"
 		 "\t-F:\t\tForce fast sync.\n"

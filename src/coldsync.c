@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.78 2001-01-11 08:42:43 arensb Exp $
+ * $Id: coldsync.c,v 1.79 2001-01-11 09:25:29 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -95,6 +95,7 @@ main(int argc, char *argv[])
 	global_opts.do_restore		= False;
 	global_opts.restoredir		= NULL;
 	global_opts.force_install	= False;
+	global_opts.install_first	= True;
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;
@@ -764,11 +765,9 @@ run_mode_Standalone(int argc, char *argv[])
 		}
 	}
 
-	/* Install new databases */
-	/* XXX - It should be configurable whether new databases get
-	 * installed at the beginning or the end.
-	 */
-	err = InstallNewFiles(pconn, palm, installdir, True);
+	/* Install new databases before sync */
+	if (global_opts.install_first)
+		err = InstallNewFiles(pconn, palm, installdir, True);
 
 	/* XXX - It should be possible to specify a list of directories to
 	 * look in: that way, the user can put new databases in
@@ -919,6 +918,10 @@ run_mode_Standalone(int argc, char *argv[])
 		    pconn == pref_cursor->pconn)
 			FetchPrefItem(pconn, pref_cursor);
 	}
+
+	/* Install new databases after sync */
+	if (!global_opts.install_first)
+		err = InstallNewFiles(pconn, palm, installdir, True);
 
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
