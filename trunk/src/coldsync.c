@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.50 2000-09-17 22:07:10 arensb Exp $
+ * $Id: coldsync.c,v 1.51 2000-09-27 19:43:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -163,17 +163,17 @@ main(int argc, char *argv[])
 	 */
 	if (reserve_fd(0, O_RDONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor 0\n"));
+		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 0);
 		exit(1);
 	}
 	if (reserve_fd(1, O_WRONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor 1\n"));
+		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 1);
 		exit(1);
 	}
 	if (reserve_fd(2, O_RDONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor 2\n"));
+		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 2);
 		exit(1);
 	}
 

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-09-23 13:06-0400\n"
+"POT-Creation-Date: 2000-09-27 14:20-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Nicolas Bouthors <nicolas@bouthors.org>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -1121,16 +1121,9 @@ msgstr ""
 msgid "Error: can't open connection.\n"
 msgstr "Erreur lors de l'ouverture de la connexion.\n"
 
-#: src/coldsync.c:166
-msgid "Error: can't reserve file descriptor 0\n"
-msgstr ""
-
-#: src/coldsync.c:171
-msgid "Error: can't reserve file descriptor 1\n"
-msgstr ""
-
-#: src/coldsync.c:176
-msgid "Error: can't reserve file descriptor 2\n"
+#: src/coldsync.c:166 src/coldsync.c:171 src/coldsync.c:176
+#, c-format
+msgid "Error: can't reserve file descriptor %d\n"
 msgstr ""
 
 #: src/conduit.c:1143 src/conduit.c:1187
