@@ -3,7 +3,7 @@
  * cfmakeraw(), for systems that don't have it. Ripped bodily from the
  * FreeBSD 3.0 distribution (/usr/src/lib/libc/gen/termios.c)
  *
- * $Id: cfmakeraw.c,v 1.1 1999-09-09 05:17:29 arensb Exp $
+ * $Id: cfmakeraw.c,v 1.1.2.1 2000-01-24 07:39:56 arensb Exp $
  */
 /*-
  * Copyright (c) 1989, 1993
@@ -40,6 +40,7 @@
 #include "config.h"
 #include <termios.h>
 
+#if !HAVE_CFMAKERAW
 /*
  * Make a pre-existing termios structure into "raw" mode: character-at-a-time
  * mode with no characters interpreted, 8-bit data path.
@@ -57,6 +58,7 @@ cfmakeraw(struct termios *t)
 	t->c_cc[VMIN] = 1;
 	t->c_cc[VTIME] = 0;
 }
+#endif	/* !HAVE_CFMAKERAW */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
