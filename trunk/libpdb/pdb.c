@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.14 2000-01-25 11:26:02 arensb Exp $
+ * $Id: pdb.c,v 1.15 2000-02-03 02:54:45 arensb Exp $
  */
 
 #include "config.h"
@@ -1602,6 +1602,10 @@ pdb_LoadRecIndex(int fd,
 	}
 
 	/* Read the record index */
+	/* XXX - It would be a Good Thing to check for zero-length records
+	 * here. They've been known to appear as a result of a broken
+	 * conduit.
+	 */
 	for (i = 0; i < totalrecs; i++)
 	{
 		static ubyte inbuf[PDB_RECORDIX_LEN];
@@ -2078,27 +2082,39 @@ pdb_LoadRecords(int fd,
 		 */
 		rec->data_len = next_off - rec->offset;
 
-		/* Allocate space for this record */
-		if ((rec->data = (ubyte *) malloc(rec->data_len)) == NULL)
+		/* Allocate space for this record
+		 * If there's a record with length zero, don't pass that to
+		 * malloc(). This is most likely due to a broken conduit.
+		 * XXX - The Right Thing to do would be not to read
+		 * zero-length records, but that would involve fixing the
+		 * record index.
+		 */
+		if (rec->data_len > 0)
 		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_LoadRecords");
-			return -1;
-		}
+			if ((rec->data = (ubyte *) malloc(rec->data_len)) ==
+			    NULL)
+			{
+				fprintf(stderr, _("%s: Out of memory.\n"),
+					"pdb_LoadRecords");
+				return -1;
+			}
 
-		/* Read the record */
-		if ((err = read(fd, rec->data, rec->data_len)) !=
-		    rec->data_len)
-		{
-			fprintf(stderr, _("Can't read record %d\n"), i);
-			perror("pdb_LoadRecords: read");
-			return -1;
-		}
+			/* Read the record */
+			if ((err = read(fd, rec->data, rec->data_len)) !=
+			    rec->data_len)
+			{
+				fprintf(stderr, _("Can't read record %d\n"),
+					i);
+				perror("pdb_LoadRecords: read");
+				return -1;
+			}
 
-		PDB_TRACE(6)
-		{
-			fprintf(stderr, "Contents of record %d:\n", i);
-			debug_dump(stderr, "<REC", rec->data, rec->data_len);
+			PDB_TRACE(6)
+			{
+				fprintf(stderr, "Contents of record %d:\n", i);
+				debug_dump(stderr, "<REC", rec->data,
+					   rec->data_len);
+			}
 		}
 	}
 
