@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.2 1999-08-26 14:21:02 arensb Exp $
+ * $Id: conduit.h,v 1.3 1999-09-04 20:58:24 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -49,7 +49,6 @@ struct conduit_spec
 	 * and converts it to a MH mail alias list, another that
 	 * converts it to a Pine alias list. Both should be run.
 	 */
-/*  	int (*run)(struct Palm *palm, struct dlp_dbinfo *db); */
 	ConduitFunc run;
 			/* The conduit function. */
 };
