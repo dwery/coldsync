@@ -1,5 +1,5 @@
 .\" coldsync.8
-.\" $Id: coldsync.8,v 1.2 1999-07-12 11:35:04 arensb Exp $
+.\" $Id: coldsync.8,v 1.3 1999-07-14 12:23:31 arensb Exp $
 .\" 
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -47,7 +47,9 @@ to the Palm. By default,
 performs a full sync (see below) with a Palm device listening on the
 device given by the
 .Fl p
-option.
+option. Normally, the only reason to do a backup is to save the
+contents of your Palm before doing something that might cause you to
+lose data.
 .Pp
 The following options are available:
 .Bl -tag -width indent
@@ -69,9 +71,16 @@ that the Palm is connected to.
 .It Fl b Ar directory
 Perform a full backup of the Palm, and put the files in
 .Ar directory .
+.Em NB:
+This will not overwrite any existing files: if a backup file for a
+database already exists in the backup directory, that database will
+simply be skipped.
 .It Fl r Ar directory
 Restore files from
 .Ar directory .
+.Em Warning:
+If you restore a database that already exists on the Palm, that
+database will be overwritten.
 .\" XXX - Not implemented yet
 .\".It Fl u Aq user|uid
 .\"Run as the specified user. This may be either a user name or a numeric
