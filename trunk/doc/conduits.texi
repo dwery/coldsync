@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.4 2000-01-23 10:05:24 arensb Exp $
+@c $Id: conduits.texi,v 1.5 2000-01-30 16:18:23 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -87,6 +87,7 @@ Overview
 Tutorial
 
 * todo-dump::                   A simple conduit.
+* pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
 
 Specification
@@ -227,17 +228,25 @@ conduit fetch @{
 @example
         type "addr"/"";
 @end example
+
+@noindent
 the conduit will be run for every database with creator @samp{addr},
 regardless of type. Likewise, if you leave the creator empty:
+
 @example
         type ""/"DATA";
 @end example
+
+@noindent
 the conduit will be run for every database with type @samp{DATA},
 regardless of creator (though this isn't usually very useful). Finally,
 you can leave both the creator and type empty:
+
 @example
         type ""/"";
 @end example
+
+@noindent
 In this case, the conduit will be run for every database.
 
 @node Overview-Flavors,  , Creators and Types, Overview
@@ -260,14 +269,26 @@ that they're all in the Address Book database in your backup directory.
 Then ColdSync wil make sure that any changes to the meeting list will be
 reflected on your Palm.
 
-@c XXX - How to specify in .coldsyncrc
+	To specify a Fetch conduit in your @file{.coldsyncrc}, use
+@code{fetch} or @code{pre-fetch} as the flavor argument to
+@code{conduit}, e.g.:
+
+@example
+@cartouche
+conduit fetch @{
+        path "/usr/local/libexec/coldsync/get-meetings";
+        type "date"/"DATA";
+@}
+@end cartouche
+@end example
 
 @cindex Multiple conduits
 @cindex Conduits, multiple
 	If you specify several conduits of the same flavor for the same
 database, they will be run one at a time, in the order in which they
 appear in @file{.coldsyncrc}. This allows you to chain the effects of
-several conduits. Bear in mind, however, that they may interfere.
+several conduits. Bear in mind, however, that they may interfere with
+each other
 
 @cindex Flavor, Dump
 @cindex Dump
@@ -280,7 +301,18 @@ contains the same information as the Address Book database on the Palm.
 After that's done, a conduit can export this list in your favorite
 address book application's format.
 
-@c XXX - How to specify in .coldsyncrc
+	To specify a Dump conduit in your @file{.coldsyncrc}, use
+@code{dump} or @code{post-dump} as the flavor argument to
+@code{conduit}, e.g.:
+
+@example
+@cartouche
+conduit dump @{
+        path "/usr/local/libexec/coldsync/save-meetings";
+        type "date"/"DATA";
+@}
+@end cartouche
+@end example
 
 @cindex Syncing, one-way
 @cindex Desktop overwrites handheld
@@ -322,18 +354,19 @@ To run it, you will need the @code{p5-Palm} Perl module from@*
 
 @menu
 * todo-dump::                   A simple conduit.
+* pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
 @end menu
 
-@node todo-dump, Style and Warnings, Tutorial, Tutorial
+@node todo-dump, pine-aliases, Tutorial, Tutorial
 @comment  node-name,  next,  previous,  up
 @section @code{todo-dump}
+@c XXX - Rewrite this with the new ColdSync.pm
 
 	Let's write a Dump conduit that writes the current To Do list to
 a file:
 
 @example
-@cartouche
 #!/usr/bin/perl
 use Palm::ToDo;
 
@@ -366,7 +399,6 @@ sub Warn
 
         return;
 @}
-@end cartouche
 @end example
 
 	The @code{Palm::ToDo} module is a parser for ToDo databases.
@@ -392,7 +424,6 @@ ensures that all warnings printed using the @code{warn} built-in have a
 status code.
 
 @example
-@cartouche
 # Parse command-line arguments
 if ($ARGV[0] ne "conduit")
 @{
@@ -410,7 +441,6 @@ if ($ARGV[1] ne "dump")
 @{
         die "404 Unsupported flavor\n";
 @}
-@end cartouche
 @end example
 
 	Each conduit is run with two command-line arguments. The first
@@ -437,7 +467,6 @@ If that's not how it was invoked, it complains and exits.
 
 @cindex Headers, parsing
 @example
-@cartouche
 # Read the conduit fields from stdin
 %HEADERS = ();
 
@@ -458,7 +487,6 @@ while (<STDIN>)
 
         $HEADERS@{$header@} = $value;
 @}
-@end cartouche
 @end example
 
 	ColdSync sends input to the conduit in a set of
@@ -511,12 +539,10 @@ as the one specified by @code{InputDB}, but it might not be.
 	Next, we perform a sanity check on the headers:
 
 @example
-@cartouche
 if (!defined($HEADERS@{"InputDB"@}))
 @{
         die "406 Missing header field: InputDB\n";
 @}
-@end cartouche
 @end example
 
 	It is allowable to @code{die} in the middle of reading the
@@ -526,17 +552,14 @@ the headers at once, and put all of the sanity checks in one place.
 	Now we can read the To Do database:
 
 @example
-@cartouche
 # Read the PDB file specified by the "InputDB" header.
 $pdb = new Palm::PDB;
 $pdb->Load($HEADERS@{"InputDB"@});
-@end cartouche
 @end example
 
 	Finally, we get to where the real work gets done:
 
 @example
-@cartouche
 format TODO =
 @@ @@ @@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 $marker, $priority, $description
@@ -559,7 +582,6 @@ foreach $record (@@@{$pdb->@{"records"@}@})
 @}
 
 close OUTFILE;
-@end cartouche
 @end example
 
 	@code{@@@{$pdb->@{"records"@}@}} is a list of references to
@@ -571,10 +593,8 @@ will have a ``-''.
 	Now we're done:
 
 @example
-@cartouche
 print STDOUT "202 Success!\n";
 exit 0;
-@end cartouche
 @end example
 
 @cindex Status code
@@ -585,7 +605,132 @@ before exiting. A status code in the range 200-299 indicates success.
 400-599 indicates failure.
 @xref{Status Codes}.
 
-@node Style and Warnings,  , todo-dump, Tutorial
+@node pine-aliases, Style and Warnings, todo-dump, Tutorial
+@comment  node-name,  next,  previous,  up
+@section @code{pine-aliases}
+
+@cindex Pine (mail reader)
+@cindex Multi-flavor conduit
+@cindex Conduit, multi-flavor
+	Now that we've seen a trivial conduit, let's take a look at a
+slightly more complicated one: a conduit to synchronize addresses in the
+Palm Address Book database with those in Pine's address book.
+
+	Note that this is still just a tutorial conduit: we'll be making
+some simplifying assumptions that will make this conduit unsuitable for
+use in the real world.
+
+	Having said this, let's take a look at the conduit:
+
+@example
+#!/usr/bin/perl
+use Palm::Address;
+use ColdSync;
+
+$PINE_ALIASES = "$ENV@{HOME@}/.addressbook";
+
+ConduitMain(
+        "fetch" => \&DoFetch,
+        "dump"  => \&DoDump,
+        );
+@end example
+
+@cindex @code{ConduitMain}
+	Unlike @code{todo-dump} (@pxref{todo-dump}), @code{pine-aliases}
+is a multi-flavor conduit: it can be used either as a Fetch conduit or
+as a Dump conduit. For this reason, we use @code{ConduitMain} rather
+than @code{StartConduit}/@code{EndConduit}.
+
+	There are several reasons why one might want to write a
+multi-flavor conduit like this one. The first is that the Fetch and Dump
+functions really just implement the two halves of a single conduit that
+performs two-way synchronization between the Palm and Pine.
+
+	Secondly, we'll be writing some convenience functions that will
+be used by both @code{&DoFetch} and @code{&DoDump}, so it makes sense to
+keep them together.
+
+	Finally, in many cases, the two things that one is synchronizing
+(in this case the Palm Address Book and Pine's addressbook file) don't
+contain the same information, or represent it in such a way that it's
+difficult to convert one to the other, and the conduit writer must
+resort to a number of tricks to perform the sync correctly.
+
+	For instance, the Fetch conduit for @code{kab} tries to save
+each person's fax number in the Palm database. If there is no fax field,
+it will append ``(212) 123-4567 (fax)'' to the ``Other'' field.
+Therefore, the @code{kab} Dump conduit must look for the fax number in
+the ``Other'' field as well as the ``Fax'' field. Keeping the two
+conduits together in the same file makes it easier to keep track of
+these sorts of tricks and make sure that the two conduits work properly.
+
+@cindex @code{$PDB}
+@cindex @code{%HEADERS}
+	@code{ConduitMain} takes as its arguments a table that tells
+which function to call for each flavor. When the conduit is run,
+@code{ConduitMain} parses and checks the command-line arguments, reads
+the headers from standard input and puts them in @code{%HEADERS}, and
+calls the appropriate function. If an @code{InputDB} header was
+specified, that file will be read into @code{$PDB}. Then it calls the
+flavor-specific function (in this case, either @code{&DoFetch} or
+@code{&DoDump}) to do the actual work of the conduit, and finally cleans
+up: for Fetch conduits, it writes the contents of @code{$PDB} to the
+file specified by the @code{OutputDB} header.
+
+@subsection @code{&DoFetch}
+
+	The @code{&DoFetch} function reads Pine's alias file. For each
+address that it finds there, it updates the e-mail address in the
+appropriate record in the Palm database.
+
+@example
+sub DoFetch
+@{
+        my %aliases = ();
+
+        $PDB = new Palm::PDB;
+        $PDB->Load($HEADERS@{"InputDB"@} ||
+                   $HEADERS@{"OutputDB"@});
+
+        open ALIASES, "< $PINE_ALIASES" or
+                die "Can't open $PINE_ALIASES: $!\n";
+
+        while (<ALIASES>)
+        @{
+                my $alias = $1;
+                my $addr = $2;
+                my $fullname = $3;
+                my @@rest;
+
+                chomp;
+                ($alias, $fullname, $addr, @@rest) = split /\t/;
+                $aliases@{$fullname@} = $addr;
+        @}
+
+        my $fullname;
+        my $address;
+
+        while (($fullname, $address) = each %aliases)
+        @{
+                my $record = &find_person($PDB, $fullname);
+
+                next if !defined($record);      # No entry in PDB
+
+                my $pdb_addr = &get_address($record);
+
+                next if $pdb_addr eq $address;
+                                # It already matches. Ignore it.
+
+                print STDOUT "101 Setting $fullname -> $address\n";
+                &set_address($record, $address);
+        @}
+        close ALIASES;
+
+        return 1;               # Success
+@}
+@end example
+
+@node Style and Warnings,  , pine-aliases, Tutorial
 @comment  node-name,  next,  previous,  up
 @section Style and Warnings: things to watch out for
 
