@@ -1,7 +1,11 @@
 /* palm_types.h
  * Definitions of various types that PalmOS likes to use.
  *
- * $Id: palm_types.h,v 1.1 1999-09-09 05:15:39 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: palm_types.h,v 1.2 2001-01-09 16:34:31 arensb Exp $
  */
 #ifndef _palm_types_h_
 #define _palm_types_h_
