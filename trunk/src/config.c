@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.80 2001-11-05 03:42:04 arensb Exp $
+ * $Id: config.c,v 1.81 2001-11-12 01:08:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -174,11 +174,11 @@ parse_args(int argc, char *argv[])
 			break;
 
 		    case 'I':	/* -I: Install younger databases */
-			global_opts.force_install = True;
+			global_opts.force_install = True3;
 			break;
 
 		    case 'z':	/* -z: Install databases after main sync */
-			global_opts.install_first = False;
+			global_opts.install_first = False3;
 			break;
 
 		    case 'f':	/* -f <file>: Read configuration from
@@ -297,6 +297,10 @@ load_config(const Bool read_user_config)
 		Error(_("Can't allocate new configuration."));
 		return -1;
 	}
+
+	/* Initialize the options to be undefined */
+	sync_config->options.force_install = Undefined;
+	sync_config->options.install_first = Undefined;
 
 	/* Add a default conduit to the head of the queue, equivalent
 	 * to:
@@ -419,6 +423,27 @@ load_config(const Bool read_user_config)
 				return -1;
 			}
 		}
+	}
+
+	/* Set options from the config file(s) that don't override the
+	 * command line.
+	 */
+	if (global_opts.install_first == Undefined)
+	{
+		if (sync_config->options.install_first == Undefined)
+			global_opts.install_first = True3;
+		else
+			global_opts.install_first =
+				sync_config->options.install_first;
+	}
+
+	if (global_opts.force_install == Undefined)
+	{
+		if (sync_config->options.force_install == Undefined)
+			global_opts.force_install = False3;
+		else
+			global_opts.force_install =
+				sync_config->options.force_install;
 	}
 
 	/* Make sure there's at least one listen block: if a port was
