@@ -8,9 +8,10 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.3 1999-02-22 10:59:42 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.4 1999-02-24 13:11:30 arensb Exp $
  */
 #include <stdio.h>
+#include <string.h>		/* For memcpy() et al. */
 #include "dlp.h"
 #include "dlp_cmd.h"
 #include "util.h"
@@ -1165,7 +1166,7 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 
 			DLPC_TRACE(3, "block size: %d (0x%04x)\n", *size,
 				   *size);
-			debug_dump(stderr, "APP: ", *data, *size);
+/*  			debug_dump(stderr, "APP: ", *data, *size); */
 
 			break;
 		    default:	/* Unknown argument type */
@@ -1867,7 +1868,7 @@ DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 		       struct dlp_resource *value,
 						/* Resource info returned
 						 * here */
-		       ubyte *data)		/* Resource data returned
+		       const ubyte **data)	/* Resource data returned
 						 * here */
 {
 	int i;
@@ -1933,8 +1934,9 @@ DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 			value->index = get_uword(&rptr);
 			value->size = get_uword(&rptr);
 			/* XXX - Potential buffer overflow */
-			memcpy(data, rptr, value->size);
-			rptr += value->size;
+/*  			memcpy(data, rptr, value->size); */
+/*  			rptr += value->size; */
+*data = rptr;
 
 			DLPC_TRACE(3, "Resource: type '%c%c%c%c' (0x%08lx), "
 				   "id %d, index %d, size %d\n",
