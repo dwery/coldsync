@@ -1,3 +1,15 @@
+- Need a "logit(...)" function that'll write its arguments to the log
+  file, or send them to syslog if necessary. Should use snprintf() to
+  avoid buffer overruns.
+- Need Warning(...) and Error(...) functions that'll print the error
+  both to stderr and to the log (if the log isn't syslog).
+- When accepting a connection from a remote host, first open the TCP
+  socket, and only then acknowledge the UDP packet. That way, if the
+  TCP socket can't be opened for some reason, we can abort before
+  acknowledging the UDP packet, and not promise the client a
+  connection we can't offer. Besides, this is probably closer to what
+  happens with inetd, where by the time the program is launched, inetd
+  has already done most of the work of accepting the connection.
 - When a program is launched by 'inetd', its stderr is the socket.
   This will break logging. Add a "-l <fname>" option. If <fname> is
   "syslog", use syslog for logging. Can use snprintf() to format the
@@ -7,9 +19,6 @@
   standalone libraries.
 - Assume that snprintf() is available. This can be used to replace the
   various mk*fname() functions.
-- Bug: zero-length records. See Simon Callan's email: if a
-  Memo/ToDo/Datebook record is EXPUNGED and DIRTY, GenericConduit
-  doesn't handle it correctly (saves it instead of deleting it).
 - Init mode should set the NetSync host and mask, if they're set in
   the pda block.
 - "forward:" line in pda block: this is of the form
