@@ -123,3 +123,10 @@
 #  define _GNU_SOURCE		1
 #  define __EXTENSIONS__	1
 #endif	/* __GNUC__ */
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * mode: C		***
+ * fill-column:	75	***
+ * End:			***
+ */
