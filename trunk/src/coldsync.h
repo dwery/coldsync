@@ -2,11 +2,11 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.45 2000-12-24 21:24:48 arensb Exp $
+ * $Id: coldsync.h,v 1.46 2001-01-09 16:05:01 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -71,6 +71,7 @@ struct cmd_opts {
 				 */
 	char *devname;		/* Name of the device on which to listen */
 	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
+/*	char *log_fname;*/	/* Where to write the log file */
 	/* XXX - do_backup and do_restore are made obsolete by run modes */
 	/* XXX - backupdir and restoredir are made obsolete by
 	 * mode-specific functions.
@@ -301,7 +302,7 @@ extern int open_tempfile(char *name_template);
 /* config.c */
 extern int parse_args(int argc, char *argv[]);
 extern int load_config(void);
-extern void print_version(void);
+extern void print_version(FILE *outfile);
 extern int get_hostinfo(void);
 extern int get_hostaddrs(void);
 extern void free_hostaddrs(void);
@@ -357,6 +358,8 @@ extern int add_to_log(const char *msg);
 extern int parse_config_file(const char *fname, struct sync_config *config);
 
 /* misc.c */
+extern int Warn(const char *format, ...);
+extern int Error(const char *format, ...);
 extern const char *mkfname(const char *first, ...);
 extern const char *mkpdbname(const char *dirname,
 			     const struct dlp_dbinfo *dbinfo,
