@@ -1,3 +1,12 @@
+- Built-in conduits receive information about the PDA block (Keni's
+  patch), but external conduits don't. It'd be nice if they did. The
+  obvious way to do this is by sending them additional headers, e.g.:
+	PDA-Name: Palm m105;
+	PDA-Snum: 189X7M27GA63-N;
+	PDA-Directory: /folks/arensb/.palm-m105;
+	PDA-Default: 1;
+	PDA-Username: Gorko the Invincible;
+	PDA-UID: 31337;
 - Fix io_drain lock
 - Add a warning about listen usb under linux.
 - Fix --with-getlong 
