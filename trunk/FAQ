@@ -135,6 +135,9 @@ A: Yes. See http://kreucher.user.msu.edu/clie/
 Q: Does ColdSync work with the Palm M50x series?
 A: Yes, though USB support is still very incomplete. Under Linux, you can
    sync over USB; under other OSes, you'll need to use a serial cradle.
+	Syncing over USB involves a somewhat different set of protocols
+   from serial syncing. Palm has not published documentation on either set
+   of protocols, so this may never work properly.
 
 Q: Does ColdSync support syncing via the infrared port?
 A: Not directly, but yes.
