@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.6 1999-11-12 09:51:12 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.7 1999-11-27 05:44:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -31,10 +31,15 @@
 #endif	/* STDC_HEADERS */
 
 #include <stdlib.h>		/* For malloc() */
-#include <pconn/dlp.h>
-#include <pconn/dlp_cmd.h>
-#include <pconn/util.h>
-#include <pconn/palm_errno.h>
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
+#include "pconn/dlp.h"
+#include "pconn/dlp_cmd.h"
+#include "pconn/util.h"
+#include "pconn/palm_errno.h"
 
 int dlpc_trace = 0;		/* Debugging level for DLP commands */
 
@@ -127,7 +132,18 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadUserInfo_Info:
-			/* XXX - Make sure the size is sane */
+			/* XXX - Ideally, ought to make sure the size is
+			 * sane: it should be >=
+			 * DLPRETLEN_ReadUserInfo_Info, and should be large
+			 * enough to hold everything that the return
+			 * argument contains. Have to parse the argument a
+			 * bit at a time to determine this, though, so it
+			 * might not be worth the effort unless there's a
+			 * buffer overflow exploit involved. I don't think
+			 * there is, though there might be if this function
+			 * is ever called in a case where 'userinfo' is a
+			 * stack variable.
+			 */
 			userinfo->userid = get_udword(&rptr);
 			userinfo->viewerid = get_udword(&rptr);
 			userinfo->lastsyncPC = get_udword(&rptr);
@@ -213,7 +229,8 @@ fprintf(stderr, "after punpack(), err == %d\n", err);
 			break;
 
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadUserInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadUserInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -313,7 +330,8 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteUserInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpWriteUserInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -417,7 +435,8 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 		    }
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadSysInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadSysInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -483,7 +502,8 @@ DlpGetSysDateTime(struct PConnection *pconn,
 					ptime->year);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpGetSysDateTime: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpGetSysDateTime",
 				ret_argv[i].id);
 			continue;
 		}
@@ -558,7 +578,8 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpSetSysDateTime: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpSetSysDateTime",
 				ret_argv[i].id);
 			continue;
 		}
@@ -579,13 +600,11 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[2];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_ReadStorageInfo_Req];
+					/* Buffer holding outgoing arg */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	ubyte act_count = 0;	/* # card info structs returned */
-
-	if (outbuf == NULL)
-		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> ReadStorageInfo(%d)\n", card);
@@ -694,7 +713,8 @@ DlpReadStorageInfo(struct PConnection *pconn,
 			cinfo->reserved4 = get_udword(&rptr);	/* Padding */
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadStorageInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadStorageInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -917,7 +937,8 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadDBList: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadDBList",
 				ret_argv[i].id);
 			continue;
 		}
@@ -942,13 +963,11 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_OpenDB_DB + DLPCMD_DBNAME_LEN];
+					/* Buffer holding outgoing arg */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-
-	/* XXX */
-	if (outbuf == NULL)
-		outbuf = malloc(128);
+	int max;		/* To prevent buffer overruns */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -963,9 +982,18 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	wptr = outbuf;
 	put_ubyte(&wptr, card);
 	put_ubyte(&wptr, mode);
-	/* XXX - Potential buffer overflow */
-	memcpy(wptr, name, strlen(name)+1);
-	wptr += strlen(name)+1;
+
+	/* XXX - How many significant characters (i.e., not counting the
+	 * trailing NUL) are actually allowed? Need to check, here and in
+	 * all functions that use ubyte outbuf[foo + DLPCMD_DBNAME_LEN];.
+	 * Everywhere DLPCMD_DBNAME_LEN is used, for that matter.
+	 */
+	max = strlen(name);
+	if (max > DLPCMD_DBNAME_LEN-1)
+		max = DLPCMD_DBNAME_LEN-1;
+	memcpy(wptr, name, max);
+	wptr += max;
+	put_ubyte(&wptr, 0);		/* Trailing NUL */
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_OpenDB_DB;
@@ -1009,7 +1037,8 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 					*handle);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpOpenDB: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpOpenDB",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1035,15 +1064,11 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_CreateDB_DB + DLPCMD_DBNAME_LEN];
+					/* Buffer holding outgoing arg */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be, and allocate
-		 * accordingly.
-		 */
-		outbuf = malloc(1024);
+	int max;		/* To prevent buffer overflow */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -1068,8 +1093,11 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	put_ubyte(&wptr, 0);		/* Padding */
 	put_uword(&wptr, newdb->flags);
 	put_uword(&wptr, newdb->version);
-	memcpy(wptr, newdb->name, strlen(newdb->name));
-	wptr += strlen(newdb->name);
+	max = strlen(newdb->name);
+	if (max > DLPCMD_DBNAME_LEN-1)
+		max = DLPCMD_DBNAME_LEN-1;
+	memcpy(wptr, newdb->name, max);
+	wptr += max;
 	put_ubyte(&wptr, 0);		/* Trailing NUL */
 
 	/* Fill in the argument */
@@ -1113,7 +1141,8 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 					"Database handle: %d\n", *handle);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpCreateDB: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpCreateDB",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1189,7 +1218,8 @@ DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpCloseDB: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpCloseDB",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1212,11 +1242,9 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_DeleteDB_DB + DLPCMD_DBNAME_LEN];
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-
-	if (outbuf == NULL)
-		outbuf = malloc(128);
+	int max;		/* To prevent buffer overruns */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> DeleteDB: card %d, name \"%s\"\n",
@@ -1230,9 +1258,12 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 	wptr = outbuf;
 	put_ubyte(&wptr, card);
 	put_ubyte(&wptr, 0);		/* Padding */
-	/* XXX - Potential buffer overrun: check length of 'name' */
-	memcpy(wptr, name, strlen(name));
-	wptr += strlen(name);
+
+	max = strlen(name);
+	if (max > DLPCMD_DBNAME_LEN - 1)
+		max = DLPCMD_DBNAME_LEN - 1;
+	memcpy(wptr, name, max);
+	wptr += max;
 	put_ubyte(&wptr, 0);		/* Terminating NUL */
 
 	/* Fill in the argument */
@@ -1268,7 +1299,8 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpDeleteDB: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpDeleteDB",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1349,7 +1381,6 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadAppBlock_Blk:
-			/* XXX - Sanity check: Make sure argv[i].size <= size */
 			*size = get_uword(&rptr);
 			/* Return a pointer to the data. */
 			*data = rptr;
@@ -1365,7 +1396,8 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadAppBlock: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadAppBlock",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1389,21 +1421,20 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	ubyte *outbuf = NULL;		/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(1024);
+	if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteAppBlock_Block +
+				       len)) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"DlpWriteAppBlock");
+		return -1;
+	}
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteAppBlock\n");
 
-if (DLPARGLEN_WriteAppBlock_Block + len > 1024)
-{
-fprintf(stderr, "##### I can't send this AppInfo block: it's too big\n");
-return -1;
-}
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteAppBlock;
 	header.argc = 1;
@@ -1424,13 +1455,19 @@ return -1;
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
+	free(outbuf);			/* We're done with it now */
+	outbuf = NULL;
 
 	/* Get a response */
 	DLPC_TRACE(10)
 		fprintf(stderr,
 			"DlpWriteAppBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_WriteAppBlock, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteAppBlock, &resp_header,
+			    &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1449,7 +1486,9 @@ return -1;
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteAppBlock: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpWriteAppBlock",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1460,7 +1499,6 @@ return -1;
 
 /* DlpReadSortBlock
  * Read the sort block for a database.
- * XXX - I think this is used by the application to sort its records.
  * XXX - Not terribly well-tested.
  */
 int
@@ -1530,7 +1568,6 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadSortBlock_Blk:
-			/* XXX - Sanity check: Make sure argv[i].size <= size */
 			/* Return the data and its length to the caller */
 			*size = ret_argv[i].size;
 			/* Return a pointer to the data */
@@ -1538,7 +1575,9 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 			rptr += *size;
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadSortBlock: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadSortBlock",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1563,20 +1602,19 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	ubyte *outbuf = NULL;		/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(1024);
+	if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteSortBlock_Block +
+				       len)) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"DlpWriteSortBlock");
+		return -1;
+	}
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteSortBlock\n");
-if (DLPARGLEN_WriteSortBlock_Block + len > 1024)
-{
-fprintf(stderr, "##### I can't send this sort block: it's too big\n");
-return -1;
-}
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteSortBlock;
@@ -1598,7 +1636,12 @@ return -1;
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
+	free(outbuf);			/* We're done with it now */
+	outbuf = NULL;
 
 	/* Get a response */
 	DLPC_TRACE(10)
@@ -1623,7 +1666,9 @@ return -1;
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteSortBlock: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpWriteSortBlock",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1723,7 +1768,9 @@ DlpReadNextModifiedRec(
 					   recinfo->size);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadNextModifiedRec: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadNextModifiedRec",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1834,7 +1881,8 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadRecordByID: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadRecordByID",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1851,7 +1899,7 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
  * you're supposed to use this function to get the ID of the record you
  * want to read, but call DlpReadRecordByID to actually read it.
  * Also, the returned recinfo->index value is the size of the record.
- * XXX - Is there some deep significance to this?
+ * There might be some deep significance to this, but I don't know.
  */
 int
 DlpReadRecordByIndex(
@@ -1947,7 +1995,8 @@ DlpReadRecordByIndex(
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadRecordByIndex: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadRecordByIndex",
 				ret_argv[i].id);
 			continue;
 		}
@@ -1983,7 +2032,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	if ((outbuf = malloc(DLPARGLEN_WriteRecord_Rec + len)) == NULL)
 	{
 		fprintf(stderr,
-			"DlpWriteRecord: Can't allocate output buffer.\n");
+			_("DlpWriteRecord: Can't allocate output buffer.\n"));
 		return -1;
 	}
 
@@ -2073,7 +2122,8 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 			*recid = get_udword(&rptr);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteRecord: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpWriteRecord",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2155,7 +2205,8 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpDeleteRecord: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpDeleteRecord",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2170,7 +2221,7 @@ DlpReadResourceByIndex(
 	const ubyte handle,		/* Database handle */
 	const uword index,		/* Resource index */
 	const uword offset,		/* Offset into resource */
-	const uword len,		/* #bytes to read (~0n == to the
+	const uword len,		/* #bytes to read (~0 == to the
 					 * end) */
 	struct dlp_resource *value,	/* Resource info returned here */
 	const ubyte **data)		/* Resource data returned here */
@@ -2181,13 +2232,9 @@ DlpReadResourceByIndex(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_ReadResource_ByIndex];
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -2222,7 +2269,8 @@ DlpReadResourceByIndex(
 			"DlpReadResourceByIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header,
+			    &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2246,10 +2294,7 @@ DlpReadResourceByIndex(
 			value->id = get_uword(&rptr);
 			value->index = get_uword(&rptr);
 			value->size = get_uword(&rptr);
-			/* XXX - Potential buffer overflow */
-/*  			memcpy(data, rptr, value->size); */
-/*  			rptr += value->size; */
-*data = rptr;
+			*data = rptr;
 
 			DLPC_TRACE(3)
 				fprintf(stderr,
@@ -2265,7 +2310,9 @@ DlpReadResourceByIndex(
 					value->size);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadResourceByIndex: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadResourceByIndex",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2291,13 +2338,10 @@ DlpReadResourceByType(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	static ubyte outbuf[DLPARGLEN_ReadResource_ByType];
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(2048);
+	int max;		/* To prevent buffer overruns */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -2357,9 +2401,12 @@ DlpReadResourceByType(
 			value->id = get_uword(&rptr);
 			value->index = get_uword(&rptr);
 			value->size = get_uword(&rptr);
-			/* XXX - Potential buffer overflow */
-			memcpy(data, rptr, value->size);
-			rptr += value->size;
+			max = value->size;
+			if (max > len)
+				/* XXX - Error message */
+				max = len;
+			memcpy(data, rptr, max);
+			rptr += max;
 
 			DLPC_TRACE(3)
 				fprintf(stderr,
@@ -2375,7 +2422,8 @@ DlpReadResourceByType(
 					value->size);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadResourceByType: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadResourceByType",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2420,7 +2468,8 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 	if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteResource_Rsrc+size))
 	    == NULL)
 	{
-		fprintf(stderr, "Out of memory\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"DlpWriteResource");
 		return -1;
 	}
 	wptr = outbuf;
@@ -2429,9 +2478,6 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 	put_udword(&wptr, type);
 	put_uword(&wptr, id);
 	put_uword(&wptr, size);
-	/* XXX - Potential buffer overflow */
-if (((wptr-outbuf) + size) > DLPARGLEN_WriteResource_Rsrc + size)
-fprintf(stderr, "### Buffer overflow in DlpWriteResource!\n");
 	memcpy(wptr, data, size);
 	wptr += size;
 
@@ -2478,7 +2524,8 @@ fprintf(stderr, "### Buffer overflow in DlpWriteResource!\n");
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteResource: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpWriteResource",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2562,7 +2609,8 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpDeleteResource: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpDeleteResource",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2627,7 +2675,8 @@ DlpCleanUpDatabase(
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpCleanUpDatabase: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpCleanUpDatabase",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2691,7 +2740,9 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpResetSyncFlags: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpResetSyncFlags",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2718,13 +2769,21 @@ DlpCallApplication(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	ubyte *outbuf = NULL;		/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(2048);
+	/* If the Palm is using DLP 1.x, then 'outbuf' is larger than it
+	 * needs to be, strictly speaking. We're just allocating as large a
+	 * buffer as we might need.
+	 */
+	if ((outbuf = (ubyte *) malloc(DLPARGLEN_CallApplication_V2 +
+				       paramsize)) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"DlpCallApplication");
+		return -1;
+	}
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -2766,11 +2825,7 @@ DlpCallApplication(
 		put_udword(&wptr, 0L);		/* reserved1 */
 		put_udword(&wptr, 0L);		/* reserved2 */
 	}
-	/* XXX - Potential buffer overrun */
-	if (param != NULL)
-		/* XXX - Error-checking: conceivably 'param' could be NULL
-		 * and 'paramsize' > 0.
-		 */
+	if (paramsize > 0)
 		memcpy(wptr, param, paramsize);
 	wptr += paramsize;
 
@@ -2785,7 +2840,12 @@ DlpCallApplication(
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
+	free(outbuf);			/* We're done with it now */
+	outbuf = NULL;
 
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpCallApplication: waiting for response\n");
@@ -2834,7 +2894,9 @@ DlpCallApplication(
 		    default:	/* Unknown argument type */
 /* XXX - Do this everywhere: */
 /*  		palm_errno = PALMERR_BADRESID; */
-			fprintf(stderr, "##### DlpCallApplication: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpCallApplication",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2891,7 +2953,9 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpResetSystem: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpResetSystem",
 				ret_argv[i].id);
 			continue;
 		}
@@ -2959,7 +3023,9 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpAddSyncLogEntry: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpAddSyncLogEntry",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3029,7 +3095,9 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
 			dbinfo->numrecs = get_uword(&rptr);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadOpenDBInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadOpenDBInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3104,7 +3172,9 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpMoveCategory: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpMoveCategory",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3161,7 +3231,9 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpOpenConduit: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpOpenConduit",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3227,7 +3299,9 @@ DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpEndOfSync: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpEndOfSync",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3292,7 +3366,9 @@ DlpResetRecordIndex(
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpResetRecordIndex: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpResetRecordIndex",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3382,12 +3458,17 @@ DlpReadRecordIDList(
 		{
 		    case DLPRET_ReadRecordIDList_List:
 			*numread = get_uword(&rptr);
-			/* XXX - Make sure max >= *numread */
 			for (i = 0; i < *numread; i++)
+			{
+				if (i >= max)	/* Paranoia */
+					break;
 				recids[i] = get_udword(&rptr);
+			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadRecordIDList: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadRecordIDList",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3494,7 +3575,9 @@ DlpReadNextRecInCategory(
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadNextRecInCategory: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadNextRecInCategory",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3603,7 +3686,9 @@ DlpReadNextModifiedRecInCategory(
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadNextModifiedRecInCategory: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadNextModifiedRecInCategory",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3612,7 +3697,9 @@ DlpReadNextModifiedRecInCategory(
 	return 0;		/* Success */
 }
 
-/* XXX - This is untested: I don't know what values to feed it */
+/* XXX - This is untested: I don't know what values to feed it
+ * XXX - There are values in the Palm headers.
+ */
 int
 DlpReadAppPreference(
 	struct PConnection *pconn,	/* Connection to Palm */
@@ -3709,7 +3796,9 @@ DlpReadAppPreference(
 					pref->version, pref->size, pref->len);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadAppPreference: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadAppPreference",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3736,12 +3825,16 @@ DlpWriteAppPreference(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte *outbuf = NULL;	/* Output buffer */
+	ubyte *outbuf = NULL;		/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	if (outbuf == NULL)
-		/* XXX - Find out how big this needs to be */
-		outbuf = malloc(2048);
+	if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteAppPreference_Pref +
+				       pref->size)) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"DlpWriteAppPreference");
+		return -1;
+	}
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteAppPreference: XXX\n");
@@ -3758,7 +3851,6 @@ DlpWriteAppPreference(
 	put_uword(&wptr, pref->size);
 	put_ubyte(&wptr, flags);
 	put_ubyte(&wptr, 0);		/* Padding */
-	/* XXX - Potential buffer overflow */
 	memcpy(outbuf, data, pref->size);
 	wptr += pref->size;
 
@@ -3770,7 +3862,12 @@ DlpWriteAppPreference(
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
+	free(outbuf);			/* We don't need this anymore */
+	outbuf = NULL;
 
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
@@ -3796,7 +3893,9 @@ DlpWriteAppPreference(
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteRecord: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpWriteRecord",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3906,7 +4005,9 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadNetSyncInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpReadNetSyncInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -3920,7 +4021,9 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
  * XXX - It might be good to add a special value (e.g., 0xffff) to the
  * netsyncinfo->*size fields to tell this function to use strlen() to
  * compute the sizes.
+ * XXX - This works for the hostname, but not for binary strings.
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
+ * XXX - This API sucks. Needs to be redone.
  */
 int
 DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
@@ -3935,6 +4038,8 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
+	/* XXX - This is so that ElectricFence can find overruns.
+	 */
 	if (outbuf == NULL)
 		/* XXX - Figure out how big this needs to be */
 		outbuf = malloc(2048);
@@ -4013,7 +4118,9 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpWriteNetSyncInfo: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: "
+					  "0x%02x\n"),
+				"DlpWriteNetSyncInfo",
 				ret_argv[i].id);
 			continue;
 		}
@@ -4106,7 +4213,8 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 					*value, *value);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, "##### DlpReadFeature: Unknown argument type: 0x%02x\n",
+			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x\n"),
+				"DlpReadFeature",
 				ret_argv[i].id);
 			continue;
 		}
