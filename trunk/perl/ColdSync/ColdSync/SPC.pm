@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.13 2002-06-21 10:20:36 azummo Exp $
+# $Id: SPC.pm,v 1.14 2002-06-21 14:52:30 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.13 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.14 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -221,6 +221,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_DeleteRecord
 	dlp_DeleteAllRecords
 	dlp_WriteRecord
+	dlp_SetDBInfo
 );
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
@@ -1419,6 +1420,74 @@ sub dlp_SetSysDateTime
 					 data => pack("nC5x",
 						      $year, $mon, $day,
 						      $hour, $min, $sec)
+				 }
+				 );
+
+	# No return arguments to parse
+	return $err;
+}
+
+sub _dlpdatezero
+{
+	my %date;
+
+	$date{'year'}	= 0;
+	$date{'month'}	= 0;
+	$date{'day'}	= 0;
+	$date{'hour'}	= 0;
+	$date{'minute'} = 0;
+	$date{'second'} = 0;
+
+	return \%date;
+}
+
+sub dlp_SetDBInfo
+{
+	my $dbh		= shift; # db handle		
+	my $dbinfo	= shift; # Hash with infos to set.
+
+	# Check given values and set defaults.
+
+	$dbinfo->{'wClrDbFlags'}	= 0x0000 unless defined $dbinfo->{'wClrDbFlags'};
+	$dbinfo->{'wSetDbFlags'}	= 0x0000 unless defined $dbinfo->{'wSetDbFlags'};
+	$dbinfo->{'wDbVersion'}		= 0xFFFF unless defined $dbinfo->{'wDbVersion'};
+
+	$dbinfo->{'crDate'}	= _dlpdatezero() unless defined $dbinfo->{'crDate'}{'year'};
+	$dbinfo->{'modDate'}	= _dlpdatezero() unless defined $dbinfo->{'modDate'}{'year'};
+	$dbinfo->{'bckUpDate'}	= _dlpdatezero() unless defined $dbinfo->{'bckUpDate'}{'year'};
+
+	$dbinfo->{'dwType'}	= 0 unless defined $dbinfo->{'dwType'};
+	$dbinfo->{'dwCreator'}	= 0 unless defined $dbinfo->{'dwCreator'};
+
+	my ($err, @argv) = dlp_req(DLPCMD_SetDBInfo,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("C x n n n nCCCCCx nCCCCCx nCCCCCx xxxx xxxx x x",
+						$dbh,
+						$dbinfo->{'wClrDbFlags'},
+						$dbinfo->{'wSetDbFlags'},
+						$dbinfo->{'wDbVersion'},
+						$dbinfo->{'crDate'}{'year'},
+						$dbinfo->{'crDate'}{'month'},
+						$dbinfo->{'crDate'}{'day'},
+						$dbinfo->{'crDate'}{'hour'},
+						$dbinfo->{'crDate'}{'minute'},
+						$dbinfo->{'crDate'}{'second'},
+						$dbinfo->{'modDate'}{'year'},
+						$dbinfo->{'modDate'}{'month'},
+						$dbinfo->{'modDate'}{'day'},
+						$dbinfo->{'modDate'}{'hour'},
+						$dbinfo->{'modDate'}{'minute'},
+						$dbinfo->{'modDate'}{'second'},
+						$dbinfo->{'bckUpDate'}{'year'},
+						$dbinfo->{'bckUpDate'}{'month'},
+						$dbinfo->{'bckUpDate'}{'day'},
+						$dbinfo->{'bckUpDate'}{'hour'},
+						$dbinfo->{'bckUpDate'}{'minute'},
+						$dbinfo->{'bckUpDate'}{'second'},
+						$dbinfo->{'dwType'},
+						$dbinfo->{'dwCreator'},
+					),
 				 }
 				 );
 
