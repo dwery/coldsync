@@ -5,10 +5,10 @@ use strict;
 use warnings;
 
 use Palm::PDB;
-use Palm::StdAppInfo;
+use Palm::StdAppInfo();
 use ColdSync::SPC;
 
-$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.2 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.3 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -150,13 +150,24 @@ sub DESTROY($)
 sub _init_helper($)
 {
 	my $self = shift;
+	my $creator = $self->{creator};
+	my $type = $self->{type};
 
 	# Find the appropriate helper for this database
-	$self->{'helper'} =
-		$Palm::PDB::PDBHandlers{$self->{creator}}{$self->{type}} ||
-		$Palm::PDB::PDBHandlers{undef}{$self->{type}} ||
-		$Palm::PDB::PDBHandlers{$self->{creator}}{""} ||
+	my $helper =
+		$Palm::PDB::PDBHandlers{$creator}{$type} ||
+		$Palm::PDB::PDBHandlers{undef}{$type} ||
+		$Palm::PDB::PDBHandlers{$creator}{""} ||
 		$Palm::PDB::PDBHandlers{""}{""} || undef;
+
+	die "No handler defined for creator \"$creator\", type \"$type\"\n"
+		unless defined $helper;
+
+	# instantiate it... we could get away with just using the class
+	# name, but some Palm::PDB methods assume that there's a hash
+	# available.
+	$self->{'helper'} = {};
+	bless $self->{'helper'}, $helper;
 }
 
 sub _init_app_info($)
@@ -166,6 +177,21 @@ sub _init_app_info($)
 	my $data = dlp_ReadAppBlock($self->{'dbhandle'});
 	return unless defined $data;
 	$self->{'appinfo'} = $self->{'helper'}->ParseAppInfoBlock($data);
+
+	# most PackAppInfoBlock implementations assume that the handler has
+	# a Palm::PDB->{'appinfo'} hash.
+	# It would actually be better to have PackAppInfoBlock
+	# take the appinfo hash/object as an argument, like PackRecord and
+	# PackResource.
+	$self->{'helper'}->{'appinfo'} = $self->{'appinfo'};
+
+	# we can't be assured that every helper will implement the appinfo
+	# such that we get categories. Palm::Raw, for example, just leaves
+	# the appinfo as a binary string. So we'll do our own little parse
+	# on the side for category support. catno() is currently the
+	# only method that needs this.
+	$self->{'std_appinfo'} = {};
+	&Palm::StdAppInfo::parse_StdAppInfo($self->{'std_appinfo'}, $data)
 }
 
 sub _calc_record_attributes($)
@@ -239,7 +265,7 @@ sub catno($$)
 
 	for (my $i = 0; $i < Palm::StdAppInfo::numCategories; $i ++)
 	{
-		my $category = $self->{'appinfo'}{'categories'}[$i];
+		my $category = $self->{'std_appinfo'}{'categories'}[$i];
 		next unless defined $category;
 		return $category->{'id'} if $category->{'name'} eq $catname;
 	}
