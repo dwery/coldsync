@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.17 2001-06-26 05:45:55 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.18 2001-07-09 10:36:00 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -14,7 +14,8 @@
 #include "palm.h"
 #include "PConnection.h"
 
-/* XXX - Reorganize this file into sections, one per command.
+/* XXX - The DLPRETLEN_* macros are never used. Should they be? Or should
+ * they just be nuked?
  */
 
 /* DLP command codes */
@@ -66,8 +67,9 @@
 #define DLPCMD_ReadFeature		0x38	/* Read a feature */
 
 /* DLP 1.2 functions (PalmOS v3.0) */
-#define DLPCMD_FindDB			0x39
-#define DLPCMD_SetDBInfo		0x3a
+#define DLPCMD_FindDB			0x39	/* Find a database given
+						 * creator/type or name */
+#define DLPCMD_SetDBInfo		0x3a	/* Change database info */
 
 /* dlp_time
  * Structure for giving date and time. If the year is zero, then this is a
@@ -170,7 +172,7 @@ struct dlp_setuserinfo
 	struct dlp_time lastsync;
 				/* Time of last successful sync */
 	ubyte modflags;		/* Flags indicating which values have
-				 * changed */
+				 * changed (DLPCMD_MODUIFLAG_*, below) */
 	ubyte usernamelen;	/* Length of username, including NUL */
 				/* XXX - Probably better to determine from
 				 * string (but what if the string isn't
@@ -198,6 +200,38 @@ struct dlp_setuserinfo
 #define DLPRET_ReadSysInfo_Ver		DLPRET_BASE+1	/* v1.2 extension */
 #define DLPRETLEN_ReadSysInfo_Ver	12
 
+/* dlp_sysinfo
+ * The data returned from a DlpReadSysInfo command.
+ */
+struct dlp_sysinfo
+{
+	udword rom_version;	/* ROM system software version */
+	udword localization;	/* Localization ID (?) */
+	ubyte unused;		/* Set this to 0 */
+	ubyte prodIDsize;	/* Size of product/ID field */
+	udword prodID;		/* Product ID */
+				/* The headers say that the product ID used
+				 * to be a variable-sized field. If
+				 * someone's collecting ancient Palms, this
+				 * could be a source of bugs.
+				 */
+
+	/* DLP 1.2 fields. Not all Palms will return these, in which case
+	 * they will be set to 0.
+	 */
+	uword dlp_ver_maj;	/* Palm's DLP major version */
+	uword dlp_ver_min;	/* Palm's DLP minor version */
+	uword comp_ver_maj;	/* Palm's product compatibility major
+				 * version */
+	uword comp_ver_min;	/* Palm's product compatibility minor
+				 * version */
+	udword max_rec_size;	/* Max. size of record that can be
+				 * allocated on Palm, assuming sufficient
+				 * memory. 0xffffffff == all available
+				 * memory.
+				 */
+};
+
 /** GetSysDateTime **/
 #define DLPRET_GetSysDateTime_Time	DLPRET_BASE
 #define DLPRETLEN_GetSysDateTime_Time	8
@@ -210,9 +244,40 @@ struct dlp_setuserinfo
 #define DLPARG_ReadStorageInfo_Req	DLPARG_BASE
 #define DLPARGLEN_ReadStorageInfo_Req	2
 
-/* XXX - Sizes. Get a clue */
 #define DLPRET_ReadStorageInfo_Info	DLPRET_BASE
 #define DLPRET_ReadStorageInfo_Ext	DLPRET_BASE+1	/* v1.1 */
+
+#define DLPCMD_MEMCARD_LEN	32	/* Max. length of card and
+					 * manufacturer name, including
+					 * NUL.
+					 */
+
+struct dlp_cardinfo
+{
+	ubyte totalsize;	/* Total size of this card info */
+	ubyte cardno;		/* Card number */
+	uword cardversion;	/* Card version */
+	struct dlp_time ctime;	/* Creation date and time */
+	udword rom_size;	/* ROM size */
+	udword ram_size;	/* RAM size */
+	udword free_ram;	/* Free RAM size */
+	ubyte cardname_size;	/* Size of card name string (not counting
+				 * NUL) */
+	ubyte manufname_size;	/* Size of manufacturer name string (not
+				 * counting NUL) */
+	char cardname[DLPCMD_MEMCARD_LEN];
+				/* Card name */
+	char manufname[DLPCMD_MEMCARD_LEN];
+				/* Manufacturer name */
+
+	/* DLP 1.1 extensions */
+	uword rom_dbs;		/* ROM database count */
+	uword ram_dbs;		/* RAM database count */
+	udword reserved1;	/* Set to 0 */
+	udword reserved2;	/* Set to 0 */
+	udword reserved3;	/* Set to 0 */
+	udword reserved4;	/* Set to 0 */
+};
 
 /** ReadDBList **/
 #define DLPARG_ReadDBList_Req		DLPARG_BASE
@@ -222,11 +287,67 @@ struct dlp_setuserinfo
 #define DLPRETLEN_ReadDBList_Info	4
 
 /* Flags for ReadDBList */
-#define DLPCMD_READDBLFLAG_RAM		0x80
-#define DLPCMD_READDBLFLAG_ROM		0x40
-#define DLPCMD_READDBLFLAG_MULT		0x20		/* v1.2 */
+#define DLPCMD_READDBLFLAG_RAM		0x80		/* Search RAM DBs */
+#define DLPCMD_READDBLFLAG_ROM		0x40		/* Search ROM DBs */
+#define DLPCMD_READDBLFLAG_MULT		0x20		/* OK to return
+							 * multiple entries
+							 * (DLP v1.2) */
 
-#define DLPRET_READDBLFLAG_MORE		0x80
+#define DLPRET_READDBLFLAG_MORE		0x80	/* There are more database
+						 * descriptions coming.
+						 */
+
+#define DLPCMD_DBNAME_LEN	32	/* 31 chars + NUL (from
+					 * dmDBNameLength)
+					 */
+
+struct dlp_dbinfo
+{
+	ubyte size;		/* Total size of the DB info */
+	ubyte misc_flags;	/* v1.1 flags (DLPCMD_DBINFOFL_*, below) */
+	uword db_flags;		/* Database flags (DLPCMD_DBFLAG_*, below) */
+	udword type;		/* Database type */
+	udword creator;		/* Database creator */
+	uword version;		/* Database version */
+	udword modnum;		/* Modification number (?) */
+	struct dlp_time ctime;	/* Creation time */
+	struct dlp_time mtime;	/* Last modification time */
+	struct dlp_time baktime;	/* Last backup time */
+	uword index;		/* Database index */
+
+	char name[DLPCMD_DBNAME_LEN];
+				/* Database name, NUL-terminated */
+};
+#define DLPCMD_DBINFO_LEN	44	/* Size of 'struct dlp_dbinfo',
+					 * not counting 'name'
+					 */
+
+/* XXX - These are the same as PDB_ATTR_* in "pdb.h", and shouldn't be
+ * duplicated.
+ */
+#define DLPCMD_DBFLAG_RESDB	0x0001	/* This is a resource database
+					 * (record database otherwise)
+					 */
+#define DLPCMD_DBFLAG_RO	0x0002	/* Read-only database */
+#define DLPCMD_DBFLAG_APPDIRTY	0x0004	/* App. info block is dirty */
+#define DLPCMD_DBFLAG_BACKUP	0x0008	/* Database should be backed up if
+					 * no app-specific conduit has been
+					 * supplied.
+					 */
+#define DLPCMD_DBFLAG_OKNEWER	0x0010	/* Tells backup conduit that it's
+					 * okay to install a newer version
+					 * of this database with a different
+					 * name if the current database is
+					 * open (e.g., Graffiti Shortcuts).
+					 */
+#define DLPCMD_DBFLAG_RESET	0x0020	/* Reset device after installing */
+#define DLPCMD_DBFLAG_OPEN	0x8000	/* Database is open */
+
+#define DLPCMD_DBINFOFL_EXCLUDE	0x80	/* Exclude from sync (DLP v1.1) */
+#define DLPCMD_DBINFOFL_RAM	0x40	/* RAM-based(?) (DLP v1.2) */
+
+#define DBINFO_ISRSRC(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RESDB)
+#define DBINFO_ISROM(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RO)
 
 /** OpenDB **/
 #define DLPARG_OpenDB_DB		DLPARG_BASE
@@ -235,11 +356,11 @@ struct dlp_setuserinfo
 #define DLPRET_OpenDB_DB		DLPRET_BASE
 #define DLPRETLEN_OpenDB_DB		1
 
-/* Flags for OpenDB */
-#define DLPCMD_OPENDBFLAG_READ		0x80
-#define DLPCMD_OPENDBFLAG_WRITE		0x40
-#define DLPCMD_OPENDBFLAG_EXCL		0x20
-#define DLPCMD_OPENDBFLAG_SHOWSECRET	0x10
+/* Modes for opening databases */
+#define DLPCMD_MODE_SECRET	0x10	/* Show secret (?) */
+#define DLPCMD_MODE_EXCLUSIVE	0x20	/* ??? */
+#define DLPCMD_MODE_WRITE	0x40	/* Writing */
+#define DLPCMD_MODE_READ	0x80	/* Reading */
 
 /** CreateDB **/
 #define DLPARG_CreateDB_DB		DLPARG_BASE
@@ -248,15 +369,40 @@ struct dlp_setuserinfo
 #define DLPRET_CreateDB_DB		DLPRET_BASE
 #define DLPRETLEN_CreateDB_DB		1
 
+/* Request to create a new database */
+struct dlp_createdbreq
+{
+	udword creator;		/* Database creator */
+	udword type;		/* Database type */
+	ubyte card;		/* Memory card number */
+	ubyte unused;		/* Set to 0 */
+	uword flags;		/* Flags. See DLPCMD_DBFLAG_* */
+	uword version;		/* Database version */
+	char name[DLPCMD_DBNAME_LEN];		/* Database name */
+				/* I'm not 100% sure about this length, but
+				 * it certainly seems plausible.
+				 */
+};
+
 /** CloseDB **/
 #define DLPARG_CloseDB_One		DLPARG_BASE
 #define DLPARGLEN_CloseDB_One		1
 #define DLPARG_CloseDB_All		DLPARG_BASE+1
 #define DLPARGLEN_CloseDB_All		0
-#define DLPARG_CloseDB_Update		DLPARG_BASE+2	/* XXX - PalmOS 3.0 */
+#define DLPARG_CloseDB_Update		DLPARG_BASE+2	/* Close a specific
+							 * DB and update
+							 * mod times
+							 * (PalmOS 3.0)
+							 */
 #define DLPARGLEN_CloseDB_Update	2
 
-/* XXX - Flags */
+#define DLPCMD_CLOSEALLDBS	0xff	/* Close all databases */
+
+/* CloseDB flags for PalmOS v3.0 (not supported yet) */
+#define DLPCMD_CLOSEFL_UPBACKUP	0x80	/* Update backup time */
+#define DLPCMD_CLOSEFL_UPMOD	0x40	/* Update modification time */
+#define DLPCMD_CLOSEFL_ALL	(DLPCMD_CLOSEFL_UPBACKUP |
+				 DLPCMD_CLOSEFL_UPMOD)
 
 /** DeleteDB **/
 #define DLPARG_DeleteDB_DB		DLPARG_BASE
@@ -312,6 +458,17 @@ struct dlp_setuserinfo
 #define DLPC_RECORD_TOEND		(uword) ~0	/* Read the entire
 							 * record.
 							 */
+/* dlp_recinfo is used by both DlpReadRecordByID() and
+ * DlpReadRecordByIndex().
+ */
+struct dlp_recinfo
+{
+	udword id;		/* Record ID */
+	uword index;		/* Record index */
+	uword size;		/* Record size */
+	ubyte attributes;	/* Record attributes */
+	ubyte category;		/* Record category */
+};
 
 /** WriteRecord **/
 #define DLPARG_WriteRecord_Rec		DLPARG_BASE
@@ -324,6 +481,15 @@ struct dlp_setuserinfo
 #define DLPARG_DeleteRecord_Rec		DLPARG_BASE
 #define DLPARGLEN_DeleteRecord_Rec	6
 
+#define DLPCMD_DELRECFLAG_ALL		0x80
+					/* Ignore the record ID. Delete all
+					 * records */
+#define DLPCMD_DELRECFLAG_CATEGORY	0x40
+					/* The least significant byte of
+					 * the record ID contains the
+					 * category of records to be
+					 * deleted.
+					 */
 /** ReadResource **/
 #define DLPARG_ReadResource_ByIndex	DLPARG_BASE
 #define DLPARGLEN_ReadResource_ByIndex	8
@@ -337,6 +503,14 @@ struct dlp_setuserinfo
 							 * resource.
 							 */
 
+struct dlp_resource
+{
+	udword type;		/* Resource type */
+	uword id;		/* Resource ID */
+	uword index;		/* Resource index */
+	uword size;		/* Resource size */
+};
+
 /** WriteResource **/
 #define DLPARG_WriteResource_Rsrc	DLPARG_BASE
 #define DLPARGLEN_WriteResource_Rsrc	10
@@ -344,6 +518,9 @@ struct dlp_setuserinfo
 /** DeleteResource **/
 #define DLPARG_DeleteResource_Res	DLPARG_BASE
 #define DLPARGLEN_DeleteResource_Res	8
+
+#define DLPCMD_DELRSRCFLAG_ALL		0x80
+					/* Delete all resources in the DB */
 
 /** CleanUpDatabase **/
 #define DLPARG_CleanUpDatabase_DB	DLPARG_BASE
@@ -364,291 +541,6 @@ struct dlp_setuserinfo
 #define DLPRET_CallApplication_V2	DLPRET_BASE+1
 #define DLPRETLEN_CallApplication_V2	16
 
-/** ResetSystem **/
-/* No arguments, nothing returned */
-
-/** AddSyncLogEntry **/
-#define DLPARG_AddSyncLogEntry_Msg	DLPARG_BASE
-
-#define DLPC_MAXLOGLEN			2048
-			/* The longest log that can be uploaded (including
-			 * terminating NUL). */
-
-/** ReadOpenDBInfo **/
-#define DLPARG_ReadOpenDBInfo_DB	DLPARG_BASE
-#define DLPARGLEN_ReadOpenDBInfo_DB	1
-
-#define DLPRET_ReadOpenDBInfo_Info	DLPRET_BASE
-#define DLPRETLEN_ReadOpenDBInfo_Info	2
-
-/** MoveCategory **/
-#define DLPARG_MoveCategory_Cat		DLPARG_BASE
-#define DLPARGLEN_MoveCategory_Cat	4
-
-/** ProcessRPC **/
-/* ProcessRPC is special. It doesn't use the usual DLP wrappers */
-
-/** OpenConduit **/
-/* No arguments, nothing returned */
-
-/** EndOfSync **/
-#define DLPARG_EndOfSync_Status		DLPARG_BASE
-#define DLPARGLEN_EndOfSync_Status	2
-
-/** ResetRecordIndex **/
-#define DLPARG_ResetRecordIndex_DB	DLPARG_BASE
-#define DLPARGLEN_ResetRecordIndex_DB	1
-
-/** ReadRecordIDList **/
-#define DLPARG_ReadRecordIDList_Req	DLPARG_BASE
-#define DLPARGLEN_ReadRecordIDList_Req	6
-
-#define DLPRET_ReadRecordIDList_List	DLPRET_BASE
-#define DLPRETLEN_ReadRecordIDList_List	8
-
-#define DLPC_RRECIDL_TOEND		(uword) ~0	/* Read all of the
-							 * record IDs.
-							 */
-
-/* XXX - Flag: 0x80 -> ask the creator application to sort the database
- * before returning the list.
- */
-
-/* 1.1 functions */
-/** ReadNextRecInCategory **/
-#define DLPARG_ReadNextRecInCategory_Rec	DLPARG_BASE
-#define DLPARGLEN_ReadNextRecInCategory_Rec	2
-
-#define DLPRET_ReadNextRecInCategory_Rec	DLPRET_BASE
-#define DLPRETLEN_ReadNextRecInCategory_Rec	10
-
-/** ReadNextModifiedRecInCategory **/
-#define DLPARG_ReadNextModifiedRecInCategory_Rec	DLPARG_BASE
-#define DLPARGLEN_ReadNextModifiedRecInCategory_Rec	2
-
-#define DLPRET_ReadNextModifiedRecInCategory_Rec	DLPRET_BASE
-#define DLPRETLEN_ReadNextModifiedRecInCategory_Rec	10
-
-/** ReadAppPreference **/
-#define DLPARG_ReadAppPreference_Pref	DLPARG_BASE
-#define DLPARGLEN_ReadAppPreference_Pref	10
-
-#define DLPRET_ReadAppPreference_Pref	DLPRET_BASE
-#define DLPRETLEN_ReadAppPreference_Pref	6
-
-/** WriteAppPreference **/
-#define DLPARG_WriteAppPreference_Pref	DLPARG_BASE
-#define DLPARGLEN_WriteAppPreference_Pref	12
-
-/** ReadNetSyncInfo **/
-#define DLPRET_ReadNetSyncInfo_Info	DLPRET_BASE
-#define DLPRETLEN_ReadNetSyncInfo_Info	24
-
-/** WriteNetSyncInfo **/
-#define DLPARG_WriteNetSyncInfo_Info	DLPARG_BASE
-#define DLPARGLEN_WriteNetSyncInfo_Info	24
-
-/* XXX - Flags */
-
-/** ReadFeature **/
-#define DLPARG_ReadFeature_Req		DLPARG_BASE
-#define DLPARGLEN_ReadFeature_Req	6
-
-#define DLPRET_ReadFeature_Feature	DLPRET_BASE
-#define DLPRETLEN_ReadFeature_Feature	4
-
-/* 1.2 functions */
-/** FindDB **/
-/* XXX */
-
-/** SetDBInfo **/
-/* XXX */
-
-/* XXX - Finish cleaning this up */
-
-/* dlp_sysinfo
- * The data returned from a DlpReadSysInfo command.
- */
-struct dlp_sysinfo
-{
-	udword rom_version;	/* ROM system software version */
-	udword localization;	/* Localization ID (?) */
-	ubyte unused;		/* Set this to 0 */
-	ubyte prodIDsize;	/* Size of product/ID field */
-	udword prodID;		/* Product ID */
-		/* XXX - The headers hint that the product ID used to be a
-		 * variable-sized field. Perhaps this should be supported,
-		 * for compatibility with older devices.
-		 */
-
-	/* DLP 1.2 fields. Not all Palms will return these, in which case
-	 * they will be set to 0.
-	 */
-	uword dlp_ver_maj;	/* Palm's DLP major version */
-	uword dlp_ver_min;	/* Palm's DLP minor version */
-	uword comp_ver_maj;	/* Palm's product compatibility major
-				 * version */
-	uword comp_ver_min;	/* Palm's product compatibility minor
-				 * version */
-	udword max_rec_size;	/* Max. size of record that can be
-				 * allocated on Palm, assuming sufficient
-				 * memory. 0xffffffff == all available
-				 * memory.
-				 */
-};
-
-#define DLPCMD_MEMCARD_LEN	32	/* Max. length of card and
-					 * manufacturer name, including
-					 * NUL.
-					 */
-
-struct dlp_cardinfo
-{
-	ubyte totalsize;	/* Total size of this card info */
-	ubyte cardno;		/* Card number */
-	uword cardversion;	/* Card version */
-	struct dlp_time ctime;	/* Creation date and time */
-	udword rom_size;	/* ROM size */
-	udword ram_size;	/* RAM size */
-	udword free_ram;	/* Free RAM size */
-	ubyte cardname_size;	/* Size of card name string (not counting
-				 * NUL) */
-	ubyte manufname_size;	/* Size of manufacturer name string (not
-				 * counting NUL) */
-	char cardname[DLPCMD_MEMCARD_LEN];
-				/* Card name */
-	char manufname[DLPCMD_MEMCARD_LEN];
-				/* Manufacturer name */
-
-	/* DLP 1.1 extensions */
-	uword rom_dbs;		/* ROM database count */
-	uword ram_dbs;		/* RAM database count */
-	udword reserved1;	/* Set to 0 */
-	udword reserved2;	/* Set to 0 */
-	udword reserved3;	/* Set to 0 */
-	udword reserved4;	/* Set to 0 */
-};
-
-#define DLPCMD_DBLISTFLAG_MORE	0x80	/* There are more databases to list */
-
-#define DLPCMD_DBNAME_LEN	32	/* 31 chars + NUL (from
-					 * dmDBNameLength)
-					 */
-
-struct dlp_dbinfo
-{
-	ubyte size;		/* Total size of the DB info */
-	ubyte misc_flags;	/* v1.1 flags */
-	uword db_flags;		/* Database flags */
-	udword type;		/* Database type */
-	udword creator;		/* Database creator */
-	uword version;		/* Database version */
-	udword modnum;		/* Modification number (?) */
-	struct dlp_time ctime;	/* Creation time */
-	struct dlp_time mtime;	/* Last modification time */
-	struct dlp_time baktime;	/* Last backup time */
-	uword index;		/* Database index */
-
-	char name[DLPCMD_DBNAME_LEN];
-				/* Database name, NUL-terminated */
-};
-#define DLPCMD_DBINFO_LEN	44	/* Size of 'struct dlp_dbinfo',
-					 * not counting 'name'
-					 */
-
-#define DBINFO_ISRSRC(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RESDB)
-#define DBINFO_ISROM(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RO)
-
-/* XXX - These are the same as PDB_ATTR_* in "pdb.h", and shouldn't be
- * duplicated.
- */
-/* XXX - Except for PDB_ATTR_OPEN, dammit! */
-#define DLPCMD_DBFLAG_RESDB	0x0001	/* This is a resource database
-					 * (record database otherwise)
-					 */
-#define DLPCMD_DBFLAG_RO	0x0002	/* Read-only database */
-#define DLPCMD_DBFLAG_APPDIRTY	0x0004	/* App. info block is dirty */
-#define DLPCMD_DBFLAG_BACKUP	0x0008	/* Database should be backed up if
-					 * no app-specific conduit has been
-					 * supplied.
-					 */
-#define DLPCMD_DBFLAG_OKNEWER	0x0010	/* Tells backup conduit that it's
-					 * okay to install a newer version
-					 * of this database with a different
-					 * name if the current database is
-					 * open (e.g., Graffiti Shortcuts).
-					 */
-#define DLPCMD_DBFLAG_RESET	0x0020	/* Reset device after installing */
-#define DLPCMD_DBFLAG_OPEN	0x8000	/* Database is open */
-
-/* Sync termination codes */
-#define DLPCMD_SYNCEND_NORMAL	0	/* Normal */
-#define DLPCMD_SYNCEND_NOMEM	1	/* Out of memory */
-#define DLPCMD_SYNCEND_CANCEL	2	/* User cancelled */
-#define DLPCMD_SYNCEND_OTHER	3	/* None of the above */
-
-/*** OpenDB ***/
-/* Modes for opening databases */
-#define DLPCMD_MODE_SECRET	0x10	/* Show secret (?) */
-#define DLPCMD_MODE_EXCLUSIVE	0x20	/* ??? */
-#define DLPCMD_MODE_WRITE	0x40	/* Writing */
-#define DLPCMD_MODE_READ	0x80	/* Reading */
-
-/*** CreateDB ***/
-/* Request to create a new database */
-struct dlp_createdbreq
-{
-	udword creator;		/* Database creator */
-	udword type;		/* Database type */
-	ubyte card;		/* Memory card number */
-	ubyte unused;		/* Set to 0 */
-	uword flags;		/* Flags. See DLPCMD_DBFLAG_* */
-	uword version;		/* Database version */
-	char name[128];		/* Database name */
-				/* XXX - Fixed size: bad. Find out what
-				 * maximum length is. I suspect it's 31
-				 * chars + NUL, from 'dmDBNameLength' in
-				 * DataMgr.h */
-};
-
-/*** CloseDB ***/
-#define DLPCMD_CLOSEALLDBS	0xff	/* Close all databases */
-
-/*** ReadRecord ***/
-struct dlp_recinfo
-{
-	udword id;		/* Record ID */
-	uword index;		/* Record index */
-	uword size;		/* Record size */
-	ubyte attributes;	/* Record attributes */
-	ubyte category;		/* Record category */
-};
-
-/* XXX - Get rid of this */
-struct dlp_readrecret
-{
-	udword recid;		/* Unique record ID */
-	uword index;		/* Record index */
-	uword size;		/* Record size, in bytes */
-	ubyte attributes;	/* Record attributes (?) */
-	ubyte category;		/* Record category index */
-	const void *data;	/* Record data */
-};
-
-/*** WriteRecord ***/
-
-/*** DeleteRecord ***/
-#define DLPCMD_DELRECFLAG_ALL		0x80
-					/* Ignore the record ID. Delete all
-					 * records */
-#define DLPCMD_DELRECFLAG_CATEGORY	0x40
-					/* The least significant byte of
-					 * the record ID contains the
-					 * category of records to be
-					 * deleted.
-					 */
-
-/*** CallApplication ***/
 struct dlp_appcall
 {
 	udword creator;		/* Application DB creator */
@@ -666,19 +558,30 @@ struct dlp_appresult
 	udword reserved1;	/* Set to 0 */
 	udword reserved2;	/* Set to 0 */
 	ubyte data[2048];	/* Result data */
-				/* XXX - Fixed size: bad! */
+				/* XXX - Fixed size: bad! Could this be
+				 * turned into a 'const ubyte *', with a
+				 * pointer into the DLP layer's buffer,
+				 * like DlpReadRecordByID()?
+				 */
 };
 
-/*** ReadResource ***/
-struct dlp_resource
-{
-	udword type;		/* Resource type */
-	uword id;		/* Resource ID */
-	uword index;		/* Resource index */
-	uword size;		/* Resource size */
-};
+/** ResetSystem **/
+/* No arguments, nothing returned */
 
-/*** ReadOpenDBInfo ***/
+/** AddSyncLogEntry **/
+#define DLPARG_AddSyncLogEntry_Msg	DLPARG_BASE
+
+#define DLPC_MAXLOGLEN			2048
+			/* The longest log that can be uploaded (including
+			 * terminating NUL). */
+
+/** ReadOpenDBInfo **/
+#define DLPARG_ReadOpenDBInfo_DB	DLPARG_BASE
+#define DLPARGLEN_ReadOpenDBInfo_DB	1
+
+#define DLPRET_ReadOpenDBInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadOpenDBInfo_Info	2
+
 struct dlp_opendbinfo
 {
 	/* Yes, it seems bogus to have a struct that contains a single
@@ -689,7 +592,82 @@ struct dlp_opendbinfo
 	uword numrecs;		/* # records in database */
 };
 
-/*** ReadAppPreference ***/
+/** MoveCategory **/
+#define DLPARG_MoveCategory_Cat		DLPARG_BASE
+#define DLPARGLEN_MoveCategory_Cat	4
+
+/** ProcessRPC **/
+/* ProcessRPC is special. It doesn't use the usual DLP wrappers */
+
+/** OpenConduit **/
+/* No arguments, nothing returned */
+
+/** EndOfSync **/
+#define DLPARG_EndOfSync_Status		DLPARG_BASE
+#define DLPARGLEN_EndOfSync_Status	2
+
+/* Sync termination codes */
+#define DLPCMD_SYNCEND_NORMAL	0	/* Normal */
+#define DLPCMD_SYNCEND_NOMEM	1	/* Out of memory */
+#define DLPCMD_SYNCEND_CANCEL	2	/* User cancelled */
+#define DLPCMD_SYNCEND_OTHER	3	/* None of the above */
+
+/** ResetRecordIndex **/
+#define DLPARG_ResetRecordIndex_DB	DLPARG_BASE
+#define DLPARGLEN_ResetRecordIndex_DB	1
+
+/** ReadRecordIDList **/
+#define DLPARG_ReadRecordIDList_Req	DLPARG_BASE
+#define DLPARGLEN_ReadRecordIDList_Req	6
+
+#define DLPRET_ReadRecordIDList_List	DLPRET_BASE
+#define DLPRETLEN_ReadRecordIDList_List	8
+
+#define DLPCMD_RRIDFLAG_SORT		0x80	/* Sort database before
+						 * returning list.
+						 */
+
+#define DLPC_RRECIDL_TOEND		(uword) ~0	/* Read all of the
+							 * record IDs.
+							 */
+
+/* 1.1 functions */
+/** ReadNextRecInCategory **/
+#define DLPARG_ReadNextRecInCategory_Rec	DLPARG_BASE
+#define DLPARGLEN_ReadNextRecInCategory_Rec	2
+
+#define DLPRET_ReadNextRecInCategory_Rec	DLPRET_BASE
+#define DLPRETLEN_ReadNextRecInCategory_Rec	10
+
+/* XXX - Get rid of this struct */
+/* ReadNextRecInCategory() and ReadNextModifiedRecInCategory() both use
+ * this
+ */
+struct dlp_readrecret
+{
+	udword recid;		/* Unique record ID */
+	uword index;		/* Record index */
+	uword size;		/* Record size, in bytes */
+	ubyte attributes;	/* Record attributes (?) */
+	ubyte category;		/* Record category index */
+	const void *data;	/* Record data */
+};
+
+/** ReadNextModifiedRecInCategory **/
+#define DLPARG_ReadNextModifiedRecInCategory_Rec	DLPARG_BASE
+#define DLPARGLEN_ReadNextModifiedRecInCategory_Rec	2
+
+#define DLPRET_ReadNextModifiedRecInCategory_Rec	DLPRET_BASE
+#define DLPRETLEN_ReadNextModifiedRecInCategory_Rec	10
+
+/** ReadAppPreference **/
+#define DLPARG_ReadAppPreference_Pref	DLPARG_BASE
+#define DLPARGLEN_ReadAppPreference_Pref	10
+
+#define DLPRET_ReadAppPreference_Pref	DLPRET_BASE
+#define DLPRETLEN_ReadAppPreference_Pref	6
+
+/* Both ReadAppPreference() and WriteAppPreference() use this. */
 struct dlp_apppref
 {
 	uword version;		/* Version number */
@@ -699,9 +677,19 @@ struct dlp_apppref
 				 * DlpReadAppPreference() */
 };
 
-/* XXX - Need flags */
+#define DLPC_READAPP_FULL		0xffff	/* Read the entire
+						 * preference */
+#define DLPC_READAPPFL_BACKEDUP		0x80	/* Read backed up
+						 * preference database */
 
-/*** ReadNetSyncInfo ***/
+/** WriteAppPreference **/
+#define DLPARG_WriteAppPreference_Pref	DLPARG_BASE
+#define DLPARGLEN_WriteAppPreference_Pref	12
+
+/** ReadNetSyncInfo **/
+#define DLPRET_ReadNetSyncInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadNetSyncInfo_Info	24
+
 #define DLPCMD_MAXHOSTNAMELEN	256	/* Max. length of a hostname,
 					 * including terminating NUL. (from
 					 * dlpMaxHostAddrLength in the Palm
@@ -752,16 +740,17 @@ struct dlp_netsyncinfo
 				/* Netmask of sync host */
 };
 
-/*** WriteNetSyncInfo ***/
+/** WriteNetSyncInfo **/
+#define DLPARG_WriteNetSyncInfo_Info	DLPARG_BASE
+#define DLPARGLEN_WriteNetSyncInfo_Info	24
+
+/* XXX - This is bogus. Just have WriteNetSyncInfo() pass a separate
+ * 'modflags' argument.
+ */
 struct dlp_writenetsyncinfo
 {
 	ubyte modflags;		/* Indicates which fields were modified */
 
-	/* XXX - This is clumsy. Might it be better to combine
-	 * dlp_netsyncinfo and dlp_writenetsyncinfo into one structure? Or
-	 * add a 'modflags' argument to DlpWriteNetSyncInfo(), specifying
-	 * which fields need to be looked at?
-	 */
 	struct dlp_netsyncinfo netsyncinfo;
 				/* The NetSync information to write */
 };
@@ -773,6 +762,20 @@ struct dlp_writenetsyncinfo
 #define DLPCMD_MODNSFLAG_HOSTNAME	0x40	/* Sync host name */
 #define DLPCMD_MODNSFLAG_HOSTADDR	0x20	/* Sync host address */
 #define DLPCMD_MODNSFLAG_NETMASK	0x10	/* Sync host netmask */
+
+/** ReadFeature **/
+#define DLPARG_ReadFeature_Req		DLPARG_BASE
+#define DLPARGLEN_ReadFeature_Req	6
+
+#define DLPRET_ReadFeature_Feature	DLPRET_BASE
+#define DLPRETLEN_ReadFeature_Feature	4
+
+/* 1.2 functions */
+/** FindDB **/
+/* XXX */
+
+/** SetDBInfo **/
+/* XXX */
 
 #ifdef __cplusplus
 extern "C" {
@@ -853,7 +856,7 @@ extern int DlpWriteSortBlock(
 	const ubyte handle,
 	const uword len,
 	const ubyte *data);
-extern int DlpReadNextModifiedRec(	/* XXX - Bogus API */
+extern int DlpReadNextModifiedRec(
 	PConnection *pconn,
 	const ubyte handle,
 	struct dlp_recinfo *recinfo,
@@ -872,6 +875,8 @@ extern int DlpReadRecordByIndex(
 	const ubyte handle,
 	const uword index,
 	struct dlp_recinfo *recinfo);
+/* XXX - Should this use dlp_recinfo instead of explicit values, for
+ * symmetry? */
 extern int DlpWriteRecord(
 	PConnection *pconn,
 	const ubyte handle,
@@ -887,6 +892,9 @@ extern int DlpDeleteRecord(
 	const ubyte handle,
 	const ubyte flags,
 	const udword recid);
+/* XXX - It's also possible to delete all records, or all records in a
+ * category. Add convenience functions for this.
+ */
 extern int DlpReadResourceByIndex(
 	PConnection *pconn,
 	const ubyte handle,
@@ -904,6 +912,7 @@ extern int DlpReadResourceByType(
 	const uword len,
 	struct dlp_resource *value,
 	ubyte *data);
+/* XXX - Should this use dlp_resource, for symmetry? */
 extern int DlpWriteResource(
 	PConnection *pconn,
 	const ubyte handle,
@@ -959,7 +968,7 @@ extern int DlpReadRecordIDList(
 	const ubyte handle,
 	const ubyte flags,
 	const uword start,
-	const uword max,
+	const uword max,			/* Or DLPC_RRECIDL_TOEND */
 	uword *numread,
 	udword recids[]);
 /* v1.1 functions */
@@ -977,7 +986,7 @@ extern int DlpReadAppPreference(
 	PConnection *pconn,
 	const udword creator,
 	const uword id,
-	const uword len,
+	const uword len,			/* Or DLPC_READAPP_FULL */
 	const ubyte flags,
 	struct dlp_apppref *pref,
 	ubyte *data);
