@@ -7,10 +7,13 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.5 2000-09-27 15:16:00 arensb Exp $
+# $Id: todo-text,v 1.6 2000-12-13 16:04:13 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
+
+# XXX - When syncing a category whose name is empty, use #NNN, where NNN is
+# the category ID.
 
 use strict;
 use Palm::ToDo;
@@ -31,7 +34,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.5 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.6 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
