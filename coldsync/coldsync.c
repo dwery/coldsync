@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.3 1999-02-22 10:36:28 arensb Exp $
+ * $Id: coldsync.c,v 1.4 1999-02-24 13:22:46 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -9,6 +9,9 @@
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
 #include <termios.h>		/* Experimental */
+#include <dirent.h>		/* For opendir(), readdir(), closedir() */
+#include <string.h>		/* For strrchr() */
+#include <unistd.h>		/* For sleep() */
 #include "config.h"
 #include "pconn/palm_errno.h"
 #include <pconn/PConnection.h>
@@ -17,6 +20,15 @@
 #include <pconn/util.h>
 #include "coldsync.h"
 #include "palm/pdb.h"
+
+/* XXX - This should be defined elsewhere (e.g., in a config file). The
+ * reason there are two macros here is that under Solaris, B19200 != 19200
+ * for whatever reason. There should be a table that maps one to the other.
+ */
+#define SYNC_RATE		57600
+#define BSYNC_RATE		B57600
+
+void listlocalfiles();
 
 struct ColdPalm palm;
 
@@ -45,6 +57,7 @@ main(int argc, char *argv[])
 	 * run
 	 */
 	/* XXX - Get list of local files */
+listlocalfiles();
 
 	if ((pconn = new_PConnection(argv[1])) == NULL)
 	{
@@ -120,7 +133,7 @@ Cold_Connect(struct PConnection *pconn/*int fd*/,
 	int err;
 	struct slp_addr pcaddr;
 	struct cmp_packet cmpp;
-/*  struct termios term; */
+struct termios term;
 
 	pcaddr.protocol = SLP_PKTTYPE_PAD;	/* XXX - This ought to be
 						 * part of the initial
@@ -150,20 +163,25 @@ Cold_Connect(struct PConnection *pconn/*int fd*/,
 	cmpp.ver_major = 1;	/* XXX - Should be constants in header file */
 	cmpp.ver_minor = 1;
 	cmpp.rate = 0;	/* Should be able to set a different rate */
-#if 0
-cmpp.rate = 38400;
+#if 1
+cmpp.rate = SYNC_RATE;
 cmpp.flags = CMP_IFLAG_CHANGERATE;
 #endif	/* 0 */
 	printf("===== Sending INIT packet\n");
 	cmp_write(pconn, &cmpp);
 	printf("===== Finished sending INIT packet\n");
 
-#if 0
+#if 1
 /* Change the speed */
 /* XXX - This probably goes in Pconn_accept() or something */
 tcgetattr(pconn->fd, &term);
-cfsetspeed(&term, 38400);
+/*  fprintf(stderr, "Input speed: %d\n", cfgetispeed(&term)); */
+/*  fprintf(stderr, "Output speed: %d\n", cfgetospeed(&term)); */
+cfsetspeed(&term, BSYNC_RATE);
 tcsetattr(pconn->fd, TCSANOW, &term);
+sleep(1);		/* XXX - Why is this necessary? */
+/*  fprintf(stderr, "New input speed: %d\n", cfgetispeed(&term)); */
+/*  fprintf(stderr, "New output speed: %d\n", cfgetospeed(&term)); */
 #endif	/* 0 */
 
 	return 0;
@@ -338,86 +356,51 @@ printf("\tlast_index %d, oflags 0x%02x, num %d\n",
 	return 0;
 }
 
-#if 0
-int
-Cold_HandleDB(struct PConnection *pconn,
-	      struct ColdPalm *palm,
-	      const int dbnum)
+void
+listlocalfiles()
 {
-	int err;
-	struct dlp_dbinfo *dbinfo;
-	struct stat statbuf;		/* For finding out if a database
-					 * exists locally */
-	static char bakfname[MAXPATHLEN];
-					/* Name of database backup file */
+	DIR *dir;
+	struct dirent *file;
+	char *lastdot;
+char fnamebuf[MAXPATHLEN];
 
-	dbinfo = &(palm->dblist[dbnum]);	/* Get the database info */
-
-	/* If this database can be ignored, do so */
-	if (dbinfo->misc_flags & 0x80)	/* XXX - Need constant */
+	printf("Listing directory \"%s\"\n", INSTALL_DIR);
+	dir = opendir(INSTALL_DIR);
+	if (dir == NULL)
 	{
-		/* Exclude from sync. Just ignore this */
-		printf("# Database \"%s\" is excluded from sync. Ignoring.\n",
-		       dbinfo->name);
-		return 0;
+		perror("opendir");
+		exit(1);
 	}
 
-	if (dbinfo->db_flags & DLPCMD_DBFLAG_RO)
+	printf("Reading directory \"%s\"\n", INSTALL_DIR);
+	while ((file = readdir(dir)) != NULL)
 	{
-		/* It's a ROM-based database. Ignore it. */
-		printf("# Database \"%s\" is in ROM. Ignoring.\n",
-		       dbinfo->name);
-		return 0;
-	}
+		printf("\"%s\":\n", file->d_name);
+		printf("\tfileno %d, reclen %d, type %d, namlen %d\n",
+		       file->d_fileno, file->d_reclen,
+		       file->d_type, file->d_namlen);
 
-	/* If we get this far, we need to do something with this database.
-	 * If it exists locally, we need to sync it. Otherwise, we need to
-	 * back it up.
-	 */
-
-	/* XXX - Should some other figure out the file name? */
-printf("## Syncing \"%s\"\n", dbinfo->name);
-	/* See if the database exists locally */
-#if HAVE_SNPRINTF
-	/* XXX - Watch out for weird characters in database name (e.g.,
-	 * "/"). Replace them with "%HH", where HH is the character's ASCII
-	 * code in hex.
-	 */
-	snprintf(bakfname, MAXPATHLEN,
-		 "%s/%s.%s",
-		 BACKUP_DIR,
-		 dbinfo->name,
-		 (dbinfo->db_flags & DLPCMD_DBFLAG_RESDB ? "prc" : "pdb"));
-#else
-#error "You don't seem to have the snprintf() function"
-#endif	/* HAVE_SNPRINTF */
-printf("Checking for the existence of \"%s\"\n", bakfname);
-
-/* XXX - Eventually, existing databases will get synced. For now, just back them
- * up */
-#if 0
-	err = stat(bakfname, &statbuf);
-	if (err == 0)
-	{
-		printf("It exists. Yay!\n");
-	} else {
-		printf("It doesn't exist.\n");
-#endif	/* 0 */
-		err = Cold_BackupDB(pconn, palm, dbinfo, bakfname);
-		if (err < 0)
+		lastdot = strrchr(file->d_name, '.');
+		if (lastdot == NULL)
 		{
-			/* XXX - Do something intelligent here */
-			fprintf(stderr, "### Error backing up \"%s\"\n",
-				bakfname);
-			return -1;
+			printf("\tThis file has no dots.\n");
+			continue;
 		}
-#if 0
+		if (strcasecmp(lastdot, ".pdb") == 0)
+		{
+			printf("\tThis is a PDB file\n");
+		} else if (strcasecmp(lastdot, ".prc") == 0)
+		{
+			printf("\tThis is a resource file\n");
+		} else {
+			printf("\tI don't know this file type\n");
+			continue;
+		}
+/* XXX - Possible buffer overflow */
+sprintf(fnamebuf, "%s/%s", INSTALL_DIR, file->d_name);
+LoadDatabase(fnamebuf);
 	}
-#endif	/* 0 */
-
-	return 0;
 }
-#endif	/* 0 */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
