@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.77 2001-01-11 08:27:24 arensb Exp $
+ * $Id: coldsync.c,v 1.78 2001-01-11 08:42:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -544,7 +544,7 @@ run_mode_Standalone(int argc, char *argv[])
 	 * The way to get the list of the local host's addresses is
 	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
 	 */
-	if (pda->forward)
+	if ((pda != NULL) && pda->forward)
 	{
 		/* XXX - Need to figure out if remote address is really
 		 * local, in which case we really need to continue doing a
