@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.26 2002-04-27 18:36:31 azummo Exp $
+ * $Id: PConnection_net.c,v 1.27 2002-04-27 23:24:47 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -596,7 +596,7 @@ pconn_net_open(PConnection *pconn,
 	pconn->io_private	= 0;
 
 	pconn->whosonfirst	= 0;
-	pconn->net.xid		= 0xFE;
+	pconn->net.xid		= 0xFF;
 
 	/* Create a socket
 	 * Although we'll use pconn->fd for both the UDP and TCP sockets,
