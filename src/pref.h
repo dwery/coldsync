@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.h,v 1.1.2.4 2000-09-03 02:22:55 arensb Exp $
+ * $Id: pref.h,v 1.1.2.5 2000-09-03 04:30:58 arensb Exp $
  */
 #ifndef _pref_h_
 #define _pref_h_
@@ -35,6 +35,9 @@ typedef struct pref_item
 					 * used.
 					 */
 
+    /* XXX - This field seems awfully bogus. Try taking it out and see what
+     * happens.
+     */
     struct PConnection *pconn;	/* The connection from which to get these
 				 * preferences. This isn't very elegant, but
 				 * it beats having to provide the run_conduit
