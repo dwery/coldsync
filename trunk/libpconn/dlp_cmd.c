@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.17 2001-03-16 14:07:38 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.18 2001-03-27 14:12:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -3752,9 +3752,6 @@ DlpReadNextModifiedRecInCategory(
 	return 0;		/* Success */
 }
 
-/* XXX - This is untested: I don't know what values to feed it
- * XXX - There are values in the Palm headers.
- */
 int
 DlpReadAppPreference(
 	PConnection *pconn,		/* Connection to Palm */
@@ -3925,7 +3922,7 @@ DlpWriteAppPreference(
 	outbuf = NULL;
 
 	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
+		fprintf(stderr, "WriteAppPreference: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteAppPreference,
@@ -3950,7 +3947,7 @@ DlpWriteAppPreference(
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
 					  "0x%02x\n"),
-				"DlpWriteRecord",
+				"DlpWriteAppPreference",
 				ret_argv[i].id);
 			continue;
 		}
