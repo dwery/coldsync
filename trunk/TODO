@@ -1,3 +1,11 @@
+- It should be possible to set the hostid in a config file. If it's
+  set in /etc/coldsync.conf, then obviously it shouldn't be possible
+  to override it in ~/.coldsyncrc .
+- Bug: 'hostid' doesn't get set. This was done by get_config() in
+  src/config.c before it was nuked. Reinstate this soonest. See
+  differences between v1.41, 1.42.
+	Add a get_hostid() to config.c, call it in main() before the
+  various run_mode_*() functions.
 - Log for a full backup can exceed maximum size for logs. Find out
   what this limit is (under 2311 bytes, I think). What to do if the
   sync log exceeds this size? Send the first N bytes? The last N bytes
@@ -79,12 +87,6 @@
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
   sure what for.
 	Find an appropriate Perl module to parse iCalendar format.
-- NetSync: figure out just how it works and stuff.
-  Blargh. From the output of 'tcpdump', it looks as if the host with
-  the databases wants to talk NetBIOS to the host with the cradle.
-  Oh, well. Can always come up with a reimplementation for Unix hosts.
-  That would probably be a win anyway, since it would allows us to do
-  the usual Unix-y stuff, like SSL, TCP wrappers, identd etc.
 - NetSync:
 	From Alex Tronin's tcpdump:
 	Cradle host sends three UDP datagrams to the sync host,
@@ -227,10 +229,6 @@
   separate it into new_serial_PConnection(), new_usb_PConnection(),
   new_tcp_PConnection()? Or pass it a union that gives the
   connection-specific arguments?
-- See what other 'make' features are portable. It might be keen to use
-	VAR += VALUE
-	VAR ?= DEFAULT_VALUE
-	VAR != `cmd`	(or whatever)
 - In config.c, when creating directories: ought to do ~-expansion on
   directory names: as in csh, only expand leading "~" or "~user".
 - In .coldsyncrc, should be able to associate a name (or alias) with a
