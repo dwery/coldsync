@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.5 2001-09-08 01:12:06 arensb Exp $
+ * $Id: palm_errno.h,v 1.6 2001-12-09 22:40:53 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -18,6 +18,10 @@ typedef enum {
 					 * Consult `errno' */
 	PALMERR_NOMEM,			/* Out of memory */
 	PALMERR_TIMEOUT,		/* A timeout occurred */
+	PALMERR_TIMEOUT2,		/* A timeout occurred in a protocol
+					 * where there ought to be no
+					 * timeouts (netsync, really)
+					 */
 	PALMERR_BADF,			/* Bad file descriptor */
 	PALMERR_EOF,			/* End of file */
 	PALMERR_ABORT,			/* Palm has aborted */
