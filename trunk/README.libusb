@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with libusb 
 
-$Id: README.libusb,v 1.1 2004-10-21 14:41:07 azummo Exp $
+$Id: README.libusb,v 1.2 2004-10-24 15:17:33 azummo Exp $
 
 
 	libusb is an USB abstraction library that's used
@@ -19,6 +19,14 @@ $Id: README.libusb,v 1.1 2004-10-21 14:41:07 azummo Exp $
 	Under Linux, you sometimes have to disable the HotPlug
 	support in order to avoid conflicts.
 
+	If loaded, you should also rmmod the visor driver.
+
+	You may also want to check that /proc/bus/usb is mounted
+	and that the user has the permission to read/write
+	on the USB devices. To ease the task, you can mount
+	/proc/bus/usb with the option devmode=0666 .
+
+
 	The libusb support has been tested with the following
 	handhelds:
 
@@ -31,7 +39,7 @@ $Id: README.libusb,v 1.1 2004-10-21 14:41:07 azummo Exp $
 	Handspring Treo 270	3.5.2H5.9
 
 	Palm m505		4.1
+	Palm Tungsten T		5.2.1
 	Palm Zire		4.1
 	Palm Zire 31		5.2.8
 	Palm Zire 72		5.2.8
-	
