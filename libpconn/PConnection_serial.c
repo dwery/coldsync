@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.33 2001-11-12 05:48:59 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.34 2001-12-06 13:43:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -361,6 +361,9 @@ serial_accept(PConnection *pconn)
 		}
 		if (!speeds[speed_ix].usable)
 		{
+			/* XXX - Ought to find out earlier that the speed
+			 * is invalid.
+			 */
 			fprintf(stderr,
 				_("Error: Palm suggested %ld bps, but the "
 				  "serial port can't go that fast.\n"),
@@ -607,7 +610,11 @@ pconn_serial_open(PConnection *pconn,
 			    abort:
 				fprintf(stderr,
 					_("Error: Can't open \"%s\".\n"),
-					device);
+					(device == NULL ? "(null)" : device));
+				/* XXX - This segfaults when using
+				 * non-default protocol. Add a more general
+				 * pconn->io_tini() method.
+				 */
 				perror("open");
 				dlp_tini(pconn);
 				padp_tini(pconn);
