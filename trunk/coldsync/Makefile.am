@@ -15,9 +15,7 @@ coldsync_DEPENDENCIES = $(top_builddir)/pconn/libpconn.a
 INCLUDES = \
 	-I$(top_srcdir)
 
-# EXTRA_DIST = \
-# 	coldsync.h
-pkginclude_HEADERS =
+EXTRA_DIST = \
 	coldsync.h \
 	pdb.h
 
