@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.6 2000-04-09 14:23:33 arensb Exp $
+# $Id: Makefile,v 2.7 2000-05-06 11:34:31 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -24,6 +24,7 @@ SRCS =		${C_SRCS} ${CXX_SRCS}
 HEADERS =	archive.h \
 		coldsync.h \
 		conduit.h \
+		cs_error.h \
 		parser.h \
 		GenericConduit.hh
 
@@ -33,7 +34,7 @@ OBJS =		${C_OBJS} ${CXX_OBJS} \
 LIBPCONN = 	-L${TOP}/libpconn -lpconn
 LIBPDB = 	-L${TOP}/libpdb -lpdb
 EXTRA_LIBS =	${LIBPDB} ${LIBPCONN} ${LIBYACC} ${LIBLEX}
-CLEAN =		${PROG} ${CXXPROG} ${OBJS} \
+CLEAN =		${CXXPROG} ${OBJS} \
 		*.ln *.bak *~ core *.core .depend \
 		lex.yy.c y.tab.c y.tab.h y.output
 
