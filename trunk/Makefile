@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.17 2001-05-24 05:41:57 arensb Exp $
+# $Id: Makefile,v 1.18 2001-06-04 10:18:28 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -13,7 +13,8 @@ TOP =		.
 SUBDIR =	.
 
 # List of subdirectories underneath this one.
-SUBDIRS =	include libpconn libpdb src perl conduits doc i18n
+# Note that $(PERLDIR) is expanded in Make.rules.
+SUBDIRS =	include libpconn libpdb src $(PERLDIR) conduits doc i18n
 
 # Files to include in snapshots and distributions
 DISTFILES =	README \
