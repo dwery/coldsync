@@ -1,12 +1,13 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.8 1999-09-09 05:46:37 arensb Exp $
+# $Id: Makefile.in,v 1.9 1999-10-21 14:10:41 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
 
 SRCDIR =	@srcdir@
 CURDIR =	${SRCDIR}
-SUBDIRS =	include libpconn libpdb src doc
+SUBDIRS =	include libpconn libpdb src doc \
+		conduits/memodump
 
 TAR =		@TAR@
 GZIP =		@GZIP@
@@ -57,9 +58,9 @@ dist::	distdir
 
 ${RECURSIVE_TARGETS}::
 	@for dir in ${SUBDIRS}; do \
-		echo "$@: Entering directory \`${SRCDIR}/$$dir'"; \
+		echo "$@: Entering directory \`${CURDIR}/$$dir'"; \
 		(cd $$dir && ${MAKE} $@); \
-		echo "$@: Leaving directory \`${SRCDIR}/$$dir'"; \
+		echo "$@: Leaving directory \`${CURDIR}/$$dir'"; \
 	done
 
 # Targets for various progressive levels of cleanliness. Each one is
