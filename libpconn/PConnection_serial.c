@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.28 2001-04-15 05:10:21 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.29 2001-07-30 07:22:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -26,6 +26,7 @@
 
 #include "pconn/PConnection.h"
 #include "pconn/cmp.h"		/* For cmp_accept() */
+#include "pconn/netsync.h"	/* For netsync_init() */
 
 #if !HAVE_CFMAKERAW
 extern void cfmakeraw(struct termios *t);
@@ -58,10 +59,6 @@ static int setspeed(PConnection *pconn, int speed);
 static struct {
 	int usable;		/* Flag: can the serial port go at this
 				 * rate? */
-				/* XXX - Need to initialize this, probably
-				 * by calling init_speeds() in
-				 * pconn_serial_open().
-				 */
 	udword bps;		/* Speed in bits per second, as used by the
 				 * CMP layer.
 				 */
@@ -252,7 +249,19 @@ serial_bind(PConnection *pconn,
 	    const void *addr,
 	    const int addrlen)
 {
-	return slp_bind(pconn, (const struct slp_addr *) addr);
+	switch (pconn->protocol)
+	{
+	    case PCONN_STACK_FULL:
+		return slp_bind(pconn, (const struct slp_addr *) addr);
+		break;
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		return 0;
+	    default:
+		/* XXX - Indicate error: unsupported protocol stack */
+		return -1;
+	}
 }
 
 static int
@@ -267,13 +276,6 @@ serial_write(PConnection *p, unsigned const char *buf, const int len)
 	return write(p->fd, buf, len);
 }
 
-/* XXX - There ought to be a way to specify "connect as fast as possible",
- * separate from "whatever the Palm suggests". If the Palm suggests 300 bps
- * but the user doesn't know how fast the serial port can go, this would
- * set the speed to be as fast as the serial port can go.
- * However, bear in mind that the speed given in the CMP wakeup packet is
- * the highest speed that the Palm can handle.
- */
 static int
 serial_accept(PConnection *pconn)
 {
@@ -287,53 +289,71 @@ serial_accept(PConnection *pconn)
 					 * 19200.
 					 */
 
-	/* Find the speed at which to connect.
-	 * If the listen block in .coldsyncrc specifies a speed, use that.
-	 * If it doesn't (or the speed is set to 0), then go with what the
-	 * Palm suggests.
-	 */
-	IO_TRACE(3)
-		fprintf(stderr, "pconn->speed == %ld\n",
-			pconn->speed);
-
-	/* Go through the speed table. Make sure the requested speed
-	 * appears in the table: this is to make sure that there is a valid
-	 * B* speed to pass to cfsetspeed().
-	 */
-	if (pconn->speed != 0)
+	switch (pconn->protocol)
 	{
-		speed_ix = bps_entry(pconn->speed);
-		if (speed_ix < 0)
+	    case PCONN_STACK_FULL:
+		/* Find the speed at which to connect. If the listen block
+		 * in .coldsyncrc specifies a speed, use that. If it
+		 * doesn't (or the speed is set to 0), then go with what
+		 * the Palm suggests.
+		 */
+		IO_TRACE(3)
+			fprintf(stderr, "pconn->speed == %ld\n",
+				pconn->speed);
+
+		/* Go through the speed table. Make sure the requested
+		 * speed appears in the table: this is to make sure that
+		 * there is a valid B* speed to pass to cfsetspeed().
+		 */
+		if (pconn->speed != 0)
 		{
-			/* The requested speed wasn't found */
-			fprintf(stderr, _("Warning: can't set the speed you "
+			speed_ix = bps_entry(pconn->speed);
+			if (speed_ix < 0)
+			{
+				/* The requested speed wasn't found */
+				fprintf(stderr,
+					_("Warning: can't set the speed you "
 					  "requested (%ld bps).\nUsing "
 					  "default.\n"),
-				pconn->speed);
-			pconn->speed = 0L;
+					pconn->speed);
+				pconn->speed = 0L;
+			}
 		}
-	}
 
-	newspeed = cmp_accept(pconn, pconn->speed);
-	if (newspeed == ~0)
-	{
-		fprintf(stderr, _("Error establishing CMP connection.\n"));
+		newspeed = cmp_accept(pconn, pconn->speed);
+		if (newspeed == ~0)
+		{
+			fprintf(stderr,
+				_("Error establishing CMP connection.\n"));
+			return -1;
+		}
+
+		/* Find 'tcspeed' from 'newspeed' */
+		pconn->speed = newspeed;
+		speed_ix = bps_entry(newspeed);
+		/* XXX - Error-checking */
+		tcspeed = speeds[speed_ix].tcspeed;
+
+		/* Change the speed */
+		if ((err = setspeed(pconn, tcspeed)) < 0)
+		{
+			fprintf(stderr, _("Error trying to set speed.\n"));
+			return -1;
+		}
+		break;
+
+	    case PCONN_STACK_SIMPLE:
+	    case PCONN_STACK_NET:
+		/* Exchange ritual packets */
+		err = ritual_exch_server(pconn);
+		if (err < 0)
+			return -1;
+		break;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol */
 		return -1;
 	}
-
-	/* Find 'tcspeed' from 'newspeed' */
-	pconn->speed = newspeed;
-	speed_ix = bps_entry(newspeed);
-	/* XXX - Error-checking */
-	tcspeed = speeds[speed_ix].tcspeed;
-
-	/* Change the speed */
-	if ((err = setspeed(pconn, tcspeed)) < 0)
-	{
-		fprintf(stderr, _("Error trying to set speed.\n"));
-		return -1;
-	}
-
 	return 0;
 }
 
@@ -348,6 +368,15 @@ serial_drain(PConnection *p)
 {
 	int err = 0;
 
+	/* We don't check pconn->protocol here because a) the sequence is
+	 * the same for all protocol stacks, and b) it might be incorrect
+	 * if this function was called before the connection was completely
+	 * set up, so it might be wrong.
+	 */
+
+	/* Drop any unsent or unreceived data that might still be lingering
+	 * in the buffer.
+	 */
 	if (p->fd >= 0)
 		/* Need to check the file descriptor because this function
 		 * is called both for normal and abnormal termination.
@@ -362,10 +391,33 @@ serial_drain(PConnection *p)
 static int
 serial_close(PConnection *p)
 {
+	/* I _think_ it's okay to assume that pconn->protocol has been set,
+	 * even though this function may have been called before the
+	 * connection was completely set up.
+	 */
+
 	/* Clean up the protocol stack elements */
-	dlp_tini(p);
-	padp_tini(p);
-	slp_tini(p);
+	switch (p->protocol)
+	{
+	    case PCONN_STACK_DEFAULT:	/* Fall through */
+	    case PCONN_STACK_FULL:
+		dlp_tini(p);
+		padp_tini(p);
+		slp_tini(p);
+		break;
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		dlp_tini(p);
+		netsync_tini(p);
+		break;
+
+	    default:
+		/* Do nothing silently: the connection might not have been
+		 * completely set up.
+		 */
+		break;
+	}
 
 	return (p->fd >= 0 ? close(p->fd) : 0);
 }
@@ -388,37 +440,74 @@ serial_select(PConnection *p,
  * 'pconn' is a partly-initialized PConnection; it must still be
  * initialized as a serial PConnection.
  * 'device' is the pathname of the serial port. If it is NULL, use stdin.
+ * 'protocol' is the software protcol stack to use: ordinary serial devices
+ * use DLP->PADP->SLP, whereas Palm m50x'es use DLP->netsync
  * 'prompt': if set, prompt the user to press the HotSync button.
  */
 int
-pconn_serial_open(PConnection *pconn, char *device, Bool prompt)
+pconn_serial_open(PConnection *pconn,
+		  const char *device,
+		  const int protocol,
+		  const Bool prompt)
 {
 	struct termios term;
 
+	if (protocol == PCONN_STACK_DEFAULT)
+		pconn->protocol = PCONN_STACK_FULL;
+	else
+		pconn->protocol = protocol;
+
 	/* Initialize the various protocols that the serial connection will
-	 * use.
+	 * use, according to the requested software protocol stack.
 	 */
-	/* Initialize the SLP part of the PConnection */
-	if (slp_init(pconn) < 0)
+	switch (pconn->protocol)
 	{
-		free(pconn);
-		return -1;
-	}
+	    case PCONN_STACK_FULL:
+		/* Initialize the SLP part of the PConnection */
+		if (slp_init(pconn) < 0)
+		{
+			free(pconn);
+			return -1;
+		}
 
-	/* Initialize the PADP part of the PConnection */
-	if (padp_init(pconn) < 0)
-	{
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;
-	}
+		/* Initialize the PADP part of the PConnection */
+		if (padp_init(pconn) < 0)
+		{
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;
+		}
 
-	/* Initialize the DLP part of the PConnection */
-	if (dlp_init(pconn) < 0)
-	{
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
+		/* Initialize the DLP part of the PConnection */
+		if (dlp_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;
+		}
+		break;
+
+	    case PCONN_STACK_SIMPLE:
+	    case PCONN_STACK_NET:
+		/* Initialize the DLP part of the PConnection */
+		if (dlp_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			return -1;
+		}
+
+		/* Initialize the NetSync part of the PConnnection */
+		if (netsync_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			netsync_tini(pconn);
+			return -1;
+		}
+		break;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol stack */
 		return -1;
 	}
 
@@ -512,9 +601,6 @@ pconn_serial_open(PConnection *pconn, char *device, Bool prompt)
 	return pconn->fd;
 }
 
-/* XXX - This is just the old serial_setspeed() (aka io_setspeed) with a
- * new name. Is it worth keeping this as a separate function?
- */
 static int
 setspeed(PConnection *pconn, int speed)
 {
