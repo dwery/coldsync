@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.9 2000-08-29 11:16:50 arensb Exp $
+# $Id: ColdSync.pm,v 1.10 2000-09-03 05:04:41 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.9 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.10 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -55,7 +55,7 @@ use Exporter;
 use Palm::PDB;
 
 @ISA = qw( Exporter );
-@EXPORT = qw( $PDB %HEADERS @HEADERS
+@EXPORT = qw( $PDB %HEADERS @HEADERS %PREFERENCES
 		ConduitMain StartConduit EndConduit );
 
 =head1 VARIABLES
@@ -84,7 +84,17 @@ which they were seen. This can be useful if your conduit allows
 multiple headers, or if the order in which the headers were received
 matters.
 
+=item %PREFERENCES
+
+Holds the preferences passed on STDIN. The keys of this hash are the
+creators of the preference items. Their values, in turn, are references to
+hashes whose key are the IDs, and whose values are the raw preference item.
+
+Thus C<$PREFERENCES{"mail"}{6}> contains the preference item whose creator
+is C<mail> and whose ID is 6.
+
 =cut
+#'
 
 $FLAVOR = undef;		# Flavor with which this conduit was invoked
 
@@ -243,12 +253,27 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
+	my @preflist;		# List of preferences to read from STDIN:
+				# Each element is an anonymous array:
+				#	[ creator, ID, length ]
+	my $len;
+	my $i;
+
 	while (<STDIN>)
 	{
 		chomp;
 		last if $_ eq "";	# Empty line is end of headers
 
 		push @HEADERS, $_;
+
+		# Get the preference
+		if(m{^Preference: (\w\w\w\w)/(\d+)/(\d+)})
+		{
+			# Put the creator, ID, and length in an anonymous
+			# array, and save it for later.
+			push @preflist, [$1, $2, $3];
+			next;
+		}
 
 		# Get the header
 		if (/^([-\w]+): (.*)/)
@@ -259,6 +284,25 @@ sub ReadHeaders
 
 		# This isn't a valid line
 		die "401 Invalid input: [$_]";
+	}
+
+	# Now read all the raw preference items from STDIN
+	# They are being read in the same order as the items were specified
+	# XXX - What happens if somehow less data is written to stdout?
+	# If we believe perlfunc, read is like fread so will simply read
+	# as much as possible, but less if not enough is provided, so that
+	# the conduit won't hang here, waiting for input. Not tested yet,
+	# however...
+	my $creator;		# Preference creator
+	my $pref_id;		# Preference ID
+	my $pref_len;		# Preference length
+
+	while (($creator, $pref_id, $pref_len) = @{shift @preflist})
+	{
+		my $data;
+
+		read STDIN, $data, $pref_len;
+		$PREFERENCES{$creator}{$id} = $data;
 	}
 
 	# Make sure all of the mandatory headers are there.
