@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.37 2002-09-07 16:47:26 azummo Exp $
+ * $Id: install.c,v 2.38 2002-09-07 16:53:43 azummo Exp $
  */
 
 #include "config.h"
@@ -592,17 +592,17 @@ InstallNewFiles(struct Palm *palm,
 			/* XXX - So now that it is, what's to be done about
 			 * it?
 			 */
+			free_pdb(pdb);
+
 			switch (cs_errno)
 			{
 				/* Fatal errors that we know of */
 			    case CSE_CANCEL:
 			    case CSE_NOCONN:
-				free_pdb(pdb);
 				return -1;
 
 				/* All other errors */
 			    default:
-				free_pdb(pdb);
 				continue;
 			}
 		}
