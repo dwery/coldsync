@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.21 2000-07-06 04:01:07 arensb Exp $
+.\" $Id: coldsync.8,v 1.22 2000-09-03 09:37:18 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -189,7 +189,7 @@ databases.
 The main sync:
 .Nm coldsync
 synchronizes the databases on the Palm with those on the desktop, so
-that they contain the same information.
+that they contain the same information. It also runs Sync conduits.
 .It
 The main sync ends. The Palm displays the message
 .Dq HotSync complete.
@@ -226,11 +226,12 @@ file. If you'll look back at the sequence of events, above, you'll see
 how this works.
 .Pp
 Currently, the only conduit flavors are
-.Dq Fetch
+.Dq Fetch ,
+.Dq Dump ,
 and
-.Dq Dump .
-Others may be added in the future, but these two are sufficient for a
-wide variety of applications.
+.Dq Sync .
+Others may be added in the future.
+.\" XXX - This section should probably be in a man page of its own.
 .Sh CONFIGURATION FILE
 .Nm ColdSync
 reads its configuration from the file
@@ -406,20 +407,26 @@ number; this allows you to have one default for pre-3.0 Palms, and
 another default for all others.
 .Ss conduit
 .Li conduit
+directives control the behavior of a conduit. The documentation for a
+conduit should specify the values to use here.
+.Pp
+.Li conduit
 directives are of the form
 .Bd -literal -offset indent
 conduit <flavor-list> {
 	path: /path/to/conduit;
 	type: <creator>/<type>;
+	preference: <pref-creator>/<pref-id>;
 	<flags>;
 }
 .Ed
 where
 .Li <flavor-list>
 is a comma-separated list of conduit flavors. Allowable conduit flavors are
-.Li fetch
+.Li fetch ,
+.Li dump ,
 and
-.Li dump
+.Li sync
 (
 .Li pre-fetch
 and
@@ -471,6 +478,43 @@ conduit fetch {
 }
 .Ed
 This conduit will match any of the three creator/type pairs.
+.Pp
+.Li preference
+directives specify which preferences the conduit is interested in.
+.Li pref
+is a synonym for
+.Li preference .
+.Pp
+Preferences are bits of configuration data stored in a pair of shared
+databases on the Palm. They include pretty much everything you can set
+through the
+.Dq Prefs
+application, but also things such as your signature from the
+.Dq Mail
+application.
+.Pp
+Preferences are stored in two databases:
+.Dq Saved Preferences
+and
+.Dq Unsaved Preferences .
+If you know (and care) in which database a given preference is
+defined, you can specify it with the
+.Li saved
+and
+.Li unsaved
+keywords:
+.Bd -literal -offset indent
+	pref: saved mail/3;
+	pref: unsaved exps/1;
+.Ed
+.Pp
+If neither
+.Li saved
+nor
+.Li unsaved
+is specified,
+.Nm ColdSync
+will try them both.
 .Pp
 The following flags are defined for conduit blocks:
 .Li default
@@ -654,8 +698,15 @@ contains files to be installed at the next sync.
 .An Andrew Arensburger Aq arensb@ooblick.com
 .An Louis A. Mamakos Aq louie@TranSys.COM :
 USB support.
+.An And a cast of several.
 .Sh DIAGNOSTICS
 Many and hopefully self-explanatory.
+.Sh LIMITATIONS
+.Pp
+.Nm ColdSync
+does not detect the serial number correctly on Handspring Visors. This
+is because the Visor does not appear to have a software-readable
+serial number.
 .Sh BUGS
 .Pp
 In the
@@ -682,8 +733,5 @@ All network addresses are assumed to be IPv4 addresses.
 .Pp
 It is not possible to reliably specify a conduit argument whose value
 begins with whitespace.
-.Pp
-.Nm ColdSync
-does not detect the serial number correctly on Handspring Visors.
 .Pp
 Probably many others.
