@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.10 2002-04-24 13:28:09 azummo Exp $
+# $Id: SPC.pm,v 1.11 2002-05-01 23:06:48 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.10 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.11 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -219,9 +219,6 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_DeleteRecord
 	dlp_DeleteAllRecords
 	dlp_WriteRecord
-	dlp_ExpSlotMediaType
-	dlp_ExpSlotEnumerate
-	dlp_ExpCardInfo
 );
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
@@ -1099,7 +1096,7 @@ sub dlp_ReadRecordByIndex
 	my $numbytes	= shift;	# Number of bytes to read starting at
 					# the offset (-1 = "to the end")
 
-	return dlp_ReadRecord(0, $dbh, $index, $offset, $numbytes);
+	return _dlp_ReadRecord(0, $dbh, $index, $offset, $numbytes);
 }
 
 
