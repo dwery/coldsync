@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.34 2003-09-30 20:10:19 azummo Exp $
+ * $Id: restore.c,v 2.35 2003-09-30 20:13:49 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -59,7 +59,7 @@ is_database_restorable(PConnection *pconn,
                        struct Palm *palm,
                        struct pdb *pdb)
 {
-	struct dlp_dbinfo *dbinfo = NULL;
+	const struct dlp_dbinfo *dbinfo = NULL;
 
 	if (pdb->attributes & PDB_ATTR_RO) {
 		/* don't even bother if the local database says it's read only. */
