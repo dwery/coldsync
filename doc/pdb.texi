@@ -1,8 +1,12 @@
 \input texinfo          @c -*- texinfo -*-
-@c $Id: pdb.texi,v 1.4 1999-11-02 03:31:52 arensb Exp $
+@c $Id: pdb.texi,v 1.5 2000-01-22 12:55:19 arensb Exp $
 @c %**start of header
 @setfilename pdb.info
 @settitle Palm Database Files
+@dircategory ColdSync Documentation
+@direntry
+* PDB: (pdb.info).              The format of Palm databases.
+@end direntry
 @setchapternewpage odd
 @c %**end of header
 
