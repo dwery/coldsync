@@ -1,5 +1,5 @@
 .\" coldsync.8
-.\" $Id: coldsync.8,v 1.5 1999-11-09 04:05:16 arensb Exp $
+.\" $Id: coldsync.8,v 1.6 1999-11-11 07:46:56 arensb Exp $
 .\" 
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -11,8 +11,6 @@
 .Nd synchronize files between a Palm and a workstation.
 .Sh SYNOPSIS
 .Nm coldsync
-.\" -u<user|uid> -b<dir> -r<dir> -p<port> -F -S -R
-.\" -d<fac[:level]>
 .Op Fl hVSFR
 .Op Fl d Ar debug
 .Op Fl u Ar user|uid
@@ -61,7 +59,9 @@ Print the version number and exit.
 Tells
 .Nm coldsync
 to read its configuration from
-.Pa config_file .
+.Pa config_file
+instead of
+.Pa ~/.coldsyncrc .
 .It Fl S
 Force a slow sync. Don't use this unless you know what you're doing.
 .It Fl F
@@ -87,10 +87,6 @@ Restore files from
 .Em Warning:
 If you restore a database that already exists on the Palm, that
 database will be overwritten.
-.\" XXX - Not implemented yet
-.\".It Fl u Aq user|uid
-.\"Run as the specified user. This may be either a user name or a numeric
-.\"UID.
 .It Fl d Ar debug
 Set debugging level. The argument
 .Ar debug
@@ -109,29 +105,122 @@ argument is an integer that specifies the verbosity of the output.
 Unless you are a developer, you should probably never need to go above
 5.
 .El
-.Ss Conduits and Syncing
-(Note: conduits have not yet been fully implemented.)
+.Sh CONFIGURATION FILE
+.Nm ColdSync
+reads its configuration from the file
+.Pa .coldsyncrc
+in the user's home directory, or from the file specified with the
+.Fl f
+command-line argument.
+.Pp
+Currently, only the following configuration syntax is implemented:
+.Bd -literal -offset indent
+	listen serial {
+		device "/dev/palm";
+	}
+.Ed
+Replace
+.Dq Pa /dev/palm
+with the name of your serial device, of course. Currently, only one
+device may be specified.
+.Pp
+If a device was specified on the command line,
+.Nm ColdSync
+ignores the one specified in the configuration file. If no device was
+specified either on the command line or in the configuration file,
+.Nm ColdSync
+defaults to
+.Pa /dev/palm .
+.Sh CONDUITS AND SYNCING
+(Note: only the
+.Dq simplest case
+described below is currently implemented.)
 .Pp
 Syncing refers to the process of synchronizing the databases on the
-Palm with a workstation. Typically, every database on the Palm will
-have a corresponding backup file in the user's home directory. When a
-Palm is synced with a machine, the two are updated with respect to
-each other: records (e.g., address book entries or To Do items)
-created on the Palm are copied to the workstation and vice-versa.
-Records that were deleted on the Palm are deleted in the workstation's
-file (and archived, if necessary), and vice-versa.
+Palm with a workstation.
 .Pp
-However, the notion of syncing is broader than this: when you compose
-a new mail message on the Palm, you don't want it to be copied to some
-backup file, you want it to be sent to its recipient. This is
-accomplished through the use of conduits.
+In the simplest case, every database on the Palm is backed up in a
+separate file in your home directory. When you sync,
+.Nm ColdSync
+updates
+the copy on the Palm and the one in your home directory to make sure
+that their contents are identical: if you've deleted an appointment on
+the Palm,
+.Nm ColdSync
+deletes the corresponding entry in the backup file on your
+workstation. If you've added an appointment to the backup file on your
+workstation,
+.Nm ColdSync
+uploads it to the Palm. This is sufficient for many purposes: although
+the backup file is not human-readable, it is possible to write a tool
+to display and modify the contents of a backup file.
 .Pp
-A conduit is a module that can be imagined as being connected to the
-Palm on one end, and to the workstation on the other. Its job is to
-make sure that everything is up to date: that anything that has
-changed on the Palm has been dealt with on the workstation end, and
-that any changes on the workstation have been uploaded to the Palm.
-.\"  .Sh ENVIRONMENT
+Syncing is implemented through the use of
+.Em conduits.
+A conduit is a program (or a module built into
+.Nm ColdSync )
+that transfers data between a Palm database and the workstation. This
+definition is rather vague, but hopefully the next few paragraphs will
+make things clearer.
+.Pp
+.Nm ColdSync
+defines five
+.Dq flavors
+of conduits:
+.Em Sync , Fetch , Dump , Install ,
+and
+.Em Uninstall.
+.Pp
+A
+.Dq Sync
+conduit is basically just a program with a connection to the Palm. The
+generic conduit built into
+.Nm ColdSync
+is such a conduit: it reads a database on the Palm and its backup
+file, and makes whatever modifications are necessary to ensure that
+they both contain the same information. However, a Sync conduit can do
+just about anything it wants. A conduit for the Palm Mail application,
+for instance, might download new mail from the Palm and forward it,
+then scan the user's mailbox on the workstation and upload new mail to
+the Palm.
+.Pp
+Sync conduits are the most powerful, but also the hardest to
+implement. Most applications don't need this sort of power; one of the
+other conduit flavors is sufficient.
+.Pp
+A
+.Dq Fetch
+conduit is one that it called before the main sync. Its purpose is to
+create a Palm database
+.Pa ( .pdb )
+file which will then by synced with the Palm's copy. A Fetch conduit
+might, for instance, download headlines from a news web site and
+put them in a Memo.
+.Nm ColdSync
+will then make sure that this new memo gets uploaded to the Palm.
+.Pp
+A
+.Dq Dump
+conduit is the inverse of a Fetch conduit: it runs after the main
+sync. Its purpose is to read a Palm database file and write its
+contents to some other file. For instance, a Dump conduit might look
+for completed items in the
+.Dq To \&Do List
+Palm application and append them to a weekly report file.
+.Pp
+Fetch and Dump conduits work well together: they can fetch and dump
+the same file. For instance, you might have a Fetch conduit that reads
+an iCal calendar file and converts it to a Palm Datebook database; and
+a Dump conduit that reads the Palm's Datebook database and converts it
+back into an iCal file. Neither conduit needs to concern itself with
+what's on the Palm, or the details of communicating back and forth
+with it.
+.Pp
+The last two flavors of conduit,
+.Dq Install
+and
+.Dq Uninstall
+are planned for a future version, but have not been fleshed out yet.
 .\"  .Sh EXAMPLES
 .Sh FILES
 .Bl -tag -width ~/.palm/archive -compact
@@ -139,6 +228,8 @@ that any changes on the workstation have been uploaded to the Palm.
 default configuration file.
 .It Pa ~/.palm/backup
 contains backup files for the Palm.
+.It Pa ~/.palm/backup/Attic
+contains databases that have been deleted from the Palm.
 .It Pa ~/.palm/archive
 contains records deleted from the Palm, but with the "Save archive on
 PC" box checked.
@@ -162,10 +253,10 @@ Many and hopefully self-explanatory.
 It is not possible to have more than one Palm device and keep their
 contents separate.
 .Pp
-Configuration files are not yet implemented.
-.Pp
 If you've been syncing with one Palm, then get a replacement and
 immediately sync with it, all of your old data will be archived. This
 is probably not what you want.
+.Pp
+There is as yet no tool for manipulating archive files.
 .Pp
 Probably many others.
