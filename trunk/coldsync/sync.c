@@ -3,16 +3,18 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.6 1999-03-16 11:56:45 arensb Exp $
+ * $Id: sync.c,v 1.7 1999-03-28 09:55:23 arensb Exp $
  */
 
 #include <stdio.h>
 #include <string.h>		/* For memcmp() */
+#include <unistd.h>		/* For close() */
 #include "pconn/PConnection.h"
 #include "pconn/dlp_cmd.h"
 #include "coldsync.h"
 #include "pdb.h"
 #include "pconn/util.h"		/* For debugging: for debug_dump() */
+#include "archive.h"
 
 #define SYNC_DEBUG	1
 #ifdef SYNC_DEBUG
@@ -29,6 +31,11 @@ static int SyncRecord(struct PConnection *pconn,
 		      struct pdb *localdb,
 		      struct pdb_record *localrec,
 		      const struct pdb_record *remoterec);
+
+/* Convenience functions: see comment further down */
+static int _open_archive(struct dlp_dbinfo *dbinfo);
+static int _archive_record(const struct pdb_record *rec);
+static int _close_archive();
 
 /* According to the Pigeon Book, here's the logic of syncing:
 
@@ -318,6 +325,7 @@ fprintf(stderr, "Deleting this record: it's clean locally but doesn't exist in t
 	 * this desirable?
 	 */
 fprintf(stderr, "*** Phase 2:\n");
+	_open_archive(remotedbinfo);
 	for (remoterec = remotedb->rec_index.rec;
 	     remoterec != NULL;
 	     remoterec = remoterec->next)
@@ -391,6 +399,7 @@ fprintf(stderr, "Adding record 0x%08lx to local database\n", remoterec->id);
 		err = SyncRecord(pconn, dbh, localdb, localrec, remoterec);
 fprintf(stderr, "SyncRecord returned %d\n", err);
 	}
+	_close_archive();
 
 	/* Write the local database to the backup file */
 	err = pdb_Write(localdb, bakfname);
@@ -507,6 +516,7 @@ extern int dlpc_debug;
 	 * logic to it.
 	 */
 dlpc_debug = 10;
+	_open_archive(remotedbinfo);
 	while ((err = DlpReadNextModifiedRec(pconn, dbh,
 					     &recinfo, &rptr))
 	       == DLPSTAT_NOERR)
@@ -524,15 +534,24 @@ fprintf(stderr, "DlpReadNextModifiedRec returned %d\n", err);
 			fprintf(stderr,
 				"FastSync: Can't allocate new record\n");
 			DlpCloseDB(pconn, dbh);
+			_close_archive();
 			return -1;
 		}
+SYNC_TRACE(5, "Created new record\n");
 
 		/* Look up the modified record in the local database */
 		localrec = pdb_FindRecordByID(localdb, remoterec->id);
 		if (localrec == NULL)
 		{
+SYNC_TRACE(5, "localrec == NULL\n");
 			/* This record is new. Add it to the local
 			 * database.
+			 */
+			/* XXX - Actually, the record may have been created
+			 * and deleted since the last sync. In particular,
+			 * if it's been deleted and marked for archival, it
+			 * needs to go in the archive file, not the backup
+			 * file.
 			 */
 
 			/* Clear the flags in localrec: it's fresh and new. */
@@ -549,23 +568,27 @@ fprintf(stderr, "DlpReadNextModifiedRec returned %d\n", err);
 					err);
 				pdb_FreeRecord(localrec);
 				DlpCloseDB(pconn, dbh);
+				_close_archive();
 				return -1;
 			}
 
 			/* Success. Go on to the next modified record */
 			continue;
 		}
+SYNC_TRACE(5, "Found record by ID(0x%08lx)\n", remoterec->id);
 
 		/* This record already exists in localdb. */
 		err = SyncRecord(pconn, dbh,
 				 localdb, localrec,
 				 remoterec);
+SYNC_TRACE(5, "SyncRecord() returned %d\n", err);
 		if (err < 0)
 		{
 			fprintf(stderr, "FastSync: SyncRecord returned %d\n",
 				err);
 			pdb_FreeRecord(remoterec);
 			DlpCloseDB(pconn, dbh);
+			_close_archive();
 			return -1;
 		}
 
@@ -582,13 +605,15 @@ fprintf(stderr, "FastSync: no more modified records\n");
 		fprintf(stderr, "FastSync: DlpReadNextModifiedRec returned %d\n", err);
 		/* XXX */
 		DlpCloseDB(pconn, dbh);
+		_close_archive();
 		return -1;
-		break;
 	}
 
 	/* XXX - Go through the local database and cope with new, modified,
 	 * and deleted records.
 	 */
+
+	_close_archive();
 
 	/* Write the local database to the backup file */
 	err = pdb_Write(localdb, bakfname);
@@ -651,7 +676,6 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 					/* Current record in remote
 					 * database (from Palm).
 					 */
-			/* XXX - Can remoterec be made const? */
 {
 	int err;
 
@@ -691,9 +715,23 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 * archive copy.
 			 */
 
-			/* XXX - If the contents are identical, archive one
-			 * copy. Otherwise, archive both copies.
+			/* If the contents are identical, archive one copy.
+			 * Otherwise, archive both copies.
 			 */
+			if ((localrec->data_len == remoterec->data_len) &&
+			    (memcmp(localrec->data,
+				    remoterec->data,
+				    localrec->data_len) == 0))
+			{
+				/* The records are identical */
+				_archive_record(localrec);
+			} else {
+				/* The records have both been modified, but
+				 * in different ways. Archive both of them.
+				 */
+				_archive_record(localrec);
+				_archive_record(remoterec);
+			}
 
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6, "> Deleting record on Palm\n");
@@ -718,8 +756,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5, "Local:  deleted, expunged\n");
 
-			/* XXX - Archive remoterec */
-			SYNC_TRACE(6, "> Need to archive remote record\n");
+			/* Archive remoterec */
+			SYNC_TRACE(6, "> Archiving remote record\n");
+			_archive_record(remoterec);
 
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6, "> Deleting record on Palm\n");
@@ -746,8 +785,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Local record has changed */
 			SYNC_TRACE(5, "Local:  dirty\n");
 
-			/* XXX - Archive remoterec */
-			SYNC_TRACE(6, "> Need to archive remote record\n");
+			/* Archive remoterec */
+			SYNC_TRACE(6, "> Archiving remote record\n");
+			_archive_record(remoterec);
 
 			/* Fix flags */
 			localrec->attributes &= 0x0f;
@@ -789,8 +829,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Local record hasn't changed */
 			SYNC_TRACE(5, "Local:  clean\n");
 
-			/* XXX - Archive remoterec */
-			SYNC_TRACE(6, "> Need to archive remote record\n");
+			/* Archive remoterec */
+			SYNC_TRACE(6, "> Archiving remote record\n");
+			_archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
@@ -810,8 +851,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			SYNC_TRACE(5, "Local:  deleted, archived\n");
 
 			/* XXX - Fix flags */
-			/* XXX - Archive localrec */
-			SYNC_TRACE(6, "> Need to archive local record\n");
+			/* Archive localrec */
+			SYNC_TRACE(6, "> Archiving local record\n");
+			_archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
@@ -911,8 +953,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 				 * attributes and category.
 				 */
 
-			/* XXX - Archive localrec */
-			SYNC_TRACE(6, "> Need to archive local record\n");
+			/* Archive localrec */
+			SYNC_TRACE(6, "> Archiving local record\n");
+			_archive_record(localrec);
 
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6, "> Copying remote record to local database\n");
@@ -1042,8 +1085,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 				 * attributes and category.
 				 */
 
-			/* XXX - Archive localrec */
-			SYNC_TRACE(6, "> Need to archive local record\n");
+			/* Archive localrec */
+			SYNC_TRACE(6, "> Archiving local record\n");
+			_archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
@@ -1117,6 +1161,90 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 #undef ARCHIVE
 
 	return 0;	/* Success */
+}
+
+/*** Convenience functions ***
+ * These aren't terribly pretty, but they make things work The Way You
+ * Expect (tm).
+ *
+ * _open_archive(), despite its name, doesn't open anything; it merely
+ * makes a note of whatever information is necessary to open the archive
+ * file for the given database.
+ *
+ * _archive_record() checks to see whether the archive file for the
+ * database given to _open_archive() has been opened. If not, it opens it,
+ * creating the archive file if necessary. Then it appends the record to
+ * the archive file.
+ *
+ * _close_archive() closes the archive file, if it's open.
+ *
+ * This way, FastSync() and SlowSync() can simply _open_archive() before
+ * they start processing records, and _close_archive() when the're done.
+ * And SyncRecord() can simply _archive_record() every record that needs to
+ * be archived. If a database doesn't have any records that need to be
+ * archived, then no archive file is opened or created.
+ */
+
+static int _archfd = -1;	/* File descriptor for archive file */
+static struct dlp_dbinfo *_arch_dbinfo = NULL;
+				/* The database we're currently dealing with */
+
+static int
+_open_archive(struct dlp_dbinfo *dbinfo)
+{
+	/* Record whatever's necessary to be able to open an archive file
+	 * later on.
+	 */
+	_arch_dbinfo = dbinfo;
+	_archfd = -1;
+
+	return 0;
+}
+
+static int
+_archive_record(const struct pdb_record *rec)
+{
+	struct arch_record arec;
+
+	/* If no archive file has been opened yet, open one, creating it if
+	 * necessary.
+	 */
+	if (_archfd < 0)
+	{
+		if ((_archfd = arch_open(_arch_dbinfo->name, O_WRONLY)) < 0)
+		{
+			fprintf(stderr, "Can't open \"%s\". Attempting to create\n",
+				_arch_dbinfo->name);
+			if ((_archfd = arch_create(
+				_arch_dbinfo->name,
+				_arch_dbinfo)) < 0)
+			{
+				fprintf(stderr, "Can't create \"%s\"\n",
+					_arch_dbinfo->name);
+				return -1;
+			}
+		}
+	}
+
+	/* Write the record */
+	arec.type = ARCHREC_REC;
+	arec.data_len = rec->data_len;
+	arec.data = rec->data;
+	return arch_writerecord(_archfd, &arec);
+}
+
+static int
+_close_archive()
+{
+	/* If an archive file was opened, close it.
+	 */
+	if (_archfd != -1)
+		close(_archfd);
+
+	_arch_dbinfo = NULL;
+	_archfd = -1;
+
+	return 0;
 }
 
 /* This is for Emacs's benefit:
