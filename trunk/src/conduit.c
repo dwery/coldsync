@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.42 2001-10-14 10:20:53 arensb Exp $
+ * $Id: conduit.c,v 2.43 2001-10-23 14:51:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1403,7 +1403,7 @@ find_in_path(const char *conduit)
 					"NULL\n");
 			return NULL;
 		}
-		snprintf(buf, MAXPATHLEN, conduitdir, conduit);
+		snprintf(buf, MAXPATHLEN, "%s/%s", conduitdir, conduit);
 		if (access(buf, X_OK) == 0)
 		{
 			SYNC_TRACE(3)
