@@ -18,8 +18,8 @@
 	PDA-Default: 1;				(done)
 	PDA-Username: Gorko the Invincible;	(done)
 	PDA-UID: 31337;				(done)
-	PDA-DLPmaj: 1;				(done)
-	PDA-DLPmin: 3;				(done)
+	PDA-DLP-major: 1;				(done)
+	PDA-DLP-minor: 3;				(done)
 - Add the PDA-xxx headers to the conduits development documentation.
 - Add a warning about listen usb under linux.
 - Fix --with-getlong 
