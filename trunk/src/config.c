@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.37 2000-10-22 03:15:52 arensb Exp $
+ * $Id: config.c,v 1.38 2000-10-22 03:25:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,13 +53,6 @@ extern struct config config;
 extern void debug_dump(FILE *outfile, const char *prefix,
 		       const ubyte *buf, const udword len);
 
-int sys_maxfds;			/* Size of file descriptor table */
-	/* XXX - What is this used for? Can it (and get_maxfds()) be
-	 * deleted? Is this a remnant from some earlier thoughts about
-	 * closing off unneeded file descriptors when fork()ing off a
-	 * conduit?
-	 */
-
 /* XXX - This should probably be hidden inside a "struct config{..}" or
  * something. I don't like global variables.
  */
@@ -79,23 +72,6 @@ static int name2listen_type(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
-static int get_maxfds(void);
-
-/* get_maxfds
- * Return the size of the file descriptor table, using whichever method is
- * available.
- */
-#if HAVE_SYSCONF
-
-static int
-get_maxfds(void)
-{
-	return sysconf(_SC_OPEN_MAX);
-}
-
-#else	/* !HAVE_SYSCONF */
-#  error "Don't know how to get size of file descriptor table."
-#endif	/* HAVE_SYSCONF */
 
 /* get_config
  * Get the initial configuration: parse command-line arguments and load the
@@ -154,10 +130,6 @@ get_config(int argc, char *argv[])
 
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
-					 */
-
-	sys_maxfds = get_maxfds();	/* Get the size of the file
-					 * descriptor table.
 					 */
 
 	/* By default, the host ID is its IP address. */
@@ -345,11 +317,6 @@ get_config(int argc, char *argv[])
 	if (global_opts.mode == mode_None)
 		global_opts.mode = mode_Standalone;
 
-	MISC_TRACE(6)
-		/* This really belongs earlier in this function, but the
-		 * -dmisc flag hasn't been parsed then.
-		 */
-		fprintf(stderr, "sys_maxfds == %d\n", sys_maxfds);
 	MISC_TRACE(2)
 	{
 		int i;
