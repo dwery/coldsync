@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.64 2001-02-21 11:20:38 arensb Exp $
+ * $Id: config.c,v 1.65 2001-02-22 14:33:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1561,7 +1561,7 @@ new_sync_config()
 
 	MISC_TRACE(5)
 		fprintf(stderr,
-			"Allocated sync_config %p\n", retval)
+			"Allocated sync_config %p\n", retval);
 	return retval;
 }
 
@@ -1579,7 +1579,7 @@ free_sync_config(struct sync_config *config)
 	conduit_block *nextc;
 
 	MISC_TRACE(5)
-		fprintf(stderr, "Freeing sync_config %p\n", config)
+		fprintf(stderr, "Freeing sync_config %p\n", config);
 
 	/* Free the listen blocks */
 	for (l = config->listen, nextl = NULL; l != NULL; l = nextl)
