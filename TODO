@@ -1,3 +1,12 @@
+- DlpAddSyncLogEntry() really does add to the sync log, just not the
+  way you'd expect. Fix things to work correctly. add_to_log() should
+  sprintf() the message, and send the message to the Palm.
+- What is the maximum log length? Is it the max length for an
+  individual line added with DlpAddSyncLogEntry()? Or is it the max
+  length for the entire log?
+- "listen serial{ protocol simple; }" works for syncing m500 over USB
+  under Linux, so get rid of usb_m500 hack.
+- Would it be possible to implement a web clipping server?
 - Bug? The first real sync with the m500, it said it was doing a fast
   sync. Did the userinfo get set during file backup or restore?
 - Add a ~/.palm/commands file, containing commands to execute on the
@@ -10,12 +19,6 @@
   always wants to do a backup, or always wants to run some command
   after the sync) and one for one-shots?
 	Allow execution of external programs.
-- Bug: with
-	listen serial {
-		device: /dev/cuaa2;
-	}
-  ColdSync tries to set the speed to 230400, even though the serial
-  port can't handle it.
 - Should all of the Dlp*() functions return type dlp_stat_t instead of
   int?
 - For man pages that cover several functions, write short ".so
