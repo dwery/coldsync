@@ -1,13 +1,13 @@
-/* PConnection_usb.c
+/* PConnection_libusb.c
  *
- * USB-related stuff for Visors.
+ * libusb support.
  *
  *	Copyright (C) 2000, Louis A. Mamakos.
  *	Copyright (C) 2002-04, Alessandro Zummo.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.7 2004-10-21 00:24:01 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.8 2004-10-21 14:40:18 azummo Exp $
  */
 
 #include "config.h"
@@ -53,6 +53,7 @@ struct usb_data {
 	usb_dev_handle *dev;
 	int hotsync_ep_out;
 	int hotsync_ep_in;
+	int hotsync_ep_int;
 	unsigned char iobuf[IOBUF_LEN];
 	unsigned char *iobufp;
 	int iobuflen;
@@ -134,7 +135,7 @@ typedef struct {
 #define PALM_TUNGSTEN_Z_ID		0x0031
 #define PALM_ZIRE_ID			0x0070
 #define PALM_ZIRE_31_72_ID		0x0061 /* Those USB ids must be very procey, they
-						* keep using the same...
+						* keep using the same... <g>
 						*/
 
 #define SONY_VENDOR_ID			0x054C
@@ -167,7 +168,7 @@ static char *hs_usb_functions[] = {
 
 
 static int
-usb_bind(PConnection *pconn,
+libusb_bind(PConnection *pconn,
 	 const void *addr,
 	 const int addrlen)
 {
@@ -190,7 +191,7 @@ usb_bind(PConnection *pconn,
 }
 
 static int
-usb_read(PConnection *p, unsigned char *buf, int len)
+libusb_read(PConnection *p, unsigned char *buf, int len)
 {
 	/*
 	 *  We've got to do intermediate buffering of the USB data
@@ -235,12 +236,24 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 				abort();
 			}
 
+			/* The interrupt endpoint, if present, must be emptied 
+			 * before reading from the bulk one.
+			 */
+
+			do {
+				char intbuf[8];
+
+				u->iobuflen = usb_interrupt_read(u->dev, u->hotsync_ep_int | 0x80,
+					&intbuf[0], 8, 10);
+			}
+			while (u->iobuflen > 0);
+
 			u->iobufp = u->iobuf;
-			IO_TRACE(3)
+			IO_TRACE(5)
 				fprintf(stderr, "calling usb_bulk_read(%02x)\n", u->hotsync_ep_in | 0x80);
 			u->iobuflen = usb_bulk_read(u->dev, u->hotsync_ep_in | 0x80,
 				(char *)u->iobufp, sizeof(u->iobuf), 5000);
-			IO_TRACE(3)
+			IO_TRACE(5)
 				fprintf(stderr, "usb read %d, ret %d\n", sizeof(u->iobuf), u->iobuflen);
 			if (u->iobuflen < 0) {
 				fprintf(stderr, "usb read: %s\n", usb_strerror());
@@ -253,13 +266,13 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-usb_write(PConnection *p, unsigned const char *buf, const int len)
+libusb_write(PConnection *p, unsigned const char *buf, const int len)
 {
 	struct usb_data *u = p->io_private;
 	int ret;
 
 	ret = usb_bulk_write(u->dev, u->hotsync_ep_out, (char *)buf, len, 5000);
-	IO_TRACE(3)
+	IO_TRACE(5)
 		fprintf(stderr, "usb write %d, ret %d\n", len, ret);
 	if (ret < 0)
 		fprintf(stderr, "usb write: %s\n", usb_strerror());
@@ -267,13 +280,13 @@ usb_write(PConnection *p, unsigned const char *buf, const int len)
 }
 
 static int
-usb_connect(PConnection *p, const void *addr, const int addrlen)
+libusb_connect(PConnection *p, const void *addr, const int addrlen)
 {
 	return -1;		/* Not applicable to USB connection */
 }
 
 static int
-usb_accept(PConnection *pconn)
+libusb_accept(PConnection *pconn)
 {
 	int err;
 	udword newspeed;		/* Not really a speed; this is just
@@ -287,6 +300,9 @@ usb_accept(PConnection *pconn)
 		/* Negotiate a CMP connection. Since this is USB, the speed
 		 * is meaningless: it'll just go however fast it can.
 		 */
+		IO_TRACE(3)
+			fprintf(stderr, "usb_accept full\n");
+
 		newspeed = cmp_accept(pconn, 0);
 		if (newspeed == ~0)
 			return -1;
@@ -298,15 +314,17 @@ usb_accept(PConnection *pconn)
 		 * until the Palm aborts. This suggests that the Palm is
 		 * waiting for data from the desktop. Or maybe the Palm
 		 * wants to be tickled in some non-obvious way.
+		 * XXX m505 works fine, maybe this is an old comment...
 		 */
-		IO_TRACE(5)
+		IO_TRACE(3)
 			fprintf(stderr, "usb_accept simple/net\n");
 
 		/* XXX - It seems to help here to send a packet to the m500. */
+		/* XXX - Same as the previous note */
 		err = ritual_exch_server(pconn);
 		if (err < 0)
 		{
-			IO_TRACE(3)
+			IO_TRACE(2)
 				fprintf(stderr, "usb_accept simple/net: "
 					"ritual_exch_server() returned %d\n",
 					err);
@@ -326,7 +344,7 @@ usb_accept(PConnection *pconn)
 }
 
 static int
-pconn_usb_close(PConnection *p)
+libusb_close(PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
 
@@ -368,13 +386,13 @@ pconn_usb_close(PConnection *p)
 }
 
 static int
-usb_select(PConnection *p, pconn_direction which, struct timeval *tvp)
+libusb_select(PConnection *p, pconn_direction which, struct timeval *tvp)
 {
 	return 1;
 }
 
 static int
-usb_drain(PConnection *p)
+libusb_drain(PConnection *p)
 {
 	/* We don't check p->protocol, because there's nothing to do for
 	 * any of them.
@@ -382,12 +400,82 @@ usb_drain(PConnection *p)
 	return 0;
 }
 
-int
-pconn_libusb_probe_os4(PConnection *pconn,
-		struct usb_data *u)
+static int
+libusb_probe_os3(PConnection *pconn,
+		struct usb_data *u,
+		struct usb_device *dev)
+{
+	int ret, i;
+	UsbConnectionInfoType ci;
+
+	bzero((void *) &ci, sizeof(UsbExtConnectionInfoType));
+
+	ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+		usbRequestVendorGetConnectionInfo, 0, 0,
+		(char *)&ci, sizeof(UsbConnectionInfoType) , 5000);
+
+	if (ret < 0)
+	{
+		perror(_("usb_control_msg(usbRequestVendorGetConnectionInfo) failed"));
+		return 0;
+	}
+
+	IO_TRACE(1) {
+		fprintf(stderr,
+			"GetConnectionInfo:\n"
+			"     ports: %d\n",
+			ci.numPorts
+		);
+	}
+
+	for (i = 0; i < ci.numPorts; i++)
+	{
+		IO_TRACE(1) {
+			fprintf(stderr,
+				"   port[%d]: %d\n"
+				"   func[%d]: %x\n",
+				i, ci.connections[i].port,
+				i, ci.connections[i].portFunctionID
+			);
+ 		}
+	}
+
+	/* Search for the port with HotSync function */
+
+	for (i = 0; i < ci.numPorts; i++)
+	{
+		if (ci.connections[i].portFunctionID == hs_usbfun_Hotsync)
+		{
+			u->hotsync_ep_in  = ci.connections[i].port;
+			u->hotsync_ep_out = ci.connections[i].port;
+			u->hotsync_ep_int = 0;
+		}
+	}
+
+	if (u->hotsync_ep_in == 0)
+	{
+		IO_TRACE(1) {
+			fprintf(stderr, "No ports found, trying defaults\n");
+ 		}
+
+	 	u->hotsync_ep_in  = 2;
+		u->hotsync_ep_out = 2;
+		u->hotsync_ep_int = 0;
+	}
+
+	/* Make it so */
+	return 1;
+}
+
+static int
+libusb_probe_generic(PConnection *pconn,
+		struct usb_data *u,
+		struct usb_device *dev)
 {
 	int ret, i;
 	UsbExtConnectionInfoType extci;
+
+	bzero((void *) &extci, sizeof(UsbExtConnectionInfoType));
 
 	ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
 		usbRequestVendorGetExtConnectionInfo, 0, 0,
@@ -407,9 +495,7 @@ pconn_libusb_probe_os4(PConnection *pconn,
 			extci.numPorts,
 			extci.differentEndPoints
 		);
- 
 	}
-
 
 	for (i = 0; i < extci.numPorts; i++)
 	{
@@ -425,23 +511,41 @@ pconn_libusb_probe_os4(PConnection *pconn,
 
 	/* XXX We are always using the first connection entry */
 
-	if (extci.differentEndPoints)
+	if (extci.numPorts > 0)
 	{
-		u->hotsync_ep_in	= extci.connections[0].info >> 4;
-		u->hotsync_ep_out	= extci.connections[0].info & 0x0F;
+		if (extci.differentEndPoints)
+		{
+			u->hotsync_ep_in  = extci.connections[0].info >> 4;
+			u->hotsync_ep_out = extci.connections[0].info & 0x0F;
+			u->hotsync_ep_int = 0;
+		}
+		else
+		{
+			u->hotsync_ep_in  = extci.connections[0].port;
+			u->hotsync_ep_out = extci.connections[0].port;
+			u->hotsync_ep_int = 0;
+		}
 	}
 	else
 	{
-		u->hotsync_ep_in = extci.connections[0].port;
-		u->hotsync_ep_out = extci.connections[0].port;
-	}
+		IO_TRACE(1) {
+			fprintf(stderr, "No ports found, trying defaults\n");
+ 		}
 
-	IO_TRACE(1) {
-		fprintf(stderr,
-			"Using endpoints: %d (in), %d (out)\n",
-				u->hotsync_ep_in,
-				u->hotsync_ep_out
-		);
+
+		if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
+			dev->descriptor.idProduct == HANDSPRING_TREO_ID)
+		{
+		 	u->hotsync_ep_in  = 4;
+			u->hotsync_ep_out = 3;
+			u->hotsync_ep_int = 2;
+		}
+		else
+		{
+		 	u->hotsync_ep_in  = 2;
+			u->hotsync_ep_out = 2;
+			u->hotsync_ep_int = 0;
+		}
 	}
 
 	/* Make it so */
@@ -454,22 +558,21 @@ pconn_libusb_open(PConnection *pconn,
 		const pconn_proto_t protocol)
 {
 	struct usb_data *u;
-	int i, ret;
-	unsigned char usbresponse[50];
+	int i;
 
 	struct usb_bus *bus;
 	struct usb_device *dev;
 
 
 	/* Set the methods used by the USB connection */
-	pconn->io_bind		= &usb_bind;
-	pconn->io_read		= &usb_read;
-	pconn->io_write		= &usb_write;
-	pconn->io_connect	= &usb_connect;
-	pconn->io_accept	= &usb_accept;
-	pconn->io_close		= &pconn_usb_close;
-	pconn->io_select	= &usb_select;
-	pconn->io_drain		= &usb_drain;
+	pconn->io_bind		= &libusb_bind;
+	pconn->io_read		= &libusb_read;
+	pconn->io_write		= &libusb_write;
+	pconn->io_connect	= &libusb_connect;
+	pconn->io_accept	= &libusb_accept;
+	pconn->io_close		= &libusb_close;
+	pconn->io_select	= &libusb_select;
+	pconn->io_drain		= &libusb_drain;
 
 	u = pconn->io_private = malloc(sizeof(struct usb_data));
 	if (!u)
@@ -557,11 +660,12 @@ pconn_libusb_open(PConnection *pconn,
 		return -1;
 	}
 
-	/* Choice the default protocol */
+	/* Choice the default protocol. */
 
 	if (protocol == PCONN_STACK_DEFAULT)
 	{
-		if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID)
+		if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
+			dev->descriptor.idProduct == HANDSPRING_VISOR_ID)
 			pconn->protocol = PCONN_STACK_FULL;
 		else
 			pconn->protocol = PCONN_STACK_NET;
@@ -646,13 +750,18 @@ pconn_libusb_open(PConnection *pconn,
 	if (usb_set_configuration(u->dev, 1) < 0)
 		perror("warning: usb_set_configuration failed");
 
+	/* XXX call usb_release_interface() somewhere */
 	if (usb_claim_interface(u->dev, 0) < 0)
 		perror("warning: usb_claim_interface failed");
 
 
-	/* Adjust for other devices */
+	/* Probe */
 
-	pconn_libusb_probe_os4(pconn, u);
+	if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
+		dev->descriptor.idProduct == HANDSPRING_VISOR_ID)
+		libusb_probe_os3(pconn, u, dev);
+	else
+		libusb_probe_generic(pconn, u, dev);
 
 	/* Make it so */
 	return 1;
