@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.9 2000-12-11 08:54:40 arensb Exp $
+ * $Id: PConnection.h,v 1.10 2000-12-13 16:39:01 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -78,14 +78,6 @@ struct PConnection
 				 * the struct, along with all the other
 				 * protocols.
 				 */
-
-	/* The HotSync protocol version number that the other end
-	 * understands. This is determined by the CMP layer, and
-	 * therefore ought to go in its part, but it's used by the
-	 * layers above it, so it goes in the common part.
-	 */
-	ubyte ver_maj;		/* Major version */
-	ubyte ver_min;		/* Minor version */
 
 	/* Protocol-dependent parts */
 
