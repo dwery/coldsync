@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.23 2000-09-17 21:18:53 arensb Exp $
+.\" $Id: coldsync.8,v 1.24 2000-09-21 15:45:44 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -730,6 +730,9 @@ does not detect the serial number correctly on Handspring Visors. This
 is because the Visor does not appear to have a software-readable
 serial number.
 .Sh BUGS
+When syncing a Handpring Visor under Linux,
+.Nm ColdSync
+spits out copious amounts of "Bad CRC" messages.
 .Pp
 .Nm ColdSync
 does not deal with categories.
