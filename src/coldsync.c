@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.65 2000-12-10 00:28:22 arensb Exp $
+ * $Id: coldsync.c,v 1.66 2000-12-10 21:45:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,6 +44,7 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 				 * rant in "log.c".
 				 */
 
+#if 0
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
  * fast the serial port can go). The reason there are two macros here is
@@ -56,6 +57,7 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
  */
 #define SYNC_RATE		38400L
 #define BSYNC_RATE		B38400
+#endif	/* 0 */
 
 static int Connect(struct PConnection *pconn);
 static int Disconnect(struct PConnection *pconn, const ubyte status);
@@ -69,6 +71,9 @@ int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
 int reserve_fd(int fd, int flags);
 
+/*  int net_listen(int argc, char *argv[]); */
+
+#if 0
 /* speeds
  * This table provides a list of speeds at which the serial port might be
  * able to communicate.
@@ -126,6 +131,7 @@ static struct {
 	/* I doubt anyone wants to go any slower than 1200 bps */
 };
 #define num_speeds	sizeof(speeds) / sizeof(speeds[0])
+#endif	/* 0 */
 
 int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
 			 * another field in 'struct Palm' or something.
@@ -339,6 +345,8 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
+if (1)
+{
 	/* Perform mode-specific actions */
 	switch (global_opts.mode) {
 	    case mode_None:		/* No mode specified */
@@ -363,6 +371,9 @@ main(int argc, char *argv[])
 			global_opts.mode);
 		err = -1;
 	}
+} else {
+/*  net_listen(argc, argv); */
+}
 
 	if (sync_config != NULL)
 	{
@@ -1508,12 +1519,12 @@ run_mode_Getty()
 static int
 Connect(struct PConnection *pconn)
 {
-	int err;
-	int i;
+/*  	int err; */
+/*  	int i; */
 	struct slp_addr pcaddr;
-	struct cmp_packet cmpp;
-	udword bps = SYNC_RATE;		/* Connection speed, in bps */
-	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
+/*  	struct cmp_packet cmpp; */
+/*  	udword bps = SYNC_RATE; */		/* Connection speed, in bps */
+/*  	speed_t tcspeed = BSYNC_RATE; */	/* B* value corresponding to 'bps'
 					 * (a necessary distinction because
 					 * some OSes (hint to Sun!) have
 					 * B19200 != 19200.
@@ -1524,8 +1535,15 @@ Connect(struct PConnection *pconn)
 						 * socket setup.
 						 */
 	pcaddr.port = SLP_PORT_DLP;
-	PConn_bind(pconn, &pcaddr);
-	/* XXX - PConn_accept(fd) */
+	PConn_bind(pconn, &pcaddr);	/* XXX - This is bogus. Stick this
+					 * in PConnection_serial and
+					 * PConnection_usb, and get rid of
+					 * the PConn_bind function.
+					 */
+	if ((*pconn->io_accept)(pconn) < 0)
+		return -1;
+
+#if 0
 
 	do {
 		SYNC_TRACE(5)
@@ -1631,6 +1649,7 @@ Connect(struct PConnection *pconn)
 		fprintf(stderr, _("Error trying to set speed"));
 		return -1;
 	}
+#endif	/* 0 */
 	return 0;
 }
 
@@ -1969,6 +1988,7 @@ UpdateUserInfo(struct PConnection *pconn,
 	return 0;		/* Success */
 }
 
+#if 0
 /* XXX - Not used anywhere yet */
 /* find_max_speed
  * Find the maximum speed at which the serial port (pconn->fd) is able to
@@ -1995,6 +2015,7 @@ find_max_speed(struct PConnection *pconn)
 
 	return -1;
 }
+#endif	/* 0 */
 
 /* dbinfo_fill
  * Fill in a dbinfo record from a pdb record header.
@@ -2178,6 +2199,42 @@ reserve_fd(int fd,		/* File descriptor to check */
 
 	return 0;		/* Success */
 }
+
+#if 0
+/* XXX - This will probably grow up into forwarding mode or something */
+int
+net_listen(int argc, char *argv[])
+{
+	extern int net_udp_listen(struct netsync_wakeup *wakeup_pkt);
+	extern int net_acknowledge_wakeup(struct netsync_wakeup *wakeup_pkt);
+	extern int net_tcp_listen(void);
+
+	struct PConnection *pconn;
+	struct netsync_wakeup wakeup_pkt;
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* Set up a PConnection to the Palm */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 0))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+
+	net_udp_listen(&wakeup_pkt);
+	net_acknowledge_wakeup(&wakeup_pkt);
+	net_tcp_listen();
+
+	return 0;
+}
+#endif	/* 0 */
 
 /* This is for Emacs's benefit:
  * Local Variables:	***
