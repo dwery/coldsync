@@ -1,3 +1,11 @@
+- With a Visor, if there's no pda{} block that matches exactly,
+  ColdSync defaults to ~/.palm and username/userid from /etc/passwd.
+	This seems like the Right Thing to do for the naive user, but
+  means that if you've misspelled something in ~/.coldsyncrc , your
+  stuff will go to the wrong place.
+	Not sure what the fix should be. Add an "abort" pda flag,
+  meaning "if you get this far, abort 'cos you overshot the real pda
+  block"?
 - Need a "logit(...)" function that'll write its arguments to the log
   file, or send them to syslog if necessary. Should use snprintf() to
   avoid buffer overruns.
@@ -332,6 +340,7 @@
   the conduit knows about.
 - Allow something like "ForceInstall: yes;" line in .coldsyncrc, to
   have the same effect as -I command-line option.
+	Actually, add a block for global options.
 - Consider an optimization: if the local database hasn't been
   modified, don't write it back to disk. This reduces the size of
   daily backups by a trivial amount, but will also make a couple of
@@ -356,9 +365,6 @@
   send tickle packets at appropriate intervals.
 - ColdSync.pm should open SPC file handle as appropriate.
 - Add some "pref" lines to sample.coldsync.rc
-- Under DU 4.0, 'configure' finds cfmakeraw(), but compilation
-  complains about "implicit declaration". It's not declared in any
-  header file, AFAICT.
 - Rewrite 'send-mail' as a Sync conduit.
 - Do something with Daniel Klein's <bilderzeitung@hotmail.com> Doc
   stuff.
