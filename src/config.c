@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.98 2002-04-18 21:54:34 azummo Exp $
+ * $Id: config.c,v 1.99 2002-04-24 17:01:20 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -19,7 +19,6 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <netdb.h>		/* For gethostbyname2() */
 #include <sys/socket.h>		/* For socket() */
-#include <getopt.h>
 
 #if HAVE_STROPTS_H
 #  include <stropts.h>		/* For ioctl() under DU */
@@ -28,6 +27,10 @@
 #if HAVE_SYS_SOCKIO_H
 #  include <sys/sockio.h>	/* For SIOCGIFCONF under Solaris */
 #endif	/* HAVE_SYS_SOCKIO_H */
+
+#if HAVE_GETOPT_LONG
+#include <getopt.h>		/* For GNU getopt_long() */
+#endif	/* HAVE_GETOPT_LONG */
 
 /* DU's headers appear to be broken: <net/if.h> refers to these structures
  * before they're defined.
@@ -71,6 +74,10 @@ extern int optind;
 extern int optopt;
 extern int opterr;
 extern int optreset;
+#if !HAVE_GETOPT_LONG
+#  define getopt_long(argc, argv, shortopts, longopts, longind) \
+	getopt(argc, argv, shortopts)
+#endif	/* !HAVE_GETOPT_LONG */
 
 extern struct config config;
 
@@ -129,7 +136,7 @@ parse_args(int argc, char *argv[])
 	int arg;			/* Current option */
 
 	/* Options: */
-	
+#if HAVE_GETOPT_LONG	
 	static struct option longopts[] =
 	{
 		{"mode", 		required_argument, 	NULL, 'm'},
@@ -150,7 +157,7 @@ parse_args(int argc, char *argv[])
 		{"debug",		required_argument,	NULL, 'd'},
 		{"auto-init",		no_argument,		NULL, 'a'},
 	};	 
-
+#endif	/* HAVE_GETOPT_LONG */
 	 
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
