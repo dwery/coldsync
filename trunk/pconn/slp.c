@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.5 1999-06-05 11:22:29 arensb Exp $
+ * $Id: slp.c,v 1.6 1999-06-24 02:47:54 arensb Exp $
  */
 
 #include <stdio.h>
@@ -129,7 +129,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	ubyte checksum;		/* Packet checksum, for checking */
 	uword got;		/* How many bytes we've read so far */
 	uword want;		/* How many bytes we still want to read */
-	bool ignore;		/* Are we ignoring this packet? */
+	Bool ignore;		/* Are we ignoring this packet? */
 	uword my_crc;		/* Computed CRC for the packet */
 
 	palm_errno = PALMERR_NOERR;
@@ -231,10 +231,10 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	SLP_TRACE(10, "Good checksum\n");
 
 	/* See if we should ignore this packet */
-	ignore = true;
+	ignore = True;
 	if ((header.type == pconn->slp.local_addr.protocol) &&
 	    (header.dest == pconn->slp.local_addr.port))
-		ignore = false;
+		ignore = False;
 	if (ignore)
 		SLP_TRACE(6, "Ignoring packet\n");
 	else
