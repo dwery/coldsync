@@ -1,3 +1,5 @@
+# $Id: Makefile,v 1.3 2000-02-03 02:53:24 arensb Exp $
+
 TOP =		..
 SUBDIR =	libpdb
 
