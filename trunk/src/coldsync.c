@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.47 2000-09-03 07:35:02 arensb Exp $
+ * $Id: coldsync.c,v 1.48 2000-09-08 15:55:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -177,7 +177,7 @@ main(int argc, char *argv[])
 
 	/* Parse arguments and read config file(s) */
 	if ((err = get_config(argc, argv)) < 0)
-	{	
+	{
 		fprintf(stderr, _("Error loading configuration\n"));
 		exit(1);
 	}
@@ -572,13 +572,10 @@ main(int argc, char *argv[])
 		/* Synchronize the databases */
 		for (i = 0; i < palm.num_dbs; i++)
 		{
-			/* XXX - First draft: run sync conduits for this
-			 * database.
+			/* Run the Sync conduits for this database. This
+			 * includes built-in conduits.
 			 */
 			err = run_Sync_conduits(&(palm.dblist[i]), pconn);
-			/* XXX - Error-checking */
-
-			err = HandleDB(pconn, &palm, i);
 			if (err < 0)
 			{
 				switch (cs_errno)
@@ -1800,7 +1797,7 @@ open_tempfile(char *name_template)
 
 	/* Open the output file */
 	if ((retval = open(name_template,
-			   O_WRONLY | O_CREAT | O_EXCL,
+			   O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
 			   0600)) < 0)
 	{
 		fprintf(stderr, _("%s: Can't create staging file \"%s\"\n"),
