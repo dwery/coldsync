@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.32 2001-03-27 14:07:45 arensb Exp $
+ * $Id: backup.c,v 2.33 2001-03-29 05:36:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -67,8 +67,19 @@ backup(PConnection *pconn,
 
 	/* Open the database on the Palm */
 	err = DlpOpenConduit(pconn);
-	if (err != DLPSTAT_NOERR)
+	switch (err)
 	{
+	    case DLPSTAT_NOERR:		/* No error */
+		break;
+	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
+					 * by user, on the Palm */
+		Error(_("Cancelled by Palm."));
+		cs_errno = CSE_CANCEL;
+		close(bakfd);
+		unlink(bakfname);
+		add_to_log(_("Cancelled\n"));
+		return -1;
+	    default:			/* All other errors */
 		switch (palm_errno)
 		{
 		    case PALMERR_TIMEOUT:
@@ -200,12 +211,18 @@ full_backup(PConnection *pconn,
 			      "full_backup",
 			      cur_db->name);
 
-			/* If the problem is that we've lost the connection
-			 * to the Palm, then abort. Otherwise, hope that
-			 * the problem was transient, and continue.
+			/* If the problem is a known fatal error, abort.
+			 * Otherwise, hope that the problem was transient,
+			 * and continue.
 			 */
-			if (cs_errno == CSE_NOCONN)
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+			    case CSE_CANCEL:
 				return -1;
+			    default:
+				break;
+			}
 		}
 	}
 	return 0;

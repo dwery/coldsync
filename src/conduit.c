@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.35 2001-03-27 14:09:16 arensb Exp $
+ * $Id: conduit.c,v 2.36 2001-03-29 05:36:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1170,6 +1170,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		{
 			switch (cs_errno)
 			{
+			    case CSE_CANCEL:
+				Error(_("Cancelled by Palm."));
+				return -1;
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm. Aborting."));
 				return -1;
@@ -1225,6 +1228,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		{
 			switch (cs_errno)
 			{
+			    case CSE_CANCEL:
+				Error(_("Cancelled by Palm."));
+				return -1;
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm. Aborting."));
 				return -1;
