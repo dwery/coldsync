@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.32 2000-07-06 04:04:20 arensb Exp $
+ * $Id: config.c,v 1.33 2000-09-03 07:32:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -20,6 +20,10 @@
 #include <sys/socket.h>		/* For AF_INET */
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
+/* XXX - Carl Parisi says that he needs to include <getopt.h>. But I think
+ * this is a GNU-ism. FreeBSD's man page isn't clear, but seems to imply
+ * that getopt() is part of POSIX.2.
+ */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
