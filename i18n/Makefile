@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2000-02-06 22:44:59 arensb Exp $
+# $Id: Makefile,v 1.2 2000-02-06 22:51:01 arensb Exp $
 
 TOP =		..
 SUBDIR =	i18n
@@ -13,7 +13,7 @@ DISTFILES =	Makefile \
 		FILES \
 		FILES.C++
 
-CLEAN =		${MOFILES}
+CLEAN =		core *.core *.bak *~ errs errs.* ${MOFILES}
 SPOTLESS =	messages.po
 
 include ../Make.rules
