@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.23 2000-12-08 07:06:24 arensb Exp $
+ * $Id: lexer.l,v 2.24 2000-12-15 06:13:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -56,7 +56,9 @@ extern int fileno(FILE *);
  * strdup() is declared :-(
  * This is an annoying feature of 'flex', not a Linux-ism.
  */
+#if !WITH_LEAK_DETECTION
 extern char *strdup(const char *string);
+#endif
 
 int lineno;
 
