@@ -3,7 +3,7 @@
  * cfmakeraw(), for systems that don't have it. Ripped bodily from the
  * FreeBSD 3.0 distribution (/usr/src/lib/libc/gen/termios.c)
  *
- * $Id: cfmakeraw.c,v 1.1 1999-02-19 23:11:06 arensb Exp $
+ * $Id: cfmakeraw.c,v 1.2 1999-02-24 13:12:48 arensb Exp $
  */
 /*-
  * Copyright (c) 1989, 1993
@@ -37,9 +37,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#include "../config.h"
-#if !HAVE_CFMAKERAW
-
 #include <termios.h>
 
 /*
@@ -59,5 +56,3 @@ cfmakeraw(struct termios *t)
 	t->c_cc[VMIN] = 1;
 	t->c_cc[VTIME] = 0;
 }
-
-#endif	/* !HAVE_CFMAKERAW */
