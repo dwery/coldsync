@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.27 2000-07-03 07:46:01 arensb Exp $
+ * $Id: conduit.c,v 2.1 2000-07-03 07:46:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
