@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.25 2001-09-08 00:21:58 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.26 2001-10-06 21:40:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -317,7 +317,9 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 	return 0;		/* Success */
 }
 
-/* XXX - Add v1.2 support: tell which version of DLP we're using */
+/* XXX - Ought to check version of DLP used by the Palm. If it's v1.2 or
+ * later, send it an argument saying which version of DLP we understand.
+ */
 int
 DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 	       struct dlp_sysinfo *sysinfo)
@@ -3000,18 +3002,9 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 
 /* DlpAddSyncLogEntry
  *
- * It appears that only the first entry takes: subsequent ones get
- * ignored. Hence, you have to transmit your entire log at once.
- * Bleah. Oh, and just for the record: no, you can't send multiple
- * arguments, each with one line of the log. That would have been just
- * a bit too easy :-(
- *
- * XXX - Could it be that if you send a non-NUL-terminated string, then
- * subsequent calls will append to the log?
- *
- * The maximum length for the message appears to be 2047 characters (plus
- * the terminating NUL) on a Palm III running PalmOS 3.0 (this may be
- * OS-dependent).
+ * Adds 'msg' to the sync log on the Palm. If 'msg' is longer than
+ * DLPC_MAXLOGLEN characters in length (not counting the final NUL), then
+ * only the last DLPC_MAXLOGLEN characters are sent.
  */
 int
 DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
@@ -3028,13 +3021,19 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> AddSyncLogEntry \"%s\"\n", msg);
 
-	/* If 'msg' is too long, keep only the last DLPC_MAXLOGLEN
-	 * characters, since that's more likely to contain any errors that
-	 * may have occurred at the end.
-	 */
+	/* Figure out the length of the message */
 	msglen = strlen(msg);
+	if (msglen <= 0)
+		return 0;		/* Don't bother with 0-length logs */
 	if (msglen > DLPC_MAXLOGLEN-1)
+	{
+		/* If 'msg' is too long, keep only the last
+		 * DLPC_MAXLOGLEN-1 characters, since that's more likely to
+		 * contain any errors that may have occurred at the end.
+		 */
 		msg += (msglen - DLPC_MAXLOGLEN + 1);
+		msglen = DLPC_MAXLOGLEN-1;
+	}
 
 	/* Fill in the header values */
 	header.id = (ubyte) DLPCMD_AddSyncLogEntry;
@@ -3042,8 +3041,12 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_AddSyncLogEntry_Msg;
-	argv[0].size = strlen(msg)+1;	/* Include the final NUL */
+	argv[0].size = msglen + 1;
 	argv[0].data = (ubyte *) msg;
+
+	DLPC_TRACE(3)
+		fprintf(stderr, "DlpAddSyncLogEntry: msg == [%.*s]\n",
+			(int) argv[0].size, argv[0].data);
 
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
