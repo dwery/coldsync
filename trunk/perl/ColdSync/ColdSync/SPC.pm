@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.24 2003-06-25 19:47:06 azummo Exp $
+# $Id: SPC.pm,v 1.25 2003-10-05 17:51:56 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.24 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.25 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -203,6 +203,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 
 @EXPORT = qw( spc_req *SPC
 	dlp_req
+	dlp_version
 	spc_get_dbinfo
 	spc_recv
 	spc_send
@@ -237,7 +238,6 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
 		
-
 # spc_init
 # Initialize a conduit for SPC.
 sub spc_init
@@ -326,6 +326,20 @@ sub spc_send
 }
 
 =head1 FUNCTIONS
+
+=head2 dlp_version
+
+	if( dlp_version >= 1.2 ) {
+		call_vfs_function();
+	}
+
+Returns the version of the DLP protocol supported by the PDA.
+
+=cut
+
+sub dlp_version {
+	return $HEADERS{'PDA-DLP-major'} + ($HEADERS{'PDA-DLP-minor'}/10.0);
+}
 
 =head2 dlp_req
 
@@ -1335,6 +1349,9 @@ more records are available.
 #'
 sub dlp_ReadNextRecInCategory($$) {
 	my ($dbh,$catno) = @_;
+
+	return undef unless dlp_version() >= 1.1;
+
 	my ($err, @argv) = dlp_req(DLPCMD_ReadNextRecInCategory,
 		{
 			'id' => dlpFirstArgID,
@@ -1361,6 +1378,9 @@ more modified records are available.
 #'
 sub dlp_ReadNextModifiedRecInCategory($$) {
 	my ($dbh,$catno) = @_;
+
+	return undef unless dlp_version() >= 1.1;
+
 	my ($err, @argv) = dlp_req(DLPCMD_ReadNextModifiedRecInCategory,
 		{
 			'id' => dlpFirstArgID,
@@ -1597,6 +1617,8 @@ sub dlp_SetDBInfo
 	my $dbh		= shift; # db handle		
 	my $dbinfo	= shift; # Hash with infos to set.
 
+	return undef unless dlp_version() >= 1.2;
+
 	# Check given values and set defaults.
 
 	$dbinfo->{'wClrDbFlags'}	= 0x0000 unless defined $dbinfo->{'wClrDbFlags'};
@@ -1801,6 +1823,8 @@ sub dlp_FindDBByCreatorType
 {
 	return unless defined wantarray;	# void context
 
+	return undef unless dlp_version() >= 1.2;
+
 	my ($creator,$type,$newsearch) = @_;
 
 	if( wantarray ) {
@@ -1891,6 +1915,8 @@ sub dlp_FindDBByName
 {
 	my $dbname = shift;
 	my $card = shift;
+
+	return undef unless dlp_version() >= 1.2;
 
 	# XXX The Palm OS 5 sdk DLCommon.h suggests that the FindByName request
 	# has a 4 byte header followed by a NUL terminated name. Of the 4 bytes,
