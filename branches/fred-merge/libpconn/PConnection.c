@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.22 2001-07-30 07:07:31 arensb Exp $
+ * $Id: PConnection.c,v 1.22.2.1 2001-10-11 00:04:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -55,7 +55,7 @@ extern int pconn_usb_open(PConnection *pconn,
  * new connection, or NULL in case of error.
  */
 PConnection *
-new_PConnection(char *fname,
+new_PConnection(char *device,
 		const int listenType,
 		const int protocol,
 		int promptHotSync)
@@ -88,7 +88,7 @@ new_PConnection(char *fname,
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
-		if (pconn_serial_open(pconn, fname, protocol, promptHotSync)
+		if (pconn_serial_open(pconn, device, protocol, promptHotSync)
 		    < 0)
 		{
 			free(pconn);
@@ -97,7 +97,7 @@ new_PConnection(char *fname,
 		return pconn;
 
 	    case LISTEN_NET:
-		if (pconn_net_open(pconn, fname, protocol, promptHotSync) < 0)
+		if (pconn_net_open(pconn, device, protocol, promptHotSync) < 0)
 		{
 			free(pconn);
 			return NULL;
@@ -109,7 +109,7 @@ new_PConnection(char *fname,
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
-		if (pconn_usb_open(pconn, fname, protocol, promptHotSync) < 0)
+		if (pconn_usb_open(pconn, device, protocol, promptHotSync) < 0)
 		{
 			free(pconn);
 			return NULL;
@@ -127,7 +127,7 @@ new_PConnection(char *fname,
 		return NULL;
 #endif
 	    case LISTEN_USB_M50x:
-	        if (pconn_usbm50x_open(pconn, fname, protocol, promptHotSync)
+	        if (pconn_usbm50x_open(pconn, device, protocol, promptHotSync)
 		    < 0)
 		{
 		    free(pconn);
