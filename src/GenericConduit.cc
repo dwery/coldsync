@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.40 2000-09-17 21:23:12 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.41 2000-09-17 21:37:29 arensb Exp $
  */
 
 /* Note on I/O:
@@ -180,7 +180,7 @@ GenericConduit::run()
 				/* backup() has already printed a
 				 * descriptive error message.
 				 */
-				fprintf(stderr, _("[generic]: Aborting.\n");
+				fprintf(stderr, _("[generic]: Aborting.\n"));
 				return -1;
 			}
 		}
