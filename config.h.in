@@ -175,7 +175,7 @@
     * 'strcasecmp()' and 'getopt()' declarations on Linux boxen using
     * glibc1 (e.g., Slackware 4.0).
     */
-#  if _LINUX_C_LIB_VERSION_MAJOR <= 5
+#  if defined(_LINUX_C_LIB_VERSION_MAJOR) && (_LINUX_C_LIB_VERSION_MAJOR <= 5)
 #    ifndef _POSIX_C_SOURCE
 #      define _POSIX_C_SOURCE  2
 #    endif	/* _POSIX_C_SOURCE */
