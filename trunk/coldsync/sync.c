@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.1 1999-03-11 03:26:24 arensb Exp $
+ * $Id: sync.c,v 1.2 1999-03-11 04:17:13 arensb Exp $
  */
 
 #include <stdio.h>
@@ -85,128 +85,6 @@
 
  */
 
-#if 0
-/* XXX - This does a rather generic sync. This ought to either call a
- * conduit, or be replaced by a call to a conduit.
- */
-int
-Cold_RecordSync(struct PConnection *pconn,	/* Connection to Palm */
-		struct Palm *palm,		/* Info about the Palm */
-		struct dlp_dbinfo *dbinfo,	/* Info about the database */
-		char *bakfname)			/* File to sync with */
-{
-	int err;
-	struct pdb *db;
-	ubyte dbh;
-	int done;
-
-fprintf(stderr, "--> Syncing record database %s with \"%s\"\n",
-	dbinfo->name, bakfname);
-
-	/* Load the database from disk */
-	if ((db = LoadDatabase(bakfname)) == NULL)
-	{
-		fprintf(stderr, "Can't load database file \"%s\". "
-			"Aborting sync.\n",
-			bakfname);
-		return -1;
-	}
-
-	/* Tell the Palm we're synchronizing a database */
-	err = DlpOpenConduit(pconn);
-	if (err != DLPSTAT_NOERR)
-	{
-		err = -1;
-		goto abort;
-	}
-
-	/* Open the database */
-	/* XXX - card #0 is hardwired */
-	err = DlpOpenDB(pconn, 0, dbinfo->name,
-			DLPCMD_MODE_READ |
-			DLPCMD_MODE_WRITE /*| DLPCMD_MODE_SECRET*/,
-			&dbh);
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:
-		break;
-	    default:
-		fprintf(stderr, "*** Can't open %s: %d\n", dbinfo->name, err);
-		err = -1;
-		goto abort;
-	}
-
-	/* XXX - Read and update the AppInfo block */
-	/* XXX - Read and update the sort block */
-	/* XXX - DlpReadNextModifiedRec() */
-	/* XXX - Actually, ought to find out whether this is a "slow" or a
-	 * "fast" sync, first. If it's a "slow" sync, can't trust the sync
-	 * flags, and need to read every record. Also, ought to do
-	 * something intelligent wrt the creation/modification/backup times
-	 */
-	done = 0;
-	while (!done)
-	{
-extern int dlpc_debug;
-		struct dlp_recinfo recinfo;
-		const ubyte *rec_data;
-
-dlpc_debug = 10;
-		err = DlpReadNextModifiedRec(pconn,
-					     dbh,
-					     &recinfo,
-					     &rec_data);
-		switch (err)
-		{
-		    case DLPSTAT_NOERR:
-			break;
-		    case DLPSTAT_NOTFOUND:
-			/* XXX - Actually, at this point, it would make
-			 * more sense to just jump to the end with a
-			 * successful exit status.
-			 */
-			done = 1;	/* No more modified records */
-			break;
-		    default:
-			fprintf(stderr, "##### DlpReadNextModifiedRec returned %d\n", err);
-			err = -1;
-			goto abort;
-		}
-	}
-
-	/* CleanUpDatabase */
-	if ((err = DlpCleanUpDatabase(pconn, dbh)) != DLPSTAT_NOERR)
-	{
-		fprintf(stderr, "##### Error cleaning up database\n");
-		err = -1;
-		goto abort;
-	}
-
-	/* XXX - HotSync calls ReadOpenDBInfo() and ReadRecordIDList() Why?
-	 * Presumably to find out which records have been deleted without
-	 * archiving and/or to see which ones have been added on the
-	 * desktop?
-	 */
-	/* ResetSyncFlags */
-	if ((err = DlpResetSyncFlags(pconn, dbh)) != DLPSTAT_NOERR)
-	{
-		fprintf(stderr, "##### Error resetting sync flags\n");
-		err = -1;
-		goto abort;
-	}
-
-  abort:
-	/* Close the database */
-	if (dbh != 0xffff)
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
-
-	if (db != NULL)
-		free_pdb(db);
-
-	return err;
-}
-#endif	/* 0 */
-
 int
 SlowSync(struct PConnection *pconn,
 	 struct dlp_dbinfo *remotedb,
@@ -226,27 +104,19 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 	/* XXX - Card #0 shouldn't be hardwired. It probably ought to be a
 	 * field in dlp_dbinfo or something.
 	 */
-if (remotedb->db_flags & DLPCMD_DBFLAG_OPEN)
-{
-fprintf(stderr, "This database is open. Not opening for writing\n");
+	if (remotedb->db_flags & DLPCMD_DBFLAG_OPEN)
+		fprintf(stderr, "This database is open. Not opening for writing\n");
 	err = DlpOpenDB(pconn, 0, remotedb->name,
 			DLPCMD_MODE_READ |
+			(remotedb->db_flags & DLPCMD_DBFLAG_OPEN ?
+			 0 :
+			 DLPCMD_MODE_WRITE) |
 			DLPCMD_MODE_SECRET,
-				/* XXX - Should there be a flag to
-				 * determine whether we read secret records
-				 * or not? */
+				/* "Secret" records aren't actually secret.
+				 * They're actually just the ones marked
+				 * private, and they're not at all secret.
+				 */
 			&dbh);
-} else {
-fprintf(stderr, "This database isn't open. Opening for writing\n");
-	err = DlpOpenDB(pconn, 0, remotedb->name,
-			DLPCMD_MODE_READ |
-			DLPCMD_MODE_WRITE |
-			DLPCMD_MODE_SECRET,
-				/* XXX - Should there be a flag to
-				 * determine whether we read secret records
-				 * or not? */
-			&dbh);
-}
 	switch (err)
 	{
 	    case DLPSTAT_NOERR:
@@ -258,14 +128,14 @@ fprintf(stderr, "This database isn't open. Opening for writing\n");
 		/* Can't complete this particular operation, but it's not a
 		 * show-stopper. The sync can go on.
 		 */
-		fprintf(stderr, "Cold_RecordBackup: Can't open \"%s\": %d\n",
+		fprintf(stderr, "SlowSync: Can't open \"%s\": %d\n",
 			remotedb->name, err);
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync can't
 		 * continue.
 		 */
-		fprintf(stderr, "Cold_RecordBackup: Can't open \"%s\": %d\n",
+		fprintf(stderr, "SlowSync: Can't open \"%s\": %d\n",
 			remotedb->name, err);
 		return -1;
 	}
@@ -310,29 +180,34 @@ fprintf(stderr, "This database isn't open. Opening for writing\n");
 		if (localrec == NULL)
 		{
 			/* It doesn't exist. */
-			/* XXX - Finish this comment */
+			/* XXX - This record is new. Mark it as modified in
+			 * the remote database.
+			 */
 			fprintf(stderr, "Can't find a local record with ID 0x%08lx\n",
 				remoterec->uniqueID);
+		} else {
+			/* XXX - The record exists. Do a byte-by-byte
+			 * comparison with the local copy. If they're
+			 * identical, that's fine. Otherwise, the record's
+			 * been modified.
+			 */
+			printf("Local Record %d:\n", i);
+			printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
+			printf("\tattributes: 0x%02x ",
+			       localrec->attributes);
+			/* XXX - Need flag #defines */
+			if (localrec->attributes & 0x80)
+				printf("DELETED ");
+			if (localrec->attributes & 0x40)
+				printf("DIRTY ");
+			if (localrec->attributes & 0x20)
+				printf("BUSY ");
+			if (localrec->attributes & 0x10)
+				printf("SECRET ");
+			if (localrec->attributes & 0x08)
+				printf("ARCHIVED ");
+			printf("\n");
 		}
-
-else {
-		printf("Local Record %d:\n", i);
-		printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
-		printf("\tattributes: 0x%02x ",
-		       localrec->attributes);
-		/* XXX - Need flag #defines */
-		if (localrec->attributes & 0x80)
-			printf("DELETED ");
-		if (localrec->attributes & 0x40)
-			printf("DIRTY ");
-		if (localrec->attributes & 0x20)
-			printf("BUSY ");
-		if (localrec->attributes & 0x10)
-			printf("SECRET ");
-		if (localrec->attributes & 0x08)
-			printf("ARCHIVED ");
-		printf("\n");
-}
 	}
 
 if (remotedb->db_flags & DLPCMD_DBFLAG_OPEN)
