@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.6 2000-05-20 16:31:51 arensb Exp $
+# $Id: Makefile.PL,v 1.7 2000-08-08 15:47:46 arensb Exp $
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -90,6 +90,17 @@ sub post_initialize
 	{
 		$self->{$var} =~ s/^\Q$self->{PREFIX}\E/\${PREFIX}/;
 	}
+}
+
+# libscan
+# Takes a path to a file that is found by init_dirscan and returns
+# false if we don't want to include this file in the library. Mainly
+# used to exclude RCS, CVS, and SCCS directories from installation.
+sub libscan {
+	my($self,$path) = @_;
+	return '' if $path =~ m:\b(RCS|CVS|SCCS)\b: ;
+	return '' if $path =~ /(\.bak|~)$/;
+	$path;
 }
 
 1;
