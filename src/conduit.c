@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.36 2001-03-29 05:36:32 arensb Exp $
+ * $Id: conduit.c,v 2.36.8.1 2001-10-11 04:49:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,13 +48,14 @@
 
 /* Bleah. AIX doesn't have WCOREDUMP */
 #ifndef WCOREDUMP
-# define WCOREDUMP(status)	0
+#  define WCOREDUMP(status)	0
 #endif	/* WCOREDUMP */
 
 #include "conduit.h"
 #include "spc.h"
 #include "pref.h"
 #include "cs_error.h"
+#include "symboltable.h"
 
 #define MAX_SANE_FD	32	/* Highest-numbered file descriptor one
 				 * might get in a sane universe. Anything
@@ -783,6 +784,10 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				/* XXX - Send a "bad request" header to the
 				 * child.
 				 */
+				Error(_("%s: Error header wrong length %ld."),
+				      "run_conduit",err );
+				Perror("read");
+				goto abort;
 			}
 
 			/* Very crude parsing of the received header */
@@ -1179,7 +1184,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
-					conduit->path);
+				     (conduit == NULL ||
+				      conduit->path == NULL ? "(null)" :
+				      conduit->path));
 			}
 		}
 
@@ -1237,7 +1244,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
-					conduit->path);
+				     (def_conduit == NULL ||
+				      def_conduit->path == NULL ? "(null)" :
+				      def_conduit->path));
 			}
 		}
 	}
@@ -1803,6 +1812,8 @@ cond_readstatus(FILE *fromchild)
 	}
 
 	/* XXX - Do something intelligent */
+	fprintf(stderr, "%s\n", errmsg);
+				/* XXX add conduit name here.  */
 
 	return errcode; 
 }
