@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.26 2004-11-01 17:48:30 azummo Exp $
+# $Id: AUTHORS,v 2.27 2004-11-02 00:19:13 christophe Exp $
 
 Authors and Contributors:
 
@@ -53,6 +53,7 @@ Christophe Beauregard <christophe.beauregard@sympatico.ca>: assorted hackery
 Ferry Hendrikx <ferry.hendrikx@portal.govt.nz>: PDA side HotSync code.
 Allan Neal <allanneal@bellsouth.net>: todo-text patch
 Wim Heirman <wim.heirman@elis.ugent.be>: SyncType patch for conduit.c
+Andrzej Dzik <Andrzej.Dzik@ekspert.szczecin.pl>: assorted patches
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
