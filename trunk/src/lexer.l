@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.31 2001-01-30 08:12:25 arensb Exp $
+ * $Id: lexer.l,v 2.32 2001-04-01 07:15:32 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -347,6 +347,14 @@ ID		[-a-zA-Z_0-9]
 		return yytext[0];
 	}
 
+%%
+
+#if 0
+/* XXX - This used to be the last rule, just a few lines above. It has
+ * since been removed because it causes a segfault when you have both
+ * /usr/local/etc/coldsync.conf and ~/.coldsyncrc . This may become an
+ * issue again once it's possible to #include files.
+ */
 <<EOF>>	{
 	/* XXX - This will break if and when .coldsyncrc can include other
 	 * files. See flex(1), but bear in mind that its file-inclusion
@@ -357,8 +365,7 @@ ID		[-a-zA-Z_0-9]
 	yy_delete_buffer(YY_CURRENT_BUFFER);
 	yyterminate();
 	}
-
-%%
+#endif
 
 void
 lex_expect(const int state)
