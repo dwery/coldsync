@@ -1,3 +1,4 @@
+- Document CS_DOTPALM, CS_PALMUSERNAME, CS_PALMSERIALNUM and CS_LOCALUSERNAME symbols. 
 - Document CS-AutoLoad and CS-AutoSave conduit headers/arguments
 - Add and document "init" type conduits.
 - Document the SyncType conduit header.
@@ -56,7 +57,7 @@
 - PConnection_net.c uses tini_slp() et al. even when it isn't
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
-- Perhaps initialize $CONDUIT_PATH to $PATH (from the environment).
+- Perhaps initialize $CS_CONDUIT_PATH to $PATH (from the environment).
 - It'd be nice to add types to distinguish between bytes and letters,
   and between arrays of arbitrary data and strings of characters. This
   is for i18n and for the benefit of Japanese users and such.
@@ -302,7 +303,7 @@
   properly. Make sure to use "#!/bin/sh" and not "#! /bin/sh", as per
   portability comments in 'automake' documentation.
 - No-brainer configuration: make "conduit -config" part of the spec.
-  Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
+  Allow the user to add "CS_CONDUITDIR=/conduit/dir" to .coldsyncrc.
   Then, when ColdSync runs, it runs "/conduit/dir/foo -config" for
   every conduit in /conduit/dir and saves the results in
   /conduit/dir/cache. /conduit/dir/cache is then read in, so that the
