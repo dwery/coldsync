@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.50 2000-12-16 19:14:33 arensb Exp $
+ * $Id: config.c,v 1.51 2000-12-16 20:30:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -780,6 +780,10 @@ get_hostid(udword *hostid)
 	 * address types (e.g., IPv6). Maybe just hash them down to 4
 	 * bytes. Hm... actually, that might work for all address types, so
 	 * no need to test for AF_INET specifically.
+	 *
+	 * Looking at the BIND source, it looks as if gethostbyname() only
+	 * returns AF_INET addresses. gethostbyname2(), which appeared in
+	 * BIND 4.9.4, takes an address family argument.
 	 */
 	if (myaddr->h_addrtype != AF_INET)
 	{
