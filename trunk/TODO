@@ -68,7 +68,7 @@
   is read-only (ROM), don't open it for writing. In fact, Backup()
   probably shouldn't open databases read-write at all.
 - Maybe add (optional) support for long arguments with libgnugetopt?
-- FreeBSD's /bin/sh is still broken (as of 3.4):
+- FreeBSD's /bin/sh is still broken (as of 4.0):
 	echo "before"
 	for dir in a b c; do
 		test "$dir" = "." && echo "found dot"
@@ -79,7 +79,8 @@
   carried upwards through the parse tree.
 	Until this gets fixed, I don't want to use 'automake'.
 - Write a 'bool has_db_extension(char *fname)' function, for convenience.
-- Should all of the .h files be lumped under #include <palm/foo.h> ?
+- Should all of the library .h files be lumped under #include
+  <palm/foo.h> ?
 - Test parser with old lex and yacc. See if it's worth supporting
   them, or whether it's easier to just require flex.
 - Add Makefile stuff for rerunning 'autoconf' when necessary. See node
@@ -115,15 +116,6 @@
   received the final ACK. If you give the data time to drain, it
   appears to work fine, though. Maybe it's just a problem with the tty
   devices.
-- Installation: allow specifying a separate directory for
-  installation, for the benefit of 'depot' and 'stow'. That is, it
-  should be possible to have a conduit installed as
-  /usr/local/stow/coldsync-1.0.0/libexec/myconduit, but at runtime
-  it'll look for the conduit as /usr/local/libexec/myconduit.
-	Probably best to just define
-		BINDIR =	${PREFIX}/bin
-		INSTBINDIR =	${PREFIX}/${STOW}/bin
-  or some such.
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
 - Fix error messages to give some idea which database is involved.
@@ -149,6 +141,10 @@
   $record->{name} eq "Firstname Lastname", then update the e-mail
   address.
 - Sync the AppInfo block. See comments in "GenericConduit.cc".
+	No, it's probably best to just define a conduit type for
+  syncing the AppInfo block, and pass the buck to that conduit.
+  There's really no good way to sync the AppInfo block in a generic
+  fashion.
 - If I ever find a database that uses sort blocks, for testing, it
   might be a good idea to sync them as well.
 - Perhaps status codes 6xx can be used for machine-readable
@@ -159,9 +155,6 @@
   portability comments in 'automake' documentation.
 - Bug: For now should complain if extraneous arguments are given on
   command line.
-- Include some conduits (including "todo-dump" and "mh-aliases") in
-  the distribution.
-- Include a sample .coldsyncrc in the distribution.
 - Add ColdSync.pm and friends to the BSD port.
 - No-brainer configuration: make "conduit -config" part of the spec.
   Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
@@ -199,7 +192,6 @@
 - In .coldsyncrc, should be able to associate a name (or alias) with a
   pda block. In addition, should be able to specify that a given
   conduit block only applies to a given PDA.
-- Why is syncing with the PalmPilot Pro so flaky? Dirty connectors?
 - During CMP connection, if the Palm suggests a speed and the
   .coldsyncrc doesn't, should just go with what the Palm suggests.
 - Consider moving the anal retentive CFLAGS from the top of
@@ -265,9 +257,6 @@
 - If a memo dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
-- Go through all Perl code and replace {"foo"} with {foo} (except
-  where hash key isn't a single word.
-- ColdSync.pm: "-config" prints default type as "/" instead of "*/*".
 - Possible API for "Sync" conduits: run generic conduit. Run an
   external program. Then rerun the generic conduit.
 - Add "-A" flag: if present, then the AppInfo block is synced as
@@ -284,8 +273,6 @@
   which records will be restored, etc.
 	Ought to be able to delete records.
 	A GUI front end would be nice.
-- Grab "mkinstalldirs" from Emacs distro. Use it to create any
-  necessary installation directories.
 - Parser: if user specifies multiple "path", "type", etc. directives
   in a block, the old value is not freed properly. This should also
   generate a warning.
