@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.32 2000-10-22 08:36:33 arensb Exp $
+ * $Id: coldsync.h,v 1.33 2000-11-04 22:59:59 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -19,7 +19,7 @@
 #include "pdb.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
-#define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.rc"
+#define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
 
 extern int sync_trace;		/* Debugging level for sync-related stuff */
 extern int misc_trace;		/* Debugging level for miscellaneous stuff */
@@ -286,13 +286,19 @@ typedef struct pda_block
 					 * other pda_block matches.
 					 */
 
-struct config
-{
+/* sync_config
+ * Holds everything that needs to be known once we're ready to synchronize
+ * a particular Palm, belonging to a particular user. This will hold a lot
+ * of the global variables, below.
+ */
+struct sync_config {
+	/* XXX */
 	listen_block *listen;		/* List of listen blocks */
 	pda_block *pda;			/* List of known PDAs */
 	conduit_block *conduits;	/* List of all conduits */
 };
 
+/* XXX - A lot of these variables need to be rethought */
 extern int need_slow_sync;
 extern udword hostid;			/* This host's ID */
 					/* XXX - This shouldn't be global */
@@ -301,26 +307,26 @@ extern char user_fullname[DLPCMD_USERNAME_LEN];
 					/* Owner's full name */
 
 /* Configuration variables */
-/* XXX - There's probably a better place to put them */
+/* XXX - There's probably a better place to put them. 'sync_config',
+ * perhaps?
+ */
 extern char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 extern char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 extern char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 extern char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 extern char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
-extern struct config config;		/* Main configuration */
-extern struct userinfo userinfo;	/* Information about the user
-					 * whose Palm this is */
+extern struct sync_config *sync_config;
 
 /* Function prototypes */
-extern struct config *new_config();
-extern void free_config(struct config *config);
-extern int parse_config(const char *fname, struct config *config);
-extern listen_block *new_listen_block();
+extern struct sync_config *new_sync_config(void);
+extern void free_sync_config(struct sync_config *config);
+extern int parse_config_file(const char *fname, struct sync_config *config);
+extern listen_block *new_listen_block(void);
 extern void free_listen_block(listen_block *l);
-extern conduit_block *new_conduit_block();
+extern conduit_block *new_conduit_block(void);
 extern void free_conduit_block(conduit_block *c);
-extern pda_block *new_pda_block();
+extern pda_block *new_pda_block(void);
 extern void free_pda_block(pda_block *p);
 extern int append_pref_desc(conduit_block *cond,
 			    const udword creator,
@@ -333,16 +339,21 @@ extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
 extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
-extern int run_mode_Standalone();
-extern int run_mode_Backup();
-extern int run_mode_Restore();
+extern int run_mode_Standalone(int argc, char *argv[]);
+extern int run_mode_Backup(int argc, char *argv[]);
+extern int run_mode_Restore(int argc, char *argv[]);
 extern int backup(struct PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
 extern int full_backup(struct PConnection *pconn,
-		       struct Palm *palm);
-extern int Restore(struct PConnection *pconn,
-		  struct Palm *palm);
+		       struct Palm *palm,
+		       const char *backupdir);
+extern int restore_file(struct PConnection *pconn,
+			struct Palm *palm,
+			const char *fname);
+extern int restore_dir(struct PConnection *pconn,
+		       struct Palm *palm,
+		       const char *dirname);
 extern int InstallNewFiles(struct PConnection *pconn,
 			   struct Palm *palm,
 			   char *newdir,
@@ -367,7 +378,7 @@ extern int append_dbentry(struct Palm *palm,
 			  struct pdb *pdb);
 extern char snum_checksum(const char *snum, int len);
 extern int open_tempfile(char *name_template);
-extern int get_config(int argc, char *argv[]);
+extern int load_config(void);
 extern int parse_args(int argc, char *argv[]);
 extern int add_to_log(const char *msg);
 
