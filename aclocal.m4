@@ -4,7 +4,7 @@
 #
 #	Copyright (C) 1999, Andrew Arensburger
 #
-# $Id: aclocal.m4,v 1.2 2000-12-16 23:13:05 arensb Exp $
+# $Id: aclocal.m4,v 1.3 2000-12-23 11:30:24 arensb Exp $
 
 # XXX - This won't compile on systems that use 'struct direct'. Then
 # again, is that bad?
@@ -58,6 +58,8 @@ AC_DEFUN(CS_CHECK_GNU_PROGS,dnl
  fi])
 
 dnl CS_CHECK_TYPE(TYPE, DEFAULT, HEADERS)
+dnl Check for TYPE in non-standard places: includes HEADERS. If TYPE cannot
+dnl be found, define it to be DEFAULT.
 AC_DEFUN(CS_CHECK_TYPE,
 [AC_REQUIRE([AC_HEADER_STDC])dnl
 AC_MSG_CHECKING(for $1)
