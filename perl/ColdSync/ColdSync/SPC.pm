@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.23 2003-06-24 12:34:47 azummo Exp $
+# $Id: SPC.pm,v 1.24 2003-06-25 19:47:06 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.23 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.24 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -231,6 +231,8 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_ReadNextModifiedRecInCategory
 	dlp_ReadDBList
 	dlp_ResetSyncFlags
+	dlp_FindDBByCreatorType
+	dlp_FindDBByName
 );
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
@@ -1769,6 +1771,186 @@ sub dlp_ResetSyncFlags
 			});
 
 	return $err;
+}
+
+=head2 dlp_FindDBByCreatorType
+
+	my $dbinfo = &dlp_FindDBByCreatorType( $creator, $type );
+	my $maildb = &dlp_FindDBByCreatorType( "mail", "DATA", 0 );
+	my @books = &dlp_FindDBByCreatorType( undef, "zTXT" );
+
+Fetches a database by a given C<$creator> and C<$type> pair. If either
+creator or type are undefined, the argument will be taken as a wildcard.
+
+If called in a scalar context, only the first match is returned. If called
+in an array context, all matches are returned (an array of hashes).
+Obviously this might be an expensive process if the wildcards match a
+lot of items (i.e. undef,DATA).
+
+A third argument, C<$newsearch>, will cause the search to be restarted
+from scratch when true. If zero, the search will be continued from
+the last position.  C<$newsearch> is implied in array context or when
+missing/undefined.
+
+All the usual database info fields are returned (see dlp_ReadDBList)
+along with the C<cardno> and C<localid> fields.
+
+=cut
+#'
+sub dlp_FindDBByCreatorType
+{
+	return unless defined wantarray;	# void context
+
+	my ($creator,$type,$newsearch) = @_;
+
+	if( wantarray ) {
+		# in array context, we simply call ourself repeatedly in scalar
+		# context, building up the array as we go
+		my @retval;
+		my $ns = 1;
+		while( my $dbinfo = dlp_FindDBByCreatorType( $creator, $type, $ns ) ) {
+			push @retval, $dbinfo;
+			$ns = 0;
+		}
+		return @retval;
+	}
+
+	my $retval = {};
+
+	$newsearch = 1 unless defined $newsearch; # implied if not provided
+	$newsearch = $newsearch ? 0x80 : 0;	# do the magic constant now...
+
+	my ($err, @argv) = dlp_req(DLPCMD_FindDB,
+		{
+			'id' => dlpFirstArgID + 2,
+			'data' => pack("C C a4 a4", 0x80, $newsearch, $type, $creator),
+		});
+
+	return undef unless defined $err;
+	return undef if $err != 0;
+
+	foreach (@argv) {
+		if($_->{'id'} == dlpFirstArgID) {
+			next unless length $_->{'data'} > 10;	# arbitrary, but enough
+			my $openref = 0;
+			my $reserved = 0;
+			($retval->{cardno},
+			 $reserved,
+			 $retval->{localid},
+			 $openref,
+			 $retval->{size},
+			 $retval->{misc_flags},
+			 $retval->{db_flags},
+			 $retval->{type},
+			 $retval->{creator},
+			 $retval->{version},
+			 $retval->{modnum},
+			 $retval->{ctime}{year},
+			 $retval->{ctime}{month},
+			 $retval->{ctime}{day},
+			 $retval->{ctime}{hour},
+			 $retval->{ctime}{minute},
+			 $retval->{ctime}{second},
+			 $retval->{mtime}{year},
+			 $retval->{mtime}{month},
+			 $retval->{mtime}{day},
+			 $retval->{mtime}{hour},
+			 $retval->{mtime}{minute},
+			 $retval->{mtime}{second},
+			 $retval->{baktime}{year},
+			 $retval->{baktime}{month},
+			 $retval->{baktime}{day},
+			 $retval->{baktime}{hour},
+			 $retval->{baktime}{minute},
+			 $retval->{baktime}{second},
+			 $retval->{db_index},
+			 $retval->{name},
+			) = unpack("C C N N C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n A*",
+				$_->{'data'});
+		}
+	}
+
+	return undef unless exists $retval->{'name'};
+	return $retval;
+}
+
+=head2 dlp_FindDBByName
+
+	my $dbinfo = &dlp_FindDBByName( $dbname, $card );
+	my $maildb = &dlp_FindDBByName( 'MailDB' );
+
+Fetches database info by a given database name C<$dbname> on the specified
+C<$card>. If C<$card> is undefined, zero is assumed.
+
+All the usual database info fields are returned (see dlp_ReadDBList)
+along with the C<cardno> and C<localid> fields.
+
+=cut
+#'
+sub dlp_FindDBByName
+{
+	my $dbname = shift;
+	my $card = shift;
+
+	# XXX The Palm OS 5 sdk DLCommon.h suggests that the FindByName request
+	# has a 4 byte header followed by a NUL terminated name. Of the 4 bytes,
+	# only two are used (bytes 0 and 2). Yeah, right. Either
+	# the comments are wrong or Palm forgot those details in the implementation
+	# because a 2 byte header works and a 4 byte header doesn't work.
+
+	my ($err, @argv) = dlp_req(DLPCMD_FindDB,
+		{
+			'id' => dlpFirstArgID,
+			'data' => pack("CC a*x", 0x80, $card, $dbname ),
+		});
+
+	return undef unless defined $err;
+	return undef if $err != 0;
+
+	my $retval = {};
+	foreach (@argv) {
+		if($_->{'id'} == dlpFirstArgID) {
+			next unless length $_->{'data'} > 10;	# arbitrary, but enough
+			my $openref = 0;
+			my $reserved = 0;
+			($retval->{cardno},
+			 $reserved,
+			 $retval->{localid},
+			 $openref,
+			 $retval->{size},
+			 $retval->{misc_flags},
+			 $retval->{db_flags},
+			 $retval->{type},
+			 $retval->{creator},
+			 $retval->{version},
+			 $retval->{modnum},
+			 $retval->{ctime}{year},
+			 $retval->{ctime}{month},
+			 $retval->{ctime}{day},
+			 $retval->{ctime}{hour},
+			 $retval->{ctime}{minute},
+			 $retval->{ctime}{second},
+			 $retval->{mtime}{year},
+			 $retval->{mtime}{month},
+			 $retval->{mtime}{day},
+			 $retval->{mtime}{hour},
+			 $retval->{mtime}{minute},
+			 $retval->{mtime}{second},
+			 $retval->{baktime}{year},
+			 $retval->{baktime}{month},
+			 $retval->{baktime}{day},
+			 $retval->{baktime}{hour},
+			 $retval->{baktime}{minute},
+			 $retval->{baktime}{second},
+			 $retval->{db_index},
+			 $retval->{name},
+			) = unpack("C C N N C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n A*",
+				$_->{'data'});
+		}
+	}
+
+	return undef unless exists $retval->{'name'};
+	return $retval;
 }
 
 1;
