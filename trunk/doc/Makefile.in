@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.9 2000-01-22 05:05:24 arensb Exp $
+# $Id: Makefile.in,v 1.10 2000-01-22 12:54:09 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -14,7 +14,7 @@ MAN8DIR =	${MANDIR}/man8
 INFODIR =	@infodir@
 
 INSTALL =	@INSTALL@
-INSTALLARGS =	-m 555
+INSTALLARGS =	-m 444
 
 MAKEINFO =	@MAKEINFO@
 TEXI2DVI =	@TEXI2DVI@
@@ -23,15 +23,19 @@ TEXI2HTML =	@TEXI2HTML@
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 
-INFOFILES =	libpalm.info \
-		pdb.info \
-		conduits.info
-DVIFILES =	libpalm.dvi \
-		pdb.dvi \
-		conduits.dvi
-PSFILES =	libpalm.ps \
-		pdb.ps \
-		conduits.ps
+# XXX - 'libpalm' should be rearranged before it's installed by
+# default.
+# INFOFILES =	libpalm.info
+INFOFILES =	conduits.info \
+		pdb.info
+
+# DVIFILES =	libpalm.dvi
+DVIFILES =	conduits.dvi \
+		pdb.dvi
+
+# PSFILES =	libpalm.ps
+PSFILES =	conduits.ps \
+		pdb.ps
 
 # XXX - Should we include HTML documentation in the distribution? If
 # nothing else, it might be nice to set things up so that you can.
@@ -93,7 +97,7 @@ conduits_toc.html:	conduits.texi
 
 depend:
 
-install::	coldsync.8
+install::	coldsync.8 ${INFOFILES}
 	if test ! -d ${MANDIR}; then \
 		mkdir ${MANDIR}; \
 		chmod 755 ${MANDIR}; \
@@ -102,7 +106,11 @@ install::	coldsync.8
 		mkdir ${MAN8DIR}; \
 		chmod 755 ${MAN8DIR}; \
 	fi
-	${INSTALL} ${INSTALLARGS} coldsync.8 ${MAN8DIR}
+	${INSTALL} ${INSTALLARGS} coldsync.8 ${MAN8DIR}/coldsync.8
+
+	for f in ${INFOFILES}; do \
+		${INSTALL} ${INSTALLARGS} $$f ${INFODIR}/$$f; \
+	done
 
 distdir-core:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
