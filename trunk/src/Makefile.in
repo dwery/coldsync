@@ -1,5 +1,10 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.6 1999-08-25 09:53:10 arensb Exp $
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.7 1999-09-04 20:52:35 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -51,6 +56,7 @@ SRCS =		PConnection.c \
 		archive.c \
 		backup.c \
 		restore.c \
+		install.c \
 		config.c \
 		handledb.c \
 		log.c \
@@ -72,6 +78,7 @@ OBJS =		PConnection.o \
 		archive.o \
 		backup.o \
 		restore.o \
+		install.o \
 		config.o \
 		handledb.o \
 		log.o \
@@ -155,8 +162,9 @@ distclean:
 spotless:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
 
+# XXX - Bleah. This causes config.o to be rebuilt every time.
 # Egcs's toupper() is broken. Print a message about this.
-config.o:	config.o.warning
-config.o.warning:
-	@echo "	If you're using egcs, ignore the warning about"
-	@echo "	\"ANSI C forbids braced-groups within expressions\""
+# config.o:	config.o.warning
+# config.o.warning:
+# 	@echo "	If you're using egcs, ignore the warning about"
+# 	@echo "	\"ANSI C forbids braced-groups within expressions\""
