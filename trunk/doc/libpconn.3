@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: libpconn.3,v 1.1 2001-09-05 07:36:39 arensb Exp $
+.\" $Id: libpconn.3,v 1.2 2001-11-12 00:08:56 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -60,7 +60,7 @@ includes the following functions, which are described in their
 respective manual pages:
 .Pp
 .Ft PConnection *
-.Fn new_PConnection "char *fname" "int listenType" "int promptHotSync"
+.Fn new_PConnection "char *fname" "int listenType" "const unsigned short flags"
 
 .Ft int
 .Fn PConnClose "PConnection *pconn"
