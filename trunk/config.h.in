@@ -58,6 +58,9 @@
 /* Define if you have the memcpy function */
 #undef HAVE_MEMCPY
 
+/* Define if you have the mkstemp function */
+#undef HAVE_MKSTEMP
+
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
 
