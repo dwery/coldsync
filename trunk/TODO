@@ -10,7 +10,6 @@
   one can try to figure out what to do next (usually sync). Otherwise,
   wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
   daemon, or whatever.
-- A lot of assertion-checking would probably be a Good Thing.
 - KDE korganizer just uses vCalendar format for both events and todo
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
@@ -118,7 +117,6 @@
   devices.
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
-- Fix error messages to give some idea which database is involved.
 - With BSD make, always reruns 'ar' in the library directories. Why?
   According to 'make -dm', it seems to recognize the target as a
   library.
@@ -265,7 +263,10 @@
 - Bug report:
 	When a non-default PDA is listed first, allegedly it gets the
   PDAFL_DEFAULT flag set (as do any subsequent default PDAs).
-	(Unconfirmed as of Thu Jun 15 03:00:04 2000)
+	Haven't been able to reproduce with
+	ColdSync 1.2.3, FreeBSD 4.0
+	ColdSync 1.2.0, FreeBSD 4.0
+	ColdSync 1.2.0, Redhat 6.2
 - When a record is moved from one category to another on the Palm, it
   isn't updated on the desktop.
 - Describe 'pref:' statements in the manual.
@@ -273,3 +274,17 @@
 - Fix ColdSync.pm to deal with preferences on stdin.
 - Allow something like "ForceInstall;" line in .coldsyncrc, to have
   the same effect as -I command-line option.
+- Consider an optimization: if the local database hasn't been
+  modified, don't write it back to disk. This reduces the size of
+  daily backups by a trivial amount, but will also make a couple of
+  users happy.
+	The obvious way to do this is to add a 'Bool dirty' flag to
+  struct pdb. It is false initially. Fix the PDB manipulation
+  functions such that they set the dirty flag if they modify the
+  database.
+	At the end of the local sync, if the dirty flag is still
+  false, don't bother writing the database to disk.
+- Go through GenericConduit.cc line by line. Make sure that the
+  category is considered part of the record everywhere, especially
+  when one of them is dirty. Yes, changing the category does mark the
+  record as being dirty.
