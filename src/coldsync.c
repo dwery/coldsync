@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.94 2001-04-15 05:37:45 arensb Exp $
+ * $Id: coldsync.c,v 1.95 2001-05-06 07:19:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -899,7 +899,7 @@ run_mode_Standalone(int argc, char *argv[])
 		switch (cs_errno)
 		{
 		    case CSE_NOCONN:
-			Error(_("Lost connection with Palm."));
+			Error(_("Lost connection to Palm."));
 			free_Palm(palm);
 			return -1;
 
@@ -998,7 +998,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* See how the above loop terminated */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	}
@@ -1055,7 +1055,7 @@ run_mode_Standalone(int argc, char *argv[])
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	    case CSE_NOCONN:
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	    default:
@@ -1225,7 +1225,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* See how the above loop terminated */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	}
@@ -2315,7 +2315,7 @@ run_mode_Daemon(int argc, char *argv[])
 					fprintf(stderr,
 						"numeric uid [%s] not found\n",
 						palment->luser);
-				Error(_("Unknown user/uid: \"%s\""),
+				Error(_("Unknown user/uid: \"%s\"."),
 				      palment->luser);
 				/* XXX - Write reason to Palm log */
 				free_Palm(palm);
@@ -2615,7 +2615,7 @@ run_mode_Daemon(int argc, char *argv[])
 		switch (cs_errno)
 		{
 		    case CSE_NOCONN:
-			Error(_("Lost connection with Palm."));
+			Error(_("Lost connection to Palm."));
 			free_Palm(palm);
 			return -1;
 		    default:
@@ -2711,7 +2711,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* See how the above loop terminated */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	}
@@ -2760,7 +2760,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* See how the above loop terminated */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	}
@@ -2925,7 +2925,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* See how the above loop terminated */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection with Palm."));
+		Error(_("Lost connection to Palm."));
 		free_Palm(palm);
 		return -1;
 	}
