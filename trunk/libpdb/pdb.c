@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.27 2000-11-14 16:23:28 arensb Exp $
+ * $Id: pdb.c,v 1.28 2000-12-10 00:27:03 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -1256,13 +1256,14 @@ new_Record(const ubyte flags,
 
 	PDB_TRACE(6)
 	{
-		fprintf(stderr, "New_Record: Creating new record:\n");
+		fprintf(stderr, "new_Record: Creating new record:\n");
 		fprintf(stderr, "\tflags == 0x%02x\n", flags);
 		fprintf(stderr, "\tcategory == 0x%02x\n", category);
 		fprintf(stderr, "\tid == 0x%08lx\n", id);
 		fprintf(stderr, "\tlen == %d\n", len);
 		debug_dump(stderr, "NEW", data, len);
 	}
+
 	/* Allocate the record to be returned */
 	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
 	    == NULL)
@@ -1306,7 +1307,75 @@ new_Record(const ubyte flags,
 	return retval;		/* Success */
 }
 
-/* XXX - new_Resource */
+/* new_Resource
+ * Create a new resource from the given arguments, and return a pointer to
+ * it. Returns NULL in case of error.
+ * The resource data is copied, so the caller needs to take care of freeing
+ * 'data'.
+ */
+struct pdb_resource *
+new_Resource(const udword type,
+	     const uword id,
+	     const uword len,
+	     const ubyte *data)
+{
+	struct pdb_resource *retval;
+
+	PDB_TRACE(6)
+	{
+		fprintf(stderr, "new_Resource: Creating new resource:\n");
+		fprintf(stderr, "\ttype == 0x%08lx (%c%c%c%c)\n",
+			type,
+			(int) ((type >> 24) & 0xff),
+			(int) ((type >> 16) & 0xff),
+			(int) ((type >>  8) & 0xff),
+			(int)  (type        & 0xff));
+		fprintf(stderr, "\tid == 0x%04x\n", id);
+		fprintf(stderr, "\tlen == %d\n", len);
+		debug_dump(stderr, "NEW", data, len);
+	}
+
+	/* Allocate the resource to be returned */
+	if ((retval = (struct pdb_resource *)
+	     malloc(sizeof(struct pdb_resource))) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"new_Resource");
+		return NULL;
+	}
+
+	/* Initialize the new resource */
+	retval->next = NULL;
+	retval->offset = 0L;
+	retval->type = type;
+	retval->id = id;
+
+	/* Allocate space to put the resource data */
+	if (len == 0)
+	{
+		/* Special case: zero-length resource (dunno if this should
+		 * ever happen, but this way we avoid malloc(0).
+		 */
+		retval->data_len = len;
+		retval->data = NULL;
+		return retval;
+	}
+
+	if ((retval->data = (ubyte *) malloc(len)) == NULL)
+	{
+		/* Couldn't allocate data portion of resource */
+		fprintf(stderr, _("%s: can't allocate data\n"),
+			"new_Resource");
+		free(retval);
+		return NULL;
+	}
+
+	/* Copy the data to the new resource */
+	retval->data_len = len;
+	memcpy(retval->data, data, len);
+
+	return retval;		/* Success */
+}
 
 /* pdb_CopyRecord
  * Make a copy of record 'rec' in database 'db' (and its data), and return
@@ -2277,6 +2346,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 		{
 			fprintf(stderr, _("Can't read resource %d: %d\n"),
 				i, err);
+			free(rsrc);
 			return -1;
 		}
 
@@ -2294,10 +2364,10 @@ pdb_DownloadResources(struct PConnection *pconn,
 		}
 
 		/* Fill in the resource index data */
+		/* XXX - Probably ought to use new_Resource() */
 		rsrc->type = resinfo.type;
 		rsrc->id = resinfo.id;
 		rsrc->offset = 0L;	/* For now */
-					/* XXX - Should this be filled in? */
 
 		/* Fill in the data size entry */
 		rsrc->data_len = resinfo.size;
@@ -2307,6 +2377,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 		{
 			fprintf(stderr, _("%s: Out of memory.\n"),
 				"pdb_DownloadResources");
+			free(rsrc);
 			return -1;
 		}
 
