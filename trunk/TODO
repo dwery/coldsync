@@ -1,3 +1,9 @@
+- Apply M50x patch.
+	Rename the listen type.
+	Add stuff to parser as well.
+- Use iconv(3) to convert command-line arguments to the appropriate
+  encoding. Most Unix boxen use EUC for Japanese, but the Visor uses
+  SJIS.
 - Fix API bogosities in libpdb, libpconn.
 - Man pages for libpconn, libpdb functions.
 - 'make install' should install libraries, headers.
