@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.5 1999-11-20 05:20:41 arensb Exp $
+ * $Id: restore.c,v 2.6 1999-11-27 05:55:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,7 +53,6 @@
 #include "pdb.h"
 #include "coldsync.h"
 
-/* XXX - Logging */
 int
 Restore(struct PConnection *pconn,
 	struct Palm *palm)		/* XXX - Unused argument */
@@ -90,6 +89,8 @@ Restore(struct PConnection *pconn,
 				global_opts.restoredir,
 				file->d_name);
 
+/* XXX - This seems to have broken somewhere along the way */
+#if 0
 /* XXX - Do we really want to check that it's a regular file? Should
  * an intelligent user be able to have symlinks? What about a stupid
  * user?
@@ -103,13 +104,14 @@ Restore(struct PConnection *pconn,
 			 */
 			SYNC_TRACE(3)
 				fprintf(stderr,
-					"  Ignoring %s: not a regular file\n",
-					file->d_name);
+					"  Ignoring %s: not a regular file (%d)\n",
+					file->d_name, file->d_type);
 			continue;
 		}
 #else	/* HAVE_DIRENT_TYPE */
 		/* XXX - Ought to stat() the file */
 #endif	/* !HAVE_DIRENT_TYPE */
+#endif	/* 0 */
 
 		/* Make sure the file name ends in ".prc" or ".pdb" */
 		extptr = strrchr(file->d_name, '.');
@@ -228,16 +230,22 @@ continue;
 				_("Restore: Can't delete database \"%s\"."
 				" err == %d\n"),
 				pdb->name, err);
-/*			return -1;*/
-continue;
+			continue;
 		}
 
 		/* Call pdb_Upload() to install the file. It shouldn't
 		 * exist anymore by now.
 		 */
+		add_to_log(_("Restore "));
+		add_to_log(pdb->name);
+		add_to_log(" - ");
 fprintf(stderr, "Calling pdb_Upload() to install %s\n", pdb->name);
 		err = pdb_Upload(pconn, pdb);
 fprintf(stderr, "pdb_Upload returned %d\n", err);  
+		if (err < 0)
+			add_to_log(_("Error\n"));
+		else
+			add_to_log(_("OK\n"));
 		/* XXX - If pdb_Upload returned -1 because of a fatal
 		 * timeout, don't keep trying to upload the others.
 		 */
