@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2004-03-27 14:57:15 azummo Exp $
+# $Id: Makefile,v 1.10 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		../..
 SUBDIR =	include/pconn
@@ -36,8 +36,8 @@ spc.h:
 	ln -s ${TOP}/src/spc.h spc.h
 
 install::	${HEADERS} spc.h
-	${MKDIR} ${INCLUDEDIR}/pconn
-	${INSTALL_DATA} ${HEADERS} spc.h ${INCLUDEDIR}/pconn
+	${MKDIR} ${DESTDIR}/${INCLUDEDIR}/pconn
+	${INSTALL_DATA} ${HEADERS} spc.h ${DESTDIR}/${INCLUDEDIR}/pconn
 
 # This is for Emacs's benefit:
 # Local Variables:	***

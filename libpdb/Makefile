@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2004-03-27 14:57:15 azummo Exp $
+# $Id: Makefile,v 1.11 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -35,8 +35,8 @@ depend::
 all::	${LIBRARY}
 
 install::	${LIBRARY}
-	${MKDIR} ${LIBDIR}
-	${INSTALL_PROGRAM} ${LIBRARY} ${LIBDIR}/${LIBRARY}
+	${MKDIR} ${DESTDIR}/${LIBDIR}
+	${INSTALL_PROGRAM} ${LIBRARY} ${DESTDIR}/${LIBDIR}/${LIBRARY}
 
 # This is for Emacs's benefit:
 # Local Variables:	***

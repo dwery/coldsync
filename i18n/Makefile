@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2002-12-18 00:23:28 azummo Exp $
+# $Id: Makefile,v 1.20 2004-11-02 04:22:19 christophe Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -92,10 +92,10 @@ install::	install-i18n-${INSTALL_I18N}
 install-i18n-yes:	${MOFILES}
 	@langs="${LANGS}"; \
 	for lang in $$langs; do \
-		echo "${MKDIR} ${LOCALEDIR}/$$lang/LC_MESSAGES"; \
-		${MKDIR} "${LOCALEDIR}/$$lang/LC_MESSAGES"; \
+		echo "${MKDIR} ${DESTDIR}/${LOCALEDIR}/$$lang/LC_MESSAGES"; \
+		${MKDIR} "${DESTDIR}/${LOCALEDIR}/$$lang/LC_MESSAGES"; \
 		${INSTALL_DATA} "$$lang.mo" \
-			"${LOCALEDIR}/$$lang/LC_MESSAGES/${PACKAGE}.mo"; \
+			"${DESTDIR}/${LOCALEDIR}/$$lang/LC_MESSAGES/${PACKAGE}.mo"; \
 	done
 
 # Do nothing.

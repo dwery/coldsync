@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2004-03-27 14:57:14 azummo Exp $
+# $Id: Makefile,v 1.15 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -45,8 +45,8 @@ depend::
 all::	${LIBRARY}
 
 install::	${LIBRARY}
-	${MKDIR} ${LIBDIR}
-	${INSTALL_PROGRAM} ${LIBRARY} ${LIBDIR}/${LIBRARY}
+	${MKDIR} ${DESTDIR}/${LIBDIR}
+	${INSTALL_PROGRAM} ${LIBRARY} ${DESTDIR}/${LIBDIR}/${LIBRARY}
 
 # XXX - Building shared libraries:
 #  FreeBSD:

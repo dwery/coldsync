@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.36 2002-12-18 00:19:03 azummo Exp $
+# $Id: Makefile,v 2.37 2004-11-02 04:22:20 christophe Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -92,8 +92,8 @@ depend::
 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
 install::	${CXXPROG}
-	${MKDIR} ${BINDIR}
-	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR}/${CXXPROG}
+	${MKDIR} ${DESTDIR}/${BINDIR}
+	${INSTALL_PROGRAM} ${CXXPROG} ${DESTDIR}/${BINDIR}/${CXXPROG}
 
 #manifest:
 #	@for i in ${DISTFILES}; do \

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2004-10-11 23:52:27 christophe Exp $
+# $Id: Makefile,v 1.18 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -59,18 +59,18 @@ manifypods:	${PERL_CONDUITS}
 
 install::	${CONDUITS} manifypods
 	@for i in ${CONDUITDIR} ${MAN1DIR}; do \
-		echo "${MKDIR} $$i"; \
-		${MKDIR} "$$i"; \
+		echo "${MKDIR} ${DESTDIR}/$$i"; \
+		${MKDIR} "${DESTDIR}/$$i"; \
 	done
 	for i in ${PERL_CONDUITS}; do \
 		${SED} 's:#! *[^ 	]*\(.*\):#!${PERL}\1:' \
 			< $$i > $$i.inst; \
-		${INSTALL_SCRIPT} $$i.inst ${CONDUITDIR}/$$i; \
+		${INSTALL_SCRIPT} $$i.inst ${DESTDIR}/${CONDUITDIR}/$$i; \
 		rm -f $$i.inst; \
 	done
 	@for i in ${PERL_CONDUITS}; do \
-		echo "${INSTALL_DATA} $$i.1 ${MAN1DIR}/$$i.1"; \
-		${INSTALL_DATA} $$i.1 ${MAN1DIR}/$$i.1; \
+		echo "${INSTALL_DATA} $$i.1 ${DESTDIR}/${MAN1DIR}/$$i.1"; \
+		${INSTALL_DATA} $$i.1 ${DESTDIR}/${MAN1DIR}/$$i.1; \
 	done
 
 # This is for Emacs's benefit:
