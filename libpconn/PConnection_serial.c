@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.44 2003-11-30 17:19:33 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.45 2004-10-20 22:45:55 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -270,17 +270,31 @@ serial_bind(PConnection *pconn,
 static int
 serial_read(PConnection *p, unsigned char *buf, int len)
 {
-	return read(p->fd, buf, len);
+	int ret;
+
+	ret = read(p->fd, buf, len);
+
+	if (ret > 0)
+		p->bytes_read += ret;
+	
+	return ret;
 }
 
 static int
 serial_write(PConnection *p, unsigned const char *buf, const int len)
 {
+	int ret;
+
 	if (p->fd == STDIN_FILENO) {
-	    return write(STDOUT_FILENO, buf, len);
+	    ret = write(STDOUT_FILENO, buf, len);
         } else {
-	    return write(p->fd, buf, len);
+	    ret = write(p->fd, buf, len);
 	}
+
+	if (ret>0)
+		p->bytes_write += ret;
+
+	return ret;
 }
 
 static int
