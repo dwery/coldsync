@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.54 2002-11-02 12:51:18 azummo Exp $
+ * $Id: lexer.l,v 2.55 2002-11-23 16:30:55 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -207,6 +207,7 @@ QSTR		[^\\\$\"\n]
 "network"	{ KEYWORD(NET);		/* Synonym */	}
 "serial"	{ KEYWORD(SERIAL);	}
 "usb"		{ KEYWORD(USB);		}
+"libusb"	{ KEYWORD(LIBUSB);	}
 
  /* Software protocols */
  /* "default" already in conduit options */

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.31 2002-08-31 19:26:03 azummo Exp $
+ * $Id: PConnection.c,v 1.32 2002-11-23 16:32:40 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,6 +44,12 @@ extern int pconn_net_open(PConnection *pconn,
 
 #if WITH_USB
 extern int pconn_usb_open(PConnection *pconn,
+			  const char *fname,
+			  const pconn_proto_t protocol);
+#endif
+
+#if WITH_LIBUSB
+extern int pconn_libusb_open(PConnection *pconn,
 			  const char *fname,
 			  const pconn_proto_t protocol);
 #endif
@@ -110,6 +116,7 @@ new_PConnection(char *device,
 #if WITH_USB
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
+		 * USB over stdin/stdout? I don't think that's a good idea :)
 		 */
 		if (pconn_usb_open(pconn, device, protocol) < 0)
 		{
@@ -125,6 +132,30 @@ new_PConnection(char *device,
 		 * the man page talks about it, etc.
 		 */
 		fprintf(stderr, _("Error: USB support not enabled.\n"));
+		free(pconn);
+		return NULL;
+#endif
+
+	    case LISTEN_LIBUSB:
+#if WITH_LIBUSB
+		/* XXX - Should be able to specify "-" for the filename to
+		 * listen on stdin/stdout.
+		 * USB over stdin/stdout? I don't think that's a good idea :)
+		 */
+		if (pconn_libusb_open(pconn, device, protocol) < 0)
+		{
+			free(pconn);
+			return NULL;
+		}
+		break;
+#else	/* WITH_LIBUSB */
+		/* This version of ColdSync was built without libusb support.
+		 * Print a message to this effect. This is done this way
+		 * because even without USB support, the parser recognizes
+		 *	listen libusb {}
+		 * the man page talks about it, etc.
+		 */
+		fprintf(stderr, _("Error: USB through libusb support not enabled.\n"));
 		free(pconn);
 		return NULL;
 #endif

@@ -210,6 +210,9 @@
 /* Define if you want USB support (FreeBSD only, at this point) */
 #undef WITH_USB
 
+/* Define if you want USB support through libusb */
+#undef WITH_LIBUSB
+
 /* Define to use linux capabilities (libcap) */
 #undef USE_CAPABILITIES
 
