@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.136 2002-05-02 23:53:21 arensb Exp $
+ * $Id: coldsync.c,v 1.137 2002-05-03 00:01:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1879,8 +1879,7 @@ run_mode_Init(int argc, char *argv[])
  * This routine will ask the Palm for its username, userid and serial number
  * and will call find_palment with the proper values.  
  */
-
-static struct palment *
+static const struct palment *
 lookup_palment(struct Palm *palm, ubyte match_type)
 {
 	const char *p_username;		/* Username on Palm */
@@ -1926,9 +1925,8 @@ lookup_palment(struct Palm *palm, ubyte match_type)
 /* getpasswd_from_palment
  * Given a palment structure tries to find a matching passwd.
  */
-
 static struct passwd *
-getpasswd_from_palment(struct palment *palment)
+getpasswd_from_palment(const struct palment *palment)
 {	
 	struct passwd *pwent = getpwnam(palment->luser);
 
@@ -1987,7 +1985,7 @@ run_mode_Daemon(int argc, char *argv[])
 	pconn_listen_t devtype;		/* Listen block type */
 	pconn_proto_t protocol;		/* Software protocol for talking
 					 * to cradle. */
-	struct palment *palment;	/* /etc/palms entry */
+	const struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
 	char *conf_fname = NULL;	/* Config file name from /etc/palms */
 
@@ -2074,7 +2072,7 @@ run_mode_Daemon(int argc, char *argv[])
 		/* Yes, get the best match */
 		palment = lookup_palment(palm, PMATCH_SERIAL);
 
-		if (palment)
+		if (palment != NULL)
 		{
 			struct dlp_setuserinfo newinfo;					
 	
