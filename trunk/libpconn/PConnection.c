@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.9 2000-11-18 23:55:05 arensb Exp $
+ * $Id: PConnection.c,v 1.10 2000-12-10 21:30:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,9 +23,14 @@ int	io_trace = 0;
 
 extern int pconn_serial_open(struct PConnection *pconn, char *fname,
 			     int prompt_for_hotsync);
+extern int serial_close(struct PConnection *p);
+extern int pconn_net_open(struct PConnection *pconn, char *fname,
+			  int prompt_for_hotsync);
+extern int net_close(struct PConnection *p);
 #ifdef WITH_USB
 extern int pconn_usb_open(struct PConnection *pconn, char *fname,
 			  int prompt_for_hotsync);
+extern int usb_close(struct PConnection *p);
 #endif
 
 /* new_PConnection
@@ -45,78 +50,47 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 		return NULL;
 	}
 
-	/* XXX - The "methods" ought to be initialized here */
-
-	/* Initialize the SLP part of the PConnection */
-	if (slp_init(pconn) < 0)
-	{
-		free(pconn);
-		return NULL;
-	}
-
-	/* Initialize the PADP part of the PConnection */
-	if (padp_init(pconn) < 0)
-	{
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return NULL;
-	}
-
-	/* Initialize the DLP part of the PConnection */
-	if (dlp_init(pconn) < 0)
-	{
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return NULL;
-	}
-
 	switch (listenType) {
-	case LISTEN_SERIAL:
+	    case LISTEN_SERIAL:
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
 		if (pconn_serial_open(pconn, fname, promptHotSync) < 0) {
-			break;
+			serial_close(pconn);
+			return NULL;
 		}
 		return pconn;
 
+	    case LISTEN_NET:
+		if (pconn_net_open(pconn, fname, promptHotSync) < 0)
+		{
+			net_close(pconn);
+			return NULL;
+		}
+		return pconn;
+
+/* XXX - If WITH_USB isn't defined, print an informative error message to
+ * that effect.
+ */
 #ifdef WITH_USB
-	case LISTEN_USB:
+	    case LISTEN_USB:
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
 		if (pconn_usb_open(pconn, fname, promptHotSync) < 0) {
-			break;
+			usb_close(pconn);
+			return NULL;
 		}
 		return pconn;
 
 #endif
-	default:
+	    default:
 		fprintf(stderr, _("%s: unknown listen type %d\n"),
 			"new_PConnection", listenType);
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
 		free(pconn);
 		return NULL;
 	}
-
-
-	/*
-	 * if we fall out of the switch by listen type, then something
-	 * has gone horribly wrong.
-	 */
-
-	fprintf(stderr, _("%s: error opening port \"%s\"\n"),
-		"new_PConnection",
-		fname);
-	perror("open");
-	dlp_tini(pconn);
-	padp_tini(pconn);
-	slp_tini(pconn);
-	free(pconn);
-	return NULL;
+	/*NOTREACHED*/
 }
 
 int
@@ -141,16 +115,7 @@ PConnClose(struct PConnection *pconn)
 
 	(*pconn->io_drain)(pconn);
 
-	/* Clean up the DLP part of the PConnection */
-	dlp_tini(pconn);
-
-	/* Clean up the PADP part of the PConnection */
-	padp_tini(pconn);
-
-	/* Clean up the SLP part of the PConnection */
-	slp_tini(pconn);
-
-	/* Close the file descriptor */
+	/* Close the file descriptor and clean up */
 	err = (*pconn->io_close)(pconn);
 
 	/* Free the PConnection */
