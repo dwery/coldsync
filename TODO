@@ -51,13 +51,8 @@
   the dialog.
 - Write a utility to just dump the contents of a pdb file.
 - Test under Purify.
-- Installing new databases: if the database to be installed already
-  exists on the Palm, check the modification numbers: if the one on
-  the desktop is more recent (has a higher modification number) than
-  the one on the Palm, install it. Otherwise, ignore it. This way,
-  sysadmin can install a standard set of databases in a central
-  location, for all users, and it'll work the way you expect.
-	It should also be possible to override this behavior.
+- Installing new databases: make it possible to install an older
+  version of a database.
 - It'd be nice to import/export sets of records into external
   databases. But you can't just upload any random database. Need to
   integrate with what you've got, somehow.
@@ -87,6 +82,10 @@
   put_ubyte()/put_uword()/put_udword() calls.
   Generally speaking, use these functions to replace all of the
   get_*()/put_* calls.
+	Bleah. ppack()/punpack() have been written, but can't just be
+  plugged in yet: some of the structures are of the form <n>, <n-byte
+  string>, which means that currently, you can't just have one
+  function call to unpack a whole structure.
 - For starters, define a conduit map that does an ordinary sync for
   everything. Make SlowSync() and FastSync() part of the generic
   conduit. Then add PalmOverwritesDesktop(), DesktopOverwritesPalm()
@@ -156,22 +155,14 @@
   programmers ought to know about Palm formats.
 - Write a few tutorials on writing conduits.
 - Perl PDB library for manipulating .pdb and .prc files.
-- Bug?: when doing a first sync, prints
-	arch_open: Can't open "/usr/folks/arensb/.palm/archive/System MIDI Sounds"
-	open: No such file or directory
-	Can't open "System MIDI Sounds". Attempting to create
 - Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
   "System"
 	Fix: when opening a database with DlpOpenDB, if the database
   is read-only (ROM), don't open it for writing. In fact, Backup()
   probably shouldn't open databases read-write at all.
-- Write a README file.
 - Might be nice if there were some "canned" debug levels, so you could
   say "-d3" and that would give you a fair amount of information,
   without you having to specify each level independently.
-- Solaris's printf() can't print NULL strings. Fix all printf()
-  statements that might try to print a NULL pointer (e.g., debugging
-  statements).
 - Add a log when doing a backup or restore. Need not be anything
   complicated, just something better than the default "All records
   successfully synchronized." Maybe just "Backup successful" or
@@ -198,3 +189,8 @@
   carried upwards through the parse tree.
 	Until this gets fixed, I don't want to use 'automake'.
 - Write a 'bool has_db_extension(char *fname)' function, for convenience.
+- Might be cool to have something that can deal with a "conduit
+  server": a friend has just beamed you a new application; you sync;
+  coldsync looks in some central repository, finds a conduit that
+  handles your database type, downloads it, and runs it automatically.
+	This has serious security implications, though.
