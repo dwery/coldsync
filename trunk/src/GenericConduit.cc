@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.55 2001-08-03 15:48:52 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.56 2001-09-08 00:22:00 arensb Exp $
  */
 
 /* Note on I/O:
@@ -242,7 +242,7 @@ GenericConduit::FirstSync()
 	add_to_log(_(" (1st) - "));
 
 	err = DlpOpenConduit(_pconn);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:		/* Everything's fine */
 		break;
@@ -286,7 +286,7 @@ GenericConduit::FirstSync()
 			 * private, and they're not at all secret.
 			 */
 			&dbh);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:
 		/* Things are fine */
@@ -432,7 +432,7 @@ GenericConduit::FirstSync()
 		SYNC_TRACE(3)
 			fprintf(stderr, "### Cleaning up database.\n");
 		err = DlpCleanUpDatabase(_pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
 			switch (palm_errno)
 			{
@@ -460,7 +460,7 @@ GenericConduit::FirstSync()
 		SYNC_TRACE(3)
 			fprintf(stderr, "### Resetting sync flags.\n");
 		err = DlpResetSyncFlags(_pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
@@ -506,7 +506,7 @@ GenericConduit::SlowSync()
 		fprintf(stderr, "*** Phase 1:\n");
 	/* Phase 1: grab the entire database from the Palm */
 	err = DlpOpenConduit(_pconn);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:		/* Everything's fine */
 		break;
@@ -547,7 +547,7 @@ GenericConduit::SlowSync()
 			 * private, and they're not at all secret.
 			 */
 			&dbh);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:
 		/* Things are fine */
@@ -863,7 +863,7 @@ GenericConduit::SlowSync()
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -922,7 +922,7 @@ GenericConduit::SlowSync()
 	SYNC_TRACE(3)
 		fprintf(stderr, "### Cleaning up database.\n");
 	err = DlpCleanUpDatabase(_pconn, dbh);
-	if (err != DLPSTAT_NOERR)
+	if (err != static_cast<int>(DLPSTAT_NOERR))
 	{
 		switch (palm_errno)
 		{
@@ -949,7 +949,7 @@ GenericConduit::SlowSync()
 		SYNC_TRACE(3)
 			fprintf(stderr, "### Resetting sync flags.\n");
 		err = DlpResetSyncFlags(_pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
@@ -995,7 +995,7 @@ GenericConduit::FastSync()
 	add_to_log(" - ");
 
 	err = DlpOpenConduit(_pconn);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:		/* Everything's fine */
 		break;
@@ -1036,7 +1036,7 @@ GenericConduit::FastSync()
 			 * private, and they're not at all secret.
 			 */
 			&dbh);
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOERR:
 		/* Things are fine */
@@ -1082,7 +1082,7 @@ GenericConduit::FastSync()
 	/* Read each modified record in turn. */
 	while ((err = DlpReadNextModifiedRec(_pconn, dbh,
 					     &recinfo, &rptr))
-	       == DLPSTAT_NOERR)
+	       == static_cast<int>(DLPSTAT_NOERR))
 	{
 		SYNC_TRACE(7)
 		{
@@ -1246,7 +1246,7 @@ GenericConduit::FastSync()
 	/* DlpReadNextModifiedRec() returned an error code. See what
 	 * it was and deal accordingly.
 	 */
-	switch (err)
+	switch (static_cast<dlp_stat_t>(err))
 	{
 	    case DLPSTAT_NOTFOUND:
 		/* No more modified records found. Skip to the next
@@ -1310,7 +1310,7 @@ GenericConduit::FastSync()
 			this->archive_record(localrec);
 
 			err = DlpDeleteRecord(_pconn, dbh, 0, localrec->id);
-			switch (err)
+			switch (static_cast<dlp_stat_t>(err))
 			{
 			    case DLPSTAT_NOERR:
 			    case DLPSTAT_NOTFOUND:
@@ -1349,7 +1349,7 @@ GenericConduit::FastSync()
 					localrec->id);
 
 			err = DlpDeleteRecord(_pconn, dbh, 0, localrec->id);
-			switch (err)
+			switch (static_cast<dlp_stat_t>(err))
 			{
 			    case DLPSTAT_NOERR:
 			    case DLPSTAT_NOTFOUND:
@@ -1400,7 +1400,7 @@ GenericConduit::FastSync()
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -1458,7 +1458,7 @@ GenericConduit::FastSync()
 		SYNC_TRACE(3)
 			fprintf(stderr, "### Cleaning up database.\n");
 		err = DlpCleanUpDatabase(_pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
 			switch (palm_errno)
 			{
@@ -1486,7 +1486,7 @@ GenericConduit::FastSync()
 		SYNC_TRACE(3)
 			fprintf(stderr, "### Resetting sync flags.\n");
 		err = DlpResetSyncFlags(_pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
@@ -1601,7 +1601,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -1651,7 +1651,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -1710,7 +1710,7 @@ GenericConduit::SyncRecord(
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -1817,7 +1817,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -1855,7 +1855,7 @@ GenericConduit::SyncRecord(
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -2021,7 +2021,7 @@ GenericConduit::SyncRecord(
 						     localrec->data_len,
 						     localrec->data,
 						     &newID);
-				if (err != DLPSTAT_NOERR)
+				if (err != static_cast<int>(DLPSTAT_NOERR))
 				{
 					switch (palm_errno)
 					{
@@ -2169,7 +2169,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -2211,7 +2211,7 @@ GenericConduit::SyncRecord(
 					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{
@@ -2255,7 +2255,7 @@ GenericConduit::SyncRecord(
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
-			if (err != DLPSTAT_NOERR)
+			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
 				switch (palm_errno)
 				{

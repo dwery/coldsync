@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.34 2001-06-26 05:51:00 arensb Exp $
+ * $Id: backup.c,v 2.35 2001-09-08 00:22:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -106,7 +106,7 @@ download_database(PConnection *pconn,
 	/* Find out how many records/resources there are in this database */
 	err = DlpReadOpenDBInfo(pconn, dbh, &opendbinfo);
 	/* XXX - Check err more thoroughly */
-	if (err != DLPSTAT_NOERR)
+	if (err != (int) DLPSTAT_NOERR)
 	{
 		fprintf(stderr, _("%s: Can't read database info: %d.\n"),
 			"download_database",
@@ -127,7 +127,7 @@ download_database(PConnection *pconn,
 	/* Try to get the AppInfo block */
 	err = DlpReadAppBlock(pconn, dbh, 0, DLPC_APPBLOCK_TOEND,
 			      &appinfo_len, &rptr);
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
 		/** Make a copy of the AppInfo block **/
@@ -176,7 +176,7 @@ download_database(PConnection *pconn,
 	/* Try to get the sort block */
 	err = DlpReadSortBlock(pconn, dbh, 0, DLPC_SORTBLOCK_TOEND,
 			       &sortinfo_len, &rptr);
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
 		/** Make a copy of the sort block **/
@@ -297,7 +297,7 @@ download_resources(PConnection *pconn,
 					     &rptr);
 
 		/* XXX - Check err more thoroughly */
-		if (err != DLPSTAT_NOERR)
+		if (err != (int) DLPSTAT_NOERR)
 		{
 			fprintf(stderr, _("Can't read resource %d: %d.\n"),
 				i, err);
@@ -415,7 +415,7 @@ download_records(PConnection *pconn,
 		if ((err = DlpReadRecordIDList(pconn, dbh, 0,
 					       numrecs, totalrecs-numrecs,
 					       &num_read, recids+numrecs))
-		    != DLPSTAT_NOERR)
+		    != (int) DLPSTAT_NOERR)
 		{
 			/* XXX - Check err more thoroughly */
 			fprintf(stderr, _("Can't read record ID list.\n"));
@@ -464,7 +464,7 @@ download_records(PConnection *pconn,
 					&recinfo,
 					&rptr);
 		/* XXX - Check err more thoroughly */
-		if (err != DLPSTAT_NOERR)
+		if (err != (int) DLPSTAT_NOERR)
 		{
 			fprintf(stderr, _("Can't read record %d: %d.\n"),
 				i, err);
@@ -570,7 +570,7 @@ backup(PConnection *pconn,
 
 	/* Open the database on the Palm */
 	err = DlpOpenConduit(pconn);
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:		/* No error */
 		break;
@@ -611,7 +611,7 @@ backup(PConnection *pconn,
 			 * they're not at all secret.
 			 */
 			&dbh);
-	if (err != DLPSTAT_NOERR)
+	if (err != (int) DLPSTAT_NOERR)
 	{
 		switch (palm_errno)
 		{

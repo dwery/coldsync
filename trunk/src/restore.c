@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.27 2001-06-26 05:52:35 arensb Exp $
+ * $Id: restore.c,v 2.28 2001-09-08 00:22:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -104,7 +104,7 @@ restore_file(PConnection *pconn,
 	}
 
 	err = DlpDeleteDB(pconn, CARD0, pdb->name);
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
 	    case DLPSTAT_NOTFOUND:

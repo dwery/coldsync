@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.102 2001-09-07 23:36:15 arensb Exp $
+ * $Id: coldsync.c,v 1.103 2001-09-08 00:22:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1950,7 +1950,7 @@ run_mode_Init(int argc, char *argv[])
 		/* XXX - Update last successful sync time */
 
 		err = DlpWriteUserInfo(pconn, &uinfo);
-		if (err != DLPSTAT_NOERR)
+		if (err != (int) DLPSTAT_NOERR)
 		{
 			Warn(_("DlpWriteUserInfo failed: %d."),
 			     err);
@@ -3312,7 +3312,7 @@ UpdateUserInfo(PConnection *pconn,
 	/* Send the updated user info to the Palm */
 	err = DlpWriteUserInfo(pconn,
 			       &uinfo);
-	if (err != DLPSTAT_NOERR)
+	if (err != (int) DLPSTAT_NOERR)
 	{
 		switch (palm_errno)
 		{

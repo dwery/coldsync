@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.32 2001-06-26 05:52:13 arensb Exp $
+ * $Id: install.c,v 2.33 2001-09-08 00:22:05 arensb Exp $
  */
 
 #include "config.h"
@@ -70,7 +70,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 	 * reason. I'm just imitating HotSync, here.
 	 */
 	err = DlpOpenConduit(pconn);
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:		/* No error */
 		break;
@@ -98,7 +98,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 
 	err = DlpCreateDB(pconn, &newdb, &dbh);
 	/* XXX - Check err */
-	if (err != DLPSTAT_NOERR)
+	if (err != (int) DLPSTAT_NOERR)
 	{
 		fprintf(stderr, _("Error creating database \"%s\": %d.\n"),
 			db->name, err);
@@ -159,7 +159,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 					       rsrc->data);
 
 			/* XXX - Check err more thoroughly */
-			if (err != DLPSTAT_NOERR)
+			if (err != (int) DLPSTAT_NOERR)
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
@@ -213,7 +213,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 					     &newid);
 
 			/* XXX - Check err more thoroughly */
-			if (err != DLPSTAT_NOERR)
+			if (err != (int) DLPSTAT_NOERR)
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
@@ -228,7 +228,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 	/* Clean up */
 	err = DlpCloseDB(pconn, dbh);
 	/* XXX - Check err */
-	if (err != DLPSTAT_NOERR)
+	if (err != (int) DLPSTAT_NOERR)
 		return -1;
 
 	return 0;		/* Success */
