@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.72.2.1 2001-10-09 01:41:27 arensb Exp $
+ * $Id: config.c,v 1.72.2.2 2001-10-11 04:26:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -195,7 +195,7 @@ parse_args(int argc, char *argv[])
 		    case 'l':	/* -l <file>: Write debugging log to
 				 * <file>.
 				 */
- 			put_symbol("LOGFILE", optarg);  
+ 			put_symbol("LOGFILE", optarg);
 			break;
 
 		    case 'm':	/* -m <mode>: Run in the given mode */
@@ -754,16 +754,15 @@ usage(int argc, char *argv[])
 	 * characters, which is what ISO C89 mandates.
 	 */
 	printf(_("Usage: %s [options] <mode> <mode args>\n"
-		 "Modes:\n%s"
-	         "Options:\n%s"),
-	       argv[0],
-	       _("\t-ms:\tSynchronize (default).\n"
+		 "Modes:\n"
+		 "\t-ms:\tSynchronize (default).\n"
 		 "\t-mI:\tInitialize.\n"
 		 "\t-mb <dir> [database...]\n"
 		 "\t\tPerform a backup to <dir>.\n"
 		 "\t-mr <file|dir>...\n"
-		 "\t\tRestore or install new databases.\n"),
-	       _("\t-h:\t\tPrint this help message and exit.\n"
+		 "\t\tRestore or install new databases.\n"
+		 "Options:\n"
+		 "\t-h:\t\tPrint this help message and exit.\n"
 		 "\t-V:\t\tPrint version and exit.\n"
 		 "\t-f <file>:\tRead configuration from <file>\n"
 		 "\t-z:\t\tInstall databases after sync.\n"
@@ -776,7 +775,8 @@ usage(int argc, char *argv[])
 		 "\t-s:\t\tLog error messages to syslog.\n"
 		 "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
 		 "\t-v:\t\tIncrease verbosity.\n"
-		 "\t-d <fac[:level]>:\tSet debugging level.\n") );
+		 "\t-d <fac[:level]>:\tSet debugging level.\n"),
+	       argv[0]);
 }
 
 /* print_version
@@ -1665,7 +1665,7 @@ new_sync_config()
 
 	MISC_TRACE(5)
 		fprintf(stderr,
-			"Allocated sync_config %p\n", (void *)retval);
+			"Allocated sync_config %p\n", (void *) retval);
 	return retval;
 }
 
@@ -1683,7 +1683,7 @@ free_sync_config(struct sync_config *config)
 	conduit_block *nextc;
 
 	MISC_TRACE(5)
-		fprintf(stderr, "Freeing sync_config %p\n", (void *)config);
+		fprintf(stderr, "Freeing sync_config %p\n", (void *) config);
 
 	/* Free the listen blocks */
 	for (l = config->listen, nextl = NULL; l != NULL; l = nextl)
