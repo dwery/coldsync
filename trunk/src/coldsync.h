@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.35 2000-11-14 16:59:34 arensb Exp $
+ * $Id: coldsync.h,v 1.36 2000-11-18 22:43:26 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -17,6 +17,7 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include "pconn/pconn.h"
 #include "pdb.h"
+#include "palm.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
 #define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
@@ -47,57 +48,6 @@ struct userinfo
 	char fullname[DLPCMD_USERNAME_LEN];
 					/* User's full name */
 	char homedir[MAXPATHLEN];	/* Home directory */
-};
-
-#define SNUM_MAX	32		/* Max. length of serial number
-					 * information, including the
-					 * terminating NUL that we'll add.
-					 * AFAIK, all Palms have 12-digit
-					 * serial numbers, but hey, it
-					 * might change.
-					 */
-
-/* Palm
- * Information about the Palm being currently synced.
- */
-/* XXX - This needs to be greatly expanded, and moved into its own file.
- * The information in this struct is a source of confusion and wasted time
- * for the user: the code to initialize this data takes a long time, and
- * obfuscates the code (e.g., in run_mode_*()).
- * A better approach would be to effectively turn this into a C++ object:
- * write accessor functions for all of the information in here. These
- * accessors read data from the Palm only as necessary: the first time
- * around, they query the Palm; on subsequent calls, they simply return the
- * cached information.
- * Presumably, this means that 'struct Palm' will need to contain a pointer
- * to the appropriate PConnection, so that it can fetch data as necessary.
- * For things like 'dblist', it might even be desirable to ListDBs(), which
- * fetches information about all databases, be separate from other
- * functions, which only care about one database: only run DlpReadDBList()
- * as often as necessary, and keep track of whether or not we have
- * retrieved information about all databases.
- */
-struct Palm
-{
-	struct dlp_sysinfo sysinfo;	/* System information */
-	struct dlp_userinfo userinfo;	/* User information */
-	struct dlp_netsyncinfo netsyncinfo;
-					/* NetSync information */
-
-	char serial[SNUM_MAX];		/* Serial number */
-	char serial_len;		/* Length of serial number */
-
-	/* Memory information */
-	int num_cards;			/* # memory cards */
-	struct dlp_cardinfo *cardinfo;	/* Info about each memory card */
-
-	/* Database information */
-	/* XXX - There should probably be one array of these per memory
-	 * card. Or perhaps 'struct dlp_dbinfo' should say which memory
-	 * card it is on.
-	 */
-	int num_dbs;			/* # of databases */
-	struct dlp_dbinfo *dblist;	/* Database list */
 };
 
 /* run_mode
@@ -131,8 +81,8 @@ struct cmd_opts {
 				 */
 	char *devname;		/* Name of the device on which to listen */
 	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
-	/* XXX - do_backup and do_restore will be obsoleted by run modes */
-	/* XXX - backupdir and restoredir will be obsoleted by
+	/* XXX - do_backup and do_restore are made obsolete by run modes */
+	/* XXX - backupdir and restoredir are made obsolete by
 	 * mode-specific functions.
 	 */
 	Bool do_backup;		/* True iff we should do a full backup */
@@ -361,8 +311,6 @@ extern int append_crea_type(conduit_block *cond,
 			    const udword type);
 extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
-extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
-extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
 extern int run_mode_Standalone(int argc, char *argv[]);
 extern int run_mode_Backup(int argc, char *argv[]);
 extern int run_mode_Restore(int argc, char *argv[]);
@@ -400,10 +348,6 @@ extern const Bool lexists(const char *fname);
 extern const Bool is_file(const char *fname);
 extern const Bool is_directory(const char *fname);
 extern const Bool is_database_name(const char *fname);
-extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
-				       const char *name);
-extern int append_dbentry(struct Palm *palm,
-			  struct pdb *pdb);
 extern int dbinfo_fill(struct dlp_dbinfo *dbinfo,
 		       struct pdb *pdb);
 extern char snum_checksum(const char *snum, int len);
