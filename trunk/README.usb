@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.7 2004-06-06 16:12:07 christophe Exp $
+$Id: README.usb,v 1.8 2004-11-12 02:08:42 christophe Exp $
 
 Linux
 =====
@@ -73,7 +73,10 @@ Place the following script at /etc/hotplug/usb/visor:
 	fi
 
 That's it. Should just work, but you might need to twiddle with device
-permissions.  Works for me with Fedora Core 2/Linux 2.6, YMMV.
+permissions.  Works for me with Fedora Core 2/Linux 2.6, YMMV. For Fedora
+Core 3 (and probably anything with udev), "/dev/usb" no longer works. Use:
+
+		export PORT="/dev/${PORT}"
 
 *BSD
 ====
