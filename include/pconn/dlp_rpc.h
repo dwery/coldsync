@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_rpc.h,v 1.2 2000-06-18 07:07:47 arensb Exp $
+ * $Id: dlp_rpc.h,v 1.3 2000-12-24 21:24:25 arensb Exp $
  *
  * Structure of an RPC-over-DLP request:
  *      +------+------+------+------+
@@ -125,32 +125,32 @@ struct DLPRPC_param {
 extern "C" {
 #endif	/* __cplusplus */
 
-extern int DlpRPC(struct PConnection *pconn,
+extern int DlpRPC(PConnection *pconn,
 		  uword trap,
 		  udword *D0,
 		  udword *A0,
 		  int argc,
 		  struct DLPRPC_param *argv);
-extern int RDLP_Backlight(struct PConnection *pconn,
+extern int RDLP_Backlight(PConnection *pconn,
 			  Bool set,
 			  Bool newState);
-extern int RDLP_BatteryLevel(struct PConnection *pconn);
-extern int RDLP_PluggedIn(struct PConnection *pconn);
-extern int RDLP_ROMToken(struct PConnection *pconn,
+extern int RDLP_BatteryLevel(PConnection *pconn);
+extern int RDLP_PluggedIn(PConnection *pconn);
+extern int RDLP_ROMToken(PConnection *pconn,
 			 uword cardno,
 			 udword token,
 			 udword *data_ptr,
 			 uword *data_len);
 /* XXX - Experimental */
-extern int RDLP_MemHandleNew(struct PConnection *pconn,
+extern int RDLP_MemHandleNew(PConnection *pconn,
 			     udword size);
-extern int RDLP_GetOSVersionString(struct PConnection *pconn);
-extern int RDLP_BatteryDialog(struct PConnection *pconn);
-extern int RDLP_MemMove(struct PConnection *pconn,
+extern int RDLP_GetOSVersionString(PConnection *pconn);
+extern int RDLP_BatteryDialog(PConnection *pconn);
+extern int RDLP_MemMove(PConnection *pconn,
 			ubyte *dst,
 			const udword src,
 			const udword len);
-extern int RDLP_MemReadable(struct PConnection *pconn,
+extern int RDLP_MemReadable(PConnection *pconn,
 			    udword addr);
 
 #ifdef  __cplusplus

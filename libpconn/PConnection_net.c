@@ -18,16 +18,16 @@
 #include "pconn/util.h"
 
 static int net_udp_listen(
-	struct PConnection *pconn,
+	PConnection *pconn,
 	struct netsync_wakeup *wakeup_pkt,
 	struct sockaddr_in *cliaddr,
 	socklen_t *cliaddr_len);
 static int net_acknowledge_wakeup(
-	struct PConnection *pconn,
+	PConnection *pconn,
 	struct netsync_wakeup *wakeup_pkt,
 	struct sockaddr_in *cliaddr,
 	socklen_t *cliaddr_len);
-static int net_tcp_listen(struct PConnection *pconn);
+static int net_tcp_listen(PConnection *pconn);
 
 /* XXX - These variables are global *ONLY* for testing */
 /*  static socklen_t cliaddr_len; */
@@ -132,7 +132,7 @@ static ubyte ritual_resp3[] = {
 };
 
 static int
-net_bind(struct PConnection *pconn,
+net_bind(PConnection *pconn,
 	 const void *addr,
 	 const int addrlen)
 {
@@ -197,13 +197,13 @@ net_bind(struct PConnection *pconn,
 }
 
 static int
-net_read(struct PConnection *p, unsigned char *buf, int len)
+net_read(PConnection *p, unsigned char *buf, int len)
 {
 	return read(p->fd, buf, len);
 }
 
 static int
-net_write(struct PConnection *p, unsigned char *buf, int len)
+net_write(PConnection *p, unsigned char *buf, int len)
 {
 	return read(p->fd, buf, len);
 }
@@ -216,7 +216,7 @@ net_write(struct PConnection *p, unsigned char *buf, int len)
  *	- Exchange ritual packets.
  */
 static int
-net_connect(struct PConnection *pconn, const void *addr, const int addrlen)
+net_connect(PConnection *pconn, const void *addr, const int addrlen)
 {
 	int err;
 	int i;
@@ -487,7 +487,7 @@ net_connect(struct PConnection *pconn, const void *addr, const int addrlen)
 }
 
 static int
-net_accept(struct PConnection *p)
+net_accept(PConnection *p)
 {
 	/* XXX - Redo this to allow IPv6 */
 	struct netsync_wakeup wakeup_pkt;
@@ -510,7 +510,7 @@ net_accept(struct PConnection *p)
 }
 
 static int
-net_close(struct PConnection *p)
+net_close(PConnection *p)
 {
 	/* Clean up the protocol stack elements */
 	dlp_tini(p);
@@ -520,9 +520,9 @@ net_close(struct PConnection *p)
 }
 
 static int
-net_select(struct PConnection *p,
-	      pconn_direction which,
-	      struct timeval *tvp)
+net_select(PConnection *p,
+	   pconn_direction which,
+	   struct timeval *tvp)
 {
 	fd_set fds;
 
@@ -534,7 +534,7 @@ net_select(struct PConnection *p,
 }
 
 static int
-net_drain(struct PConnection *p)
+net_drain(PConnection *p)
 {
 	/* I don't think there's a network equivalent of flushing a stream
 	 * or tty connection.
@@ -543,7 +543,7 @@ net_drain(struct PConnection *p)
 }
 
 int
-pconn_net_open(struct PConnection *pconn, char *device, int prompt)
+pconn_net_open(PConnection *pconn, char *device, int prompt)
 {
 /*  	int err; */
 /*  	struct sockaddr_in myaddr; */
@@ -652,7 +652,7 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 }
 
 static int
-net_udp_listen(struct PConnection *pconn,
+net_udp_listen(PConnection *pconn,
 	       struct netsync_wakeup *wakeup_pkt,
 	       struct sockaddr_in *cliaddr,
 	       socklen_t *cliaddr_len)
@@ -723,7 +723,7 @@ net_udp_listen(struct PConnection *pconn,
 }
 
 static int
-net_acknowledge_wakeup(struct PConnection *pconn,
+net_acknowledge_wakeup(PConnection *pconn,
 		       struct netsync_wakeup *wakeup_pkt,
 		       struct sockaddr_in *cliaddr,
 		       socklen_t *cliaddr_len)
@@ -771,7 +771,7 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 }
 
 static int
-net_tcp_listen(struct PConnection *pconn)
+net_tcp_listen(PConnection *pconn)
 {
 	int err;
 	struct sockaddr_in servaddr;	/* Local host's (server's) address */

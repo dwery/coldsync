@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.4 2000-12-10 21:40:11 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.5 2000-12-24 21:24:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,7 +36,7 @@ extern int dlpc_trace;		/* Debugging level for DLP commands */
  * arguments that were passed by reference are returned in argv[].
  */
 int
-DlpRPC(struct PConnection *pconn,	/* Connection to Palm */
+DlpRPC(PConnection *pconn,		/* Connection to Palm */
        uword trap,			/* RPC trap number */
        udword *D0,			/* Used for return value (?) */
        udword *A0,			/* Used for return value (?) */
@@ -301,7 +301,7 @@ DlpRPC(struct PConnection *pconn,	/* Connection to Palm */
  * the value of 'newState' has no effect.
  */
 int
-RDLP_Backlight(struct PConnection *pconn,
+RDLP_Backlight(PConnection *pconn,
 	       Bool set,
 	       Bool newState)
 {
@@ -338,7 +338,7 @@ RDLP_Backlight(struct PConnection *pconn,
  * charged).
  */
 int
-RDLP_BatteryLevel(struct PConnection *pconn)
+RDLP_BatteryLevel(PConnection *pconn)
 {
 	int err;
 	udword D0;
@@ -362,7 +362,7 @@ RDLP_BatteryLevel(struct PConnection *pconn)
  * trivially true.
  */
 int
-RDLP_PluggedIn(struct PConnection *pconn)
+RDLP_PluggedIn(PConnection *pconn)
 {
 	int err;
 	udword D0;
@@ -381,7 +381,7 @@ RDLP_PluggedIn(struct PConnection *pconn)
 }
 
 int
-RDLP_GetOSVersionString(struct PConnection *pconn)
+RDLP_GetOSVersionString(PConnection *pconn)
 {
 	int err;
 	udword D0;
@@ -405,7 +405,7 @@ RDLP_GetOSVersionString(struct PConnection *pconn)
  * read the contents of a memory location on the Palm.
  */
 int
-RDLP_MemMove(struct PConnection *pconn,
+RDLP_MemMove(PConnection *pconn,
 	     ubyte *dst,
 	     const udword src,
 	     const udword len)
@@ -448,7 +448,7 @@ RDLP_MemMove(struct PConnection *pconn,
 }
 
 int
-RDLP_BatteryDialog(struct PConnection *pconn)
+RDLP_BatteryDialog(PConnection *pconn)
 {
 	int err;
 	udword D0;
@@ -464,7 +464,7 @@ fprintf(stderr, "RDLP_BatteryDialog: err == %d\n", err);
 }
 
 int
-RDLP_MemHandleNew(struct PConnection *pconn,
+RDLP_MemHandleNew(PConnection *pconn,
 		  udword size)
 {
 	int err;
@@ -496,7 +496,7 @@ return 0;
  * 'data_ptr', to get the actual token.
  */
 int
-RDLP_ROMToken(struct PConnection *pconn,
+RDLP_ROMToken(PConnection *pconn,
 	      uword cardno,		/* Memory card number */
 	      udword token,		/* The token to read. See the
 					 * ROMToken_* constants. */
@@ -543,7 +543,7 @@ RDLP_ROMToken(struct PConnection *pconn,
 }
 
 int
-RDLP_MemReadable(struct PConnection *pconn,
+RDLP_MemReadable(PConnection *pconn,
 		 udword addr)
 {
 	int err;

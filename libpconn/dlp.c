@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.9 2000-12-16 19:49:38 arensb Exp $
+ * $Id: dlp.c,v 1.10 2000-12-24 21:24:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -51,7 +51,7 @@ int dlp_trace = 0;			/* Debugging level for DLP */
  * Initialize the DLP part of a new PConnection.
  */
 int
-dlp_init(struct PConnection *pconn)
+dlp_init(PConnection *pconn)
 {
 	/* Allocate a new argv[] of some default size */
 	if ((pconn->dlp.argv =
@@ -70,7 +70,7 @@ dlp_init(struct PConnection *pconn)
  * Clean up the DLP part of a PConnection.
  */
 int 
-dlp_tini(struct PConnection *pconn)
+dlp_tini(PConnection *pconn)
 {
 	if (pconn == NULL)
 		return 0;
@@ -92,7 +92,7 @@ dlp_tini(struct PConnection *pconn)
  * value. 'palm_errno' is set to indicate the error.
  */
 int
-dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
+dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	     struct dlp_req_header *header,
 	     				/* Request header */
 	     struct dlp_arg argv[])	/* Array of request arguments */
@@ -240,12 +240,12 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
  * value; 'palm_errno' is set to indicate the error.
  */
 int
-dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
-	      const ubyte id,	/* ID of the original request */
+dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
+	      const ubyte id,		/* ID of the original request */
 	      struct dlp_resp_header *header,
-				/* Response header will be put here */
+					/* Response header will be put here */
 	      const struct dlp_arg **argv)
-				/* Where to put the arguments */
+					/* Where to put the arguments */
 {
 	int i;
 	int err;

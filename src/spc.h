@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.h,v 2.3 2000-09-04 05:22:53 arensb Exp $
+ * $Id: spc.h,v 2.4 2000-12-24 21:25:01 arensb Exp $
  *
  * Structure of an SPC request:
  *	[request header] [data]
@@ -53,7 +53,7 @@ struct spc_hdr {
 #define SPCERR_NOMEM	2	/* Out of memory */
 
 extern int spc_send(struct spc_hdr *header,
-		    struct PConnection *pconn,
+		    PConnection *pconn,
 		    const struct dlp_dbinfo *dbinfo,
 		    const unsigned char *inbuf,
 		    unsigned char **outbuf);

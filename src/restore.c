@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.16 2000-12-09 13:00:34 arensb Exp $
+ * $Id: restore.c,v 2.17 2000-12-24 21:24:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -49,7 +49,7 @@
  * Restore an individual file.
  */
 int
-restore_file(struct PConnection *pconn,
+restore_file(PConnection *pconn,
 	     struct Palm *palm,
 	     const char *fname)
 {
@@ -202,7 +202,7 @@ restore_file(struct PConnection *pconn,
  * Restore all of the databases in a directory.
  */
 int
-restore_dir(struct PConnection *pconn,
+restore_dir(PConnection *pconn,
 	    struct Palm *palm,
 	    const char *dirname)
 {

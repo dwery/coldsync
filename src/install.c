@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.21 2000-11-24 23:01:36 arensb Exp $
+ * $Id: install.c,v 2.22 2000-12-24 21:24:52 arensb Exp $
  */
 
 #include "config.h"
@@ -51,7 +51,7 @@
  * Returns 0 if successful, or a negative value in case of error.
  */
 int
-install_file(struct PConnection *pconn,
+install_file(PConnection *pconn,
 	     struct Palm *palm,
 	     const char *fname,		/* Name of file to install */
 	     Bool deletep)		/* Flag: delete after installing? */
@@ -246,7 +246,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
  * that don't exist on the Palm, install them.
  */
 int
-InstallNewFiles(struct PConnection *pconn,
+InstallNewFiles(PConnection *pconn,
 		struct Palm *palm,
 		char *newdir,		/* Directory from which to install */
 		Bool deletep)		/* Flag: delete after installing? */

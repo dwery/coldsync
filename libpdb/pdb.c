@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.31 2000-12-17 09:52:23 arensb Exp $
+ * $Id: pdb.c,v 1.32 2000-12-24 21:24:42 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -61,10 +61,10 @@ static int pdb_LoadAppBlock(int fd, struct pdb *db);
 static int pdb_LoadSortBlock(int fd, struct pdb *db);
 static int pdb_LoadResources(int fd, struct pdb *db);
 static int pdb_LoadRecords(int fd, struct pdb *db);
-static int pdb_DownloadResources(struct PConnection *pconn,
+static int pdb_DownloadResources(PConnection *pconn,
 				 ubyte dbh,
 				 struct pdb *db);
-static int pdb_DownloadRecords(struct PConnection *pconn,
+static int pdb_DownloadRecords(PConnection *pconn,
 			       ubyte dbh,
 			       struct pdb *db);
 
@@ -617,7 +617,7 @@ pdb_Write(const struct pdb *db,
  * allocated by pdb_Download(), and the caller has to free it.
  */
 struct pdb *
-pdb_Download(struct PConnection *pconn,
+pdb_Download(PConnection *pconn,
 	     const struct dlp_dbinfo *dbinfo,
 	     ubyte dbh)		/* Database handle */
 {
@@ -815,8 +815,7 @@ pdb_Download(struct PConnection *pconn,
  * applicable.
  */
 int
-pdb_Upload(struct PConnection *pconn,
-	   struct pdb *db)
+pdb_Upload(PConnection *pconn, struct pdb *db)
 {
 	int err;
 	ubyte dbh;			/* Database handle */
@@ -2298,7 +2297,7 @@ pdb_LoadRecords(int fd,
  * different set of flags.
  */
 static int
-pdb_DownloadResources(struct PConnection *pconn,
+pdb_DownloadResources(PConnection *pconn,
 		      ubyte dbh,
 		      struct pdb *db)
 {
@@ -2396,9 +2395,9 @@ pdb_DownloadResources(struct PConnection *pconn,
 }
 
 static int
-pdb_DownloadRecords(struct PConnection *pconn,
-		   ubyte dbh,
-		   struct pdb *db)
+pdb_DownloadRecords(PConnection *pconn,
+		    ubyte dbh,
+		    struct pdb *db)
 {
 	int i;
 	int err;

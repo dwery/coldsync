@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.16 2000-12-24 09:40:16 arensb Exp $
+ * $Id: PConnection.c,v 1.17 2000-12-24 21:24:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -21,12 +21,15 @@
 
 int	io_trace = 0;
 
-extern int pconn_serial_open(struct PConnection *pconn, char *fname,
+extern int pconn_serial_open(PConnection *pconn,
+			     char *fname,
 			     int prompt_for_hotsync);
-extern int pconn_net_open(struct PConnection *pconn, char *fname,
+extern int pconn_net_open(PConnection *pconn,
+			  char *fname,
 			  int prompt_for_hotsync);
-#ifdef WITH_USB
-extern int pconn_usb_open(struct PConnection *pconn, char *fname,
+#if WITH_USB
+extern int pconn_usb_open(PConnection *pconn,
+			  char *fname,
 			  int prompt_for_hotsync);
 #endif
 
@@ -34,13 +37,13 @@ extern int pconn_usb_open(struct PConnection *pconn, char *fname,
  * Opens a new connection on the named port. Returns a handle to the
  * new connection, or NULL in case of error.
  */
-struct PConnection *
+PConnection *
 new_PConnection(char *fname, int listenType, int promptHotSync)
 {
-	struct PConnection *pconn;	/* New connection */
+	PConnection *pconn;		/* New connection */
 
 	/* Allocate space for the new connection */
-	if ((pconn = (struct PConnection *) malloc(sizeof(struct PConnection)))
+	if ((pconn = (PConnection *) malloc(sizeof(PConnection)))
 	    == NULL)
 	{
 		fprintf(stderr, _("Can't allocate new connection\n"));
@@ -113,7 +116,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 }
 
 int
-PConnClose(struct PConnection *pconn)
+PConnClose(PConnection *pconn)
 {
 	int err = 0;
 
@@ -153,7 +156,7 @@ PConnClose(struct PConnection *pconn)
  * bogus.
  */
 int
-PConn_bind(struct PConnection *pconn,
+PConn_bind(PConnection *pconn,
 	   const void *addr,
 	   const int addrlen)
 {

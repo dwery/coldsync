@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.10 2000-12-23 11:36:46 arensb Exp $
+ * $Id: palm.c,v 2.11 2000-12-24 21:24:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -40,7 +40,7 @@ static int fetch_serial(struct Palm *palm);
  * find out whether they need to query the Palm or use a cached value.
  */
 struct Palm *
-new_Palm(struct PConnection *pconn)
+new_Palm(PConnection *pconn)
 {
 	struct Palm *retval;
 

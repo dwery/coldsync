@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.6 2000-11-14 16:23:09 arensb Exp $
+ * $Id: pdb.h,v 1.7 2000-12-24 21:24:20 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -221,11 +221,11 @@ extern struct pdb *pdb_Read(int fd);	/* Load a pdb from a file. */
 extern int pdb_Write(const struct pdb *db, int fd);
 					/* Write a pdb to a file */
 extern struct pdb *pdb_Download(
-	struct PConnection *pconn,
+	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
 	ubyte dbh);
 extern int pdb_Upload(
-	struct PConnection *pconn,
+	PConnection *pconn,
 	struct pdb *pdb);
 extern struct pdb_record *pdb_FindRecordByID(
 	const struct pdb *db,
@@ -236,7 +236,7 @@ extern struct pdb_record *pdb_FindRecordByIndex(
 extern int pdb_DeleteRecordByID(
 	struct pdb *db,
 	const udword id);
-extern int UploadDatabase(struct PConnection *pconn, const struct pdb *db);
+extern int UploadDatabase(PConnection *pconn, const struct pdb *db);
 extern int pdb_AppendRecord(struct pdb *db, struct pdb_record *newrec);
 extern int pdb_AppendResource(struct pdb *db, struct pdb_resource *newrsrc);
 extern int pdb_InsertRecord(

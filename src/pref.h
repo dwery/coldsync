@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.h,v 2.1 2000-09-03 05:07:02 arensb Exp $
+ * $Id: pref.h,v 2.2 2000-12-24 21:24:57 arensb Exp $
  */
 #ifndef _pref_h_
 #define _pref_h_
@@ -38,7 +38,7 @@ typedef struct pref_item
     /* XXX - This field seems awfully bogus. Try taking it out and see what
      * happens.
      */
-    struct PConnection *pconn;	/* The connection from which to get these
+    PConnection *pconn;		/* The connection from which to get these
 				 * preferences. This isn't very elegant, but
 				 * it beats having to provide the run_conduit
 				 * routine with pconn. Is there a cleaner way
@@ -47,19 +47,13 @@ typedef struct pref_item
 } pref_item;
 
 extern int CacheFromConduits(const conduit_block *conduits,
-			     struct PConnection *pconn);
-extern int FetchPrefItem(struct PConnection *pconn,
-			 pref_item *prefitem);
-extern int DownloadPrefItem(struct PConnection *pconn,
-			    pref_item *prefitem);
-/* XXX - 'description' in the next few functions, is a struct that's passed
- * by value. Yuck! See if 'const struct pref_desc *description' will work.
- */
+			     PConnection *pconn);
+extern int FetchPrefItem(PConnection *pconn, pref_item *prefitem);
+extern int DownloadPrefItem(PConnection *pconn, pref_item *prefitem);
 extern struct pref_item *FindPrefItem(
 	const struct pref_desc *description,
 	struct pref_item *list);
-extern struct pref_item *GetPrefItem(
-	struct pref_desc *description);
+extern struct pref_item *GetPrefItem(struct pref_desc *description);
 extern void FreePrefItem(struct pref_item *prefitem);
 extern void FreePrefList(struct pref_item *list);
 

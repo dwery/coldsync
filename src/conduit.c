@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.24 2000-12-16 19:51:37 arensb Exp $
+ * $Id: conduit.c,v 2.25 2000-12-24 21:24:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -69,7 +69,7 @@ static int run_conduits(const struct dlp_dbinfo *dbinfo,
 			char *flavor,
 			unsigned short flavor_mask,
 			const Bool with_spc,
-			struct PConnection *pconn);
+			PConnection *pconn);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -85,15 +85,15 @@ static INLINE Bool crea_type_matches(
 	const udword creator,
 	const udword type);
 
-typedef int (*ConduitFunc)(struct PConnection *pconn,
+typedef int (*ConduitFunc)(PConnection *pconn,
 			   const struct dlp_dbinfo *dbinfo,
 			   const conduit_block *block);
 
-int run_DummyConduit(struct PConnection *pconn,
+int run_DummyConduit(PConnection *pconn,
 		     const struct dlp_dbinfo *dbinfo,
 		     const conduit_block *block);
 extern int run_GenericConduit(
-	struct PConnection *pconn,
+	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
 	const conduit_block *block);
 struct ConduitDef *findConduitByName(const char *name);
@@ -266,7 +266,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	    unsigned short flavor_mask,	/* Mask of the flavor */
 	    conduit_block *conduit,	/* Conduit to be run */
 	    const Bool with_spc,	/* Allow SPC calls? */
-	    struct PConnection *pconn)	/* Connection to Palm */
+	    PConnection *pconn)		/* Connection to Palm */
 {
 	int err;
 	int i;
@@ -1068,7 +1068,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 					 */
 	     unsigned short flavor_mask,
 	     const Bool with_spc,	/* Allow SPC calls? */
-	     struct PConnection *pconn)	/* Connection to Palm */
+	     PConnection *pconn)	/* Connection to Palm */
 {
 	int err;
 	conduit_block *conduit;
@@ -1261,7 +1261,7 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
  */
 int
 run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
-		  struct PConnection *pconn)
+		  PConnection *pconn)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running sync conduits for \"%s\".\n",
@@ -1964,7 +1964,7 @@ crea_type_matches(const conduit_block *cond,
 }
 
 /* XXX - Experimental */
-int run_DummyConduit(struct PConnection *pconn,
+int run_DummyConduit(PConnection *pconn,
 		     const struct dlp_dbinfo *dbinfo,
 		     const conduit_block *block)
 {

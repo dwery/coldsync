@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.17 2000-12-24 09:44:48 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.18 2000-12-24 21:24:31 arensb Exp $
  */
 
 #include "config.h"
@@ -110,7 +110,7 @@ static char *hs_usb_functions[] = {
 
 
 static int
-usb_bind(struct PConnection *pconn,
+usb_bind(PConnection *pconn,
 	 const void *addr,
 	 const int addrlen)
 {
@@ -118,7 +118,7 @@ usb_bind(struct PConnection *pconn,
 }
 
 static int
-usb_read(struct PConnection *p, unsigned char *buf, int len)
+usb_read(PConnection *p, unsigned char *buf, int len)
 {
 	/*
 	 *  We've got to do intermediate buffering of the USB data
@@ -179,19 +179,19 @@ usb_read(struct PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-usb_write(struct PConnection *p, unsigned char *buf, int len)
+usb_write(PConnection *p, unsigned char *buf, int len)
 {
 	return write(p->fd, buf, len);
 }
 
 static int
-usb_connect(struct PConnection *p, const void *addr, const int addrlen)
+usb_connect(PConnection *p, const void *addr, const int addrlen)
 {
 	return -1;		/* Not applicable to USB connection */
 }
 
 static int
-usb_accept(struct PConnection *pconn)
+usb_accept(PConnection *pconn)
 {
 	udword newspeed;		/* Not really a speed; this is just
 					 * used for the return value from
@@ -210,7 +210,7 @@ usb_accept(struct PConnection *pconn)
 }
 
 static int
-usb_close(struct PConnection *p)
+usb_close(PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
 
@@ -225,8 +225,7 @@ usb_close(struct PConnection *p)
 }
 
 static int
-usb_select(struct PConnection *p, pconn_direction which,
-	   struct timeval *tvp)
+usb_select(PConnection *p, pconn_direction which, struct timeval *tvp)
 {
 	fd_set fds;
 	struct usb_data *u = p->io_private;
@@ -253,13 +252,13 @@ usb_select(struct PConnection *p, pconn_direction which,
 }
 
 static int
-usb_drain(struct PConnection *p)
+usb_drain(PConnection *p)
 {
 	return 0;
 }
 
 int
-pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
+pconn_usb_open(PConnection *pconn, char *device, int prompt)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;

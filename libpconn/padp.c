@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.15 2000-12-13 16:59:11 arensb Exp $
+ * $Id: padp.c,v 1.16 2000-12-24 21:24:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -52,7 +52,7 @@ int padp_trace = 0;		/* Debugging level for PADP */
  * reserved).
  */
 static void
-bump_xid(struct PConnection *pconn)
+bump_xid(PConnection *pconn)
 {
 	pconn->padp.xid++;		/* Increment the current xid */
 	if ((pconn->padp.xid == 0xff) ||/* Skip past the reserved ones */
@@ -64,7 +64,7 @@ bump_xid(struct PConnection *pconn)
  * Initialize the PADP part of a PConnection.
  */
 int
-padp_init(struct PConnection *pconn)
+padp_init(PConnection *pconn)
 {
 	pconn->padp.read_timeout = PADP_WAIT_TIMEOUT;
 				/* How long to wait for a PADP packet
@@ -87,7 +87,7 @@ padp_init(struct PConnection *pconn)
  * Clean up the PADP part of a PConnection that's being closed.
  */
 int
-padp_tini(struct PConnection *pconn)
+padp_tini(PConnection *pconn)
 {
 	if (pconn == NULL)
 		return 0;
@@ -107,7 +107,7 @@ padp_tini(struct PConnection *pconn)
  * negative value and sets 'palm_errno' to indicate the error.
  */
 int
-padp_read(struct PConnection *pconn,	/* Connection to Palm */
+padp_read(PConnection *pconn,	/* Connection to Palm */
 	  const ubyte **buf,	/* Buffer to put the packet in */
 	  uword *len)		/* Length of received message */
 {
@@ -543,7 +543,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
  * Write a (possibly multi-fragment) message.
  */
 int
-padp_write(struct PConnection *pconn,
+padp_write(PConnection *pconn,
 	   const ubyte *buf,
 	   const uword len)
 {

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.73 2000-12-24 20:56:51 arensb Exp $
+ * $Id: coldsync.c,v 1.74 2000-12-24 21:24:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -49,8 +49,8 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 				 * rant in "log.c".
 				 */
 
-static int Connect(struct PConnection *pconn);
-static int Disconnect(struct PConnection *pconn, const ubyte status);
+static int Connect(PConnection *pconn);
+static int Disconnect(PConnection *pconn, const ubyte status);
 static int run_mode_Standalone(int argc, char *argv[]);
 static int run_mode_Backup(int argc, char *argv[]);
 static int run_mode_Restore(int argc, char *argv[]);
@@ -59,11 +59,10 @@ static int mkforw_addr(struct Palm *palm,
 		       pda_block *pda,
 		       struct sockaddr **addr,
 		       socklen_t *sa_len);
-int forward_netsync(struct PConnection *local,
-		    struct PConnection *remote);
+int forward_netsync(PConnection *local, PConnection *remote);
 
 int CheckLocalFiles(struct Palm *palm);
-int UpdateUserInfo(struct PConnection *pconn,
+int UpdateUserInfo(PConnection *pconn,
 		   const struct Palm *palm, const int success);
 int reserve_fd(int fd, int flags);
 
@@ -342,7 +341,7 @@ static int
 run_mode_Standalone(int argc, char *argv[])
 {
 	int err;
-	struct PConnection *pconn;	/* Connection to the Palm */
+	PConnection *pconn;		/* Connection to the Palm */
 	struct pref_item *pref_cursor;
 	const struct dlp_dbinfo *cur_db;
 					/* Used when iterating over all
@@ -505,7 +504,7 @@ run_mode_Standalone(int argc, char *argv[])
 		 */
 		struct sockaddr *sa;
 		socklen_t sa_len;
-		struct PConnection *pconn_forw;
+		PConnection *pconn_forw;
 
 		SYNC_TRACE(2)
 			fprintf(stderr,
@@ -920,7 +919,7 @@ run_mode_Backup(int argc, char *argv[])
 {
 	int err;
 	const char *backupdir = NULL;	/* Where to put backup */
-	struct PConnection *pconn;	/* Connection to the Palm */
+	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
 
 	/* Parse arguments:
@@ -1106,7 +1105,7 @@ run_mode_Restore(int argc, char *argv[])
 {
 	int err;
 	int i;
-	struct PConnection *pconn;	/* Connection to the Palm */
+	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
 
 	/* Get listen block */
@@ -1227,7 +1226,7 @@ static int
 run_mode_Init(int argc, char *argv[])
 {
 	int err;
-	struct PConnection *pconn;	/* Connection to the Palm */
+	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
 	Bool do_update;			/* Should we update the info on
 					 * the Palm? */
@@ -1618,7 +1617,7 @@ run_mode_Getty()
  * might also be the place to fork().
  */
 static int
-Connect(struct PConnection *pconn)
+Connect(PConnection *pconn)
 {
 	struct slp_addr pcaddr;
 
@@ -1635,7 +1634,7 @@ Connect(struct PConnection *pconn)
 }
 
 static int
-Disconnect(struct PConnection *pconn, const ubyte status)
+Disconnect(PConnection *pconn, const ubyte status)
 {
 	int err;
 
@@ -1871,7 +1870,7 @@ CheckLocalFiles(struct Palm *palm)
  * successful.
  */
 int
-UpdateUserInfo(struct PConnection *pconn,
+UpdateUserInfo(PConnection *pconn,
 	       const struct Palm *palm,
 	       const int success)
 {
@@ -2259,8 +2258,7 @@ mkforw_addr(struct Palm *palm,
  * Listen for packets from either pconn, and forward them to the other.
  */
 int
-forward_netsync(struct PConnection *local,
-		struct PConnection *remote)
+forward_netsync(PConnection *local, PConnection *remote)
 {
 	int err;
 	int maxfd;

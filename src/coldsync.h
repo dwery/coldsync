@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.44 2000-12-24 09:47:05 arensb Exp $
+ * $Id: coldsync.h,v 1.45 2000-12-24 21:24:48 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -328,24 +328,24 @@ extern int append_crea_type(conduit_block *cond,
 			    const udword type);
 
 /* backup.c */
-extern int backup(struct PConnection *pconn,
+extern int backup(PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
-extern int full_backup(struct PConnection *pconn,
+extern int full_backup(PConnection *pconn,
 		       struct Palm *palm,
 		       const char *backupdir);
 
 /* restore.c */
-extern int restore_file(struct PConnection *pconn,
+extern int restore_file(PConnection *pconn,
 			struct Palm *palm,
 			const char *fname);
-extern int restore_dir(struct PConnection *pconn,
+extern int restore_dir(PConnection *pconn,
 		       struct Palm *palm,
 		       const char *dirname);
 
 /* install.c */
 extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
-extern int InstallNewFiles(struct PConnection *pconn,
+extern int InstallNewFiles(PConnection *pconn,
 			   struct Palm *palm,
 			   char *newdir,
 			   Bool deletep);

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.11 2000-12-24 09:45:22 arensb Exp $
+ * $Id: slp.c,v 1.12 2000-12-24 21:24:40 arensb Exp $
  */
 
 #include "config.h"
@@ -41,7 +41,7 @@ static const ubyte slp_preamble[] = {
  * Initialize a new PConnection.
  */
 int
-slp_init(struct PConnection *pconn)
+slp_init(PConnection *pconn)
 {
 	/* Allocate the initial input and output buffers */
 	pconn->slp.inbuf = (ubyte *) malloc(SLP_INIT_INBUF_LEN);
@@ -68,7 +68,7 @@ slp_init(struct PConnection *pconn)
  * Clean up a PConnection that's being closed.
  */
 int
-slp_tini(struct PConnection *pconn)
+slp_tini(PConnection *pconn)
 {
 	if (pconn == NULL)
 		return 0;		/* Nothing to do */
@@ -102,7 +102,7 @@ slp_tini(struct PConnection *pconn)
  * before a HotSync.
  */
 int
-slp_bind(struct PConnection *pconn, const struct slp_addr *addr)
+slp_bind(PConnection *pconn, const struct slp_addr *addr)
 {
 	palm_errno = PALMERR_NOERR;
 
@@ -128,7 +128,7 @@ slp_bind(struct PConnection *pconn, const struct slp_addr *addr)
  * should not be used.
  */
 int
-slp_read(struct PConnection *pconn,	/* Connection to Palm */
+slp_read(PConnection *pconn,	/* Connection to Palm */
 	 const ubyte **buf,	/* Pointer to the data read */
 	 uword *len)		/* Length of received message */
 {
@@ -404,7 +404,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
  * Returns the number of bytes written (excluding SLP overhead)
  */
 int
-slp_write(struct PConnection *pconn,
+slp_write(PConnection *pconn,
 	  const ubyte *buf,
 	  const uword len)
 {
