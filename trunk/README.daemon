@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.1 2001-05-24 05:38:06 arensb Exp $
+$Id: README.daemon,v 2.2 2002-03-24 03:19:55 azummo Exp $
 
 Introduction
 ============
@@ -8,7 +8,7 @@ Introduction
 	ColdSync can be run as a daemon. This allows one-button
 operation: just plunk your Palm into its cradle and push the HotSync
 button.
-	There are three main ways of setting this up, depending on how
+	There are two main ways of setting this up, depending on how
 you want to connect to the Palm:
 
 	- For a serial connection, ColdSync behaves in a getty-like
@@ -18,8 +18,6 @@ you want to connect to the Palm:
 	- For a USB connection under FreeBSD, you'll need to add an
 	  entry to /etc/usbd.conf .
 
-	- To accept incoming connections over the network, you'll need
-	  to add an entry to /etc/inetd.conf .
 
 These connection types are not mutually-exclusive. A given machine can
 support all three simultaneously, including multiple serial
