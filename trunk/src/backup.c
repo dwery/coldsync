@@ -3,129 +3,133 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: backup.c,v 2.1 1999-07-12 09:20:04 arensb Exp $
  */
 #include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>		/* For open() */
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <string.h>		/* For memcpy() et al. */
-#include "config.h"
-#include "palm_types.h"
-#include "palm_errno.h"
-#include "dlp_cmd.h"
-#include "util.h"
+#include <string.h>		/* For strncpy(), strncat() */
+#include <ctype.h>		/* For isprint() */
+#include "PConnection.h"
 #include "pdb.h"
 #include "coldsync.h"
 
+/* XXX - Should this only back up one file, by analogy with conduits? */
 int
 Backup(struct PConnection *pconn,
-       struct Palm *palm,
-       struct dlp_dbinfo *dbinfo,
-       char *bakfname)
+       struct Palm *palm)
 {
 	int err;
-	struct pdb *db;
-	ubyte dbh;		/* Database handle */
+	int i;
 
-printf("--> Backing up database %s to %s\n",
-       dbinfo->name, bakfname);
+	SYNC_TRACE(1)
+		fprintf(stderr, "Inside Backup() -> \"%s\"\n",
+			global_opts.backupdir);
 
-	/* Tell the Palm we're synchronizing a database */
-	err = DlpOpenConduit(pconn);
-	if (err != DLPSTAT_NOERR)
-		return -1;
-
-	/* Open the database */
-	/* XXX - Card #0 shouldn't be hardwired. It probably ought to be a
-	 * field in dlp_dbinfo or something.
-	 */
-	err = DlpOpenDB(pconn, CARD0, dbinfo->name,
-			DLPCMD_MODE_READ |
-			(dbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
-			 0 :
-			 DLPCMD_MODE_WRITE) |
-				/* If the database is already open, don't
-				 * open it for writing.
-				 */
-			DLPCMD_MODE_SECRET,
-				/* XXX - Should there be a flag to
-				 * determine whether we read secret records
-				 * or not? */
-			&dbh);
-	switch (err)
+	for (i = 0; i < palm->num_dbs; i++)
 	{
-	    case DLPSTAT_NOERR:
-		/* Things are fine */
-		break;
-	    case DLPSTAT_NOTFOUND:
-	    case DLPSTAT_TOOMANYOPEN:
-	    case DLPSTAT_CANTOPEN:
-		/* Can't complete this particular operation, but it's not a
-		 * show-stopper. The sync can go on.
+		struct dlp_dbinfo *dbinfo;
+		static char bakfname[MAXPATHLEN+1];	/* Backup file name */
+		int bakfd;		/* Backup file descriptor */
+		struct pdb *pdb;	/* Database downloaded from Palm */
+		ubyte dbh;		/* Database handle (on Palm) */
+
+		dbinfo = &(palm->dblist[i]);
+
+		/* Construct the backup file name */
+		/* XXX - This can be optimized: only write the backup
+		 * directory and slash once.
 		 */
-		fprintf(stderr, "Backup: Can't open \"%s\": %d\n",
-			dbinfo->name, err);
-		return -1;
-	    default:
-		/* Some other error, which probably means the sync can't
-		 * continue.
+		/* XXX - Watch out for weird characters in database name: I
+		 * guess they should be replaced either with underscores
+		 * or, better, %HH, where HH is the hex value of the
+		 * character.
+		 * Slashes aren't allowed. Neither are NULs, but they're a
+		 * separate issue. I guess 'isprint()' is a good enough
+		 * test for allowable characters (of course, '%' should be
+		 * escaped, too).
 		 */
-		fprintf(stderr, "Backup: Can't open \"%s\": %d\n",
-			dbinfo->name, err);
-		return -1;
-	}
+		strncpy(bakfname, global_opts.backupdir, MAXPATHLEN);
+		strncat(bakfname, "/", MAXPATHLEN - strlen(bakfname));
+		strncat(bakfname, dbinfo->name, MAXPATHLEN - strlen(bakfname));
+		if (DBINFO_ISRSRC(dbinfo))
+			strncat(bakfname, ".prc",
+				MAXPATHLEN - strlen(bakfname));
+		else
+			strncat(bakfname, ".pdb",
+				MAXPATHLEN - strlen(bakfname));
 
-	/* XXX - Set the various record flags to sane values: none of them
-	 * should be dirty or needing archiving.
-	 */
-	db = pdb_Download(pconn, dbinfo, dbh);
-	if (db == NULL)
-	{
-		fprintf(stderr, "Can't download \"%s\"\n", dbinfo->name);
-		DlpCloseDB(pconn, dbh);
-		return -1;
-	}
+		/* XXX - This is logging, not debugging */
+		SYNC_TRACE(2)
+			fprintf(stderr, "Backing up \"%s\" to \"%s\"\n",
+				dbinfo->name, bakfname);
 
-	/* XXX - Error-checking */
-/*  	pdb_Write(db, bakfname); */	/* XXX - Rewrite to use pdb_Save() */
-
-	/* XXX - I'm not sure about the relative order of cleaning the
-	 * database and resetting the sync flags. HotSync appears to do
-	 * both at different times.
-	 */
-	if (!DBINFO_ISRSRC(dbinfo))
-	{
-		/* Resource databases don't get cleaned. */
-fprintf(stderr, "### Cleaning up database\n");
-		err = DlpCleanUpDatabase(pconn, dbh);
-		if (err != DLPSTAT_NOERR)
+		/* Create and open the backup file */
+		/* XXX - Is the O_EXCL flag desirable? */
+		bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		if (bakfd < 0)
 		{
-			fprintf(stderr, "Can't clean up database: err = %d\n",
-				err);
-			DlpCloseDB(pconn, dbh);
-			free_pdb(db);
+			fprintf(stderr, "Backup: can't create new backup file %s\n"
+				"It may already exist.\n",
+				bakfname);
+			perror("open");
 			return -1;
 		}
-	}
+		/* XXX - Lock the file */
 
-fprintf(stderr, "### Resetting sync flags 1\n");
-	err = DlpResetSyncFlags(pconn, dbh);
-	if (err != DLPSTAT_NOERR)
-	{
-		fprintf(stderr, "Can't reset sync flags: %d\n", err);
+		/* Open the database on the Palm */
+		err = DlpOpenConduit(pconn);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, "Can't open backup conduit.\n");
+			close(bakfd);
+			return -1;
+		}
+
+		err = DlpOpenDB(pconn,
+				CARD0,
+				dbinfo->name,
+				DLPCMD_MODE_READ |
+				(dbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
+				 0 :
+				 DLPCMD_MODE_WRITE) |
+				DLPCMD_MODE_SECRET,
+				/* "Secret" records aren't actually secret.
+				 * They're actually just the ones marked
+				 * private, and they're not at all secret.
+				 */
+				&dbh);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, "Can't open database \"%s\"\n",
+				dbinfo->name);
+			close(bakfd);
+			return -1;
+		}
+
+		/* Download the database from the Palm */
+		pdb = pdb_Download(pconn, dbinfo, dbh);
+		SYNC_TRACE(7)
+			fprintf(stderr, "After pdb_Download\n");
 		DlpCloseDB(pconn, dbh);
-		free_pdb(db);
-		return -1;
+		SYNC_TRACE(7)
+			fprintf(stderr, "After DlpCloseDB\n");
+
+		/* Write the database to the backup file */
+		err = pdb_Write(pdb, bakfd);
+		if (err < 0)
+		{
+			fprintf(stderr, "Backup: can't write database \"%s\" to \"%s\"\n",
+				dbinfo->name, bakfname);
+			close(bakfd);
+			return -1;
+		}
+		SYNC_TRACE(3)
+			fprintf(stderr, "Wrote \"%s\" to \"%s\"\n",
+				dbinfo->name, bakfname);
+
+		close(bakfd);
 	}
-
-	/* Clean up */
-	DlpCloseDB(pconn, dbh);		/* Close the database */
-	free_pdb(db);
-
-	return 0;		/* Success */
+	return 0;
 }
 
 /* This is for Emacs's benefit:
