@@ -2,7 +2,7 @@
  *
  * Misc. useful stuff.
  *
- * $Id: util.h,v 1.1 1999-01-31 22:26:48 arensb Exp $
+ * $Id: util.h,v 1.2 1999-02-14 04:26:00 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
@@ -17,22 +17,22 @@
 #endif	/* __GNUC__ */
 
 /* Functions for reading a value from an array of ubytes */
-extern INLINE ubyte peek_ubyte(ubyte *buf);
-extern INLINE uword peek_uword(ubyte *buf);
-extern INLINE udword peek_udword(ubyte *buf);
+extern INLINE ubyte peek_ubyte(const ubyte *buf);
+extern INLINE uword peek_uword(const ubyte *buf);
+extern INLINE udword peek_udword(const ubyte *buf);
 
 /* Functions for extracting values from an array of ubytes */
-extern INLINE ubyte get_ubyte(ubyte **buf);
-extern INLINE uword get_uword(ubyte **buf);
-extern INLINE udword get_udword(ubyte **buf);
+extern INLINE ubyte get_ubyte(const ubyte **buf);
+extern INLINE uword get_uword(const ubyte **buf);
+extern INLINE udword get_udword(const ubyte **buf);
 
 /* Functions for writing values to an array of ubytes */
-extern INLINE void put_ubyte(ubyte **buf, ubyte value);
-extern INLINE void put_uword(ubyte **buf, uword value);
-extern INLINE void put_udword(ubyte **buf, udword value);
+extern INLINE void put_ubyte(ubyte **buf, const ubyte value);
+extern INLINE void put_uword(ubyte **buf, const uword value);
+extern INLINE void put_udword(ubyte **buf, const udword value);
 
-extern void debug_dump(char *prefix, ubyte *buf, udword len);
+extern void debug_dump(const char *prefix, const ubyte *buf, const udword len);
 
-extern uword crc16(const ubyte *buf, uword len, uword start);
+extern uword crc16(const ubyte *buf, const uword len, const uword start);
 
 #endif	/* _util_h_ */
