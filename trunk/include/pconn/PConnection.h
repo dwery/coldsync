@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.35 2003-03-02 12:24:07 azummo Exp $
+ * $Id: PConnection.h,v 1.36 2003-06-29 19:37:13 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -272,6 +272,9 @@ extern int PConn_close(struct PConnection *p);
 extern int PConn_select(struct PConnection *p,
                  pconn_direction direction,
                  struct timeval *tvp);
+extern int PConn_tselect(struct PConnection *p,
+		 pconn_direction direction,
+		 int secs);
 extern palmerrno_t PConn_get_palmerrno(PConnection *p);
 extern void PConn_set_palmerrno(PConnection *p, palmerrno_t palm_errno);
 extern void PConn_set_status(PConnection *p, pconn_stat status);
