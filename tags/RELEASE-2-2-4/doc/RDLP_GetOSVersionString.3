@@ -1,0 +1,39 @@
+.\" RDLP_GetOSVersionString.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: RDLP_GetOSVersionString.3,v 1.1 2001-09-05 07:29:46 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt RDLP_GetOSVersionString 3
+.Sh NAME
+.Nm RDLP_GetOSVersionString
+.Nd read the version of PalmOS that a Palm device is running
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn RDLP_GetOSVersionString "PConnection *pconn"
+.Sh DESCRIPTION
+.Nm
+queries the Palm to find out which version of PalmOS it is running.
+This is returned as a pointer to a string.
+.Sh RETURN VALUE
+.Nm
+returns an integer. Presumably this is the address of the memory
+location where the OS version string is located. If so, this string
+should then be read with
+.Xr RDLP_MemMove .
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpRPC 3 ,
+.Xr RDLP_MemMove 3 .
+.Sh BUGS
+This function is untested.

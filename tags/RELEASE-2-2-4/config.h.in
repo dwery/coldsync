@@ -1,0 +1,408 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to empty if your compiler doesn't understand the `inline' keyword */
+#undef inline
+
+/* The number of bytes in a long long (0 if it isn't supported) */
+#undef SIZEOF_LONG_LONG
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define if your struct tm has tm_zone.  */
+#undef HAVE_TM_ZONE
+
+/* Define if you don't have tm_zone but do have the external array
+   tzname.  */
+#undef HAVE_TZNAME
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef mode_t
+
+/* Define to `long' if <sys/types.h> doesn't define.  */
+#undef off_t
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define to `int' if <signal.h> doesn't define return value for signal() */
+#undef RETSIGTYPE	/* int */
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define to `int' if <sys/types.h> doesn't define */
+#undef socklen_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if <errno.h> defines ENODEV */
+#undef HAVE_ENODEV
+
+/* Define if your OS distinguishes between text and binary files, _and_
+ * your compiler defines O_BINARY (for use with open()).
+ */
+#undef HAVE_O_BINARY
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
+/* Define if 'struct sockaddr' has a 'sa_len' field */
+#undef HAVE_SOCKADDR_SA_LEN
+
+/* Define if 'struct sockaddr6' is defined */
+#undef HAVE_SOCKADDR6
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+/* Define if you have the cfmakeraw function.  */
+#undef HAVE_CFMAKERAW
+
+/* Define if you have the usleep function.  */
+#undef HAVE_USLEEP
+
+/* Define if you have the strcasecmp function.  */
+#undef HAVE_STRCASECMP
+
+/* Define if you have the strncasecmp function.  */
+#undef HAVE_STRNCASECMP
+
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
+
+/* Define if you have the vfprintf function.  */
+#undef HAVE_VFPRINTF
+
+/* Define if you have the vsnprintf function.  */
+#undef HAVE_VSNPRINTF
+
+/* Define if you have the strchr function */
+#undef HAVE_STRCHR
+
+/* Define if you have the memcpy function */
+#undef HAVE_MEMCPY
+
+/* Define if you have the memset function */
+#undef HAVE_MEMSET
+
+/* Define if you have the bcopy function */
+#undef HAVE_BCOPY
+
+/* Define if you have the bzero function */
+#undef HAVE_BZERO
+
+/* Define if you have the mkstemp function */
+#undef HAVE_MKSTEMP
+
+/* Define if you have the fpurge function */
+#undef HAVE_FPURGE
+
+/* Define if you have the getopt function.  */
+#undef HAVE_GETOPT
+
+/* Define if you have the inet_aton function.  */
+#undef HAVE_INET_ATON
+
+/* Define if you have the inet_ntoa function.  */
+#undef HAVE_INET_NTOA
+
+/* Define if you have the inet_ntop function.  */
+#undef HAVE_INET_NTOP
+
+/* Define if you have the inet_pton function.  */
+#undef HAVE_INET_PTON
+
+/* Define if you have the gethostbyname function.  */
+#undef HAVE_GETHOSTBYNAME
+
+/* Define if you have the gethostbyname2 function.  */
+#undef HAVE_GETHOSTBYNAME2
+
+/* Define if you have the gettext function.  */
+#undef HAVE_GETTEXT
+
+/* Define if you have the rename function.  */
+#undef HAVE_RENAME
+
+/* Define if you have the select function.  */
+#undef HAVE_SELECT
+
+/* Define if you have the strncpy function.  */
+#undef HAVE_STRNCPY
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if your struct dirent has d_type */
+#undef HAVE_DIRENT_TYPE
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <libintl.h> header file.  */
+#undef HAVE_LIBINTL_H
+
+/* Define if you have the <locale.h> header file.  */
+#undef HAVE_LOCALE_H
+
+/* Define if you have the <resolv.h> header file.  */
+#undef HAVE_RESOLV_H
+
+/* Define if you have the <strings.h> header file.  */
+#undef HAVE_STRINGS_H
+
+/* Define if you have the <stropts.h> header file.  */
+#undef HAVE_STROPTS_H
+
+/* Define if you have the <termios.h> header file.  */
+#undef HAVE_TERMIOS_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the <arpa/nameser.h> header file.  */
+#undef HAVE_ARPA_NAMESER_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/sockio.h> header file.  */
+#undef HAVE_SYS_SOCKIO_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
+
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <netinet/in.h> header file.  */
+#undef HAVE_NETINET_IN_H
+
+/* Define if you have the GNU gettext package */
+#undef HAVE_LIBINTL
+
+/* Defined if the package was compiled with the ElectricFence library */
+#undef WITH_EFENCE
+
+/* Defined if memory leak detection was enabled */
+#undef WITH_LEAK_DETECTION
+
+/* Define if you want USB support for the Handspring Visor */
+#undef WITH_USB
+
+/* Name of package */
+#undef PACKAGE
+
+#undef SYSCONFDIR
+
+#undef LOCALEDIR
+
+#undef CONDUITDIR
+
+/* Version number of package */
+#undef VERSION
+
+#ifdef c_plusplus		/* Cfront 1.2 defines c_plusplus instead
+				 * of __cplusplus */
+#  define __cplusplus
+#endif	/* c_plusplus */
+
+/* Define LONGLONG to be "long long" if it's supported, or "long" otherwise */
+#ifdef SIZEOF_LONG_LONG
+   /* 'configure' checked for "long long", i.e., it wasn't run with
+    * pedantic flags.
+    */
+#  if SIZEOF_LONG_LONG == 0
+#    define LONGLONG	long
+#  else
+#    define LONGLONG	long long
+#  endif	/* SIZEOF_LONG_LONG == 0 */
+#else
+   /* 'configure' was run with pedantic flags, so it didn't even check
+    * whether "long long" exists. Since we're being pedantic, and ANSI C
+    * doesn't support "long long", don't use it.
+    */
+#  define LONGLONG	long
+#endif	/* SIZEOF_LONG_LONG */
+
+/* Define str(n)casecmp() if they don't exist.
+ *	"Here's a nickel, kid, get yourself a better OS"
+ *			-- Scott Adams, paraphrased.
+ */
+#if !HAVE_STRCASECMP
+#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
+#endif	/* HAVE_STRCASECMP */
+#if !HAVE_STRNCASECMP
+#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
+#endif	/* HAVE_STRNCASECMP */
+
+/* Define bzero() in terms of memset() if necessary
+ * We use bzero() in this code because it's possible to define bzero() in
+ * terms of memset(), but not the reverse. Otherwise, we prefer the
+ * ISO-mandated mem*() functions.
+ *
+ * If this machine has neither bzero() nor memset(), then you're screwed.
+ * If this machine has both, then we trust that the OS's authors did
+ * something smart, and that both work.
+ */
+#if !HAVE_BZERO
+#  if HAVE_MEMSET
+#    define bzero(str, len)		memset((str), 0, (len))
+#  endif	/* HAVE_MEMSET */
+#endif	/* HAVE_BZERO */
+
+/* Define an empty fpurge() if it doesn't exist. It isn't critical, but
+ * IMHO it's nice to have.
+ */
+#if !HAVE_FPURGE
+#  define	fpurge(stream)
+#endif	/* HAVE_FPURGE */
+
+/* Define gethostbyname2() if it doesn't exist. This version only supports
+ * IPv4.
+ */
+#if !HAVE_GETHOSTBYNAME2
+#  define gethostbyname2(name, family)	gethostbyname(name)
+#endif	/* HAVE_GETHOSTBYNAME2 */
+
+/* The internationalizable strings in the source are enclosed in _(), e.g.,
+ * _("Hello, world!"). That way, they can be looked up by whichever i18n
+ * package you happen to be using.
+ * N_() is a dummy macro that marks translatable strings when they're
+ * defined but not used. The most common case for this is in arrays of
+ * strings:
+ *	char *msgs[] = {
+ *		N_("Hello"),
+ *		N_("Goodbye"),
+ *	};
+ *	...
+ *	printf(_(msgs[0]));
+ * Here, the N_ marks the strings in 'msgs' so that a tool like 'xgettext'
+ * can identify them and extract them into a catalog. It is only later, in
+ * the printf() statement, that we want to call gettext() on the string to
+ * translate it.
+ */
+#if HAVE_GETTEXT
+#  define _(str)	gettext(str)
+#  ifdef gettext_noop
+#    define N_(str)	gettext_noop(str)
+#  else
+#    define N_(str)	str
+#  endif	/* gettext_noop */
+#else	/* HAVE_GETTEXT */
+#  define _(str)	str
+#  ifdef gettext_noop
+#    define N_(str)	gettext_noop(str)
+#  else
+#    define N_(str)	str
+#  endif	/* gettext_noop */
+#endif	/* HAVE_GETTEXT */
+
+/* MS Windows distinguishes between text and binary files. Cygwin's gcc
+ * (and possibly others) defines O_BINARY as a flag to open() to indicate
+ * that open() should open the file in binary mode.
+ */
+#if !HAVE_O_BINARY
+#  define O_BINARY	0	/* 0 so that when or-ed with other flags,
+				 * doesn't change anything on OSes that
+				 * don't have O_BINARY.
+				 */
+#endif	/* HAVE_O_BINARY */
+
+#ifndef _POSIX_C_SOURCE
+#  define _POSIX_C_SOURCE  2
+#endif	/* _POSIX_C_SOURCE */
+
+#ifndef __EXTENSIONS__
+#  define __EXTENSIONS__	1
+#endif
+
+#ifndef _XOPEN_SOURCE_EXTENDED
+   /* Provides declaration for lstat() under DU, and strdup() under Linux */
+#  define _XOPEN_SOURCE_EXTENDED
+#endif	/* _XOPEN_SOURCE_EXTENDED */
+
+#if __GNUC__
+
+   /* The following should fix gcc complaining about missing
+    * 'strcasecmp()' and 'getopt()' declarations on Linux boxen using
+    * glibc1 (e.g., Slackware 4.0).
+    */
+#  if defined(_LINUX_C_LIB_VERSION_MAJOR) && (_LINUX_C_LIB_VERSION_MAJOR <= 5)
+#    ifndef _BSD_SOURCE
+#      define _BSD_SOURCE
+#    endif	/* _BSD_SOURCE */
+#  endif /* _LINUX_C_LIB_VERSION_MAJOR */
+
+  /* For any given version of 'gcc', one of these two should make 'gcc'
+   * shut up about "implicit declaration of xxx".
+   */
+#  define _GNU_SOURCE		1
+#endif	/* __GNUC__ */
+
+/* OSF1/Digital Unix/Tru64 apparently requires this, to catch certain
+ * declarations.
+ */
+#ifdef __osf__
+#  define _OSF_SOURCE
+#endif
+
+#if WITH_LEAK_DETECTION
+/* This memory leak detection is extremely primitive. All this does is to
+ * use wrappers around the memory-allocation functions (defined in
+ * "misc.c"), which print their arguments and return values to stderr.
+ *
+ * Run the program's output through 'find-leaks', which will try to find
+ * malloc()s with no corresponding free()s.
+ *
+ * Note that this doesn't do squat for C++-style allocation.
+ */
+#  ifdef __cplusplus
+extern "C" {
+#  endif
+extern void *my_malloc(const int size, const char *file, const int line);
+extern void *my_calloc(const int num,
+		       const int size,
+		       const char *file,
+		       const int line);
+extern void *my_realloc(const void *ptr,
+			const int size,
+			const char *file,
+			const int line);
+extern char *my_strdup(const char *str, const char *file, const int line);
+extern void my_free(void *ptr, const char *file, const int line);
+#  ifdef __cplusplus
+}
+#  endif
+
+   /* The my_*() functions are defined in "src/misc.c" */
+#  define malloc(s)	my_malloc(s, __FILE__, __LINE__)
+#  define calloc(n,s)	my_calloc(n, s, __FILE__, __LINE__)
+#  define realloc(p,s)	my_realloc(p, s, __FILE__, __LINE__)
+#  define strdup(str)	my_strdup(str, __FILE__, __LINE__)
+#  define free(p)	my_free(p, __FILE__, __LINE__)
+#endif	/* WITH_LEAK_DETECTION */
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * mode: C		***
+ * fill-column:	75	***
+ * End:			***
+ */

@@ -1,0 +1,85 @@
+.\" DlpReadRecordIDList.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadRecordIDList.3,v 1.1 2001-09-05 07:29:24 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadRecordIDList 3
+.Sh NAME
+.Nm DlpReadRecordIDList
+.Nd read list of record IDs from a Palm database
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadRecordIDList "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const uword start" "const uword max" "uword *numread" "udword recids[]"
+.Sh DESCRIPTION
+.Nm
+reads a list of record IDs found in a database.
+.Pp
+.Fa handle
+is the database handle given by
+.Nm DlpOpenDB .
+.Pp
+.Fa flags
+specifies flags. The only flag defined so far is
+.Dv DLPCMD_RRIDFLAG_SORT ,
+which says to sort the database before returning the list of record
+IDs.
+.Pp
+.Fa start
+specifies the index of the first record to read. Use 0 to start
+reading at the beginning.
+.Pp
+.Fa max
+specifies the maximum number of record IDs to return. The special value
+.Dv DLPC_RRECIDL_TOEND
+says to return as many entries as possible. You may find it useful to
+call
+.Fn DlpReadOpenDBInfo
+to find out how many records there are in the database.
+.Pp
+.Fa numread
+is filled in with the number of entries actually read.
+.Pp
+.Fa recids
+is filled in with record IDs.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpReadOpenDBInfo 3 .
+.Sh NOTES
+The Palm may not return as many entries as you want. In the author's
+experience, the maximum number of entries returned at one time is
+around 500. To read all of the records, you might need to call
+.Nm
+inside a loop, \fIe.g.\fR:
+.Bd -literal -offset
+uword numrecs;		// # of records in database
+uword ihave;		// # of record IDs read so far
+udword recids[FOO];	// Array of record IDs
+
+ihave = 0;
+while (ihave < numrecs)
+{
+	uword num_read;		// # record IDs read this time around
+
+	DlpReadRecordIDList(pconn, dbh, 0,
+			    ihave,
+			    numrecs - ihave,
+			    &num_read,
+			    recids + ihave);
+	ihave += num_read;
+}
+.Ed
