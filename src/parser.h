@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.7 2000-05-20 23:15:51 arensb Exp $
+ * $Id: parser.h,v 2.8 2000-06-15 07:33:01 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -22,6 +22,7 @@
 #define LEX_HEADER	1	/* Conduit argument header name */
 #define LEX_BSTRING	2	/* "Bareword" (unquoted) string */
 #define LEX_CTPAIR	3	/* Creator/type pair */
+#define LEX_ID4		4	/* 4-character identifier */
 
 /* crea_type_pair
  * A convenience struct that holds a creator-type pair, as long ints.
