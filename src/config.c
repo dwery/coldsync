@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.35 2000-09-17 21:24:00 arensb Exp $
+ * $Id: config.c,v 1.36 2000-09-23 17:05:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -312,6 +312,8 @@ get_config(int argc, char *argv[])
 			return -1;
 			break;
 		}
+
+		oldoptind = optind;	/* Update for next iteration */
 	}
 
 	MISC_TRACE(6)
