@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.22 2000-05-21 03:59:05 arensb Exp $
+ * $Id: parser.y,v 2.23 2000-05-21 08:08:02 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -15,9 +15,9 @@
 #include <string.h>		/* For strncpy() et al. */
 #include <ctype.h>		/* For toupper() et al. */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "parser.h"
 
@@ -274,7 +274,7 @@ listen_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: speed %d\n", $3);
 
-		if (cur_listen->speed != NULL)
+		if (cur_listen->speed != 0)
 		{
 			fprintf(stderr,
 				_("%s: %d: Warning: speed already defined.\n"),
@@ -993,7 +993,7 @@ semicolon:	';'
 int
 yyerror(const char *msg)
 {
-	fprintf(stderr, "%s: %d: %s\n", conf_fname, lineno, gettext(msg));
+	fprintf(stderr, "%s: %d: %s\n", conf_fname, lineno, _(msg));
 	return 1;
 }
 
