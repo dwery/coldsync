@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.4 2000-09-04 07:03:50 arensb Exp $
+# $Id: SPC.pm,v 1.5 2000-09-17 21:22:53 arensb Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-($VERSION) = '$Revision: 1.4 $ ' =~ /\$Revision:\s+([^\s]+)/;
+$VERSION = sprintf "%d.%03d", '$Revision: 1.5 $ ' =~ m{(\d+)\.(\d+)};
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
 	dlp_req
