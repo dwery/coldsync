@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.92 2001-03-30 06:29:50 arensb Exp $
+ * $Id: coldsync.c,v 1.93 2001-04-15 05:20:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -894,7 +894,9 @@ run_mode_Standalone(int argc, char *argv[])
 		{
 		    case CSE_NOCONN:
 			Error(_("Lost connection with Palm."));
-			break;
+			free_Palm(palm);
+			return -1;
+
 		    default:
 			Error(_("Can't fetch list of databases."));
 			break;
@@ -992,7 +994,6 @@ run_mode_Standalone(int argc, char *argv[])
 	{
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1022,7 +1023,8 @@ run_mode_Standalone(int argc, char *argv[])
 
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
-				break;
+				free_Palm(palm);
+				return -1;
 
 			    default:
 				Warn(_("Conduit failed for unknown "
@@ -1049,7 +1051,6 @@ run_mode_Standalone(int argc, char *argv[])
 	    case CSE_NOCONN:
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	    default:
 		/* No error, nor not an important one */
@@ -1073,7 +1074,6 @@ run_mode_Standalone(int argc, char *argv[])
 		{
 		    case CSE_NOCONN:
 			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		    default:
 			/* Hope for the best */
@@ -1100,16 +1100,19 @@ run_mode_Standalone(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			Error(_("Couldn't write sync log."));
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				return -1;
+
 			    default:
 				break;
 			}
 
-			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
@@ -1142,8 +1145,6 @@ run_mode_Standalone(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
 					free_Palm(palm);
-					Disconnect(pconn,
-						   DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Warn(_("Can't fetch preference "
@@ -1220,7 +1221,6 @@ run_mode_Standalone(int argc, char *argv[])
 	{
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -1342,7 +1342,6 @@ run_mode_Backup(int argc, char *argv[])
 
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
-				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 				return -1;
 			    default:
 				break;
@@ -1391,8 +1390,6 @@ run_mode_Backup(int argc, char *argv[])
 
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
-					Disconnect(pconn,
-						   DLPCMD_SYNCEND_CANCEL);
 					return -1;
 				    default:
 					Warn(_("Error backing up \"%s\"."),
@@ -1412,16 +1409,19 @@ run_mode_Backup(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			Error(_("Couldn't write sync log."));
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				pconn = NULL;
+				return -1;
 			    default:
 				break;
 			}
 
-			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1510,9 +1510,10 @@ run_mode_Restore(int argc, char *argv[])
 				goto done;
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
-				break;
+				return -1;
 			    default:
 				Error(_("Can't restore directory."));
+				break;
 			}
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			return -1;
@@ -1535,7 +1536,7 @@ run_mode_Restore(int argc, char *argv[])
 					    case CSE_NOCONN:
 						Error(_("Lost connection to "
 							"Palm."));
-						break;
+						return -1;
 					    default:
 						Error(_("Can't restore "
 							"directory."));
@@ -1559,7 +1560,7 @@ run_mode_Restore(int argc, char *argv[])
 					    case CSE_NOCONN:
 						Error(_("Lost connection to "
 							"Palm."));
-						break;
+						return -1;
 					    default:
 						Error(_("Can't restore "
 							"directory."));
@@ -1582,16 +1583,19 @@ run_mode_Restore(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			Error(_("Couldn't write sync log."));
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				pconn = NULL;
+				return -1;
 			    default:
 				break;
 			}
 
-			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1928,17 +1932,20 @@ run_mode_Init(int argc, char *argv[])
 		err = DlpWriteUserInfo(pconn, &uinfo);
 		if (err != DLPSTAT_NOERR)
 		{
+			Warn(_("DlpWriteUserInfo failed: %d."),
+			     err);
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				pconn = NULL;
+				return -1;
 			    default:
 				break;
 			}
 
-			Warn(_("DlpWriteUserInfo failed: %d."),
-			     err);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1987,16 +1994,19 @@ run_mode_Init(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			Error(_("Couldn't write sync log."));
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				pconn = NULL;
+				return -1;
 			    default:
 				break;
 			}
 
-			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -2600,7 +2610,8 @@ run_mode_Daemon(int argc, char *argv[])
 		{
 		    case CSE_NOCONN:
 			Error(_("Lost connection with Palm."));
-			break;
+			free_Palm(palm);
+			return -1;
 		    default:
 			Error(_("Can't fetch list of databases."));
 			break;
@@ -2696,7 +2707,6 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -2724,7 +2734,8 @@ run_mode_Daemon(int argc, char *argv[])
 
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
-				break;
+				free_Palm(palm);
+				return -1;
 
 			    default:
 				Warn(_("Conduit failed for unknown "
@@ -2745,7 +2756,6 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
@@ -2766,7 +2776,6 @@ run_mode_Daemon(int argc, char *argv[])
 		{
 		    case CSE_NOCONN:
 			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		    default:
 			/* Hope for the best */
@@ -2793,16 +2802,18 @@ run_mode_Daemon(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			Error(_("Couldn't write sync log."));
+
 			switch (palm_errno)
 			{
 			    case PALMERR_TIMEOUT:
 				cs_errno = CSE_NOCONN;
-				break;
+				free_Palm(palm);
+				return -1;
 			    default:
 				break;
 			}
 
-			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
@@ -2835,8 +2846,6 @@ run_mode_Daemon(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
 					free_Palm(palm);
-					Disconnect(pconn,
-						   DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
 					Warn(_("Can't fetch preference "
@@ -2912,7 +2921,6 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
