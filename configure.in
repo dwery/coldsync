@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.130.2.1 2001-10-09 01:13:04 arensb Exp $
+dnl # $Id: configure.in,v 1.130.2.2 2001-10-11 11:19:13 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -379,7 +379,8 @@ if test $ac_cv_struct_sockaddr6 = yes; then
 fi
 
 ## Checks for library functions.
-AC_CHECK_FUNCS(fpurge \
+AC_CHECK_FUNCS(access \
+	fpurge \
 	getopt \
 	memcpy \
 	memset \
