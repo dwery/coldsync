@@ -1,3 +1,5 @@
+- Update the coduits development documentation to reflect changes
+  in mandatory headers.
 - Add documentation for 'cwd:' option in conduit{} block.
 - Man page for coldnamed(8).
 - Create a manifest file when installing, to help package-management
@@ -48,8 +50,7 @@
 - Tell conduits (esp. Sync conduits) whether this is a slow or fast sync.
 - Consider allowing database-at-a-time syncing.
   Databases (or files?) named on the command line.
-- Consider "none" database type, to specify conduits to run without an
-  attached database. Preferably also allow user to specify whether it
+- Allow user to specify whether any "none" conduit
   should run before or after other conduits.
 - Bug: run_mode_Daemon() apparently ignores serial number when looking
   in /usr/local/etc/palms. When syncing a visor, it recognizes
