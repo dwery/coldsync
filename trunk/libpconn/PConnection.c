@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.18 2001-01-11 08:27:02 arensb Exp $
+ * $Id: PConnection.c,v 1.19 2001-02-20 12:36:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,7 +23,7 @@ int	io_trace = 0;
 
 extern int pconn_serial_open(PConnection *pconn,
 			     char *fname,
-			     int prompt_for_hotsync);
+			     Bool prompt_for_hotsync);
 extern int pconn_net_open(PConnection *pconn,
 			  char *fname,
 			  int prompt_for_hotsync);
