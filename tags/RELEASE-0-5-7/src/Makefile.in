@@ -1,0 +1,176 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.18 2000-01-22 05:01:38 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	src
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+includedir =	@includedir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+C_SRCS =	coldsync.c \
+		archive.c \
+		backup.c \
+		restore.c \
+		install.c \
+		config.c \
+		handledb.c \
+		log.c \
+		conduit.c
+
+CXX_SRCS =	GenericConduit.cc
+
+SRCS =		${C_SRCS} ${CXX_SRCS}
+
+OBJS =		coldsync.o \
+		archive.o \
+		backup.o \
+		restore.o \
+		install.o \
+		config.o \
+		handledb.o \
+		log.o \
+		conduit.o \
+		GenericConduit.o \
+		lex.yy.o \
+		y.tab.o
+
+LINTOBJS =	coldsync.ln \
+		archive.ln \
+		backup.ln \
+		restore.ln \
+		install.ln \
+		config.ln \
+		handledb.ln \
+		log.ln \
+		conduit.ln \
+		lex.yy.ln \
+		y.tab.ln
+
+HEADERS =	coldsync.h \
+		archive.h \
+		conduit.h \
+		parser.h \
+		GenericConduit.hh
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		lexer.l parser.y \
+		Makefile.in
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES =
+
+CLEAN =		coldsync *.o *.ln *.bak *~ core *.core \
+		lex.yy.o lex.yy.c y.tab.o y.tab.c y.tab.h y.output
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
+LIBPDB =	-L${top_srcdir}/libpdb -lpdb
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+# This is nothing more than some educated guesses, really
+CXX_INCLUDEDIRS = \
+		-I/usr/include/c++ -I/usr/include/g++ \
+		-I${includedir}
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LEX =		@LEX@
+LEXARGS =	@LEXARGS@
+LIBLEX =	@LEXLIB@
+YACC =		@YACC@
+YACCARGS =	@YACCARGS@ -d
+LIBYACC =	@LIBYACC@
+LIBS =		@LIBS@ ${LIBPCONN} ${LIBPDB} ${LIBYACC} ${LIBLEX}
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
+
+.SUFFIXES:	.c .o .cc .ln
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
+
+all:	coldsync
+
+coldsync:	${OBJS}
+	${CXX} ${CXXFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+install:	coldsync
+	if test ! -d ${BINDIR}; then \
+		mkdir ${BINDIR}; \
+		chmod 755 ${BINDIR}; \
+	fi
+	${INSTALL} ${INSTALLARGS} coldsync ${BINDIR}
+
+depend:
+	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
+
+distdir-core:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	if test -s "${EXTRA_DISTFILES}"; then \
+		cp -p ${EXTRA_DISTFILES} ${DISTDIR}; \
+	fi
+
+clean::
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+lex.yy.o:	lex.yy.c
+	${CC} ${CFLAGS} -c $<
+
+lex.yy.c:	lexer.l y.tab.h
+	${LEX} ${LEXARGS} lexer.l
+
+y.tab.o:	y.tab.c
+	${CC} ${CFLAGS} -c $<
+
+y.tab.c y.tab.h:	parser.y
+	${YACC} ${YACCARGS} parser.y
+
+# For testing with Purify
+#PURELINK =      /usr/imports/pure/purify
+#purify: ${OBJS}
+#       ${PURELINK} ${CXX} ${CXXFLAGS} ${OBJS} -o coldsync ${LDFLAGS}
+
+lint:	${LINTOBJS}
+	${LINT} ${LINTARGS} ${LINTOBJS} @LDFLAGS@ ${LIBPCONN} ${LIBPDB}
