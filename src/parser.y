@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.11 2000-01-22 05:01:03 arensb Exp $
+ * $Id: parser.y,v 2.11.2.1 2000-01-24 07:45:29 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -53,9 +53,13 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token LISTEN
 %token NAME
 %token PATH
-%token SERIAL
 %token SPEED
 %token TYPE
+
+%token SERIAL
+%token USB
+
+%type <commtype> comm_type
 
 /* Conduit flavors */
 %token SYNC
@@ -70,6 +74,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 	int integer;
 	char *string;
 	conduit_flavor flavor;
+	comm_type commtype;
 }
 
 %%
@@ -105,7 +110,7 @@ statement:
 	;
 
 listen_stmt:
-	LISTEN SERIAL '{'
+	LISTEN comm_type  '{'
 	{
 		/* Create a new listen block. Subsequent rules that parse
 		 * substatements inside a 'listen' block will fill in
@@ -118,7 +123,7 @@ listen_stmt:
 				"yyparse");
 			return -1;
 		}
-		cur_listen->listen_type = LISTEN_SERIAL;
+		cur_listen->listen_type = $2;
 	}
 	listen_block '}'
 	{
@@ -157,6 +162,22 @@ listen_stmt:
 		}
 	}
 	;
+
+comm_type:
+	SERIAL
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found commtype: Serial\n");
+		$$ = LISTEN_SERIAL;
+	}
+	| USB
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found commtype: USB\n");
+		$$ = LISTEN_USB;
+	}
+	;
+
 
 listen_block:	listen_directives
 	{ PARSE_TRACE(3)
