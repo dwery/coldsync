@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.87 2002-03-11 23:12:14 azummo Exp $
+ * $Id: config.c,v 1.88 2002-03-18 08:25:18 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -192,13 +192,14 @@ parse_args(int argc, char *argv[])
 				 * <file>.
 				 */
 			global_opts.log_fname = optarg;
- 			put_symbol("LOGFILE", optarg);
+			if (put_symbol("LOGFILE", optarg) < 0)
 				/* XXX - Now would also be a good time to
 				 * set 'final' on the LOGFILE symbol: if it
 				 * was specified on the command line, that
 				 * overrides any value given in the
 				 * environment or config file(s).
 				 */
+				return -1;
 			break;
 
 		    case 'm':	/* -m <mode>: Run in the given mode */
