@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.14 2000-12-15 07:26:06 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.15 2000-12-17 06:18:21 arensb Exp $
  */
 
 #include "config.h"
@@ -326,6 +326,8 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 			perror(device);
 
 		if (errno != ENXIO) {
+			fprintf(stderr, _("Error: Can't open \"%s\"\n"),
+				device);
 			perror("open");
 			/*  If some other error, don't bother waiting
 			 *  for the timeout to expire.
