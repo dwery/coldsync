@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.22 2001-09-07 10:40:07 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.23 2002-05-03 17:15:30 azummo Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -199,6 +199,9 @@ struct dlp_setuserinfo
 #define DLPCMD_MODUIFLAG_VIEWERID	0x08	/* Viewer ID */
 
 /** ReadSysInfo **/
+#define DLPARG_ReadSysInfo_Ver		DLPARG_BASE
+#define DLPARGLEN_ReadSysInfo_Ver	4
+
 #define DLPRET_ReadSysInfo_Info		DLPRET_BASE
 #define DLPRETLEN_ReadSysInfo_Info	14
 

@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.31 2002-04-27 18:36:31 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.32 2002-05-03 17:15:30 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -289,9 +289,6 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 	return 0;		/* Success */
 }
 
-/* XXX - Ought to check version of DLP used by the Palm. If it's v1.2 or
- * later, send it an argument saying which version of DLP we understand.
- */
 int
 DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 	       struct dlp_sysinfo *sysinfo)
@@ -302,19 +299,34 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 	int err;
 	struct dlp_req_header header;		/* Request header */
 	struct dlp_resp_header resp_header;	/* Response header */
-	const struct dlp_arg *ret_argv;	/* Response argument list */
-	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	struct dlp_arg argv[1];			/* Request argument list */
+	const struct dlp_arg *ret_argv;		/* Response argument list */
+	static ubyte outbuf[DLPARGLEN_ReadSysInfo_Ver]; 
+						/* Buffer holding outgoing arg */
+	const ubyte *rptr;			/* Pointer into buffers (for reading) */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> ReadSysInfo\n");
 
 	/* Fill in the header values */
 	header.id = (ubyte) DLPCMD_ReadSysInfo;
-	header.argc = 0;
+	header.argc = 1;
+
+	/* Fill in the argument */
+	
+	outbuf[0] = 0x00; /* We are telling our peer we support
+	outbuf[1] = 0x01;  * DLP 1.3. Old PDAs will discard the argument.
+	outbuf[2] = 0x00;  */
+	outbuf[3] = 0x03;
+	
+	argv[0].id	= DLPARG_ReadSysInfo_Ver;
+	argv[0].size	= DLPARGLEN_ReadSysInfo_Ver;
+	argv[0].data	= outbuf;
+
 
 	/* Send the DLP request */
 	err = dlp_dlpc_req(pconn,
-			   &header, NULL,
+			   &header, argv,
 			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
