@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.5 1999-03-11 04:14:18 arensb Exp $
+ * $Id: coldsync.h,v 1.6 1999-03-16 11:03:40 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -58,6 +58,10 @@ extern int RecordSync(struct PConnection *pconn,
 		      char *bakfname);
 struct pdb *LoadDatabase(char *fname);
 extern int SlowSync(struct PConnection *pconn,
+		    struct dlp_dbinfo *remotedb,
+		    struct pdb *localdb,
+		    char *bakfname);
+extern int FastSync(struct PConnection *pconn,
 		    struct dlp_dbinfo *remotedb,
 		    struct pdb *localdb,
 		    char *bakfname);
