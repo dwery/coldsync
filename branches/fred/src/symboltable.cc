@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.cc,v 1.1.2.5 2001-10-11 10:18:23 arensb Exp $
+ * $Id: symboltable.cc,v 1.1.2.6 2001-10-11 11:20:09 arensb Exp $
  */
 
 #include <config.h>
@@ -33,6 +33,7 @@ map<string,string> table;	/* XXX - Is this going to cause problems on
 	 * the sysadmin to mandate certain variables' values ($CONDUITDIR,
 	 * perhaps?)
 	 */
+	/* XXX - Free the map before exiting */
 /* XXX - In these functions, it it worth checking to see whether the key is
  * the empty string?
  */
@@ -111,6 +112,7 @@ get_symbol_n(const char *name, int len)
 void
 put_symbol(const char *name, const char *value)
 {
+	/* XXX - Free table[name] if it's already set */
 	table[name] = value;
 }
 
