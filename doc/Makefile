@@ -1,12 +1,11 @@
-# $Id: Makefile,v 1.7 2000-05-19 12:05:20 arensb Exp $
+# $Id: Makefile,v 1.8 2000-07-31 08:56:39 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
 
 # XXX - This ought to include 'libpalm.texi', or whatever it mutates
 # into, at some point.
-TEXIFILES =	conduits.texi \
-		pdb.texi
+TEXIFILES =	conduits.texi
 
 INFOFILES =	${TEXIFILES:.texi=.info}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
