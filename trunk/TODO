@@ -1,3 +1,5 @@
+- Review Alessandro Zummo's SPC.pm. Add POD. Improve some of the
+  identifiers.
 - Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
 - Devfs: At configure-time, check for the existence of /dev/.devfsd.
   This is created by Linux's devfs daemon. If it exists, assume
@@ -405,5 +407,3 @@
   versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
   "1.002_003_004", which might be desirable. Is it worth fixing this?
 	Will Perl 5.6 make this comment obsolet?
-- All of the networking stuff assumes IPv4. Try to make it work with
-  IPv6.
