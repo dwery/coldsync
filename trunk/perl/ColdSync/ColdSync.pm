@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.16 2001-03-13 05:59:54 arensb Exp $
+# $Id: ColdSync.pm,v 1.17 2002-03-24 23:56:36 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.16 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.17 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -364,7 +364,7 @@ sub StartConduit
 
 	# Read the input database, if one was specified.
 	$PDB = new Palm::PDB;
-	if (defined($HEADERS{InputDB}))
+	if (defined($HEADERS{InputDB}) and not defined($HEADERS{NoAutoLoadDB}))
 	{
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
@@ -405,8 +405,11 @@ sub EndConduit
 	if (($FLAVOR eq "fetch") or ($FLAVOR eq "sync"))
 	{
 		# XXX - Barf if $PDB undefined
-		$PDB->Write($HEADERS{OutputDB}) or
-			die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
+		if (defined $PDB and not defined($HEADERS{NoAutoWriteDB}))
+		{
+			$PDB->Write($HEADERS{OutputDB}) or
+				die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
+		}
 	}
 	# Nothing to do for "Dump" conduits
 
