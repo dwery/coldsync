@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 1.1.2.4 2000-09-03 02:24:26 arensb Exp $
+ * $Id: pref.c,v 1.1.2.5 2000-09-03 02:32:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -306,33 +306,22 @@ DownloadPrefItem(struct PConnection *pconn,
 	return 0;	/* Success */
 }
 
-/* XXX - This shouldn't be everywhere. Move it to pref.c where it's
- * actually used. Consider making it an inline function.
- */
-#define prefdesccmp(x,y)	(((x).creator == (y)->creator && (x).id == (y)->id) ? 0 : 1)
-
-/* Finds a preference item from a list by matching it to the description.
- * Returns the found preference item if found, else returns NULL.
- */
 struct pref_item *
 FindPrefItem(const struct pref_desc *description,
 	     struct pref_item *list)
 {
-    struct pref_item *match = list;
-    const struct pref_item *previous = NULL;
-
-    /* XXX - Rewrite this as a simple for loop. 'previous' is redundant */
-    while (match != NULL)
-    {
-	if (prefdesccmp(match->description,description) == 0)
-	    break;
-	previous = match;
-	match = match->next;
-    }
-
-    return match;
+	/* Walk the list, looking for a pref_item that matches
+	 * 'description'
+	 */
+	for (; list != NULL; list = list->next)
+	{
+		if ((description->creator == list->creator) &&
+		    (description->id == list->id))
+			/* Found it */
+			return list;
+	}
+	return NULL;	/* Didn't find it */
 }
-
 
 /* Returns a fully filled preference item or, if not found, returns NULL. */
 struct pref_item *
