@@ -1,0 +1,81 @@
+dnl #
+dnl # $Id: configure.in,v 1.6 1999-03-11 10:04:37 arensb Exp $
+dnl #
+
+dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
+dnl # culprit is a couple of lines in the generated Makefile that say
+dnl #	test "$var1" = value && var2=true
+dnl # Berkeley 'make' copes quite well with the equivalent
+dnl #	if test "$var1" = value; then var2=true; fi
+
+dnl # XXX - Test to see whether cpp accepts macro definitions with
+dnl # "..." as argument.
+
+AC_INIT(pconn/PConnection.c)
+AM_INIT_AUTOMAKE(coldsync, 0.1.5)
+AM_CONFIG_HEADER(config.h)
+
+dnl # XXX - Without this, the Makefile contains
+dnl #	SHELL = @SHELL@
+dnl # but 'configure' doesn't substitute @SHELL@.
+SHELL=/bin/sh
+AC_SUBST(SHELL)
+
+dnl # Checks for programs.
+
+AC_PROG_CC
+
+# I know how to be pedantic with gcc. Other compilers, I'm not sure.
+if test x"$GCC" = x"yes" ; then
+	CFLAGS="-g -Wall -ansi -pedantic"
+else
+	AC_MSG_RESULT(dnl
+[	You don't seem to be using gcc, so various anal-retentive
+	compiler options won't be turned on. If you know what they
+	are for your compiler, you may wish to turn them on, e.g.
+		CFLAGS=\"-Wall -ansi -pedantic\" ./configure])
+fi
+
+AC_PROG_RANLIB
+
+dnl # Checks for libraries.
+
+dnl # Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
+dnl # echo "HAVE_FCNTL == $ac_cv_header_fcntl_h"
+
+dnl # Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_HEADER_TIME
+AC_STRUCT_TIMEZONE
+
+dnl # XXX - How do you find out how big an 'off_t' is?
+dnl AC_CHECK_SIZEOF(off_t)
+
+dnl # Checks for library functions.
+AC_CHECK_FUNCS(select \
+	cfsetspeed \
+	cfmakeraw \
+	snprintf)
+
+# Tell the various Makefiles to use the compatibility function provided
+if test x"$ac_cv_func_cfmakeraw" = xno ; then
+	COMPAT="$COMPAT cfmakeraw.c"
+fi
+
+AC_SUBST(COMPAT)
+
+dnl # Should print out an error if one or more required components
+dnl # couldn't be found. Use AC_MSG_WARN([message])
+
+#if test x"$ac_cv_header_sys_frobozz_h" = x"no" ; then
+#	AC_MSG_WARN([<frobozz.h> could not be found. This package may not
+#	compile properly])
+#fi
+
+AC_OUTPUT([Makefile
+	palm/Makefile
+	pconn/Makefile
+	coldsync/Makefile
+	doc/Makefile])

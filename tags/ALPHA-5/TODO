@@ -1,0 +1,85 @@
+- Error codes should probably be divided into two parts: high byte
+  indicating the protocol that gave the error, and low byte giving the
+  error code.
+- Ideally, you should be able to use Pilot VT100 and HotSync on the
+  same cradle, without having to change anything.
+  More realistically, though, it'll be necessary to write a ColdSync
+  daemon controller: some tool that'll allow you to turn off the
+  "listen for a HotSync connection" feature, and replace it with, say,
+  getty.
+  OTOH, it might be possible for the daemon to listen for certain
+  sequences. E.g., if it sees 0xbe, 0xef, 0xed in quick succession,
+  then it's a good bet that the Palm is trying to use SLP, from which
+  one can try to figure out what to do next (usually sync). Otherwise,
+  wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
+  daemon, or whatever.
+- Write a class to sync two generic databases: a database is an
+  ordered list of records; if they differ, they need to be synched.
+  The normal case of synching a database on the palm with one on the
+  desktop is just a specific subclass. Allow subclasses to override
+  retrieving, comparing, storing, the logic underlying what to copy
+  where, etc.
+  How do you sync two heterogenous databases (e.g., ToDo.pdb and an
+  XPostitNote of things to do)?
+- A lot of assertion-checking would probably be a Good Thing.
+- (When ColdSync actually gets written:) Gnome and KDE support
+- Fix PADP so it can dump when writing, as well as when reading.
+- Modem sync
+- NetSync: figure out just how it works and stuff.
+- Add a type for those four-letter creator types and such.
+- Something to parse version numbers, as per <System/NetMgr.h> and
+  <System/SystemMgr.h>
+- Add functions InitPalmLog(), AddToPalmLog(char *), WritePalmLog(),
+  to make logging work more or less the way you expect.
+- Make the *_TRACE stuff go to a separate debugging log file.
+- It should be possible to sync two Palms with each other if you have
+  two cradles, or over the net.
+- Add identd support?
+- PAM for security throughout?
+- Figure out a sane source directory organization and stick to it. I'm
+  not going to worry about it too much in this alpha stage, though.
+- Figure out why 'coldsync/coldsync' and HotSync on the Palm don't
+  always finish at the same time.
+- Would it be a good idea to grab as many of the identifiers from the
+  Palm header files as practical, to make it easier to switch to them
+  at some future point?
+- Get dependencies working right in Makefiles, so stuff gets rebuilt
+  properly.
+- The sync itself should probably just consist of opening the database
+  on the Palm, finding the appropriate conduit, and invoking it.
+  "Appropriate conduit" defaults to either a generic sync, or backup,
+  depending on whether the database exists on the desktop or not. The
+  generic conduit (and possibly the backup) should probably be written
+  in C++ for easy subclassing.
+- Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
+- Add robustness. Ideally, ColdSync should recover from everything
+  that's recoverable.
+- Need functions to begin and end pause: if the desktop pops up a
+  dialog box or something, it can take an arbitrary amount of time to
+  complete. During that time, 'coldsync' should send regular tickle
+  packets to the Palm to keep it from timing out. These should
+  probably return an error if the sync is being run in batch
+  (non-interactive) mode, i.e. when there's no one there to respond to
+  the dialog.
+- Move the DLP time conversion functions out of pconn/util.[ch]. Then
+  take the #include <coldsync/whatever> out of util.c
+- Come up with a good archive file format. Presumably, this should be
+  just a series of records of the form
+	<type><headerlen><length><mod/del time?>
+	<data>
+  where <type> is the type of chunk (AppInfo block (for when it
+  changes), sort block, resource or record), <length> is the length in
+  bytes of the remainder of the chunk, and <data> is the record data
+  itself. <mod/del time> is the time when the record was modified or
+  deleted, or whatever other housecleaning stuff is necessary.
+  <headerlen> is the length of the header before the data. This ought
+  to help maintain compatibility with older versions.
+  Probably be good to add a magic cookie and version number at the
+  beginning of the file.
+  This way, adding a record to the archive is as simple as appending
+  it. Having the AppInfo and sort blocks give some hope of figuring
+  out which category and such the record was in. Similarly, deleting a
+  record from the archive doesn't affect the other records.
+- Write a utility to just dump the contents of a pdb file.
+- Add CTRACE() macro for debugging, like the *_TRACE() ones.
+- Turn the pdb stuff into its own library.
