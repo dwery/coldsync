@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.79 2001-01-11 09:25:29 arensb Exp $
+ * $Id: coldsync.c,v 1.80 2001-01-14 12:19:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -750,24 +750,27 @@ run_mode_Standalone(int argc, char *argv[])
 		fprintf(stderr, "Doing a sync.\n");
 
 
-	/* Run any install conduits on the dbs in install directory Notice
-	 * that install conduits are *not* run on files named for install
-	 * on the command line.
-	 */
-	while (NextInstallFile(&dbinfo)>=0) {
-		err = run_Install_conduits(&dbinfo);
-		if (err < 0) {
-			Error(_("Error %d running install conduits.\n"),
-			      err);
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	}
-
-	/* Install new databases before sync */
+	/* Install new databases before sync, if the config says so */
 	if (global_opts.install_first)
+	{
+		/* Run any install conduits on the dbs in install directory
+		 * Notice that install conduits are *not* run on files
+		 * named for install on the command line.
+		 */
+		while (NextInstallFile(&dbinfo)>=0) {
+			err = run_Install_conduits(&dbinfo);
+			if (err < 0) {
+				Error(_("Error %d running install "
+					"conduits.\n"),
+				      err);
+				free_Palm(palm);
+				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				return -1;
+			}
+		}
+
 		err = InstallNewFiles(pconn, palm, installdir, True);
+	}
 
 	/* XXX - It should be possible to specify a list of directories to
 	 * look in: that way, the user can put new databases in
@@ -921,7 +924,25 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* Install new databases after sync */
 	if (!global_opts.install_first)
+	{
+		/* Run any install conduits on the dbs in install directory
+		 * Notice that install conduits are *not* run on files
+		 * named for install on the command line.
+		 */
+		while (NextInstallFile(&dbinfo)>=0) {
+			err = run_Install_conduits(&dbinfo);
+			if (err < 0) {
+				Error(_("Error %d running install "
+					"conduits.\n"),
+				      err);
+				free_Palm(palm);
+				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				return -1;
+			}
+		}
+
 		err = InstallNewFiles(pconn, palm, installdir, True);
+	}
 
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
