@@ -165,6 +165,9 @@
 /* Define if you have the GNU gettext package */
 #undef HAVE_LIBINTL
 
+/* Define if your system supports IPv6 */
+#undef HAVE_IPV6
+
 /* Defined if the package was compiled with the ElectricFence library */
 #undef WITH_EFENCE
 
