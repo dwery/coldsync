@@ -41,10 +41,16 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.1 1999-09-09 05:14:01 arensb Exp $
+ * $Id: cmp.h,v 1.2 2000-12-08 07:23:46 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
+
+/* These define the version of the CMP protocol that this library
+ * implements.
+ */
+#define CMP_VER_MAJOR		1
+#define CMP_VER_MINOR		1
 
 /* CMP message types */
 #define CMP_TYPE_WAKEUP		1	/* Wakeup packet */
