@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.41 2002-11-02 12:55:55 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.42 2002-11-02 12:59:42 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -437,13 +437,16 @@ serial_drain(PConnection *p)
 	/* Drop any unsent or unreceived data that might still be lingering
 	 * in the buffer.
 	 */
-	if (p->fd >= 0)
-		/* Need to check the file descriptor because this function
-		 * is called both for normal and abnormal termination.
-		 */
-		err = tcdrain(p->fd);
-	if (err < 0)
-		perror("tcdrain");
+	if (isatty(p->fd))
+	{
+		if (p->fd >= 0)
+			/* Need to check the file descriptor because this function
+			 * is called both for normal and abnormal termination.
+			 */
+			err = tcdrain(p->fd);
+		if (err < 0)
+			perror("tcdrain");
+	}
 
 	return err;
 }
