@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.77 2003-09-30 20:53:31 azummo Exp $
+ * $Id: coldsync.h,v 1.78 2003-10-01 12:29:39 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -252,6 +252,8 @@ typedef struct conduit_block
 				 * 'struct pref_desc's will fit in it?
 				 */
 	int num_prefs;		/* # of entries in the 'prefs' array */
+
+	Bool enabled;		/* Enabled flag */
 } conduit_block;
 
 #define CONDFL_DEFAULT	0x01	/* This is a default conduit: if no other

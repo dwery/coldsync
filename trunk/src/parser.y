@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.74 2003-06-26 21:01:07 azummo Exp $
+ * $Id: parser.y,v 2.75 2003-10-01 12:29:39 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -89,6 +89,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token OPTIONS
 %token PATH
 %token CWD
+%token ENABLED
 %token PDA
 %token PREFERENCE
 %token SAVED
@@ -405,6 +406,8 @@ conduit_stmt:	CONDUIT
 		PARSE_TRACE(3)
 		{
 			fprintf(stderr, "Found conduit+conduit_block:\n");
+			fprintf(stderr, "\tEnabled: [%s]\n",
+				cur_conduit->enabled ? "Yes" : "No");
 			fprintf(stderr, "\tPath: [%s]\n",
 				(cur_conduit->path == NULL ?
 				 "(null)" :
@@ -630,7 +633,7 @@ conduit_directive:
 
 		if (cur_conduit->cwd != NULL)
 		{
-			Warn(_("%s: %d: Cwd already defined."),
+			Warn(_("%s: %d: Cwd re-defined."),
 			     conf_fname, lineno);
 			free(cur_conduit->cwd);
 		}
@@ -642,6 +645,18 @@ conduit_directive:
 			fprintf(stderr, "\tConduit: cwd [%s]\n",
 				cur_conduit->cwd);
 	}
+        | ENABLED colon boolean ';'
+        {
+	 	PARSE_TRACE(3)
+			fprintf(stderr, "\tConduit: enabled.\n");
+                cur_conduit->enabled = $3;
+        }
+        | ENABLED ';'
+        {
+         	PARSE_TRACE(3)
+	                fprintf(stderr, "\tConduit: enabled.\n");
+        	cur_conduit->enabled = True;
+        }
 	| PREFERENCE colon
 	{
 		lex_expect(LEX_ID4);
