@@ -6,9 +6,8 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.30 2001-01-25 07:47:52 arensb Exp $
+ * $Id: lexer.l,v 2.31 2001-01-30 08:12:25 arensb Exp $
  */
-#include "config.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -40,25 +39,6 @@
 #ifdef ECHO
 #undef ECHO		/* <termios.h> also defines ECHO */
 #endif	/* ECHO */
-
-/* This is a hack for Solaris. It requires __EXTENSIONS__ or
- * _POSIX_C_SOURCE to be defined in order to find the declaration for
- * fileno(). However, lint defines fileno() as a cpp macro, hence the
- * #ifndef block.
- */
-#ifndef fileno
-extern int fileno(FILE *);
-#endif  /* fileno */
-
-/* Hack for Linux: "../config.h" contains magic to that makes the
- * declaration of strdup() be included, but "../config.h" is included only
- * after <stdio.h>, which includes <features.h>, which controls whether
- * strdup() is declared :-(
- * This is an annoying feature of 'flex', not a Linux-ism.
- */
-#if !WITH_LEAK_DETECTION
-extern char *strdup(const char *string);
-#endif
 
 int lineno;
 
