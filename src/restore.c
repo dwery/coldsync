@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.3 1999-09-09 05:51:42 arensb Exp $
+ * $Id: restore.c,v 2.4 1999-11-04 10:59:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -45,10 +45,9 @@
 #  define strcasecmp(s1,s2)	strcmp((s1),(s2))
 #endif	/* !HAVE_STRCASECMP */
 
-/*  #include "PConnection.h" */
-#include <pconn/pconn.h>	/* XXX - Clean this up */
-#include "coldsync.h"
+#include "pconn/pconn.h"
 #include "pdb.h"
+#include "coldsync.h"
 
 /* XXX - Logging */
 int
