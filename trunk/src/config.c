@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.78 2001-10-18 02:49:16 arensb Exp $
+ * $Id: config.c,v 1.79 2001-11-01 07:02:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -733,42 +733,62 @@ set_mode(const char *str)
 static void
 usage(int argc, char *argv[])
 {
-	/* XXX - gcc 3.0 complains that this string is longer than 509
+	/* The usage string is broken up into individual strings in
+	 * usage_msg[] for two reasons:
+	 * First of all, gcc 3.0 complains if the string is longer than 509
 	 * characters, which is what ISO C89 mandates.
+	 *
+	 * Secondly, a single monolithic string is harder to translate: if
+	 * you add one option, suddenly the whole usage string, in other
+	 * languages, becomes obsolete.
+	 * By breaking this up one string per option, if you add an option
+	 * and don't translate it immediately, then non-English users will
+	 * see most of the usage string in their language, and the new
+	 * option in English. Not perfect, but better than seeing the whole
+	 * thing in English.
 	 */
-	/* XXX - Presumably the list of values should be separated from the
-	 * strings themselves. That is, use
-	 *	printf(_("\t-t <devtype>:\tPort type %s.\n"),
-	 *		"[serial|usb|net]");
-	 * so that future changes don't require translation. (Obviously,
-	 * things like "<file|dir>" should remain as they are.
+	/* XXX - This still isn't quite right: it would be nice to have
+	 * arguments: in the string
+	 *	-t <devtype>: Port type [serial|usb|net].
+	 * the substring "serial|usb|net" should not be translated. Hence,
+	 * it would be nice to move it out of the translated string, so
+	 * that the range of values can be changed without having to be
+	 * retranslated every time.
+	 * Any suggestions?
 	 */
-	printf(_("Usage: %s [options] <mode> <mode args>\n"
-		 "Modes:\n"
-		 "\t-ms:\tSynchronize (default).\n"
-		 "\t-mI:\tInitialize.\n"
-		 "\t-mb <dir> [database...]\n"
-		 "\t\tPerform a backup to <dir>.\n"
-		 "\t-mr <file|dir>...\n"
-		 "\t\tRestore or install new databases.\n"
-		 "Options:\n"
-		 "\t-h:\t\tPrint this help message and exit.\n"
-		 "\t-V:\t\tPrint version and exit.\n"
-		 "\t-f <file>:\tRead configuration from <file>\n"
-		 "\t-z:\t\tInstall databases after sync.\n"
-		 "\t-I:\t\tForce installation of new databases.\n"
-		 "\t-S:\t\tForce slow sync.\n"
-		 "\t-F:\t\tForce fast sync.\n"
-		 "\t-R:\t\tCheck ROM databases.\n"
-		 "\t-p <port>:\tListen on device <port>.\n"
-		 "\t-t <devtype>:\tPort type [serial|usb|net].\n"
-		 "\t-P <protocol>:\tSoftware protocol "
-			 "[default|full|simple|net].\n"
-		 "\t-s:\t\tLog error messages to syslog.\n"
-		 "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
-		 "\t-v:\t\tIncrease verbosity.\n"
-		 "\t-d <fac[:level]>:\tSet debugging level.\n"),
-	       argv[0]);
+	const char *usage_msg[] = {
+		N_("Modes:\n"),
+		N_("\t-ms:\tSynchronize (default).\n"),
+		N_("\t-mI:\tInitialize.\n"),
+		N_("\t-mb <dir> [database...]\n"
+		   "\t\tPerform a backup to <dir>.\n"),
+		N_("\t-mr <file|dir>...\n"
+		   "\t\tRestore or install new databases.\n"),
+		N_("Options:\n"),
+		N_("\t-h:\t\tPrint this help message and exit.\n"),
+		N_("\t-V:\t\tPrint version and exit.\n"),
+		N_("\t-f <file>:\tRead configuration from <file>\n"),
+		N_("\t-z:\t\tInstall databases after sync.\n"),
+		N_("\t-I:\t\tForce installation of new databases.\n"),
+		N_("\t-S:\t\tForce slow sync.\n"),
+		N_("\t-F:\t\tForce fast sync.\n"),
+		N_("\t-R:\t\tCheck ROM databases.\n"),
+		N_("\t-p <port>:\tListen on device <port>.\n"),
+		N_("\t-t <devtype>:\tPort type [serial|usb|net].\n"),
+		N_("\t-P <protocol>:\tSoftware protocol "
+		   "[default|full|simple|net].\n"),
+		N_("\t-s:\t\tLog error messages to syslog.\n"),
+		N_("\t-l: <file>:\tWrite error/debugging messages to "
+		   "<file>.\n"),
+		N_("\t-v:\t\tIncrease verbosity.\n"),
+		N_("\t-d <fac[:level]>:\tSet debugging level.\n"),
+		NULL
+	};
+	int i;
+
+	printf(_("Usage: %s [options] <mode> <mode args>\n"), argv[0]);
+	for (i = 0; usage_msg[i] != NULL; i++)
+		printf("%s", _(usage_msg[i]));
 }
 
 /* print_version
