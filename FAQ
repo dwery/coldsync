@@ -91,6 +91,13 @@ A: Not directly, but yes.
    have so far been unable to duplicate their success. You should probably
    start with the IR-HOWTO that comes with the Redhat distribution.
 
+Q: ColdSync doesn't detect my Visor's serial number correctly.
+A: It has been reported that 
+   ColdSync reads the Visor's serial number as 
+	ff:ff:ff:ff:ff:ff:ff:ff:ff:ff:ff:ff
+   which is obviously bogus. Unfortunately, I don't have a Visor with which
+   to experiment, but if someone'll send me a patch, I'll incorporate it.
+
 # This is for Emacs's benefit:
 # Local Variables:	***
 # mode: auto-fill	***
