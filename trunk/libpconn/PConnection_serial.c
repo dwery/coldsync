@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.20 2001-02-20 12:38:06 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.21 2001-03-16 14:13:30 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -504,13 +504,13 @@ setspeed(PConnection *pconn, int speed)
 		return -1;
 	}
 
-#if defined(__FreeBSD__)
-	/* XXX - For some reason, under FreeBSD, when syncing with xcopilot
-	 * (pseudo-ttys), no communication occurs after this point unless
-	 * this sleep() is present.
+	/* XXX - This sleep() bothers me tremendously. On one hand, under
+	 * FreeBSD with xcopilot, if this sleep isn't there, no
+	 * communication appears to occur after tcsetattr(), above.
+	 * On the other hand, I've gotten reports that this is also
+	 * necessary under Linux.
 	 */
 	sleep(1);
-#endif	/* __FreeBSD__ */
 
 	return 0;
 }
