@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2002-11-02 22:27:58 azummo Exp $
+# $Id: Makefile,v 1.13 2003-06-24 12:34:02 azummo Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -21,7 +21,12 @@ DISTFILES =	Makefile \
 		${CONDUITS} \
 		memo-text \
 		std-categories \
-		dump-headers
+		dump-headers \
+		dump-env \
+		dump-dbs \
+		dump-expslots \
+		dump-vfs \
+		zire71-photo
 
 all::
 
