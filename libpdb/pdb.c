@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.42 2001-10-12 02:19:12 arensb Exp $
+ * $Id: pdb.c,v 1.43 2001-11-08 01:57:54 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -1377,7 +1377,7 @@ pdb_LoadRsrcIndex(int fd,
 		{
 			fprintf(stderr,
 				"\tResource %d: type '%c%c%c%c' (0x%08lx), "
-				"id %u, offset 0x%04lx\n",
+				"id %u, offset 0x%08lx\n",
 				i,
 				(char) (rsrc->type >> 24) & 0xff,
 				(char) (rsrc->type >> 16) & 0xff,
@@ -1481,7 +1481,7 @@ pdb_LoadRecIndex(int fd,
 
 		PDB_TRACE(6)
 			fprintf(stderr,
-				"\tRecord %d: offset 0x%04lx, flags 0x%02x, "
+				"\tRecord %d: offset 0x%08lx, flags 0x%02x, "
 				" category 0x%02x, ID 0x%08lx\n",
 				i,
 				rec->offset,
@@ -1507,7 +1507,7 @@ pdb_LoadAppBlock(int fd,
 		 struct pdb *db)
 {
 	int err;
-	uword next_off;		/* Offset of the next thing in the file
+	localID next_off;		/* Offset of the next thing in the file
 				 * after the AppInfo block */
 	off_t offset;		/* Offset into file, for checking */
 
@@ -1624,7 +1624,7 @@ pdb_LoadSortBlock(int fd,
 		 struct pdb *db)
 {
 	int err;
-	uword next_off;		/* Offset of the next thing in the file
+	localID next_off;		/* Offset of the next thing in the file
 				 * after the sort block */
 	off_t offset;		/* Offset into file, for checking */
 
@@ -1882,7 +1882,7 @@ pdb_LoadRecords(int fd,
 	     i++, rec = rec->next)
 	{
 		off_t offset;		/* Current offset, for checking */
-		udword next_off;	/* Offset of next resource in file */
+		localID next_off;	/* Offset of next resource in file */
 
 		/* Sanity check: make sure we haven't stepped off the end
 		 * of the list.
