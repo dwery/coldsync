@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.109 2000-12-24 09:36:16 arensb Exp $
+dnl # $Id: configure.in,v 1.110 2001-01-08 08:09:22 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -15,6 +15,10 @@ dnl # 'compress'
 
 dnl # XXX - Might want to check for socket(), <netinet/in.h> etc., and
 dnl # turn off NetSync if they don't exist.
+
+dnl # XXX - Check for setvbuf(). Not sure what to do if it doesn't
+dnl # exist, though. #define setvbuf() out of existence and hope for
+dnl # the best?
 
 AC_INIT(src/coldsync.c)
 
@@ -391,7 +395,8 @@ AC_CHECK_FUNCS(fpurge \
 	socketpair \
 	strcasecmp \
 	strncasecmp \
-	snprintf
+	snprintf \
+	vfprintf
 )
 
 if test x"$ac_cv_func_inet_pton" != xyes; then
