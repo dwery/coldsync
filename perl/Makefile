@@ -1,6 +1,4 @@
-# $Id: Makefile,v 1.7 2000-05-20 16:31:15 arensb Exp $
-
-# XXX - This Makefile is temporary. It should be replaced by a Makefile.PL
+# $Id: Makefile,v 1.8 2000-05-20 22:43:30 arensb Exp $
 
 TOP =		..
 SUBDIR =	perl
