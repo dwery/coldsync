@@ -49,13 +49,6 @@
  *
  *******************************************************************/
 
-/*  #include <BuildRules.h> */
-
-/* Include Pilot elementary data types */
-/*  #include <Common.h> */
-
-/* Include prototypes for this module */
-/*  #include <Crc.h> */
 #include "palm_types.h"
 
 typedef ubyte Byte;
