@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.64 2000-05-03 03:31:18 arensb Exp $
+dnl # $Id: configure.in,v 1.65 2000-05-03 04:37:23 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -48,6 +48,31 @@ CPPFLAGS="-I${prefix}/include"
 ## Checks for programs.
 
 AC_PROG_CC
+
+# Pedantic compilation. Enabled by default if using gcc.
+AC_ARG_ENABLE(pedantic,dnl
+[  --disable-pedantic      Turn off pedantic error-checking during compilation.],dnl
+	cs_cv_pedantic=no,
+	AC_CACHE_VAL(cs_cv_pedantic,
+		cs_cv_pedantic=yes
+	)
+)
+
+if test x"$cs_cv_pedantic" = xyes; then
+	# I know how to be pedantic with gcc. Other compilers, I'm not sure.
+	if test x"$GCC" = x"yes" ; then
+		CFLAGS="-Wall -ansi -pedantic $CFLAGS"
+		CXXFLAGS="-Wall -ansi -pedantic $CXXFLAGS"
+	else
+		AC_MSG_RESULT(dnl
+[	You don't seem to be using gcc, so various anal retentive
+	compiler options won't be turned on. If you know what they
+	are for your compiler, you may wish to turn them on, e.g.
+		CFLAGS=\"-Wall -ansi -pedantic\" ./configure
+		CXXFLAGS=\"-Wall -ansi -pedantic\" ./configure])
+	fi
+fi
+AC_SUBST(CFLAGS)
 
 # AIX sucks so bad, it requires its own special check.
 AC_AIX
@@ -329,31 +354,6 @@ if test -z "$ac_cv_func_select" -o x"$ac_cv_func_select" = x"no" ; then
 fi
 
 AC_DEFINE_UNQUOTED(SYSCONFDIR,"`eval echo \"${sysconfdir}\"`")
-
-# Pedantic compilation. Enabled by default if using gcc.
-AC_ARG_ENABLE(pedantic,dnl
-[  --disable-pedantic      Turn off pedantic error-checking during compilation.],dnl
-	cs_cv_pedantic=no,
-	AC_CACHE_VAL(cs_cv_pedantic,
-		cs_cv_pedantic=yes
-	)
-)
-
-if test x"$cs_cv_pedantic" = xyes; then
-	# I know how to be pedantic with gcc. Other compilers, I'm not sure.
-	if test x"$GCC" = x"yes" ; then
-		CFLAGS="-Wall -ansi -pedantic $CFLAGS"
-		CXXFLAGS="-Wall -ansi -pedantic $CXXFLAGS"
-	else
-		AC_MSG_RESULT(dnl
-[	You don't seem to be using gcc, so various anal retentive
-	compiler options won't be turned on. If you know what they
-	are for your compiler, you may wish to turn them on, e.g.
-		CFLAGS=\"-Wall -ansi -pedantic\" ./configure
-		CXXFLAGS=\"-Wall -ansi -pedantic\" ./configure])
-	fi
-fi
-AC_SUBST(CFLAGS)
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT([Make.rules
