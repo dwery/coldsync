@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.69 2000-12-16 19:51:23 arensb Exp $
+ * $Id: coldsync.c,v 1.70 2000-12-16 23:00:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1087,7 +1087,7 @@ run_mode_Init(int argc, char *argv[])
 	const char *p_username;		/* Username on the Palm */
 	const char *new_username;	/* What the username should be */
 	udword p_userid;		/* Userid on the Palm */
-	udword new_userid;		/* What the userid should be */
+	udword new_userid = 0;		/* What the userid should be */
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
