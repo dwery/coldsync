@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.14 2000-11-18 22:47:04 arensb Exp $
+ * $Id: restore.c,v 2.15 2000-11-19 00:13:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -229,30 +229,6 @@ restore_dir(struct PConnection *pconn,
 		SYNC_TRACE(3)
 			fprintf(stderr, "Examining %s/%s\n",
 				dirname, file->d_name);
-
-/* XXX - This seems to have broken somewhere along the way */
-#if 0
-/* XXX - Do we really want to check that it's a regular file? Should
- * an intelligent user be able to have symlinks? What about a stupid
- * user?
- */
-#if HAVE_DIRENT_TYPE
-		/* Make sure this is a regular file */
-		if (file->d_type != DT_REG)
-		{
-			/* Dunno wht it is, but it's not a regular
-			 * file. Ignore it.
-			 */
-			SYNC_TRACE(3)
-				fprintf(stderr,
-					"  Ignoring %s: not a regular file (%d)\n",
-					file->d_name, file->d_type);
-			continue;
-		}
-#else	/* HAVE_DIRENT_TYPE */
-		/* XXX - Ought to stat() the file */
-#endif	/* !HAVE_DIRENT_TYPE */
-#endif	/* 0 */
 
 		/* Make sure this file has the proper extension for a Palm
 		 * database of some sort. If not, ignore it.
