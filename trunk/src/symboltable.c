@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.c,v 1.4 2002-11-05 21:37:51 azummo Exp $
+ * $Id: symboltable.c,v 1.5 2002-11-13 12:09:04 azummo Exp $
  *
  * This file implements the symbol table, as used in the .coldsyncrc
  * parser. No, it's not terribly sophisticated, because we're likely
@@ -181,6 +181,9 @@ put_symbol(const char *name, const char *value)
 		fprintf(stderr, "Inside put_symbol(%s,%s)\n", name, value);
 		fprintf(stderr, "\tsymtab == %p\n", symtab);
 	}
+
+	/* Automatically set an env var with the same name */
+	setenv(name, value, 1);
 
 	/* Create a new symbol */
 	if ((newsym = new_symbol(name, value)) == NULL)
