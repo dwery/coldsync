@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.1 1999-02-19 22:44:42 arensb Exp $
+ * $Id: pdb.h,v 1.2 1999-02-24 13:15:32 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -58,6 +58,10 @@ struct pdb_header
 	udword mtime;			/* Time of last modification */
 	udword baktime;			/* Time of last backup */
 	udword modnum;			/* Modification number */
+			/* XXX - What exactly is the modification number?
+			 * Does it get incremented each time you, say,
+			 * create a new category?
+			 */
 
 	/* XXX - These two should probably be called something like
 	 * appinfo_offset and sortinfo_offset, since "ID" is misleading.
@@ -113,6 +117,7 @@ struct pdb_resource
  */
 struct pdb
 {
+	long file_size;			/* Total length of file */
 	struct pdb_header header;	/* Database header */
 	struct pdb_recordlist_header reclist_header;
 					/* Record list header */
@@ -124,17 +129,22 @@ struct pdb
 		struct pdb_record *rec;
 		struct pdb_resource *res;
 	} rec_index;
-	void *appinfo;			/* Optional app info block */
-	void *sortinfo;			/* Optional sort info block */
-	struct pdb_record *records;	/* Array of records */
+	long appinfo_len;		/* Length of AppInfo block */
+	void *appinfo;			/* Optional AppInfo block */
+	long sortinfo_len;		/* Length of sort block */
+	void *sortinfo;			/* Optional sort block */
+/*  	struct pdb_record *records; */	/* Array of records */
+	uword *data_len;		/* Array of resource/record sizes */
+	ubyte **data;			/* Array of resources/records */
 					/* XXX - This should also probably
 					 * become a linked list, for the
 					 * same reasons as above.
 					 */
 };
 
-extern struct pdb *read_pdb(int fd);
+/*  extern struct pdb *read_pdb(int fd); */
 extern void free_pdb(struct pdb *db);
+extern struct pdb *LoadDatabase(char *fname);
 
 #endif	/* _pdb_h_ */
 
