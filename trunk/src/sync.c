@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.6 2002-11-03 23:24:45 azummo Exp $
+ * $Id: sync.c,v 2.7 2002-11-13 12:07:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -648,11 +648,25 @@ do_sync(pda_block *pda, struct Palm *palm)
 		strncpy(palmdir, pda->directory, MAXPATHLEN);
 	} else {
 		/* Either there is no applicable PDA, or else it doesn't
-		 * specify a directory. Use the default (~/.palm).
+		 * specify a directory. Use the $(DOTPALM) env
+		 * or the default (~/.palm).
 		 */
-		strncpy(palmdir,
-			mkfname(userinfo.homedir, "/.palm", NULL),
-			MAXPATHLEN);
+		 
+		char *dotpalm = get_symbol("CS_DOTPALM");
+		
+		if (dotpalm)
+		{
+			strncpy(palmdir, dotpalm, MAXPATHLEN);
+		
+			/* Free the our copy of the symbol. */
+			free(dotpalm);			
+		}
+		else
+		{
+			strncpy(palmdir,
+				mkfname(userinfo.homedir, "/.palm", NULL),
+				MAXPATHLEN);
+		}
 	}
 	
 	MISC_TRACE(3)
