@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.19 2000-11-19 00:10:31 arensb Exp $
+ * $Id: backup.c,v 2.20 2000-11-20 05:26:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -31,7 +31,7 @@ backup(struct PConnection *pconn,
        const char *dirname)		/* Directory to back up to */
 {
 	int err;
-	const char *bakfname;		/* Backup pathname */
+	const volatile char *bakfname;	/* Backup pathname */
 	int bakfd;			/* Backup file descriptor */
 	struct pdb *pdb;		/* Database downloaded from Palm */
 	ubyte dbh;			/* Database handle (on Palm) */
@@ -49,7 +49,8 @@ backup(struct PConnection *pconn,
 
 	/* Create and open the backup file */
 	/* XXX - Is the O_EXCL flag desirable? */
-	bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY, 0600);
+	bakfd = open((const char *) bakfname,
+		     O_WRONLY | O_CREAT | O_EXCL | O_BINARY, 0600);
 	if (bakfd < 0)
 	{
 		fprintf(stderr, _("%s: can't create new backup file "

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.14 2000-09-03 07:31:13 arensb Exp $
+ * $Id: archive.c,v 1.15 2000-11-20 05:27:01 arensb Exp $
  */
 
 #include "config.h"
@@ -49,7 +49,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 {
 	int err;
 	int fd;				/* File descriptor; will be returned */
-	const char *archfname;		/* Name of the archive file */
+	const volatile char *archfname;		/* Name of the archive file */
 	ubyte headerbuf[ARCH_HEADERLEN];	/* Archive header to write */
 	ubyte *wptr;			/* Pointer into buffers, for writing */
 
@@ -61,7 +61,8 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 	 * Create it with fascist permissions, since presumably
 	 * this'll contain private information.
 	 */
-	if ((fd = open(archfname, O_RDWR | O_CREAT | O_TRUNC | O_BINARY,
+	if ((fd = open((const char *) archfname,
+		       O_RDWR | O_CREAT | O_TRUNC | O_BINARY,
 		       0600)) < 0)
 	{
 		fprintf(stderr, _("%s: Can't open file \"%s\"\n"),
@@ -109,7 +110,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 {
 	int err;
 	int fd;				/* Return value: file descriptor */
-	const char *archfname;		/* Name of the archive file */
+	const volatile char *archfname;		/* Name of the archive file */
 
 	archfname = mkarchfname(dbinfo);
 				/* Construct the name of the archive file */
@@ -119,7 +120,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 	 * caller specified O_CREAT, so that open() doesn't read bogus
 	 * values from the stack.
 	 */
-	if ((fd = open(archfname, flags, 0600)) < 0)
+	if ((fd = open((const char *) archfname, flags, 0600)) < 0)
 	{
 		if (errno != ENOENT)
 		{
