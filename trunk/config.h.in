@@ -22,6 +22,9 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef pid_t
 
+/* Define to `int' if <signal.h> doesn't define return value for signal() */
+#undef RETSIGTYPE	/* int */
+
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 #undef size_t
 
@@ -57,6 +60,9 @@
 
 /* Define if you have the strncpy function.  */
 #undef HAVE_STRNCPY
+
+/* Define if you have the sysconf function.  */
+#undef HAVE_SYSCONF
 
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
@@ -109,7 +115,7 @@
 
 /* The internationalizable strings in the source are enclosed in _(), e.g.,
  * _("Hello, world!"). That way, they can be looked up by whichever i18n
- * package you happen to be using. (Only GNU gettext support is foreseen.)
+ * package you happen to be using.
  */
 #if HAVE_LIBINTL
 #  define _(str)	gettext(str)
@@ -138,6 +144,13 @@
 #  define _GNU_SOURCE		1
 #  define __EXTENSIONS__	1
 #endif	/* __GNUC__ */
+
+/* OSF1/Digital Unix/Tru64 apparently requires this, to catch certain
+ * declarations.
+ */
+#ifdef __osf__
+#  define _OSF_SOURCE
+#endif
 
 /* This is for Emacs's benefit:
  * Local Variables:	***
