@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.8 2000-01-27 03:59:58 arensb Exp $
+ * $Id: install.c,v 2.9 2000-02-03 03:26:47 arensb Exp $
  */
 
 #include "config.h"
@@ -275,8 +275,11 @@ InstallNewFiles(struct PConnection *pconn,
 		outfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (outfd < 0)
 		{
-			if (errno != EEXIST)
+			if (errno == EEXIST)
 			{
+				/* File already exists. This isn't a problem */
+				add_to_log(_("OK\n"));
+			} else {
 				fprintf(stderr, _("Error opening \"%s\"\n"),
 					bakfname);
 				perror("open");
