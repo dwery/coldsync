@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::VFS qw(:DEFAULT :vfs_opentags);
+use ColdSync::SPC::ExpSlot;
+
+use Data::Dumper;
+
+use IO::File;
+
+$| = 1;
+
+StartConduit('sync');
+
+
+	my $source = '/tmp/test.mp3';
+	my $destination = '/AUDIO/test.mp3';
+
+	my $fh = new IO::File "< $source";
+		or die "402 Couldn't open $source";
+
+
+	my ($err, $en) = dlp_VFSVolumeEnumerate();
+
+	my $vol = $en->{'volumes'}[0];
+
+	if (defined $vol)
+	{
+		my ($err, $res, $fileRef) = dlp_VFSFileOpen($vol, 0x1F, $destination);
+
+		if (defined $fileRef)
+		{
+			print "File opened for writing\n";
+
+			dlp_VFSFileResize($fileRef, 1);
+
+			my $data;
+
+			my $bufSize = 32768;
+
+			while (my $size = $fh->read($data, $bufSize))
+			{
+				printf "writing $size...\n";
+
+				dlp_VFSFileWrite($fileRef, $data);
+			}
+
+			dlp_VFSFileClose($fileRef);
+		}
+		else
+		{
+			print "Couldn't open $destination on the handheld.\n";
+		}
+	}
+
+	$fh->close;
+
+EndConduit();
