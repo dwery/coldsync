@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.11 2000-05-21 07:59:01 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.12 2000-11-28 01:42:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2950,6 +2950,10 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
  * Bleah. Oh, and just for the record: no, you can't send multiple
  * arguments, each with one line of the log. That would have been just
  * a bit too easy :-(
+ *
+ * The maximum length for the message appears to be 2047 characters (plus
+ * the terminating NUL) on a Palm III running PalmOS 3.0 (this may be
+ * OS-dependent).
  */
 int
 DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
