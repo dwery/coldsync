@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.17 2000-11-04 22:54:49 arensb Exp $
+ * $Id: backup.c,v 2.18 2000-11-18 22:35:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -134,20 +134,24 @@ full_backup(struct PConnection *pconn,
 	    const char *backupdir)
 {
 	int err;
-	int i;
+	const struct dlp_dbinfo *cur_db;
 
 	SYNC_TRACE(1)
 		fprintf(stderr, "Inside full_backup() -> \"%s\"\n",
 			backupdir);
 
-	for (i = 0; i < palm->num_dbs; i++)
+	palm_fetch_all_DBs(palm);
+	/* XXX - Error-checking */
+
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
-		err = backup(pconn, &(palm->dblist[i]), backupdir);
+		err = backup(pconn, cur_db, backupdir);
 		if (err < 0)
 		{
 			fprintf(stderr, "%s: Error backing up \"%s\"\n",
 				"full_backup",
-				palm->dblist[i].name);
+				cur_db->name);
 			/* But try to continue anyway */
 		}
 	}
