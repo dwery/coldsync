@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.72 2004-10-11 18:29:13 christophe Exp $
+ * $Id: conduit.c,v 2.73 2004-10-11 18:52:09 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2294,12 +2294,13 @@ sigchld_handler(int sig)
 	/* If WUNTRACED is ever deemed to be a good thing, we'll need to
 	 * check WIFSTOPPED here as well.
 	 */
-	if (WIFEXITED(conduit_status) ||
-	    WIFSIGNALED(conduit_status))
+	/* The check for p is there because p==0 is a valid return code when
+	 * WNOHANG is used. p==0 usually indicates a spurious SIGCHLD of some
+	 * sort. */
+	if (p > 0 && (WIFEXITED(conduit_status) || WIFSIGNALED(conduit_status)))
 	{
 		MISC_TRACE(4)
-			fprintf(stderr, "Conduit pid %d is no longer running.\n",
-				conduit_pid );
+			fprintf(stderr, "Conduit pid %d is no longer running.\n", p );
 		MISC_TRACE(5)
 		{
 			if (WIFEXITED(conduit_status))
@@ -2322,7 +2323,7 @@ sigchld_handler(int sig)
 		siglongjmp(chld_jmpbuf, 1);
 	}
 	MISC_TRACE(5)
-		fprintf(stderr, "Conduit is still running.\n");
+		fprintf(stderr, "Conduit pid %d is still running.\n", p);
 
 	errno = old_errno;	/* Restore old errno */
 	return;			/* Nothing to do */
