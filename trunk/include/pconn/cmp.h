@@ -41,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.3 2000-12-11 08:54:57 arensb Exp $
+ * $Id: cmp.h,v 1.4 2000-12-13 16:20:12 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
@@ -77,6 +77,8 @@
 /* cmp_packet
  * Structure of a CMP packet. Since they all have the same header and
  * body structure, the two are rolled into one.
+ * XXX - In CMP 2.0, the header and body (bodies) are more separate: the
+ * header is set to CMP_TYPE_EXTENDED, and the body is entirely different.
  */
 struct cmp_packet
 {
