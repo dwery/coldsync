@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.7 1999-11-27 05:54:52 arensb Exp $
+ * $Id: parser.y,v 2.8 1999-12-01 06:10:27 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -132,7 +132,9 @@ listen_stmt:
 		{
 			/* This is the first listen block */
 			file_config->listen = cur_listen;
-			cur_listen = NULL;
+			cur_listen = NULL;	/* So it doesn't get freed
+						 * twice.
+						 */
 		} else {
 			/* This is not the first listen block. Append it to
 			 * the list.
@@ -147,7 +149,9 @@ listen_stmt:
 			     last = last->next)
 				;
 			last->next = cur_listen;
-			cur_listen = NULL;
+			cur_listen = NULL;	/* So it doesn't get freed
+						 * twice.
+						 */
 		}
 	}
 	;
@@ -192,7 +196,7 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 				_("%s: Can't allocate conduit_block!\n"),
 				"yyparse");
 			/* XXX - Try to recover gracefully */
-			exit(1);
+			return -1;
 		}
 		cur_conduit->flavor = $2;
 
@@ -263,6 +267,9 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		{
 			/* First conduit on this list */
 			*list = cur_conduit;
+			cur_conduit = NULL;	/* So it doesn't get freed
+						 * twice.
+						 */
 		} else {
 			/* Append conduit to the appropriate list */
 			conduit_block *last;
@@ -274,7 +281,9 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 
 			cur_conduit->next = NULL;
 			last->next = cur_conduit;
-			cur_conduit = NULL;
+			cur_conduit = NULL;	/* So it doesn't get freed
+						 * twice.
+						 */
 		}
 	}
 	;
