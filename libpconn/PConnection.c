@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.34 2003-03-02 13:37:14 azummo Exp $
+ * $Id: PConnection.c,v 1.35 2003-05-24 18:06:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -168,9 +168,9 @@ new_PConnection(char *device,
 		free(pconn);
 		return NULL;
 	}
-	
-	pconn->status = PCONNSTAT_UP;
 
+	PConn_set_status(pconn, PCONNSTAT_NONE);
+	
 	return pconn;
 }
 
@@ -202,6 +202,11 @@ PConnClose(PConnection *pconn)
 	 */
 	if (pconn->io_close != NULL)
 		err = PConn_close(pconn);
+
+	/* This is useful only if a callback has been set, since 
+	 * the pconn structure is going to be freed soon.
+	 */
+	PConn_set_status(pconn, PCONNSTAT_CLOSED);
 
 	/* Free the PConnection */
 	free(pconn);
@@ -278,13 +283,23 @@ PConn_connect(struct PConnection *p,
 		  const void *addr,
 		  const int addrlen)
 {
-	return (*p->io_connect)(p, addr, addrlen);
+	int rc = (*p->io_connect)(p, addr, addrlen);
+
+	if (rc == 0)
+		PConn_set_status(p, PCONNSTAT_UP);
+
+	return rc;
 }
 
 int
 PConn_accept(struct PConnection *p)
 {
-	return (*p->io_accept)(p);
+	int rc = (*p->io_accept)(p);
+
+	if (rc == 0)
+		PConn_set_status(p, PCONNSTAT_UP);
+
+	return rc;
 }
 
 int
@@ -349,7 +364,9 @@ PConn_get_status(PConnection *p)
 int
 PConn_isonline(PConnection *p)
 {
-	return p->status & PCONNSTAT_UP;
+	pconn_stat status = PConn_get_status(p);
+
+	return (status == PCONNSTAT_UP) ? 1 : 0;
 }
 
 /* This is for Emacs's benefit:
