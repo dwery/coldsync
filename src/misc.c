@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.4 2000-11-19 00:12:05 arensb Exp $
+ * $Id: misc.c,v 2.5 2000-11-20 05:23:32 arensb Exp $
  */
 
 #include "config.h"
@@ -20,6 +20,7 @@
 
 #if STDC_HEADERS
 # include <string.h>		/* For memcpy() et al. */
+# include <stdarg.h>		/* Variable-length argument lists */
 #else	/* STDC_HEADERS */
 # ifndef HAVE_STRCHR
 #  define strchr index
@@ -48,6 +49,69 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
 				 * by (l)exists() and is_*(), below.
 				 */
 
+/* mkfname
+ * Concatenate all of the arguments, and return a pointer to the resulting
+ * string. Since the intended purpose of this is to create file pathnames,
+ * the returned string is NUL-terminated, and does not exceed MAXPATHLEN
+ * characters in length.
+ * The last argument must be NULL.
+ * This function simply concatenates strings. It does not try to separate
+ * pathname elements with "/", so the caller needs to supply them.
+ *
+ * mkfname() returns a pointer to its own storage, so a) the caller need
+ * not free() it, and b) the caller should make a private copy of the
+ * returned string.
+ *
+ * The 'volatile' return value is a somewhat pessimistic statement: it says
+ * that I don't trust the compiler to realize that all sorts of different
+ * functions are returning the very same pointer all over the place, so one
+ * can't assume that what's at the other end of the pointer will stay put.
+ */
+const volatile char *
+mkfname(const char *first, ...)
+{
+	va_list ap;
+	static char buf[MAXPATHLEN+1];	/* Result will be placed here */
+	const char *str;		/* Current string */
+	int len;
+
+	MISC_TRACE(7)
+		fprintf(stderr, "Inside mkfname()\n");
+
+	va_start(ap, first);
+	str = first;
+	MISC_TRACE(8)
+		fprintf(stderr, "First str == 0x%08lx [%s]\n",
+			(long) str, str);
+	len = 0;
+	while (str != NULL)
+	{
+		MISC_TRACE(7)
+			fprintf(stderr, "Appending \"%s\"\n",
+				(str == NULL ? "NULL" : str));
+
+		/* Append this string to 'buf' */
+		for (; *str != '\0'; str++)
+		{
+			buf[len] = *str;
+			len++;
+			if (len >= MAXPATHLEN)
+				goto done;
+		}
+		str = va_arg(ap, const char *);
+				/* Advance to the next argument */
+		MISC_TRACE(8)
+			fprintf(stderr, "Now str == 0x%08lx [%s]\n",
+				(long) str, str);
+	}
+  done:
+	va_end(ap);
+
+	buf[len] = '\0';
+
+	return buf;
+}
+
 /* mkpdbname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
  * weird characters so that the result can be used as a pathname.
@@ -57,12 +121,13 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
  *
  * Returns a pointer to the resulting filename.
  */
-const char *
+const volatile char *
 mkpdbname(const char *dirname,
 	  const struct dlp_dbinfo *dbinfo,
 	  Bool add_suffix)
 {
-	static char buf[MAXPATHLEN+1];
+/*  	static char buf[MAXPATHLEN+1]; */
+	const volatile char *retval;
 	static char namebuf[(DLPCMD_DBNAME_LEN * 3) + 1];
 				/* Buffer to hold the converted name (with
 				 * all of the weird characters escaped).
@@ -77,9 +142,6 @@ mkpdbname(const char *dirname,
 	MISC_TRACE(3)
 		fprintf(stderr, "Inside mkpdbname(\"%s\",\"%s\")\n",
 			dirname, dbinfo->name);
-	strncpy(buf, dirname, MAXPATHLEN);
-	strncat(buf, "/", MAXPATHLEN-strlen(buf));
-
 	/* If there are any weird characters in the database's name, escape
 	 * them before trying to create a file by that name. Any "weird"
 	 * characters are replaced by "%HH", where HH is the ASCII value
@@ -109,15 +171,19 @@ mkpdbname(const char *dirname,
 		}
 	}
 	*nptr = '\0';
-	strncat(buf, namebuf, MAXPATHLEN-(nptr-namebuf));
 
-	if (add_suffix)
-		strncat(buf, (DBINFO_ISRSRC(dbinfo) ? ".prc" : ".pdb"),
-			MAXPATHLEN-strlen(buf));
+	retval = mkfname(dirname,
+			 "/",
+			 namebuf,
+			 (add_suffix ?
+			  (DBINFO_ISRSRC(dbinfo) ? ".prc" : ".pdb")
+			  : ""),
+			 NULL);
 
 	MISC_TRACE(3)
-		fprintf(stderr, "mkpdbname:    -> \"%s\"\n", buf);
-	return buf;
+		fprintf(stderr, "mkpdbname:    -> \"%s\"\n", retval);
+
+	return retval;
 }
 
 /* mkbakfname
@@ -128,7 +194,7 @@ mkpdbname(const char *dirname,
  * This isn't a method in GenericConduit because it's generic enough that
  * other conduits might want to make use of it.
  */
-const char *
+const volatile char *
 mkbakfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(backupdir, dbinfo, True);
@@ -138,7 +204,7 @@ mkbakfname(const struct dlp_dbinfo *dbinfo)
  * Similar to mkbakfname(), but constructs a filename in the install
  * directory (~/.palm/install by default).
  */
-const char *
+const volatile char *
 mkinstfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(installdir, dbinfo, True);
@@ -148,7 +214,7 @@ mkinstfname(const struct dlp_dbinfo *dbinfo)
  * Similar to mkbakfname(), but constructs a filename in the archive
  * directory (~/.palm/archive by default).
  */
-const char *
+const volatile char *
 mkarchfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(archivedir, dbinfo, False);
