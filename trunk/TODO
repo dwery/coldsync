@@ -302,9 +302,6 @@
   complains about "implicit declaration". It's not declared in any
   header file, AFAICT.
 - Rewrite 'send-mail' as a Sync conduit.
-- Rename handledb.c, since it no longer contains a HandleDB()
-  function. See whether it makes sense to rename this file and put
-  some of the more generally useful functions in there. Or something.
 - Do something with Daniel Klein's <bilderzeitung@hotmail.com> Doc
   stuff.
 - The $VERSION stuff in the Perl modules doesn't handle branch
