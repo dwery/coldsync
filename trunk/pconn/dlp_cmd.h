@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.4 1999-02-24 13:10:28 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.5 1999-03-11 03:19:33 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -32,7 +32,7 @@
 #define DLPCMD_WriteSortBlock		0x1e	/* Write app sort block */
 #define DLPCMD_ReadNextModifiedRec	0x1f	/* Read next modified record */
 #define DLPCMD_ReadRecord		0x20	/* Read a record */
-#define DLPCMD_WriteRecord		0x21	/* XXX - Write a record */
+#define DLPCMD_WriteRecord		0x21	/* Write a record */
 #define DLPCMD_DeleteRecord		0x22	/* Delete records */
 #define DLPCMD_ReadResource		0x23	/* Read a resource */
 #define DLPCMD_WriteResource		0x24	/* Write a resource */
@@ -132,6 +132,10 @@ struct dlp_userinfo
 {
 	udword userid;		/* User ID number (0 if none) */
 	udword viewerid;	/* ID assigned to viewer by desktop (?) */
+			/* XXX - I have no idea what the viewer is, nor
+			 * does anyone else, as far as I can tell. Perhaps
+			 * this field can be reused for some other purpose.
+			 */
 	udword lastsyncPC;	/* Last sync PC ID (0 if none) */
 	struct dlp_time lastgoodsync;
 				/* Time of last successful sync */
@@ -262,6 +266,10 @@ struct dlp_setuserinfo
 #define DLPRET_ReadAppBlock_Blk		DLPRET_BASE
 #define DLPRETLEN_ReadAppBlock_Blk	2
 
+#define DLPC_APPBLOCK_TOEND		(uword) ~0	/* Read to the end of
+							 * the AppInfo block.
+							 */
+
 /** WriteAppBlock **/
 #define DLPARG_WriteAppBlock_Block	DLPARG_BASE
 #define DLPARGLEN_WriteAppBlock_Block	4
@@ -272,6 +280,11 @@ struct dlp_setuserinfo
 
 #define DLPRET_ReadSortBlock_Blk	DLPRET_ReadAppBlock_Blk
 #define DLPRETLEN_ReadSortBlock_Blk	DLPRETLEN_ReadAppBlock_Blk
+
+#define DLPC_SORTBLOCK_TOEND		(uword) ~0	/* Read to the end
+							 * of the sort
+							 * block.
+							 */
 
 /** WriteSortBlock **/
 #define DLPARG_WriteSortBlock_Block	DLPARG_WriteAppBlock_Block
@@ -293,6 +306,10 @@ struct dlp_setuserinfo
 #define DLPRET_ReadRecord_Rec		DLPRET_BASE
 #define DLPRETLEN_ReadRecord_Rec	10
 
+#define DLPC_RECORD_TOEND		(uword) ~0	/* Read the entire
+							 * record.
+							 */
+
 /** WriteRecord **/
 #define DLPARG_WriteRecord_Rec		DLPARG_BASE
 #define DLPARGLEN_WriteRecord_Rec	8
@@ -312,6 +329,10 @@ struct dlp_setuserinfo
 
 #define DLPRET_ReadResource_Rsrc	DLPRET_BASE
 #define DLPRETLEN_ReadResource_Rsrc	10
+
+#define DLPC_RESOURCE_TOEND		(uword) ~0	/* Read the entire
+							 * resource.
+							 */
 
 /** WriteResource **/
 #define DLPARG_WriteResource_Rsrc	DLPARG_BASE
@@ -375,6 +396,14 @@ struct dlp_setuserinfo
 
 #define DLPRET_ReadRecordIDList_List	DLPRET_BASE
 #define DLPRETLEN_ReadRecordIDList_List	8
+
+#define DLPC_RRECIDL_TOEND		(uword) ~0	/* Read all of the
+							 * record IDs.
+							 */
+
+/* XXX - Flag: 0x80 -> ask the creator application to sort the database
+ * before returning the list.
+ */
 
 /* 1.1 functions */
 /** ReadNextRecInCategory **/
@@ -501,6 +530,9 @@ struct dlp_dbinfo
 };
 #define DLPCMD_DBINFO_LEN	44
 
+#define DBINFO_ISRSRC(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RESDB)
+#define DBINFO_ISROM(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RO)
+
 /* XXX - These are the same as PDB_ATTR_* in "pdb.h", and shouldn't be
  * duplicated.
  */
@@ -521,28 +553,6 @@ struct dlp_dbinfo
 					 */
 #define DLPCMD_DBFLAG_RESET	0x0020	/* Reset device after installing */
 #define DLPCMD_DBFLAG_OPEN	0x8000	/* Database is open */
-
-/* Application (info?) block */
-struct dlp_appblock
-{
-	ubyte dbid;		/* Database ID (handle) */
-	ubyte unused;		/* Set to 0 */
-	uword offset;		/* Offset into block */
-	uword len;		/* # bytes to read/write, starting at 'offset'
-				 * (-1 == to the end)
-				 */
-};
-
-/* Sort block (same as dlp_appblock, actually) */
-struct dlp_sortblock
-{
-	ubyte dbid;		/* Database ID (handle) */
-	ubyte unused;		/* Set to 0 */
-	uword offset;		/* Offset into block */
-	uword len;		/* # bytes to read/write, starting at 'offset'
-				 * (-1 == to the end)
-				 */
-};
 
 /* Sync termination codes */
 #define DLPCMD_SYNCEND_NORMAL	0	/* Normal */
@@ -588,16 +598,6 @@ struct dlp_recinfo
 };
 
 /* XXX - These identifiers need work */
-struct dlp_readrecreq_byid
-{
-	ubyte dbid;		/* Database ID (handle) */
-	ubyte unused;		/* Set to 0 */
-	udword recid;		/* Record ID */
-	uword offset;		/* Offset into the record */
-	uword len;		/* How many bytes to read, starting at
-				 * 'offset' (-1 == to the end). */
-};
-
 struct dlp_readrecreq_byindex
 {
 	ubyte dbid;		/* Database ID (handle) */
@@ -621,12 +621,10 @@ struct dlp_readrecret
 /*** WriteRecord ***/
 struct dlp_writerec
 {
-	ubyte dbid;		/* Database ID (handle) */
 	ubyte flags;		/* Record flags */
 	udword recid;		/* Unique record ID */
 	ubyte attributes;	/* Record attributes */
 	ubyte category;		/* Record category */
-	void *data;		/* Record data */
 };
 
 /*** DeleteRecord ***/
@@ -673,16 +671,12 @@ struct dlp_resource
 /*** ReadOpenDBInfo ***/
 struct dlp_opendbinfo
 {
+	/* Yes, it seems bogus to have a struct that contains a single
+	 * field, but with a name like ReadOpenDBInfo, this just seems like
+	 * the sort of function that might return more information in the
+	 * future.
+	 */
 	uword numrecs;		/* # records in database */
-};
-
-/*** ReadRecordIDList ***/
-struct dlp_idlistreq
-{
-	ubyte dbid;		/* Database ID (handle) */
-	ubyte flags;		/* Flags (DLPREQ_IDLFLAG_*) */
-	uword start;		/* Where to start reading */
-	uword max;		/* Max # entries to return */
 };
 
 /*** ReadAppPreference ***/
@@ -831,9 +825,11 @@ extern int DlpReadAppBlock(
 	const uword len,
 	uword *size,
 	const ubyte **data);
-extern int DlpWriteAppBlock(		/* XXX - bogus API */
+extern int DlpWriteAppBlock(
 	struct PConnection *pconn,
-	const struct dlp_appblock *appblock,
+	const ubyte handle,
+	const uword offset,
+	const uword len,
 	const ubyte *data);
 extern int DlpReadSortBlock(
 	struct PConnection *pconn,
@@ -842,14 +838,18 @@ extern int DlpReadSortBlock(
 	const uword len,
 	uword *size,
 	const ubyte **data);
-extern int DlpWriteSortBlock(		/* XXX - bogus API */
-	struct PConnection *pconn,
-	const struct dlp_sortblock *sortblock,
-	const ubyte *data);
-extern int DlpReadNextModifiedRec(
+extern int DlpWriteSortBlock(
 	struct PConnection *pconn,
 	const ubyte handle,
-	struct dlp_readrecret *record);
+	const uword offset,
+	const uword len,
+	const ubyte *data);
+extern int DlpReadNextModifiedRec(	/* XXX - Bogus API */
+	struct PConnection *pconn,
+	const ubyte handle,
+/*  	struct dlp_readrecret *record); */
+	struct dlp_recinfo *recinfo,
+	const ubyte **data);
 /* These next two functions both use ReadRecord */
 extern int DlpReadRecordByID(
 	struct PConnection *pconn,
@@ -865,8 +865,10 @@ extern int DlpReadRecordByIndex(	/* XXX - bogus API */
 	struct dlp_readrecret *record);
 extern int DlpWriteRecord(		/* XXX - bogus API */
 	struct PConnection *pconn,
-	const udword len,
+	const ubyte handle,
 	const struct dlp_writerec *rec,
+	const udword len,
+	const ubyte *data,
 	udword *recid);
 extern int DlpDeleteRecord(
 	struct PConnection *pconn,
@@ -947,7 +949,7 @@ extern int DlpReadRecordIDList(
 	const uword start,
 	const uword max,
 	uword *numread,
-	udword recids[]);
+	udword recids[]);	/* XXX - Should this allocate a list? */
 /* v1.1 functions */
 extern int DlpReadNextRecInCategory(		/* XXX - bogus API */
 	struct PConnection *pconn,
