@@ -1,3 +1,27 @@
+- It might be nice to allow a conduit block to specify a name, rather
+  than a creator/type pair, since those are usually more intuitive.
+	Problem:
+	conduit sync {
+		type: fooX/barX;
+		type: todo/DATA;
+		name: FooBarDB;
+	}
+  How do "type:" and "name:" interact? Multiple "type:" lines are
+  or-ed together. Should "name:" entries be or-ed as well?
+- Feature: add a SIGINFO handler.
+- Bug: When ColdSync uploads the name, it is followed by some garbage.
+  Presumably something's not getting the name right. Perhaps the user
+  name isn't terminated somewhere?
+- Per-mode options
+	It appears possible (under FreeBSD) to allow mode-specific
+  options: have the getopt() loop in "config.c" stop after a
+  "-m<mode>" option has been seen. Then, in run_mode_Foo():
+	int arg;
+
+	optind = opterr = 0;
+	arg = getopt(argc, argv, <optstr>);
+
+	It remains to be seen whether this is portable or not.
 - Add a Bool check_palm_owner(pda_block, palm) (or something) function
   that verifies that the Palm (which is known to have the correct
   serial number) has the proper username/userid and whatnot. For
