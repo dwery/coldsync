@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.1 1999-01-31 22:24:04 arensb Exp $
+ * $Id: PConnection.c,v 1.2 1999-02-14 04:12:45 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -51,17 +51,35 @@ new_PConnection(char *fname)
 		return NULL;
 	}
 
+	/* Initialize the SLP part of the PConnection */
+	if (slp_init(pconn) < 0)
+	{
+		free(pconn);
+		return -1;
+	}
+
+	/* Initialize the PADP part of the PConnection */
+	if (padp_init(pconn) < 0)
+	{
+		padp_tini(pconn);
+		slp_tini(pconn);
+		return -1;
+	}
+
 	/* Open the file */
 	if ((pconn->fd = open(fname, O_RDWR)) < 0)
 	{
 		perror("open");
-		return NULL;
+		slp_tini(pconn);
+		free(pconn);
+		return -1;
 	}
 
 	/* Set up the terminal characteristics */
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
 	cfsetspeed(&term, B9600);	/* Set initial rate. 9600 bps required
 					 * for handshaking */
+	/* XXX - Solaris 2.5 does not have cfmakeraw() */
 	cfmakeraw(&term);		/* Make it raw */
 	tcsetattr(pconn->fd, TCSANOW, &term);
 					/* Make it so */
@@ -82,6 +100,12 @@ PConnClose(int fd)
 	/* Look up the PConnection */
 	if ((pconn = PConnLookup(fd)) == NULL)
 		return -1;	/* Couldn't find the PConnection */
+
+	/* Clean up the PADP part of the PConnection */
+	padp_tini(pconn);
+
+	/* Clean up the SLP part of the PConnection */
+	slp_tini(pconn);
 
 	/* Close the file descriptor */
 	err = close(pconn->fd);
@@ -108,10 +132,7 @@ PConnClose(int fd)
 	}
 
 	/* Free the PConnection */
-	free(pconn);	/* XXX - Memory leak: this should ask the
-			 * various protocols (from highest to lowest)
-			 * to clean up after themselves.
-			 */
+	free(pconn);
 
 	return err;
 }
