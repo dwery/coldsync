@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.4 2002-08-31 19:26:03 azummo Exp $
+ * $Id: spalm.h,v 2.5 2002-10-16 19:10:36 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -93,6 +93,10 @@ struct Palm
 
 /* XXX - Maybe this should be a function */
 #define palm_ok(palm) (palm->accessor_status_ == PALMACC_NOERR)
+
+#define palm_dlp_min_version(palm,rmaj,rmin) (palm->sysinfo_.dlp_ver_maj > rmaj ||\
+						(palm->sysinfo_.dlp_ver_maj == rmaj &&\
+						 palm->sysinfo_.dlp_ver_min >= rmin))
 
 /* Constructor, destructor */
 extern struct Palm *new_Palm(PConnection *pconn);

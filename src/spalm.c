@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.11 2002-09-07 17:05:16 azummo Exp $
+ * $Id: spalm.c,v 2.12 2002-10-16 19:10:36 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -546,7 +546,7 @@ ListDBs(struct Palm *palm)
 		iflags = DLPCMD_READDBLFLAG_RAM;
 
 		/* XXX - Better have a function to check this condition */
-		if (palm->sysinfo_.dlp_ver_maj >= 1 && palm->sysinfo_.dlp_ver_min >= 2)
+		if (palm_dlp_min_version(palm, 1, 2))
 			iflags |= DLPCMD_READDBLFLAG_MULT;
 
 		if (global_opts.check_ROM)
