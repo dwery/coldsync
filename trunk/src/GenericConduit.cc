@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.19 2000-02-06 22:25:52 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.20 2000-03-04 11:35:14 arensb Exp $
  */
 
 /* Note on I/O:
@@ -899,6 +899,7 @@ GenericConduit::FastSync()
 	 *	clean	dirty	Upload local AppInfo block to Palm
 	 *	dirty	clean	Download Palm's AppInfo block to local copy
 	 *	dirty	dirty	Conflict. Palm overwrites desktop (tie-breaker)
+	 *			Save AppInfo block to archive file?
 	 */
 
 	/* Read each modified record in turn. */
