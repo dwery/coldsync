@@ -37,7 +37,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.2 1999-01-31 21:57:58 arensb Exp $
+ * $Id: cmp.h,v 1.3 1999-02-04 10:03:07 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
@@ -94,7 +94,7 @@ extern int cmp_recv(PConnHandle ph, struct cmp_packet *ret);
 #define CMP_IFLAG_CHANGERATE	0x80	/* Rate change request */
 #define CMP_IFLAG_RCV1TO	0x40	/* Set receive timeout to 1 min.
 					 * (v1.1) */
-#define CMP_IFLAG_RCV2TO	0x40	/* Set receive timeout to 1 min.
+#define CMP_IFLAG_RCV2TO	0x40	/* Set receive timeout to 2 min.
 					 * (v1.1) */
 /* ABORT flags: reason for abort */
 #define CMP_AFLAG_VERSION	0x80	/* Protocol version mismatch */
@@ -125,6 +125,6 @@ extern int cmp_errno;		/* Error code */
 extern char *cmp_errlist[];	/* Error messages */
 
 extern int cmp_read(int fd, struct cmp_packet *packet);
-extern int cmp_write(int fd, struct cmp_packet *packet);
+extern int cmp_write(int fd, const struct cmp_packet *packet);
 
 #endif	/* _cmp_h_ */
