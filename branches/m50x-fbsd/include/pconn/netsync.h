@@ -8,34 +8,10 @@
  *
  * NetSync outline:
  *
- * The machine with the cradle is the client. It talks to the server host,
- * which will do the actual work of syncing.
+ * This packet encapsulation protocol is used for both 'NetSync' and
+ * talking to the Palm m50x in its USB Palm cradle.
  *
- * The client starts out by sending one or more wakeup packets to the
- * server, on UDP port 14237. These packets are of the form
- *	+------+------+------+------+
- *	|    magic    | type |   ?  |
- *	+------+------+------+------+
- *	| hostid                    |
- *	+------+------+------+------+
- *	| netmask                   |
- *	+------+------+------+------+
- *	| NUL-terminated hostname...
- *	+------+------+------+------+
- *
- * Where <magic> is the constant 0xfade, <type> appears to be the type of
- * request (1 == wakeup packet, 2 == ACK). <hostid> and <netmask> are the
- * IPv4 address and netmask of the host to sync with. <hostname> is the
- * name of the host. HotSync appears to use the address as authoritative,
- * and presumably sends the name along mainly for the server's benefit.
- *
- * The server then sends back a UDP datagram with the same information,
- * except that <type> is set to 2. The client will send up to 3 wakeup
- * requests before giving up.
- *
- * Once the server has acknowledged the wakeup packet (thereby accepting
- * the connection), it listens on TCP port 14238. At this point, data goes
- * back and forth in the following format:
+ * Data goes back and forth in the following format:
  *
  *	+------+------+
  *	| cmd  | xid  |
@@ -58,8 +34,9 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.2 2000-12-24 21:24:26 arensb Exp $
+ * $Id: netsync.h,v 1.2.8.1 2001-07-29 07:26:06 arensb Exp $
  */
+
 #ifndef _netsync_h_
 #define _netsync_h_
 
@@ -67,13 +44,30 @@
 #include "pconn.h"
 #include "pconn/palm_types.h"
 
-#define NETSYNC_WAKEUP_MAGIC	0xfade
-#define NETSYNC_WAKEUP_PORT	14237	/* UDP port on which the client
-					 * sends out the wakeup request.
-					 */
-#define NETSYNC_DATA_PORT	14238	/* TCP port on which the client and
-					 * server exchange sync data.
-					 */
+/*
+ * Ritual statements
+ * These packets are sent back and forth during the initial handshaking
+ * phase. I don't know what they mean. The sequence is:
+ * client sends UDP wakeup packet
+ * server sends UDP wakeup ACK
+ * client sends ritual response 1
+ * server sends ritual statement 2
+ * client sends ritual response 2
+ * server sends ritual statement 3
+ * client sends ritual response 3
+ *
+ * The comments are mostly conjecture and speculation.
+ */
+extern ubyte ritual_resp1[];
+#define ritual_resp1_size 22
+extern ubyte ritual_stmt2[];
+#define ritual_stmt2_size 50
+extern ubyte ritual_resp2[];
+#define ritual_resp2_size 50
+extern ubyte ritual_stmt3[];
+#define ritual_stmt3_size 46
+extern ubyte ritual_resp3[];
+#define ritual_resp3_size 8
 
 /* struct netsync_wakeup
  * At the beginning of the NetSync process, the client sends one or more
@@ -111,6 +105,10 @@ extern int netsync_tini(PConnection *pconn);
 extern int netsync_read(PConnection *pconn,
 			const ubyte **buf,
 			uword *len);
+extern int netsync_read_method(PConnection *pconn,
+			       const ubyte **buf,
+			       uword *len,
+			       int no_header);
 extern int netsync_write(PConnection *pconn,
 			 const ubyte *buf,
 			 const uword len);
