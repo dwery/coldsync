@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.13 1999-11-09 06:35:36 arensb Exp $
+# $Id: Makefile.in,v 1.14 1999-11-10 06:44:32 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -139,3 +139,8 @@ y.tab.o:	y.tab.c
 
 y.tab.c y.tab.h:	parser.y
 	${YACC} ${YACCARGS} parser.y
+
+# For testing with Purify
+#PURELINK =      /usr/imports/pure/purify
+#purify: ${OBJS}
+#       ${PURELINK} ${CXX} ${CXXFLAGS} ${OBJS} -o coldsync ${LDFLAGS}
