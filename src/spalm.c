@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.6 2002-03-29 18:20:17 azummo Exp $
+ * $Id: spalm.c,v 2.7 2002-04-02 20:52:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -625,7 +625,6 @@ ListDBs(struct Palm *palm)
 			 * the index of the database just read, plus one.
 			 */
 			start = last_index + 1;
-			start = last_index+1; 
 		}
 	}
 
