@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.8 2000-05-21 07:59:10 arensb Exp $
+ * $Id: padp.c,v 1.9 2000-08-07 00:34:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -533,8 +533,8 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
  */
 int
 padp_write(struct PConnection *pconn,
-		 ubyte *buf,
-		 uword len)
+	   const ubyte *buf,
+	   uword len)
 {
 	int err;
 	static ubyte outbuf[PADP_HEADER_LEN+PADP_MAX_PACKET_LEN];
