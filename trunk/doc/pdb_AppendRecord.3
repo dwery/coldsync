@@ -1,0 +1,88 @@
+.\" pdb_AppendRecord.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_AppendRecord.3,v 1.1 2001-11-20 14:35:19 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_AppendRecord 3
+.Sh NAME
+.Nm pdb_AppendRecord
+.Nm pdb_AppendResource
+.Nm pdb_InsertRecord
+.Nm pdb_InsertResource
+.Nd add records to a Palm database
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft int
+.Fn pdb_AppendRecord "struct pdb *db" "struct pdb_record *newrec"
+.Ft int
+.Fn pdb_AppendResource "struct pdb *db" "struct pdb_resource *newrsrc"
+.Ft int
+.Fn pdb_InsertRecord "struct pdb *db" "struct pdb_record *prev" "struct pdb_record *newrec"
+.Ft int
+.Fn pdb_InsertResource "struct pdb *db" "struct pdb_resource *prev" "struct pdb_resource *newrsrc"
+.Sh DESCRIPTION
+.Nm pdb_AppendRecord
+appends the record pointed to by
+.Fa newrec
+to the database
+.Fa db .
+Note that
+.Fa newrec
+is not copied, so the caller must not free it.
+.Pp
+.Nm pdb_AppendResource
+appends the resource pointed to by
+.Fa newrsrc
+to the database
+.Fa db .
+Note that
+.Fa newrsrc
+is not copied, so the caller must not free it.
+.Pp
+.Nm pdb_InsertRecord
+adds the record pointed to by
+.Fa newrec
+into the database pointed to by
+.Fa db ,
+immediately after the record
+.Fa prev .
+If
+.Fa prev
+is NULL, the new record is inserted at the beginning of the database.
+.Pp
+.Nm pdb_InsertResource
+adds the resource pointed to by
+.Fa newrsrc
+into the database pointed to by
+.Fa db ,
+immediately after the resource
+.Fa prev .
+If
+.Fa prev
+is NULL, the new resource is inserted at the beginning of the database.
+.Sh RETURN VALUE
+These functions return 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr new_Record 3 ,
+.Xr new_Resource 3 .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.Xr LIMITATIONS
+.Nm pdb_InsertRecord
+and
+.Nm pdb_InsertResource
+do not check whether
+.Fa prev
+is in
+.Fa db .
+It is strongly recommended that the caller not abuse this behavior.
