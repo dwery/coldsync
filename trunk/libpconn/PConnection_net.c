@@ -198,13 +198,6 @@ net_select(struct PConnection *p,
 }
 
 static int
-net_setspeed(struct PConnection *pconn, int speed)
-{
-	/* This is meaningless on a network, so this always succeeds */
-	return 0;
-}
-
-static int
 net_drain(struct PConnection *p)
 {
 	/* I don't think there's a network equivalent of flushing a stream
@@ -246,7 +239,6 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	pconn->io_accept = &net_accept;
 	pconn->io_close = &net_close;
 	pconn->io_select = &net_select;
-	pconn->io_setspeed = &net_setspeed;
 	pconn->io_drain = &net_drain;
 	pconn->io_private = 0;
 

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.12 2000-12-13 16:38:44 arensb Exp $
+ * $Id: PConnection.c,v 1.13 2000-12-15 07:25:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -55,7 +55,6 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 	pconn->io_drain = NULL;
 	pconn->io_close = NULL;
 	pconn->io_select = NULL;
-	pconn->io_setspeed = NULL;
 	pconn->speed = -1;
 	pconn->io_private = NULL;
 

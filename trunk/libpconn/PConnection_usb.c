@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.13 2000-12-13 16:58:50 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.14 2000-12-15 07:26:06 arensb Exp $
  */
 
 #include "config.h"
@@ -239,14 +239,6 @@ usb_select(struct PConnection *p, pconn_direction which,
 }
 
 static int
-usb_setspeed(struct PConnection *p, int speed) {
-	/*
-	 * Nothing to do here..
-	 */
-	return 0;
-}
-
-static int
 usb_drain(struct PConnection *p)
 {
 	return 0;
@@ -297,7 +289,6 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	pconn->io_accept = &usb_accept;
 	pconn->io_close = &usb_close;
 	pconn->io_select = &usb_select;
-	pconn->io_setspeed = &usb_setspeed;
 	pconn->io_drain = &usb_drain;
 
 	u = pconn->io_private = malloc(sizeof(struct usb_data));

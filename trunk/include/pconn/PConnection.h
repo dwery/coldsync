@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.11 2000-12-13 16:58:15 arensb Exp $
+ * $Id: PConnection.h,v 1.12 2000-12-15 07:24:58 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -65,8 +65,6 @@ struct PConnection
 	int (*io_close)(struct PConnection *p);
 	int (*io_select)(struct PConnection *p, pconn_direction direction,
 			 struct timeval *tvp);
-	/* XXX -io_setspeed is obsolete */
-	int (*io_setspeed)(struct PConnection *p, int speed);
 
 	long speed;		/* Speed at which to listen, for serial
 				 * connections.
