@@ -1,0 +1,201 @@
+- Error codes should probably be divided into two parts: high byte
+  indicating the protocol that gave the error, and low byte giving the
+  error code.
+- Ideally, you should be able to use Pilot VT100 and HotSync on the
+  same cradle, without having to change anything.
+  More realistically, though, it'll be necessary to write a ColdSync
+  daemon controller: some tool that'll allow you to turn off the
+  "listen for a HotSync connection" feature, and replace it with, say,
+  getty.
+  OTOH, it might be possible for the daemon to listen for certain
+  sequences. E.g., if it sees 0xbe, 0xef, 0xed in quick succession,
+  then it's a good bet that the Palm is trying to use SLP, from which
+  one can try to figure out what to do next (usually sync). Otherwise,
+  wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
+  daemon, or whatever.
+- Write a class to sync two generic databases: a database is an
+  ordered list of records; if they differ, they need to be synched.
+  The normal case of synching a database on the palm with one on the
+  desktop is just a specific subclass. Allow subclasses to override
+  retrieving, comparing, storing, the logic underlying what to copy
+  where, etc.
+  How do you sync two heterogenous databases (e.g., ToDo.pdb and an
+  XPostitNote of things to do)?
+  (A: By using an intermediate format. In this case, have a function
+  that reads XPostitNotes into a PDB, and another that takes a PDB and
+  stores it as XPostitNotes.)
+- A lot of assertion-checking would probably be a Good Thing.
+- (When ColdSync actually gets written:) Gnome and KDE support
+- Fix PADP so it can dump when writing, as well as when reading.
+- Modem sync
+- NetSync: figure out just how it works and stuff.
+  Blargh. From the output of 'tcpdump', it looks as if the host with
+  the databases wants to talk NetBIOS to the host with the cradle.
+  Oh, well. Can always come up with a reimplementation for Unix hosts.
+  That would probably be a win anyway, since it would allows us to do
+  the usual Unix-y stuff, like SSL, TCP wrappers, identd etc.
+- Add a type for those four-letter creator types and such.
+- Something to parse version numbers, as per <System/NetMgr.h> and
+  <System/SystemMgr.h>
+- Clean up the logging code.
+- add_to_log() should probably also use printf() syntax, for
+  convenience.
+- Make the *_TRACE stuff go to a separate debugging log file.
+- It should be possible to sync two Palms with each other if you have
+  two cradles, or over the net.
+	Naah. Just sync to an intermediate file.
+- Add identd support?
+- PAM for security throughout?
+- Add code to check ~/.palm/backup to look for databases that aren't
+  on the Palm. Best solution is probably: if database exists on
+  desktop but not on Palm, move it to an 'attic' directory (like CVS).
+  That way, at least it's not gone. Should also be possible to force a
+  backup from the backup directory: don't try to do anything fancy,
+  just restore everything as is.
+	List of Palm's databases is in 'palm->dblist[]', so check the
+  backup directory for files that aren't in there.
+- Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
+- Add robustness. Ideally, ColdSync should recover from everything
+  that's recoverable.
+- Need functions to begin and end pause: if the desktop pops up a
+  dialog box or something, it can take an arbitrary amount of time to
+  complete. During that time, 'coldsync' should send regular tickle
+  packets to the Palm to keep it from timing out. These should
+  probably return an error if the sync is being run in batch
+  (non-interactive) mode, i.e. when there's no one there to respond to
+  the dialog.
+- Write a utility to just dump the contents of a pdb file.
+- Test with xcopilot (and real Palm) under Linux and other OSes.
+- Test under Purify.
+- Installing new databases: if the database to be installed already
+  exists on the Palm, check the modification numbers: if the one on
+  the desktop is more recent (has a higher modification number) than
+  the one on the Palm, install it. Otherwise, ignore it. This way,
+  sysadmin can install a standard set of databases in a central
+  location, for all users, and it'll work the way you expect.
+	It should also be possible to override this behavior.
+- It'd be nice to import/export sets of records into external
+  databases. But you can't just upload any random database. Need to
+  integrate with what you've got, somehow.
+- Fix backups: the first time you sync a database, there's no backup
+  copy on the desktop. But if that database includes deleted records,
+  they'll be marked as deleted in the backup. Presumably they should
+  be deleted. Or will this fix itself the next time you do a sync?
+	The Right Thing might be to have two modes: a simple backup
+  just backs everything up to a directory, without any changes (also,
+  it shouldn't reset the sync flags!). You can then restore from this
+  directory. The other, more common mode, does a complete backup of a
+  database if it doesn't exist on the desktop; then it archives the
+  archived records and deletes the expunged ones.
+- Directory structure:
+	~/.palm/<id>/backup	Backup of what's on the Palm
+	~/.palm/<id>/archive	Old archived stuff
+	~/.palm/<id>/install	Stuff to install at next sync
+  where <id> is the Palm's unique ID. This is fine for the Palm III,
+  but what about older ones (PalmPilot et al.)? Can the viewer ID be
+  used for this? How does one create one? Generate a random number and
+  hope for the best?
+- Use syslog for logging.
+- Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
+  "The Practice of Programming," section 9.1). Use them in
+  "dlp_cmd.c", to replace the blocks of
+  get_ubyte()/get_uword()/get_udword() and
+  put_ubyte()/put_uword()/put_udword() calls.
+  Generally speaking, use these functions to replace all of the
+  get_*()/put_* calls.
+- For starters, define a conduit map that does an ordinary sync for
+  everything. Make SlowSync() and FastSync() part of the generic
+  conduit. Then add PalmOverwritesDesktop(), DesktopOverwritesPalm()
+  and Backup() conduits. Put all this in a config file.
+- Conduits should have pre-fetch and post-dump hooks, with C and Perl
+  libraries to simplify things. This should make a number of common
+  things easier to write. The pre-fetch hook reads, say, a file, and
+  returns a list of records; the post-dump hook takes a list of
+  records and does something to them, e.g., dump them to a file.
+	This way, if you want to keep "ToDoDB" in sync with ~/TODO,
+  you just need to provide a hook that'll read ~/TODO and convert it
+  to a list of records; and a hook that'll take a list of records and
+  write them to ~/TODO. This is easy, and allows you to use the
+  generic conduit instead of having to write your own.
+- Dynamically-loaded objects: if the 'coldsync' binary has a variable
+  'foo' or a function func(), how does it make these available to a
+  dynamically-loaded library?
+- Redo the PDB library API: should use filehandles, rather than
+  filenames. That way, can attempt to open a file and see if that's
+  even possible. Currently, we download a database from the Palm, try
+  to write it, and only *then* find out if ~/.palm/backup isn't
+  writable.
+- Optimization: don't sync a database if its modification number is
+  the same as the desktop copy. We already know that this database
+  hasn't changed, so there's no need to open the database, send a
+  "send me the next modified record" request that we know is going to
+  fail, and close the database.
+- Lock files while syncing.
+- Separate the distribution into 'coldsync' and 'coldsync-doc', since
+  the documentation is almost three times as large as everything else.
+  At least, get rid of the .ps files, or distribute them separately.
+  Is it possible to make 'make dist' create two distributions?
+- Write a license (Artistic? Adapt it?).
+- The daemon ought to have some way to communicate with actual users,
+  so that they can be notified when a sync starts, be asked questions,
+  and other fun stuff. OTOH, since this is Unix, it ought to be able
+  to run unattended.
+	Possibly the best way to do this is to have the daemon listen
+  on a "control" port. Clients can connect to this port and be
+  notified, or control the daemon.
+	Maybe a Unix domain socket is the obvious way to do it, since
+  then there's no question about which machine the connection comes
+  from. If it's a TCP or UDP socket, however, you can monitor syncs
+  going on on another machine (useful for nosy administrators?). Here
+  again, TCP is probably more secure, but UDP is less likely to cause
+  a problem if something dies.
+- When a new database is installed, it might contain dirty records. At
+  the very least, it needs to make its way to the backup directory. Of
+  course, it's silly to upload the database, then download it again
+  just for the sake of syncing it. Fix the conduit API (not just
+  GenericConduit) to make sense in this situation.
+	Presumably this is the equivalent of a slow sync, but don't
+  bother downloading the database from the Palm.
+- Add convenience functions for the various RPC calls, or at least the
+  more useful ones. See SysTraps.h for list of traps.
+- Get rid of the variable-argument trace macros. 'egcs' complains
+  about them.
+- For files that include <string.h>, fix them according to the
+  'autoconf' documentation:
+	#if STDC_HEADERS
+	# include <string.h>
+	#else
+	# ifndef HAVE_STRCHR
+	#  define strchr index
+	#  define strrchr rindex
+	# endif
+	char *strchr (), *strrchr ();
+	# ifndef HAVE_MEMCPY
+	#  define memcpy(d, s, n) bcopy ((s), (d), (n))
+	#  define memmove(d, s, n) bcopy ((s), (d), (n))
+	# endif
+	#endif
+- Split up the doc directory into directories, one per document. (But
+  see next item.)
+- Combine the documentation: there's no 'libpalm' anymore, and I'm
+  probably not going to have time to maintain the documentation for
+  all of the various functions defined in
+  {slp,padp,cmp,dlp,dlp_cmd}.c, so just strip out the function
+  descriptions, and combine "libpalm.texi" with "pdb.texi" into a
+  single, more general document that describes all sorts of things
+  programmers ought to know about Palm formats.
+- Write a few tutorials on writing conduits.
+- Perl PDB library for manipulating .pdb and .prc files.
+- Bug?: when doing a first sync, prints
+	arch_open: Can't open "/usr/folks/arensb/.palm/archive/System MIDI Sounds"
+	open: No such file or directory
+	Can't open "System MIDI Sounds". Attempting to create
+- Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
+  "System"
+	Fix: when opening a database with DlpOpenDB, if the database
+  is read-only (ROM), don't open it for writing. In fact, Backup()
+  probably shouldn't open databases read-write at all.
+- Write a README file.
+- Might be nice if there were some "canned" debug levels, so you could
+  say "-d3" and that would give you a fair amount of information,
+  without you having to specify each level independently.
