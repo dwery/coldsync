@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.20 2000-09-08 15:48:40 arensb Exp $
+ * $Id: handledb.c,v 1.21 2000-09-09 21:27:37 arensb Exp $
  */
 
 #include "config.h"
@@ -38,9 +38,6 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "conduit.h"
-
-extern int run_GenericConduit(struct PConnection *pconn,
-			      struct dlp_dbinfo *db);
 
 /* mkfname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
