@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.79 2001-11-01 07:02:10 arensb Exp $
+ * $Id: config.c,v 1.80 2001-11-05 03:42:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -755,6 +755,20 @@ usage(int argc, char *argv[])
 	 * that the range of values can be changed without having to be
 	 * retranslated every time.
 	 * Any suggestions?
+	 *
+	 * Perhaps something like the following:
+	 * static char *usage_msg[][3] = {
+	 *	{ "plain\n" },
+	 *	{ "protocol [%s]\n", "serial|usb|net" },
+	 *	{ "plain 2\n" },
+	 *	{ NULL }
+	 * };
+	 * int i;
+	 *
+	 * for (i = 0; usage_msg[i][0] != NULL; i++)
+	 * {
+	 *	vprintf(usage_msg[i][0], (void *) &usage_msg[i][1]);
+	 * }
 	 */
 	const char *usage_msg[] = {
 		N_("Modes:\n"),
@@ -824,6 +838,7 @@ _("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
 _("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 "        to case, whenever possible.\n"));
 #endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
+	/* XXX - IPv6 */
 	fprintf(outfile,
 _("\n"
 "    Default global configuration file: %s\n"),
