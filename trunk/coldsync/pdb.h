@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.4 1999-03-11 10:04:41 arensb Exp $
+ * $Id: pdb.h,v 1.5 1999-03-11 20:38:03 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -160,8 +160,7 @@ struct pdb
 	 */
 	union {
 		struct pdb_record *rec;
-		struct pdb_resource *res;
-			/* XXX - Rename 'res' to 'rsrc', for clarity. */
+		struct pdb_resource *rsrc;
 	} rec_index;
 };
 
