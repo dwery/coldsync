@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.41 2001-10-12 03:59:21 arensb Exp $
+ * $Id: conduit.c,v 2.42 2001-10-14 10:20:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1443,8 +1443,9 @@ find_in_path(const char *conduit)
 				snprintf(buf, MAXPATHLEN, "%s/%s",
 					 path, conduit);
 			}
+			path = NULL;
 		} else {
-			if (colon == path+1)
+			if (colon == path)
 			{
 				/* Empty path component. Try
 				 * $CONDUITDIR/conduit
@@ -1458,9 +1459,10 @@ find_in_path(const char *conduit)
 			} else {
 				/* Non-empty path component */
 				snprintf(buf, MAXPATHLEN, "%.*s/%s",
-					 colon-path-1, path,
+					 colon-path, path,
 					 conduit);
 			}
+			path = colon + 1;
 		}
 
 		/* See if the pathname in 'buf' is executable */
