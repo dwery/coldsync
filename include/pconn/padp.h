@@ -55,7 +55,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.1 1999-09-09 05:15:12 arensb Exp $
+ * $Id: padp.h,v 1.2 2000-08-07 00:36:06 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
@@ -111,7 +111,7 @@ extern int padp_init(struct PConnection *pconn);
 extern int padp_tini(struct PConnection *pconn);
 
 extern int padp_read(struct PConnection *pconn, const ubyte **buf, uword *len);
-extern int padp_write(struct PConnection *pconn, ubyte *buf, uword len);
+extern int padp_write(struct PConnection *pconn, const ubyte *buf, uword len);
 extern int padp_unget(struct PConnection *pconn);	/* XXX - Is this desirable? */
 
 #endif	/* _padp_h_ */
