@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.56 2001-09-08 00:22:00 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.57 2001-09-08 01:13:37 arensb Exp $
  */
 
 /* Note on I/O:
@@ -267,7 +267,8 @@ GenericConduit::FirstSync()
 		{
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
-			fprintf(stderr, "palm_errno == %d\n", palm_errno);
+			fprintf(stderr, "palm_errno == %d\n",
+				static_cast<int>(palm_errno));
 		}	
 		return -1;
 	}
