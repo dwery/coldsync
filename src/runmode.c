@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.9 2002-11-13 12:08:43 azummo Exp $
+ * $Id: runmode.c,v 2.10 2002-12-28 23:55:01 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -926,6 +926,42 @@ run_mode_Daemon(int argc, char *argv[])
 
 	return do_sync(pda, palm);
 }
+
+int
+run_mode_List(int argc, char *argv[])
+{
+	int err;
+
+	struct Palm *palm;
+
+
+	/* Connect to the Palm */
+	if ((palm = palm_Connect()) == NULL )
+		return -1;
+
+        err = palm_fetch_all_DBs(palm); /* We're going to be looking at all
+                                         * of the databases on the Palm, so
+                                         * make sure we get them all.
+                                         */
+        if (err < 0)
+        {
+		Error(_("Can't fetch list of databases."));
+
+		palm_CSDisconnect(palm);
+		return -1;
+	}
+
+	/* Dump the entire list */
+
+	palm_print_dbs(palm, stdout);
+
+	/* Finally, close the connection */
+
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+
+	return 0;
+}
+
 
 /* snum_checksum
  * Calculate and return the checksum character for a checksum 'snum' of
