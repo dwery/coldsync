@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.6 2000-11-24 22:57:28 arensb Exp $
+ * $Id: misc.c,v 2.7 2000-12-10 01:07:55 arensb Exp $
  */
 
 #include "config.h"
@@ -445,6 +445,58 @@ is_database_name(const char *fname)
 
 	return False;		/* None of the above */
 }
+
+/* Stone-knives-and-bearskins memory leak detection:
+ * See the comments in "config.h.in". These functions are just wrappers
+ * around various memory-management functions. They print their arguments
+ * and return values. This enables an external program to read the output
+ * of the program and try to find memory leaks.
+ */
+#if WITH_LEAK_DETECTION
+   /* Undefine the memory-management functions that were defined in
+    * "config.h", so that we can use them for real.
+    */
+#  undef malloc
+#  undef realloc
+#  undef free
+
+void *
+my_malloc(const int size, const char *file, const int line)
+{
+	extern void *malloc(const int size);
+	void *retval;
+
+	retval = malloc(size);
+	fprintf(stderr, "MEM: %s: %d: malloc(%d) returns 0x%08lx\n",
+		file, line, size, (unsigned long) retval);
+	return retval;
+}
+
+void *
+my_realloc(const void *ptr,
+	   const int size,
+	   const char *file,
+	   const int line)
+{
+	extern void *realloc(const void *ptr, const int size);
+	void *retval;
+
+	retval = realloc(ptr, size);
+	fprintf(stderr, "MEM: %s: %d: realloc(0x%08lx, %d) returns 0x%08lx\n",
+		file, line, (unsigned long) ptr, size, (unsigned long) retval);
+	return retval;
+}
+
+void
+my_free(void *ptr, const char *file, const int line)
+{
+	extern void free(void *ptr);
+
+	fprintf(stderr, "MEM: %s: %d: free(0x%08lx)\n",
+		file, line, (unsigned long) ptr);
+	free(ptr);
+}
+#endif	/* WITH_LEAK_DETECTION */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
