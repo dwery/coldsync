@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.20 2000-05-03 04:42:10 arensb Exp $
+ * $Id: pdb.c,v 1.21 2000-05-03 06:29:14 arensb Exp $
  */
 
 #include "config.h"
@@ -97,6 +97,9 @@ split_attributes(const ubyte attributes,
 		*flags = (attributes & 0xf8);
 		*category = 0;
 	}
+	PDB_TRACE(6)
+		fprintf(stderr, "split 0x%02x into 0x%02x, 0x%02x\n",
+			attributes, *flags, *category);
 }
 
 /* new_pdb
@@ -2407,9 +2410,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		/* Fill in the record index data */
 		rec->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
-		split_attributes(recinfo.attributes,
-				 &(rec->flags),
-				 &(rec->category));
+		rec->flags = recinfo.attributes;
+		rec->category = recinfo.category;
 		rec->id = recinfo.id;
 
 		/* Fill in the data size entry */
