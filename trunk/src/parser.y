@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.14 2000-04-10 09:35:53 arensb Exp $
+ * $Id: parser.y,v 2.15 2000-05-06 11:50:22 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -49,9 +49,12 @@ static struct config *file_config;	/* As the parser runs, it will fill
 					 */
 %}
 
+%token <crea_type>	CREA_TYPE
+%token <header_type>	HEADER_PAIR
 %token <integer>	NUMBER
 %token <string>		STRING
-%token <crea_type>	CREA_TYPE
+%token <string>		WORD
+%token ARGUMENTS
 %token CONDUIT
 %token DEFAULT
 %token DEVICE
@@ -70,6 +73,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 
 %type <commtype> comm_type
 %type <crea_type> creator_type
+%type <string> opt_name
 
 /* Conduit flavors */
 %token SYNC
@@ -86,6 +90,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 	conduit_flavor flavor;
 	comm_type commtype;
 	crea_type_pair crea_type;
+	struct cond_header header_type;
 }
 
 %%
@@ -271,7 +276,7 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		PARSE_TRACE(4)
 			fprintf(stderr, "]\n");
 	}
-	conduit_block '}'
+	conduit_block opt_header_list '}'
 	{
 		/* Got a conduit block. Append it to the appropriate list. */
 		conduit_block **list;
@@ -369,6 +374,10 @@ conduit_directives:
 	;
 
 conduit_directive:
+	/* XXX - There ought to be a colon between "type" and the database
+	 * type, for consistency with the user-supplied headers. For now,
+	 * make this colon optional and complain if it's missing.
+	 */
 	TYPE creator_type ';'
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
@@ -392,6 +401,7 @@ conduit_directive:
 		cur_conduit->dbcreator = $2.creator;
 		cur_conduit->dbtype = $2.type;
 	}
+	/* XXX - These ought to take a colon, just like the "type". */
 	| NAME STRING ';'	/* XXX - Is this used? */
 	| PATH STRING ';'
 	{
@@ -413,7 +423,7 @@ conduit_directive:
 			fprintf(stderr, "This is a default conduit\n");
 
 		/* Mark this conduit as being a fall-back default */
-		cur_conduit->flags |= CONDFL_DEFAULT;	/* XXX - Test this */
+		cur_conduit->flags |= CONDFL_DEFAULT;
 	}
 	| FINAL ';'
 	{
@@ -488,7 +498,82 @@ creator_type:	STRING '/' STRING
 	}
 	;
 
-pda_stmt:	PDA '{'
+/* Optional list of user-supplied headers */
+opt_header_list:	ARGUMENTS ':'
+	{
+		start_header = True;
+	}
+	header_list
+	|	/* Empty */
+	;
+
+/* header_list: a possibly-empty list of user-supplied headers */
+/* XXX - this is broken: it ought to say
+ *	header_list STRING ':' STRING ';'
+ * or some such. That would make it easier to detect errors. Probably need
+ * to make heavy use of lex states for this, though.
+ *	It should be possible to double-quote the rhs string.
+ */
+header_list:	header_list HEADER_PAIR ';'
+	{
+		struct cond_header *new_hdr;
+
+		PARSE_TRACE(3)
+		{
+			fprintf(stderr, "Found header list\n");
+			fprintf(stderr, "New header: [%s]->[%s]\n",
+				$2.name, $2.value);
+		}
+
+		/* Append the new header to the current conduit_block's
+		 * header list.
+		 */
+		if ((new_hdr = (struct cond_header *)
+		     malloc(sizeof(struct cond_header))) == NULL)
+		{
+			fprintf(stderr,
+				_("%s: Can't allocate conduit header\n"),
+				"yyparse");
+			return -1;
+		}
+
+		/* Initialize the new header */
+		new_hdr->next = NULL;
+		new_hdr->name = $2.name;
+		$2.name = NULL;
+		new_hdr->value = $2.value;
+		$2.value = NULL;
+
+		/* Append the new header to the list in the current conduit
+		 * block.
+		 */
+		if (cur_conduit->headers == NULL)
+		{
+			/* This is the first header */
+			cur_conduit->headers = new_hdr;
+		} else {
+			struct cond_header *last_hdr;
+						/* Last header on the list */
+
+			/* Find the last header on the list. This isn't the
+			 * most efficient way to do things, but efficiency
+			 * isn't a big concern here.
+			 */
+			for (last_hdr = cur_conduit->headers;
+			     last_hdr->next != NULL;
+			     last_hdr = last_hdr->next)
+				;
+			last_hdr->next = new_hdr;
+		}
+	}
+	|	/* Empty */
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found empty header list\n");
+	}
+	;
+
+pda_stmt:	PDA opt_name '{'
 	{
 		/* Create a new PDA block. Subsequent rules that parse
 		 * substatements inside a 'pda' block will fill in fields
@@ -500,6 +585,19 @@ pda_stmt:	PDA '{'
 				_("%s: Can't allocate PDA block\n"),
 				"yyparse");
 			return -1;
+		}
+
+		/* Initialize the name */
+		cur_pda->name = $2;
+		$2 = NULL;
+
+		PARSE_TRACE(2)
+		{
+			fprintf(stderr, "Found pda_block, ");
+			if (cur_pda->name == NULL)
+				fprintf(stderr, "no name\n");
+			else
+				fprintf(stderr, "name [%s]\n", cur_pda->name);
 		}
 	}
 	pda_block
@@ -552,6 +650,13 @@ pda_stmt:	PDA '{'
 						 * twice.
 						 */
 		}
+	}
+	;
+
+opt_name:	STRING
+	|	/* Empty */
+	{
+		$$ = NULL;
 	}
 	;
 
