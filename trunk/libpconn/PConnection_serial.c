@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.40 2002-10-26 13:24:47 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.41 2002-11-02 12:55:55 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -162,7 +162,7 @@ find_available_speeds(int fd)
 			 */
 			continue;
 
-		IO_TRACE(3)
+		IO_TRACE(4)
 			fprintf(stderr, "Trying %ld bps (%d)... ",
 				speeds[i].bps, speeds[i].tcspeed);
 
@@ -195,7 +195,7 @@ find_available_speeds(int fd)
 			continue;
 		}
 
-		IO_TRACE(3)
+		IO_TRACE(4)
 			fprintf(stderr, "yes\n");
 		speeds[i].usable = 1;
 
@@ -208,7 +208,7 @@ find_available_speeds(int fd)
 
 	for (; i < num_speeds; i++)
 	{
-		IO_TRACE(3)
+		IO_TRACE(4)
 			fprintf(stderr, "Assuming %ld bps (%d) yes\n",
 				speeds[i].bps, speeds[i].tcspeed);
 		speeds[i].usable = 1;
@@ -502,8 +502,7 @@ serial_select(PConnection *p,
  * 'device' is the pathname of the serial port. If it is NULL, use stdin.
  * Also the special string 'stdin' use stdin.
  * 'protocol' is the software protcol stack to use: ordinary serial devices
- * use DLP->PADP->SLP, whereas Palm m50x'es use DLP->netsync
- * 'prompt': if set, prompt the user to press the HotSync button.
+ * use DLP->PADP->SLP, whereas Palm m50x'es use DLP->netsync.
  */
 int
 pconn_serial_open(PConnection *pconn,
@@ -564,6 +563,11 @@ pconn_serial_open(PConnection *pconn,
 			netsync_tini(pconn);
 			return -1;
 		}
+
+		/* XXX Maybe these should go in netsync_init() ? */
+		pconn->whosonfirst = 0;
+		pconn->net.xid = 0xFF;
+		
 		break;
 
 	    case PCONN_STACK_NONE:
@@ -587,6 +591,9 @@ pconn_serial_open(PConnection *pconn,
 
 	if ((device == NULL) || strcasecmp("stdin", device) == 0 )
 	{
+		IO_TRACE(2)
+			fprintf(stderr, "Using stdin/stdout\n");
+
 		/* Use stdin */
 		pconn->fd = STDIN_FILENO;
 	} else {
@@ -604,6 +611,8 @@ pconn_serial_open(PConnection *pconn,
 		 * device numbers under Linux, and add other Linux-specfic
 		 * hacks.
 		 */
+
+		/* XXX Should this message go to stderr instead? */
 
 		if ((pconn->flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT)) ==
 			(PCONNFL_PROMPT | PCONNFL_TRANSIENT))
@@ -651,34 +660,42 @@ pconn_serial_open(PConnection *pconn,
 	IO_TRACE(5)
 		fprintf(stderr, "PConnection fd == %d\n", pconn->fd);
 
-	/* Find the speeds at which the serial port can go */
-	if (find_available_speeds(pconn->fd) < 0)
+	if (isatty(pconn->fd))
 	{
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;
+		/* Find the speeds at which the serial port can go */
+		if (find_available_speeds(pconn->fd) < 0)
+		{
+			fprintf(stderr,
+				_("Error: find_available_speeds failed.\n"));
+	
+			dlp_tini(pconn);
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;
+		}
+
+		/* Set up the terminal characteristics */
+		tcgetattr(pconn->fd, &term);	/* Get current characteristics */
+
+		/* Set initial rate. 9600 bps required for handshaking */
+		if (pconn->flags & PCONNFL_NOCHANGESPEED) {
+			IO_TRACE(5)
+				fprintf(stderr, "This is a modem, so not setting initial speed.\n");
+		} else {
+			cfsetispeed(&term, B9600);
+			cfsetospeed(&term, B9600);
+			IO_TRACE(5)
+				fprintf(stderr, "This is a not modem, so setting initial speed.\n");
+		}
+
+		cfmakeraw(&term);		/* Make it raw */
+		/* XXX - Error-checking */
+
+		tcsetattr(pconn->fd, TCSANOW, &term); /* Make it so */
+		/* XXX - Error-checking */
 	}
 
-	/* Set up the terminal characteristics */
-	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
-
-	/* Set initial rate. 9600 bps required for handshaking */
-	if (pconn->flags & PCONNFL_NOCHANGESPEED) {
-		IO_TRACE(5)
-			fprintf(stderr, "This is a modem, so not setting initial speed.\n");
-	} else {
-		cfsetispeed(&term, B9600);
-		cfsetospeed(&term, B9600);
-		IO_TRACE(5)
-			fprintf(stderr, "This is a not modem, so setting initial speed.\n");
-	}
-
-	cfmakeraw(&term);		/* Make it raw */
-	/* XXX - Error-checking */
-	tcsetattr(pconn->fd, TCSANOW, &term);
-	/* XXX - Error-checking */
-					/* Make it so */
+	/* XXX Should this message go to stderr instead? */
 
 	if ((pconn->flags & PCONNFL_PROMPT) && !(pconn->flags & PCONNFL_TRANSIENT))
 		printf(_("Please press the HotSync button.\n"));
