@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.16 2000-01-27 07:38:48 arensb Exp $
+ * $Id: handledb.c,v 1.17 2000-02-03 02:42:20 arensb Exp $
  */
 
 #include "config.h"
@@ -152,7 +152,8 @@ mkfname(const char *dirname,
 						 */
 		{
 			/* Escape it */
-			sprintf(nptr, "%%%02X", dbinfo->name[i]);
+			sprintf(nptr, "%%%02X",
+				(unsigned char) dbinfo->name[i]);
 			nptr += 3;
 		} else {
 			/* Just a regular character */
