@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.59 2002-09-08 19:54:09 azummo Exp $
+ * $Id: conduit.c,v 2.60 2002-09-12 21:31:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -466,6 +466,10 @@ run_conduit(struct Palm *palm,
 	++last_header;
 	headers[last_header].name = "Version";
 	headers[last_header].value = VERSION;
+
+	++last_header;
+	headers[last_header].name = "SyncType";
+	headers[last_header].value = (char *) need_slow_sync ? "Slow" : "Fast";
 
 	++last_header;
 	headers[last_header].name = "PDA-Snum";
