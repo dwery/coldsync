@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.1 1999-02-19 22:51:53 arensb Exp $
+# $Id: Makefile.am,v 1.2 1999-02-22 10:41:03 arensb Exp $
 #
 
 lib_LIBRARIES = libpconn.a
@@ -23,7 +23,7 @@ pkginclude_HEADERS = \
 	PConnection.h \
 	palm_errno.h
 
-noinst_PROGRAMS = foo
+# noinst_PROGRAMS = foo
 
 EXTRA_DIST = \
 	Makefile
