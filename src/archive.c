@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.12 2000-01-27 04:19:50 arensb Exp $
+ * $Id: archive.c,v 1.13 2000-05-21 07:59:38 arensb Exp $
  */
 
 #include "config.h"
@@ -31,9 +31,9 @@
 #include <time.h>		/* For time() */
 #include <errno.h>		/* For errno */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "coldsync.h"

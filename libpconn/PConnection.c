@@ -6,16 +6,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.5 2000-02-03 04:25:35 arensb Exp $
+ * $Id: PConnection.c,v 1.6 2000-05-21 07:58:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
 #include "src/coldsync.h"	/* XXX - Required for LISTEN_USB. This

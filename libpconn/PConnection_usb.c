@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.5 2000-03-14 06:35:30 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.6 2000-05-21 07:58:51 arensb Exp $
  */
 
 #include "config.h"
@@ -37,9 +37,9 @@
 
 #include <dev/usb/usb.h>
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
 #include "pconn/palm_types.h"
