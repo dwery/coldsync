@@ -1,9 +1,9 @@
 # ColdSync.pm
 # A module to simplify writing ColdSync conduits.
 #
-# $Id: ColdSync.pm,v 1.2 2000-02-07 04:45:33 arensb Exp $
+# $Id: ColdSync.pm,v 1.3 2000-05-06 11:32:54 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.3 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -49,7 +49,7 @@ perform a certain amount of sanity-checking on the conduit's input.
 use Exporter;
 
 @ISA = qw( Exporter );
-@EXPORT = qw( $PDB %HEADERS
+@EXPORT = qw( $PDB %HEADERS @HEADERS
 		ConduitMain StartConduit EndConduit );
 
 =head1 VARIABLES
@@ -70,6 +70,13 @@ expected to write a Palm database, it will write $PDB.
 Holds the headers passed to the conduit on STDIN. Duplicate headers
 are not supported. If a conduit is passed multiple headers with the
 same label, only the last one is recorded in %HEADERS.
+
+=item @HEADERS
+
+Holds the list of header lines passed in on STDIN, in the order in
+which they were seen. This can be useful if your conduit allows
+multiple headers, or if the order in which the headers were received
+matters.
 
 =cut
 
@@ -139,8 +146,29 @@ sub DumpConfig
 conduit $flavor {
 	path "$0";
 	type $typestring;
-}
 EOT
+			# If %HEADERS contains any default values, list
+			# them.
+
+			# XXX - Doesn't deal properly with some headers: if
+			# the header has leading or trailing whitespace, it
+			# should be quoted. This requires a rewrite of the
+			# corresponding lex/yacc code to accept quotes,
+			# though.
+
+			if (%HEADERS ne ())
+			{
+				my $key;
+				my $value;
+
+				print "    arguments:\n";
+				while (($key, $value) = each %HEADERS)
+				{
+					print "#\t$key:\t$value\n";
+				}
+			}
+
+			print "}\n";
 		}
 	}
 
@@ -209,15 +237,17 @@ sub ReadHeaders
 		chomp;
 		last if $_ eq "";	# Empty line is end of headers
 
+		push @HEADERS, $_;
+
 		# Get the header
-		if (/^(\w+): (.*)/)
+		if (/^([-\w]+): (.*)/)
 		{
 			$HEADERS{$1} = $2;
 			next;
 		}
 
 		# This isn't a valid line
-		die "401 Invalid input";
+		die "401 Invalid input: [$_]";
 	}
 
 	# Make sure all of the mandatory headers are there.
@@ -272,9 +302,9 @@ sub StartConduit
 
 	# Read the input database, if one was specified.
 	$PDB = new Palm::PDB;
-	if (defined($HEADERS{"InputDB"}))
+	if (defined($HEADERS{InputDB}))
 	{
-		$PDB->Load($HEADERS{"InputDB"}) or
+		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
 	}
 }
@@ -282,7 +312,7 @@ sub StartConduit
 =item EndConduit()
 
 Cleans up after a single-flavor conduit. For Fetch conduits, writes
-$PDB to the file given by $HEADERS{"OutputDB"}. If everything went
+$PDB to the file given by $HEADERS{OutputDB}. If everything went
 well, exits with status 0.
 
 Dump conduits are not expected to write a Palm database, so
@@ -298,7 +328,7 @@ sub EndConduit
 	if ($FLAVOR eq "fetch")
 	{
 		# XXX - Barf if $PDB undefined
-		$PDB->Write($HEADERS{"OutputDB"}) or
+		$PDB->Write($HEADERS{OutputDB}) or
 			die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
 	}
 	# Nothing to do for "Dump" conduits
@@ -373,13 +403,13 @@ sub ConduitMain
 	ReadHeaders;
 
 	$PDB = new Palm::PDB;
-	if (defined($HEADERS{"InputDB"}))
+	if (defined($HEADERS{InputDB}))
 	{
-		$PDB->Load($HEADERS{"InputDB"}) or
+		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
 	}
 
-	if (($flavor eq "dump") && (!defined($HEADERS{"InputDB"})))
+	if (($flavor eq "dump") && (!defined($HEADERS{InputDB})))
 	{
 		die "405 Missing InputDB header.\n";
 	}
@@ -405,3 +435,7 @@ F<ColdSync Conduits: Specification and Hacker's Guide>
 
 =cut
 #'
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
