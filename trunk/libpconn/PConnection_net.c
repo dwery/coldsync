@@ -281,7 +281,7 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	}
 
 	/* Bind the UDP socket to the NetSync wakeup port */
-	bzero(&myaddr, sizeof(myaddr));
+	bzero((void *) &myaddr, sizeof(myaddr));
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 				/* Listen on all interfaces */
@@ -477,7 +477,7 @@ net_tcp_listen(struct PConnection *pconn)
 		}
 	}
 
-	bzero(&servaddr, sizeof(servaddr));
+	bzero((void *) &servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
