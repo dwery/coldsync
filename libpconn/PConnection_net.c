@@ -551,10 +551,6 @@ net_drain(PConnection *p)
 int
 pconn_net_open(PConnection *pconn, char *device, int prompt)
 {
-/*  	int err; */
-/*  	struct sockaddr_in myaddr; */
-/*	struct servent *service;*/	/* NetSync wakeup service entry */
-
 	IO_TRACE(1)
 		fprintf(stderr, "Opening net connection.\n");
 
@@ -598,61 +594,6 @@ pconn_net_open(PConnection *pconn, char *device, int prompt)
 
 	IO_TRACE(5)
 		fprintf(stderr, "UDP socket == %d\n", pconn->fd);
-
-#if 0
-	service = getservbyname("netsync-wakeup", "udp");
-				/* Try to get the entry for
-				 * "netsync-wakeup" from /etc/services
-				 */
-	IO_TRACE(2)
-	{
-		if (service != NULL)
-		{
-			int i;
-
-			fprintf(stderr, "Got entry for netsync-wakeup/udp:\n");
-			fprintf(stderr, "\tname: \"%s\"\n", service->s_name);
-			fprintf(stderr, "\taliases:\n");
-			for (i = 0; service->s_aliases[i] != NULL; i++)
-				fprintf(stderr, "\t\t\"%s\"\n",
-					service->s_aliases[i]);
-			fprintf(stderr, "\tport: %d\n",
-				ntohs(service->s_port));
-			fprintf(stderr, "\tprotocol: \"%s\"\n",
-				service->s_proto);
-		} else {
-			fprintf(stderr, "No entry for netsync-wakeup/udp\n");
-		}
-	}
-
-	/* Bind the UDP socket to the NetSync wakeup port */
-	bzero((void *) &myaddr, sizeof(myaddr));
-	myaddr.sin_family = AF_INET;
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-				/* Listen on all interfaces */
-				/* XXX - Perhaps this ought to be
-				 * configurable. */
-	if (service == NULL)
-		myaddr.sin_port = htons(NETSYNC_WAKEUP_PORT);
-	else
-		myaddr.sin_port = service->s_port;
-				/* Port is already in network byte order */
-
-	IO_TRACE(4)
-		fprintf(stderr, "bind()ing to %d\n",
-			ntohs(myaddr.sin_port));
-	err = bind(pconn->fd, (struct sockaddr *) &myaddr, sizeof(myaddr));
-	if (err < 0)
-	{
-		perror("bind");
-		if (pconn->fd >= 0)
-			close(pconn->fd);
-		return -1;
-	}
-#endif	/* 0 */
-
-	IO_TRACE(5)
-		fprintf(stderr, "Returning socket %d\n", pconn->fd);
 
 	return pconn->fd;
 }
