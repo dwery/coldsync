@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.5 1999-08-26 14:25:01 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.6 1999-09-09 05:49:43 arensb Exp $
  */
 #include "config.h"
 #include <iostream.h>
@@ -23,8 +23,9 @@
 extern "C" {
 /* XXX - Should all of the "standard" header files be inside this block? */
 #include <unistd.h>
-#include "dlp_cmd.h"
-#include "util.h"
+//  #include "dlp_cmd.h"
+//  #include "util.h"
+#include <pconn/pconn.h>	// XXX - Clean this up
 #include "coldsync.h"
 #include "archive.h"
 #include "pdb.h"

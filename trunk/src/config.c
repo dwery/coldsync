@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.5 1999-09-04 21:00:11 arensb Exp $
+ * $Id: config.c,v 1.6 1999-09-09 05:51:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -27,7 +27,8 @@
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
 #include "coldsync.h"
-#include "dlp_cmd.h"
+/*  #include "dlp_cmd.h" */
+#include <pconn/pconn.h>	/* XXX - Clean this up */
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN	256
