@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2000-11-10 03:35:50 arensb Exp $
+# $Id: Makefile,v 1.10 2001-05-06 05:59:57 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -7,7 +7,7 @@ SUBDIR =	doc
 # into, at some point.
 TEXIFILES =	conduits.texi
 
-INFOFILES =	${TEXIFILES:.texi=.info}
+INFOFILES =	${TEXIFILES:.texi=.info} ${TEXIFILES:.texi=.info-*}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
 PSFILES =	${TEXIFILES:.texi=.ps}
 PDFFILES =	${TEXIFILES:.texi=.pdf}
