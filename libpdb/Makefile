@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2002-03-10 23:05:03 arensb Exp $
+# $Id: Makefile,v 1.10 2004-03-27 14:57:15 azummo Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -34,10 +34,9 @@ depend::
 
 all::	${LIBRARY}
 
-# It might be a good idea later on to install the library, so that
-# people can write other programs that communicate with the Palm, but
-# not just yet.
-# install::
+install::	${LIBRARY}
+	${MKDIR} ${LIBDIR}
+	${INSTALL_PROGRAM} ${LIBRARY} ${LIBDIR}/${LIBRARY}
 
 # This is for Emacs's benefit:
 # Local Variables:	***

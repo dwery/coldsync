@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2002-11-23 16:32:40 azummo Exp $
+# $Id: Makefile,v 1.14 2004-03-27 14:57:14 azummo Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -44,10 +44,9 @@ depend::
 
 all::	${LIBRARY}
 
-# It might be a good idea later on to install the library, so that
-# people can write other programs that communicate with the Palm, but
-# not just yet.
-# install::
+install::	${LIBRARY}
+	${MKDIR} ${LIBDIR}
+	${INSTALL_PROGRAM} ${LIBRARY} ${LIBDIR}/${LIBRARY}
 
 # XXX - Building shared libraries:
 #  FreeBSD:
