@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.44 2000-08-07 00:37:36 arensb Exp $
+ * $Id: coldsync.c,v 1.44.2.1 2000-08-31 15:37:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -37,6 +37,7 @@
 #include "pdb.h"
 #include "conduit.h"
 #include "parser.h"
+#include "pref.h"
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
@@ -128,11 +129,13 @@ int need_slow_sync;
 int cs_errno;			/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
 struct config config;		/* Main configuration */
+struct pref_item *pref_cache;	/* Preference cache */
 
 int
 main(int argc, char *argv[])
 {
 	struct PConnection *pconn;
+	struct pref_item *pref_cursor;
 	int err;
 	int i;
 
@@ -368,6 +371,17 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* Create preference cache */
+	MISC_TRACE(1)
+		fprintf(stderr,"Initializing preference cache\n");
+	if((err = CacheFromConduits(config.conduits,pconn)) < 0)
+	{
+	    fprintf(stderr,"CacheFromConduits() returned %d\n",err);
+	    Disconnect(pconn,DLPCMD_SYNCEND_CANCEL);
+	    pconn = NULL;
+	    exit(1);
+	}
+
 	/* Find out whether we need to do a slow sync or not */
 	/* XXX - Actually, it's not as simple as this (see comment below) */
 	if (hostid == palm.userinfo.lastsyncPC)
@@ -398,6 +412,7 @@ main(int argc, char *argv[])
 	if ((err = ListDBs(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, _("ListDBs returned %d\n"), err);
+		FreePrefList(pref_cache);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		pconn = NULL;
 		exit(1);
@@ -492,6 +507,7 @@ main(int argc, char *argv[])
 		if (err < 0)
 		{
 			fprintf(stderr, _("Error installing new files.\n"));
+			FreePrefList(pref_cache);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			pconn = NULL;
 			exit(1);
@@ -528,6 +544,7 @@ main(int argc, char *argv[])
 				fprintf(stderr, _("Error %d running pre-fetch "
 						  "conduits.\n"),
 					err);
+				FreePrefList(pref_cache);
 				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 				pconn = NULL;
 				exit(1);
@@ -570,6 +587,7 @@ main(int argc, char *argv[])
 
 				Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 				pconn = NULL;
+				FreePrefList(pref_cache);
 				exit(1);
 			}
 		}
@@ -594,6 +612,7 @@ main(int argc, char *argv[])
 			fprintf(stderr, _("Error writing user info\n"));
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
+			FreePrefList(pref_cache);
 			exit(1);
 		}
 	}
@@ -608,18 +627,34 @@ main(int argc, char *argv[])
 			fprintf(stderr, _("Error writing sync log.\n"));
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
+			FreePrefList(pref_cache);
 			exit(1);
 		}
 	}
 
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
+	/* There might still be pref items that are not yet cached.
+	 * The dump conduits are going to try to download them if not cached,
+	 * but with a closed connection, they are gonna fail. Although ugly,
+	 * we will manually fill the cache here.
+	 */
+	for(pref_cursor = pref_cache;
+	    pref_cursor != NULL;
+	    pref_cursor = pref_cursor->next)
+	{
+		if(pref_cursor->contents_info == NULL &&
+		   pconn == pref_cursor->pconn)
+		FetchPrefItem(pconn,pref_cursor);
+	}
+
 		fprintf(stderr, "Closing connection to Palm\n");
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, _("Error disconnecting\n"));
 		exit(1);
 	}
+		FreePrefList(pref_cache);
 	pconn = NULL;
 
 	/* XXX - The post-dump conduits should only be run if we're
@@ -646,6 +681,11 @@ main(int argc, char *argv[])
 	}
 
 	MISC_TRACE(1)
+
+	MISC_TRACE(1)
+		fprintf(stderr,"Removing preference cache\n");
+
+	FreePrefList(pref_cache);
 		fprintf(stderr, "ColdSync terminating normally\n");
 	exit(0);
 
