@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.13 1999-05-31 21:07:59 arensb Exp $
+ * $Id: pdb.c,v 1.14 1999-06-04 00:53:08 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -1773,7 +1773,7 @@ pdb_LoadRecords(int fd,
 			return -1;
 		}
 
-printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
+/*  printf("Reading record %d (id 0x%08lx)\n", i, rec->id); */
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
@@ -1803,9 +1803,9 @@ printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
 		 * It's debatable whether 'i' or 'rec' should be
 		 * authoritative for determining the offset of the next
 		 * resource. I'm going to choose 'rec', since I think
-		 * that's more likely to be immune to fencepost errors. The
-		 * two should, however, be equivalent. In fact, it might be
-		 * a Good Thing to add a check to make sure.
+		 * that's more likely to be immune from fencepost errors.
+		 * The two should, however, be equivalent. In fact, it
+		 * might be a Good Thing to add a check to make sure.
 		 */
 		if (rec->next == NULL)
 		{
