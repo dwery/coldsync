@@ -2,11 +2,11 @@
  *
  * Definitions, declarations pertaining to conduits.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.8 2000-01-19 06:12:41 arensb Exp $
+ * $Id: conduit.h,v 1.9 2000-01-22 05:14:38 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -61,20 +61,10 @@
 #  error COND_MAXLINELEN is too small!
 #endif
 
-/* XXX - These are old-API functions. Most of them should probably go away */
 extern int init_conduits(struct Palm *palm);
 					/* Initialize global conduit stuff */
 extern int tini_conduits();		/* Clean up global conduit stuff */
-extern int load_conduit(struct conduit_spec *spec);
-extern struct conduit_spec *getconduitbyname(const char *name);
-extern int register_conduit(const char *name,
-			    const char *dbname,
-			    const udword dbtype,
-			    const udword dbcreator,
-			    const Bool mandatory);
-extern const struct conduit_spec *find_conduit(const struct dlp_dbinfo *db);
 
-/* XXX - New-API functions */
 extern int run_Fetch_conduits(struct dlp_dbinfo *dbinfo);
 extern int run_Dump_conduits(struct dlp_dbinfo *dbinfo);
 
