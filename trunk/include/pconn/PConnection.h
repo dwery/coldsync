@@ -7,10 +7,10 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.18 2001-06-30 17:58:01 arensb Exp $
+ * $Id: PConnection.h,v 1.19 2001-07-11 04:32:25 arensb Exp $
  */
-#ifndef _PConn_h_
-#define _PConn_h_
+#ifndef _PConnection_h_
+#define _PConnection_h_
 
 #include <termios.h>		/* For speed_t */
 #include "palm.h"
@@ -172,7 +172,7 @@ extern int io_trace;
 #define	IO_TRACE(n)	if (io_trace >= (n))
 extern int net_trace;
 
-#endif	/* _PConn_h_ */
+#endif	/* _PConnection_h_ */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
