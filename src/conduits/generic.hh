@@ -1,10 +1,10 @@
-/* GenericConduit.hh
+/* generic.hh
  *
  *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: generic.hh,v 1.1 2002-12-10 16:55:31 azummo Exp $
+ * $Id: generic.hh,v 1.2 2002-12-18 00:21:02 azummo Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
