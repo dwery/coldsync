@@ -152,8 +152,6 @@
 - When building, make sure that #include and such find the .h files
   and libraries in this, the build directory, and not the ones in
   /usr/local that were presumably installed previously.
-- Either fix the install: targets to not install "libpconn.a" and
-  "libdb.a", or write man pages for all of the library functions.
 - Add Makefile stuff for rerunning 'autoconf' when necessary. See node
   "Automatic Remaking" in "autoconf.info".
 - Add a "group" field to the listen and conduit blocks, of the form
@@ -217,7 +215,6 @@
   check for C++ in 'configure', and can simplify the 'make depend'
   targets.
 	Then again, that might make it harder to subclass.
-- Perl: write a ColdSync module, to simplify writing conduits.
 - Open a Unix domain socket that a client can listen on. Send
   conduits' messages to that socket. Define error codes like 22z =
   progress, so that clients can monitor how things are going.
@@ -258,14 +255,9 @@
   pathname and an interpreter path, and mungs the #! path work
   properly. Make sure to use "#!/bin/sh" and not "#! /bin/sh", as per
   portability comments in 'automake' documentation.
-- Bug: the argument "-dmisc" should be equivalent to "-dmisc:1".
-  Currently, it's a parse error.
 - Bug: For now should complain if extraneous arguments are given on
   command line.
-- Fix the "todo-dump" tutorial for the new ColdSync.pm.
-- Add "mh-aliases" to the tutorial.
 - Include "todo-dump" and "mh-aliases" in the distribution.
-- Documentation for ColdSync.pm.
 - Makefile.PM and such for ColdSync.pm
 - Add ColdSync.pm and friends to the BSD port.
 - No-brainer configuration: make "conduit -config" part of the spec.
@@ -281,8 +273,12 @@
   manually.
 	Obviously, need the "final" flag in conduit blocks, to prevent
   unwanted conduits from running.
-- Configure: make sure that C++ compiler groks 'bool' and 'static_cast'.
-- Bug: the (TM) character in database names doesn't come out right:
-  it's character 0x99, but in filenames it becomes %FF.
 - The 'prompt_for_hotsync' argument to new_PConnection() is a hack.
-  That whole function needs to be rethought.
+  That whole function needs to be rethought. Would it be better to
+  separate it into new_serial_PConnection(), new_usb_PConnection(),
+  new_tcp_PConnection()? Or pass it a union that gives the
+  connection-specific arguments?
+- See what other 'make' features are portable. It might be keen to use
+	VAR += VALUE
+	VAR ?= DEFAULT_VALUE
+	VAR != `cmd`	(or whatever)
