@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.28 2000-06-15 07:34:40 arensb Exp $
+ * $Id: parser.y,v 2.29 2000-07-06 04:04:52 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -310,6 +310,16 @@ conduit_stmt:	CONDUIT
 	{
 		lex_expect(0);		/* No special lexer context */
 
+		/* Sanity check */
+		if (cur_conduit->num_ctypes == 0)
+		{
+			fprintf(stderr,
+				_("%s: Warning: no `type:' line seen\n"
+				  "\tin definition of \"%s\"\n"),
+				conf_fname,
+				cur_conduit->path);
+		}
+
 		if (file_config->conduits == NULL)
 		{
 			/* First conduit on this list */
@@ -387,6 +397,8 @@ conduit_directive:
 	 * conduit applies to just resource or record databases.
 	 */
 	{
+		int err;
+
 		PARSE_TRACE(4)
 		{
 			fprintf(stderr, "Conduit creator: 0x%08ld (%c%c%c%c)\n",
@@ -405,19 +417,15 @@ conduit_directive:
 
 		lex_expect(0);
 
-		if ((cur_conduit->dbcreator != 0L) ||
-		    (cur_conduit->dbtype != 0L))
+		if ((err = append_crea_type(cur_conduit, $4.creator, $4.type))
+		    < 0)
 		{
-			/* XXX - This doesn't work if the previous
-			 * creator/type definition was "* / *".
-			 */
 			fprintf(stderr,
-				_("%s: %d: Warning: type already defined.\n"),
+				_("%s: %d: Can't add creator-type pair to "
+				  "list. This is very bad.\n"),
 				conf_fname, lineno);
+			return -1;
 		}
-
-		cur_conduit->dbcreator = $4.creator;
-		cur_conduit->dbtype = $4.type;
 	}
 	| PATH opt_colon
 	{
