@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.22 2002-04-27 18:36:31 azummo Exp $
+ * $Id: slp.c,v 1.23 2003-02-24 23:53:08 azummo Exp $
  */
 
 #include "config.h"
@@ -157,7 +157,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		err = PConn_read(pconn, pconn->slp.header_inbuf+i, 1);
 		if (err < 0)
 		{
-			perror("slp_read: read");
+			perror("slp_read: read preamble");
 			return err;
 		}
 		if (err == 0)
@@ -194,8 +194,8 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 					pconn->slp.header_inbuf+got, want-got);
 		if (err < 0)
 		{
-			perror("slp_read: read");
-			return -1;
+			perror("slp_read: read header");
+			return err;
 		}
 		if (err == 0)
 		{
@@ -310,7 +310,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		if (err < 0)
 		{
 			perror("slp_read: read2");
-			return -1;
+			return err;
 		}
 		if (err == 0)
 		{
@@ -344,7 +344,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		if (err < 0)
 		{
 			perror("slp_read: read");
-			return -1;
+			return err;
 		}
 		if (err == 0)
 		{
