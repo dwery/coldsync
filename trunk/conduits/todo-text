@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.2 2000-05-11 15:57:08 arensb Exp $
+# $Id: todo-text,v 1.3 2000-05-25 12:09:06 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -31,7 +31,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.2 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.3 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -438,6 +438,10 @@ marks the beginning of a new paragraph.
 
 In the example above, the third item is marked with a star (C<*>), meaning
 that this item has been completed.
+
+The aim is simplicity, not completeness. Hence, this format ignores due
+dates and provides only rudimentary support for priorities. See
+L<"LIMITATIONS">, below.
 
 =head2 Headers and Footers
 
