@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.3 1999-02-22 10:50:13 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.4 1999-02-24 13:10:28 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -880,7 +880,7 @@ extern int DlpReadResourceByIndex(
 	const uword offset,
 	const uword len,
 	struct dlp_resource *value,
-	ubyte *data);
+	const ubyte **data);
 extern int DlpReadResourceByType(
 	struct PConnection *pconn,
 	const ubyte dbid,
