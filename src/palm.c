@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.17 2001-03-27 14:10:47 arensb Exp $
+ * $Id: palm.c,v 2.17.2.1 2001-06-30 07:09:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -985,7 +985,7 @@ palm_append_dbentry(struct Palm *palm,
 	int num_dbs;			/* # databases on Palm */
 
 	MISC_TRACE(4)
-		fprintf(stderr, "append_dbentry: adding \"%s\"\n",
+		fprintf(stderr, "palm_append_dbentry: adding \"%s\"\n",
 			pdb->name);
 
 	/* Find out how many databases there are */
@@ -1006,7 +1006,7 @@ palm_append_dbentry(struct Palm *palm,
 	palm->num_dbs_++;
 
 	/* Fill in the new entry */
-	dbinfo = &(palm->dblist_[num_dbs-1]);
+	dbinfo = &(palm->dblist_[num_dbs]);
 	return dbinfo_fill(dbinfo, pdb);
 }
 
