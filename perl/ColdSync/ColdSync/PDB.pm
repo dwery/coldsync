@@ -8,7 +8,7 @@ use Palm::PDB;
 use Palm::StdAppInfo();
 use ColdSync::SPC;
 
-$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.4 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.5 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -267,7 +267,7 @@ sub catno($$)
 	{
 		my $category = $self->{'std_appinfo'}{'categories'}[$i];
 		next unless defined $category;
-		return $category->{'id'} if $category->{'name'} eq $catname;
+		return $i if $category->{'name'} eq $catname;
 	}
 	return undef;
 }
@@ -328,6 +328,8 @@ sub record($$)
 		process_record($_);
 	}
 
+	my @unfiled = $db->records( $db->catno('Unfiled') );
+
 Returns all the records in the database. More specifically, it
 B<downloads> and returns all the records. And it doesn't cache. Depending
 on the size of the database and the speed of the link, this can be a
@@ -336,31 +338,46 @@ the records in the database. It's usually sufficient to try fetching
 modified records, records in a specific category, or (if synching with
 a local source) accessing records by a known ID.
 
+If a defined category number is provided as an argument, only records in
+the given category will be returned. This uses the C<nextRecInCategory>
+method and, thus, leaves the record iterator in an undefined state.
+
 =cut
-sub records($)
+sub records
 {
 	my $self = shift;
-	die "records() is an instance method" unless ref $self;
+	my $cat = shift;
 
+	die "records() is an instance method" unless ref $self;
 	die "records() called on unreadable database" unless $self->isReadable();
 
-	# XXX if records were treated as the right kind of objects
-	# (tied hashes, probably), we could just load the record Id list
-	# and Dlp request the record bits when the record fields were accessed,
-	# caching as we go. This would require a sophisticated record
-	# cache in order to handle things like deletions and writes and
-	# some extra smarts to know when the database went away.
-
-	my $num_records = $self->num_records();
-
 	my @records;
-	for (my $i = 0; $i < $num_records; $i ++)
+	if (defined $cat)
+	{ 
+		$self->resetIndex();
+		while (my $rec = $self->nextRecInCategory($cat))
+		{
+			push @records, $rec;
+		}
+	} else
 	{
-		my $rawrec = dlp_ReadRecordByIndex($self->{'dbhandle'}, $i, 0, -1);
-		next unless defined $rawrec;
+		# XXX if records were treated as the right kind of objects
+		# (tied hashes, probably), we could just load the record Id list
+		# and Dlp request the record bits when the record fields were accessed,
+		# caching as we go. This would require a sophisticated record
+		# cache in order to handle things like deletions and writes and
+		# some extra smarts to know when the database went away.
 
-		my $rec = $self->{'helper'}->ParseRecord(%$rawrec);
-		push @records, $rec if defined $rec;
+		my $num_records = $self->num_records();
+
+		for (my $i = 0; $i < $num_records; $i ++)
+		{
+			my $rawrec = dlp_ReadRecordByIndex($self->{'dbhandle'}, $i, 0, -1);
+			next unless defined $rawrec;
+
+			my $rec = $self->{'helper'}->ParseRecord(%$rawrec);
+			push @records, $rec if defined $rec;
+		}
 	}
 	return @records;
 }
