@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.37 2001-03-29 05:35:45 arensb Exp $
+ * $Id: pdb.c,v 1.38 2001-06-26 05:49:23 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -53,8 +53,29 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-#include "pconn/pconn.h"
+#include <palm.h>
 #include "pdb.h"
+
+/* XXX - The functions declared INLINE, below, really ought to be inline
+ * functions. I'm not sure how to do this portably, though.
+ */
+#ifdef __GNUC__
+#  define INLINE __inline__
+#else
+#  define INLINE
+#endif	/* __GNUC__ */
+
+/* Functions for extracting values from an array of ubytes */
+extern INLINE ubyte get_ubyte(const ubyte **buf);
+extern INLINE uword get_uword(const ubyte **buf);
+extern INLINE udword get_udword(const ubyte **buf);
+
+/* Functions for writing values to an array of ubytes */
+extern INLINE void put_ubyte(ubyte **buf, const ubyte value);
+extern INLINE void put_uword(ubyte **buf, const uword value);
+extern INLINE void put_udword(ubyte **buf, const udword value);
+extern void debug_dump(FILE *outfile, const char *prefix,
+		       const ubyte *buf, const udword len);
 
 int pdb_trace = 0;		/* Debugging level for PDB stuff */
 #define PDB_TRACE(n)	if (pdb_trace >= (n))
@@ -70,12 +91,6 @@ static int pdb_LoadAppBlock(int fd, struct pdb *db);
 static int pdb_LoadSortBlock(int fd, struct pdb *db);
 static int pdb_LoadResources(int fd, struct pdb *db);
 static int pdb_LoadRecords(int fd, struct pdb *db);
-static int pdb_DownloadResources(PConnection *pconn,
-				 ubyte dbh,
-				 struct pdb *db);
-static int pdb_DownloadRecords(PConnection *pconn,
-			       ubyte dbh,
-			       struct pdb *db);
 
 /* merge_attributes
  * Takes a record's flags and category, and merges them into a single byte,
@@ -397,7 +412,7 @@ pdb_Write(const struct pdb *db,
 	wptr = header_buf;
 	memcpy(wptr, db->name, PDB_DBNAMELEN);
 	wptr += PDB_DBNAMELEN;
-	put_uword(&wptr, (db->attributes & ~DLPCMD_DBFLAG_OPEN));
+	put_uword(&wptr, (db->attributes & ~PDB_ATTR_OPEN));
 				/* Clear the 'open' flag before writing */
 	put_uword(&wptr, db->version);
 	put_udword(&wptr, db->ctime);
@@ -616,396 +631,6 @@ pdb_Write(const struct pdb *db,
 			}
 		}
 	}
-
-	return 0;		/* Success */
-}
-
-/* pdb_Download
- * Download a database from the Palm. The returned 'struct pdb' is
- * allocated by pdb_Download(), and the caller has to free it.
- */
-/* XXX - Probably best to move this to the main ColdSync tree */
-struct pdb *
-pdb_Download(PConnection *pconn,
-	     const struct dlp_dbinfo *dbinfo,
-	     ubyte dbh)		/* Database handle */
-{
-	int err;
-	struct pdb *retval;
-	const ubyte *rptr;	/* Pointer into buffers, for reading */
-		/* These next two variables are here mainly to make the
-		 * types come out right.
-		 */
-	uword appinfo_len;	/* Length of AppInfo block */
-	uword sortinfo_len;	/* Length of sort block */
-	struct dlp_opendbinfo opendbinfo;
-				/* Info about open database (well, the # of
-				 * resources in it). */
-
-	/* Allocate the return value */
-	if ((retval = new_pdb()) == NULL)
-	{
-		fprintf(stderr, _("%s: can't allocate pdb.\n"),
-			"pdb_Download");
-		return NULL;
-	}
-
-	/* Get the database header info */
-	memcpy(retval->name, dbinfo->name, PDB_DBNAMELEN);
-	retval->attributes = dbinfo->db_flags;
-	retval->version = dbinfo->version;
-	/* Convert the times from DLP time structures to Palm-style
-	 * time_ts.
-	 */
-	retval->ctime = time_dlp2palmtime(&dbinfo->ctime);
-	retval->mtime = time_dlp2palmtime(&dbinfo->mtime);
-	retval->baktime = time_dlp2palmtime(&dbinfo->baktime);
-	retval->modnum = dbinfo->modnum;
-	retval->appinfo_offset = 0L;	/* For now */
-	retval->sortinfo_offset = 0L;	/* For now */
-	retval->type = dbinfo->type;
-	retval->creator = dbinfo->creator;
-	retval->uniqueIDseed = 0L;	/* XXX - Should this be something
-					 * else? */
-	PDB_TRACE(4)
-	{
-		fprintf(stderr, "pdb_Download:\n");
-		fprintf(stderr, "\tname: \"%s\"\n", retval->name);
-		fprintf(stderr, "\tattributes: 0x%04x\n", retval->attributes);
-		fprintf(stderr, "\tversion: %d\n", retval->version);
-		fprintf(stderr, "\tctime: %ld\n", retval->ctime);
-		fprintf(stderr, "\tmtime: %ld\n", retval->mtime);
-		fprintf(stderr, "\tbaktime: %ld\n", retval->baktime);
-		fprintf(stderr, "\tmodnum: %ld\n", retval->modnum);
-		fprintf(stderr, "\tappinfo_offset: %ld\n",
-			retval->appinfo_offset);
-		fprintf(stderr, "\tsortinfo_offset: %ld\n",
-			retval->sortinfo_offset);
-		fprintf(stderr, "\ttype: '%c%c%c%c'\n",
-			(char) ((retval->type >> 24) & 0xff),
-			(char) ((retval->type >> 16) & 0xff),
-			(char) ((retval->type >> 8) & 0xff),
-			(char) (retval->type & 0xff));
-		fprintf(stderr, "\tcreator: '%c%c%c%c'\n",
-			(char) ((retval->creator >> 24) & 0xff),
-			(char) ((retval->creator >> 16) & 0xff),
-			(char) ((retval->creator >> 8) & 0xff),
-			(char) (retval->creator & 0xff));
-		fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->uniqueIDseed);
-	}
-
-	/* Get the database record/resource index header info */
-	/* Find out how many records/resources there are in this database */
-	err = DlpReadOpenDBInfo(pconn, dbh, &opendbinfo);
-	if (err != DLPSTAT_NOERR)
-	{
-		fprintf(stderr, _("%s: Can't read database info: %d.\n"),
-			"pdb_Download",
-			err);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
-		free_pdb(retval);
-		return NULL;
-	}
-	retval->next_reclistID = 0L;
-	retval->numrecs = opendbinfo.numrecs;
-	PDB_TRACE(4)
-	{
-		fprintf(stderr, "\n\tnextID: %ld\n", retval->next_reclistID);
-		fprintf(stderr, "\tlen: %d\n", retval->numrecs);
-	}
-
-	/* Try to get the AppInfo block */
-	err = DlpReadAppBlock(pconn, dbh, 0, DLPC_APPBLOCK_TOEND,
-			      &appinfo_len, &rptr);
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:
-		/** Make a copy of the AppInfo block **/
-		/* Allocate space for the AppInfo block */
-		if ((retval->appinfo = (ubyte *) malloc(appinfo_len))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_Download");
-			DlpCloseDB(pconn, dbh);	/* Don't really care if
-						 * this fails */
-			free_pdb(retval);
-			return NULL;
-		}
-		memcpy(retval->appinfo, rptr, appinfo_len);
-					/* Copy the AppInfo block */
-		retval->appinfo_len = appinfo_len;
-		PDB_TRACE(4)
-			fprintf(stderr,
-				"pdb_Download: got an AppInfo block\n");
-		PDB_TRACE(6)
-			debug_dump(stderr, "APP", retval->appinfo,
-				   retval->appinfo_len);
-		break;
-	    case DLPSTAT_NOTFOUND:
-		/* This database doesn't have an AppInfo block */
-		retval->appinfo_len = 0;
-		retval->appinfo = NULL;
-		PDB_TRACE(5)
-			fprintf(stderr, "pdb_Download: this db doesn't have "
-				"an AppInfo block\n");
-		break;
-	    default:
-		fprintf(stderr, _("%s: Can't read AppInfo block for %s: "
-				  "%d.\n"),
-			"pdb_Download",
-			dbinfo->name, err);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
-		free_pdb(retval);
-		return NULL;
-	}
-
-	/* Try to get the sort block */
-	err = DlpReadSortBlock(pconn, dbh, 0, DLPC_SORTBLOCK_TOEND,
-			       &sortinfo_len, &rptr);
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:
-		/** Make a copy of the sort block **/
-		/* Allocate space for the sort block */
-		if ((retval->sortinfo = (ubyte *) malloc(sortinfo_len))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_Download");
-			DlpCloseDB(pconn, dbh);	/* Don't really care if
-						 * this fails */
-			free_pdb(retval);
-			return NULL;
-		}
-		memcpy(retval->sortinfo, rptr, retval->sortinfo_len);
-					/* Copy the sort block */
-		retval->sortinfo_len = sortinfo_len;
-		break;
-	    case DLPSTAT_NOTFOUND:
-		/* This database doesn't have a sort block */
-		retval->sortinfo_len = 0;
-		retval->sortinfo = NULL;
-		break;
-	    default:
-		fprintf(stderr, _("%s: Can't read sort block for %s: %d.\n"),
-			"pdb_Download",
-			dbinfo->name, err);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
-		free_pdb(retval);
-		return NULL;
-	}
-
-	/* Download the records/resources */
-	if (DBINFO_ISRSRC(dbinfo))
-		err = pdb_DownloadResources(pconn, dbh, retval);
-	else
-		err = pdb_DownloadRecords(pconn, dbh, retval);
-	PDB_TRACE(7)
-		fprintf(stderr,
-			"After pdb_Download{Resources,Records}; err == %d\n",
-			err);
-	if (err < 0)
-	{
-		fprintf(stderr, _("Can't download record or resource "
-				  "index.\n"));
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
-		free_pdb(retval);
-		return NULL;
-	}
-
-	return retval;			/* Success */
-}
-
-/* pdb_Upload
- * Upload 'db' to the Palm. This database must not exist (i.e., it's the
- * caller's responsibility to delete it if necessary).
- * When a record is uploaded, the Palm may assign it a new record number.
- * pdb_Upload() records this change in 'db', but it is the caller's
- * responsibility to save this change to the appropriate file, if
- * applicable.
- */
-/* XXX - Probably best to move this to the main ColdSync tree */
-int
-pdb_Upload(PConnection *pconn, struct pdb *db)
-{
-	int err;
-	ubyte dbh;			/* Database handle */
-	struct dlp_createdbreq newdb;	/* Argument for creating a new
-					 * database */
-
-	PDB_TRACE(1)
-		fprintf(stderr, "Uploading \"%s\"\n", db->name);
-
-	/* Call OpenConduit to let the Palm (or the user) know that
-	 * something's going on. (Actually, I don't know that that's the
-	 * reason. I'm just imitating HotSync, here.
-	 */
-	err = DlpOpenConduit(pconn);
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:		/* No error */
-		break;
-	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
-					 * by the user, on the Palm. */
-		fprintf(stderr, _("Upload of \"%s\" cancelled by Palm.\n"),
-			db->name);
-		/* XXX - Error-reporting: this function is nominally in
-		 * libpdb, so it shouldn't really be allowed to touch
-		 * either palm_errno or cs_errno. So can't follow the rules
-		 * and also report the fact that the upload was cancelled.
-		 * So we cheat. Massively.
-		 * This ugliness will go away once this function is moved
-		 * out of libpdb and into the main body of ColdSync.
-		 */
-		{
-			extern int cs_errno;
-			cs_errno = 1;	/* XXX - CSE_CANCEL */
-		}
-		return -1;
-	    default:			/* All other errors */
-		fprintf(stderr, _("Can't open conduit for \"%s\": %d.\n"),
-			db->name, err);
-		return -1;
-	}
-
-	/* Create the database */
-	newdb.creator = db->creator;
-	newdb.type = db->type;
-	newdb.card = CARD0;
-	newdb.flags = db->attributes;
-			/* XXX - Is this right? This is voodoo code */
-	newdb.version = db->version;
-	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
-
-	err = DlpCreateDB(pconn, &newdb, &dbh);
-	if (err != DLPSTAT_NOERR)
-	{
-		fprintf(stderr, _("Error creating database \"%s\": %d.\n"),
-			db->name, err);
-		return -1;
-	}
-
-	/* Upload the AppInfo block, if it exists */
-	if (db->appinfo_len > 0)
-	{
-		PDB_TRACE(3)
-			fprintf(stderr, "Uploading AppInfo block\n");
-
-		err = DlpWriteAppBlock(pconn, dbh,
-				       db->appinfo_len,
-				       db->appinfo);
-		if (err < 0)
-			return err;
-	}
-
-	/* Upload the sort block, if it exists */
-	if (db->sortinfo_len > 0)
-	{
-		PDB_TRACE(3)
-			fprintf(stderr, "Uploading sort block\n");
-
-		err = DlpWriteSortBlock(pconn, dbh,
-					db->sortinfo_len,
-					db->sortinfo);
-		if (err < 0)
-			return err;
-	}
-
-	/* Upload each record/resource in turn */
-	if (IS_RSRC_DB(db))
-	{
-		/* It's a resource database */
-		struct pdb_resource *rsrc;
-
-		PDB_TRACE(4)
-			fprintf(stderr, "Uploading resources.\n");
-
-		for (rsrc = db->rec_index.rsrc;
-		     rsrc != NULL;
-		     rsrc = rsrc->next)
-		{
-			PDB_TRACE(5)
-				fprintf(stderr,
-					"Uploading resource 0x%04x\n",
-					rsrc->id);
-
-			err = DlpWriteResource(pconn,
-					       dbh,
-					       rsrc->type,
-					       rsrc->id,
-					       rsrc->data_len,
-					       rsrc->data);
-
-			if (err != DLPSTAT_NOERR)
-			{
-				/* Close the database */
-				err = DlpCloseDB(pconn, dbh);
-				return -1;
-			}
-		}
-	} else {
-		/* It's a record database */
-		struct pdb_record *rec;
-
-		PDB_TRACE(4)
-			fprintf(stderr, "Uploading records.\n");
-
-		for (rec = db->rec_index.rec;
-		     rec != NULL;
-		     rec = rec->next)
-		{
-			udword newid;		/* New record ID */
-
-			PDB_TRACE(5)
-				fprintf(stderr,
-					"Uploading record 0x%08lx\n",
-					rec->id);
-
-			/* XXX - Gross hack to avoid uploading zero-length
-			 * records (which shouldn't exist in the first
-			 * place).
-			 */
-			if (rec->data_len == 0)
-				continue;
-
-			err = DlpWriteRecord(pconn,
-					     dbh,
-					     0x80,	/* Mandatory magic */
-							/* XXX - Actually,
-							 * at some point
-							 * DlpWriteRecord
-							 * will get fixed
-							 * to make sure the
-							 * high bit is set,
-							 * at which point
-							 * this argument
-							 * will be allowed
-							 * to be 0.
-							 */
-					     rec->id,
-					     rec->flags,
-					     rec->category,
-					     rec->data_len,
-					     rec->data,
-					     &newid);
-
-			if (err != DLPSTAT_NOERR)
-			{
-				/* Close the database */
-				err = DlpCloseDB(pconn, dbh);
-				return -1;
-			}
-
-			/* Update the ID assigned to this record */
-			rec->id = newid;
-		}
-	}
-
-	/* Clean up */
-	err = DlpCloseDB(pconn, dbh);
-	if (err != DLPSTAT_NOERR)
-		return -1;
 
 	return 0;		/* Success */
 }
@@ -1580,7 +1205,12 @@ pdb_LoadHeader(int fd,
 		if (db->attributes & PDB_ATTR_OKNEWER)
 			fprintf(stderr, " OKNEWER");
 		if (db->attributes & PDB_ATTR_RESET) fprintf(stderr, " RESET");
-		if (db->attributes & PDB_ATTR_OPEN) fprintf(stderr, " OPEN");
+		if (db->attributes & PDB_ATTR_NOCOPY)
+			fprintf(stderr, " NOCOPY");
+		if (db->attributes & PDB_ATTR_STREAM)
+			fprintf(stderr, " STREAM");
+		if (db->attributes & PDB_ATTR_OPEN)
+			fprintf(stderr, " OPEN");
 		fprintf(stderr, "\n");
 		fprintf(stderr, "\tversion: %u\n", db->version);
 		t = db->ctime - EPOCH_1904;
@@ -2313,295 +1943,6 @@ pdb_LoadRecords(int fd,
 	}
 
 	return 0;		/* Success */
-}
-
-/* pdb_DownloadResources
- * Download a resource database's resources from the Palm, and put them in
- * 'db'.
- * Occasionally, this will produce a file different from the one that
- * 'pilot-xfer -b' does. With a blank xcopilot (i.e., delete the RAM and
- * scratch files), do a backup with 'pilot-xfer -b'. Then delete the RAM
- * and scratch files and do a backup with 'coldsync -b'. The file "Unsaved
- * Preferences.prc" produced by ColdSync will have an additional resource,
- * of type "psys" and ID 1; the Palm headers seem to indicate that this is
- * a password. The file produced by 'pilot-xfer' doesn't have this
- * resource.
- * I'd like to think that this means that ColdSync is better than
- * pilot-xfer, but it could just as easily be an off-by-one error or a
- * different set of flags.
- */
-static int
-pdb_DownloadResources(PConnection *pconn,
-		      ubyte dbh,
-		      struct pdb *db)
-{
-	int i;
-	int err;
-	uword totalrsrcs;	/* The real number of resources in the
-				 * database.
-				 */
-
-	totalrsrcs = db->numrecs;	/* Get the number of resources now.
-					 * It is necessary to remember this
-					 * now because pdb_AppendResource()
-					 * increments db->numrecs in the
-					 * name of convenience.
-					 */
-
-	/* Read each resource in turn */
-	for (i = 0; i < totalrsrcs; i++)
-	{
-		struct pdb_resource *rsrc;	/* The new resource */
-		struct dlp_resource resinfo;	/* Resource info will be
-						 * read into here before
-						 * being parsed into
-						 * 'rsrc'.
-						 */
-		const ubyte *rptr;	/* Pointer into buffers, for reading */
-
-
-		/* Allocate the new resource */
-		if ((rsrc = (struct pdb_resource *)
-		     malloc(sizeof(struct pdb_resource)))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_DownloadResources");
-			return -1;
-		}
-
-		/* Download the 'i'th resource from the Palm */
-		err = DlpReadResourceByIndex(pconn, dbh, i, 0,
-					     DLPC_RESOURCE_TOEND,
-					     &resinfo,
-					     &rptr);
-
-		if (err != DLPSTAT_NOERR)
-		{
-			fprintf(stderr, _("Can't read resource %d: %d.\n"),
-				i, err);
-			free(rsrc);
-			return -1;
-		}
-
-		PDB_TRACE(5)
-		{
-			fprintf(stderr, "DLP resource data %d:\n", i);
-			fprintf(stderr, "\ttype: '%c%c%c%c'\n",
-				(char) ((resinfo.type >> 24) & 0xff),
-				(char) ((resinfo.type >> 16) & 0xff),
-				(char) ((resinfo.type >> 8) & 0xff),
-				(char) (resinfo.type & 0xff));
-			fprintf(stderr, "\tid: %d\n", resinfo.id);
-			fprintf(stderr, "\tindex: %d\n", resinfo.index);
-			fprintf(stderr, "\tsize: %d\n", resinfo.size);
-		}
-
-		/* Fill in the resource index data */
-		/* XXX - Probably ought to use new_Resource() */
-		rsrc->type = resinfo.type;
-		rsrc->id = resinfo.id;
-		rsrc->offset = 0L;	/* For now */
-
-		/* Fill in the data size entry */
-		rsrc->data_len = resinfo.size;
-
-		/* Allocate space in 'rsrc' for the resource data itself */
-		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_DownloadResources");
-			free(rsrc);
-			return -1;
-		}
-
-		/* Copy the resource data to 'rsrc' */
-		memcpy(rsrc->data, rptr, rsrc->data_len);
-		PDB_TRACE(6)
-			debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
-
-		/* Append the resource to the database */
-		pdb_AppendResource(db, rsrc);	/* XXX - Error-checking */
-		db->numrecs = totalrsrcs;	/* Kludge */
-	}
-
-	return 0;	/* Success */
-}
-
-/* XXX - This probably ought to be moved into the main ColdSync tree */
-static int
-pdb_DownloadRecords(PConnection *pconn,
-		    ubyte dbh,
-		    struct pdb *db)
-{
-	int i;
-	int err;
-	udword *recids;		/* Array of record IDs */
-	uword numrecs;		/* # record IDs actually read */
-	uword totalrecs;	/* The real number of records in the
-				 * database.
-				 */
-
-	totalrecs = db->numrecs;	/* Get the number of records in the
-					 * database. It is necessary to
-					 * remember this here because
-					 * pdb_AppendResource() increments
-					 * db->numrecs in the name of
-					 * convenience.
-					 */
-
-	/* Handle the easy case first: if there aren't any records, don't
-	 * bother asking for their IDs.
-	 */
-	if (totalrecs == 0)
-	{
-		/* No records */
-		db->rec_index.rec = NULL;
-
-		return 0;
-	}
-
-	/* Allocate the array of record IDs.
-	 * This is somewhat brain-damaged: ideally, we'd like to just read
-	 * each record in turn. It'd seem that DlpReadRecordByIndex() would
-	 * be just the thing; but it doesn't actually return the record
-	 * data, it just returns record info. So instead, we have to use
-	 * DlpReadRecordIDList() to get a list with each record's ID, then
-	 * use DlpReadRecordByID() to get the record data.
-	 */
-	if ((recids = (udword *) calloc(totalrecs, sizeof(udword)))
-	    == NULL)
-	{
-		fprintf(stderr, _("Can't allocate list of record IDs.\n"));
-		return -1;
-	}
-
-	/* Read the list of record IDs. DlpReadRecordIDList() might not be
-	 * able to read all of them at once (it seems to have a limit of
-	 * 500 or so), so we might need to read them a chunk at a time.
-	 */
-	numrecs = 0;
-	while (numrecs < totalrecs)
-	{
-		uword num_read;		/* # of record IDs read this time */
-
-		PDB_TRACE(4)
-			fprintf(stderr, "pdb_DownloadRecords: Reading a chunk "
-				"of record IDs starting at %d\n",
-				numrecs);
-
-		/* Get the list of record IDs, as described above */
-		if ((err = DlpReadRecordIDList(pconn, dbh, 0,
-					       numrecs, totalrecs-numrecs,
-					       &num_read, recids+numrecs))
-		    != DLPSTAT_NOERR)
-		{
-			fprintf(stderr, _("Can't read record ID list.\n"));
-			free(recids);
-			return -1;
-		}
-
-		/* Sanity check */
-		if (num_read <= 0)
-		{
-			fprintf(stderr, _("DlpReadRecordIDList() read 0 "
-					  "records. What happened?\n"));
-			free(recids);
-			return -1;
-		}
-
-		numrecs += num_read;
-	}
-
-	/* Read each record in turn */
-	for (i = 0; i < totalrecs; i++)
-	{
-		struct pdb_record *rec;		/* The new resource */
-		struct dlp_recinfo recinfo;	/* Record info will be read
-						 * into here before being
-						 * parsed into 'rec'.
-						 */
-		const ubyte *rptr;	/* Pointer into buffers, for reading */
-
-		/* Allocate the new record */
-		if ((rec = (struct pdb_record *)
-		     malloc(sizeof(struct pdb_record)))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"pdb_DownloadRecords");
-			free(recids);
-			return -1;
-		}
-
-		/* Download the 'i'th record from the Palm */
-		err = DlpReadRecordByID(pconn, dbh,
-					recids[i],
-					0, DLPC_RECORD_TOEND,
-					&recinfo,
-					&rptr);
-		if (err != DLPSTAT_NOERR)
-		{
-			fprintf(stderr, _("Can't read record %d: %d.\n"),
-				i, err);
-			free(recids);
-			return -1;
-		}
-
-		PDB_TRACE(6)
-		{
-			fprintf(stderr, "DLP record data %d:\n", i);
-			fprintf(stderr, "\tid: 0x%08lx\n", recinfo.id);
-			fprintf(stderr, "\tindex: %d\n", recinfo.index);
-			fprintf(stderr, "\tsize: %d\n", recinfo.size);
-			fprintf(stderr, "\tattributes: 0x%02x\n",
-				recinfo.attributes);
-			fprintf(stderr, "\tcategory: %d\n", recinfo.category); 
-		}
-
-		/* Fill in the record index data */
-		rec->offset = 0L;	/* For now */
-					/* XXX - Should this be filled in? */
-		rec->flags = recinfo.attributes;
-		rec->category = recinfo.category;
-		rec->id = recinfo.id;
-
-		/* Fill in the data size entry */
-		rec->data_len = recinfo.size;
-
-		if (rec->data_len == 0)
-		{
-			rec->data = NULL;
-			PDB_TRACE(6)
-				fprintf(stderr, "REC: No record data\n");
-		} else {
-			/* Allocate space in 'rec' for the record data
-			 * itself
-			 */
-			if ((rec->data = (ubyte *) malloc(rec->data_len))
-			    == NULL)
-			{
-				fprintf(stderr, _("%s: Out of memory.\n"),
-					"pdb_DownloadRecords");
-				free(recids);
-				return -1;
-			}
-
-			/* Copy the record data to 'rec' */
-			memcpy(rec->data, rptr, rec->data_len);
-			PDB_TRACE(6)
-				debug_dump(stderr, "REC", rec->data,
-					   rec->data_len);
-		}
-
-		/* Append the record to the database */
-		pdb_AppendRecord(db, rec);	/* XXX - Error-checking */
-		db->numrecs = totalrecs;	/* Kludge */
-	}
-
-	free(recids);
-
-	return 0;	/* Success */
 }
 
 /* This is for Emacs's benefit:
