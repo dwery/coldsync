@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.54 2002-05-14 16:02:17 arensb Exp $
+ * $Id: conduit.c,v 2.55 2002-05-31 13:56:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -332,6 +332,14 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	 */
 	if (with_spc)
 	{
+		/* Signals the PDA we are running a counduit. This is useful to
+		 * switch the message on the ddisplay to "Synchronizing" and to check
+		 * for an abort condition.
+		 */
+		/* XXX - Check for the abort condition ;) */
+		DlpOpenConduit(pconn);
+
+
 		/* Set up a pair of pipes for talking SPC with the child */
 		if ((err = socketpair(AF_UNIX, SOCK_STREAM, 0, spcpipe)) < 0)
 		{
