@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.33 2001-11-19 17:10:40 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.34 2001-12-10 07:29:17 arensb Exp $
  */
 
 #include "config.h"
@@ -594,7 +594,6 @@ pconn_usb_open(PConnection *pconn,
 		return -1;	  
 	}
 
-
 	/*
 	 *  Now search the list of functions supported over the USB interface
 	 *  for the endpoint associated with the HotSync function.  So far,
@@ -672,7 +671,7 @@ pconn_usb_open(PConnection *pconn,
 	 * 
 	 *  Ok, all of the device specific control messages have been
 	 *  completed.  It is critically important that these be performed
-	 *  before opening a full duplex conneciton to the hot sync
+	 *  before opening a full duplex connection to the hot sync
 	 *  endpoint on the Visor, on which all of the data transfer occur.
 	 *  If this is open while the set configuration operation above is
 	 *  done, at best it won't work (in FreeBSD 4.0 and later), and at
