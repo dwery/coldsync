@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2001-12-06 13:45:00 arensb Exp $
+# $Id: Makefile,v 1.15 2001-12-09 19:30:00 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -92,7 +92,7 @@ all::	${INFOFILES}
 install::	coldsync.8 ${INFOFILES}
 	-${MKDIR} ${MAN3DIR}
 	@for i in ${MAN3FILES}; do \
-		echo ${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
+		echo "${INSTALL_MAN} $$i ${MAN3DIR}/$$i"; \
 		${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
 	done
 	-${MKDIR} ${MAN8DIR}
