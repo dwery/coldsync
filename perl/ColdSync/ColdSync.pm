@@ -1,9 +1,13 @@
 # ColdSync.pm
 # A module to simplify writing ColdSync conduits.
 #
-# $Id: ColdSync.pm,v 1.6 2000-08-07 01:36:08 arensb Exp $
+#	Copyright (C) 1999, 2000, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: ColdSync.pm,v 1.7 2000-08-08 14:01:39 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.6 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.7 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -312,6 +316,13 @@ sub StartConduit
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
 	}
+
+	# Open the SPC pipe, if requested
+	if (exists $ColdSync::SPC::{"VERSION"} and
+	    defined $HEADERS{"SPCPipe"})
+	{
+		&ColdSync::SPC::spc_init;
+	}
 }
 
 =item EndConduit()
@@ -412,6 +423,13 @@ sub ConduitMain
 	{
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
+	}
+
+	# Open the SPC pipe, if requested
+	if (exists $ColdSync::SPC::{"VERSION"} and
+	    defined $HEADERS{"SPCPipe"})
+	{
+		&ColdSync::SPC::spc_init;
 	}
 
 	# Call the appropriate handler. Note that $handler has to be
