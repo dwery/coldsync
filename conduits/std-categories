@@ -1,22 +1,33 @@
 #!/usr/bin/perl
-# $Id: std-categories,v 2.1 2000-11-23 03:43:45 arensb Exp $
-use lib "/folks/arensb/proj/coldsync/perl/ColdSync";
-use lib "/folks/arensb/proj/palm-perl";
+#
+#	Copyright (C) 1999, 2000, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: std-categories,v 3.1 2000-11-24 04:53:36 arensb Exp $
+#
+# This is a ColdSync Sync conduit for synchronizing the categories between
+# a database on the Palm and one on the desktop.
+#
+# This script is rather hairy, and probably doesn't do the Right Thing in
+# all cases, but that's because categories aren't quite as clean as they
+# could be. Certainly nowhere near as pretty as record syncing.
+
+# XXX - "std-categories -config" gives a dangerous configuration:
+#	type: */*;
+# this includes databases that don't have a standard AppInfo block.
+
 use strict;
 use ColdSync;
 use ColdSync::SPC;
 use Palm::StdAppInfo;
 
-use vars qw( %Pappinfo );
+use vars qw( %Pappinfo $DEBUG );
+use constant NumCategories => Palm::StdAppInfo::numCategories;
+					# Number of categories in a
+					# standard AppInfo block
 
-use constant NumCategories => 16;
-
-# XXX - When you delete a category on the Palm, you get a category with an
-# empty name, the same ID as before, and "renamed" set to 0.
-# The way to distinguish between a) a category that was deleted on the
-# Palm, and b) a category that was added on the desktop is this:
-#	a) "renamed" is false; ID is < 128
-#	b) "renamed" is true; ID is >= 128
+$DEBUG = 0;		# Turns debugging on
 
 StartConduit("sync");
 select STDERR;		# XXX - Just for debugging
@@ -40,319 +51,320 @@ use vars qw( %Pappinfo );	# Parsed category information from AppInfo
 
 $Pappinfo_raw = dlp_ReadAppBlock($dbh);
 				# Download the AppInfo block from the Palm
+# XXX - Error-checking
+# XXX - Might be a good idea to make sure that $Pappinfo_raw is at least
+# long enough for a standard set of categories, in case some dumbass runs
+# this on a non-StdAppInfo database.
 &Palm::StdAppInfo::parse_StdAppInfo(\%Pappinfo, $Pappinfo_raw);
 				# Parse the AppInfo block into a set of
 				# categories.
+# XXX - Might be a good idea to make sure that category 0 has ID 0, in case
+# some dumbass runs this on a non-StdAppInfo database.
 
-print "* Palm categories:\n";
-&dumphash(\%Pappinfo, "");	# XXX - Debugging
-print "* Desktop categories:\n";
-&dumphash($PDB->{appinfo}, "");	# XXX - Debugging
-
-## Use the Palm's categories as a base, and insert the categories from
-## the desktop.
-#my $nextID = 256;		# We may need to add new categories and IDs
-#				# temporarily. This gives the next category
-#				# ID to be used. Category IDs are in the
-#				# range 0-255, so starting at 256 ensures
-#				# that there will be no conflict.
-#my $i;
-#
-## Start by copying all of the Palm's categories to the working set.
-#my $Pcats  = $Pappinfo{categories};
-#my $DTcats = $PDB->{appinfo}{categories};
-#
-## XXX - Merge the working set with $PDB's categories
-#for ($i = 0; $i < Palm::StdAppInfo::numCategories; $i++)
-#{
-#	# Ignore unassigned categories
-#	next if !defined($Pcats->[$i]{name}) or
-#		($Pcats->[$i]{name} eq "");
-#
-#	# Compare this Palm category to the ones on the desktop
-#	# XXX - This whole comparison is currently O(n^2). It should be
-#	# possible to do better.
-#	# (Okay, technically, since both sets are bounded, this is O(1),
-#	# but still, it'd be nice to do better.)
-#	my $j;
-#
-#	for ($j = 0; $j < Palm::StdAppInfo::numCategories; $j++)
-#	{
-#		next if (!defined($DTcats->[$j]{name})) or
-#			($DTcats->[$i]{name} eq "");
-#		if ($Pcats->[$i]{name} eq $DTcats->[$j]{name})
-#		{
-#			# Found a category with the same name.
-#			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
-#			{
-#				# Name and ID match. This is the same
-#				# category.
-#				# XXX - What if $i != $j ?
-#			} else {
-#				# Name matches, ID doesn't. Since the user
-#				# most is interested in names, not IDs,
-#				# this is considered to be the same
-#				# category. Fix one of the IDs to match the
-#				# other.
-#				# XXX - What if $i != $j ?
-#				$DTcats->[$j]{id} = $Pcats->[$i]{id};
-#			}
-#
-#			# Clear the "renamed" flags in case they were set.
-#			$Pcats->[$i]{renamed} = 0;
-#			$DTcats->[$j]{renamed} = 0;
-#		} else {
-#			# The category name doesn't match. This could still
-#			# be the same category, if one of the copies has
-#			# the 'renamed' flag set, and they have the same ID.
-#			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
-#			{
-#				# Different name, same ID
-#				if ($Pcats->[$i]{renamed})
-#				{
-#					# Different name, same ID, and the
-#					# Palm category was renamed. Change
-#					# the name on the desktop.
-#					# XXX
-#				} elsif ($DTcats->[$j]{renamed})
-#				{
-#					# Different name, same ID, and the
-#					# desktop category was renamed.
-#					# Change the name on the Palm.
-#					# XXX
-#				} else {
-#					# Different name, same ID, but
-#					# neither category was renamed.
-#					# Change the ID on the desktop so
-#					# that it doesn't conflict.
-#					# XXX
-#				}
-#			} else {
-#				# Different name, different ID. These are
-#				# different categories. Nothing to do.
-#			}
-#		}
-#	}
-#}
-#
-## XXX - Find new categories on the desktop
-#
-## Recreate the AppInfo block with category names and IDs from the working
-## set.
-##  @{$Pappinfo{categories}} = ();
-##  @{$Pappinfo{uniqueIDs}} = ();
-##  for ($i = 0; $i <= $#work; $i++)
-##  {
-##  	push @{$Pappinfo{uniqueIDs}}, $work[$i]->[0];
-##  	push @{$Pappinfo{categories}}, $work[$i]->[1];
-##  }
-##  $Pappinfo{renamed} = 0;
-
-#  print "* Renamed?\n";
-#  for (@{$Pappinfo{categories}})
-#  {
-#  	print "$_->{name} -> $_->{renamed}\n";
-#  	$_->{renamed} = undef;
-#  }
+if ($DEBUG)
+{
+	print "* Palm categories:\n";
+	&dumphash(\%Pappinfo, "");
+	print "* Desktop categories:\n";
+	&dumphash($PDB->{appinfo}, "");
+}
 
 # Phase 1: Underpants!
 
 # Phase 2: Get the names and IDs in sync between the Palm and Desktop
 # Phase 2.1: Look at the categories on the Palm
-print STDERR "Examining Palm categories:\n";
-for (my $i = 0; $i <= $#{$Pappinfo{categories}}; $i++)
+print STDERR "===== Examining Palm categories:\n" if $DEBUG;
+for (my $i = 0; $i < NumCategories; $i++)
 {
-	my $category = $Pappinfo{categories}->[$i];
-	print "Category $i:\n";
-	print "    Name: [$category->{name}]";
-	print " ", $category->{id};
-	print " RENAMED" if $category->{renamed};
-	print "\n";
+	my $category = $Pappinfo{categories}[$i];
+	my $Dcategory;
 
-	my $Dcategory;		# Desktop category
-
-	# XXX - Deal with categories deleted on the Palm: id < 128 and name
-	# == ""
+	print STDERR "category $i: [$category->{name}]\n" if $DEBUG;
 
 	if ($category->{name} eq "")
 	{
-		# This category doesn't exist. It may have been deleted
-		$Dcategory = &find_cat_by_id($PDB->{appinfo},
-					     $category->{id});
-	}
-
-	if ($category->{renamed})
-	{
-		# This category has been renamed. Look for a category on
-		# the desktop with the same ID.
-
-		my $Dcategory;		# Desktop category
-
 		$Dcategory = &find_cat_by_id($PDB->{appinfo},
 					     $category->{id});
 
 		if (!defined($Dcategory))
 		{
-			print STDERR "\tThis category doesn't exist on the desktop.\n";
+			# This category exists neither on the Palm, nor
+			# on the desktop. Nothing to do.
+			print STDERR "This category doesn't exist. Nothing to do.\n"
+				if $DEBUG;
+
 			next;
 		}
 
-		print STDERR "\tThis category exists on the desktop.\n";
-		print STDERR "\tRenaming D[$Dcategory->{name}] to $category->{name}\n";
-		$Dcategory->{name} = $category->{name};
-		$category->{renamed} = 0;
-		$Dcategory->{renamed} = 0;
-
-		$Dcategory->{_goesto} = $i;	# Index of Palm category
-	} else {
-		# This category has not been renamed. Look for a category
-		# on the desktop with the same name.
-
-		my $Dcategory;		# Desktop category
-
-		$Dcategory = &find_cat_by_name($PDB->{appinfo},
-					       $category->{name});
-
-		if (!defined($Dcategory))
-		{
-			print STDERR "\tThis category doesn't exist on the desktop.\n";
-			next;
-		}
-
-		print STDERR "\tThis category exists on the desktop.\n";
+		# This category doesn't exist on the Palm, but does
+		# exist on the desktop
 		if ($Dcategory->{renamed})
 		{
-			print STDERR "\tRenaming P[$category->{name}] to $Dcategory->{name}\n";
-			$category->{name} = $Dcategory->{name};
-			$Dcategory->{renamed} = 0;
-		}
 
-		$Dcategory->{_goesto} = $i;	# Index of Palm category
+			# Doesn't exist on the Palm.
+			# Exists on the desktop.
+			# Renamed on the desktop.
+			# -> Add it on the Palm.
+			print STDERR "Renamed on the desktop. Renaming on Palm.\n"
+				if $DEBUG;
+
+			$category->{name} = $Dcategory->{name};
+			$category->{renamed} = 0;
+			$Dcategory->{renamed} = 0;
+			$Dcategory->{_moveto} = $i;
+		} else {
+
+			# Doesn't exist on Palm.
+			# Exists on desktop.
+			# Not renamed.
+			# -> Deleted on Palm. Delete it on desktop
+			print STDERR "Deleted on Palm. Deleting on desktop.\n"
+				if $DEBUG;
+
+			$Dcategory->{name} = "";
+			$category->{renamed} = 0;
+			$Dcategory->{renamed} = 0;
+			$Dcategory->{_moveto} = $i;
+		}
+	} else {
+		# This category exists on the Palm
+
+		if ($category->{renamed})
+		{
+			$Dcategory = &find_cat_by_id($PDB->{appinfo},
+						     $category->{id});
+
+			if (defined($Dcategory))
+			{
+				# Exists on Palm.
+				# Exists on desktop.
+				# Renamed on Palm.
+				# -> Renamed on Palm. Change name on desktop.
+				print STDERR "Renamed on Palm. Need to rename on desktop.\n"
+					if $DEBUG;
+
+				$Dcategory->{name} = $category->{name};
+				$category->{renamed} = 0;
+				$Dcategory->{renamed} = 0;
+				$Dcategory->{_moveto} = $i;
+			} else {
+				# Exists on Palm.
+				# Doesn't exist on desktop.
+				# Renamed on Palm.
+				# -> Add it on the desktop.
+				print STDERR "New category. Need to add on desktop.\n"
+					if $DEBUG;
+
+				$category->{renamed} = 0;
+				$Dcategory->{renamed} = 0;
+				$Dcategory->{_moveto} = $i;
+			}
+		} else {
+			$Dcategory = &find_cat_by_name($PDB->{appinfo},
+						       $category->{name});
+
+			if (defined($Dcategory))
+			{
+				# This category exists on the Palm and
+				# on the desktop. It has not been renamed
+				if ($Dcategory->{renamed})
+				{
+					# Exists on Palm.
+					# Exists on desktop.
+					# Not renamed on Palm.
+					# Renamed on desktop.
+					# -> Rename on Palm.
+					print STDERR "Renamed on desktop. Need to rename on Palm.\n"
+						if $DEBUG;
+					$category->{name} = $Dcategory->{name};
+					$category->{renamed} = 0;
+					$Dcategory->{renamed} = 0;
+					$Dcategory->{_moveto} = $i;
+				} else {
+					# Exists on Palm.
+					# Exists on desktop.
+					# Not renamed on Palm.
+					# Not renamed on desktop.
+					# -> Okay, but make sure the IDs are
+					#    in sync.
+
+					print STDERR "OK. Make sure IDs are in sync.\n"
+						if $DEBUG;
+
+					$Dcategory->{id} = $category->{id};
+					$category->{renamed} = 0;
+					$Dcategory->{renamed} = 0;
+					$Dcategory->{_moveto} = $i;
+				}
+			} else {
+				# Exists on Palm.
+				# Doesn't exist on desktop.
+				# Not renamed on Palm.
+				# -> Not clear whether a) deleted on desktop,
+				#    or b) added (and synced) on Palm.
+				# -> Be conservative and add it on the desktop.
+
+				print STDERR "Judgment call: add on the desktop.\n"
+					if $DEBUG;
+			}
+		}
 	}
 }
 
 # Phase 2.2: Look at the categories on the desktop
-print STDERR "Examining Desktop categories:\n";
-for (my $i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
+print STDERR "===== Examining desktop categories:\n" if $DEBUG;
+for (my $i = 0; $i < NumCategories; $i++)
 {
-	my $category = $PDB->{appinfo}{categories}->[$i];
-	print "Category $i:\n";
-	print "    Name: [$category->{name}]";
-	print " ", $category->{id};
-	print " RENAMED" if $category->{renamed};
-	print "\n";
+	my $category = $PDB->{appinfo}{categories}[$i];
 
-	if (defined($category->{_goesto}))
+	print STDERR "category $i: [$category->{name}]\n" if $DEBUG;
+	if (defined($category->{_moveto}))
 	{
-		print STDERR "\tSeen it already\n";
+		print STDERR "\tSeen it already.\n" if $DEBUG;
 		next;
 	}
 
-	next if $category->{name} eq "";
-				# Skip undefined categories
-
 	if ($category->{renamed})
 	{
-		# This category has been renamed. Look for a category on
-		# the desktop with the same ID.
-
-		my $Pcategory;		# Palm category
-
-		$Pcategory = &find_cat_by_id(\%Pappinfo,
-					     $category->{id});
-
-		if (!defined($Pcategory))
+		# This category exists on the desktop, but not on the Palm.
+		if ($category->{name} eq "")
 		{
-			print STDERR "\tThis category doesn't exist on the Palm.\n";
-			next;
-		}
+			# Doesn't exist on Palm.
+			# Exists on desktop.
+			# Deleted on desktop
+			# -> Delete on Palm.
 
-		print STDERR "\tThis category exists on the Palm.\n";
-		print STDERR "\tRenaming D[$Pcategory->{name}] to $category->{name}\n";
-		$Pcategory->{name} = $category->{name};
-		$category->{renamed} = 0;
-		$Pcategory->{renamed} = 0;
-	} else {
-		# This category has not been renamed. Look for a category
-		# on the desktop with the same name.
+			# XXX - Is there anything to do, really?
+			print STDERR "Deleted on desktop. Deleting on Palm.\n"
+				if $DEBUG;
 
-		my $Pcategory;		# Desktop category
+			$category->{_moveto} = 0;
+		} else {
+			# Doesn't exist on Palm.
+			# Exists on desktop.
+			# Renamed on desktop.
+			# -> Add to Palm
+			print STDERR "Added on desktop. Adding on Palm.\n"
+				if $DEBUG;
 
-		$Pcategory = &find_cat_by_name(\%Pappinfo,
-					       $category->{name});
+			my $newindex;
 
-		if (!defined($Pcategory))
-		{
-			print STDERR "\tThis category doesn't exist on the Palm.\n";
-			next;
-		}
+			if ($Pappinfo{categories}[$i]{name} eq "")
+			{
+				# This index is free on the Palm, so we
+				# don't have to move the category.
+				$newindex = $i;
+			} else {
+				$newindex = &find_empty_cat(\%Pappinfo);
+				if ($newindex < 0)
+				{
+					# No free slots available.
+					print STDERR "No free categories. Dropping desktop category \"$category->{name}\".\n"
+						if $DEBUG;
 
-		print STDERR "\tThis category exists on the desktop.\n";
-		if ($Pcategory->{renamed})
-		{
-			print STDERR "\tRenaming P[$category->{name}] to $Pcategory->{name}\n";
-			$category->{name} = $Pcategory->{name};
+					$category->{_moveto} = 0;
+					next;
+				}
+			}
+
+			print STDERR "Adding on Palm, index $newindex\n"
+				if $DEBUG;
+
+			my $Pcategory = $Pappinfo{categories}[$newindex];
+
+			$Pcategory->{name} = $category->{name};
+			$Pcategory->{id} = $category->{id};
 			$Pcategory->{renamed} = 0;
+			$category->{_moveto} = $i;
 		}
+	} else {
+		# This category exists on the desktop, but not on the Palm.
+		# It has not been renamed.
+		# It may have been either added (and synced) on the desktop,
+		# or it might have been deleted on the Palm.
+		# -> Be conservative, and add it on the Palm, if possible.
+
+		my $newindex;
+
+		if ($Pappinfo{categories}[$i]{name} eq "")
+		{
+			# This index is free on the Palm, so we don't have
+			# to move the category.
+			$newindex = $i;
+		} else {
+			$newindex = &find_empty_cat(\%Pappinfo);
+			if ($newindex < 0)
+			{
+				# No free slots available.
+				print STDERR "No free categories. Dropping desktop category \"$category->{name}\".\n"
+					if $DEBUG;
+
+				$category->{_moveto} = 0;
+				next;
+			}
+		}
+
+		print STDERR "Adding on Palm, index $newindex\n"
+			if $DEBUG;
+
+		my $Pcategory = $Pappinfo{categories}[$newindex];
+
+		$Pcategory->{name} = $category->{name};
+		$Pcategory->{id} = $category->{id};
+		$Pcategory->{renamed} = 0;
+		$category->{_moveto} = $i;
 	}
 }
 
-# Phase 2.3: Move new categories to the Palm.
-print STDERR "Moving new categories to the Palm:\n";
-for (my $i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
+# XXX - Should probably double-check that category 0 has ID 0 (Unfiled).
+
+if ($DEBUG)
 {
-	my $category = $PDB->{appinfo}{categories}->[$i];
+	print STDERR "===== Final set of categories:\n";
+	&dumphash(\%Pappinfo, "");
+}
 
-	next if $category->{name} eq "";
+# Phase 2.3: Move new categories to the Palm.
+for (@{$PDB->{records}})
+{
+	my $oldcat = $_->{category};
+	my $newcat = $PDB->{appinfo}{categories}[$oldcat]{_moveto};
 
-	print "Category $i:\n";
-	print "    Name: [$category->{name}]";
-	print " ", $category->{id};
-	print " RENAMED" if $category->{renamed};
-	print "\n";
-
-	# XXX - This is the ugly part: if the category already exists on
-	# the Palm, it may be at a different index, so this one needs to be
-	# moved.
-	# Likewise, if this is a new category, need to find an empty slot
-	# for it, which also involves renumbering all records in this
-	# category.
-
-	if (!defined($category->{_goesto}))
+	if (!defined($newcat))
 	{
-		if ($Pappinfo{categories}->[$i]{name} eq "")
-		{
-			print STDERR "This is a new category. It can stay at this index.\n";
-		} else {
-			print STDERR "This is a new category. Need to find a place for it.\n";
-			my $new_index = &find_empty_cat(\%Pappinfo);
-
-			if ($new_index < 0)
-			{
-				# Couldn't find a free slot. Move the records
-				# in this category to Unfiled.
-				# XXX
-			}
-		}
-	} elsif ($category->{_goesto} == $i)
-	{
-		# This category has been dealt with, and stays put
-		print STDERR "This category stays put.\n";
-	} else {
-		print STDERR "This category should move to $category->{_goesto}\n";
+		die("555 Category $oldcat doesn't have a _moveto. Aborting.");
 	}
+
+	next if $oldcat == $newcat;
+
+	print STDERR "Moving record $_->{id} from $oldcat to $newcat.\n"
+		if $DEBUG;
+
+	$_->{category} = $newcat;
+	$_->{attributes}{dirty} = 1;
+}
+
+# Phase 2.4: Copy the Palm AppInfo block to the desktop PDB
+for (my $i = 0; $i < NumCategories; $i++)
+{
+	my $Pcategory = $Pappinfo{categories}[$i];
+	my $Dcategory = $PDB->{appinfo}{categories}[$i];
+
+	$Dcategory->{name}	= $Pcategory->{name};
+	$Dcategory->{id}	= $Pcategory->{id};
+	$Dcategory->{renamed}	= $Pcategory->{renamed};
 }
 
 # Phase 3: Profits!
 
 # Upload the AppInfo block to the Palm.
-# XXX - Don't do this just yet
-#$Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
-#$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
-
+$Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
+$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
+# XXX - Error-checking
 $err = &dlp_CloseDB($dbh);
+# XXX - Error-checking
 
-die "599 Dying for no good reason";
+#die "599 Dying for no good reason";
 		# XXX - Just to avoid writing the database prematurely
 EndConduit;
 
@@ -378,8 +390,6 @@ sub find_cat_by_id
 	for (@{$appinfo->{categories}})
 	{
 		next unless $_->{id} eq $id;
-		next if $_->{name} eq "";
-					# Skip empty categories
 		return $_;		# Found it
 	}
 
@@ -400,7 +410,8 @@ sub find_empty_cat
 	return -1;
 }
 
-# XXX - Debugging functions
+##### Debugging functions
+
 sub hexdump
 {
 	my $prefix = shift;	# What to print in front of each line
@@ -441,13 +452,6 @@ sub dumphash
 			&dumphash($value, $indent . "\t");
 		} elsif (ref($value) eq "ARRAY")
 		{
-#  			my $i;
-
-#  			print $indent, $key, ":\n";
-#  			for ($i = 0; $i <= $#{$value}; $i++)
-#  			{
-#  				print $indent, "\t$i: [$value->[$i]]\n";
-#  			}
 			print $indent, $key, ":\n";
 			&dumparray($value, $indent . "\t");
 		} else {
