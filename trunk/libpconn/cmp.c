@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.2 1999-11-04 10:44:31 arensb Exp $
+ * $Id: cmp.c,v 1.3 2000-05-19 12:07:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -24,7 +24,7 @@ cmp_read(struct PConnection *pconn,
 	 struct cmp_packet *packet)
 {
 	int err;
-	const ubyte *inbuf;	/* Input data (from PADP) */
+	const ubyte *inbuf = NULL;	/* Input data (from PADP) */
 	uword inlen;		/* Length of input data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
@@ -32,6 +32,10 @@ cmp_read(struct PConnection *pconn,
 
 	/* Read a PADP packet */
 	err = padp_read(pconn, &inbuf, &inlen);
+	/* XXX - padp_read() might return 0 == end of file, e.g. if the
+	 * device exists but doesn't return any useful data (e.g.,
+	 * /dev/null).
+	 */
 	if (err < 0)
 		return err;	/* Error */
 

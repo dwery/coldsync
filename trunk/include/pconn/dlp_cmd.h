@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.4 1999-11-27 05:38:14 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.5 2000-05-19 12:07:14 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -562,6 +562,7 @@ struct dlp_dbinfo
 /* XXX - These are the same as PDB_ATTR_* in "pdb.h", and shouldn't be
  * duplicated.
  */
+/* XXX - Except for PDB_ATTR_OPEN, dammit! */
 #define DLPCMD_DBFLAG_RESDB	0x0001	/* This is a resource database
 					 * (record database otherwise)
 					 */
