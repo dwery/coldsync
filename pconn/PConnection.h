@@ -3,7 +3,7 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.2 1999-02-21 08:53:15 arensb Exp $
+ * $Id: PConnection.h,v 1.3 1999-02-22 10:44:44 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -64,6 +64,11 @@ struct PConnection
 				/* How long to wait (in 1/10ths of a
 				 * second) for a PADP packet to come in.
 				 */
+		udword inbuf_len;	/* Current length of 'inbuf' */
+		ubyte *inbuf;	/* A local buffer for holding
+				 * multi-fragment messages. It grows
+				 * dynamically as needed.
+				 */
 	} padp;
 
 	/* Serial Link Protocol (SLP) */
@@ -101,13 +106,10 @@ struct PConnection
 	} slp;
 };
 
-/*  typedef struct PConnection *PConnHandle; */
-
-extern struct PConnection *PConnLookup(int fd);
-extern int new_PConnection(char *fname);
-extern int PConnClose(int fd);
-extern int PConn_bind(int fd, struct slp_addr *addr);
-extern int PConnSetSpeed(int fd, speed_t speed);	/* XXX */
+extern struct PConnection *new_PConnection(char *fname);
+extern int PConnClose(struct PConnection *pconn);
+extern int PConn_bind(struct PConnection *pconn, struct slp_addr *addr);
+extern int PConnSetSpeed(struct PConnection *pconn, speed_t speed);	/* XXX */
 
 #endif	/* _PConn_h_ */
 
