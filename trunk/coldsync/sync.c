@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.10 1999-06-27 06:04:40 arensb Exp $
+ * $Id: sync.c,v 1.11 1999-07-04 02:50:32 arensb Exp $
  */
 
 #include <stdio.h>
@@ -33,9 +33,9 @@ int SyncRecord(struct PConnection *pconn,
 		      const struct pdb_record *remoterec);
 
 /* Convenience functions: see comment further down */
-static int _open_archive(struct dlp_dbinfo *dbinfo);
+/*  static int _open_archive(struct dlp_dbinfo *dbinfo); */
 static int _archive_record(const struct pdb_record *rec);
-static int _close_archive();
+/*  static int _close_archive(); */
 
 /* According to the Pigeon Book, here's the logic of syncing:
 
@@ -109,6 +109,7 @@ static int _close_archive();
    * block.
  */
 
+#if 0
 int
 SlowSync(struct PConnection *pconn,
 	 struct dlp_dbinfo *remotedbinfo,
@@ -136,7 +137,7 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 	 */
 	if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
 		fprintf(stderr, "This database is open. Not opening for writing\n");
-	err = DlpOpenDB(pconn, 0, remotedbinfo->name,
+	err = DlpOpenDB(pconn, CARD0, remotedbinfo->name,
 			DLPCMD_MODE_READ |
 			(remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
 			 0 :
@@ -433,7 +434,9 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 
 	return 0;		/* Success */
 }
+#endif	/* 0 */
 
+#if 0
 /* FastSync
  * Do a fast sync of 'localdb' with the Palm. A fast sync is one where this
  * is the last machine that the Palm synced with.
@@ -468,7 +471,7 @@ extern int dlpc_debug;
 	 */
 	if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
 		fprintf(stderr, "This database is open. Not opening for writing\n");
-	err = DlpOpenDB(pconn, 0, remotedbinfo->name,
+	err = DlpOpenDB(pconn, CARD0, remotedbinfo->name,
 			DLPCMD_MODE_READ |
 			(remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
 			 0 :
@@ -650,6 +653,7 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 
 	return 0;		/* Success */
 }
+#endif	/* 0 */
 
 /* pdb_SyncRecord
  * Sync a record.
@@ -715,11 +719,13 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 				    localrec->data_len) == 0))
 			{
 				/* The records are identical */
+				/* XXX - Make sure this works with C++ objects */
 				_archive_record(localrec);
 			} else {
 				/* The records have both been modified, but
 				 * in different ways. Archive both of them.
 				 */
+				/* XXX - Make sure this works with C++ objects */
 				_archive_record(localrec);
 				_archive_record(remoterec);
 			}
@@ -749,6 +755,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive remoterec */
 			SYNC_TRACE(6, "> Archiving remote record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(remoterec);
 
 			/* Delete the record on the Palm */
@@ -778,6 +785,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive remoterec */
 			SYNC_TRACE(6, "> Archiving remote record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(remoterec);
 
 			/* Fix flags */
@@ -822,6 +830,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive remoterec */
 			SYNC_TRACE(6, "> Archiving remote record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(localrec);
 
 			/* Delete localrec */
@@ -846,6 +855,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive localrec */
 			SYNC_TRACE(6, "> Archiving local record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(localrec);
 
 			/* Delete localrec */
@@ -958,6 +968,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive localrec */
 			SYNC_TRACE(6, "> Archiving local record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(localrec);
 
 			/* Copy remoterec to localdb */
@@ -1172,6 +1183,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Archive localrec */
 			SYNC_TRACE(6, "> Archiving local record\n");
+			/* XXX - Make sure this works with C++ objects */
 			_archive_record(localrec);
 
 			/* Delete localrec */
@@ -1274,6 +1286,7 @@ static int _archfd = -1;	/* File descriptor for archive file */
 static struct dlp_dbinfo *_arch_dbinfo = NULL;
 				/* The database we're currently dealing with */
 
+#if 0
 static int
 _open_archive(struct dlp_dbinfo *dbinfo)
 {
@@ -1285,6 +1298,7 @@ _open_archive(struct dlp_dbinfo *dbinfo)
 
 	return 0;
 }
+#endif	/* 0 */
 
 static int
 _archive_record(const struct pdb_record *rec)
@@ -1296,6 +1310,12 @@ _archive_record(const struct pdb_record *rec)
 	 */
 	if (_archfd < 0)
 	{
+		/* XXX - Oh, blargh. This needs to be redone to work with
+		 * C++ conduit objects. In particular, the archive will
+		 * eventually be opened before any records are downloaded.
+		 * So I guess maybe this means that this entire test will
+		 * become obsolete.
+		 */
 		if ((_archfd = arch_open(_arch_dbinfo->name, O_WRONLY)) < 0)
 		{
 			fprintf(stderr, "Can't open \"%s\". Attempting to create\n",
@@ -1318,6 +1338,7 @@ _archive_record(const struct pdb_record *rec)
 	return arch_writerecord(_archfd, &arec);
 }
 
+#if 0
 static int
 _close_archive()
 {
@@ -1331,6 +1352,7 @@ _close_archive()
 
 	return 0;
 }
+#endif	/* 0 */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
