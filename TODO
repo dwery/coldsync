@@ -52,3 +52,21 @@
 - Change file descriptors to "PConnection *"s wherever it makes sense.
   Possibly the easiest way to do this is to comment out PConnLookup
   and see what breaks.
+- The sync itself should probably just consist of opening the database
+  on the Palm, finding the appropriate conduit, and invoking it.
+  "Appropriate conduit" defaults to either a generic sync, or backup,
+  depending on whether the database exists on the desktop or not. The
+  generic conduit (and possibly the backup) should probably be written
+  in C++ for easy subclassing.
+- Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
+- Add robustness. Ideally, ColdSync should recover from everything
+  that's recoverable.
+- Need functions to begin and end pause: if the desktop pops up a
+  dialog box or something, it can take an arbitrary amount of time to
+  complete. During that time, 'coldsync' should send regular tickle
+  packets to the Palm to keep it from timing out. These should
+  probably return an error if the sync is being run in batch
+  (non-interactive) mode, i.e. when there's no one there to respond to
+  the dialog.
+- Move the DLP time conversion functions out of pconn/util.[ch]. Then
+  take the #include <coldsync/whatever> out of util.c
