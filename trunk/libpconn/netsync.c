@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.14 2001-10-12 02:18:17 arensb Exp $
+ * $Id: netsync.c,v 1.15 2001-10-18 01:35:20 arensb Exp $
  */
 
 #include "config.h"
@@ -184,6 +184,11 @@ static const int ritual_resp3_size =
  * It is not known what the ritual packets are. This function doesn't try
  * to analyze them or anything.
  * Returns 0 if successful, -1 in case of error.
+ */
+/* XXX - This can hang under Linux. One workaround is to select() before
+ * reading the response statements, to make sure the Palm received the
+ * original request. Give it 2 seconds or so. If select() times out, 'goto
+ * retry2;' (or whichever) and try resending the request.
  */
 int
 ritual_exch_server(PConnection *pconn)
@@ -529,7 +534,9 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
-debug_dump(stderr, "<<  ", pconn->net.inbuf+got, err);
+
+		NET_TRACE(5)
+			debug_dump(stderr, "<<  ", pconn->net.inbuf+got, err);
 		got += err;
 		NET_TRACE(6)
 			fprintf(stderr, "want: %ld, got: %ld\n", want, got);
