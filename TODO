@@ -1,5 +1,3 @@
-- Bug: "-P" option doesn't get passed down to new_PConnection
-  properly, when running entirely from command line.
 - Bug: when run from /etc/ttys, the Palm might suggest a speed that
   the serial port can't handle. But ColdSync doesn't notice this in
   time to send back a reasonable speed.
