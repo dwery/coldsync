@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.24 2003-11-30 22:54:45 azummo Exp $
+# $Id: AUTHORS,v 2.25 2004-03-27 21:13:53 christophe Exp $
 
 Authors and Contributors:
 
@@ -49,8 +49,7 @@ Bron Gondawna <brong@brong.net>: Modem support, command line config file
 	in daemon mode and wildcards in palms file.
 Miguel Angelo Rozsas <miguel@rozsas.xx.nom.br>: Portuguese (Brazilian)
 	translation.
-Christophe Beauregard <christophe.beauregard@sympatico.ca>: helped
-	with PCONNSTAT_UP bug fixing.
+Christophe Beauregard <christophe.beauregard@sympatico.ca>: assorted hackery
 Ferry Hendrikx <ferry.hendrikx@portal.govt.nz>: PDA side HotSync code.
 
 	A big thank you to Kenneth Albanowski and the rest of the
