@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.15 2003-03-14 17:18:38 azummo Exp $
+ * $Id: spalm.c,v 2.16 2003-06-24 12:42:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -419,8 +419,7 @@ fetch_serial(struct Palm *palm)
 		return 0;	/* Success, in a way */
 	}
 
-	/* The Palm's ROM is v3.0 or later, so it has a serial number. */
-
+	/* The Palm's ROM is v3.0 or later, so it may have a serial number. */
 	
 	if (p_rom_version < 0x05000000 )
 	{
@@ -466,6 +465,18 @@ fetch_serial(struct Palm *palm)
 
 		palm->serial_[snum_len] = '\0';
 		palm->serial_len_ = snum_len;
+	}
+	else
+	{
+		/* OS 5 or newer does not support reading the
+		 * serial number with a RDLP call.
+		 */
+	
+		/* Set the serial number to the empty string */
+		palm->serial_[0] = '\0';
+		palm->serial_len_ = 0;
+
+		return 0;	/* Success, in a way */
 	}
 
 	/* See if this is one of the special serial numbers defined in
