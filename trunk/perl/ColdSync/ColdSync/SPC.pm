@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.15 2002-06-22 14:05:53 azummo Exp $
+# $Id: SPC.pm,v 1.16 2002-06-22 19:14:27 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.15 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.16 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -1457,13 +1457,16 @@ sub dlp_SetDBInfo
 	$dbinfo->{'modDate'}	= _dlpdatezero() unless defined $dbinfo->{'modDate'}{'year'};
 	$dbinfo->{'bckUpDate'}	= _dlpdatezero() unless defined $dbinfo->{'bckUpDate'}{'year'};
 
-	$dbinfo->{'dwType'}	= 0 unless defined $dbinfo->{'dwType'};
-	$dbinfo->{'dwCreator'}	= 0 unless defined $dbinfo->{'dwCreator'};
+	$dbinfo->{'dwType'}	= "\0\0\0\0" unless defined $dbinfo->{'dwType'};
+	$dbinfo->{'dwCreator'}	= "\0\0\0\0" unless defined $dbinfo->{'dwCreator'};
+
+	# This one must always be null terminated.
+	$dbinfo->{'name'}	= "\0\0" unless defined $dbinfo->{'name'};
 
 	my ($err, @argv) = dlp_req(DLPCMD_SetDBInfo,
 				 {
 					 id   => dlpFirstArgID,
-					 data => pack("C x n n n nCCCCCx nCCCCCx nCCCCCx xxxx xxxx x x",
+					 data => pack("C x n n n nCCCCCx nCCCCCx nCCCCCx a4 a4 a*",
 						$dbh,
 						$dbinfo->{'wClrDbFlags'},
 						$dbinfo->{'wSetDbFlags'},
@@ -1488,6 +1491,7 @@ sub dlp_SetDBInfo
 						$dbinfo->{'bckUpDate'}{'second'},
 						$dbinfo->{'dwType'},
 						$dbinfo->{'dwCreator'},
+						$dbinfo->{'name'},
 					),
 				 }
 				 );
