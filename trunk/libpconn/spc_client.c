@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.5 2002-04-27 18:36:31 azummo Exp $
+ * $Id: spc_client.c,v 1.6 2002-07-04 21:04:09 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,7 +53,7 @@ spc_client_read(PConnection *p, unsigned char *buf, int len)
 {
 	int len1, len2;
 	for(len1 = len; len1 > 0; len1 -= len2 ) {
-		len2 = read(p->fd, buf, len);
+		len2 = read(p->fd, buf, len1);
 		buf += len2;
 	}
 	return len;
@@ -64,7 +64,7 @@ spc_client_write(PConnection *p, unsigned const char *buf, int len)
 {
 	int len1, len2;
 	for(len1 = len; len1 > 0; len1 -= len2 ) {
-		len2 =  write(p->fd, buf, len);
+		len2 =  write(p->fd, buf, len1);
 		buf += len2;
 	}
 	return len;
