@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.35 2002-10-16 18:59:32 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.36 2002-11-03 00:14:33 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -35,8 +35,6 @@
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
-
-#include <netinet/in.h>
 
 #include "pconn/dlp.h"
 #include "pconn/dlp_cmd.h"
@@ -707,7 +705,7 @@ _parse_dbinfo(const ubyte *buffer, struct dlp_dbinfo *db)
 	/* Copy 'till the first NUL or DLPCMD_DBNAME_LEN-1 (31)
 	 * characters, whichever is shorter.
 	 */			 
-	strncpy(db->name, rptr, DLPCMD_DBNAME_LEN-1);
+	strncpy(db->name, (const char *)rptr, DLPCMD_DBNAME_LEN-1);
 
 	/* Ensure a trailing NUL */
 	db->name[DLPCMD_DBNAME_LEN-1] = '\0';
