@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.32 2000-04-10 09:28:13 arensb Exp $
+ * $Id: coldsync.c,v 1.33 2000-05-06 11:36:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -31,6 +31,7 @@
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/pconn.h"
+#include "cs_error.h"
 #include "coldsync.h"
 #include "pdb.h"
 #include "conduit.h"
@@ -122,6 +123,7 @@ static struct {
 struct Palm palm;
 int need_slow_sync;
 
+int cs_errno;			/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
 struct config config;		/* Main configuration */
 
@@ -452,10 +454,6 @@ main(int argc, char *argv[])
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a sync.\n");
 
-		/* XXX - Make sure that all of the relevant directories
-		 * exist: ~/.palm/{backup,backup/Attic,archive,install}
-		 */
-
 		/* Install new databases */
 		/* XXX - It should be configurable whether new databases
 		 * get installed at the beginning or the end.
@@ -521,15 +519,28 @@ main(int argc, char *argv[])
 			err = HandleDB(pconn, &palm, i);
 			if (err < 0)
 			{
-				fprintf(stderr,
-					_("!!! Oh, my God! A conduit failed! "
-					  "Mayday, mayday! Bailing!\n"));
-				/* XXX - Ought to be able to recover from
-				 * this: if it's a problem with the conduit
-				 * or with the local copy of the backup
-				 * database, just print an error message
-				 * and go on to the next one.
-				 */
+				switch (cs_errno)
+				{
+				    case CSE_CANCEL:
+					fprintf(stderr,
+						_("Sync cancelled.\n"));
+					add_to_log(_("*Cancelled*\n"));
+					DlpAddSyncLogEntry(pconn, synclog);
+						/* Doesn't really matter if
+						 * it fails, since we're
+						 * terminating anyway.
+						 */
+					break;
+					/* XXX - Other reasons for 
+					 * premature termination.
+					 */
+				    default:
+					fprintf(stderr,
+						_("Conduit failed for unknown "
+						  "reason\n"));
+					break;
+				}
+
 				Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 				pconn = NULL;
 				exit(1);
@@ -586,6 +597,8 @@ main(int argc, char *argv[])
 
 	/* XXX - The post-dump conduits should only be run if we're
 	 * actually doing a sync. Is there a better way of expressing this?
+	 * Yes: have a 'mode' command-line option that specifies "backup",
+	 * "restore", "normal" or "daemon" (mutually exclusive).
 	 */
 	if ((!global_opts.do_backup) &&
 	    (!global_opts.do_restore))
@@ -723,8 +736,8 @@ Connect(struct PConnection *pconn)
 		tcspeed = BSYNC_RATE;
 	}
 	SYNC_TRACE(2)
-		fprintf(stderr, "-> Setting speed to %ld (%d)\n",
-			bps, tcspeed);
+		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
+			(long) bps, (long) tcspeed);
 
 	/* Compose a reply */
 	cmpp.type = CMP_TYPE_INIT;
