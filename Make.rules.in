@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.24 2004-02-25 11:32:18 azummo Exp $
+# $Id: Make.rules.in,v 1.25 2005-02-02 02:10:39 christophe Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -29,7 +29,7 @@ LIBEXECDIR =	@libexecdir@
 CONDUITDIR =	@CONDUITDIR@
 DATADIR =	@datadir@
 LOCALEDIR =	${DATADIR}/locale
-SYSCONFDIR =	@sysconfdir@
+SYSCONFDIR =	@sysconfdir@/coldsync
 LIBDIR =	@libdir@
 INCLUDEDIR =	@includedir@
 INFODIR =	@infodir@
