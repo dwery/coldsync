@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2000-11-10 03:35:43 arensb Exp $
+# $Id: Makefile,v 1.9 2001-06-04 01:48:29 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -19,6 +19,7 @@ CLEAN =		*.1 \
 DISTFILES =	Makefile \
 		${CONDUITS} \
 		memo-text \
+		copy-appinfo \
 		std-categories
 
 all::
