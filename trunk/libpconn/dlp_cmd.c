@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.15 2001-01-11 08:27:11 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.16 2001-02-21 11:20:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -201,7 +201,9 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 			break;
 
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadUserInfo",
 				ret_argv[i].id);
 			continue;
@@ -302,7 +304,9 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpWriteUserInfo",
 				ret_argv[i].id);
 			continue;
@@ -407,7 +411,9 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 		    }
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadSysInfo",
 				ret_argv[i].id);
 			continue;
@@ -474,7 +480,9 @@ DlpGetSysDateTime(PConnection *pconn,
 					ptime->year);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpGetSysDateTime",
 				ret_argv[i].id);
 			continue;
@@ -550,7 +558,9 @@ DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpSetSysDateTime",
 				ret_argv[i].id);
 			continue;
@@ -685,7 +695,9 @@ DlpReadStorageInfo(PConnection *pconn,
 			cinfo->reserved4 = get_udword(&rptr);	/* Padding */
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadStorageInfo",
 				ret_argv[i].id);
 			continue;
@@ -916,7 +928,9 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadDBList",
 				ret_argv[i].id);
 			continue;
@@ -1016,7 +1030,9 @@ DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 					*handle);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpOpenDB",
 				ret_argv[i].id);
 			continue;
@@ -1120,7 +1136,9 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 					"Database handle: %d\n", *handle);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpCreateDB",
 				ret_argv[i].id);
 			continue;
@@ -1197,7 +1215,9 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpCloseDB",
 				ret_argv[i].id);
 			continue;
@@ -1278,7 +1298,9 @@ DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpDeleteDB",
 				ret_argv[i].id);
 			continue;
@@ -1374,7 +1396,9 @@ DlpReadAppBlock(PConnection *pconn,	/* Connection */
 
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadAppBlock",
 				ret_argv[i].id);
 			continue;
@@ -1859,7 +1883,9 @@ DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadRecordByID",
 				ret_argv[i].id);
 			continue;
@@ -1973,7 +1999,9 @@ DlpReadRecordByIndex(
 			}
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadRecordByIndex",
 				ret_argv[i].id);
 			continue;
@@ -2100,7 +2128,9 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 			*recid = get_udword(&rptr);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpWriteRecord",
 				ret_argv[i].id);
 			continue;
@@ -2183,7 +2213,9 @@ DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpDeleteRecord",
 				ret_argv[i].id);
 			continue;
@@ -2400,7 +2432,9 @@ DlpReadResourceByType(
 					value->size);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadResourceByType",
 				ret_argv[i].id);
 			continue;
@@ -2502,7 +2536,9 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpWriteResource",
 				ret_argv[i].id);
 			continue;
@@ -2587,7 +2623,9 @@ DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpDeleteResource",
 				ret_argv[i].id);
 			continue;
@@ -2653,7 +2691,9 @@ DlpCleanUpDatabase(
 		switch (ret_argv[i].id)
 		{
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpCleanUpDatabase",
 				ret_argv[i].id);
 			continue;
@@ -4228,7 +4268,9 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 					*value, *value);
 			break;
 		    default:	/* Unknown argument type */
-			fprintf(stderr, _("##### %s: Unknown argument type: 0x%02x.\n"),
+			fprintf(stderr,
+				_("##### %s: Unknown argument type: "
+				  "0x%02x.\n"),
 				"DlpReadFeature",
 				ret_argv[i].id);
 			continue;

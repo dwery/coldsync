@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.11 2001-01-11 08:27:09 arensb Exp $
+ * $Id: dlp.c,v 1.12 2001-02-21 11:19:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -205,7 +205,8 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 			 */
 			DLP_TRACE(10)
 				fprintf(stderr,
-					"Long argument %d, id 0x%04x, size %ld\n",
+					"Long argument %d, id 0x%04x, "
+					"size %ld\n",
 					i, argv[i].id, argv[i].size);
 			put_uword(&wptr, (argv[i].id & 0x3fff) | 0xc000);
 					/* Make sure the high two bits are
@@ -272,14 +273,18 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	/* Make sure it's really a DLP response */
 	if ((header->id & 0x80) != 0x80)
 	{
-		fprintf(stderr, _("##### Expected a DLP response, but this isn't one!\n"));
+		fprintf(stderr,
+			_("##### Expected a DLP response, but this "
+			  "isn't one!\n"));
 		return -1;
 	}
 
 	/* Make sure the response ID matches the request ID */
 	if ((header->id & 0x7f) != id)
 	{
-		fprintf(stderr, _("##### Bad response ID: expected 0x%02x, got 0x%02x.\n"),
+		fprintf(stderr,
+			_("##### Bad response ID: expected 0x%02x, "
+			  "got 0x%02x.\n"),
 			id | 0x80, header->id);
 		palm_errno = PALMERR_BADID;
 		return -1;
