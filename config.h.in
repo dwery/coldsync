@@ -81,9 +81,6 @@
 /* Define if you have the strncpy function.  */
 #undef HAVE_STRNCPY
 
-/* Define if you have the sysconf function.  */
-#undef HAVE_SYSCONF
-
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
 
