@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.5 1999-09-04 20:57:55 arensb Exp $
+ * $Id: coldsync.h,v 1.6 1999-09-09 05:57:01 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -16,9 +16,12 @@
 #include <sys/types.h>		/* For uid_t */
 #include <sys/param.h>		/* For MAXPATHLEN */
 
-#include "PConnection.h"
-#include "dlp_cmd.h"
+/*#include "PConnection.h"
+#include "dlp_cmd.h"*/
+#include <pconn/pconn.h>		/* XXX - Clean this up */
+#include <pdb.h>
 
+#if 0
 #define CARD0	0		/* Memory card #0. The only real purpose of
 				 * this is to make it marginally easier to
 				 * find all of the places where card #0 has
@@ -26,6 +29,7 @@
 				 * multiple memory cards is added, if it
 				 * ever is.
 				 */
+#endif	/* 0 */
 
 /* Palm
  * Information about the Palm being currently synced.
@@ -139,11 +143,18 @@ extern int Backup(struct PConnection *pconn,
 		  struct Palm *palm);
 extern int Restore(struct PConnection *pconn,
 		  struct Palm *palm);
+/*  extern int InstallNewFiles(struct PConnection *pconn, */
+/*  			   struct Palm *palm); */
 extern int InstallNewFiles(struct PConnection *pconn,
-			   struct Palm *palm);
+			   struct Palm *palm,
+			   char *newdir,
+			   Bool deletep);
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
 extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
+extern int append_dbentry(struct Palm *palm,
+			  struct pdb *pdb);
+
 
 #endif	/* _coldsync_h_ */
 
