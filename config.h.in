@@ -58,6 +58,12 @@
 /* Define if you have the strncpy function.  */
 #undef HAVE_STRNCPY
 
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if your struct dirent has d_type */
+#undef HAVE_DIRENT_TYPE
+
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
@@ -70,6 +76,12 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
 /* Define if you have the <sys/select.h> header file.  */
 #undef HAVE_SYS_SELECT_H
 
@@ -79,6 +91,9 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Defined if the package was compiled with the ElectricFence library */
+#undef WITH_EFENCE
+
 /* Name of package */
 #undef PACKAGE
 
@@ -86,21 +101,22 @@
 #undef VERSION
 
 #if __GNUC__
-#  define __EXTENSIONS__	/* Necessary for various headers to
+/* XXX - See if these are even necessary */
+#undef WANT_EXTENSIONS
+#undef WANT_BSD_SOURCE
+#undef WANT_XOPEN_SOURCE
+
+/*#  define __EXTENSIONS__*/	/* Necessary for various headers to
 				 * find prototypes for certain
 				 * functions and such that aren't
 				 * explicitly mentioned in the ANSI
 				 * standard.
 				 */
+#if WANT_BSD_SOURCE
+#  define _BSD_SOURCE	1	/* For cfmakeraw() under Redhat 6.0 */
+#endif	/* WANT_BSD_SOURCE */
+
+#if WANT_XOPEN_SOURCE
+#  define _XOPEN_SOURCE	1	/* For getopt() under Redhat 6.0 */
+#endif	/* WANT_XOPEN_SOURCE */
 #endif	/* __GNUC__ */
-
-/* strcasecmp() is nice to have, but if it doesn't exist, just use
- * strcmp().
- */
-#if !HAVE_STRCASECMP
-#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
-#endif	/* !HAVE_STRCASECMP */
-
-#if !HAVE_STRNCASECMP
-#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
-#endif	/* !HAVE_STRCASECMP */
