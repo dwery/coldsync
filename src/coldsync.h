@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.52 2001-06-26 05:51:23 arensb Exp $
+ * $Id: coldsync.h,v 1.53 2001-07-30 07:08:34 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -68,6 +68,7 @@ struct cmd_opts {
 				 */
 	char *devname;		/* Name of the device on which to listen */
 	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
+	int protocol;		/* Protocol stack for talking to cradle */
 	Bool use_syslog;	/* Use syslog for error messages? */
 	char *log_fname;	/* Where to write the log file */
 	/* XXX - do_backup and do_restore are made obsolete by run modes */
@@ -115,7 +116,10 @@ typedef struct listen_block
 {
 	struct listen_block *next;
 	int listen_type;	/* Block type. See the LISTEN_*
-				 * constants above.
+				 * constants in "pconn/PConnection.h"
+				 */
+	int protocol;		/* Protocol stack. See the PCONN_STACK_*
+				 * constants in "pconn/PConnection.h"
 				 */
 	char *device;		/* Device to listen on */
 	long speed;
