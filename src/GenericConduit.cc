@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.43 2000-09-21 14:54:43 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.41 2000-09-17 21:37:29 arensb Exp $
  */
 
 /* Note on I/O:
@@ -82,7 +82,7 @@ run_GenericConduit(
 	const conduit_block *block)
 {
 	// XXX - Ctor or run() should take 'block' as well, for the user
-	// headers and preferences.
+	// headers
 	GenericConduit gc(pconn, dbinfo);
 
 	return gc.run();
@@ -212,8 +212,7 @@ GenericConduit::run()
 		 * a FirstSync().
 		 */
 		err = this->FirstSync();
-	} else if ((global_opts.force_slow || need_slow_sync) && 
-		   !global_opts.force_fast)
+	} else if (global_opts.force_slow || need_slow_sync)
 	{
 		SYNC_TRACE(3)
 			fprintf(stderr, "Doing a slow sync\n");

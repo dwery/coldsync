@@ -5,13 +5,12 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.13 2000-09-21 14:35:55 arensb Exp $
+# $Id: ColdSync.pm,v 1.11 2000-09-17 21:22:40 arensb Exp $
 package ColdSync;
-use strict;
 
 use vars qw( $VERSION );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.13 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.11 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -163,37 +162,40 @@ sub DumpConfig
 		}
 	}
 
-	print "conduit ", join(",", @flavors), " {\n";
-			# Print the "conduit" directive and the list of
-			# flavors
-	print "\tpath: \"$0\";\n";
-			# Print path to the conduit
-
-	# Print the list of types that this conduit supports.
-	foreach $typestring (@typestrings)
+	foreach $flavor (@flavors)
 	{
-		print "\ttype: $typestring;\n";
-	}
-
-	# If %HEADERS contains any default values, list them.
-	# XXX - Doesn't deal properly with some headers: if the header has
-	# leading or trailing whitespace, it should be quoted. This
-	# requires a rewrite of the corresponding lex/yacc code to accept
-	# quotes, though.
-
-	if (%HEADERS ne ())
-	{
-		my $key;
-		my $value;
-
-		print "    arguments:\n";
-		while (($key, $value) = each %HEADERS)
+		foreach $typestring (@typestrings)
 		{
-			print "#\t$key:\t$value\n";
+			# XXX - The $0 may be incorrect
+			print <<EOT;
+conduit $flavor {
+	path "$0";
+	type $typestring;
+EOT
+			# If %HEADERS contains any default values, list
+			# them.
+
+			# XXX - Doesn't deal properly with some headers: if
+			# the header has leading or trailing whitespace, it
+			# should be quoted. This requires a rewrite of the
+			# corresponding lex/yacc code to accept quotes,
+			# though.
+
+			if (%HEADERS ne ())
+			{
+				my $key;
+				my $value;
+
+				print "    arguments:\n";
+				while (($key, $value) = each %HEADERS)
+				{
+					print "#\t$key:\t$value\n";
+				}
+			}
+
+			print "}\n";
 		}
 	}
-
-	print "}\n";
 
 	# XXX - Now do the same thing for resource databases, once
 	# those become supported.
@@ -254,7 +256,7 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
-	my @preflist = ();	# List of preferences to read from STDIN:
+	my @preflist;		# List of preferences to read from STDIN:
 				# Each element is an anonymous array:
 				#	[ creator, ID, length ]
 	my $len;

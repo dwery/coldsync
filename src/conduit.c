@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.15 2000-09-20 04:33:29 arensb Exp $
+ * $Id: conduit.c,v 2.14 2000-09-17 21:46:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1960,12 +1960,7 @@ findConduitByName(const char *name)
 
 	SYNC_TRACE(5)
 		fprintf(stderr, "Looking for built-in conduit \"%s\"\n",
-			(name == NULL ? "(null)" : name));
-
-	/* Check for NULL path. */
-	if (name == NULL)
-		return NULL;
-
+			name);
 	for (i = 0; i < num_builtin_conduits; i++)
 	{
 		SYNC_TRACE(6)

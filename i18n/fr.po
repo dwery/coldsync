@@ -5,13 +5,14 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-09-21 11:43-0400\n"
+"POT-Creation-Date: 2000-09-17 17:26-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
-"Last-Translator: Nicolas Bouthors <nicolas@bouthors.org>\n"
+"Last-Translator: Andrew Arensburger <arensb@ooblick.com>\n"
 "Language-Team: fr <fr@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
+"Last-Knowledgeable-Translator: Jorge Barros <jorge.barros@lecroy.com>\n"
 
 #: src/parser.y:290 src/parser.y:517 src/parser.y:944
 #, c-format
@@ -69,13 +70,13 @@ msgstr ""
 
 #: src/coldsync.c:1651
 msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
-msgstr "    WITH_EFENCE: les débordements de mémoires tampon provoqueront une violation de segmentation"
+msgstr ""
 
 #: src/coldsync.c:1647
 msgid "    WITH_USB: USB support.\n"
 msgstr "    WITH_USB: support pour USB.\n"
 
-#: src/GenericConduit.cc:248
+#: src/GenericConduit.cc:247
 msgid " (1st) - "
 msgstr " (1er) - "
 
@@ -83,7 +84,7 @@ msgstr " (1er) - "
 #, c-format
 msgid "\"%s\" is a read-only database. Not uploading\n"
 msgstr ""
-"« %s » est une base de données en lecture seule. Elle ne sera pas installée\n"
+"« %s » est une base de données `read-only'. Elle ne sera pas installée\n"
 
 #: src/coldsync.c:993
 msgid ""
@@ -152,27 +153,27 @@ msgstr ""
 msgid "##### Unexpected packet type %d\n"
 msgstr "##### Paquet inattendu de type %d\n"
 
-#: src/GenericConduit.cc:1010
+#: src/GenericConduit.cc:1009
 #, c-format
 msgid "%s error: Can't allocate new record\n"
 msgstr "%s: Erreur: J'arrive pas à allouer un nouvel enregistrement\n"
 
-#: src/GenericConduit.cc:856 src/GenericConduit.cc:1324
+#: src/GenericConduit.cc:855 src/GenericConduit.cc:1323
 #, c-format
 msgid "%s error: Can't clean up database: %d\n"
 msgstr "%s: Erreur: Impossible de nettoyer une base de données: %d\n"
 
-#: src/GenericConduit.cc:538
+#: src/GenericConduit.cc:537
 #, c-format
 msgid "%s error: Can't download \"%s\"\n"
 msgstr "%s: Erreur: Impossible de télécharger « %s »\n"
 
-#: src/GenericConduit.cc:2225
+#: src/GenericConduit.cc:2224
 #, c-format
 msgid "%s error: Can't load \"%s\"\n"
 msgstr "%s: Erreur: Impossible de charger « %s »\n"
 
-#: src/GenericConduit.cc:2216
+#: src/GenericConduit.cc:2215
 #, c-format
 msgid "%s error: Can't open \"%s\"\n"
 msgstr "%s: Erreur: Impossible d'ouvrir « %s »\n"
@@ -182,20 +183,20 @@ msgstr "%s: Erreur: Impossible d'ouvrir « %s »\n"
 msgid "%s error: Can't read %s backup file.\n"
 msgstr "%s: Erreur: Impossible de lire le fichier de secours pour %s.\n"
 
-#: src/GenericConduit.cc:436 src/GenericConduit.cc:874
-#: src/GenericConduit.cc:1343
+#: src/GenericConduit.cc:435 src/GenericConduit.cc:873
+#: src/GenericConduit.cc:1342
 #, c-format
 msgid "%s error: Can't reset sync flags: %d\n"
 msgstr ""
 "%s: Erreur: Je n'arrive pas a remettre à zéro les flags de synchronisation: "
 "%d\n"
 
-#: src/GenericConduit.cc:397
+#: src/GenericConduit.cc:396
 #, c-format
 msgid "%s error: Can't write backup file.\n"
 msgstr "%s: Erreur: Je n'arrive pas à écrire le fichier de backup.\n"
 
-#: src/GenericConduit.cc:416
+#: src/GenericConduit.cc:415
 #, c-format
 msgid "%s error: can't clean up database: %d\n"
 msgstr "%s: Erreur: Impossible de nettoyer une base de données: %d\n"
@@ -326,15 +327,15 @@ msgstr "%s: Impossible d'allouer un conduit_block!\n"
 msgid "%s: Can't allocate listen block\n"
 msgstr "%s: Impossible d'allouer un bloc d'écoute\n"
 
-#: src/GenericConduit.cc:1102
+#: src/GenericConduit.cc:1101
 #, c-format
 msgid "%s: Can't append new record to database: %d\n"
 msgstr ""
 "%s: Je n'arrive pas à ajouter un nouvel enregistrement à la\n"
 "base de données: %d\n"
 
-#: src/GenericConduit.cc:1727 src/GenericConduit.cc:1764
-#: src/GenericConduit.cc:1891
+#: src/GenericConduit.cc:1726 src/GenericConduit.cc:1763
+#: src/GenericConduit.cc:1890
 #, c-format
 msgid "%s: Can't copy record\n"
 msgstr "%s: Je n'arrive pas à copier un enregistrement\n"
@@ -362,14 +363,14 @@ msgstr "%s: Impossible de créer le nom du fichier intermédiaire\n"
 #: src/conduit.c:1818
 #, c-format
 msgid "%s: Can't get child process status\n"
-msgstr "%s: Je n'arrive pas à connaitre l'état du processus fils\n"
+msgstr ""
 
 #: libpconn/PConnection_usb.c:319
 #, c-format
 msgid "%s: Can't get information about USB device"
 msgstr "%s: Je n'arrive pas à obtenir les informations du port USB"
 
-#: src/GenericConduit.cc:1853 src/GenericConduit.cc:1902
+#: src/GenericConduit.cc:1852 src/GenericConduit.cc:1901
 #, c-format
 msgid "%s: Can't insert record 0x%08lx\n"
 msgstr "%s: Je n'arrive pas à insérer l'enregistrement 0x%08lx\n"
@@ -382,27 +383,16 @@ msgstr "%s: Impossible de charger la base de données « %s »\n"
 #: src/conduit.c:1378
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered\n"
-"%s: Impossible de mettre en place une sortie standard ligne à ligne\n"
-"pour le fils"
-
-#: lexer.l:137 lexer.l:150 lexer.l:268 lexer.l:346
-#, fuzzy, c-format
-msgid "%s: Can't make copy of string.\n"
-msgstr "Impossible de copier une chaîne.\n"
-
-#: lexer.l:296
-#, fuzzy, c-format
-msgid "%s: Can't malloc copy of string\n"
-msgstr "Impossible de copier une chaîne.\n"
+msgstr ""
 
 #: src/archive.c:126 src/install.c:118 src/parser.y:1018
 #, c-format
 msgid "%s: Can't open \"%s\"\n"
 msgstr "%s: Impossible d'ouvrir « %s »\n"
 
-#: src/GenericConduit.cc:297 src/GenericConduit.cc:307
-#: src/GenericConduit.cc:517 src/GenericConduit.cc:527
-#: src/GenericConduit.cc:953 src/GenericConduit.cc:962
+#: src/GenericConduit.cc:296 src/GenericConduit.cc:306
+#: src/GenericConduit.cc:516 src/GenericConduit.cc:526
+#: src/GenericConduit.cc:952 src/GenericConduit.cc:961
 #, c-format
 msgid "%s: Can't open \"%s\": %d\n"
 msgstr "%s: Impossible d'ouvrir « %s »: %d\n"
@@ -447,7 +437,7 @@ msgstr "%s: Je n'arrive pas à lire le bloc de tri pour %s: %d\n"
 msgid "%s: Can't rename \"%s\" to \"%s\"\n"
 msgstr "%s: Impossible de renommer « %s » en « %s »\n"
 
-#: src/GenericConduit.cc:2280
+#: src/GenericConduit.cc:2279
 #, c-format
 msgid ""
 "%s: Can't rename staging file.\n"
@@ -460,17 +450,17 @@ msgstr ""
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application\n"
 msgstr ""
-"%s: Ne peux pas restaurer %s: il est ouvert par un autre programme\n"
+"%s: Ne peux pas restaurer %s: elle est ouverte pas un autre utilitaire\n"
 
 #: src/archive.c:137
 #, c-format
 msgid "%s: Can't seek to end of file\n"
-msgstr "%s: Impossible de me positionner à la fin du fichier\n"
+msgstr "%s: Impossible de repositionner à la fin du fichier\n"
 
 #: src/conduit.c:394
 #, c-format
 msgid "%s: Can't set signal handler\n"
-msgstr "%s: Impossible de mettre en place une fonction de gestion de signal"
+msgstr ""
 
 #: libpdb/pdb.c:547
 #, c-format
@@ -482,10 +472,10 @@ msgstr "%s: Je n'arrive pas à écrire le bloc AppInfo\n"
 msgid "%s: Can't write archive file header\n"
 msgstr "%s: Impossible d'écrire l'entête du fichier d'archive\n"
 
-#: src/GenericConduit.cc:843 src/GenericConduit.cc:1304
+#: src/GenericConduit.cc:842 src/GenericConduit.cc:1303
 #, c-format
 msgid "%s: Can't write backup file.\n"
-msgstr "%s: Impossible d'écrire le fichier de sauvegarde.\n"
+msgstr "%s: Impossible d'écrire le fichier de secours.\n"
 
 #: libpdb/pdb.c:602
 #, c-format
@@ -513,7 +503,7 @@ msgstr "%s: Je n'arrive pas à écrire un élément de l'index des resources\n"
 msgid "%s: Can't write sort block\n"
 msgstr "%s: Je n'arrive pas à écrire le bloc de tri\n"
 
-#: src/GenericConduit.cc:2269
+#: src/GenericConduit.cc:2268
 #, c-format
 msgid "%s: Can't write staging file \"%s\"\n"
 msgstr "%s: Impossible d'écrire le fichier intermédiaire « %s »\n"
@@ -529,14 +519,14 @@ msgid ""
 "%s: Conduit is running happily, but hasn't printed anything. \n"
 "And yet, I was notified. This is a bug. Please notify the maintainer.\n"
 msgstr ""
-"%s: Le conduit s'éxécute correctement, mais n'a rien affiché, et\n"
-"n'est pas prêt à lire. Pourtant, on m'a averti. Ceci est un bug.\n"
-"Veuillez en informer le mainteneur.\n"
+"%s: Le conduit exécute gentiment, mais n'a rien imprimé. Et\n"
+"pourtant, on m'a averti. Ceci est un bug. Veuillez en informer le\n"
+"mainteneur.\n"
 
 #: libpconn/PConnection_usb.c:423
 #, c-format
 msgid "%s: Could not find HotSync endpoint on Visor.\n"
-msgstr "%s: Je n'arrive pas à établir la connection HotSync avec le Visor."
+msgstr ""
 
 #: src/restore.c:231
 #, c-format
@@ -550,7 +540,7 @@ msgstr ""
 msgid "%s: Error deleting \"%s\"\n"
 msgstr "%s: Erreur lors de l'effaçage de « %s »\n"
 
-#: src/GenericConduit.cc:1215 src/GenericConduit.cc:1246
+#: src/GenericConduit.cc:1214 src/GenericConduit.cc:1245
 #, c-format
 msgid "%s: Error deleting record 0x%08lx: %d\n"
 msgstr "%s: Erreur lors de l'effaçage de l'enregistrement 0x%08lx: %d\n"
@@ -558,7 +548,7 @@ msgstr "%s: Erreur lors de l'effaçage de l'enregistrement 0x%08lx: %d\n"
 #: src/coldsync.c:1187 src/coldsync.c:1252
 #, c-format
 msgid "%s: Error in checking for \"%s\"\n"
-msgstr "%s: Erreur lors de la vérification de « %s »\n"
+msgstr "%s: Erreur lors de l'examination de « %s »\n"
 
 #: src/conduit.c:838
 #, c-format
@@ -604,9 +594,9 @@ msgstr "%s: Plus de mémoire.\n"
 msgid "%s: Too many file descriptors. Aborting.\n"
 msgstr ""
 
-#: src/GenericConduit.cc:1450 src/GenericConduit.cc:1486
-#: src/GenericConduit.cc:1630 src/GenericConduit.cc:1954
-#: src/GenericConduit.cc:1986
+#: src/GenericConduit.cc:1449 src/GenericConduit.cc:1485
+#: src/GenericConduit.cc:1629 src/GenericConduit.cc:1953
+#: src/GenericConduit.cc:1985
 #, c-format
 msgid "%s: Warning: Can't delete record 0x%08lx: %d\n"
 msgstr "%s: Avertissement: Impossible d'effacer l'enregistrement 0x%08lx: %d\n"
@@ -687,7 +677,7 @@ msgstr ""
 #: src/conduit.c:1642
 #, c-format
 msgid "%s: conduit exited unexpectedly\n"
-msgstr "%s: conduit s'est terminé de manière inattendue\n"
+msgstr "%s: conduit a terminé de manière inattendue\n"
 
 #: src/conduit.c:700
 #, c-format
@@ -757,13 +747,6 @@ msgstr "%s: réponse inattendue à GetBytesAvailable: %d\n"
 msgid "%s: unknown listen type %d\n"
 msgstr "%s: l'argument %d est d'un type inconnu\n"
 
-#: lexer.l:389
-#, c-format
-msgid ""
-"%s: unknown start state %d\n"
-"Please tell the maintainer to fix `lexer.l'.\n"
-msgstr ""
-
 #: src/coldsync.c:597
 msgid "*Cancelled*\n"
 msgstr "*Annulé*\n"
@@ -808,7 +791,7 @@ msgstr "J'arrive pas à allouer une nouvelle connexion\n"
 msgid "Can't connect to Palm\n"
 msgstr "Impossible de se connecter au Palm\n"
 
-#: src/GenericConduit.cc:1843
+#: src/GenericConduit.cc:1842
 msgid "Can't copy a new record.\n"
 msgstr "Je n'arrive pas à copier un nouvel enregistrement.\n"
 
@@ -816,7 +799,7 @@ msgstr "Je n'arrive pas à copier un nouvel enregistrement.\n"
 msgid "Can't copy string.\n"
 msgstr "Impossible de copier une chaîne.\n"
 
-#: src/GenericConduit.cc:2138
+#: src/GenericConduit.cc:2137
 #, c-format
 msgid "Can't create \"%s\"\n"
 msgstr "Impossible de créer « %s »\n"
@@ -829,12 +812,12 @@ msgstr ""
 #: libpdb/pdb.c:2141
 #, c-format
 msgid "Can't find record %d\n"
-msgstr "Je n'arrive pas à trouver l'enregistrement N°%d\n"
+msgstr "Je n'arrive pas à trouver l'enregistrement No. %d\n"
 
 #: libpdb/pdb.c:2016
 #, c-format
 msgid "Can't find resource %d\n"
-msgstr "Je n'arrive pas à trouver la resource N°%d\n"
+msgstr "Je n'arrive pas à trouver la resource No. %d\n"
 
 #: libpdb/pdb.c:1819
 msgid "Can't find the AppInfo block!\n"
@@ -945,19 +928,18 @@ msgstr "Je n'arrive pas à lire les resources.\n"
 msgid "Can't read sort block\n"
 msgstr "Je n'arrive pas à lire le bloc de tri\n"
 
-#: src/GenericConduit.cc:259 src/GenericConduit.cc:480
-#: src/GenericConduit.cc:918
+#: src/GenericConduit.cc:258 src/GenericConduit.cc:479
+#: src/GenericConduit.cc:917
 msgid "Cancelled\n"
 msgstr "Annulé\n"
 
 #: src/coldsync.c:1637
 msgid "ColdSync homepage at http://www.ooblick.com/software/coldsync/\n"
-msgstr ""
-"La page ouèbe de ColdSync est http://www.ooblick.com/software/coldsync/\n"
+msgstr "La page ouèbe de ColdSync est http://www.ooblick.com/software/coldsync/\n"
 
 #: src/coldsync.c:1643
 msgid "Compile-type options:\n"
-msgstr "Options lors de la compilation:\n"
+msgstr "Options indiquées lors de la compilation:\n"
 
 #: src/coldsync.c:609
 msgid "Conduit failed for unknown reason\n"
@@ -981,16 +963,16 @@ msgstr "DlpWriteUserInfo a échoué: %d\n"
 msgid "End of file"
 msgstr "Fin de fichier"
 
-#: src/GenericConduit.cc:301 src/GenericConduit.cc:311
-#: src/GenericConduit.cc:321 src/GenericConduit.cc:400
-#: src/GenericConduit.cc:420 src/GenericConduit.cc:440
-#: src/GenericConduit.cc:520 src/GenericConduit.cc:530
-#: src/GenericConduit.cc:541 src/GenericConduit.cc:651
-#: src/GenericConduit.cc:846 src/GenericConduit.cc:859
-#: src/GenericConduit.cc:878 src/GenericConduit.cc:956
-#: src/GenericConduit.cc:965 src/GenericConduit.cc:1015
-#: src/GenericConduit.cc:1108 src/GenericConduit.cc:1307
-#: src/GenericConduit.cc:1327 src/GenericConduit.cc:1347 src/backup.c:61
+#: src/GenericConduit.cc:300 src/GenericConduit.cc:310
+#: src/GenericConduit.cc:320 src/GenericConduit.cc:399
+#: src/GenericConduit.cc:419 src/GenericConduit.cc:439
+#: src/GenericConduit.cc:519 src/GenericConduit.cc:529
+#: src/GenericConduit.cc:540 src/GenericConduit.cc:650
+#: src/GenericConduit.cc:845 src/GenericConduit.cc:858
+#: src/GenericConduit.cc:877 src/GenericConduit.cc:955
+#: src/GenericConduit.cc:964 src/GenericConduit.cc:1014
+#: src/GenericConduit.cc:1107 src/GenericConduit.cc:1306
+#: src/GenericConduit.cc:1326 src/GenericConduit.cc:1346 src/backup.c:61
 #: src/backup.c:72 src/backup.c:94 src/backup.c:115 src/install.c:190
 #: src/install.c:203 src/install.c:293 src/restore.c:272
 msgid "Error\n"
@@ -1070,9 +1052,9 @@ msgstr "Impossible de changer la taille de palm->dblist\n"
 msgid "Error trying to set speed"
 msgstr "Erreur lors du règlage de vitesse"
 
-#: src/GenericConduit.cc:806 src/GenericConduit.cc:1274
-#: src/GenericConduit.cc:1534 src/GenericConduit.cc:1657
-#: src/GenericConduit.cc:1813 src/GenericConduit.cc:2020
+#: src/GenericConduit.cc:805 src/GenericConduit.cc:1273
+#: src/GenericConduit.cc:1533 src/GenericConduit.cc:1656
+#: src/GenericConduit.cc:1812 src/GenericConduit.cc:2019
 #, c-format
 msgid "Error uploading record 0x%08lx: %d\n"
 msgstr "Erreur lors de l'installation de l'enregistrement 0x%08lx: %d\n"
@@ -1140,6 +1122,7 @@ msgstr "Erreur: le conduit %s n'est pas un conduit de type %s\n"
 msgid "Error: no port specified.\n"
 msgstr "Erreur: vous n'avez pas précisé de port.\n"
 
+# XXX
 #: libpdb/pdb.c:256
 msgid "File isn't seekable.\n"
 msgstr "Ce fichier ne peut pas être positionné.\n"
@@ -1203,8 +1186,8 @@ msgstr "Pas d'informations sur NetSync.\n"
 msgid "No error"
 msgstr "Pas d'erreur"
 
-#: src/GenericConduit.cc:448 src/GenericConduit.cc:886
-#: src/GenericConduit.cc:1355 src/backup.c:123 src/install.c:272
+#: src/GenericConduit.cc:447 src/GenericConduit.cc:885
+#: src/GenericConduit.cc:1354 src/backup.c:123 src/install.c:272
 #: src/install.c:295 src/restore.c:274
 msgid "OK\n"
 msgstr "OK\n"
@@ -1234,7 +1217,7 @@ msgstr "Restauration "
 msgid "Restore: Can't delete database \"%s\". err == %d\n"
 msgstr "Restore: Impossible d'effacer la base de données « %s ». err == %d\n"
 
-#: libpconn/slp.c:379
+#: libpconn/slp.c:362
 #, c-format
 msgid "SLP: bad CRC: expected 0x%04x, got 0x%04x\n"
 msgstr "SLP: mauvais CRC: je m'attendais à 0x%04x, mais j'ai reçu 0x%04x\n"
@@ -1301,8 +1284,8 @@ msgid ""
 msgstr ""
 "Usage: %s [options] -p port\n"
 "Options:\n"
-"\t-h:\t\tAfficher ce message et quitter.\n"
-"\t-V:\t\tAfficher la version et quitter.\n"
+"\t-h:\t\tImprimer ce message et quitter.\n"
+"\t-V:\t\tImprimer la version et quitter.\n"
 "\t-f <fichier>:\tLire la configuration dans <fichier>.\n"
 "\t-b <rép>:\tFaire une copie de secours dans le répertoire <rép>.\n"
 "\t-r <rép>:\tRestaurer à partir du répertoire <rép>.\n"
@@ -1339,7 +1322,7 @@ msgid ""
 "Warning: can't set the speed you requested (%ld bps).\n"
 "Using default (%ld bps)\n"
 msgstr ""
-"Avertissement: ne peux pas transmettre à la vitesse que vous avez demandé (%ld "
+"Avertissement: ne peux pas mettre la vitesse que vous avez demandé (%ld "
 "o/s).\n"
 "Je mettrai la vitesse de défaut (%ld o/s)\n"
 
@@ -1403,7 +1386,7 @@ msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable a échoué"
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo a échoué"
 
-#: src/GenericConduit.cc:319
+#: src/GenericConduit.cc:318
 msgid "pdb_Download() failed.\n"
 msgstr "pdb_Download() a échoué.\n"
 

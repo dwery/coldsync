@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.6 2000-09-21 15:46:03 arensb Exp $
+ * $Id: slp.c,v 1.5 2000-05-21 07:59:19 arensb Exp $
  */
 
 #include "config.h"
@@ -234,8 +234,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 
 	if (checksum != header.checksum)
 	{
-		fprintf(stderr, _("%s: bad checksum: expected 0x%02x, "
-				  "got 0x%02x\n"),
+		fprintf(stderr, _("%s: bad checksum: expected 0x%02x, got 0x%02x\n"),
 			"slp_read",
 			checksum, header.checksum);
 		goto redo;		/* Drop the packet on the floor */
@@ -263,12 +262,6 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	if (header.size > pconn->slp.inbuf_len)
 	{
 		ubyte *eptr;	/* Pointer to reallocated buffer */
-
-		SLP_TRACE(6)
-			fprintf(stderr,
-				"Resizing SLP buffer from %ld to %d\n",
-				pconn->slp.inbuf_len,
-				header.size);
 
 		/* Reallocate the input buffer. We use the temporary
 		 * variable `eptr' in case realloc() fails: we don't
@@ -311,16 +304,6 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
-
-		SLP_TRACE(8)
-		{
-			/* Dump just this chunk */
-			fprintf(stderr, "Read SLP chunk:\n");
-			debug_dump(stderr, "SLP <<< ",
-				   pconn->slp.inbuf+got,
-				   err);
-		}	
-
 		got += err;
 	}
 	/* Dump the body, for debugging */

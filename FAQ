@@ -37,7 +37,7 @@ A: No. Some of the questions in this list have been added to prevent their
 Q: Is ColdSync better than pilot-link?
 A: Well, *I* think so, otherwise I wouldn't have written it.
 	Seriously: technically, pilot-link is mainly a library of
-   functions for talking to Palm devices. ColdSync includes such a library
+   funnctions for talking to Palm devices. ColdSync includes such a library
    as well. I think that the ColdSync library is better-written, in the
    sense of being more readable (and hence more easily maintained), better
    documented, and more robust.

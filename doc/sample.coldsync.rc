@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.4 2000-09-22 15:09:21 arensb Exp $
+# $Id: sample.coldsync.rc,v 1.3 2000-07-22 04:08:07 arensb Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -21,8 +21,7 @@ listen serial {
 	speed: 38400;
 }
 
-# If you're syncing a Visor over USB under FreeBSD, use "usb" instead
-# of "serial":
+# If you're syncing a Visor over USB, use "usb" instead of "serial":
 
 listen usb {
 	device: "/dev/ugen0";
@@ -50,8 +49,8 @@ pda "My Palm III" {
 	directory: "/home/arensb/.palmIII";
 }
 
-# If your Palm doesn't have a serial number in ROM (e.g., a PalmPilot
-# or Visor), use the empty string (of course, if you have more than
+# If your Palm doesn't have a serial number in ROM (e.g., a
+# PalmPilot), use the empty string (of course, if you have more than
 # one such Palm, they'll all use the same PDA block):
 
 pda "My PalmPilot Pro" {
@@ -86,7 +85,7 @@ pda "Default for everything else" {
 ### Conduits
 ########################################
 
-# Conduits presently come in three flavors: Fetch, Dump, and Sync.
+# Conduits presently come in two flavors: Fetch and Dump.
 #
 # Fetch conduits are run before the main sync. They are intended to
 # gather data from files and create or update the databases with which
@@ -96,24 +95,8 @@ pda "Default for everything else" {
 # the newly-synchronized databases back into whatever form is most
 # useful on the local machine.
 #
-# Sync conduits run during the main portion of the sync, and can run
-# instead of, or in addition to the built-in generic conduit. They are
-# intended for cases too complex to be easily handled by Fetch and
-# Dump conduits.
-#
 # Other than that, conduits run in the order in which they appear in
 # the .coldsyncrc
-
-## Example 0:
-# If you do not have a .coldsyncrc file, the following is equivalent
-# to the defaults. It says to run the built-in generic conduit on all
-# databases unless another one has been specified.
-
-conduit sync {
-	path: [generic];
-	type: */*;
-	default;
-}
 
 ## Example 1:
 # 'memo-text', when run as a Fetch conduit, converts the file
@@ -230,16 +213,4 @@ conduit dump {
 conduit dump {
 	path: "/usr/local/libexec/conduits/conduit2";
 	type: todo/DATA;
-}
-
-## Example 7:
-# A conduit also has access to preferences; these are bits of
-# configuration data that aren't stored in the database being synced.
-# Each conduit's documentation should say which preferences it is
-# interested in.
-
-conduit sync {
-        path: "/usr/local/libexec/conduits/deliver-mail";
-        type: mail/DATA;
-        pref: mail/3;		# Mail signature preference
 }
