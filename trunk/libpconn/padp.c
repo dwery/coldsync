@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.4 2000-01-25 11:25:52 arensb Exp $
+ * $Id: padp.c,v 1.5 2000-01-25 11:28:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -336,7 +336,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Use select() to wait for the file descriptor to
 			 * be readable. If nothing comes in in time,
-			 * conclude that the connection is dead, * and time
+			 * conclude that the connection is dead, and time
 			 * out.
 			 */
 			timeout.tv_sec = pconn->padp.read_timeout / 10;
