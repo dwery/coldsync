@@ -1,3 +1,5 @@
+# $Id: Makefile,v 2.3 2000-02-03 03:25:02 arensb Exp $
+
 TOP =		..
 SUBDIR =	src
 
@@ -54,7 +56,7 @@ depend::
 include ../Make.rules
 
 install::	${CXXPROG}
-	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR} ${BINDIR}/${CXXPROG}
+	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR}/${CXXPROG}
 
 # Additional dependencies, maintained by hand 'cos I don't know how
 # else to do it
