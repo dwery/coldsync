@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.4 1999-09-04 20:53:51 arensb Exp $
+ * $Id: archive.c,v 1.5 1999-09-09 05:50:27 arensb Exp $
  */
 
 #include "config.h"
@@ -18,8 +18,9 @@
 #include <unistd.h>		/* For write(), lseek() */
 #include <time.h>		/* For time() */
 #include <errno.h>		/* For errno */
-#include "palm_types.h"
-#include "util.h"		/* For put_*() */
+/*  #include "palm_types.h" */	/* XXX */
+/*#include "util.h"*/		/* For put_*() */
+#include <pconn/pconn.h>	/* XXX - Clean this up */
 #include "archive.h"
 
 /* arch_create
