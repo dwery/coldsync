@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.107 2002-10-31 16:35:51 azummo Exp $
+ * $Id: config.c,v 1.108 2002-11-02 12:51:18 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -590,6 +590,10 @@ load_config(const Bool read_user_config)
 			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
 			fprintf(stderr, "\tProtocol: %d\n", (int) l->protocol);
 			fprintf(stderr, "\tFlags:");
+			if ((l->flags & LISTENFL_PROMPT) != 0)
+				fprintf(stderr, " PROMPT");
+			if ((l->flags & LISTENFL_NOCHANGESPEED) != 0)
+				fprintf(stderr, " NOCHANGESPEED");
 			if ((l->flags & LISTENFL_TRANSIENT) != 0)
 				fprintf(stderr, " TRANSIENT");
 			fprintf(stderr, "\n");

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.70 2002-10-31 15:29:07 azummo Exp $
+ * $Id: parser.y,v 2.71 2002-11-02 12:51:18 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -96,6 +96,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token SNUM
 %token TRANSIENT
 %token NOCHANGESPEED
+%token NOPROMPT
 %token TYPE
 %token UNSAVED
 
@@ -202,6 +203,14 @@ listen_stmt:
 			fprintf(stderr, "\tSpeed: [%ld]\n", cur_listen->speed);
 			fprintf(stderr, "\tProtocol: %d\n",
 				(int) cur_listen->protocol);
+                        fprintf(stderr, "\tFlags:");  
+                        if ((cur_listen->flags & LISTENFL_PROMPT) != 0)
+                                fprintf(stderr, " PROMPT");
+			if ((cur_listen->flags & LISTENFL_NOCHANGESPEED) != 0)
+                                fprintf(stderr, " NOCHANGESPEED");
+                      	if ((cur_listen->flags & LISTENFL_TRANSIENT) != 0)
+                                fprintf(stderr, " TRANSIENT");
+		        fprintf(stderr, "\n");
 		}
 
 		if (file_config->listen == NULL)
@@ -347,6 +356,13 @@ listen_directive:
 
 		/* Mark this device as being a modem */
 		cur_listen->flags |= LISTENFL_NOCHANGESPEED;
+	}
+	| NOPROMPT semicolon
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "Don't prompt for the HotSync button.\n");
+
+		cur_listen->flags &= ~(1L << LISTENFL_PROMPT);
 	}
 	| error
 	{
