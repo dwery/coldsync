@@ -1,0 +1,119 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.3 1999-11-04 10:44:02 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	libpconn
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+# Compatibility functions, included for systems that don't have them.
+# XXX - Bleah. This probably needs to be broken up into individual
+# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
+# the like.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		dlp_cmd.c \
+		util.c \
+		dlp.c \
+		palm_errno.c \
+		padp.c \
+		slp.c \
+		cmp.c \
+		PConnection.c \
+		${COMPAT}
+
+OBJS =		dlp_cmd.o \
+		util.o \
+		dlp.o \
+		palm_errno.o \
+		padp.o \
+		slp.o \
+		cmp.o \
+		PConnection.o \
+		${COMPATOBJS}
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in \
+		cfmakeraw.c
+
+CLEAN =		libpconn.a *.o *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# XXX - Figure out where to put this. Also, allow for -R flag if ever
+# decide to build shared libraries.
+#LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
+#LIBPDB =	-L${top_srcdir}/libpdb -lpdb
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+RANLIB =	@RANLIB@
+
+.SUFFIXES:	.c .o .cc
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+# XXX - "libpconn.a" should probably be a 'make' symbol, in case we
+# decide to build shared libraries. Don't forget to change it
+# throughout.
+all:	libpconn.a
+
+libpconn.a:	${OBJS}
+	ar cq $@ ${OBJS}
+	${RANLIB} $@
+
+install:	libpconn.a
+	if test ! -d ${LIBDIR}; then\
+		mkdir ${LIBDIR}; \
+		chmod 755 ${LIBDIR}; \
+	fi
+	${INSTALL} ${INSTALLARGS} libpconn.a ${LIBDIR}
+
+depend:
+	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
+
+distdir:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}

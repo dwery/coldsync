@@ -1,0 +1,100 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.2 1999-11-02 03:33:36 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+# XXX - This is broken: "srcdir" is "..", which breaks the "entering
+# directory" and "leaving directory" messages for recursive targets.
+SRCDIR =	@srcdir@
+subdir =	include
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+INCLUDEDIR =	@includedir@
+
+SUBDIRS =	pconn
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+# List of recursive targets, i.e., those where you build the target in
+# each subdirectory.
+RECURSIVE_TARGETS = \
+		all depend clean distclean spotless distdir install
+
+HEADERS =	pdb.h
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in
+
+CLEAN =		*.o *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+
+.SUFFIXES:	.c .o .cc
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+# XXX - "libpdb.a" should probably be a 'make' symbol, in case we
+# decide to build shared libraries. Don't forget to change it
+# throughout.
+all::	
+
+install::	${HEADERS}
+	if test ! -d ${INCLUDEDIR}; then \
+		mkdir ${INCLUDEDIR}; \
+	fi
+	for i in ${HEADERS}; do \
+		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/"$$i"; \
+	done
+
+depend::
+
+distdir::	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean::
+	-rm -f ${CLEAN}
+distclean::
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless::
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+${RECURSIVE_TARGETS}::
+	@for dir in ${SUBDIRS}; do \
+		echo "$@: Entering directory \`${curdir}/$$dir'"; \
+		(cd $$dir && ${MAKE} $@); \
+		echo "$@: Leaving directory \`${curdir}/$$dir'"; \
+	done
