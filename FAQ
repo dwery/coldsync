@@ -107,7 +107,7 @@ A: Preferences, such as your e-mail signature, your preferred time and date
 
 Q: Does ColdSync work with the Handspring Visor?
 A: Yes.
-A: Under FreeBSD 4.x, use
+   Under FreeBSD 4.x, use
 
 	listen usb {
 		device: /dev/ugen0;
@@ -128,6 +128,9 @@ A: Under FreeBSD 4.x, use
    since ColdSync won't be accessing the USB port directly.
 	(Thanks to alert readers Shawn Sorichetti <ssoriche@home.com> and
    Gaspar Chilingarov <nm@web.am> for this information.)
+
+Q: Does ColdSync work with the Sony Clie?
+A: Yes. See http://kreucher.user.msu.edu/clie/
 
 Q: Does ColdSync support syncing via the infrared port?
 A: Not directly, but yes.
