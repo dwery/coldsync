@@ -149,6 +149,17 @@ A: As far as I've been able to determine, the Handspring Visor does not
    "snum" ROM token. However, the contents of this token are not a
    12-character string, but a set of 12 0xff bytes.
 
+Q: How can I find out the user name and user ID on my Palm, in order to set
+   up my .coldsyncrc correctly?
+A: Two ways: the simplest is to run
+	coldsync -mI
+   If the username and userid don't match what's in your .coldsyncrc, it
+   will suggest a palm{} block to add to your .coldsyncrc.
+
+	A more direct way, however, is to write
+	<Shortcut> . 4
+   on your Palm. The username and userid will be displayed on the screen.
+
 # This is for Emacs's benefit:
 # Local Variables:	***
 # mode: auto-fill	***
