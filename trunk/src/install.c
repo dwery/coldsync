@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.18 2000-11-19 00:11:53 arensb Exp $
+ * $Id: install.c,v 2.19 2000-11-20 03:51:38 arensb Exp $
  */
 
 #include "config.h"
@@ -187,7 +187,6 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 	struct pdb pdb;          /* A scratch database */
 	static DIR *dir=NULL;
 	struct dirent *file;
-	char *lastdot;          /* Pointer to last dot in filename */
 	int fd;                 /* Database file descriptor */
 	
 	if(dir==NULL) 
