@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: pdb.h,v 1.2 1999-08-01 08:06:53 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -220,6 +220,9 @@ extern struct pdb *pdb_Download(
 	struct PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
 	ubyte dbh);
+extern int pdb_Upload(
+	struct PConnection *pconn,
+	struct pdb *pdb);
 extern struct pdb_record *pdb_FindRecordByID(
 	const struct pdb *db,
 	const udword id);
