@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.40 2001-08-06 00:29:40 arensb Exp $
+ * $Id: pdb.c,v 1.40.2.1 2001-10-11 02:40:42 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -45,6 +45,7 @@
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
 
+/* XXX - Is this right? Should this be in the "else" clause, above? */
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For bzero() */
 #endif	/* HAVE_STRINGS_H */
