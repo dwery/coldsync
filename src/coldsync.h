@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.60 2002-03-11 23:12:14 azummo Exp $
+ * $Id: coldsync.h,v 1.61 2002-03-28 23:14:27 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -97,6 +97,8 @@ struct cmd_opts {
 				 * messages should be translated, for
 				 * instance.
 				 */
+	char *listen_name;	/* Requested listen block name
+				 */				
 };
 
 extern struct cmd_opts global_opts;	/* XXX - I'm not quite happy with
@@ -120,6 +122,7 @@ typedef struct listen_block
 	char *device;		/* Device to listen on */
 	long speed;
 	unsigned short flags;	/* Flags. See LISTENFL_*, below */
+	char *name;		/* Name of this listen block. */
 } listen_block;
 
 #define LISTENFL_TRANSIENT	0x01	/* This device is transient: it
