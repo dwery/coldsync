@@ -9,7 +9,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.h,v 1.6 2000-01-27 02:03:38 arensb Exp $
+ * $Id: archive.h,v 1.7 2000-01-27 04:18:38 arensb Exp $
  */
 #ifndef _archive_h_
 #define _archive_h_
@@ -76,7 +76,7 @@ struct arch_record
 					/* XXX - Not used */
 
 /* Function prototype */
-extern int arch_create(char *fname, const struct dlp_dbinfo *dbinfo);
+extern int arch_create(const struct dlp_dbinfo *dbinfo);
 extern int arch_open(const struct dlp_dbinfo *dbinfo, int flags);
 extern int arch_readheader(int fd, struct arch_header *header);	/* XXX */
 extern int arch_readrecord(int fd, struct arch_record *rec);	/* XXX */
