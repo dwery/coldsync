@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.2 1999-02-21 08:46:51 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -66,116 +66,6 @@
 #define DLPCMD_FindDB			0x39
 #define DLPCMD_SetDBInfo		0x3a
 
-/* Argument IDs, by command */
-#define DLPARG_BASE			0x20
-
-#define DLPARG_WriteUserInfo_UserInfo	DLPARG_BASE
-#define DLPARGLEN_WriteUserInfo_UserInfo	22
-						/* Doesn't include
-						 * user name */
-#define DLPARG_SetSysDateTime_Time	DLPARG_BASE
-#define DLPARGLEN_SetSysDateTime_Time	8
-
-#define DLPARG_OpenDB_DB		DLPARG_BASE
-
-#define DLPARG_CreateDB_DB		DLPARG_BASE
-
-#define DLPARG_CloseDB_One		DLPARG_BASE
-#define DLPARGLEN_CloseDB_One		1
-#define DLPARG_CloseDB_All		DLPARG_BASE+1
-#define DLPARGLEN_CloseDB_All		0
-
-#define DLPARG_DeleteDB_DB		DLPARG_BASE
-#define DLPARGLEN_DeleteDB_DB		2
-
-#define DLPARG_ReadAppBlock_Req		DLPARG_BASE
-#define	DLPARGLEN_ReadAppBlock_Req	6
-
-#define DLPARG_WriteAppBlock_Block	DLPARG_BASE
-#define DLPARGLEN_WriteAppBlock_Block	4
-
-#define DLPARG_ReadSortBlock_Req	DLPARG_BASE
-#define	DLPARGLEN_ReadSortBlock_Req	6
-
-#define DLPARG_WriteSortBlock_Block	DLPARG_BASE
-#define DLPARGLEN_WriteSortBlock_Block	4
-
-#define DLPARG_ReadNextModifiedRec_Req	DLPARG_BASE
-#define DLPARGLEN_ReadNextModifiedRec_Req	1
-
-#define DLPARG_ReadAppPreference_Pref	DLPARG_BASE
-#define DLPARGLEN_ReadAppPreference_Pref	10
-
-#define DLPARG_WriteAppPreference_Pref	DLPARG_BASE
-#define DLPARGLEN_WriteAppPreference_Pref	12
-
-#define DLPARG_ReadRecord_ByID		DLPARG_BASE
-#define DLPARGLEN_ReadRecord_ByID	10
-#define DLPARG_ReadRecord_ByIndex	DLPARG_BASE+1
-#define DLPARGLEN_ReadRecord_ByIndex	8
-
-#define DLPARG_WriteRecord_Rec		DLPARG_BASE
-#define DLPARGLEN_WriteRecord_Rec	8
-
-#define DLPARG_DeleteRecord_Rec		DLPARG_BASE
-#define DLPARGLEN_DeleteRecord_Rec	6
-
-#define DLPARG_ReadResource_ByIndex	DLPARG_BASE
-#define DLPARGLEN_ReadResource_ByIndex	8
-#define DLPARG_ReadResource_ByType	DLPARG_BASE+1
-#define DLPARGLEN_ReadResource_ByType	12
-
-#define DLPARG_WriteResource_Res	DLPARG_BASE
-#define DLPARGLEN_WriteResource_Res	10
-
-#define DLPARG_DeleteResource_Res	DLPARG_BASE
-#define DLPARGLEN_DeleteResource_Res	8
-
-#define DLPARG_CleanUpDatabase_DB	DLPARG_BASE
-#define DLPARGLEN_CleanUpDatabase_DB	1
-
-#define DLPARG_ResetSyncFlags_DB	DLPARG_BASE
-#define DLPARGLEN_ResetSyncFlags_DB	1
-
-#define DLPARG_CallApplication_V1	DLPARG_BASE
-#define DLPARG_CallApplication_V2	DLPARG_BASE+1
-/* Possible result codes */
-#define DLPRET_CallApplication_V1	DLPARG_BASE
-#define DLPRET_CallApplication_V2	DLPARG_BASE+1
-
-#define DLPARG_AddSyncLogEntry_Msg	DLPARG_BASE
-
-#define DLPARG_ReadOpenDBInfo_DB	DLPARG_BASE
-#define DLPARGLEN_ReadOpenDBInfo_DB	1
-
-#define DLPARG_MoveCategory_Cat		DLPARG_BASE
-#define DLPARGLEN_MoveCategory_Cat	4
-
-#define DLPARG_EndOfSync_Status		DLPARG_BASE
-#define DLPARGLEN_EndOfSync_Status	2
-
-#define DLPARG_ResetRecordIndex_DB	DLPARG_BASE
-#define DLPARGLEN_ResetRecordIndex_DB	1
-
-#define DLPARG_ReadRecordIDList_Req	DLPARG_BASE
-#define DLPARGLEN_ReadRecordIDList_Req	6
-
-#define DLPARG_ReadNextRecInCategory_Rec	DLPARG_BASE
-#define DLPARGLEN_ReadNextRecInCategory_Rec	2
-
-#define DLPARG_ReadNextModifiedRecInCategory_Rec	DLPARG_BASE
-#define DLPARGLEN_ReadNextModifiedRecInCategory_Rec	2
-
-#define DLPARG_WriteNetSyncInfo_Info	DLPARG_BASE
-#define DLPARGLEN_WriteNetSyncInfo_Info	24
-
-#define DLPARG_ReadFeature_Req		DLPARG_BASE
-#define DLPARGLEN_ReadFeature_Req	6
-
-#define DLPCMD_USERNAME_LEN		41	/* Max. length of user name,
-						 * including terminating
-						 * NUL. */
-
 /* dlp_time
  * Structure for giving date and time.
  */
@@ -189,6 +79,47 @@ struct dlp_time
 	ubyte second;		/* Second, 0-59 */
 	ubyte unused;		/* Unused. Set to 0 */
 };
+
+/* Argument IDs, by command.
+ * In each section:
+ * - DLPARG_<func>_<type> is the request ID for function <func>. Some
+ *	functions can pass several types of arguments; <type> serves
+ *	to distinguish between them. Functions with only one argument
+ *	use DLPARG_BASE as the request ID. Functions with multiple
+ *	arguments typically use DLPARG_BASE, DLPARG_BASE+1, ... as
+ *	their request IDs.
+ * - DLPARGLEN_<func>_<type> is the length, in bytes, of request ID
+ *	DLPARG_<func>_<type>. Some arguments have a variable length;
+ *	of those, some consist of a fixed-size header followed by
+ *	variable-length data. In these cases, DLPARGLEN_<func>_<type>
+ *	is the length of the fixed-sized header. (In other words,
+ *	check the spec: don't assume that DLPARGLEN_<func>_<type>
+ *	gives the full length of the argument.)
+ * - DLPRET_<func>_<type> is the response ID for function <func>. Some
+ *	functions can return several types of arguments (or multiple
+ *	ones); <type> serves to distinguish between them. Response IDs
+ *	begin at DLPRET_BASE, and typically go up by one for each
+ *	additional type of response.
+ * -DLPRETLEN_<func>_<type> is the length of response ID
+ *	DLPRET_<func>_<type>. Some responses have a variable length;
+ *	of those, most consist of a fixed-size header followed by
+ *	variable-length data. In these cases, DLPRETLEN_<func>_<type>
+ *	is the length of the fixed-sized header. (In other words,
+ *	check the spec: don't assume that DLPRETLEN_<func>_<type>
+ *	gives the full length of the response.)
+ */
+#define DLPARG_BASE			0x20
+#define DLPRET_BASE			DLPARG_BASE
+
+/** ReadUserInfo **/
+#define DLPRET_ReadUserInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadUserInfo_Info	30
+
+#define DLPCMD_USERNAME_LEN		41	/* Max. length of user
+						 * name, including
+						 * terminating NUL. (from
+						 * dlpMaxUserNameSize)
+						 * */
 
 /* dlp_userinfo
  * The data returned from a DlpReadUserInfo command.
@@ -213,6 +144,12 @@ struct dlp_userinfo
 				 * understands DES, MD4 and MD5.
 				 */
 };
+
+/** WriteUserInfo **/
+#define DLPARG_WriteUserInfo_UserInfo	DLPARG_BASE
+#define DLPARGLEN_WriteUserInfo_UserInfo	22
+						/* Doesn't include user
+						 * name */
 
 /* dlp_setuserinfo
  * This data structure is passed to DlpWriteUserInfo, to change (parts
@@ -243,6 +180,250 @@ struct dlp_setuserinfo
 #define DLPCMD_MODUIFLAG_USERNAME	0x10	/* User name */
 #define DLPCMD_MODUIFLAG_VIEWERID	0x08	/* Viewer ID */
 
+/** ReadSysInfo **/
+#define DLPRET_ReadSysInfo_Info		DLPRET_BASE
+#define DLPRETLEN_ReadSysInfo_Info	14
+/* XXX */
+#define DLPRET_ReadSysInfo_Ver		DLPRET_BASE+1	/* v1.2 extension */
+#define DLPRETLEN_ReadSysInfo_Ver	12
+
+/** GetSysDateTime **/
+#define DLPRET_GetSysDateTime_Time	DLPRET_BASE
+#define DLPRETLEN_GetSysDateTime_Time	8
+
+/** SetSysDateTime **/
+#define DLPARG_SetSysDateTime_Time	DLPARG_BASE
+#define DLPARGLEN_SetSysDateTime_Time	8
+
+/** ReadStorageInfo **/
+#define DLPARG_ReadStorageInfo_Req	DLPARG_BASE
+#define DLPARGLEN_ReadStorageInfo_Req	2
+
+/* XXX - Sizes. Get a clue */
+#define DLPRET_ReadStorageInfo_Info	DLPRET_BASE
+#define DLPRET_ReadStorageInfo_Ext	DLPRET_BASE+1
+
+/** ReadDBList **/
+#define DLPARG_ReadDBList_Req		DLPARG_BASE
+#define DLPARGLEN_ReadDBList_Req	4
+
+#define DLPRET_ReadDBList_Info		DLPRET_BASE
+#define DLPRETLEN_ReadDBList_Info	4
+
+/* Flags for ReadDBList */
+#define DLPCMD_READDBLFLAG_RAM		0x80
+#define DLPCMD_READDBLFLAG_ROM		0x40
+#define DLPCMD_READDBLFLAG_MULT		0x20	/* v1.2 */
+
+#define DLPRET_READDBLFLAG_MORE		0x80
+
+/** OpenDB **/
+#define DLPARG_OpenDB_DB		DLPARG_BASE
+#define DLPARGLEN_OpenDB_DB		2
+
+#define DLPRET_OpenDB_DB		DLPRET_BASE
+#define DLPRETLEN_OpenDB_DB		1
+
+/* Flags for OpenDB */
+#define DLPCMD_OPENDBFLAG_READ		0x80
+#define DLPCMD_OPENDBFLAG_WRITE		0x40
+#define DLPCMD_OPENDBFLAG_EXCL		0x20
+#define DLPCMD_OPENDBFLAG_SHOWSECRET	0x10
+
+/** CreateDB **/
+#define DLPARG_CreateDB_DB		DLPARG_BASE
+#define DLPARGLEN_CreateDB_DB		14
+
+#define DLPRET_CreateDB_DB		DLPRET_BASE
+#define DLPRETLEN_CreateDB_DB		1
+
+/** CloseDB **/
+#define DLPARG_CloseDB_One		DLPARG_BASE
+#define DLPARGLEN_CloseDB_One		1
+#define DLPARG_CloseDB_All		DLPARG_BASE+1
+#define DLPARGLEN_CloseDB_All		0
+#define DLPARG_CloseDB_Update		DLPARG_BASE+2	/* XXX - PalmOS 3.0 */
+#define DLPARGLEN_CloseDB_Update	2
+
+/* XXX - Flags */
+
+/** DeleteDB **/
+#define DLPARG_DeleteDB_DB		DLPARG_BASE
+#define DLPARGLEN_DeleteDB_DB		2
+
+/** ReadAppBlock **/
+#define DLPARG_ReadAppBlock_Req		DLPARG_BASE
+#define	DLPARGLEN_ReadAppBlock_Req	6
+
+#define DLPRET_ReadAppBlock_Blk		DLPRET_BASE
+#define DLPRETLEN_ReadAppBlock_Blk	2
+
+/** WriteAppBlock **/
+#define DLPARG_WriteAppBlock_Block	DLPARG_BASE
+#define DLPARGLEN_WriteAppBlock_Block	4
+
+/** ReadSortBlock **/
+#define DLPARG_ReadSortBlock_Req	DLPARG_BASE
+#define	DLPARGLEN_ReadSortBlock_Req	6
+
+#define DLPRET_ReadSortBlock_Blk	DLPRET_ReadAppBlock_Blk
+#define DLPRETLEN_ReadSortBlock_Blk	DLPRETLEN_ReadAppBlock_Blk
+
+/** WriteSortBlock **/
+#define DLPARG_WriteSortBlock_Block	DLPARG_WriteAppBlock_Block
+#define DLPARGLEN_WriteSortBlock_Block	DLPARGLEN_WriteAppBlock_Block
+
+/** ReadNextModifiedRec **/
+#define DLPARG_ReadNextModifiedRec_Req	DLPARG_BASE
+#define DLPARGLEN_ReadNextModifiedRec_Req	1
+
+#define DLPRET_ReadNextModifiedRec_Rec	DLPARG_BASE
+#define DLPRETLEN_ReadNextModifiedRec_Rec	10
+
+/** ReadRecord **/
+#define DLPARG_ReadRecord_ByID		DLPARG_BASE
+#define DLPARGLEN_ReadRecord_ByID	10
+#define DLPARG_ReadRecord_ByIndex	DLPARG_BASE+1
+#define DLPARGLEN_ReadRecord_ByIndex	8
+
+#define DLPRET_ReadRecord_Rec		DLPRET_BASE
+#define DLPRETLEN_ReadRecord_Rec	10
+
+/** WriteRecord **/
+#define DLPARG_WriteRecord_Rec		DLPARG_BASE
+#define DLPARGLEN_WriteRecord_Rec	8
+
+#define DLPRET_WriteRecord_Rec		DLPRET_BASE
+#define DLPRETLEN_WriteRecord_Rec	4
+
+/** DeleteRecord **/
+#define DLPARG_DeleteRecord_Rec		DLPARG_BASE
+#define DLPARGLEN_DeleteRecord_Rec	6
+
+/** ReadResource **/
+#define DLPARG_ReadResource_ByIndex	DLPARG_BASE
+#define DLPARGLEN_ReadResource_ByIndex	8
+#define DLPARG_ReadResource_ByType	DLPARG_BASE+1
+#define DLPARGLEN_ReadResource_ByType	12
+
+#define DLPRET_ReadResource_Rsrc	DLPRET_BASE
+#define DLPRETLEN_ReadResource_Rsrc	10
+
+/** WriteResource **/
+#define DLPARG_WriteResource_Rsrc	DLPARG_BASE
+#define DLPARGLEN_WriteResource_Rsrc	10
+
+/** DeleteResource **/
+#define DLPARG_DeleteResource_Res	DLPARG_BASE
+#define DLPARGLEN_DeleteResource_Res	8
+
+/** CleanUpDatabase **/
+#define DLPARG_CleanUpDatabase_DB	DLPARG_BASE
+#define DLPARGLEN_CleanUpDatabase_DB	1
+
+/** ResetSyncFlags **/
+#define DLPARG_ResetSyncFlags_DB	DLPARG_BASE
+#define DLPARGLEN_ResetSyncFlags_DB	1
+
+/** CallApplication **/
+#define DLPARG_CallApplication_V1	DLPARG_BASE
+#define DLPARG_CallApplication_V2	DLPARG_BASE+1
+
+#define DLPRET_CallApplication_V1	DLPRET_BASE
+#define DLPRETLEN_CallApplication_V1	6
+#define DLPRET_CallApplication_V2	DLPRET_BASE+1
+#define DLPRETLEN_CallApplication_V2	16
+
+/** ResetSystem **/
+/* No arguments, nothing returned */
+
+/** AddSyncLogEntry **/
+#define DLPARG_AddSyncLogEntry_Msg	DLPARG_BASE
+
+/** ReadOpenDBInfo **/
+#define DLPARG_ReadOpenDBInfo_DB	DLPARG_BASE
+#define DLPARGLEN_ReadOpenDBInfo_DB	1
+
+#define DLPRET_ReadOpenDBInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadOpenDBInfo_Info	2
+
+/** MoveCategory **/
+#define DLPARG_MoveCategory_Cat		DLPARG_BASE
+#define DLPARGLEN_MoveCategory_Cat	4
+
+/** ProcessRPC **/
+/* ProcessRPC is special. It doesn't use the usual DLP wrappers */
+
+/** OpenConduit **/
+/* No arguments, nothing returned */
+
+/** EndOfSync **/
+#define DLPARG_EndOfSync_Status		DLPARG_BASE
+#define DLPARGLEN_EndOfSync_Status	2
+
+/** ResetRecordIndex **/
+#define DLPARG_ResetRecordIndex_DB	DLPARG_BASE
+#define DLPARGLEN_ResetRecordIndex_DB	1
+
+/** ReadRecordIDList **/
+#define DLPARG_ReadRecordIDList_Req	DLPARG_BASE
+#define DLPARGLEN_ReadRecordIDList_Req	6
+
+#define DLPRET_ReadRecordIDList_List	DLPRET_BASE
+#define DLPRETLEN_ReadRecordIDList_List	8
+
+/* 1.1 functions */
+/** ReadNextRecInCategory **/
+#define DLPARG_ReadNextRecInCategory_Rec	DLPARG_BASE
+#define DLPARGLEN_ReadNextRecInCategory_Rec	2
+
+#define DLPRET_ReadNextRecInCategory_Rec	DLPRET_BASE
+#define DLPRETLEN_ReadNextRecInCategory_Rec	10
+
+/** ReadNextModifiedRecInCategory **/
+#define DLPARG_ReadNextModifiedRecInCategory_Rec	DLPARG_BASE
+#define DLPARGLEN_ReadNextModifiedRecInCategory_Rec	2
+
+#define DLPRET_ReadNextModifiedRecInCategory_Rec	DLPRET_BASE
+#define DLPRETLEN_ReadNextModifiedRecInCategory_Rec	10
+
+/** ReadAppPreference **/
+#define DLPARG_ReadAppPreference_Pref	DLPARG_BASE
+#define DLPARGLEN_ReadAppPreference_Pref	10
+
+#define DLPRET_ReadAppPreference_Pref	DLPRET_BASE
+#define DLPRETLEN_ReadAppPreference_Pref	6
+
+/** WriteAppPreference **/
+#define DLPARG_WriteAppPreference_Pref	DLPARG_BASE
+#define DLPARGLEN_WriteAppPreference_Pref	12
+
+/** ReadNetSyncInfo **/
+#define DLPRET_ReadNetSyncInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadNetSyncInfo_Info	24
+
+/** WriteNetSyncInfo **/
+#define DLPARG_WriteNetSyncInfo_Info	DLPARG_BASE
+#define DLPARGLEN_WriteNetSyncInfo_Info	24
+
+/* XXX - Flags */
+
+/** ReadFeature **/
+#define DLPARG_ReadFeature_Req		DLPARG_BASE
+#define DLPARGLEN_ReadFeature_Req	6
+
+#define DLPRET_ReadFeature_Feature	DLPRET_BASE
+#define DLPRETLEN_ReadFeature_Feature	4
+
+/* 1.2 functions */
+/** FindDB **/
+/* XXX */
+
+/** SetDBInfo **/
+/* XXX */
+
+/* XXX - Finish cleaning this up */
+
 /* dlp_sysinfo
  * The data returned from a DlpReadSysInfo command.
  */
@@ -259,18 +440,10 @@ struct dlp_sysinfo
 		 */
 };
 
-/* dlp_storageinfo
- */
-/* XXX - This should probably never be seen by the programmer; hide it
- * in slp.h.
- */
-struct dlp_storageinfo
-{
-	ubyte lastcard;		/* # of last card */
-	ubyte more;		/* Non-zero if there are more cards */
-	ubyte unused;		/* Set to 0 */
-	ubyte act_count;	/* Actual count of structures returned */
-};
+#define DLPCMD_MEMCARD_LEN	32	/* Max. length of card and
+					 * manufacturer name, including
+					 * NUL.
+					 */
 
 /* XXX - Should this include the 1.1 extensions? */
 struct dlp_cardinfo
@@ -282,14 +455,16 @@ struct dlp_cardinfo
 	udword rom_size;	/* ROM size */
 	udword ram_size;	/* RAM size */
 	udword free_ram;	/* Free RAM size */
-	ubyte cardname_size;	/* Size of card name string */
-	ubyte manufname_size;	/* Size of manufacturer name string */
-	const unsigned char *cardname;
-	const unsigned char *manufname;
-};
+	ubyte cardname_size;	/* Size of card name string (not counting
+				 * NUL) */
+	ubyte manufname_size;	/* Size of manufacturer name string (not
+				 * counting NUL) */
+	char cardname[DLPCMD_MEMCARD_LEN];
+				/* Card name */
+	char manufname[DLPCMD_MEMCARD_LEN];
+				/* Manufacturer name */
 
-struct dlp_cardinfo_ext		/* 1.1 extension */
-{
+	/* DLP 1.1 extensions */
 	uword rom_dbs;		/* ROM database count */
 	uword ram_dbs;		/* RAM database count */
 	udword reserved1;	/* Set to 0 */
@@ -298,14 +473,11 @@ struct dlp_cardinfo_ext		/* 1.1 extension */
 	udword reserved4;	/* Set to 0 */
 };
 
-/* XXX - This probably belongs in dlp.h */
-struct dlp_dblist_header
-{
-	uword lastindex;	/* Index of last database returned */
-	ubyte flags;		/* Flags */
-	ubyte act_count;	/* Actual count of structs returned */
-};
 #define DLPCMD_DBLISTFLAG_MORE	0x80	/* There are more databases to list */
+
+#define DLPCMD_DBNAME_LEN	32	/* 31 chars + NUL (from
+					 * dmDBNameLength)
+					 */
 
 struct dlp_dbinfo
 {
@@ -320,6 +492,9 @@ struct dlp_dbinfo
 	struct dlp_time mtime;	/* Last modification time */
 	struct dlp_time baktime;	/* Last backup time */
 	uword index;		/* Database index */
+
+	char name[DLPCMD_DBNAME_LEN];
+				/* Database name, NUL-terminated */
 };
 #define DLPCMD_DBINFO_LEN	44
 
@@ -587,107 +762,217 @@ extern "C" {
 #endif	/* __cplusplus */
 
 /* DLP command functions */
-extern int DlpReadUserInfo(int fd, struct dlp_userinfo *userinfo);
-extern int DlpWriteUserInfo(int fd, const struct dlp_setuserinfo *userinfo);
-extern int DlpReadSysInfo(int fd, struct dlp_sysinfo *sysinfo);
-extern int DlpGetSysDateTime(int fd, struct dlp_time *ptime);
-extern int DlpSetSysDateTime(int fd, const struct dlp_time *ptime);
-extern int DlpReadStorageInfo(int fd, int card);	/* XXX - API */
-extern int DlpReadDBList(int fd, ubyte flags, int card, uword start); /* XXX - API */
-extern int DlpOpenDB(int fd, int card, const char *name, ubyte mode,
-		     ubyte *dbhandle);
-extern int DlpCreateDB(int fd, const struct dlp_createdbreq *newdb,
-		       ubyte *dbhandle);
-extern int DlpCloseDB(int fd, const ubyte dbhandle);
+extern int DlpReadUserInfo(
+	int fd,
+	struct dlp_userinfo *userinfo);
+extern int DlpWriteUserInfo(
+	int fd,
+	const struct dlp_setuserinfo *userinfo);
+extern int DlpReadSysInfo(
+	int fd,
+	struct dlp_sysinfo *sysinfo);
+extern int DlpGetSysDateTime(
+	int fd,
+	struct dlp_time *ptime);
+extern int DlpSetSysDateTime(
+	int fd,
+	const struct dlp_time *ptime);
+extern int DlpReadStorageInfo(		/* XXX - API */
+	int fd,
+	const ubyte card,
+	ubyte *last_card,
+	ubyte *more,
+	struct dlp_cardinfo *cinfo);
+extern int DlpReadDBList(
+	int fd,
+	const ubyte iflags,
+	const int card,
+	const uword start,
+	uword *last_index,
+	ubyte *oflags,
+	ubyte *num,
+	struct dlp_dbinfo *dbs);
+extern int DlpOpenDB(
+	int fd,
+	int card,
+	const char *name,
+	ubyte mode,
+	ubyte *dbhandle);
+extern int DlpCreateDB(
+	int fd,
+	const struct dlp_createdbreq *newdb,
+	ubyte *dbhandle);
+extern int DlpCloseDB(
+	int fd,
+	const ubyte dbhandle);
 	/* XXX - This should probably be separated into two functions:
 	 * DlpCloseDB(handle) and DlpCloseAllDBs()
 	 */
-extern int DlpDeleteDB(int fd, const int card, const char *name);
-extern int DlpReadAppBlock(int fd, struct dlp_appblock *appblock,
-			   uword *len, ubyte *data);
-extern int DlpWriteAppBlock(int fd,
-			    const struct dlp_appblock *appblock,
-			    ubyte *data);
-extern int DlpReadSortBlock(int fd, struct dlp_sortblock *sortblock,
-			    uword *len, ubyte *data);
-extern int DlpWriteSortBlock(int fd,
-			     const struct dlp_sortblock *sortblock,
-			     ubyte *data);
-extern int DlpReadNextModifiedRec(int fd, const ubyte handle,
-				  struct dlp_readrecret *record);
+extern int DlpDeleteDB(
+	int fd,
+	const int card,
+	const char *name);
+extern int DlpReadAppBlock(
+	int fd,
+	struct dlp_appblock *appblock,
+	uword *len,
+	ubyte *data);
+extern int DlpWriteAppBlock(
+	int fd,
+	const struct dlp_appblock *appblock,
+	const ubyte *data);
+extern int DlpReadSortBlock(
+	int fd,
+	struct dlp_sortblock *sortblock,
+	uword *len,
+	ubyte *data);
+extern int DlpWriteSortBlock(
+	int fd,
+	const struct dlp_sortblock *sortblock,
+	const ubyte *data);
+extern int DlpReadNextModifiedRec(
+	int fd,
+	const ubyte handle,
+	struct dlp_readrecret *record);
 /* These next two functions both use ReadRecord */
-extern int DlpReadRecordByID(int fd,
-			     const struct dlp_readrecreq_byid *req,
-			     struct dlp_readrecret *record);
-extern int DlpReadRecordByIndex(int fd,
-				const struct dlp_readrecreq_byindex *req,
-				struct dlp_readrecret *record);
-extern int DlpWriteRecord(int fd, const udword len,
-			  const struct dlp_writerec *rec,
-			  udword *recid);
-extern int DlpDeleteRecord(int fd, const ubyte dbid, const ubyte flags,
-			   const udword recid);
-extern int DlpReadResourceByIndex(int fd, const ubyte dbid, const uword index,
-				  const uword offset, const uword len,
-				  struct dlp_resource *value,
-				  ubyte *data);
-extern int DlpReadResourceByType(int fd, const ubyte dbid, const udword type,
-				 const uword id, const uword offset,
-				 const uword len,
-				 struct dlp_resource *value,
-				 ubyte *data);
-extern int DlpWriteResource(int fd, const ubyte dbid, const udword type,
-			    const uword id, const uword size,
-			    const ubyte *data);
-extern int DlpDeleteResource(int fd, const ubyte dbid, const ubyte flags,
-			     const udword type, const uword id);
-extern int DlpCleanUpDatabase(int fd, const ubyte dbid);
-extern int DlpResetSyncFlags(int fd, const ubyte dbid);
+extern int DlpReadRecordByID(
+	int fd,
+	const struct dlp_readrecreq_byid *req,
+	struct dlp_readrecret *record);
+extern int DlpReadRecordByIndex(
+	int fd,
+	const struct dlp_readrecreq_byindex *req,
+	struct dlp_readrecret *record);
+extern int DlpWriteRecord(
+	int fd,
+	const udword len,
+	const struct dlp_writerec *rec,
+	udword *recid);
+extern int DlpDeleteRecord(
+	int fd,
+	const ubyte dbid,
+	const ubyte flags,
+	const udword recid);
+extern int DlpReadResourceByIndex(
+	int fd,
+	const ubyte dbid,
+	const uword index,
+	const uword offset,
+	const uword len,
+	struct dlp_resource *value,
+	ubyte *data);
+extern int DlpReadResourceByType(
+	int fd,
+	const ubyte dbid,
+	const udword type,
+	const uword id,
+	const uword offset,
+	const uword len,
+	struct dlp_resource *value,
+	ubyte *data);
+extern int DlpWriteResource(
+	int fd,
+	const ubyte dbid,
+	const udword type,
+	const uword id,
+	const uword size,
+	const ubyte *data);
+extern int DlpDeleteResource(
+	int fd,
+	const ubyte dbid,
+	const ubyte flags,
+	const udword type,
+	const uword id);
+extern int DlpCleanUpDatabase(
+	int fd,
+	const ubyte dbid);
+extern int DlpResetSyncFlags(
+	int fd,
+	const ubyte dbid);
 /* XXX - DlpCallApplication: untested */
-extern int DlpCallApplication(int fd, const udword version,
-			      const struct dlp_appcall *appcall,
-			      const udword paramsize,
-			      const ubyte *param,
-			      struct dlp_appresult *appresult);
-extern int DlpResetSystem(int fd);
-extern int DlpAddSyncLogEntry(int fd, const char *msg);
-extern int DlpReadOpenDBInfo(int fd, ubyte handle,
-			     struct dlp_opendbinfo *dbinfo);
-extern int DlpMoveCategory(int fd, const ubyte handle,
-			   const ubyte from, const ubyte to);
+extern int DlpCallApplication(
+	int fd,
+	const udword version,
+	const struct dlp_appcall *appcall,
+	const udword paramsize,
+	const ubyte *param,
+	struct dlp_appresult *appresult);
+extern int DlpResetSystem(
+	int fd);
+extern int DlpAddSyncLogEntry(
+	int fd,
+	const char *msg);
+extern int DlpReadOpenDBInfo(
+	int fd,
+	ubyte handle,
+	struct dlp_opendbinfo *dbinfo);
+extern int DlpMoveCategory(
+	int fd,
+	const ubyte handle,
+	const ubyte from,
+	const ubyte to);
 /* XXX - DlpProcessRPC */
-extern int DlpOpenConduit(int fd);
-extern int DlpEndOfSync(int fd, const ubyte status);
-extern int DlpResetRecordIndex(int fd, const ubyte dbid);
-extern int DlpReadRecordIDList(int fd, const struct dlp_idlistreq *idreq,
-			       uword *numread,
-			       udword recids[]);
+extern int DlpOpenConduit(
+	int fd);
+extern int DlpEndOfSync(
+	int fd,
+	const ubyte status);
+extern int DlpResetRecordIndex(
+	int fd,
+	const ubyte dbid);
+extern int DlpReadRecordIDList(
+	int fd,
+	const struct dlp_idlistreq *idreq,
+	uword *numread,
+	udword recids[]);
 /* v1.1 functions */
-extern int DlpReadNextRecInCategory(int fd, const ubyte handle,
-				    const ubyte category,
-				    struct dlp_readrecret *record);
-extern int DlpReadNextModifiedRecInCategory(int fd, const ubyte handle,
-					    const ubyte category,
-					    struct dlp_readrecret *record);
+extern int DlpReadNextRecInCategory(
+	int fd,
+	const ubyte handle,
+	const ubyte category,
+	struct dlp_readrecret *record);
+extern int DlpReadNextModifiedRecInCategory(
+	int fd,
+	const ubyte handle,
+	const ubyte category,
+	struct dlp_readrecret *record);
 /* XXX - DlpReadAppPreference: untested */
-extern int DlpReadAppPreference(int fd, const udword creator, const uword id,
-				const uword len, const ubyte flags,
-				struct dlp_apppref *pref,
-				ubyte *data);
+extern int DlpReadAppPreference(
+	int fd,
+	const udword creator,
+	const uword id,
+	const uword len,
+	const ubyte flags,
+	struct dlp_apppref *pref,
+	ubyte *data);
 /* XXX - DlpWriteAppPreference: untested */
-extern int DlpWriteAppPreference(int fd, const udword creator, const uword id,
-				 const ubyte flags,
-				 const struct dlp_apppref *pref,
-				 const ubyte *data);
-extern int DlpReadNetSyncInfo(int fd, struct dlp_netsyncinfo *netsyncinfo);
+extern int DlpWriteAppPreference(
+	int fd,
+	const udword creator,
+	const uword id,
+	const ubyte flags,
+	const struct dlp_apppref *pref,
+	const ubyte *data);
+extern int DlpReadNetSyncInfo(
+	int fd,
+	struct dlp_netsyncinfo *netsyncinfo);
 extern int DlpWriteNetSyncInfo(
 	int fd,
 	const struct dlp_writenetsyncinfo *netsyncinfo);
-extern int DlpReadFeature(int fd, const udword creator, const word featurenum,
-			  udword *value);
+extern int DlpReadFeature(
+	int fd,
+	const udword creator,
+	const word featurenum,
+	udword *value);
 
 #ifdef  __cplusplus
 }
 #endif	/* __cplusplus */
 
 #endif	/* _dlp_cmd_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
