@@ -6,37 +6,36 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.3 1999-11-27 05:38:55 arensb Exp $
+ * $Id: PConnection.c,v 1.3.2.1 2000-01-24 07:38:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <termios.h>
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/PConnection.h"
-/*  #include "coldsync.h" */
+#include "src/coldsync.h"	/* XXX - Required for LISTEN_USB. This
+				 * symbol ought to be defined in a libpconn
+				 * file somewhere.
+				 */
 
-#define MISC_TRACE(n)	if (0)
-
-#if !HAVE_CFMAKERAW
-extern void cfmakeraw(struct termios *t);
-#endif	/* HAVE_CFMAKERAW */
+extern int pconn_serial_open(struct PConnection *pconn, char *fname);
+#ifdef WITH_USB
+extern int pconn_usb_open(struct PConnection *pconn, char *fname);
+#endif
 
 /* new_PConnection
  * Opens a new connection on the named port. Returns a handle to the
  * new connection, or NULL in case of error.
  */
 struct PConnection *
-new_PConnection(char *fname)
+new_PConnection(char *fname, int listenType)
 {
 	struct PConnection *pconn;	/* New connection */
-	struct termios term;
 
 	/* Allocate space for the new connection */
 	if ((pconn = (struct PConnection *) malloc(sizeof(struct PConnection)))
@@ -70,13 +69,24 @@ new_PConnection(char *fname)
 		return NULL;
 	}
 
-	/* Open the file */
-	if ((pconn->fd = open(fname, O_RDWR)) < 0)
-	{
-		fprintf(stderr, _("%s: error opening port \"%s\"\n"),
-			"new_PConnection",
-			fname);
-		perror("open");
+	switch (listenType) {
+	case LISTEN_SERIAL:
+		if (pconn_serial_open(pconn, fname) < 0) {
+			break;
+		}
+		return pconn;
+
+#ifdef WITH_USB
+	case LISTEN_USB:
+		if (pconn_usb_open(pconn, fname) < 0) {
+			break;
+		}
+		return pconn;
+
+#endif
+	default:
+		fprintf(stderr, _("%s: unknown listen type %d\n"),
+			"new_PConnection", listenType);
 		dlp_tini(pconn);
 		padp_tini(pconn);
 		slp_tini(pconn);
@@ -84,18 +94,21 @@ new_PConnection(char *fname)
 		return NULL;
 	}
 
-	/* Set up the terminal characteristics */
-	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
 
-	/* Set initial rate. 9600 bps required for handshaking */
-	cfsetispeed(&term, B9600);
-	cfsetospeed(&term, B9600);
+	/*
+	 * if we fall out of the switch by listen type, then something
+	 * has gone horribly wrong.
+	 */
 
-	cfmakeraw(&term);		/* Make it raw */
-	tcsetattr(pconn->fd, TCSANOW, &term);
-					/* Make it so */
-
-	return pconn;
+	fprintf(stderr, _("%s: error opening port \"%s\"\n"),
+		"new_PConnection",
+		fname);
+	perror("open");
+	dlp_tini(pconn);
+	padp_tini(pconn);
+	slp_tini(pconn);
+	free(pconn);
+	return NULL;
 }
 
 int
@@ -116,10 +129,9 @@ PConnClose(struct PConnection *pconn)
 	 * FreeBSD? (But only with 'xcopilot', it appears.)
 	 */
 	MISC_TRACE(4)
-		fprintf(stderr, "Calling tcdrain()\n");
-	err = tcdrain(pconn->fd);
-	if (err < 0)
-		perror("tcdrain");
+		fprintf(stderr, "Calling io_drain()\n");
+
+	(*pconn->io_drain)(pconn);
 
 	/* Clean up the DLP part of the PConnection */
 	dlp_tini(pconn);
@@ -131,7 +143,7 @@ PConnClose(struct PConnection *pconn)
 	slp_tini(pconn);
 
 	/* Close the file descriptor */
-	err = close(pconn->fd);
+	err = (*pconn->io_close)(pconn);
 
 	/* Free the PConnection */
 	free(pconn);
