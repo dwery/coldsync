@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.6 2000-09-21 15:46:03 arensb Exp $
+ * $Id: slp.c,v 1.7 2000-11-27 09:52:35 arensb Exp $
  */
 
 #include "config.h"
@@ -376,7 +376,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	if (my_crc != 0)
 	{
 		rptr = pconn->slp.crc_inbuf;
-		fprintf(stderr, _("SLP: bad CRC: expected 0x%04x, got 0x%04x\n"),
+		fprintf(stderr,
+			_("SLP: bad CRC: expected 0x%04x, got 0x%04x\n"),
 			my_crc, peek_uword(rptr));
 		goto redo;
 	}
@@ -496,6 +497,8 @@ slp_write(struct PConnection *pconn,
 		}
 		sent += err;
 	}
+	/* XXX - Would tcdrain() be a good idea here? */
+
 	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(c) >>>", crc_buf, SLP_CRC_LEN);
 
