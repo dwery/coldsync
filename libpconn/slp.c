@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.10 2000-12-17 09:52:16 arensb Exp $
+ * $Id: slp.c,v 1.11 2000-12-24 09:45:22 arensb Exp $
  */
 
 #include "config.h"
@@ -102,7 +102,7 @@ slp_tini(struct PConnection *pconn)
  * before a HotSync.
  */
 int
-slp_bind(struct PConnection *pconn, struct slp_addr *addr)
+slp_bind(struct PConnection *pconn, const struct slp_addr *addr)
 {
 	palm_errno = PALMERR_NOERR;
 
