@@ -2,14 +2,14 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.2 1999-07-12 09:12:53 arensb Exp $
+ * $Id: PConnection.c,v 1.3 1999-08-01 08:01:58 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <termios.h>
-#include "config.h"
 #include "PConnection.h"
 
 #if !HAVE_CFMAKERAW
@@ -97,6 +97,8 @@ PConnClose(struct PConnection *pconn)
 	 * ACK for the DLP EndOfSync command, and hangs until it times out,
 	 * which wastes the user's time.
 	 */
+	MISC_TRACE(4)
+		fprintf(stderr, "Calling tcdrain()\n");
 	tcdrain(pconn->fd);
 
 	/* Clean up the DLP part of the PConnection */
