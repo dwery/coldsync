@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2001-05-06 05:59:57 arensb Exp $
+# $Id: Makefile,v 1.11 2001-08-16 00:29:48 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -7,7 +7,12 @@ SUBDIR =	doc
 # into, at some point.
 TEXIFILES =	conduits.texi
 
-INFOFILES =	${TEXIFILES:.texi=.info} ${TEXIFILES:.texi=.info-*}
+INFOFILES =	${TEXIFILES:.texi=.info}
+# EXTRA_INFOFILES is split off from INFOFILES because under DU, when there
+# are no existing foo.info-* files, /bin/sh just expands the glob to the
+# string "foo.info-*". Then 'make' complains that it doesn't know how to
+# build this file.
+EXTRA_INFOFILES =	${TEXIFILES:.texi=.info-*}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
 PSFILES =	${TEXIFILES:.texi=.ps}
 PDFFILES =	${TEXIFILES:.texi=.pdf}
@@ -24,7 +29,7 @@ EXTRA_DISTFILES = \
 		${INFOFILES} \
 		${PSFILES}
 
-CLEAN =		${INFOFILES} ${DVIFILES} ${PSFILES} \
+CLEAN =		${INFOFILES} ${EXTRA_INFOFILES} ${DVIFILES} ${PSFILES} \
 		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr \
 		*.bak *~ errs errs.* \
 		*.html
@@ -39,7 +44,7 @@ install::	coldsync.8 ${INFOFILES}
 	${MKDIR} ${MAN8DIR} ${INFODIR} ${SYSCONFDIR}
 	${INSTALL_MAN} coldsync.8 ${MAN8DIR}/coldsync.8
 	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
-	@for file in ${INFOFILES}; do \
+	@for file in ${INFOFILES} ${EXTRA_INFOFILES}; do \
 		echo "${INSTALL_DATA} $${file} ${INFODIR}/$${file}"; \
 		${INSTALL_DATA} $${file} ${INFODIR}/$${file}; \
 	done
