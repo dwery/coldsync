@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.3 2000-01-22 05:09:32 arensb Exp $
+ * $Id: pdb.h,v 1.4 2000-04-10 09:28:34 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -103,8 +103,10 @@
 					 * this 'dlpRecAttrArchived'.)
 					 */
 
-typedef udword localID;			/* Local (card-relative) chunk ID */
-					/* XXX - What does this mean? */
+typedef udword localID;			/* Local (card-relative) chunk ID
+					 * (basically, a pointer that can
+					 * be used as a unique ID).
+					 */
 
 #define PDB_HEADER_LEN		72	/* Length of header in a file */
 #define PDB_RECORDLIST_LEN	6	/* Length of record index header in
