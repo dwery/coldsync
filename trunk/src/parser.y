@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.51 2001-10-18 03:50:18 arensb Exp $
+ * $Id: parser.y,v 2.52 2001-11-05 00:27:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -145,7 +145,7 @@ statement:
 	}
 	| options_stmt
 	{ PARSE_TRACE(3)
-		  fprintf(stderr, "Found a options_stmt\n");
+		  fprintf(stderr, "Found an options_stmt\n");
 	}
 	| pda_stmt
 	{ PARSE_TRACE(3)
