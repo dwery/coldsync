@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.cc,v 1.1.2.1 2001-10-09 01:41:28 arensb Exp $
+ * $Id: symboltable.cc,v 1.1.2.2 2001-10-11 03:19:48 arensb Exp $
  */
 
 #include <config.h>
@@ -17,7 +17,10 @@ extern "C" {
 #include "symboltable.h"
 }
 
-map<string,string> table;
+map<string,string> table;	/* XXX - Is this going to cause problems on
+				 * machines where the assembler or linker
+				 * can't handle identifiers of length 4096?
+				 */
 
 /* Get a symbol from the table that matches the give key.   */
 string get_symbol(const string &key) {
@@ -89,3 +92,9 @@ void symboltable_init() {
 
 */
    
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
+ */
