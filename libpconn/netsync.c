@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.23 2002-10-24 17:49:31 azummo Exp $
+ * $Id: netsync.c,v 1.24 2002-10-26 13:23:28 azummo Exp $
  */
 
 #include "config.h"
@@ -223,9 +223,6 @@ ritual_exch_server(PConnection *pconn)
 	switch (pconn->protocol)
 	{
 	    case PCONN_STACK_NET:
-/*		err = netsync_read_method(pconn, &inbuf, &inlen, False);
-		break;
-*/
 	    case PCONN_STACK_SIMPLE:
 		inlen = ritual_resp1_size;
 		err = netsync_read_method(pconn, &inbuf, &inlen, True);
