@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.7 1999-06-29 14:46:44 arensb Exp $
+ * $Id: PConnection.c,v 1.8 1999-07-04 02:52:44 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -12,7 +12,7 @@
 #include "config.h"
 #include "PConnection.h"
 
-/* XXX - These ought to go someplace else */
+/* XXX - This ought to go someplace else */
 #if !HAVE_CFMAKERAW
 extern void cfmakeraw(struct termios *t);
 #endif	/* HAVE_CFMAKERAW */
