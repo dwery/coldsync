@@ -296,7 +296,7 @@ net_udp_listen(struct PConnection *pconn,
 
 	/* Receive a datagram from a client */
   retry:
-	len = recvfrom(pconn->fd, buf, sizeof(buf), 0,
+	len = recvfrom(pconn->fd, (char *) buf, sizeof(buf), 0,
 		       (struct sockaddr *) cliaddr,
 		       cliaddr_len);
 
@@ -380,7 +380,7 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 	pkt_len = wptr - outbuf;
 
 	fprintf(stderr, "Sending acknowledgment.\n");
-	err = sendto(pconn->fd, outbuf, pkt_len, 0,
+	err = sendto(pconn->fd, (const char *) outbuf, pkt_len, 0,
 		     (struct sockaddr *) cliaddr,
 		     *cliaddr_len);
 	if (err < 0)
