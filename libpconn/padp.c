@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.20 2001-06-26 05:47:32 arensb Exp $
+ * $Id: padp.c,v 1.19 2001-04-15 04:40:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,7 +36,7 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-#include "palm.h"
+#include "pconn/palm_types.h"
 #include "pconn/palm_errno.h"
 #include "pconn/slp.h"
 #include "pconn/padp.h"

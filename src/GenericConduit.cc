@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.54 2001-06-26 05:49:50 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.53 2001-03-27 14:07:28 arensb Exp $
  */
 
 /* Note on I/O:
@@ -325,7 +325,7 @@ GenericConduit::FirstSync()
 	}
 
 	/* Download the database from the Palm to _remotedb */
-	_remotedb = download_database(_pconn, _dbinfo, dbh);
+	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
 		switch (palm_errno)
@@ -586,7 +586,7 @@ GenericConduit::SlowSync()
 	}
 
 	/* Download the entire remote database */
-	_remotedb = download_database(_pconn, _dbinfo, dbh);
+	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
 		switch (palm_errno)

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_rpc.h,v 1.4 2001-06-26 05:46:08 arensb Exp $
+ * $Id: dlp_rpc.h,v 1.3 2000-12-24 21:24:25 arensb Exp $
  *
  * Structure of an RPC-over-DLP request:
  *      +------+------+------+------+
@@ -78,7 +78,7 @@
 #ifndef _dlp_rpc_h_
 #define _dlp_rpc_h_
 
-#include "palm.h"
+#include "palm_types.h"
 #include "PConnection.h"
 
 /* Selected trap numbers. There are more traps than you can shake a stick

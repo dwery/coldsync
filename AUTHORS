@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.8 2001-06-26 05:41:19 arensb Exp $
+# $Id: AUTHORS,v 2.6.2.1 2001-06-30 07:46:59 arensb Exp $
 
 Authors and Contributors:
 
@@ -26,7 +26,7 @@ Sumant S.R. Oemrawsingh <sikander@stad.dsl.nl>: Preferences.
 Andreas J. Koenig <andreas.koenig@anima.de>: $VERSION in Perl.
 John-David Smith <jdsmith@astro.cornell.edu>: Install conduits.
 Philipp Matthias Hahn <pmhahn@titan.lahn.de>: Updated German
-	translations, various patches.
+	translation, various patches.
 Ted Faber <faber@lunabase.org>.
 Zachary P. Landau <kapheine@hypa.net>: Added -z option.
 Mark Reed <markjreed@mail.com>.

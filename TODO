@@ -1,19 +1,3 @@
-- Redo error return status in {upload,download}_database() and
-  friends, as per XXX comments.
-- Separate i18n stuff for libpconn/libpdb into separate files. Figure
-  out some way printing the appropriate messages ("coldsync" domain
-  for the main program, "libpdb" for libpdb messages, etc.)
-	dlopen() calls _init(). Can this be used?
-- Separate libpconn and libpdb into separate packages. pdb_Upload()
-  and pdb_Download() should go into the main ColdSync tree.
-	Actually, this presents a number of problems. Perhaps better
-  to just fix the Makefiles to create shared libraries and install
-  them with 'make install'.
-	Also need to fix header files so that they don't depend on
-  anything that won't be installed (e.g., "config.h").
-	Separate i18n files.
-	Where does debug_dump() go?
-- Tell conduits (esp. Sync conduits) whether this is a slow or fast sync.
 - Consider allowing database-at-a-time syncing.
   Databases (or files?) named on the command line.
 - Consider "none" database type, to specify conduits to run without an
@@ -29,6 +13,7 @@
   though not
 
 	109X7B28GC66-F|Gorko the Invincible|31337|arensb|Palm III|/folks/arensb/.coldsyncrc.test
+- Update FAQ.
 - Rethink the Dlp*() functions.
 	They return a DLPSTAT_* error code, but this makes
   error-checking rather hairy. Would it be better if they just set
@@ -149,6 +134,7 @@
   standalone mode: if it doesn't match, don't sync.
 - Bug: should be smarter about installing files: it'd be nice to make
   sure that there's enough memory.
+- Update doc/conduits.texi to talk about Install conduits.
 - Possible feature: degraded-mode NetSync: if ColdSync is supposed to
   forward a connection to another host for NetSync, but can't, it
   could go into degraded mode: do a local sync to a temporary
@@ -160,6 +146,8 @@
 - Bug: Under FreeBSD, when both Visor and Rio 600 are plugged in,
   Coldsync doesn't find the Visor correctly.
 - Add default flag to listen blocks.
+- "-r <dir> -dsync:1" should print each database as it is uploaded.
+  Ditto for "-d <dir> -dsync:1".
 - KDE korganizer just uses vCalendar format for both events and todo
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
@@ -168,6 +156,8 @@
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
+- Add robustness. Ideally, ColdSync should recover from everything
+  that's recoverable.
 - Lock files while syncing.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -198,6 +188,11 @@
   programmers ought to know about Palm formats.
 	Possibly turn 'libpalm.texi' into a couple of appendixes in
   the combined document.
+- Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
+  "System"
+	Fix: when opening a database with DlpOpenDB, if the database
+  is read-only (ROM), don't open it for writing. In fact, Backup()
+  probably shouldn't open databases read-write at all.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - FreeBSD's /bin/sh is still broken (as of 4.0):
 	echo "before"
@@ -236,11 +231,13 @@
   devices.
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
+- With BSD make, always reruns 'ar' in the library directories. Why?
+  According to 'make -dm', it seems to recognize the target as a
+  library.
 - Should variables set in .coldsyncrc be propagated to the
   environment? Should this be done as soon as they're set, or when the
   conduit is run?
-- Should send mail to the user with a report of the sync (in daemon
-  mode). Probably just add an option for this.
+- Should send mail to the user with a report of the sync.
 - Conduit for MH alias file: look for lines of the form
 	alias:	<address> Firstname Lastname
   (where the "<" and ">" are literal). If $record->{firstName} . " " .
@@ -294,6 +291,10 @@
 	Kill ColdSync with Ctrl-C. Have it send a valid cancel to the
   Palm.
 	Fill the Palm up. See what happens.
+- Rewrite the INSTALL file. In particular, cover permissions problems:
+  must be able to read/write the appropriate serial or USB device. See
+	http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
+  for Linux information.
 - Dump conduit: read all of the completed "to do" items and append
   them to a text file, thus generating a status report. Optionally
   delete and/or expunge them.
