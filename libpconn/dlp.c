@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.6 2000-09-03 05:04:22 arensb Exp $
+ * $Id: dlp.c,v 1.7 2000-12-10 21:39:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -37,7 +37,6 @@
 #include "pconn/palm_types.h"
 #include "pconn/palm_errno.h"
 #include "pconn/dlp.h"
-#include "pconn/padp.h"
 #include "pconn/util.h"
 #include "pconn/PConnection.h"
 
@@ -213,7 +212,7 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 	}
 
 	/* Send the request */
-	err = padp_write(pconn, outbuf, wptr-outbuf);
+	err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
 		free(outbuf);
@@ -241,12 +240,12 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 {
 	int i;
 	int err;
-	const ubyte *inbuf;	/* Input data (from PADP) */
+	const ubyte *inbuf;	/* Input data (from PADP or NetSync) */
 	uword inlen;		/* Length of input data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
 	/* Read the response */
-	err = padp_read(pconn, &inbuf, &inlen);
+	err = (*pconn->dlp.read)(pconn, &inbuf, &inlen);
 	if (err < 0)
 		return err;	/* Error */
 
