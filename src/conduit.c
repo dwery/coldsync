@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.16 2000-10-22 03:25:50 arensb Exp $
+ * $Id: conduit.c,v 2.17 2000-11-04 23:00:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1073,7 +1073,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	found_conduit = False;
 
 	/* Walk the queue */
-	for (conduit = config.conduits;
+	for (conduit = sync_config->conduits;
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
