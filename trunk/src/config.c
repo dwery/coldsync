@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.31 2000-06-15 07:29:04 arensb Exp $
+ * $Id: config.c,v 1.32 2000-07-06 04:04:20 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -595,22 +595,26 @@ get_config(int argc, char *argv[])
 			if (c->flavors & FLAVORFL_SYNC)
 				fprintf(stderr, " SYNC");
 			fprintf(stderr, "\n");
-			/* if (c->flavor != Sync)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Sync), but this is %d\n",
-					Sync, c->flavor); */
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
+			fprintf(stderr, "\tCreator/Types:\n");
+			for (i = 0; i < c->num_ctypes; i++)
+			{
+				register udword crea = c->ctypes[i].creator;
+				register udword type = c->ctypes[i].type;
+
+				fprintf(stderr,
+					"\t  [%c%c%c%c/%c%c%c%c] "
+					"(0x%08lx/0x%08lx)\n",
+					(char) ((crea >> 24) & 0xff),
+					(char) ((crea >> 16) & 0xff),
+					(char) ((crea >> 8) & 0xff),
+					(char) (crea & 0xff),
+					(char) ((type >> 24) & 0xff),
+					(char) ((type >> 16) & 0xff),
+					(char) ((type >> 8) & 0xff),
+					(char) (type & 0xff),
+					crea,
+					type);
+			}
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
 			if ((c->flags & CONDFL_DEFAULT) != 0)
 				fprintf(stderr, "\tDEFAULT\n");
@@ -1133,8 +1137,9 @@ new_conduit_block()
 	/* Initialize the new conduit_block */
 	retval->next = NULL;
 	retval->flavors = 0;
-	retval->dbtype = 0L;
-	retval->dbcreator = 0L;
+	retval->ctypes = NULL;
+	retval->ctypes_slots = 0;
+	retval->num_ctypes = 0;
 	retval->flags = 0;
 	retval->path = NULL;
 	retval->headers = NULL;
@@ -1166,6 +1171,10 @@ free_conduit_block(conduit_block *c)
 		next_hdr = hdr->next;
 		free(hdr);
 	}
+
+	/* Free the 'ctypes' array */
+	if (c->ctypes != NULL)
+		free(c->ctypes);
 
 	/* Free the 'pref_desc' array */
 	if (c->prefs != NULL)
@@ -1272,6 +1281,67 @@ append_pref_desc(conduit_block *cond,	/* Conduit block to add to */
 	cond->prefs[cond->num_prefs].id = id;
 	cond->prefs[cond->num_prefs].flags = flags;
 	cond->num_prefs++;
+
+	return 0;		/* Success */
+}
+
+/* append_crea_type
+ * Appends a creator/type pair to the conduit_block 'cond'.
+ * Returns 0 if successful, a negative value otherwise.
+ */
+int
+append_crea_type(conduit_block *cond,	/* Conduit block to add to */
+		 const udword creator,	/* Database creator */
+		 const udword type)	/* Database type */
+{
+	/* Is this the first creator/type pair being added? */
+	if (cond->ctypes == NULL)
+	{
+		/* Yes. Start by allocating size for 1 entry, for
+		 * starters.
+		 * (In most memory-allocation schemes of this type, one
+		 * allocates room for more than one element, but in this
+		 * case, the vast majority of conduits will only have one
+		 * element.)
+		 */
+		MISC_TRACE(7)
+			fprintf(stderr, "Allocating a new 'ctypes' array.\n");
+		if ((cond->ctypes = (crea_type_t *)
+		     calloc(4, sizeof(crea_type_t))) == NULL)
+		{
+			/* Can't allocate new array */
+			return -1;
+		}
+		cond->ctypes_slots = 4;
+
+	} else if (cond->num_ctypes >= cond->ctypes_slots)
+	{
+		crea_type_t *newctypes;
+
+		/* This is not the first creator/type pair, but the
+		 * 'ctypes' array is full and needs to be extended. Double
+		 * its length.
+		 */
+		MISC_TRACE(7)
+			fprintf(stderr, "Extending ctypes array to %d\n",
+				cond->ctypes_slots * 2);
+		if ((newctypes = (crea_type_t *)
+		     realloc(cond->ctypes, 2 * cond->ctypes_slots *
+			     sizeof(crea_type_t))) == NULL)
+		{
+			/* Can't extend array */
+			return -1;
+		}
+		cond->ctypes = newctypes;
+		cond->ctypes_slots *= 2;
+	}
+
+	/* If we get this far, then cond->ctypes is long enough to hold the
+	 * new creator/type pair. Add it.
+	 */
+	cond->ctypes[cond->num_ctypes].creator = creator;
+	cond->ctypes[cond->num_ctypes].type = type;
+	cond->num_ctypes++;
 
 	return 0;		/* Success */
 }
