@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.2 2000-06-11 06:49:28 arensb Exp $
+# $Id: sample.coldsync.rc,v 1.3 2000-07-22 04:08:07 arensb Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -17,14 +17,14 @@
 # following listen block is equivalent to the defaults:
 
 listen serial {
-	device "/dev/palm";
-	speed 38400;
+	device: "/dev/palm";
+	speed: 38400;
 }
 
 # If you're syncing a Visor over USB, use "usb" instead of "serial":
 
 listen usb {
-	device "/dev/ugen0";
+	device: "/dev/ugen0";
 }
 
 # However, if you're syncing a Visor under Linux, and using the "make
@@ -32,7 +32,7 @@ listen usb {
 # anyway:
 
 listen serial {
-	device "/dev/ttyUSB1";
+	device: "/dev/ttyUSB1";
 }
 
 ########################################
@@ -45,8 +45,8 @@ listen serial {
 # using the "directory" directive:
 
 pda "My Palm III" {
-	snum "189X7M27GA63-N";
-	directory "/home/arensb/.palmIII";
+	snum: "189X7M27GA63-N";
+	directory: "/home/arensb/.palmIII";
 }
 
 # If your Palm doesn't have a serial number in ROM (e.g., a
@@ -54,8 +54,8 @@ pda "My Palm III" {
 # one such Palm, they'll all use the same PDA block):
 
 pda "My PalmPilot Pro" {
-	snum "";
-	directory "/home/arensb/.palmPilot";
+	snum: "";
+	directory: "/home/arensb/.palmPilot";
 }
 
 # The 'default' keyword specifies that this PDA block should be used
@@ -66,18 +66,18 @@ pda "My PalmPilot Pro" {
 # /home/arensb/.allPalms .
 
 pda "My Palm III" {
-	snum "189X7M27GA63-N";
-	directory "/home/arensb/.palmIII";
+	snum: "189X7M27GA63-N";
+	directory: "/home/arensb/.palmIII";
 }
 
 pda "Default for old PalmPilots" {
-	snum "";
-	directory "/home/arensb/.palmPilot";
+	snum: "";
+	directory: "/home/arensb/.palmPilot";
 	default;
 }
 
 pda "Default for everything else" {
-	directory "/home/arensb/.allPalms";
+	directory: "/home/arensb/.allPalms";
 	default;
 }
 
@@ -104,11 +104,11 @@ pda "Default for everything else" {
 # converts the .pdb file back into text format in /home/arensb/Memos.
 
 conduit fetch, dump {
-	path "/usr/local/libexec/conduits/memo-text";
-	type memo/DATA;
+	path: "/usr/local/libexec/conduits/memo-text";
+	type: memo/DATA;
     arguments:
-	File:	/home/arensb/Memos
-	Delete: no
+	File:	/home/arensb/Memos;
+	Delete: no;
 }
 
 ## Example 2:
@@ -118,13 +118,13 @@ conduit fetch, dump {
 # "conduit2".
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/conduit1";
-	type memo/DATA;
+	path: "/usr/local/libexec/conduits/conduit1";
+	type: memo/DATA;
 }
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/conduit2";
-	type memo/DATA;
+	path: "/usr/local/libexec/conduits/conduit2";
+	type: memo/DATA;
 }
 
 ## Example 3:
@@ -140,14 +140,14 @@ conduit fetch {
 # conduit matches.
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/default-conduit";
-	type */*;
+	path: "/usr/local/libexec/conduits/default-conduit";
+	type: */*;
 	default;
 }
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/memo-text";
-	type memo/DATA;
+	path: "/usr/local/libexec/conduits/memo-text";
+	type: memo/DATA;
 }
 
 ## Example 4:
@@ -159,14 +159,14 @@ conduit fetch {
 # will run 'default-conduit' for all other databases.
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/default-conduit";
-	type */*;
+	path: "/usr/local/libexec/conduits/default-conduit";
+	type: */*;
 	default;
 }
 
 conduit fetch {
-	path "/usr/local/libexec/conduits/default-todo";
-	type todo/*;
+	path: "/usr/local/libexec/conduits/default-todo";
+	type: todo/*;
 	default;
 }
 
@@ -177,19 +177,19 @@ conduit fetch {
 # 'conduit3' will never be run.
 
 conduit dump {
-	path "/usr/local/libexec/conduits/conduit1";
-	type todo/DATA;
+	path: "/usr/local/libexec/conduits/conduit1";
+	type: todo/DATA;
 }
 
 conduit dump {
-	path "/usr/local/libexec/conduits/conduit2";
-	type todo/DATA;
+	path: "/usr/local/libexec/conduits/conduit2";
+	type: todo/DATA;
 	final;
 }
 
 conduit dump {
-	path "/usr/local/libexec/conduits/conduit3";
-	type todo/DATA;
+	path: "/usr/local/libexec/conduits/conduit3";
+	type: todo/DATA;
 }
 
 ## Example 6:
@@ -201,16 +201,16 @@ conduit dump {
 # database:
 
 conduit dump {
-	path "/usr/local/libexec/conduits/conduit1";
-	type todo/DATA;
+	path: "/usr/local/libexec/conduits/conduit1";
+	type: todo/DATA;
 }
 
 conduit dump {
-	type */*;	# Applies to all databases
+	type: */*;	# Applies to all databases
 	final;
 }
 
 conduit dump {
-	path "/usr/local/libexec/conduits/conduit2";
-	type todo/DATA;
+	path: "/usr/local/libexec/conduits/conduit2";
+	type: todo/DATA;
 }
