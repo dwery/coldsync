@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.6 2000-04-09 13:45:26 arensb Exp $
+# $Id: Make.rules.in,v 1.7 2000-05-06 11:18:16 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -18,6 +18,8 @@ exec_prefix =	@exec_prefix@
 BINDIR =	@bindir@
 SBINDIR =	@sbindir@
 LIBEXECDIR =	@libexecdir@
+# XXX - This ought to be directly configurable
+CONDUITDIR =	${LIBEXECDIR}/coldsync
 DATADIR =	@datadir@
 LOCALEDIR =	${DATADIR}/locale
 SYSCONFDIR =	@sysconfdir@
@@ -61,6 +63,7 @@ TEXI2DVI =	@TEXI2DVI@
 TEXI2HTML =	@TEXI2HTML@
 DVIPS =		@DVIPS@
 MKID =		@MKID@
+# XXX - MKDIR
 
 # I18n-related utilities
 XGETTEXT =	@XGETTEXT@
@@ -187,7 +190,8 @@ ${RECURSIVE_TARGETS}::
 	for dir in $$subdirs; do \
 		echo "$@: Entering directory \`${SUBDIR}/$$dir'"; \
 		(cd $$dir && \
-		 ${MAKE} SUBDIR="${SUBDIR}/$$dir" TOP=${TOP}/.. $@); \
+		 ${MAKE} SUBDIR="${SUBDIR}/$$dir" TOP=${TOP}/.. \
+		 	PREFIX="${PREFIX}" prefix="${prefix}" $@); \
 		echo "$@: Leaving directory \`${SUBDIR}/$$dir'"; \
 	done
 
