@@ -80,3 +80,6 @@
   it. Having the AppInfo and sort blocks give some hope of figuring
   out which category and such the record was in. Similarly, deleting a
   record from the archive doesn't affect the other records.
+- Write a utility to just dump the contents of a pdb file.
+- Add CTRACE() macro for debugging, like the *_TRACE() ones.
+- Turn the pdb stuff into its own library.

@@ -2,7 +2,7 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.1 1999-03-11 03:25:46 arensb Exp $
+ * $Id: upload.c,v 1.2 1999-03-11 10:04:43 arensb Exp $
  */
 #include <stdio.h>
 #include "pconn/PConnection.h"
@@ -20,26 +20,31 @@ int i;
 	ubyte dbh;		/* Handle for new database */
 
 fprintf(stderr, "UploadDatabase: about to upload \"%s\"\n",
-db->header.name);
-if (db->header.attributes & PDB_ATTR_RESDB)
+db->name);
+if (IS_RSRC_DB(db))
 {
-for (i = 0; i < db->reclist_header.len; i++)
+#if 0
+/* XXX - Be nice to dump this info, but this doesn't work with the new
+ * linked list-based 'struct pdb'.
+ */
+for (i = 0; i < db->numrecs; i++)
 fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 	i,
        (char) (db->rec_index.res[i].type >> 24) & 0xff,
        (char) (db->rec_index.res[i].type >> 16) & 0xff,
        (char) (db->rec_index.res[i].type >> 8) & 0xff,
        (char) db->rec_index.res[i].type & 0xff);
+#endif	/* 0 */
 }
 
 	/* Delete the database */
-	err = DlpDeleteDB(pconn, 0, db->header.name);
+	err = DlpDeleteDB(pconn, 0, db->name);
 				/* XXX - Card # shouldn't be hardcoded */
 	if ((err != DLPSTAT_NOERR) &&
 	    (err != DLPSTAT_NOTFOUND))
 	{
 		fprintf(stderr, "Can't delete \"%s\", err %d\n",
-			db->header.name, err);
+			db->name, err);
 		return -1;
 	}
 
@@ -50,45 +55,22 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 	if (err != DLPSTAT_NOERR)
 	{
 		fprintf(stderr, "Can't open conduit for \"%s\", err %d\n",
-			db->header.name, err);
+			db->name, err);
 		return -1;
 	}
 
 	/* Create the database */
-	/* XXX - If the database exists, should probably let
-	 * DlpCreateDB() fail and use DlpOpenDB(for-writing) instead.
-	 */
-	newdb.creator = db->header.creator;
-	newdb.type = db->header.type;
+	newdb.creator = db->creator;
+	newdb.type = db->type;
 	newdb.card = 0;		/* XXX - Shouldn't be hard-coded */
-	newdb.flags = db->header.attributes;
-	newdb.version = db->header.version;
-	memcpy(newdb.name, db->header.name, PDB_DBNAMELEN);
+	newdb.flags = db->attributes;
+	newdb.version = db->version;
+	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
 
 	err = DlpCreateDB(pconn, &newdb, &dbh);
-	if (err < 0)
+	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "Error creating database\n");
-		return -1;
-	}
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:
-		break;
-	    case DLPSTAT_EXISTS:
-		err = DlpOpenDB(pconn,
-				0,	/* XXX - Shouldn't be hard-coded */
-				db->header.name,
-				DLPCMD_MODE_WRITE,
-				&dbh);
-		if (err < 0)
-			fprintf(stderr, "Error in opening database \"%s\"\n",
-				db->header.name);
-		else if (err == DLPSTAT_NOERR)
-			break;
-		/* XXX - This is ugly flow control */
-	    default:
-		fprintf(stderr, "DLP error in creating database\n");
+		fprintf(stderr, "Error creating database: %d\n", err);
 		return -1;
 	}
 
@@ -112,13 +94,16 @@ fprintf(stderr, "## Writing sort block 0x%08lx\n", (long) db->sortinfo);
 			return -1;
 	}
 
-	/* XXX - DlpWriteRecord or DlpWriteResource */
-	if (db->header.attributes & PDB_ATTR_RESDB)
+#if 0
+/* XXX - Rewrite this whole section */
+	/* DlpWriteRecord or DlpWriteResource */
+	if (IS_RSRC_DB(db))
 	{
 		int i;
+		struct pdb_resource *rsrc;
 
 		/* It's a resource database */
-		for (i = 0; i < db->reclist_header.len; i++)
+		for (i = 0; i < db->numrecs; i++)
 		{
 int j;
 fprintf(stderr, "UploadDatabase: i == %d, fd == %d\n", i, pconn->fd);
@@ -181,6 +166,7 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 			}
 		}
 	}
+#endif	/* 0 */
 
 	/* Close the database */
 	err = DlpCloseDB(pconn, dbh);
