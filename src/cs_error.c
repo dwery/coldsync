@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.7 2002-10-30 19:55:00 azummo Exp $
+ * $Id: cs_error.c,v 2.8 2002-11-23 17:19:47 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -92,7 +92,7 @@ print_cs_errno(CSErrno cs_errno)
 			break;
 	
 		case CSE_PALMERR:
-			Error(_("Protocol error."));
+			Error(_("Communication error."));
 			break;
 	
 		case CSE_DLPERR:
