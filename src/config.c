@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.82 2001-11-12 05:50:26 arensb Exp $
+ * $Id: config.c,v 1.83 2001-11-19 17:14:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -481,6 +481,8 @@ load_config(const Bool read_user_config)
 
 		if (global_opts.devtype != LISTEN_NONE)
 			l->listen_type = global_opts.devtype;
+
+		l->protocol = global_opts.protocol;
 
 		/* Prepend the new listen block to the list of listen blocks */
 		l->next = sync_config->listen;
@@ -1835,6 +1837,7 @@ new_listen_block()
 	retval->protocol = PCONN_STACK_DEFAULT;
 	retval->device = NULL;
 	retval->speed = 0L;
+	retval->flags = 0;
 
 	return retval;
 }
