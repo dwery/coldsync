@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.30 2001-09-07 09:46:12 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.31 2001-09-22 09:22:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -320,6 +320,18 @@ serial_accept(PConnection *pconn)
 					  "default.\n"),
 					pconn->speed);
 				pconn->speed = 0L;
+			} else if (!speeds[speed_ix].usable)
+			{
+				/* The requested speed is faster than the
+				 * serial port can go.
+				 */
+				fprintf(stderr,
+					_("Warning: can't set the serial port "
+					  "to the speed you requested "
+					  "(%ld bps).\n"
+					  "Using default.\n"),
+					pconn->speed);
+				pconn->speed = 0L;
 			}
 		}
 
@@ -331,10 +343,30 @@ serial_accept(PConnection *pconn)
 			return -1;
 		}
 
+		IO_TRACE(3)
+			fprintf(stderr, "Speed from CMP == %ld\n",
+				newspeed);
+
 		/* Find 'tcspeed' from 'newspeed' */
 		pconn->speed = newspeed;
 		speed_ix = bps_entry(newspeed);
-		/* XXX - Error-checking */
+
+		/* Make sure this speed is valid */
+		if (speed_ix < 0)
+		{
+			fprintf(stderr,
+				_("Error: Palm suggested unknown speed %ld\n"),
+				newspeed);
+			return -1;
+		}
+		if (!speeds[speed_ix].usable)
+		{
+			fprintf(stderr,
+				_("Error: Palm suggested %ld bps, but the "
+				  "serial port can't go that fast.\n"),
+				newspeed);
+			return -1;
+		}
 		tcspeed = speeds[speed_ix].tcspeed;
 
 		/* Change the speed */
