@@ -1,8 +1,6 @@
 - Under Solaris, defining _XPG4_2 might induce standards-compliance,
   and make things happier. There's a comment in PConnection_net.c that
   says that this causes all sorts of other problems, though.
-- Document "-s" option.
-- Document "-l logfile" option.
 - With a Visor, if there's no pda{} block that matches exactly,
   ColdSync defaults to ~/.palm and username/userid from /etc/passwd.
 	This seems like the Right Thing to do for the naive user, but
@@ -18,13 +16,6 @@
   connection we can't offer. Besides, this is probably closer to what
   happens with inetd, where by the time the program is launched, inetd
   has already done most of the work of accepting the connection.
-- When a program is launched by 'inetd', its stderr is the socket.
-  This will break logging. Add a "-l <fname>" option. If <fname> is
-  "syslog", use syslog for logging. Can use snprintf() to format the
-  log message.
-	How will this break debug_dump()?
-	This will most likely make it harder to make lib{pconn,pdb}
-  standalone libraries.
 - Assume that snprintf() is available. This can be used to replace the
   various mk*fname() functions.
 - Init mode should set the NetSync host and mask, if they're set in
@@ -96,10 +87,6 @@
 - It should be possible to set the hostid in a config file. If it's
   set in /etc/coldsync.conf, then obviously it shouldn't be possible
   to override it in ~/.coldsyncrc .
-- Log for a full backup can exceed maximum size for logs. Find out
-  what this limit is (under 2311 bytes, I think. 2047?). What to do if
-  the sync log exceeds this size? Send the first N bytes? The last N
-  bytes (those most likely to contain any errors)?
 - It would be nice if add_to_log() took printf()-like arguments.
 	Reimplement this with snprintf(), now that it's always
   available.
@@ -171,13 +158,8 @@
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
-- add_to_log() should probably also use printf() syntax, for
-  convenience.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
-- Allow syslog for logging.
-- Allow copious debugging to a file, including a trace of everything
-  going back and forth. See tcpdump().
 - Lock files while syncing.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
