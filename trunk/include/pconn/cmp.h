@@ -41,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.6 2001-01-09 16:32:11 arensb Exp $
+ * $Id: cmp.h,v 1.7 2001-09-07 10:56:29 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
@@ -53,11 +53,13 @@
 #define CMP_VER_MINOR		1
 
 /* CMP message types */
-#define CMP_TYPE_WAKEUP		1	/* Wakeup packet */
-#define CMP_TYPE_INIT		2	/* Initiate communications */
-#define CMP_TYPE_ABORT		3	/* Abort communications */
-#define CMP_TYPE_EXTENDED	4	/* For future command
+typedef enum {
+	CMP_TYPE_WAKEUP		= 1,	/* Wakeup packet */
+	CMP_TYPE_INIT		= 2,	/* Initiate communications */
+	CMP_TYPE_ABORT		= 3,	/* Abort communications */
+	CMP_TYPE_EXTENDED	= 4	/* For future command
 					 * extensions */
+} cmp_pkt_t;
 
 /* CMP flags */
 /* INIT flags */
