@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.59 2000-11-24 04:51:34 arensb Exp $
+ * $Id: coldsync.c,v 1.60 2000-11-24 22:58:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -128,7 +128,8 @@ int cs_errno;			/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
 struct sync_config *sync_config = NULL;
 				/* Configuration for the current sync */
-struct pref_item *pref_cache;	/* Preference cache */
+struct pref_item *pref_cache = NULL;
+				/* Preference cache */
 
 int
 main(int argc, char *argv[])
@@ -444,6 +445,8 @@ run_mode_Standalone(int argc, char *argv[])
 		pconn = NULL;
 		return -1;
 	}
+
+	/* XXX - Check user name and ID. Make sure they match */
 
 	/* XXX - In daemon mode, presumably load_palm_config() (or
 	 * something) should tell us which user to run as. Therefore fork()
