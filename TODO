@@ -1,3 +1,8 @@
+- Bug: "-P" option doesn't get passed down to new_PConnection
+  properly, when running entirely from command line.
+- Bug: when run from /etc/ttys, the Palm might suggest a speed that
+  the serial port can't handle. But ColdSync doesn't notice this in
+  time to send back a reasonable speed.
 - Review Alessandro Zummo's SPC.pm. Add POD. Improve some of the
   identifiers.
 - Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
@@ -51,7 +56,6 @@
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
 - Perhaps initialize $CONDUIT_PATH to $PATH (from the environment).
-- Document $CONDUIT_PATH.
 - It'd be nice to add types to distinguish between bytes and letters,
   and between arrays of arbitrary data and strings of characters. This
   is for i18n and for the benefit of Japanese users and such.
@@ -260,15 +264,6 @@
   GenericConduit) to make sense in this situation.
 	Presumably this is the equivalent of a slow sync, but don't
   bother downloading the database from the Palm.
-- Combine the documentation: there's no 'libpalm' anymore, and I'm
-  probably not going to have time to maintain the documentation for
-  all of the various functions defined in
-  {slp,padp,cmp,dlp,dlp_cmd}.c, so just strip out the function
-  descriptions, and combine "libpalm.texi" with "pdb.texi" into a
-  single, more general document that describes all sorts of things
-  programmers ought to know about Palm formats.
-	Possibly turn 'libpalm.texi' into a couple of appendixes in
-  the combined document.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - FreeBSD's /bin/sh is still broken (as of 4.0):
 	echo "before"
