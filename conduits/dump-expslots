@@ -3,7 +3,7 @@
 use strict;
 
 use ColdSync;
-use ColdSync::SPC;
+use ColdSync::SPC qw( :DEFAULT :dlp_args );
 use ColdSync::SPC::ExpSlot;
 
 use Data::Dumper;
@@ -20,14 +20,25 @@ StartConduit('sync');
 
 	print "\nDumping slot(s) info..\n";
 
+	my $err;
+
 	foreach my $slot ( @{$ek->{'slots'}} )
 	{
 		my $exp = dlp_ExpSlotMediaType($slot);
 
 		print "\nSlot $slot: " . Data::Dumper->Dump( [ $exp ] );
 
-		$exp = dlp_ExpCardInfo($slot);
-		print "\n\tCard: " . Data::Dumper->Dump( [ $exp ] );
+		$err = dlp_ExpCardPresent($slot);
+
+		if ($err eq dlpRespErrNone)
+		{
+			$exp = dlp_ExpCardInfo($slot);
+			print "\n\tCard: " . Data::Dumper->Dump( [ $exp ] );
+		}
+		else
+		{
+			print "\n\tCard not present\n";
+		}
 	}
 
 	print "\n";
