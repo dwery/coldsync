@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.18 2003-01-28 12:45:27 arensb Exp $
+@c $Id: conduits.texi,v 1.19 2003-10-10 10:58:20 azummo Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -502,8 +502,10 @@ conduit was given a @code{InputDB} header, @code{StartConduit} loads the
 database into @code{$PDB}.
 
 	@code{EndConduit} takes care of cleaning up when the conduit
-finishes. For Fetch conduits, it writes @code{$PDB} to the file given by
-@code{$HEADERS@{OutputDB@}}.
+finishes. It also writes any changes in @code{$PDB} to the file given
+by @code{$HEADERS@{OutputDB@}} (in past times, it did this for
+Fetch and Sync conduits, even if there were no changes. Dump conduits
+had to write the database manually).
 
 	Starting with this template, all we need to do now is to insert
 the actual code:
@@ -618,9 +620,8 @@ the headers from standard input and stores them in the hash
 @code{InputDB} header was specified, that file will be read into the
 variable @code{$PDB}. Then it calls the flavor-specific function (in
 this case, either @code{&DoFetch} or @code{&DoDump}) to do the actual
-work of the conduit, and finally cleans up: for Fetch conduits, it
-writes the contents of @code{$PDB} to the file specified by the
-@code{OutputDB} header.
+work of the conduit, and finally cleans up: it writes any changes in
+@code{$PDB} to the file given by @code{$HEADERS@{OutputDB@}}.
 
 @menu
 * &DoFetch::                    The Fetch part of the conduit
@@ -641,13 +642,6 @@ appropriate record in the Palm database.
 sub DoFetch
 @{
         my %aliases = ();
-
-        if (!defined($PDB))
-        @{
-                $PDB = new Palm::PDB;
-                $PDB->Load($HEADERS@{"OutputDB"@}) or
-                        die "502 No input database\n";
-        @}
 
         open ALIASES, "< $PINE_ALIASES" or
                 die "Can't open $PINE_ALIASES: $!\n";
@@ -686,12 +680,6 @@ sub DoFetch
         return 1;               # Success
 @}
 @end example
-
-	The @code{InputDB} header is optional for Fetch conduits, so
-@code{$PDB} may not have been initialized. But @code{pine-aliases} does
-not create a new database from scratch; it only modifies an existing
-one. If no @code{InputDB} database was specified, we load the database
-specified by @code{OutputDB}.
 
 	The body of @code{&DoFetch} is divided into two phases: in the
 first phase, it reads the Pine alias file and builds a hash,
@@ -1494,7 +1482,7 @@ gracefully.
 	The @code{OutputDB} header specifies the full pathname to the
 database file that the conduit should use as its output. This header is
 mandatory for Sync, Fetch, and Install conduits, and is optional for
-Dump conduits.
+Dump conduits. It's almost always identical to @code{InputDB}.
 @ifhtml
 <P>
 @end ifhtml
