@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.17 2000-02-03 04:25:41 arensb Exp $
+ * $Id: config.c,v 1.18 2000-02-07 01:39:29 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,7 +46,7 @@
 
 extern struct config config;
 
-/* XXX - For debugging only */
+/* For debugging only */
 extern void debug_dump(FILE *outfile, const char *prefix,
 		       const ubyte *buf, const udword len);
 
@@ -68,6 +68,7 @@ char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
 struct userinfo userinfo;	/* Information about the Palm's owner */
 
+static int name2listen_type(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
@@ -93,11 +94,6 @@ get_maxfds(void)
  * Get the initial configuration: parse command-line arguments and load the
  * configuration file, if any.
  * For now, this assumes standalone mode, not daemon mode.
- */
-/* XXX - A lot of what load_palm_config() does belongs in here. In
- * particular, this function needs to look up the current user in order to
- * get the user's home directory in order to build the full pathname to
- * ~/.coldsyncrc.
  */
 int
 get_config(int argc, char *argv[])
@@ -256,11 +252,15 @@ get_config(int argc, char *argv[])
 		    case 't':	/* -t <device type>: Listen on port device
 				 * of type <device type>
 				 */
-			/* XXX this is ugly - ought to be able to
-			 * specify a symbolic name here, like in the
-			 * config file.
-			 */
-			devtype = atoi(optarg);	/* XXX */
+			devtype = name2listen_type(optarg);
+			if (devtype < 0)
+			{
+				fprintf(stderr,
+					_("Unknown device type: \"%s\"\n"),
+					optarg);
+				usage(argc, argv);
+				return -1;
+			}
 			break;
 
 		    case 'd':	/* -d <fac>:<n>: Debugging level */
@@ -664,14 +664,29 @@ get_config(int argc, char *argv[])
 		}
 	}
 
-	/* XXX - Get host name and address, for UserInfo and NetSyncInfo
-	 * stuff.
-	 */
-
 	if (user_config != NULL)
 		free_config(user_config);
 
 	return 0;
+}
+
+/* name2listen_type
+ * Convert the name of a listen type to its integer value. See the LISTEN_*
+ * defines in "coldsync.h".
+ */
+static int
+name2listen_type(const char *str)
+{
+	/* XXX - It'd be really nice if these strings were translatable */
+	if (strcasecmp(str, "serial") == 0)
+		return LISTEN_SERIAL;
+#if 0	/* XXX - Not implemented yet */
+	if (strcasecmp(str, "tcp") == 0)
+		return LISTEN_TCP;
+#endif	/* 0 */
+	if (strcasecmp(str, "usb") == 0)
+		return LISTEN_USB;
+	return -1;		/* None of the above */
 }
 
 int
@@ -691,10 +706,6 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 	 */
 	int err;
 	uid_t uid;		/* UID of user running 'coldsync' */
-				/* XXX - Different OSes' getuid() return
-				 * different types. Deal with this in
-				 * 'autoconf'
-				 */
 	struct passwd *pwent;	/* /etc/passwd entry for current user */
 	struct stat statbuf;	/* For checking for files and directories */
 
@@ -735,7 +746,6 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 	}
 
 	/* Construct the various directory paths */
-	/* XXX - Should the directory names be configurable? Independent? */
 	/* XXX - By default, the backup directory should be of the form
 	 * ~<user>/.palm/<palm ID>/backup or something. <palm ID> should be
 	 * the serial number for a Palm III, not sure what for others.
@@ -757,12 +767,6 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 			return -1;
 		}
 	}
-
-	/* XXX - At this point, we should read a config file in ~/.palm,
-	 * see where it says the backup, archive, install directories are,
-	 * and make sure those exist. The paths below are just overridable
-	 * defaults.
-	 */
 
 	/* ~/.palm/backup */
 	strncpy(backupdir, palmdir, MAXPATHLEN);
