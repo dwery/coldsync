@@ -1,9 +1,10 @@
 .\" coldsync.8
-.\" $Id: coldsync.8,v 1.9 2000-01-25 11:25:42 arensb Exp $
 .\" 
 .\" Copyright 1999, 2000, Andrew Arensburger.
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
+.\"
+.\" $Id: coldsync.8,v 1.10 2000-01-27 05:55:34 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -326,6 +327,49 @@ will be lost the next time you sync.
 .Pp
 For information on writing your own conduits, see
 .%T ColdSync Conduits
+.Sh WARNINGS
+.Ss The Bargle Bug
+If you've been syncing with one Palm and later upgrade to a new one, do
+.Em not
+simply sync with the new one: you will lose all of your old data.
+.Pp
+Instead, make a backup of your old Palm:
+.Dl % mkdir palm-backup
+.Dl % coldsync -b palm-backup
+Then copy the contents of
+.Pa palm-backup
+to
+.Pa ~/.palm/install ,
+and sync with the new Palm.
+.Pp
+If your old Palm has been lost or stolen and you can't make a backup, then
+copy the files from
+.Pa ~/.palm/backup
+to
+.Pa ~/.palm/install .
+This isn't as good as working from a fresh backup, but it's better
+than nothing.
+.Pp
+This behavior is not considered a bug, but rather an unfortunate side
+effect of normal behavior:
+.Nm ColdSync
+can't tell whether you've upgraded to a new Palm or simply decided to
+delete everything you had.
+.Ss Upgrades
+Every so often, Palm announces a PalmOS upgrade. Some of these
+upgrades are simple and consist of a
+.Pa .prc
+file that you need to upload. It's probably safe to apply this upgrade
+by putting the
+.Pa .prc
+file in
+.Pa ~/.palm/install
+and syncing.
+.Pp
+Other upgrades are more complex, and
+.Nm ColdSync
+can't handle them. For these, you'll need to follow Palm's
+instructions.
 .\" .Sh EXAMPLES
 .Sh FILES
 .Bl -tag -width ~/.palm/archive -compact
@@ -362,11 +406,15 @@ contents separate.
 .Nm ColdSync
 does not sync
 .Pa .prc
-files. You need to do a backup to get them.
-.Pp
-If you've been syncing with one Palm, then get a replacement and
-immediately sync with it, all of your old data will be archived. This
-is probably not what you want.
+files. It makes a backup if there is isn't one already, but that's it.
+If you upgrade from version 1.0 of an application to version 2.0,
+.Nm ColdSync
+will not back up the new version. In addition, most of the preferences
+in the Prefs application are saved in
+.Pa .prc
+files, so
+.Nm ColdSync
+does not maintain backups of them.
 .Pp
 There is as yet no tool for manipulating archive files.
 .Pp
