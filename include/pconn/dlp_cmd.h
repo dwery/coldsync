@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.1 1999-09-09 05:14:59 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.2 1999-11-10 09:04:37 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -179,9 +179,13 @@ struct dlp_setuserinfo
 				 * changed */
 	ubyte usernamelen;	/* Length of username, including NUL */
 				/* XXX - Probably better to determine from
-				 * string */
+				 * string (but what if the string isn't
+				 * terminated, for whatever reason?)
+				 */
 	char *username;		/* User name */
-				/* XXX - Should this be an array? */
+				/* XXX - This should probably be an array,
+				 * of length DLPCMD_USERNAME_LEN
+				 */
 };
 
 /* Possible values for the 'flags' field in a 'struct dlp_setuserinfo'.
