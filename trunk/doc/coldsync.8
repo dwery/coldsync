@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.39 2001-02-08 07:41:40 arensb Exp $
+.\" $Id: coldsync.8,v 1.40 2001-02-20 14:02:33 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -441,6 +441,14 @@ after the dash is the checksum. If you omit the checksum,
 .Nm ColdSync
 will calculate it for you and suggest that you add it to your
 .Pa .coldsyncrc .
+.Pp
+You may also use the special value
+.Li *Visor*
+to represent the (binary) string that all Handspring Visors return as
+their serial number. Since all Visors return the same
+.Dq serial number ,
+it is not possible to differentiate between Visors this way, but it is
+possible to distinguish a Visor from other Palms.
 .Pp
 The
 .Li directory
