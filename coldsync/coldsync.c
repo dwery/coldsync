@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.4 1999-02-24 13:22:46 arensb Exp $
+ * $Id: coldsync.c,v 1.5 1999-03-11 03:45:47 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -19,7 +19,7 @@
 #include <pconn/dlp_cmd.h>
 #include <pconn/util.h>
 #include "coldsync.h"
-#include "palm/pdb.h"
+#include "pdb.h"
 
 /* XXX - This should be defined elsewhere (e.g., in a config file). The
  * reason there are two macros here is that under Solaris, B19200 != 19200
@@ -28,9 +28,12 @@
 #define SYNC_RATE		57600
 #define BSYNC_RATE		B57600
 
-void listlocalfiles();
+extern int load_config(int argc, char *argv[]);
+extern int load_palm_config(struct Palm *palm);
+int listlocalfiles(struct PConnection *pconn);
+int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 
-struct ColdPalm palm;
+struct Palm palm;
 
 int
 main(int argc, char *argv[])
@@ -46,7 +49,12 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* XXX - Read config files */
+	/* Read config files */
+	if ((err = load_config(argc, argv)) < 0)
+	{
+		/* XXX - Clean up? */
+		exit(1);
+	}
 
 	/* XXX - In the production version (daemon), this should just set
 	 * up the serial port normally (raw, 9600 bps), then wait for it to
@@ -56,9 +64,6 @@ main(int argc, char *argv[])
 	/* XXX - Figure out fastest speed at which each serial port will
 	 * run
 	 */
-	/* XXX - Get list of local files */
-listlocalfiles();
-
 	if ((pconn = new_PConnection(argv[1])) == NULL)
 	{
 		fprintf(stderr, "Error: can't open connection.\n");
@@ -74,6 +79,24 @@ listlocalfiles();
 		exit(1);
 	}
 
+	/* Get system, NetSync and user info */
+	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, "Can't get system/user/NetSync info\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
+
+	/* Figure out which Palm we're dealing with, and load per-palm
+	 * config.
+	 */
+	if ((err = load_palm_config(&palm)) < 0)
+	{
+		fprintf(stderr, "Can't get per-Palm config.\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
+
 	if ((err = Cold_GetMemInfo(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, "Cold_GetMemInfo() returned %d\n", err);
@@ -81,12 +104,60 @@ listlocalfiles();
 		exit(1);
 	}
 
+	/* XXX - Get list of local files */
+/*  listlocalfiles(pconn); */
+
 	/* Get a list of all databases on the Palm */
 	if ((err = Cold_ListDBs(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, "Cold_ListDBs returned %d\n", err);
 		/* XXX - Clean up */
 		exit(1);
+	}
+
+	/* Print out the list of databases, for posterity */
+	/* XXX - Should do this only if debugging turned on */
+	printf("\nDatabase list:\n");
+	printf("Name                            flags type crea ver mod. num\n"
+	       "        ctime                mtime                baktime\n");
+	for (i = 0; i < palm.num_dbs; i++)
+	{
+		printf("%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
+		       PDB_DBNAMELEN,
+		       palm.dblist[i].name,
+		       palm.dblist[i].db_flags,
+		       (char) (palm.dblist[i].type >> 24),
+		       (char) (palm.dblist[i].type >> 16),
+		       (char) (palm.dblist[i].type >> 8),
+		       (char) palm.dblist[i].type,
+		       (char) (palm.dblist[i].creator >> 24),
+		       (char) (palm.dblist[i].creator >> 16),
+		       (char) (palm.dblist[i].creator >> 8),
+		       (char) palm.dblist[i].creator,
+		       palm.dblist[i].version,
+		       palm.dblist[i].modnum);
+		printf("        "
+		       "%02d:%02d:%02d %02d/%02d/%02d  "
+		       "%02d:%02d:%02d %02d/%02d/%02d  "
+		       "%02d:%02d:%02d %02d/%02d/%02d\n",
+		       palm.dblist[i].ctime.hour,
+		       palm.dblist[i].ctime.minute,
+		       palm.dblist[i].ctime.second,
+		       palm.dblist[i].ctime.day,
+		       palm.dblist[i].ctime.month,
+		       palm.dblist[i].ctime.year,
+		       palm.dblist[i].mtime.hour,
+		       palm.dblist[i].mtime.minute,
+		       palm.dblist[i].mtime.second,
+		       palm.dblist[i].mtime.day,
+		       palm.dblist[i].mtime.month,
+		       palm.dblist[i].mtime.year,
+		       palm.dblist[i].baktime.hour,
+		       palm.dblist[i].baktime.minute,
+		       palm.dblist[i].baktime.second,
+		       palm.dblist[i].baktime.day,
+		       palm.dblist[i].baktime.month,
+		       palm.dblist[i].baktime.year);
 	}
 
 	/* XXX - Figure out which conduits exist for each of the existing
@@ -111,6 +182,9 @@ listlocalfiles();
 	 * new databases now.
 	 */
 
+	/* XXX - Write updated NetSync info */
+	/* XXX - Write updated user info */
+
 	/* Finally, close the connection */
 	if ((err = Cold_Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
@@ -133,7 +207,7 @@ Cold_Connect(struct PConnection *pconn/*int fd*/,
 	int err;
 	struct slp_addr pcaddr;
 	struct cmp_packet cmpp;
-struct termios term;
+	struct termios term;
 
 	pcaddr.protocol = SLP_PKTTYPE_PAD;	/* XXX - This ought to be
 						 * part of the initial
@@ -162,27 +236,20 @@ struct termios term;
 	cmpp.type = CMP_TYPE_INIT;
 	cmpp.ver_major = 1;	/* XXX - Should be constants in header file */
 	cmpp.ver_minor = 1;
-	cmpp.rate = 0;	/* Should be able to set a different rate */
-#if 1
-cmpp.rate = SYNC_RATE;
-cmpp.flags = CMP_IFLAG_CHANGERATE;
-#endif	/* 0 */
+	cmpp.rate = SYNC_RATE;
+	cmpp.flags = CMP_IFLAG_CHANGERATE;
 	printf("===== Sending INIT packet\n");
 	cmp_write(pconn, &cmpp);
 	printf("===== Finished sending INIT packet\n");
 
-#if 1
-/* Change the speed */
-/* XXX - This probably goes in Pconn_accept() or something */
-tcgetattr(pconn->fd, &term);
-/*  fprintf(stderr, "Input speed: %d\n", cfgetispeed(&term)); */
-/*  fprintf(stderr, "Output speed: %d\n", cfgetospeed(&term)); */
-cfsetspeed(&term, BSYNC_RATE);
-tcsetattr(pconn->fd, TCSANOW, &term);
-sleep(1);		/* XXX - Why is this necessary? */
-/*  fprintf(stderr, "New input speed: %d\n", cfgetispeed(&term)); */
-/*  fprintf(stderr, "New output speed: %d\n", cfgetospeed(&term)); */
-#endif	/* 0 */
+	/* Change the speed */
+	/* XXX - This probably goes in Pconn_accept() or something */
+	tcgetattr(pconn->fd, &term);
+	cfsetspeed(&term, BSYNC_RATE);
+	tcsetattr(pconn->fd, TCSANOW, &term);
+	sleep(1);		/* XXX - Why is this necessary? (under
+				 * FreeBSD 3.0).
+				 */
 
 	return 0;
 }
@@ -213,7 +280,7 @@ Cold_Disconnect(struct PConnection *pconn/*int fd*/, const ubyte status)
  */
 int
 Cold_GetMemInfo(struct PConnection *pconn,
-		struct ColdPalm *palm)
+		struct Palm *palm)
 {
 	int err;
 	ubyte last_card;
@@ -236,6 +303,7 @@ Cold_GetMemInfo(struct PConnection *pconn,
 
 	palm->num_cards = 1;	/* XXX - Hard-wired, for the reasons above */
 
+/*
 fprintf(stderr, "===== Got memory info:\n");
 fprintf(stderr, "\tTotal size:\t%d\n", palm->cardinfo[0].totalsize);
 fprintf(stderr, "\tCard number:\t%d\n", palm->cardinfo[0].cardno);
@@ -264,10 +332,11 @@ fprintf(stderr, "\tCard name (%d) \"%s\"\n",
 fprintf(stderr, "\tManufacturer name (%d) \"%s\"\n",
 	palm->cardinfo[0].manufname_size,
 	palm->cardinfo[0].manufname);
+*/
 
 /* XXX - Check DLP version */
-fprintf(stderr, "\tROM databases: %d\n", palm->cardinfo[0].rom_dbs);
-fprintf(stderr, "\tRAM databases: %d\n", palm->cardinfo[0].ram_dbs);
+/*  fprintf(stderr, "\tROM databases: %d\n", palm->cardinfo[0].rom_dbs); */
+/*  fprintf(stderr, "\tRAM databases: %d\n", palm->cardinfo[0].ram_dbs); */
 
 	return 0;
 }
@@ -278,7 +347,7 @@ fprintf(stderr, "\tRAM databases: %d\n", palm->cardinfo[0].ram_dbs);
  * This function must be called after Cold_GetMemInfo().
  */
 int
-Cold_ListDBs(struct PConnection *pconn, struct ColdPalm *palm)
+Cold_ListDBs(struct PConnection *pconn, struct Palm *palm)
 {
 	int err;
 	int card;		/* Memory card number */
@@ -323,7 +392,6 @@ Cold_ListDBs(struct PConnection *pconn, struct ColdPalm *palm)
 		 */
 		for (i = 0; i < palm->num_dbs; i++)
 		{
-fprintf(stderr, "===== Reading DB list for card %d, start %d\n", card, start);
 			err = DlpReadDBList(pconn, iflags, card, start,
 					    &last_index, &oflags, &num,
 					    &(palm->dblist[i]));
@@ -345,26 +413,25 @@ fprintf(stderr, "===== Reading DB list for card %d, start %d\n", card, start);
 			 * the index of the database just read, plus one.
 			 */
 			start = last_index + 1;
-printf("=== Database: \"%s\"\n", palm->dblist[i].name);
 			start = last_index+1; 
-printf("\terr == %d\n", err);
-printf("\tlast_index %d, oflags 0x%02x, num %d\n",
-       last_index, oflags, num);
 		}
 	}
 
 	return 0;
 }
 
-void
-listlocalfiles()
+#if 0
+int
+listlocalfiles(struct PConnection *pconn)
 {
+	int err;
 	DIR *dir;
 	struct dirent *file;
 	char *lastdot;
+	struct pdb *db;
 char fnamebuf[MAXPATHLEN];
 
-	printf("Listing directory \"%s\"\n", INSTALL_DIR);
+printf("Listing directory \"%s\"\n", INSTALL_DIR);
 	dir = opendir(INSTALL_DIR);
 	if (dir == NULL)
 	{
@@ -372,34 +439,116 @@ char fnamebuf[MAXPATHLEN];
 		exit(1);
 	}
 
-	printf("Reading directory \"%s\"\n", INSTALL_DIR);
 	while ((file = readdir(dir)) != NULL)
 	{
-		printf("\"%s\":\n", file->d_name);
-		printf("\tfileno %d, reclen %d, type %d, namlen %d\n",
-		       file->d_fileno, file->d_reclen,
-		       file->d_type, file->d_namlen);
-
 		lastdot = strrchr(file->d_name, '.');
 		if (lastdot == NULL)
 		{
-			printf("\tThis file has no dots.\n");
 			continue;
 		}
 		if (strcasecmp(lastdot, ".pdb") == 0)
 		{
-			printf("\tThis is a PDB file\n");
+			/* Do nothing. Fall through */
 		} else if (strcasecmp(lastdot, ".prc") == 0)
 		{
-			printf("\tThis is a resource file\n");
+			/* Do nothing. Fall through */
 		} else {
 			printf("\tI don't know this file type\n");
 			continue;
 		}
 /* XXX - Possible buffer overflow */
 sprintf(fnamebuf, "%s/%s", INSTALL_DIR, file->d_name);
-LoadDatabase(fnamebuf);
+db = pdb_Read(fnamebuf);
+err = UploadDatabase(pconn, db);
+fprintf(stderr, "UploadDatabase returned %d\n", err);
+if (err != 0) return err;
 	}
+	return 0;
+}
+#endif	/* 0 */
+
+/* GetUserSysInfo
+ * Get system and user info from the Palm, and put it in 'palm'.
+ */
+int
+GetPalmInfo(struct PConnection *pconn,
+	       struct Palm *palm)
+{
+	int err;
+
+	/* Get system information about the Palm */
+	if ((err = DlpReadSysInfo(pconn, &(palm->sysinfo))) < 0)
+	{
+		fprintf(stderr, "Can't get system info\n");
+		return -1;
+	}
+printf("System info:\n");
+printf("\tROM version: 0x%08lx\n", palm->sysinfo.rom_version);
+printf("\tLocalization: 0x%08lx\n", palm->sysinfo.localization);
+printf("\tproduct ID: 0x%08lx\n", palm->sysinfo.prodID);
+
+	/* Get NetSync information from the Palm */
+	/* XXX - Need to check some stuff, first: if it's a pre-1.1 Palm,
+	 * it doesn't know about NetSync. HotSync tries to
+	 * OpenDB("NetSync"), then it tries ReadFeature('netl',0), before
+	 * calling ReadNetSyncInfo().
+	 */
+	err = DlpReadNetSyncInfo(pconn, &(palm->netsyncinfo));
+	switch (err)
+	{
+	    case DLPSTAT_NOERR:
+printf("NetSync info:\n");
+printf("\tLAN sync on: %d\n", palm->netsyncinfo.lansync_on);
+printf("\thostname: \"%s\"\n", palm->netsyncinfo.synchostname);
+printf("\thostaddr: \"%s\"\n", palm->netsyncinfo.synchostaddr);
+printf("\tnetmask: \"%s\"\n", palm->netsyncinfo.synchostnetmask);
+		break;
+	    case DLPSTAT_NOTFOUND:
+		printf("No NetSync info.\n");
+		break;
+	    default:
+		fprintf(stderr, "Error reading NetSync info\n");
+		return -1;
+	}
+
+	/* Get user information from the Palm */
+	if ((err = DlpReadUserInfo(pconn, &(palm->userinfo))) < 0)
+	{
+		fprintf(stderr, "Can't get user info\n");
+		return -1;
+	}
+printf("User info:\n");
+printf("\tUserID: 0x%08lx\n", palm->userinfo.userid);
+printf("\tViewerID: 0x%08lx\n", palm->userinfo.viewerid);
+printf("\tLast sync PC: 0x%08lx\n", palm->userinfo.lastsyncPC);
+if (palm->userinfo.lastgoodsync.year == 0)
+{
+	printf("\tLast good sync: never\n");
+} else {
+	printf("\tLast good sync: %02d:%02d:%02d %02d/%02d/%02d\n",
+	       palm->userinfo.lastgoodsync.hour,
+	       palm->userinfo.lastgoodsync.minute,
+	       palm->userinfo.lastgoodsync.second,
+	       palm->userinfo.lastgoodsync.day,
+	       palm->userinfo.lastgoodsync.month,
+	       palm->userinfo.lastgoodsync.year);
+}
+if (palm->userinfo.lastsync.year == 0)
+{
+	printf("\tLast sync attempt: never\n");
+} else {
+	printf("\tLast sync attempt: %02d:%02d:%02d %02d/%02d/%02d\n",
+	       palm->userinfo.lastsync.hour,
+	       palm->userinfo.lastsync.minute,
+	       palm->userinfo.lastsync.second,
+	       palm->userinfo.lastsync.day,
+	       palm->userinfo.lastsync.month,
+	       palm->userinfo.lastsync.year);
+}
+printf("\tUser name: \"%s\"\n", palm->userinfo.username);
+printf("\tPassword: <%d bytes>\n", palm->userinfo.passwdlen);
+
+	return 0;
 }
 
 /* This is for Emacs's benefit:
