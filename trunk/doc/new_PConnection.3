@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: new_PConnection.3,v 1.1 2001-09-05 07:29:52 arensb Exp $
+.\" $Id: new_PConnection.3,v 1.2 2001-09-07 09:42:18 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -20,7 +20,7 @@
 .Fd #include <palm.h>
 .Fd #include <pconn/pconn.h>
 .Ft PConnection *
-.Fn new_PConnection "char *device" "int listenType" "int protocol" "int promptHotSync"
+.Fn new_PConnection "char *device" "const pconn_listen_t listenType" "const pconn_proto_t protocol" "int promptHotSync"
 .Sh DESCRIPTION
 .Nm
 creates and initializes a new
