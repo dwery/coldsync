@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.7 2000-12-08 06:28:46 arensb Exp $
+ * $Id: PConnection.h,v 1.8 2000-12-10 21:25:03 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -60,6 +60,7 @@ struct PConnection
 	 */
 	int (*io_read)(struct PConnection *p, unsigned char *buf, int len);
 	int (*io_write)(struct PConnection *p, unsigned char *buf, int len);
+	int (*io_accept)(struct PConnection *p);
 	int (*io_drain)(struct PConnection *p);
 	int (*io_close)(struct PConnection *p);
 	int (*io_select)(struct PConnection *p, pconn_direction direction,
@@ -96,7 +97,39 @@ struct PConnection
 				 * dynamically resized to hold however many
 				 * arguments there are in the response.
 				 */
+
+		/* 'read' and 'write' are methods, really: they point to
+		 * functions that will read and write a DLP packet.
+		 * XXX - 'len' should probably be udword in both cases, to
+		 * support NetSync and PADP 2.x(?)
+		 */
+		int (*read)(struct PConnection *pconn,
+			    const ubyte **buf,
+			    uword *len);
+		int (*write)(struct PConnection *pconn,
+			     const ubyte *buf,
+			     uword len);
+		/* XXX - With NetSync, it looks as if the format is
+		 * slightly different: there appears to be a udword slot in
+		 * the request packet where 'errno' goes in the response;
+		 * the argc and arg length fields are both udwords.
+		 *
+		 * If NetSync can't handle traditional packets, then either
+		 * add a field here saying to use udwords everywhere (which
+		 * dlp_send_req() and dlp_recv_resp() have to look at), or
+		 * better, implement NetSync-specific versions of those
+		 * functions, and replace 'read' and 'write' above with
+		 * pointers to them (net_send_dlp_req(),
+		 * net_recv_dlp_resp()).
+		 */
 	} dlp;
+
+	/* NetSync protocol */
+	struct {
+		ubyte xid;		/* Transaction ID */
+		udword inbuf_len;	/* Current length of 'inbuf' */
+		ubyte *inbuf;		/* Buffer to hold incoming packets */
+	} net;
 
 	/* Packet Assembly/Disassembly Protocol (PADP) */
 	struct {
