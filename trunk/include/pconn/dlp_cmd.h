@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.7 2000-08-07 01:05:11 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.8 2000-11-20 09:10:38 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -177,7 +177,7 @@ struct dlp_setuserinfo
 				 * string (but what if the string isn't
 				 * terminated, for whatever reason?)
 				 */
-	char *username;		/* User name */
+	const char *username;	/* User name */
 				/* XXX - This should probably be an array,
 				 * of length DLPCMD_USERNAME_LEN
 				 */
