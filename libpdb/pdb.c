@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.38 2001-06-26 05:49:23 arensb Exp $
+ * $Id: pdb.c,v 1.39 2001-07-02 05:33:46 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -20,10 +20,6 @@
  * Add 'int pdb_errno'; define error numbers and error messages that go
  * with them.
  * Debugging messages should go to 'FILE *pdb_logfile'.
- */
-/* XXX - When the pdb_{Up,Down}load() functions get moved to the main
- * ColdSync body, will need to redo error-reporting, both in these
- * functions and in their callers (and their callers, etc.).
  */
 
 #include "config.h"
@@ -293,7 +289,9 @@ pdb_Read(int fd)
 	/* Load the record list header */
 	if ((err = pdb_LoadRecListHeader(fd, retval)) < 0)
 	{
-		fprintf(stderr, _("Can't load header.\n"));
+		fprintf(stderr, _("Can't load record list header for "
+				  "\"%.*s\".\n"),
+			PDB_DBNAMELEN, retval->name);
 		free_pdb(retval);
 		return NULL;
 	}
@@ -304,7 +302,9 @@ pdb_Read(int fd)
 		/* Read the resource index */
 		if ((err = pdb_LoadRsrcIndex(fd, retval)) < 0)
 		{
-			fprintf(stderr, _("Can't read resource index.\n"));
+			fprintf(stderr, _("Can't read resource index for "
+					  "\"%.*s\".\n"),
+				PDB_DBNAMELEN, retval->name);
 			free_pdb(retval);
 			return NULL;
 		}
@@ -312,7 +312,9 @@ pdb_Read(int fd)
 		/* Read the record index */
 		if ((err = pdb_LoadRecIndex(fd, retval)) < 0)
 		{
-			fprintf(stderr, _("Can't read record index.\n"));
+			fprintf(stderr, _("Can't read record index for "
+					  "\"%.*s\".\n"),
+				PDB_DBNAMELEN, retval->name);
 			free_pdb(retval);
 			return NULL;
 		}
@@ -327,7 +329,9 @@ pdb_Read(int fd)
 	/* Load the AppInfo block, if any */
 	if ((err = pdb_LoadAppBlock(fd, retval)) < 0)
 	{
-		fprintf(stderr, _("Can't read AppInfo block.\n"));
+		fprintf(stderr, _("Can't read AppInfo block for "
+				  "\"%.*s\".\n"),
+			PDB_DBNAMELEN, retval->name);
 		free_pdb(retval);
 		return NULL;
 	}
@@ -335,7 +339,9 @@ pdb_Read(int fd)
 	/* Load the sort block, if any */
 	if ((err = pdb_LoadSortBlock(fd, retval)) < 0)
 	{
-		fprintf(stderr, _("Can't read sort block.\n"));
+		fprintf(stderr, _("Can't read sort block for "
+				  "\"%.*s\".\n"),
+			PDB_DBNAMELEN, retval->name);
 		free_pdb(retval);
 		return NULL;
 	}
@@ -346,7 +352,9 @@ pdb_Read(int fd)
 		/* Read the resources */
 		if ((err = pdb_LoadResources(fd, retval)) < 0)
 		{
-			fprintf(stderr, _("Can't read resources.\n"));
+			fprintf(stderr, _("Can't read resources for "
+					  "\"%.*s\".\n"),
+				PDB_DBNAMELEN, retval->name);
 			free_pdb(retval);
 			return NULL;
 		}
@@ -354,7 +362,9 @@ pdb_Read(int fd)
 		/* Read the records */
 		if ((err = pdb_LoadRecords(fd, retval)) < 0)
 		{
-			fprintf(stderr, _("Can't read records.\n"));
+			fprintf(stderr, _("Can't read records for "
+					  "\"%.*s\".\n"),
+				PDB_DBNAMELEN, retval->name);
 			free_pdb(retval);
 			return NULL;
 		}
@@ -441,8 +451,10 @@ pdb_Write(const struct pdb *db,
 	/* Write the database header */
 	if (write(fd, header_buf, PDB_HEADER_LEN) != PDB_HEADER_LEN)
 	{
-		fprintf(stderr, _("%s: can't write database header.\n"),
-			"pdb_Write");
+		fprintf(stderr, _("%s: can't write database header for "
+				  "\"%.*s\".\n"),
+			"pdb_Write",
+			PDB_DBNAMELEN, db->name);
 		perror("write");
 		close(fd);
 		return -1;
@@ -459,8 +471,10 @@ pdb_Write(const struct pdb *db,
 	/* Write the record list header */
 	if (write(fd, rlheader_buf, PDB_RECORDLIST_LEN) != PDB_RECORDLIST_LEN)
 	{
-		fprintf(stderr, _("%s: can't write record list header.\n"),
-			"pdb_Write");
+		fprintf(stderr, _("%s: can't write record list header for "
+				  "\"%.*s\".\n"),
+			"pdb_Write",
+			PDB_DBNAMELEN, db->name);
 		perror("write");
 		return -1;
 	}
@@ -492,8 +506,10 @@ pdb_Write(const struct pdb *db,
 			    PDB_RESOURCEIX_LEN)
 			{
 				fprintf(stderr, _("%s: Can't write resource "
-						  "index entry.\n"),
-					"pdb_Write");
+						  "index entry for "
+						  "\"%.*s\".\n"),
+					"pdb_Write",
+					PDB_DBNAMELEN, db->name);
 				perror("write");
 				return -1;
 			}
@@ -522,8 +538,10 @@ pdb_Write(const struct pdb *db,
 			if (rec->data_len == 0)
 			{
 				fprintf(stderr,
-					_("%s record 0x%08lx has length 0.\n"),
-					db->name, rec->id);
+					_("\"%.*s\" record 0x%08lx has "
+					  "length 0.\n"),
+					PDB_DBNAMELEN, db->name,
+					rec->id);
 			}
 
 			put_udword(&wptr, offset);
@@ -539,8 +557,10 @@ pdb_Write(const struct pdb *db,
 			    PDB_RECORDIX_LEN)
 			{
 				fprintf(stderr, _("%s: Can't write record "
-						  "index entry.\n"),
-					"pdb_Write");
+						  "index entry for "
+						  "\"%.*s\".\n"),
+					"pdb_Write",
+					PDB_DBNAMELEN, db->name);
 				perror("write");
 				return -1;
 			}
@@ -556,8 +576,10 @@ pdb_Write(const struct pdb *db,
 	nul_buf[0] = nul_buf[1] = '\0';
 	if (write(fd, nul_buf, 2) != 2)
 	{
-		fprintf(stderr, _("%s: Can't write the two useless NULs.\n"),
-			"pdb_Write");
+		fprintf(stderr, _("%s: Can't write the two useless NULs to "
+				  "\"%.*s\".\n"),
+			"pdb_Write",
+			PDB_DBNAMELEN, db->name);
 		perror("write");
 		return -1;
 	}
@@ -568,8 +590,10 @@ pdb_Write(const struct pdb *db,
 		if (write(fd, db->appinfo, db->appinfo_len) !=
 		    db->appinfo_len)
 		{
-			fprintf(stderr, _("%s: Can't write AppInfo block.\n"),
-				"pdb_Write");
+			fprintf(stderr, _("%s: Can't write AppInfo block for "
+					  "\"%.*s\".\n"),
+				"pdb_Write",
+				PDB_DBNAMELEN, db->name);
 			perror("write");
 			return -1;
 		}
@@ -581,8 +605,10 @@ pdb_Write(const struct pdb *db,
 		if (write(fd, db->sortinfo, db->sortinfo_len) !=
 		    db->sortinfo_len)
 		{
-			fprintf(stderr, _("%s: Can't write sort block.\n"),
-				"pdb_Write");
+			fprintf(stderr, _("%s: Can't write sort block for "
+					  "\"%.*s\".\n"),
+				"pdb_Write",
+				PDB_DBNAMELEN, db->name);
 			perror("write");
 			return -1;
 		}
@@ -606,8 +632,9 @@ pdb_Write(const struct pdb *db,
 			    rsrc->data_len)
 			{
 				fprintf(stderr, _("%s: Can't write resource "
-						  "data.\n"),
-					"pdb_Write");
+						  "data for \"%.*s\".\n"),
+					"pdb_Write",
+					PDB_DBNAMELEN, db->name);
 				perror("write");
 				return -1;
 			}
@@ -624,8 +651,10 @@ pdb_Write(const struct pdb *db,
 			    rec->data_len)
 			{
 				fprintf(stderr,
-					_("%s: Can't write record data.\n"),
-					"pdb_Write");
+					_("%s: Can't write record data for "
+					  "\"%.*s\".\n"),
+					"pdb_Write",
+					PDB_DBNAMELEN, db->name);
 				perror("write");
 				return -1;
 			}
@@ -1068,8 +1097,10 @@ struct pdb_record *pdb_CopyRecord(
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rec->data_len)) == NULL)
 	{
-		fprintf(stderr, _("%s: can't allocate record data.\n"),
-			"pdb_CopyRecord");
+		fprintf(stderr, _("%s: can't allocate record data for "
+				  "\"%.*s\".\n"),
+			"pdb_CopyRecord",
+			PDB_DBNAMELEN, db->name);
 		free(retval);
 		return NULL;
 	}
@@ -1112,8 +1143,10 @@ struct pdb_resource *pdb_CopyResource(
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 	{
-		fprintf(stderr, _("%s: can't allocate resource data.\n"),
-			"pdb_CopyResource");
+		fprintf(stderr, _("%s: can't allocate resource data for "
+				  "\"%.*s\".\n"),
+			"pdb_CopyResource",
+			PDB_DBNAMELEN, db->name);
 		free(retval);
 		return NULL;
 	}
@@ -1419,8 +1452,10 @@ pdb_LoadRecIndex(int fd,
 		    PDB_RECORDIX_LEN)
 		{
 			fprintf(stderr, _("%s: error reading record index "
-					  "entry (%d bytes): %d.\n"),
+					  "entry for \"%.*s\" (%d bytes): "
+					  "%d.\n"),
 				"LoadRecIndex",
+				PDB_DBNAMELEN, db->name,
 				PDB_RECORDIX_LEN,
 				err);
 			perror("read");
@@ -1536,10 +1571,12 @@ pdb_LoadAppBlock(int fd,
 		if (offset > db->appinfo_offset)
 		{
 			/* Oops! We're in the wrong place */
-			fprintf(stderr, _("Warning: AppInfo block isn't where "
-					  "I thought it would be.\n"
+			fprintf(stderr, _("Warning: AppInfo block in \"%.*s\" "
+					  "isn't where I thought it would "
+					  "be.\n"
 					  "Expected 0x%lx, but we're at "
 					  "0x%lx.\n"),
+				PDB_DBNAMELEN, db->name,
 				db->appinfo_offset, (long) offset);
 		}
 
@@ -1550,7 +1587,9 @@ pdb_LoadAppBlock(int fd,
 		if (offset < 0)
 		{
 			/* Something's wrong */
-			fprintf(stderr, _("Can't find the AppInfo block!\n"));
+			fprintf(stderr, _("Can't find the AppInfo block in "
+					  "\"%.*s\"!\n"),
+				PDB_DBNAMELEN, db->name);
 			return -1;
 		}
 	}
@@ -1645,10 +1684,12 @@ pdb_LoadSortBlock(int fd,
 		if (offset > db->sortinfo_offset)
 		{
 			/* Oops! We're in the wrong place */
-			fprintf(stderr, _("Warning: sort block isn't where I "
-					  "thought it would be.\n"
+			fprintf(stderr, _("Warning: sort block in \"%.*s\" "
+					  "isn't where I thought it would "
+					  "be.\n"
 					  "Expected 0x%lx, but we're at "
 					  "0x%lx.\n"),
+				PDB_DBNAMELEN, db->name,
 				db->sortinfo_offset, (long) offset);
 		}
 
@@ -1659,7 +1700,9 @@ pdb_LoadSortBlock(int fd,
 		if (offset < 0)
 		{
 			/* Something's wrong */
-			fprintf(stderr, _("Can't find the sort block!\n"));
+			fprintf(stderr, _("Can't find the sort block in "
+					  "\"%.*s\"!\n"),	
+				PDB_DBNAMELEN, db->name);
 			return -1;
 		}
 	}
@@ -1704,8 +1747,9 @@ pdb_LoadResources(int fd,
 		if (rsrc == NULL)
 		{
 			fprintf(stderr, _("Hey! I can't find the %dth "
-					  "resource!\n"),
-				i);
+					  "resource in \"%.*s\"!\n"),
+				i,
+				PDB_DBNAMELEN, db->name);
 			return -1;
 		}
 
@@ -1730,12 +1774,13 @@ pdb_LoadResources(int fd,
 		{
 			if (offset > rsrc->offset)
 			{
-				fprintf(stderr, _("Warning: resource %d isn't "
-						  "where I thought it would "
-						  "be.\n"
+				fprintf(stderr, _("Warning: resource %d in "
+						  "\"%.*s\" isn't where "
+						  "I thought it would be.\n"
 						  "Expected 0x%lx, but we're "
 						  "at 0x%lx.\n"),
 					i,
+					PDB_DBNAMELEN, db->name,
 					rsrc->offset, (long) offset);
 			}
 
@@ -1747,8 +1792,10 @@ pdb_LoadResources(int fd,
 			if (offset < 0)
 			{
 				/* Something's wrong */
-				fprintf(stderr, _("Can't find resource %d.\n"),
-					i);
+				fprintf(stderr, _("Can't find resource %d in "
+						  "\"%.*s\".\n"),
+					i,
+					PDB_DBNAMELEN, db->name);
 				return -1;
 			}
 		}
@@ -1793,7 +1840,10 @@ pdb_LoadResources(int fd,
 		if ((err = read(fd, rsrc->data, rsrc->data_len)) !=
 		    rsrc->data_len)
 		{
-			fprintf(stderr, _("Can't read resource %d.\n"), i);
+			fprintf(stderr, _("Can't read resource %d in "
+					  "\"%.*s\".\n"),
+				i,
+				PDB_DBNAMELEN, db->name);
 			perror("pdb_LoadResources: read");
 			return -1;
 		}
@@ -1835,8 +1885,9 @@ pdb_LoadRecords(int fd,
 		if (rec == NULL)
 		{
 			fprintf(stderr, _("Hey! I can't find the %dth "
-					  "record!\n"),
-				i);
+					  "record in \"%.*s\"!\n"),
+				i,
+				PDB_DBNAMELEN, db->name);
 			return -1;
 		}
 
@@ -1856,12 +1907,13 @@ pdb_LoadRecords(int fd,
 		{
 			if (offset > rec->offset)
 			{
-				fprintf(stderr, _("Warning: record %d isn't "
-						  "where I thought it would "
-						  "be.\n"
+				fprintf(stderr, _("Warning: record %d in "
+						  "\"%.*s\" isn't where "
+						  "I thought it would be.\n"
 						  "Expected 0x%lx, but we're "
 						  "at 0x%lx.\n"),
 					i,
+					PDB_DBNAMELEN, db->name,
 					rec->offset, (long) offset);
 			}
 
@@ -1872,8 +1924,10 @@ pdb_LoadRecords(int fd,
 			if (offset < 0)
 			{
 				/* Something's wrong */
-				fprintf(stderr, _("Can't find record %d.\n"),
-					i);
+				fprintf(stderr, _("Can't find record %d in "
+						  "\"%.*s\".\n"),
+					i,
+					PDB_DBNAMELEN, db->name);
 				return -1;
 			}
 		}
@@ -1927,8 +1981,10 @@ pdb_LoadRecords(int fd,
 			if ((err = read(fd, rec->data, rec->data_len)) !=
 			    rec->data_len)
 			{
-				fprintf(stderr, _("Can't read record %d.\n"),
-					i);
+				fprintf(stderr, _("Can't read record %d in "
+						  "\"%.*s\".\n"),
+					i,
+					PDB_DBNAMELEN, db->name);
 				perror("pdb_LoadRecords: read");
 				return -1;
 			}
