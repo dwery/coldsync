@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.5 1999-11-04 10:51:06 arensb Exp $
+ * $Id: conduit.c,v 1.6 1999-11-09 04:10:18 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -343,23 +343,27 @@ run_Fetch_conduits(struct Palm *palm,
 {
 	conduit_block *conduit;
 
-	fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
-		dbinfo->name);
+	SYNC_TRACE(2)
+		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
+			dbinfo->name);
 
 	for (conduit = config.fetch_q;
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
-		fprintf(stderr, "Trying conduit...\n");
+		SYNC_TRACE(3)
+			fprintf(stderr, "Trying conduit...\n");
 
 		/* See if the creator matches */
 		if ((conduit->dbcreator != 0) &&
 		    (conduit->dbcreator != dbinfo->creator))
 		{
-			fprintf(stderr, "  Creator: database is 0x%08lx, "
-				"conduit is 0x%08lx. Not applicable.\n",
-				dbinfo->creator,
-				conduit->dbcreator);
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"  Creator: database is 0x%08lx, "
+					"conduit is 0x%08lx. Not applicable.\n",
+					dbinfo->creator,
+					conduit->dbcreator);
 			continue;
 		}
 
@@ -367,17 +371,20 @@ run_Fetch_conduits(struct Palm *palm,
 		if ((conduit->dbtype != 0) &&
 		    (conduit->dbtype != dbinfo->type))
 		{
-			fprintf(stderr, "  Type: database is 0x%08lx, "
-				"conduit is 0x%08lx. Not applicable.\n",
-				dbinfo->type,
-				conduit->dbtype);
+			SYNC_TRACE(5)
+				fprintf(stderr, "  Type: database is 0x%08lx, "
+					"conduit is 0x%08lx. Not applicable.\n",
+					dbinfo->type,
+					conduit->dbtype);
 			continue;
 		}
 
 		/* This conduit matches */
-		fprintf(stderr, "  This conduit matches. "
-			"I ought to run \"%s\"\n",
-			(conduit->path == NULL ? "(null)" : conduit->path));
+		SYNC_TRACE(2)
+			fprintf(stderr, "  This conduit matches. "
+				"I ought to run \"%s\"\n",
+				(conduit->path == NULL ? "(null)" :
+				 conduit->path));
 	}
 
 	return 0;		/* XXX */
@@ -393,23 +400,26 @@ run_Dump_conduits(struct Palm *palm,
 {
 	conduit_block *conduit;
 
-	fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
-		dbinfo->name);
+	SYNC_TRACE(2)
+		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
+			dbinfo->name);
 
 	for (conduit = config.dump_q;
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
+		SYNC_TRACE(3)
 		fprintf(stderr, "Trying conduit...\n");
 
 		/* See if the creator matches */
 		if ((conduit->dbcreator != 0) &&
 		    (conduit->dbcreator != dbinfo->creator))
 		{
-			fprintf(stderr, "  Creator: database is 0x%08lx, "
-				"conduit is 0x%08lx. Not applicable.\n",
-				dbinfo->creator,
-				conduit->dbcreator);
+			SYNC_TRACE(5)
+				fprintf(stderr, "  Creator: database is 0x%08lx, "
+					"conduit is 0x%08lx. Not applicable.\n",
+					dbinfo->creator,
+					conduit->dbcreator);
 			continue;
 		}
 
@@ -417,17 +427,20 @@ run_Dump_conduits(struct Palm *palm,
 		if ((conduit->dbtype != 0) &&
 		    (conduit->dbtype != dbinfo->type))
 		{
-			fprintf(stderr, "  Type: database is 0x%08lx, "
-				"conduit is 0x%08lx. Not applicable.\n",
-				dbinfo->type,
-				conduit->dbtype);
+			SYNC_TRACE(5)
+				fprintf(stderr, "  Type: database is 0x%08lx, "
+					"conduit is 0x%08lx. Not applicable.\n",
+					dbinfo->type,
+					conduit->dbtype);
 			continue;
 		}
 
 		/* This conduit matches */
-		fprintf(stderr, "  This conduit matches. "
-			"I ought to run \"%s\"\n",
-			(conduit->path == NULL ? "(null)" : conduit->path));
+		SYNC_TRACE(2)
+			fprintf(stderr, "  This conduit matches. "
+				"I ought to run \"%s\"\n",
+				(conduit->path == NULL ? "(null)" :
+				 conduit->path));
 	}
 
 	return 0;		/* XXX */
