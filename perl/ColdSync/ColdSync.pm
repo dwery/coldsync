@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.8 2000-08-09 15:37:09 arensb Exp $
+# $Id: ColdSync.pm,v 1.8.2.1 2000-08-31 15:31:47 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.8 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.8.2.1 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -55,7 +55,7 @@ use Exporter;
 use Palm::PDB;
 
 @ISA = qw( Exporter );
-@EXPORT = qw( $PDB %HEADERS @HEADERS
+@EXPORT = qw( $PDB %HEADERS @HEADERS %PREFERENCES
 		ConduitMain StartConduit EndConduit );
 
 =head1 VARIABLES
@@ -83,6 +83,13 @@ Holds the list of header lines passed in on STDIN, in the order in
 which they were seen. This can be useful if your conduit allows
 multiple headers, or if the order in which the headers were received
 matters.
+
+=item %PREFERENCES
+Holds the preferences passed on STDIN. Actually, the keys of this
+hash are the creators of the preference items. Their values are again
+hashes of which the keys are the id's and the values the actual
+raw preference item. Thus $PREFERENCES{'creator'}{'id'} will contain
+the raw preference item from 'creator' with 'id' as identifier.
 
 =cut
 
@@ -241,12 +248,26 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
+	my(@preflist,$len,$i);		# Makes getting preferences easier
 	while (<STDIN>)
 	{
 		chomp;
 		last if $_ eq "";	# Empty line is end of headers
 
 		push @HEADERS, $_;
+
+		# Get the preference
+		if(/^Preference: (\w\w\w\w)\/(\d+)\/(\d+)/)
+		{
+			# We temporarily save the length in the hash. Later
+			# on, we'll read the raw data from stdin.
+			$PREFERENCES{$1}{$2} = $3;
+
+			# The list is required so we know the order in which
+			# the items were specified.
+			push(@preflist,\$PREFERENCES{$1}{$2});
+			next;
+		}
 
 		# Get the header
 		if (/^([-\w]+): (.*)/)
@@ -257,6 +278,19 @@ sub ReadHeaders
 
 		# This isn't a valid line
 		die "401 Invalid input: [$_]";
+	}
+
+	# Now read all the raw preference items from STDIN
+	# They are being read in the same order as the items were specified
+	# XXX What happens if somehow less data is written to stdout?
+	# If we believe perlfunc, read is like fread so will simply read
+	# as much as possible, but less if not enough is provided, so that
+	# the conduit won't hang here, waiting for input. Not tested yet,
+	# however...
+	for($i = 0;$i < $#preflist; $i++)
+	{
+		$len = ${$preflist[$i]};
+		read(STDIN,${$preflist[$i]},$len);
 	}
 
 	# Make sure all of the mandatory headers are there.
