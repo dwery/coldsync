@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.19 2000-05-06 11:39:54 arensb Exp $
+ * $Id: conduit.c,v 1.20 2000-05-21 07:59:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -29,9 +29,9 @@
 					 * under AIX */
 #endif	/* HAVE_SYS_SELECT_H */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>			/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 /* Bleah. AIX doesn't have WCOREDUMP */
 #ifndef WCOREDUMP

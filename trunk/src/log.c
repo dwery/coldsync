@@ -6,16 +6,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.15 2000-04-10 06:13:39 arensb Exp $
+ * $Id: log.c,v 1.16 2000-05-21 08:00:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "coldsync.h"
 

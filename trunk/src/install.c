@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.12 2000-05-06 11:43:39 arensb Exp $
+ * $Id: install.c,v 2.13 2000-05-21 08:00:05 arensb Exp $
  */
 
 #include "config.h"
@@ -38,9 +38,9 @@
 #  include <strings.h>		/* For strcasecmp() under AIX */
 #endif	/* HAVE_STRINGS_H */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */

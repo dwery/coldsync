@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.4 2000-03-14 06:35:23 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.5 2000-05-21 07:58:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -15,9 +15,9 @@
 #include <fcntl.h>
 #include <termios.h>
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
 

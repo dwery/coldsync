@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.29 2000-05-19 12:11:03 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.30 2000-05-21 07:59:33 arensb Exp $
  */
 
 /* Note on I/O:
@@ -48,10 +48,10 @@ extern "C" {
 #include <unistd.h>
 
 /* Include I18N-related stuff, if necessary */
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <locale.h>		/* For setlocale() and friends */
 #  include <libintl.h>
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "cs_error.h"

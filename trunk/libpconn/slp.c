@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.4 2000-01-25 11:25:53 arensb Exp $
+ * $Id: slp.c,v 1.5 2000-05-21 07:59:19 arensb Exp $
  */
 
 #include "config.h"
@@ -17,9 +17,9 @@
 #include <stdlib.h>	/* For malloc(), realloc() */
 #include <string.h>	/* For memset() */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/palm_errno.h"
 #include "pconn/slp.h"

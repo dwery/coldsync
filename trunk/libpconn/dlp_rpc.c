@@ -8,15 +8,15 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.1 2000-04-09 14:16:45 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.2 2000-05-21 07:59:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
 #include "pconn/util.h"

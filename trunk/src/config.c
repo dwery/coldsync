@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.24 2000-05-20 22:44:32 arensb Exp $
+ * $Id: config.c,v 1.25 2000-05-21 07:59:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -21,9 +21,9 @@
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "coldsync.h"
 #include "pconn/pconn.h"

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.23 2000-05-11 16:56:00 arensb Exp $
+ * $Id: pdb.c,v 1.24 2000-05-21 07:59:26 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -40,9 +40,9 @@
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "pdb.h"

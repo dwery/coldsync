@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.8 2000-03-14 07:08:32 arensb Exp $
+ * $Id: restore.c,v 2.9 2000-05-21 08:00:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -37,9 +37,9 @@
 # endif
 #endif
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "pdb.h"

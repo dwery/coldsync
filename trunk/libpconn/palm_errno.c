@@ -6,15 +6,15 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.3 2000-02-06 22:27:07 arensb Exp $
+ * $Id: palm_errno.c,v 1.4 2000-05-21 07:59:15 arensb Exp $
  */
 #include "config.h"
 
 /* Include I18N-related stuff, if necessary */
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <locale.h>		/* For setlocale() and friends */
 #  include <libintl.h>
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include <pconn/palm_errno.h>
 

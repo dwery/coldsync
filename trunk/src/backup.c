@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.11 2000-01-27 05:21:33 arensb Exp $
+ * $Id: backup.c,v 2.12 2000-05-21 07:59:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -15,9 +15,9 @@
 #include <string.h>		/* For strncpy(), strncat() */
 #include <ctype.h>		/* For isprint() */
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "pdb.h"
