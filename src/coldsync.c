@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.3 1999-07-12 11:35:30 arensb Exp $
+ * $Id: coldsync.c,v 1.4 1999-07-14 12:28:12 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), atoi() */
@@ -118,25 +118,25 @@ main(int argc, char *argv[])
 	MISC_TRACE(2)
 	{
 		fprintf(stderr, "Options:\n");
-		fprintf(stderr, "do_backup: %s\n",
+		fprintf(stderr, "\tdo_backup: %s\n",
 			global_opts.do_backup ? "True" : "False");
-		fprintf(stderr, "backupdir: \"%s\"\n",
+		fprintf(stderr, "\tbackupdir: \"%s\"\n",
 			global_opts.backupdir);
-		fprintf(stderr, "do_restore: %s\n",
+		fprintf(stderr, "\tdo_restore: %s\n",
 			global_opts.do_restore ? "True" : "False");
-		fprintf(stderr, "restoredir: \"%s\"\n",
+		fprintf(stderr, "\trestoredir: \"%s\"\n",
 			global_opts.restoredir);
-		fprintf(stderr, "force_slow: %s\n",
+		fprintf(stderr, "\tforce_slow: %s\n",
 			global_opts.force_slow ? "True" : "False");
-		fprintf(stderr, "force_fast: %s\n",
+		fprintf(stderr, "\tforce_fast: %s\n",
 			global_opts.force_fast ? "True" : "False");
-		fprintf(stderr, "port: \"%s\"\n",
+		fprintf(stderr, "\tport: \"%s\"\n",
 			global_opts.port);
-		fprintf(stderr, "username: \"%s\"\n",
+		fprintf(stderr, "\tusername: \"%s\"\n",
 			global_opts.username);
-		fprintf(stderr, "username: %d\n",
+		fprintf(stderr, "\tusername: %d\n",
 			global_opts.uid);
-		fprintf(stderr, "check_ROM: %s\n",
+		fprintf(stderr, "\tcheck_ROM: %s\n",
 			global_opts.check_ROM ? "True" : "False");
 	}
 
@@ -1184,20 +1184,20 @@ set_debug_level(const char *str)
 		lvl = 1;
 	}
 
-	/* Set the appropriate debugging facility */
-	if (strncasecmp(str, "slp", 3) == 0)
+	/* Set the appropriate debugging facility. */
+	if (strncasecmp(str, "slp:", 4) == 0)
 		debug.slp = lvl;
-	else if (strncasecmp(str, "cmp", 3) == 0)
+	else if (strncasecmp(str, "cmp:", 4) == 0)
 		debug.cmp = lvl;
-	else if (strncasecmp(str, "padp", 4) == 0)
+	else if (strncasecmp(str, "padp:", 5) == 0)
 		debug.padp = lvl;
-	else if (strncasecmp(str, "dlp", 3) == 0)
-		debug.dlp = lvl;
-	else if (strncasecmp(str, "dlpc", 4) == 0)
+	else if (strncasecmp(str, "dlpc:", 5) == 0)
 		debug.dlpc = lvl;
-	else if (strncasecmp(str, "sync", 4) == 0)
+	else if (strncasecmp(str, "dlp:", 4) == 0)
+		debug.dlp = lvl;
+	else if (strncasecmp(str, "sync:", 5) == 0)
 		debug.sync = lvl;
-	else if (strncasecmp(str, "misc", 4) == 0)
+	else if (strncasecmp(str, "misc:", 5) == 0)
 		debug.misc = lvl;
 	else {
 		fprintf(stderr, "Unknown facility \"%s\"\n", str);
@@ -1212,14 +1212,14 @@ usage(int argc, char *argv[])
 {
 	printf("Usage: %s [options] -p port\n"
 	       "Options:\n"
-	       "\t-u <user|uid>:\tRun under the given UID.\n"
+	       "\t-h:\t\tPrint this help message and exit.\n"
+	       "\t-V:\t\tPrint version and exit.\n"
+/*  	       "\t-u <user|uid>:\tRun under the given UID.\n" */
 	       "\t-b <dir>:\tPerform a backup to <dir>.\n"
 	       "\t-r <dir>:\tRestore from <dir>.\n"
 	       "\t-S:\t\tForce slow sync.\n"
 	       "\t-F:\t\tForce fast sync.\n"
 	       "\t-R:\t\tCheck ROM databases.\n"
-	       "\t-h:\t\tPrint this help message and exit.\n"
-	       "\t-v:\t\tPrint version and exit.\n"
 	       "\t-p <port>:\tListen on device <port>\n"
 	       "\t-d <fac[:level]>:\tSet debugging level.\n"
 	       ,
@@ -1236,6 +1236,10 @@ print_version(void)
 	       /* These two strings are defined in "config.h" */
 	       PACKAGE,
 	       VERSION);
+	/* XXX - Ought to print out other information, e.g., copyright,
+	 * compile-time flags, optional packages, maybe OS name and
+	 * version, who compiled it and when, etc.
+	 */
 }
 
 /* This is for Emacs's benefit:
