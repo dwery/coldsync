@@ -7,6 +7,16 @@
   odds are you won't be able to easily find it and fix it next week;
   certainly no one else will.
 
+- Priorities: when you're deciding how to implement such-and-such
+  feature, remember that the cardinal sin in syncing is loss of data:
+  whatever you do, don't delete anything unless there's a backup
+  somewhere, or you're certain that it isn't needed.
+	The next issue is that things should be optimized for the
+  user. In particular, try to minimize total sync time. If you have to
+  choose between allocating a few Mb of memory for a cache, or making
+  the user wait another second for a sync to complete, choose the
+  former. Waiting is boring.
+
 - As much as possible, if you add something, try to make it optional.
   E.g., KDE and Gnome support would be cool, but not everyone is
   running KDE or Gnome, so don't assume that they are available.
