@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.16 2002-04-27 18:36:31 azummo Exp $
+ * $Id: dlp.c,v 1.17 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -62,7 +62,8 @@ dlp_init(PConnection *pconn)
 		return -1;
 	}
 	pconn->dlp.argv_len = DLP_DEFAULT_ARGV_LEN;
-
+	pconn->dlp.resp.error = DLPSTAT_NOERR;
+	
 	return 0;
 }
 
@@ -406,6 +407,7 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 		/* Get a response */
 		err = dlp_recv_resp(pconn, header->id,
 				    resp_header, ret_argv);
+
 		if (err < 0)
 		{
 			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT2)
@@ -417,6 +419,13 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 					pconn->palm_errno);
 			return err;		/* Some other error */
 		}
+
+		/* Save the header */
+		memcpy(&pconn->dlp.resp, resp_header, sizeof(struct dlp_resp_header));
+
+		/* Invoke the io_complete callback, if present */
+		if (pconn->dlp.io_complete)
+			(*pconn->dlp.io_complete)(pconn);
 
 		DLP_TRACE(2)
 			fprintf(stderr,
@@ -434,6 +443,44 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 	PConn_set_palmerrno(pconn, PALMERR_TIMEOUT);
 	PConn_set_status(pconn, PCONNSTAT_LOST);
 	return -1;
+}
+
+const char *
+dlp_strerror(const dlp_stat_t err)
+{
+        /* This is implemented as a switch statement and not as an array
+         * lookup in order to allow the compiler to make sure that all
+         * error codes have an error message.
+         */
+
+	switch (err)
+	{
+		case DLPSTAT_NOERR:		return N_("No error");
+		case DLPSTAT_SYSTEM:		return N_("General Palm system error");
+		case DLPSTAT_ILLEGALREQ:	return N_("Unknown request ID");
+		case DLPSTAT_NOMEM:		return N_("Insufficient memory");
+		case DLPSTAT_PARAM:		return N_("Invalid parameter");  
+		case DLPSTAT_NOTFOUND:		return N_("Database/record/resource/whatever not found");
+		case DLPSTAT_NONEOPEN:		return N_("There are no open databases");
+		case DLPSTAT_DBOPEN:		return N_("Database is open by someone else");
+		case DLPSTAT_TOOMANYOPEN:	return N_("Too many open databases");
+		case DLPSTAT_EXISTS:		return N_("Database already exists");
+		case DLPSTAT_CANTOPEN:		return N_("Can't open database");
+		case DLPSTAT_RECDELETED:	return N_("Record is deleted");  
+		case DLPSTAT_RECBUSY:		return N_("Record is busy");     
+		case DLPSTAT_UNSUPP:		return N_("Requested operation is not supported on the given database type");
+		case DLPSTAT_UNUSED1:		return N_("You do not have write access; or database is in ROM (Unused error code?)");
+		case DLPSTAT_READONLY:		return N_("You do not have write access; or database is in ROM");
+		case DLPSTAT_SPACE:		return N_("Not enough space for record/resource/whatever");
+		case DLPSTAT_LIMIT:		return N_("Size limit exceeded");
+		case DLPSTAT_CANCEL:		return N_("Cancel request received");
+		case DLPSTAT_BADWRAP:		return N_("Bad arg wrapper");
+		case DLPSTAT_NOARG:		return N_("Required argument not found");
+		case DLPSTAT_ARGSIZE:		return N_("Invalid argument size");
+	}
+
+	/* This should never be reached */
+	return N_("Unknown error");
 }
 
 /* This is for Emacs's benefit:

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.61 2002-05-04 21:23:49 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.62 2002-08-31 19:26:03 azummo Exp $
  */
 
 /* Note on I/O:
@@ -148,7 +148,7 @@ GenericConduit::run()
 				_dbinfo->name);
 		return 0; 
 	}
-	SYNC_TRACE(4)
+	SYNC_TRACE(5)
 		fprintf(stderr, "\"%s\" is not a ROM database, or else "
 			"I'm not ignoring it.\n",
 			_dbinfo->name);
@@ -254,10 +254,8 @@ GenericConduit::FirstSync()
 				"by user\n");
 		va_add_to_log(_pconn, "%s %s - %s\n",
 			      _dbinfo->name, _("(1st)"), _("Cancelled"));
-		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
-		update_cs_errno_p(_pconn);
 
 		SYNC_TRACE(4)
 		{
@@ -305,12 +303,10 @@ GenericConduit::FirstSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		update_cs_errno_p(_pconn);
-
-		Error(_("%s: Can't open \"%s\": %d."),
+		Error(_("%s: Can't open \"%s\"."),
 		      "GenericConduit::FirstSync",
-		      _dbinfo->name,
-		      err);
+		      _dbinfo->name);
+		print_latest_dlp_error(_pconn);
 		va_add_to_log(_pconn, "%s %s - %s\n",
 			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
@@ -320,8 +316,6 @@ GenericConduit::FirstSync()
 	_remotedb = download_database(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
-		update_cs_errno_p(_pconn);
-
 		Error(_("pdb_Download() failed."));
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
 		va_add_to_log(_pconn, "%s %s - %s\n",
@@ -419,10 +413,9 @@ GenericConduit::FirstSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
-			update_cs_errno_p(_pconn);
-
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
+			print_latest_dlp_error(_pconn);
 			err = DlpCloseDB(_pconn, dbh);
 			va_add_to_log(_pconn, "%s %s - %s\n",
 				      _dbinfo->name, _("(1st)"), _("Error"));
@@ -444,7 +437,7 @@ GenericConduit::FirstSync()
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
 
-			update_cs_errno_p(_pconn);
+			print_latest_dlp_error(_pconn);
 
 			if (PConn_isonline(_pconn))
 			{
@@ -493,11 +486,8 @@ GenericConduit::SlowSync()
 				"by user\n");
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Cancelled"));
-		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
-		update_cs_errno_p(_pconn);
-
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
@@ -534,6 +524,7 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
+		print_latest_dlp_error(_pconn);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -541,11 +532,10 @@ GenericConduit::SlowSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		update_cs_errno_p(_pconn);
-
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
+		print_latest_dlp_error(_pconn);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -555,8 +545,6 @@ GenericConduit::SlowSync()
 	_remotedb = download_database(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
-		update_cs_errno_p(_pconn);
-
 		Error(_("%s: Can't download \"%s\"."),
 		      "GenericConduit", _dbinfo->name);
 		DlpCloseDB(_pconn, dbh);
@@ -828,11 +816,10 @@ GenericConduit::SlowSync()
 					     &newID);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
+				print_latest_dlp_error(_pconn);
 				return -1;
 			}
 
@@ -863,6 +850,9 @@ GenericConduit::SlowSync()
 		}
 	}
 
+	/* Make sure we update modnum */
+	_localdb->modnum = _dbinfo->modnum;
+
 	/* Write the local database to the backup file */
 	err = this->write_backup(_localdb);
 	if (err < 0)
@@ -881,10 +871,9 @@ GenericConduit::SlowSync()
 	err = DlpCleanUpDatabase(_pconn, dbh);
 	if (err != static_cast<int>(DLPSTAT_NOERR))
 	{
-		update_cs_errno_p(_pconn);
-
 		Error(_("%s: Can't clean up database: %d."),
 		      "GenericConduit", err);
+		print_latest_dlp_error(_pconn);
 		err = DlpCloseDB(_pconn, dbh);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
@@ -905,7 +894,7 @@ GenericConduit::SlowSync()
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
 
-			update_cs_errno_p(_pconn);
+			print_latest_dlp_error(_pconn);
 
 			if (PConn_isonline(_pconn))
 			{
@@ -952,11 +941,8 @@ GenericConduit::FastSync()
 				"by user\n");
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Cancelled"));
-		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
-		update_cs_errno_p(_pconn);
-
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
@@ -991,6 +977,7 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
+		print_latest_dlp_error(_pconn);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -998,11 +985,10 @@ GenericConduit::FastSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		update_cs_errno_p(_pconn);
-
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
+		print_latest_dlp_error(_pconn);
 		va_add_to_log(_pconn, "%s - %s\n",
 			      _dbinfo->name, _("Error"));
 		return -1;
@@ -1195,12 +1181,11 @@ GenericConduit::FastSync()
 				"GenericConduit: no more modified records.\n");
 		break;
 	    default:
-		update_cs_errno_p(_pconn);
-
 		SYNC_TRACE(6)
 			fprintf(stderr, "GenericConduit: "
 				"DlpReadNextModifiedRec returned %d\n",
 				err);
+		print_latest_dlp_error(_pconn);
 		DlpCloseDB(_pconn, dbh);
 
 		this->close_archive();
@@ -1254,8 +1239,6 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -1291,8 +1274,6 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -1305,6 +1286,7 @@ GenericConduit::FastSync()
 					"0x%08lx: %d."),
 				      "FastSync",
 				      localrec->id, err);
+				print_latest_dlp_error(_pconn);
 				continue;
 			}
 		} else if (DIRTY(localrec))
@@ -1329,11 +1311,10 @@ GenericConduit::FastSync()
 					     &newID);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
+				print_latest_dlp_error(_pconn);
 				return -1;
 			}
 
@@ -1356,6 +1337,9 @@ GenericConduit::FastSync()
 					localrec->id);
 		}
 	}
+
+	/* Make sure we update modnum */
+	_localdb->modnum = _dbinfo->modnum;
 
 	/* Write the local database to the backup file */
 	err = this->write_backup(_localdb);
@@ -1381,10 +1365,9 @@ GenericConduit::FastSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != static_cast<int>(DLPSTAT_NOERR))
 		{
-			update_cs_errno_p(_pconn);
-
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
+			print_latest_dlp_error(_pconn);
 			err = DlpCloseDB(_pconn, dbh);
 			va_add_to_log(_pconn, "%s - %s\n",
 				      _dbinfo->name, _("Error"));
@@ -1406,8 +1389,7 @@ GenericConduit::FastSync()
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
 
-			update_cs_errno_p(_pconn);
-
+			print_latest_dlp_error(_pconn);
 
 			if (PConn_isonline(_pconn))
 			{
@@ -1517,8 +1499,6 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -1534,6 +1514,8 @@ GenericConduit::SyncRecord(
 				       "record 0x%08lx: %d."),
 				     "SlowSync",
 				     remoterec->id, err);
+
+				print_latest_dlp_error(_pconn);
 			}
 
 			/* Delete localrec */
@@ -1566,8 +1548,6 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -1582,6 +1562,8 @@ GenericConduit::SyncRecord(
 				       "record 0x%08lx: %d."),
 				     "SlowSync",
 				     remoterec->id, err);
+
+				print_latest_dlp_error(_pconn);
 			}
 
 			/* Delete localrec */
@@ -1622,11 +1604,12 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
+
+				print_latest_dlp_error(_pconn);
+
 				return -1;
 			}
 
@@ -1721,8 +1704,6 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -1738,6 +1719,8 @@ GenericConduit::SyncRecord(
 				       "record 0x%08lx: %d."),
 				     "SlowSync",
 				     remoterec->id, err);
+
+				print_latest_dlp_error(_pconn);
 			}
 
 			CLEAR_STATUS_FLAGS(localrec);
@@ -1757,11 +1740,11 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
+
+				print_latest_dlp_error(_pconn);
 				return -1;
 			}
 
@@ -1912,11 +1895,10 @@ GenericConduit::SyncRecord(
 						     &newID);
 				if (err != static_cast<int>(DLPSTAT_NOERR))
 				{
-					update_cs_errno_p(_pconn);
-
 					Error(_("Error uploading record "
-						"0x%08lx: %d."),
-					      localrec->id, err);
+						"0x%08lx."),
+					      localrec->id);
+					print_latest_dlp_error(_pconn);
 					return -1;
 				}
 
@@ -2051,8 +2033,6 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -2068,6 +2048,9 @@ GenericConduit::SyncRecord(
 				       "record 0x%08lx: %d."),
 				     "SlowSync",
 				     remoterec->id, err);
+
+				print_latest_dlp_error(_pconn);
+
 			}
 
 		} else if (EXPUNGED(localrec))
@@ -2092,8 +2075,6 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				if (!PConn_isonline(_pconn))
 				{
 					Error(_("%s: Lost connection to "
@@ -2108,6 +2089,8 @@ GenericConduit::SyncRecord(
 				       "record 0x%08lx: %d."),
 				     "SlowSync",
 				     remoterec->id, err);
+
+				print_latest_dlp_error(_pconn);
 			}
 
 		} else if (DIRTY(localrec))
@@ -2133,11 +2116,11 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != static_cast<int>(DLPSTAT_NOERR))
 			{
-				update_cs_errno_p(_pconn);
-
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
+
+				print_latest_dlp_error(_pconn);
 				return -1;
 			}
 

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.56 2002-05-31 13:59:30 azummo Exp $
+ * $Id: conduit.c,v 2.57 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -69,11 +69,11 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
 					 */
 
-static int run_conduits(const struct dlp_dbinfo *dbinfo,
+static int run_conduits(struct Palm *palm,
+			const struct dlp_dbinfo *dbinfo,
 			char *flavor,
 			unsigned short flavor_mask,
 			const Bool with_spc,
-			PConnection *pconn,
 			pda_block *pda);
 static const char *find_in_path(const char *conduit);
 static pid_t spawn_conduit(const char *path,
@@ -162,7 +162,7 @@ block_sigchld(sigset_t *sigmask)
 {
 	sigset_t new_sigmask;
 
-	SYNC_TRACE(7)
+	CONDUIT_TRACE(7)
 		fprintf(stderr, "Blocking SIGCHLD.\n");
 	sigemptyset(&new_sigmask);
 	sigaddset(&new_sigmask, SIGCHLD);
@@ -178,7 +178,7 @@ block_sigchld(sigset_t *sigmask)
 static INLINE void
 unblock_sigchld(const sigset_t *old_sigmask)
 {
-	SYNC_TRACE(7)
+	CONDUIT_TRACE(7)
 		fprintf(stderr, "Unblocking SIGCHLD.\n");
 	sigprocmask(SIG_SETMASK, old_sigmask, NULL);
 }
@@ -247,14 +247,14 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 					 * headers */
 
 static int
-run_conduit(const struct dlp_dbinfo *dbinfo,
-					/* The database to sync */
-	    char *flavor,		/* Name of the flavor */
-	    unsigned short flavor_mask,	/* Mask of the flavor */
-	    conduit_block *conduit,	/* Conduit to be run */
-	    const Bool with_spc,	/* Allow SPC calls? */
-	    PConnection *pconn,		/* Connection to Palm */
-	    pda_block *pda)
+run_conduit(struct Palm *palm,
+
+		const struct dlp_dbinfo *dbinfo,	/* The database to sync */
+		char *flavor,				/* Name of the flavor */
+		unsigned short flavor_mask,		/* Mask of the flavor */
+		conduit_block *conduit,			/* Conduit to be run */
+		const Bool with_spc,			/* Allow SPC calls? */
+		pda_block *pda)
 {
 	int err;
 	int i;
@@ -337,7 +337,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * for an abort condition.
 		 */
 		/* XXX - Check for the abort condition ;) */
-		DlpOpenConduit(pconn);
+		DlpOpenConduit(palm_pconn(palm));
 
 
 		/* Set up a pair of pipes for talking SPC with the child */
@@ -358,7 +358,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 
 		spc_state = SPC_Read_Header;	/* Next thing to do */
 
-		SYNC_TRACE(6)
+		CONDUIT_TRACE(6)
 		{
 			fprintf(stderr, "spcpipe == (%d, %d)\n",
 				spcpipe[0], spcpipe[1]);
@@ -396,7 +396,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	/* Before all the jumping stuff, make sure the pref_list is
 	 * allocated.
 	 */
-	SYNC_TRACE(6)
+	CONDUIT_TRACE(6)
 		fprintf(stderr, "run_conduit: %d prefs in this conduit\n",
 			conduit->num_prefs);
 	if (conduit->num_prefs > 0)
@@ -419,7 +419,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * This implies that it's okay to call setjmp() multiple
 		 * times with the same jump buffer.
 		 */
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(6)
 			fprintf(stderr, "Returned from sigsetjmp(): %d\n",
 				err);
 		canjump = 0;
@@ -467,6 +467,25 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	headers[last_header].name = "Version";
 	headers[last_header].value = VERSION;
 
+	++last_header;
+	headers[last_header].name = "PDA-Snum";
+	headers[last_header].value = (char *) palm_serial(palm);
+
+	++last_header;
+	headers[last_header].name = "PDA-Username";
+	headers[last_header].value = (char *) palm_username(palm);
+
+	if (pda)
+	{
+		++last_header;
+		headers[last_header].name = "PDA-Directory";
+		headers[last_header].value = pda->directory;
+
+		++last_header;
+		headers[last_header].name = "PDA-Default";
+		headers[last_header].value = (pda->flags & PDAFL_DEFAULT) ? "1" : "0";
+	}
+
 	if (dbinfo)
 	{
 		/* Construct the input filename to pass to the conduit. For install
@@ -504,7 +523,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * list and if necessary, download it
 		 */
 
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr,
 				"run_conduit: sending preference %d: "
 				"0x%08lx/%d\n",
@@ -518,7 +537,8 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			switch (cs_errno)
 			{
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
+			    case CSE_CANCEL:
+			    	/* print_cs_errno(cs_errno); */
 				break;
 			    default:
 				Error(_("Can't get preference item."));
@@ -585,6 +605,10 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				 */
 		int len;	/* How many bytes of 'bufp' to write */
 
+		/* Skip if the header value is NULL */
+		if (hdr->value == NULL)
+			continue;
+
 		/* Create the header line. Make sure that the entire line
 		 * is no more than COND_MAXLINELEN characters in length
 		 * (not counting the \n at the end), and that the header
@@ -607,7 +631,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			/* An error occurred. I don't think we care at this
 			 * point.
 			 */
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				Perror("poll_fd");
 		} else if (err > 0)
 		{
@@ -623,14 +647,14 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		/* Okay, now that the child has nothing to say, we can send
 		 * it the current header.
 		 */
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, ">>> %s: %s\n",
 				hdr->name,
 				hdr->value);
 
 		while (len > 0)
 		{
-			SYNC_TRACE(7)
+			CONDUIT_TRACE(7)
 				fprintf(stderr, "writing chunk [%s] (%d)\n",
 					bufp, len);
 			err = write(fileno(tochild), bufp, len);
@@ -717,7 +741,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * but doesn't make the user wait forever.
 		 */
 		err = select(max_fd+1, &in_fds, &out_fds, NULL, NULL);
-		SYNC_TRACE(7)
+		CONDUIT_TRACE(7)
 			fprintf(stderr,
 				"run_conduit: select() returned %d\n",
 				err);
@@ -750,7 +774,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 */
 		if (FD_ISSET(fileno(fromchild), &in_fds))
 		{
-			SYNC_TRACE(4)
+			CONDUIT_TRACE(4)
 				fprintf(stderr,
 					"Child has printed to stdout.\n");
 
@@ -758,7 +782,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			err = cond_readstatus(fromchild);
 			unblock_sigchld(&sigmask);
 
-			SYNC_TRACE(2)
+			CONDUIT_TRACE(2)
 				fprintf(stderr,
 					"run_conduit: got status %d\n",
 					err);
@@ -820,7 +844,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			spc_req.len = ntohl(
 				* ((unsigned long *) (spc_header+4)));
 
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				fprintf(stderr,
 					"SPC request OP == %d, "
 					"len == %ld\n",
@@ -886,7 +910,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			 */
 			block_sigchld(&sigmask);
 			err = spc_send(&spc_req,
-				       pconn,
+				       palm_pconn(palm),
 				       dbinfo,
 				       spc_inbuf,
 				       (unsigned char **) &spc_outbuf);
@@ -938,7 +962,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			/* Need to send the SPC response header */
 			static unsigned char spc_header[SPC_HEADER_LEN];
 
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				fprintf(stderr,
 					"Sending SPC response OP == %d, "
 					"status == %d, "
@@ -985,7 +1009,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 
 			if (spc_towrite > 0)
 			{
-				SYNC_TRACE(6)
+				CONDUIT_TRACE(5)
 					fprintf(stderr, "Sending SPC data\n");
 
 				/* Send the next chunk */
@@ -1040,7 +1064,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		if (err < 0)
 		{
 			/* An error occurred. I don't think we care */
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				Perror("select");
 			break;
 		}
@@ -1060,11 +1084,11 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	/* Restore previous SIGCHLD handler */
 	signal(SIGCHLD, old_sigchld);
 
-	SYNC_TRACE(4)
+	CONDUIT_TRACE(6)
 		fprintf(stderr, "Closing child's file descriptors.\n");
 	if (tochild != NULL)
 	{
-		SYNC_TRACE(7)
+		CONDUIT_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n", fileno(tochild));
 		fpurge(tochild);	/* Just drop whatever may be
 					 * lingering in the file handle, in
@@ -1075,7 +1099,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	}
 	if (fromchild != NULL)
 	{
-		SYNC_TRACE(7)
+		CONDUIT_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n",
 				fileno(fromchild));
 		fpurge(fromchild);	/* Just drop whatever may be
@@ -1099,14 +1123,14 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
  * Returns 0 if successful, or a negative value in case of error.
  */
 static int
-run_conduits(const struct dlp_dbinfo *dbinfo,
-	     char *flavor,		/* Dump flavor: will be sent to
+run_conduits(struct Palm *palm,
+		const struct dlp_dbinfo *dbinfo,
+		char *flavor,		/* Dump flavor: will be sent to
 					 * conduit.
 					 */
-	     unsigned short flavor_mask,
-	     const Bool with_spc,	/* Allow SPC calls? */
-	     PConnection *pconn,	/* Connection to Palm */
-	     pda_block *pda)
+		unsigned short flavor_mask,
+		const Bool with_spc,	/* Allow SPC calls? */
+		pda_block *pda)
 {
 	int err;
 	conduit_block *conduit;
@@ -1145,7 +1169,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
-		SYNC_TRACE(3)
+		CONDUIT_TRACE(3)
 			fprintf(stderr, "Trying conduit %s...\n",
 				(conduit->path == NULL ? "(null)" :
 				 conduit->path));
@@ -1153,7 +1177,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		/* See if the flavor matches */
 		if ((conduit->flavors & flavor_mask) == 0)
 		{
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				fprintf(stderr, "  Flavor set 0x%02x doesn't "
 					"match %#x\n\t=>Not applicable.\n",
 					conduit->flavors,
@@ -1167,7 +1191,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				       type,
 				       flags))
 		{
-			SYNC_TRACE(5)
+			CONDUIT_TRACE(5)
 				fprintf(stderr,
 					"  Creator/Type doesn't match\n"
 					"\t=>Not applicable.\n");
@@ -1175,7 +1199,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		}
 
 		/* This conduit matches */
-		SYNC_TRACE(2)
+		CONDUIT_TRACE(2)
 			fprintf(stderr, "  This conduit matches. "
 				"Running \"%s\"\n",
 				(conduit->path == NULL ? "(null)" :
@@ -1183,7 +1207,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 
 		if (conduit->flags & CONDFL_DEFAULT)
 		{
-			SYNC_TRACE(2)
+			CONDUIT_TRACE(3)
 				fprintf(stderr, "  This is a default conduit. "
 					"Remembering for later.\n");
 
@@ -1199,8 +1223,8 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		/* See if it's a built-in conduit */
 		if ((builtin = findConduitByName(conduit->path)) == NULL)
 			/* It's an external program. Run it */
-			err = run_conduit(dbinfo, flavor, flavor_mask,
-					  conduit, with_spc, pconn, pda);
+			err = run_conduit(palm, dbinfo, flavor, flavor_mask,
+					  conduit, with_spc, pda);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1214,7 +1238,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				continue;
 			}
 
-			err = (*builtin->func)(pconn, dbinfo, conduit, pda);
+			err = (*builtin->func)(palm_pconn(palm), dbinfo, conduit, pda);
 		}
 
 		/* Error-checking */
@@ -1223,11 +1247,10 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			switch (cs_errno)
 			{
 			    case CSE_CANCEL:
-				Error(_("Cancelled by Palm."));
-				return -1;
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm. Aborting."));
+			    	/* print_cs_errno(cs_errno); */
 				return -1;
+
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
@@ -1240,7 +1263,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		/* If this is a final conduit, don't look any further. */
 		if (conduit->flags & CONDFL_FINAL)
 		{
-			SYNC_TRACE(2)
+			CONDUIT_TRACE(3)
 				fprintf(stderr, "  This is a final conduit. "
 					"Not looking any further.\n");
 
@@ -1254,14 +1277,14 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		 * Run it now. The default conduit is run only on "real"
 		 * (i.e. no "none") databases.
 		 */
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "Running default conduit\n");
 
 		/* See if it's a built-in conduit */
 		if ((builtin = findConduitByName(def_conduit->path)) == NULL)
 			/* It's an external program. Run it */
-			err = run_conduit(dbinfo, flavor, flavor_mask,
-					  def_conduit, with_spc, pconn, pda);
+			err = run_conduit(palm, dbinfo, flavor, flavor_mask,
+					  def_conduit, with_spc, pda);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1275,7 +1298,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				return -1;
 			}
 
-			err = (*builtin->func)(pconn, dbinfo, def_conduit, pda);
+			err = (*builtin->func)(palm_pconn(palm), dbinfo, def_conduit, pda);
 		}
 
 		/* Error-checking */
@@ -1284,11 +1307,10 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			switch (cs_errno)
 			{
 			    case CSE_CANCEL:
-				Error(_("Cancelled by Palm."));
-				return -1;
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm. Aborting."));
+			    	/* print_cs_errno(cs_errno); */
 				return -1;
+
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
@@ -1307,9 +1329,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
  * applicable for the database 'dbinfo'.
  */
 int
-run_Fetch_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
+run_Fetch_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
-	SYNC_TRACE(1)
+	CONDUIT_TRACE(1)
 		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
 			dbinfo != NULL ? dbinfo->name : "(none)");
 
@@ -1320,7 +1342,7 @@ run_Fetch_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False, NULL, pda);
+	return run_conduits(palm, dbinfo, "fetch", FLAVORFL_FETCH, False, pda);
 }
 
 /* run_Dump_conduits
@@ -1334,9 +1356,9 @@ run_Fetch_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
  * it.
  */
 int
-run_Dump_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
+run_Dump_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
-	SYNC_TRACE(1)
+	CONDUIT_TRACE(1)
 		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
 			dbinfo != NULL ? dbinfo->name : "(none)");
 
@@ -1347,7 +1369,7 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False, NULL, pda);
+	return run_conduits(palm, dbinfo, "dump", FLAVORFL_DUMP, False, pda);
 }
 
 /* run_Sync_conduits
@@ -1355,10 +1377,10 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
  * applicable for the database 'dbinfo'.
  */
 int
-run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
-		  PConnection *pconn, pda_block *pda)
+run_Sync_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo,
+		  pda_block *pda)
 {
-	SYNC_TRACE(1)
+	CONDUIT_TRACE(1)
 		fprintf(stderr, "Running sync conduits for \"%s\".\n",
 			dbinfo != NULL ? dbinfo->name : "(none)");
 
@@ -1369,7 +1391,7 @@ run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn, pda);
+	return run_conduits(palm, dbinfo, "sync", FLAVORFL_SYNC, True, pda);
 }
 
 /* run_Install_conduits 
@@ -1377,13 +1399,13 @@ run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
  * whichever ones are applicable for that database.
  */
 int
-run_Install_conduits(struct dlp_dbinfo *dbinfo, pda_block *pda)
+run_Install_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
-	SYNC_TRACE(1)
+	CONDUIT_TRACE(1)
 		fprintf(stderr, "Running install conduits for \"%s\".\n",
 			dbinfo != NULL ? dbinfo->name : "(none)");
 
-	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL, pda);
+	return run_conduits(palm, dbinfo, "install", FLAVORFL_INSTALL, False, pda);
 }
 
 /* find_in_path
@@ -1415,7 +1437,7 @@ find_in_path(const char *conduit)
 	 */
 	if (strchr(conduit, '/') != NULL)
 	{
-		SYNC_TRACE(3)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "find_in_path: returning [%s]\n",
 				conduit);
 		return conduit;
@@ -1423,7 +1445,7 @@ find_in_path(const char *conduit)
 
 	path = get_symbol("CONDUIT_PATH");
 	conduitdir = get_symbol("CONDUITDIR");
-	SYNC_TRACE(4)
+	CONDUIT_TRACE(4)
 	{
 		fprintf(stderr, "find_in_path: $CONDUIT_PATH == [%s]\n",
 			path);
@@ -1434,13 +1456,13 @@ find_in_path(const char *conduit)
 	/* If $CONDUIT_PATH is empty, try $CONDUITDIR */
 	if ((path == NULL) || (path[0] == '\0'))
 	{
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "find_in_path: no $CONDUIT_PATH\n");
 		/* Empty or unset $CONDUIT_PATH. */
 		if ((conduitdir == NULL) || (conduitdir[0] == '\0'))
 		{
 			/* Empty or unset $CONDUITDIR. */
-			SYNC_TRACE(4)
+			CONDUIT_TRACE(4)
 				fprintf(stderr, "find_in_path: no "
 					"$CONDUITDIR, either. Returning "
 					"NULL\n");
@@ -1449,7 +1471,7 @@ find_in_path(const char *conduit)
 		snprintf(buf, MAXPATHLEN, "%s/%s", conduitdir, conduit);
 		if (access(buf, X_OK) == 0)
 		{
-			SYNC_TRACE(3)
+			CONDUIT_TRACE(3)
 				fprintf(stderr, "find_in_path: returning "
 					"[%s]\n",
 					buf);
@@ -1458,7 +1480,7 @@ find_in_path(const char *conduit)
 
 		/* No $CONDUIT_PATH, and $CONDUITDIR/conduit isn't
 		 * executable. Give up. */
-		SYNC_TRACE(3)
+		CONDUIT_TRACE(3)
 			fprintf(stderr, "find_in_path: returning NULL\n");
 		return NULL;
 	}
@@ -1509,11 +1531,11 @@ find_in_path(const char *conduit)
 		}
 
 		/* See if the pathname in 'buf' is executable */
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "find_in_path: Trying [%s]\n", buf);
 		if (access(buf, X_OK) == 0)
 		{
-			SYNC_TRACE(3)
+			CONDUIT_TRACE(4)
 				fprintf(stderr, "find_in_path: "
 					"returning [%s]\n", buf);
 			return buf;
@@ -1521,7 +1543,7 @@ find_in_path(const char *conduit)
 	}
 
 	/* Nothing is executable. */
-	SYNC_TRACE(3)
+	CONDUIT_TRACE(4)
 		fprintf(stderr, "find_in_path: returning NULL\n");
 	return NULL;
 }
@@ -1531,11 +1553,11 @@ find_in_path(const char *conduit)
 static void
 mychdir( const char *d )
 {
-	SYNC_TRACE(4)
+	CONDUIT_TRACE(4)
 		fprintf( stderr, "Switching to directory: \"%s\"\n", d );   
 
 	if (chdir(d) != 0)
-		Error(_("%s: Couldn't change directory to \"%s\"\n"),
+		Error(_("%s: Couldn't change directory to \"%s\"."),
 		      "spawn_conduit", d);
 }
 
@@ -1583,12 +1605,12 @@ spawn_conduit(
 		Perror("pipe(inpipe)");
 		return -1;
 	}
-	SYNC_TRACE(6)
+	CONDUIT_TRACE(6)
 		fprintf(stderr, "spawn_conduit: inpipe == %d, %d\n",
 			inpipe[0], inpipe[1]);
 
 	/* Turn this file descriptor into a file handle */
-	SYNC_TRACE(5)
+	CONDUIT_TRACE(5)
 		fprintf(stderr, "spawn_conduit: tochild fd == %d\n",
 			inpipe[1]);
 
@@ -1613,10 +1635,10 @@ spawn_conduit(
 		close(inpipe[1]);
 		return -1;
 	}
-	SYNC_TRACE(6)
+	CONDUIT_TRACE(6)
 		fprintf(stderr, "spawn_conduit: outpipe == %d, %d\n",
 			outpipe[0], outpipe[1]);
-	SYNC_TRACE(5)
+	CONDUIT_TRACE(5)
 		fprintf(stderr, "spawn_conduit: fromchild fd == %d\n",
 			outpipe[0]);
 
@@ -1667,7 +1689,7 @@ spawn_conduit(
 	} else if (conduit_pid != 0)
 	{
 		/* This is the parent */
-		SYNC_TRACE(5)
+		CONDUIT_TRACE(5)
 			fprintf(stderr, "Conduit PID == %d\n",
 				(int) conduit_pid);
 
@@ -1724,7 +1746,7 @@ spawn_conduit(
 	
 	if (cwd != NULL)
 	{
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf( stderr, "Obeying to cwd param: %s\n", cwd );	
 	
 		/* cwd to the directory in which the conduit resides */
@@ -1754,11 +1776,11 @@ spawn_conduit(
 				if (pw->pw_dir)
 					mychdir(pw->pw_dir);
 				else
-					Error(_("%s: No home directory for %s.\n"),
+					Error(_("%s: No home directory for %s."),
 						"spawn_conduit", pw->pw_name );
 			}
 			else
-			 	Error(_("%s: getpwuid(%d) failed.\n"),
+			 	Error(_("%s: getpwuid(%d) failed."),
  	        	 	      "spawn_conduit", uid );
 		}
 		else
@@ -1817,12 +1839,12 @@ cond_readline(char *buf,	/* Buffer to read into */
 		FD_ZERO(&infds);
 		FD_SET(fromchild_fd, &infds);
 
-		SYNC_TRACE(5)
+		CONDUIT_TRACE(5)
 			fprintf(stderr, "cond_readline: About to select()\n");
 
 		err = select(fromchild_fd+1, &infds, NULL, NULL, NULL);
 
-		SYNC_TRACE(5)
+		CONDUIT_TRACE(5)
 			fprintf(stderr,
 				"cond_readline: select() returned %d\n",
 				err);
@@ -1862,7 +1884,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 			/* select() was interrupted */
 			if (conduit_pid > 0)
 			{
-				SYNC_TRACE(5)
+				CONDUIT_TRACE(5)
 					fprintf(stderr,
 						"cond_readline: select() just "
 						"got spooked, is all.\n");
@@ -1878,7 +1900,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 			FD_ZERO(&infds);
 			FD_SET(fromchild_fd, &infds);
 
-			SYNC_TRACE(6)
+			CONDUIT_TRACE(6)
 				fprintf(stderr, "cond_readline: About to "
 					"check for dying message\n");
 
@@ -1906,21 +1928,21 @@ cond_readline(char *buf,	/* Buffer to read into */
 			char *s;
 			int s_len;	/* Length of string read */
 
-			SYNC_TRACE(6)
+			CONDUIT_TRACE(6)
 				fprintf(stderr,
 					"Child has written something\n");
 
 			s = fgets(buf, len, fromchild);
 			if (s == NULL)
 			{
-				SYNC_TRACE(6)
+				CONDUIT_TRACE(6)
 					fprintf(stderr, "cond_readline: "
 						"fgets() returned NULL\n");
 
 				/* Error or end of file */
 				if (feof(fromchild))
 				{
-					SYNC_TRACE(6)
+					CONDUIT_TRACE(6)
 						fprintf(stderr,
 							"cond_readline: "
 							"End of file\n");
@@ -1930,7 +1952,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 				}
 
 				/* File error */
-				SYNC_TRACE(4)
+				CONDUIT_TRACE(4)
 					fprintf(stderr, "cond_readline: "
 						"error in fgets()\n");
 				Perror("cond_readline: fgets");
@@ -1960,7 +1982,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 	Error(_("%s: Conduit exited unexpectedly."),
 	      "cond_sendline");
 
-	SYNC_TRACE(2)
+	CONDUIT_TRACE(2)
 	{
 		if (WIFEXITED(conduit_status))
 			/* XXX - If conduit_status != 0, this fact ought to
@@ -2027,14 +2049,14 @@ cond_readstatus(FILE *fromchild)
 	{
 		/* Error in cond_readline(), or child exited unexpectedly */
 		/* XXX - Differentiate these cases */
-		SYNC_TRACE(3)
+		CONDUIT_TRACE(3)
 			fprintf(stderr, "cond_readstatus: Child exited "
 				"unexpectedly(?)\n");
 		return -1;
 	} else if (err == 0)
 	{
 		/* End of file, or child exited normally */
-		SYNC_TRACE(3)
+		CONDUIT_TRACE(3)
 			fprintf(stderr, "cond_readstatus: Child exited "
 				"normally\n");
 		return 0;
@@ -2046,7 +2068,7 @@ cond_readstatus(FILE *fromchild)
 	if (buf[msglen-1] == '\n')
 		buf[msglen-1] = '\0';
 
-	SYNC_TRACE(5)
+	CONDUIT_TRACE(5)
 		fprintf(stderr, "cond_readstatus: <<< \"%s\"\n", buf);
 
 	/* See if the line is of the correct form */
@@ -2105,7 +2127,7 @@ sigchld_handler(int sig)
 	if (canjump != 1)
 	{
 		/* Unexpected signal. Ignore it */
-		SYNC_TRACE(5)
+		CONDUIT_TRACE(5)
 			fprintf(stderr, "Unexpected signal. Ignoring.\n");
 		errno = old_errno;	/* Restore old errno */
 		return;
@@ -2140,7 +2162,7 @@ sigchld_handler(int sig)
 
 		conduit_pid = -1;
 
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
 		errno = old_errno;	/* Restore old errno */
 		siglongjmp(chld_jmpbuf, 1);
@@ -2171,7 +2193,7 @@ sigchld_handler(int sig)
 
 		conduit_pid = -1;
 
-		SYNC_TRACE(4)
+		CONDUIT_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
 		errno = old_errno;	/* Restore old errno */
 		siglongjmp(chld_jmpbuf, 1);
@@ -2201,7 +2223,7 @@ crea_type_matches(const conduit_block *cond,
 					 * doesn't match.
 					 */
 
-	SYNC_TRACE(7)
+	CONDUIT_TRACE(7)
 		fprintf(stderr, "crea_type_matches: "
 			"conduit \"%s\",\n"
 			"\tcreator: [%c%c%c%c] (0x%08lx) / "
@@ -2232,7 +2254,7 @@ crea_type_matches(const conduit_block *cond,
 		 * either one may be a wildcard (0), which matches
 		 * anything.
 		 */
-		SYNC_TRACE(7)
+		CONDUIT_TRACE(7)
 			fprintf(stderr, "crea_type_matches: Comparing "
 				"[%c%c%c%c/%c%c%c%c] (0x%08lx/0x%08lx) (flags: %02x)\n",
 
@@ -2258,14 +2280,14 @@ crea_type_matches(const conduit_block *cond,
 		    ((cond->ctypes[i].type == type) ||
 		     (cond->ctypes[i].type == 0L)))
 		{
-			SYNC_TRACE(7)
+			CONDUIT_TRACE(7)
 				fprintf(stderr, "crea_type_matches: "
 					"Found a match.\n");
 			return True;
 		}
 	}
 
-	SYNC_TRACE(7)
+	CONDUIT_TRACE(7)
 		fprintf(stderr, "crea_type_matches: No match found.\n");
 	return False;
 }
@@ -2285,7 +2307,7 @@ findConduitByName(const char *name)
 {
 	int i;
 
-	SYNC_TRACE(5)
+	CONDUIT_TRACE(5)
 		fprintf(stderr, "Looking for built-in conduit \"%s\"\n",
 			(name == NULL ? "(null)" : name));
 
@@ -2295,13 +2317,13 @@ findConduitByName(const char *name)
 
 	for (i = 0; i < num_builtin_conduits; i++)
 	{
-		SYNC_TRACE(6)
+		CONDUIT_TRACE(6)
 			fprintf(stderr, "Comparing to \"%s\"\n",
 				builtin_conduits[i].name);
 
 		if (strcmp(name, builtin_conduits[i].name) == 0)
 		{
-			SYNC_TRACE(6)
+			CONDUIT_TRACE(6)
 				fprintf(stderr, "Found builtin conduit\n");
 
 			/* Found it */

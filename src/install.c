@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.35 2002-04-27 18:00:07 azummo Exp $
+ * $Id: install.c,v 2.36 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -70,20 +70,12 @@ upload_database(PConnection *pconn, struct pdb *db)
 	 * reason. I'm just imitating HotSync, here.
 	 */
 	err = DlpOpenConduit(pconn);
-	switch ((dlp_stat_t) err)
+
+	if (err != DLPSTAT_NOERR)
 	{
-	    case DLPSTAT_NOERR:		/* No error */
-		break;
-	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
-					 * by the user, on the Palm. */
-		fprintf(stderr, _("Upload of \"%s\" cancelled by Palm.\n"),
+		Error(_("Upload of \"%s\" failed."),
 			db->name);
-		cs_errno = CSE_CANCEL;
-		return -1;
-	    default:			/* All other errors */
-		fprintf(stderr, _("Can't open conduit for \"%s\": %d.\n"),
-			db->name, err);
-		cs_errno = CSE_OTHER;
+		print_latest_dlp_error(pconn);
 		return -1;
 	}
 
@@ -103,8 +95,9 @@ upload_database(PConnection *pconn, struct pdb *db)
 	/* XXX - Check err */
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		fprintf(stderr, _("Error creating database \"%s\": %d.\n"),
-			db->name, err);
+		Error(_("Error creating database \"%s\"."),
+			db->name);
+		print_latest_dlp_error(pconn);
 		return -1;
 	}
 
@@ -118,8 +111,12 @@ upload_database(PConnection *pconn, struct pdb *db)
 				       db->appinfo_len,
 				       db->appinfo);
 		/* XXX - Check err */
-		if (err < 0)
+		if (err != (int) DLPSTAT_NOERR)
+		{
+			Error(_("DlpWriteAppBlock failed."));
+			print_latest_dlp_error(pconn);
 			return err;
+		}
 	}
 
 	/* Upload the sort block, if it exists */
@@ -131,7 +128,12 @@ upload_database(PConnection *pconn, struct pdb *db)
 		err = DlpWriteSortBlock(pconn, dbh,
 					db->sortinfo_len,
 					db->sortinfo);
-		/* XXX - Check err */
+		if (err != (int) DLPSTAT_NOERR)
+		{
+			Error(_("DlpWriteSortBlock failed."));
+			print_latest_dlp_error(pconn);
+			return err;
+		}
 		if (err < 0)
 			return err;
 	}
@@ -149,7 +151,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 		     rsrc != NULL;
 		     rsrc = rsrc->next)
 		{
-			SYNC_TRACE(5)
+			SYNC_TRACE(8)
 				fprintf(stderr,
 					"Uploading resource 0x%04x\n",
 					rsrc->id);
@@ -164,6 +166,9 @@ upload_database(PConnection *pconn, struct pdb *db)
 			/* XXX - Check err more thoroughly */
 			if (err != (int) DLPSTAT_NOERR)
 			{
+				Error(_("DlpWriteResource failed."));
+				print_latest_dlp_error(pconn);
+
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
 				return -1;
@@ -182,7 +187,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 		{
 			udword newid;		/* New record ID */
 
-			SYNC_TRACE(5)
+			SYNC_TRACE(8)
 				fprintf(stderr,
 					"Uploading record 0x%08lx\n",
 					rec->id);
@@ -218,6 +223,9 @@ upload_database(PConnection *pconn, struct pdb *db)
 			/* XXX - Check err more thoroughly */
 			if (err != (int) DLPSTAT_NOERR)
 			{
+				Error(_("DlpWriteRecord failed."));
+				print_latest_dlp_error(pconn);
+
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
 				return -1;
@@ -230,10 +238,12 @@ upload_database(PConnection *pconn, struct pdb *db)
 
 	/* Clean up */
 	err = DlpCloseDB(pconn, dbh);
-	/* XXX - Check err */
 	if (err != (int) DLPSTAT_NOERR)
+	{
+		Error(_("DlpCloseDB failed."));
+		print_latest_dlp_error(pconn);
 		return -1;
-
+	}
 	return 0;		/* Success */
 }
 
@@ -321,13 +331,15 @@ install_file(PConnection *pconn,
 	{
 		/* Delete the existing database */
 		err = DlpDeleteDB(pconn, CARD0, pdb->name);
-		if (err < 0)
-		{
-			update_cs_errno_p(pconn);
 
-			Error(_("%s: Error deleting \"%s\"."),
+		if (err != (int) DLPSTAT_NOERR)
+		{
+			Error(_("%s: Error deleting \"%s\" on Palm."),
 			      "install_file",
 			      pdb->name);
+			      
+			print_latest_dlp_error(pconn);
+
 			add_to_log(_("Error\n"));
 			free_pdb(pdb);
 			return -1;
@@ -337,8 +349,6 @@ install_file(PConnection *pconn,
 	err = upload_database(pconn, pdb);
 	if (err < 0)
 	{
-		update_cs_errno_p(pconn);
-
 		Error(_("%s: Error uploading \"%s\"."),
 		      "install_file",
 		      pdb->name);
@@ -433,14 +443,14 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 }	
 
 /* InstallNewFiles
- * Go through the install directory. If there are any databases there
+ * Go through the giiven directory. If there are any databases there
  * that don't exist on the Palm, install them.
  */
 int
-InstallNewFiles(PConnection *pconn,
-		struct Palm *palm,
+InstallNewFiles(struct Palm *palm,
 		char *newdir,		/* Directory from which to install */
-		Bool deletep)		/* Flag: delete after installing? */
+		Bool deletep,		/* Flag: delete after installing? */
+		Bool force_install)	/* Flag: force install */
 {
 	int err;
 	DIR *dir;
@@ -451,8 +461,8 @@ InstallNewFiles(PConnection *pconn,
 			newdir);
 	if ((dir = opendir(newdir)) == NULL)
 	{
-		Error(_("%s: Can't open install directory."),
-		      "InstallNewFiles");
+		Warn(_("%s: Can't open %s directory."),
+		      "InstallNewFiles", newdir);
 		Perror("opendir");
 		return -1;
 	}
@@ -521,7 +531,7 @@ InstallNewFiles(PConnection *pconn,
 
 		/* See if the database already exists on the Palm */
 		dbinfo = palm_find_dbentry(palm, pdb->name);
-		if ((dbinfo != NULL) && (!global_opts.force_install))
+		if ((dbinfo != NULL) && (!force_install))
 		{
 			/* The database exists. Check its modification
 			 * number: if it's more recent than the version
@@ -560,31 +570,28 @@ InstallNewFiles(PConnection *pconn,
 		if (dbinfo != NULL)
 		{
 			/* Delete the existing database */
-			err = DlpDeleteDB(pconn, CARD0, pdb->name);
-			if (err < 0)
+			err = DlpDeleteDB(palm_pconn(palm), CARD0, pdb->name);
+			if (err != (int) DLPSTAT_NOERR)
 			{
-				Error(_("%s: Error deleting \"%s\"."),
+				Error(_("%s: Error deleting \"%s\" on the Palm."),
 				      "InstallNewFiles",
 				      pdb->name);
-				va_add_to_log(pconn, "%s %s - %s\n",
+				print_latest_dlp_error(palm_pconn(palm)); 
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Install"),
 					      pdb->name,
 					      _("Error"));
 				free_pdb(pdb);
-
-				update_cs_errno_p(pconn);
 			}
 		}
 
-		err = upload_database(pconn, pdb);
+		err = upload_database(palm_pconn(palm), pdb);
 		if (err < 0)
 		{
-			update_cs_errno_p(pconn);
-
 			Error(_("%s: Error uploading \"%s\"."),
 			      "InstallNewFiles",
 			      pdb->name);
-			va_add_to_log(pconn, "%s %s - %s\n",
+			va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 				      _("Install"),
 				      pdb->name,
 				      _("Error"));
@@ -624,7 +631,7 @@ InstallNewFiles(PConnection *pconn,
 				fprintf(stderr, "InstallNewFiles: "
 					"appending db to palm->dbinfo\n");
 
-			if (palm_append_dbentry(palm, pdb) < 0)
+			if (palm_append_pdbentry(palm, pdb) < 0)
 			{
 				free_pdb(pdb);
 				return -1;
@@ -669,7 +676,7 @@ InstallNewFiles(PConnection *pconn,
 			if (errno == EEXIST)
 			{
 				/* File already exists. This isn't a problem */
-				va_add_to_log(pconn, "%s %s - %s\n",
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Install"),
 					      pdb->name,
 					      _("OK"));
@@ -677,7 +684,7 @@ InstallNewFiles(PConnection *pconn,
 				Error(_("Error opening \"%s\"."),
 				      bakfname);
 				Perror("open");
-				va_add_to_log(pconn, "%s %s - %s\n",
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Install"),
 					      pdb->name,
 					      _("Problem"));
@@ -696,12 +703,12 @@ InstallNewFiles(PConnection *pconn,
 					bakfname);
 			err = pdb_Write(pdb, outfd);
 			if (err < 0)
-				va_add_to_log(pconn, "%s %s - %s\n",
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Install"),
 					      pdb->name,
 					      _("Error"));
 			else
-				va_add_to_log(pconn, "%s %s - %s\n",
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Install"),
 					      pdb->name,
 					      _("OK"));

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdablock.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: pdablock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -45,17 +45,17 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 
 	/* Get serial number */
 	p_snum = palm_serial(palm);
-	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_snum == NULL) && !palm_ok(palm))
 		return;
 
 	/* Get userid */
 	p_userid = palm_userid(palm);
-	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	if ((p_userid == 0) && !palm_ok(palm))
 		return;		/* Something went wrong */
 
 	/* Get username */
 	p_username = palm_username(palm);
-	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_username == NULL) && !palm_ok(palm))
 		return;		/* Something went wrong */
 
 	/* First line of PDA block */
@@ -138,7 +138,7 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 
 	/* Get serial number */
 	p_snum = palm_serial(palm);
-	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_snum == NULL) && !palm_ok(palm))
 		return NULL;
 
 	default_pda = NULL;
@@ -184,7 +184,7 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 
 			/* Check the user ID */
 			p_userid = palm_userid(palm);
-			if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+			if ((p_userid == 0) && !palm_ok(palm))
 			{
 				/* Something went wrong */
 				return NULL;
@@ -201,7 +201,7 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 
 			/* Check the user name */
 			p_username = palm_username(palm);
-			if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+			if ((p_username == NULL) && !palm_ok(palm))
 			{
 				/* Something went wrong */
 				return NULL;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.66 2002-07-04 21:23:11 azummo Exp $
+ * $Id: parser.y,v 2.67 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -83,6 +83,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token HOSTID
 %token INSTALL_FIRST
 %token AUTOINIT
+%token FILTER_DBS
 %token LISTEN
 %token OPTIONS
 %token PATH
@@ -890,6 +891,18 @@ option:	FORCE_INSTALL colon boolean ';'
 			fprintf(stderr, "Option: autoinit.\n");
 		file_config->options.autoinit = True3;
 	}
+	| FILTER_DBS colon boolean ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: filter_dbs.\n");
+		file_config->options.filter_dbs = $3;
+	}
+	| FILTER_DBS ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: filter_dbs.\n");
+		file_config->options.filter_dbs = True3;
+	}
 	| HOSTID colon NUMBER semicolon
 	{
 		PARSE_TRACE(3)
@@ -915,7 +928,7 @@ option:	FORCE_INSTALL colon boolean ';'
 		lex_expect(LEX_NONE);
 		if (put_symbol($1, $4) < 0)
 		{
-			Error(_("%s: Can't set option.\n"),
+			Error(_("%s: Can't set option."),
 			      "yyparse");
 			return -1;
 		}

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.13 2002-04-27 18:00:07 azummo Exp $
+ * $Id: spc.c,v 2.14 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -123,34 +123,23 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 		    err = (*pconn->dlp.write)(pconn, inbuf, header->len);
 		    SYNC_TRACE(7)
 			    fprintf(stderr,
-				    "spc_send: padp_write returned %d\n",
+				    "spc_send: dlp.write returned %d\n",
 				    err);
 		    if (err < 0)	/* Problem with padp_write */
-		    {
-			    update_cs_errno_p(pconn);
 			    return -1;
-		    }
 
 		    err = (*pconn->dlp.read)(pconn, &padp_respbuf, &padp_resplen);
 		    SYNC_TRACE(7)
 		    {
 			    fprintf(stderr,
-				    "spc_send: padp_read returned %d\n",
+				    "spc_send: dlp.read returned %d\n",
 				    err);
 			    fprintf(stderr,
 				    "spc_send: padp_resplen == %d\n",
 				    padp_resplen);
 		    }
 		    if (err < 0)	/* Problem with padp_read */
-		    {
-			    if (PConn_get_palmerrno(pconn) == PALMERR_EOF)
-				    /* EOF. In practical terms, this
-				     * means the connection to the
-				     * Palm was lost.
-				     */
-				    cs_errno = CSE_NOCONN;
-			    return -1;
-		    }
+			return -1;
 
 		    *outbuf = malloc(padp_resplen);
 		    if (*outbuf == NULL)	/* Out of memory */

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduitblock.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: conduitblock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -19,10 +19,7 @@
 #endif  /* HAVE_LIBINTL_H */
 
 #include "coldsync.h"
-#include "pconn/pconn.h"
 #include "parser.h"		/* For config file parser stuff */
-#include "symboltable.h"
-#include "cs_error.h"
 
 
 /* new_conduit_block

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.37 2002-04-27 18:00:07 azummo Exp $
+ * $Id: backup.c,v 2.38 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -108,9 +108,10 @@ download_database(PConnection *pconn,
 	/* XXX - Check err more thoroughly */
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		fprintf(stderr, _("%s: Can't read database info: %d.\n"),
-			"download_database",
-			err);
+		Error(_("%s: Can't read database info."),
+			"download_database");
+
+		print_latest_dlp_error(pconn);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
@@ -167,6 +168,7 @@ download_database(PConnection *pconn,
 				  "%d.\n"),
 			"download_database",
 			dbinfo->name, err);
+		print_latest_dlp_error(pconn);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
@@ -206,6 +208,7 @@ download_database(PConnection *pconn,
 		fprintf(stderr, _("%s: Can't read sort block for %s: %d.\n"),
 			"download_database",
 			dbinfo->name, err);
+		print_latest_dlp_error(pconn);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
@@ -299,8 +302,9 @@ download_resources(PConnection *pconn,
 		/* XXX - Check err more thoroughly */
 		if (err != (int) DLPSTAT_NOERR)
 		{
-			fprintf(stderr, _("Can't read resource %d: %d.\n"),
-				i, err);
+			Error(_("Can't read resource %d."),
+				i);
+			print_latest_dlp_error(pconn);
 			free(rsrc);
 			return -1;
 		}
@@ -412,13 +416,15 @@ download_records(PConnection *pconn,
 				numrecs);
 
 		/* Get the list of record IDs, as described above */
-		if ((err = DlpReadRecordIDList(pconn, dbh, 0,
+		err = DlpReadRecordIDList(pconn, dbh, 0,
 					       numrecs, totalrecs-numrecs,
-					       &num_read, recids+numrecs))
-		    != (int) DLPSTAT_NOERR)
+					       &num_read, recids+numrecs);
+
+		if (err != (int) DLPSTAT_NOERR)
 		{
 			/* XXX - Check err more thoroughly */
-			fprintf(stderr, _("Can't read record ID list.\n"));
+			Error(_("Can't read record ID list."));
+			print_latest_dlp_error(pconn);
 			free(recids);
 			/* XXX - Set cs_errno */
 			return -1;
@@ -466,8 +472,8 @@ download_records(PConnection *pconn,
 		/* XXX - Check err more thoroughly */
 		if (err != (int) DLPSTAT_NOERR)
 		{
-			fprintf(stderr, _("Can't read record %d: %d.\n"),
-				i, err);
+			Error(_("Can't read record %d."), i);
+			print_latest_dlp_error(pconn);
 			free(recids);
 			/* XXX - Set cs_errno */
 			return -1;
@@ -565,7 +571,6 @@ backup(PConnection *pconn,
 	}
 	/* XXX - Lock the file */
 
-	/* Open the database on the Palm */
 	err = DlpOpenConduit(pconn);
 	switch ((dlp_stat_t) err)
 	{
@@ -574,22 +579,21 @@ backup(PConnection *pconn,
 	    case DLPSTAT_CANCEL:	/* There was a pending cancellation
 					 * by user, on the Palm */
 		Error(_("Cancelled by Palm."));
-		cs_errno = CSE_CANCEL;
 		close(bakfd);
 		unlink(bakfname);
 		va_add_to_log(pconn, "%s %s - %s\n",
 			      _("Backup"), dbinfo->name, _("Cancelled"));
 		return -1;
 	    default:			/* All other errors */
-	    	update_cs_errno_p(pconn);
-
-		Error(_("Can't open backup conduit."));
+		Error(_("DlpOpenConduit failed."));
+		print_latest_dlp_error(pconn);
 		close(bakfd);
 		va_add_to_log(pconn, "%s %s - %s\n",
 			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 
+	/* Open the database on the Palm */
 	err = DlpOpenDB(pconn,
 			CARD0,
 			dbinfo->name,
@@ -605,10 +609,9 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != (int) DLPSTAT_NOERR)
 	{
-	    	update_cs_errno_p(pconn);
-
 		Error(_("Can't open database \"%s\"."),
 		      dbinfo->name);
+		print_latest_dlp_error(pconn);
 		close(bakfd);
 		va_add_to_log(pconn, "%s %s - %s\n",
 			      _("Backup"), dbinfo->name, _("Error"));
@@ -624,8 +627,6 @@ backup(PConnection *pconn,
 		 * typically the problem is that the connection to the Palm
 		 * was lost.
 		 */
-	    	update_cs_errno_p(pconn);
-
 		err = DlpCloseDB(pconn, dbh);
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */

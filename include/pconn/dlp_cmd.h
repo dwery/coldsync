@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.23 2002-05-03 17:15:30 azummo Exp $
+ * $Id: dlp_cmd.h,v 1.24 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -755,7 +755,61 @@ struct dlp_netsyncinfo
 
 /* 1.2 functions */
 /** FindDB **/
-/* XXX */
+#define DLPARG_FindDB_ByName		DLPARG_BASE
+#define DLPARG_FindDB_ByOpenHandle	DLPARG_BASE+1
+#define DLPARG_FindDB_ByTypeCreator	DLPARG_BASE+2
+
+#define DLPARGLEN_FindDB_ByName		4
+#define DLPARGLEN_FindDB_ByOpenHandle	2				
+#define DLPARGLEN_FindDB_ByTypeCreator	10
+
+#define DLPRET_FindDB_Basic		DLPRET_BASE
+#define DLPRET_FindDB_Size		DLPRET_BASE+1
+
+#define DLPRETLEN_FindDB_Basic		54
+#define DLPRETLEN_FindDB_Size		24
+
+#define DLPCMD_FindDB_OptFlag_GetAttributes	0x80	/* get database attributes -- this is
+							 * an option to allow find operations to skip
+							 * returning this data as a performance optimization
+							 */
+
+#define DLPCMD_FindDB_OptFlag_GetSize		0x40	/* get record count and data size also -- this is
+							 * an option because the operation can take a long
+							 * time, which we would rather avoid if it is not needed
+							 */
+                                                                                                
+#define DLPCMD_FindDB_OptFlag_GetMaxRecSize	0x20	/* get max rec/resource size -- this is
+							 * an option because the operation can take a long
+							 * time, which we would rather avoid if it is not needed
+							 * (dlpFindDBOptFlagGetMaxRecSize is only supported for
+							 * dlpFindDBByOpenHandleReqArgID)
+							 */
+
+#define DLPCMD_FindDB_SrchFlag_NewSearch	0x80	/* set to beging a new search */
+#define DLPCMD_FindDB_SrchFlag_OnlyLatest	0x40	/* set to search for the latest version */
+
+
+
+struct dlp_finddb_bytypecreator_req
+{
+	ubyte	optflags;		/* DLPCMD_FindDB_OptFlag_.... */
+	ubyte	srchflags;		/* DLPCMD_FindDB_SrchFlag_.... */
+
+	udword	type;			/* type id (zero = wildcard) */
+	udword	creator;		/* creator id (zero = wildcard) */
+};
+
+struct dlp_finddb
+{
+	ubyte	cardno;			/* card number of the database */
+	udword	localid;		/* local id of the database */
+	udword	openref;		/* db open ref of the database (if currently opened by the caller) */
+	
+	struct dlp_dbinfo dbinfo;	/* database info */
+};			
+
+
 
 /** SetDBInfo **/
 /* XXX */
@@ -995,6 +1049,12 @@ extern int DlpReadFeature(
 	const udword creator,
 	const word featurenum,
 	udword *value);
+extern int DlpFindDB_ByTypeCreator(
+	PConnection *pconn,
+	struct dlp_finddb *finddbinfo,
+	const udword creator,
+	const udword type,
+	const ubyte newsearch);
 
 #ifdef  __cplusplus
 }

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.6 2002-07-18 16:43:16 azummo Exp $
+ * $Id: palment.c,v 2.7 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -280,7 +280,7 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 				if (is_wildcard(palment->serial))
 				{
 					SYNC_TRACE(5)
-						fprintf(stderr, " Wildcard match for serial number [%s].\n",
+						fprintf(stderr, " + wildcard match for serial number [%s].\n",
 							palment->serial);
 				
 					goto test_username;
@@ -292,19 +292,19 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 			if ( ! match_serial(palment, p_snum) )
 			{
 				SYNC_TRACE(5)
-					fprintf(stderr, " Serial number [%s] doesn't match with [%s].\n",
+					fprintf(stderr, " ! serial number [%s] doesn't match with [%s].\n",
 						palment->serial, p_snum);
 
 				continue;
 			}
 			
 			SYNC_TRACE(5)
-				fprintf(stderr, " Serial number [%s] matches with [%s].\n",
+				fprintf(stderr, " + serial number [%s] matches with [%s].\n",
 					palment->serial, p_snum);
 		}
 		else
 			SYNC_TRACE(5)
-				fprintf(stderr, " serial match not required.\n");
+				fprintf(stderr, " * serial match not required.\n");
 
 test_username:
 		if (match_type & PMATCH_USERNAME)
@@ -319,18 +319,18 @@ test_username:
 			{
 				SYNC_TRACE(4)
 					fprintf(stderr,
-						" Username [%s] doesn't match\n",
+						" ! username [%s] doesn't match\n",
 						palment->username);
 				continue;
 			}
 
 			SYNC_TRACE(5)
-				fprintf(stderr, " Username [%s] matches\n",
+				fprintf(stderr, " + username [%s] matches\n",
 					palment->username);
 		}
 		else
 			SYNC_TRACE(5)
-				fprintf(stderr, " username match not required.\n");
+				fprintf(stderr, " * username match not required.\n");
 
 		if (match_type & PMATCH_USERID)
 		{
@@ -346,19 +346,19 @@ test_username:
 			{
 				SYNC_TRACE(4)
 					fprintf(stderr,
-						" Userid %lu doesn't match %lu\n",
+						" ! userid %lu doesn't match %lu\n",
 						palment->userid,
 						p_userid);
 				continue;
 			}
 
 			SYNC_TRACE(5)
-				fprintf(stderr, " Userid %lu matches\n",
+				fprintf(stderr, " + userid %lu matches\n",
 					palment->userid);
 		}
 		else
 			SYNC_TRACE(5)
-				fprintf(stderr, " username match not required.\n");
+				fprintf(stderr, " * username match not required.\n");
 
 
 		SYNC_TRACE(3)
@@ -387,7 +387,7 @@ lookup_palment(struct Palm *palm, ubyte match_type)
 
 	/* Get username */
 	p_username = palm_username(palm);
-	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_username == NULL) && !palm_ok(palm))
 	{
 		/* Something went wrong */
 		return NULL;
@@ -395,7 +395,7 @@ lookup_palment(struct Palm *palm, ubyte match_type)
 
 	/* Get userid */
 	p_userid = palm_userid(palm);
-	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	if ((p_userid == 0) && !palm_ok(palm))
 	{
 		/* Something went wrong */
 		return NULL;
@@ -403,7 +403,7 @@ lookup_palment(struct Palm *palm, ubyte match_type)
 
 	/* Get serial number */
 	p_snum = palm_serial(palm);
-	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_snum == NULL) && !palm_ok(palm))
 	{
 		/* Something went wrong */
 		return NULL;

@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: palmconn.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -58,10 +58,7 @@ Connect(PConnection *pconn)
 	pcaddr.port = (ubyte) SLP_PORT_DLP;
 	PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
 	if (PConn_accept(pconn) < 0)
-	{
-		update_cs_errno_p(pconn);
 		return -1;
-	}
 
 	return 0;
 }
@@ -129,6 +126,8 @@ palm_Connect( void )
 		return NULL;
 	}
 	pconn->speed = listen->speed;
+	pconn->dlp.io_complete = &update_cs_errno_dlp;
+	pconn->palm_errno_set_callback = &update_cs_errno_pconn;
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -165,6 +164,30 @@ palm_Disconnect(struct Palm *palm, ubyte status)
 
 	free_Palm(palm);
 }
+
+void
+palm_CSDisconnect(struct Palm *palm)
+{
+ 	/* XXX - ???? */                   
+
+        switch (cs_errno)
+        {
+            case CSE_NOCONN:
+		palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
+		break;
+
+            case CSE_NOERR:
+		palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+		break;
+
+            default:
+         	palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
+ 	 	break;
+ 	}
+}
+
+
+
 
 /* This is for Emacs's benefit:
  * Local Variables:	***

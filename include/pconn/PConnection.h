@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.32 2002-07-04 21:23:11 azummo Exp $
+ * $Id: PConnection.h,v 1.33 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -134,8 +134,18 @@ typedef struct PConnection
 	pconn_stat status;	/* Connection status
 				 */
 
+	/* This is a callback function that get's invoked
+	 * when PConn_set_status is called.a
+	 */
+	void (*palm_status_set_callback)(struct PConnection *p, pconn_stat status);
+
 	palmerrno_t palm_errno;	/* Latest error code
 				 */
+
+	/* This is a callback function that get's invoked
+	 * when PConn_set_palmerrno is called.
+	 */
+	void (*palm_errno_set_callback)(struct PConnection *p, palmerrno_t palm_errno);
 
 	int whosonfirst;	/* If 1 the connection has been locally initiated */
 
@@ -151,6 +161,10 @@ typedef struct PConnection
 				 * arguments there are in the response.
 				 */
 
+		struct dlp_resp_header resp;
+				/* Copy of the latest responce header received
+				 */
+
 		/* 'read' and 'write' are methods, really: they point to
 		 * functions that will read and write a DLP packet.
 		 * XXX - 'len' should probably be udword in both cases, to
@@ -162,6 +176,12 @@ typedef struct PConnection
 		int (*write)(struct PConnection *pconn,
 			     const ubyte *buf,
 			     uword len);
+
+		/* This is a callback function that get's called whenever 
+		 * a response to DLP command comes back from the Palm.
+		 */
+		 
+		void (*io_complete)(struct PConnection *p);
 	} dlp;
 
 	/* NetSync protocol */
@@ -251,7 +271,7 @@ extern int PConn_select(struct PConnection *p,
                  pconn_direction direction,
                  struct timeval *tvp);
 extern palmerrno_t PConn_get_palmerrno(PConnection *p);
-extern void PConn_set_palmerrno(PConnection *p, palmerrno_t errno);
+extern void PConn_set_palmerrno(PConnection *p, palmerrno_t palm_errno);
 extern void PConn_set_status(PConnection *p, pconn_stat status);
 extern pconn_stat PConn_get_status(PConnection *p);
 extern int PConn_isonline(PConnection *p);

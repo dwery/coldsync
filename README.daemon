@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.3 2002-03-24 03:20:31 azummo Exp $
+$Id: README.daemon,v 2.4 2002-08-31 19:26:02 azummo Exp $
 
 Introduction
 ============
@@ -16,7 +16,7 @@ you want to connect to the Palm:
 	  terminal on a serial line, or incoming PPP.
 
 	- For a USB connection under FreeBSD, you'll need to add an
-	  entry to /etc/usbd.conf .
+	  entry to /etc/usbd.conf . See README.usb for more details.
 
 
 These connection types are not mutually-exclusive. A given machine can
@@ -43,6 +43,7 @@ conduits on certain database types, or any conduits at all.
 
 	The second config file is /usr/local/etc/palms . This file is
 also described in coldsync(8). It
+
 	- maps Palm devices to users, i.e., it specifies that before
 	  syncing a Palm with serial number X, username Y, and userid
 	  Z, it should first setuid() to Unix user U.
@@ -130,5 +131,7 @@ these ports, so the names "netsync-wakeup" and "netsync" are made up.
 	/etc/inetd.conf: Add the following line:
 
 netsync-wakeup	dgram	udp	wait	root	/usr/local/bin/coldsync coldsync -md -t net -s -
+netsync	dgram	tcp	wait	root	/usr/local/bin/coldsync coldsync -md -t
+serial  -s -
 
 then kill -HUP inetd.

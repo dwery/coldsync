@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.9 2002-04-27 18:00:07 azummo Exp $
+ * $Id: spalm.c,v 2.10 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -136,13 +136,17 @@ fetch_meminfo(struct Palm *palm)
 	 * cards to be read, but it's always one on every Palm I've tried
 	 * this on.
 	 */
-	if ((err = DlpReadStorageInfo(palm->pconn_, CARD0, &last_card, &more,
-				      palm->cardinfo_)) < 0)
+	err = DlpReadStorageInfo(palm_pconn(palm), CARD0, &last_card, &more,
+				      palm->cardinfo_);
+				      
+	if (err != (int) DLPSTAT_NOERR)
 	{
-		update_cs_errno(palm);
-	
+		Error(_("DlpReadStorageInfo failed."));
+		print_latest_dlp_error(palm_pconn(palm));
 		return -1;
 	}
+	
+
 
 	palm->num_cards_ = 1;	/* XXX - Hard-wired, for the reasons above */
 			/* This also indicates to other functions that
@@ -203,14 +207,23 @@ fetch_sysinfo(struct Palm *palm)
 		fprintf(stderr, "Fetching SysInfo\n");
 
 	/* Get system information about the Palm */
-	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
-	{
-		update_cs_errno(palm);
+	err = DlpReadSysInfo(palm_pconn(palm), &(palm->sysinfo_));
 
+#if 0
+	{
 		/* XXX - This message doesn't really belong here */
 		Error(_("Can't get system info."));
 		return -1;
 	}
+#endif
+	if (err != (int) DLPSTAT_NOERR)
+	{
+		Error(_("DlpReadSysInfo failed."));
+		print_latest_dlp_error(palm_pconn(palm));
+		return -1;
+	}
+	
+	
 	MISC_TRACE(3)
 	{
 		fprintf(stderr, "System info:\n");
@@ -275,9 +288,8 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		update_cs_errno(palm);
-
 		Error(_("Can't read NetSync info."));
+		print_latest_dlp_error(palm_pconn(palm));
 		return -1;
 	}
 
@@ -299,14 +311,21 @@ fetch_userinfo(struct Palm *palm)
 		fprintf(stderr, "Fetching UserInfo\n");
 
 	/* Get user information from the Palm */
-	if ((err = DlpReadUserInfo(palm->pconn_, &(palm->userinfo_))) < 0)
+	err = DlpReadUserInfo(palm_pconn(palm), &(palm->userinfo_));
+
+	if (err != (int) DLPSTAT_NOERR)
 	{
-		Error(_("Can't get user info."));
-
-		update_cs_errno(palm);
-
+		Error(_("DlpReadUserInfo failed."));
+		print_latest_dlp_error(palm_pconn(palm));
 		return -1;
 	}
+#if 0
+	{
+		Error(_("Can't get user info."));
+		print_latest_dlp_error(palm_pconn(palm));
+		return -1;
+	}
+#endif
 
 	/* Note that we've fetched this information */
 	palm->have_userinfo_ = True;
@@ -407,12 +426,10 @@ fetch_serial(struct Palm *palm)
 		fprintf(stderr,
 			"Getting location of serial number in ROM.\n");
 	/* XXX - Move this into its own function? */
-	err = RDLP_ROMToken(palm->pconn_, CARD0, ROMToken_Snum,
+	err = RDLP_ROMToken(palm_pconn(palm), CARD0, ROMToken_Snum,
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
-		update_cs_errno(palm);
-
 		Error(_("Can't get location of serial number."));
 		return -1;
 	}
@@ -437,8 +454,6 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
-		update_cs_errno(palm);
-
 		Error(_("Can't read serial number."));
 		return -1;
 	}
@@ -508,7 +523,7 @@ ListDBs(struct Palm *palm)
 					 * at */
 		uword last_index;	/* Index of last database read */
 		ubyte oflags;
-		ubyte num;
+		ubyte num = 0;
 
 		/* Get total # of databases */
 		palm->num_dbs_ =
@@ -531,10 +546,12 @@ ListDBs(struct Palm *palm)
 		    == NULL)
 			return -1;
 
-		/* XXX - If the Palm uses DLP >= 1.2, get multiple
-		 * databases at once.
-		 */
 		iflags = DLPCMD_READDBLFLAG_RAM;
+
+		/* XXX - Better have a function to check this condition */
+		if (palm->sysinfo_.dlp_ver_maj >= 1 && palm->sysinfo_.dlp_ver_min >= 2)
+			iflags |= DLPCMD_READDBLFLAG_MULT;
+
 		if (global_opts.check_ROM)
 			iflags |= DLPCMD_READDBLFLAG_ROM;
 				/* Flags: read at least RAM databases. If
@@ -552,16 +569,15 @@ ListDBs(struct Palm *palm)
 		 * its size above becomes just an optimization for the
 		 * special case where DLP >= 1.1.
 		 */
-		for (i = 0; i < palm->num_dbs_; i++)
+		for (i = 0; i < palm->num_dbs_; i += num)
 		{
-			err = DlpReadDBList(palm->pconn_, iflags, card,
+			err = DlpReadDBList(palm_pconn(palm), iflags, card,
 					    start, &last_index, &oflags,
 					    &num, &(palm->dblist_[i]));
+
+			/* XXX - What happens if we get any DLPSTAT_xxx here? */
 			if (err < 0)
-			{
-				update_cs_errno(palm);
 				return -1;
-			}
 
 			/* Sanity check: if there are no more databases to
 			 * be read, stop reading now. This shouldn't
@@ -654,11 +670,16 @@ palm_rom_version(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch SysInfo if we haven't done so yet */
 	if (!palm->have_sysinfo_)
 		if ((err = fetch_sysinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return 0;
-
+		}
 	return palm->sysinfo_.rom_version;
 }
 
@@ -669,11 +690,17 @@ const char *palm_username(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch UserInfo if we haven't done so yet */
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
+		}
 	}
 
 	return palm->userinfo_.username;
@@ -686,11 +713,17 @@ const int palm_username_len(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch UserInfo if we haven't done so yet */
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return -1;
+		}
 	}
 
 	return palm->userinfo_.usernamelen;
@@ -706,11 +739,17 @@ const udword palm_userid(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch UserInfo if we haven't done so yet */
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return 0;
+		}
 	}
 
 	return palm->userinfo_.userid;
@@ -723,11 +762,17 @@ const udword palm_viewerid(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch UserInfo if we haven't done so yet */
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return 0;
+		}
 	}
 
 	return palm->userinfo_.viewerid;
@@ -744,11 +789,17 @@ palm_lastsyncPC(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch UserInfo if we haven't done so yet */
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return 0;
+		}
 	}
 
 	return palm->userinfo_.lastsyncPC;
@@ -762,11 +813,17 @@ palm_serial_len(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch the serial number if we haven't done so yet */
 	if (palm->serial_len_ < 0)
 	{
 		if ((err = fetch_serial(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return -1;
+		}
 	}
 
 	return palm->serial_len_;
@@ -781,11 +838,17 @@ palm_serial(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch the serial number if we haven't done so yet */
 	if (palm->serial_len_ < 0)
 	{
 		if ((err = fetch_serial(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
+		}
 	}
 
 	return palm->serial_;
@@ -799,14 +862,67 @@ palm_num_cards(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch memory info if we haven't done so yet */
 	if (palm->num_cards_ < 0)
 	{
 		if ((err = fetch_meminfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return -1;
+		}
 	}
 
 	return palm->num_cards_;
+}
+
+/* palm_fetch_some_DBs
+ * Fetch descriptions of some of the databases on the Palm, based
+ * on their creator/type.
+ */
+void 
+palm_fetch_some_DBs(struct Palm *palm,
+			udword creator,
+			udword type)
+{
+	dlp_stat_t err;
+
+	struct dlp_finddb fdb;
+
+	MISC_TRACE(6)
+		fprintf(stderr, "Inside palm_fetch_some_DBs\n");
+
+	/* some hacks. we need it to fool palm_num_dbs() et al */
+	
+	palm->have_all_DBs_ = True;
+
+	if (palm->num_dbs_ < 0)
+		palm->num_dbs_ = 0;
+					
+	/* Start searching... */
+	err = DlpFindDB_ByTypeCreator(palm_pconn(palm),
+					&fdb,
+					creator,
+					type,   
+					True);
+
+	/* .. continue 'till we have results */
+	while (err == DLPSTAT_NOERR)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "\tfound: %s\n", fdb.dbinfo.name);
+
+		if (!(palm_find_dbentry(palm, fdb.dbinfo.name)))
+			palm_append_dbentry(palm, &fdb.dbinfo); 
+
+		err = DlpFindDB_ByTypeCreator(palm_pconn(palm),
+						&fdb,
+						creator,
+						type,   
+						False);
+	}
 }
 
 /* palm_fetch_all_DBs
@@ -843,10 +959,15 @@ palm_num_dbs(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch list of databases, if we haven't done so yet */
 	if (!palm->have_all_DBs_)
 	{
 		if ((err = ListDBs(palm)) < 0)
+
+			palm->accessor_status_ = PALMACC_FAIL;
 			return -1;
 	}
 
@@ -860,7 +981,7 @@ palm_num_dbs(struct Palm *palm)
 void
 palm_resetdb(struct Palm *palm)
 {
-	MISC_TRACE(6)
+	MISC_TRACE(12)
 		fprintf(stderr, "Resetting Palm database iterator.\n");
 
 	palm->dbit_ = 0;
@@ -887,7 +1008,7 @@ palm_nextdb(struct Palm *palm)
 	const struct dlp_dbinfo *retval;
 	int num_dbs;			/* # databases on Palm */
 
-	MISC_TRACE(6)
+	MISC_TRACE(12)
 		fprintf(stderr, "Palm database iterator++\n");
 
 	/* XXX - This is a naive implementation. It can be improved: this
@@ -955,19 +1076,19 @@ palm_find_dbentry(struct Palm *palm,
 }
 
 /* palm_append_dbentry
- * Append an entry for 'pdb' to palm->dblist.
+ * Append an entry for 'db' to palm->dblist.
  */
 int
 palm_append_dbentry(struct Palm *palm,
-		    struct pdb *pdb)
+		    struct dlp_dbinfo *newdb)
 {
-	struct dlp_dbinfo *newdblist;
 	struct dlp_dbinfo *dbinfo;
+	struct dlp_dbinfo *newdblist;
 	int num_dbs;			/* # databases on Palm */
 
 	MISC_TRACE(4)
 		fprintf(stderr, "palm_append_dbentry: adding \"%s\"\n",
-			pdb->name);
+			newdb->name);
 
 	/* Find out how many databases there are */
 	num_dbs = palm_num_dbs(palm);
@@ -988,7 +1109,23 @@ palm_append_dbentry(struct Palm *palm,
 
 	/* Fill in the new entry */
 	dbinfo = &(palm->dblist_[num_dbs]);
-	return dbinfo_fill(dbinfo, pdb);
+
+	memcpy(dbinfo, newdb, sizeof(struct dlp_dbinfo));
+	return 0;
+}
+
+/* palm_append_pdbentry
+ * Append an entry for 'pdb' to palm->dblist.
+ */
+int
+palm_append_pdbentry(struct Palm *palm,
+		    struct pdb *pdb)
+{
+	struct dlp_dbinfo dbinfo;
+
+	dbinfo_fill(&dbinfo, pdb);
+	
+	return palm_append_dbentry(palm, &dbinfo);
 }
 
 const char *
@@ -996,11 +1133,17 @@ palm_netsync_hostname(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch NetSync info if we haven't done so yet */
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
+		}
 	}
 
 	return palm->netsyncinfo_.hostname;
@@ -1011,11 +1154,17 @@ palm_netsync_hostaddr(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch NetSync info if we haven't done so yet */
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
+		}
 	}
 
 	return palm->netsyncinfo_.hostaddr;
@@ -1026,11 +1175,17 @@ palm_netsync_netmask(struct Palm *palm)
 {
 	int err;
 
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
 	/* Fetch NetSync info if we haven't done so yet */
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
+		}
 	}
 
 	return palm->netsyncinfo_.hostnetmask;

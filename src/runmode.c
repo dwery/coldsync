@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: runmode.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -85,7 +85,7 @@ run_mode_Standalone(int argc, char *argv[])
 			break;
 
 		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
+			/* print_cs_errno(cs_errno); */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 
@@ -129,23 +129,12 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* See if the userid matches. */
 	p_userid = palm_userid(palm);
-	if (p_userid == 0)
+	if (p_userid == 0 && !palm_ok(palm))
 	{
-		switch (cs_errno)
-		{
-		    case CSE_NOERR:	/* No error */
-			break;
-
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
-
-		    default:
-			Error(_("Can't get user ID from Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
+		Error(_("Can't get user ID from Palm."));
+		/* print_cs_errno(cs_errno); */
+		palm_CSDisconnect(palm);
+		return -1;
 	}
 
 	if (p_userid != want_userid)
@@ -181,23 +170,13 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* See if the username matches */
 	p_username = palm_username(palm);
-	if (p_username == NULL)
+
+	if (p_username == NULL && !palm_ok(palm))
 	{
-		switch (cs_errno)
-		{
-		    case CSE_NOERR:	/* No error */
-			break;
-
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
-
-		    default:
-			Error(_("Can't get user name from Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
+		Error(_("Can't get user name from Palm."));
+		/* print_cs_errno(cs_errno); */
+		palm_CSDisconnect(palm);
+		return -1;
 	}
 
 	if (strncmp(p_username, want_username, DLPCMD_USERNAME_LEN)
@@ -301,7 +280,7 @@ run_mode_Backup(int argc, char *argv[])
 						 * log */
 
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
+				/* print_cs_errno(cs_errno); */
 				palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 				return -1;
 			    default:
@@ -350,7 +329,7 @@ run_mode_Backup(int argc, char *argv[])
 							 * upload log */
 
 				    case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
+					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -398,8 +377,7 @@ run_mode_Restore(int argc, char *argv[])
 					Error(_("Cancelled by Palm."));
 					goto done;
 				    case CSE_NOCONN:
-					Error(_("Lost connection to "
-						"Palm."));
+					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -421,8 +399,7 @@ run_mode_Restore(int argc, char *argv[])
 					Error(_("Cancelled by Palm."));
 					goto done;
 				    case CSE_NOCONN:
-					Error(_("Lost connection to "
-						"Palm."));
+					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -515,10 +492,12 @@ run_mode_Init(int argc, char *argv[])
 
 	/* Username */
 	p_username = palm_username(palm);
-	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	if ((p_username == NULL) && !palm_ok(palm))
 	{
 		/* Something went wrong */
-		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
+		Error(_("Can't get user name from Palm."));
+		/* print_cs_errno(cs_errno); */
+		palm_CSDisconnect(palm);
 		return -1;
 	}
 
@@ -578,11 +557,12 @@ run_mode_Init(int argc, char *argv[])
 
 	/* User ID */
 	p_userid = palm_userid(palm);	/* Get userid from Palm */
-	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	if ((p_userid == 0) && !palm_ok(palm))
 	{
 		/* Something went wrong */
 		Error(_("Can't get user ID from Palm."));
-		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
+		/* print_cs_errno(cs_errno); */
+		palm_CSDisconnect(palm);
 		return -1;
 	}
 
@@ -685,8 +665,6 @@ run_mode_Init(int argc, char *argv[])
 			Warn(_("DlpWriteUserInfo failed: %d."),
 			     err);
 
-			update_cs_errno(palm);
-
 			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		}
@@ -741,9 +719,6 @@ run_mode_Daemon(int argc, char *argv[])
 	char *devname;			/* Name of device to open */
 	char devbuf[MAXPATHLEN];	/* In case we need to construct
 					 * device name */
-	pconn_listen_t devtype;		/* Listen block type */
-	pconn_proto_t protocol;		/* Software protocol for talking
-					 * to cradle. */
 	const struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
 	char *conf_fname = NULL;	/* Config file name from /etc/palms */
@@ -760,27 +735,23 @@ run_mode_Daemon(int argc, char *argv[])
 	 * "/.*": use the given device
 	 * "foo": try /dev/foo
 	 */
-	/* if (argc > 0) */
-	/* XXX - Temp. disabled while developing */
-	if( 0 )
+	if (argc > 0)
 	{
+		fprintf(stderr,
+			"OBSOLETE: Please use -p %s instead.\n",
+			argv[0]);
+	
 		/* A port was specified on the command line. */
 		SYNC_TRACE(3)
 			fprintf(stderr,
 				"Port specified on command line: [%s]\n",
 				argv[0]);
 
-		/* Use the listen type specified by the '-t' option */
-		devtype = global_opts.devtype;
+		SYNC_TRACE(3)
+			fprintf(stderr, "Listen type: %d\n", (int) global_opts.devtype);
 
 		SYNC_TRACE(3)
-			fprintf(stderr, "Listen type: %d\n", (int) devtype);
-
-		/* Use the protocol stack specified by the '-P' option */
-		protocol = global_opts.protocol;
-
-		SYNC_TRACE(3)
-			fprintf(stderr, "Protocol: %d\n", (int) protocol);
+			fprintf(stderr, "Protocol: %d\n", (int) global_opts.protocol);
 
 		/* Figure out which device to use */
 		if (strcmp(argv[0], "-") == 0)
@@ -807,6 +778,13 @@ run_mode_Daemon(int argc, char *argv[])
 				 "/dev/%s", argv[0]);
 			devname = devbuf;
 		}
+		
+		if (prepend_listen_block(devname, global_opts.devtype, global_opts.protocol) < 0)
+		{
+			/* XXX - Maybe we should tell something to the user? */
+			return -1;
+		}
+
 	} else {
 		/* No port specified on command line. Get listen block from
 		 * coldsyncrc.
@@ -819,11 +797,6 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Connect to the Palm */
 	if( (palm = palm_Connect()) == NULL )
 		return -1;
-
-	/* Look up this Palm in /etc/palms */
-	/* XXX - Figure out exactly what the search criteria should be */
-	/* XXX - Should allow '*' in fields as wildcard */
-	/* XXX - If userid is 0, abort? */
 
 	/* Check if this palm is uninitialized and if autoinit is true*/
 	if( palm_userid(palm) == 0 && global_opts.autoinit == True)
@@ -845,11 +818,16 @@ run_mode_Daemon(int argc, char *argv[])
 		else
 		{
 			Error(_("No matching entry in %s, couldn't autoinit."), _PATH_PALMS);
-
+			/* XXX - Write reason to Palm log */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1; 
 		}
 	}
+
+	/* Look up this Palm in /etc/palms */
+	/* XXX - Figure out exactly what the search criteria should be */
+	/* XXX - Should allow '*' in fields as wildcard */
+	/* XXX - If userid is 0, abort? */
 
 	palment = lookup_palment(palm, PMATCH_EXACT);
 

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.28 2002-07-04 21:03:27 azummo Exp $
+ * $Id: PConnection_net.c,v 1.29 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -170,6 +170,8 @@ net_write(PConnection *p, unsigned const char *buf, const int len)
 	return write(p->fd, buf, len);
 }
 
+#if 0
+
 static int
 net_connect_udp(PConnection *pconn, const void *addr, const int addrlen)
 {
@@ -302,8 +304,7 @@ net_connect_udp(PConnection *pconn, const void *addr, const int addrlen)
 
 	return 0;
 }
-
-
+#endif
 
 
 /* net_connect

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.3 2002-04-17 23:18:34 azummo Exp $
+ * $Id: spalm.h,v 2.4 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -21,6 +21,14 @@
 					 * serial numbers, but hey, it
 					 * might change.
 					 */
+
+#define palm_has_username(palm)		(palm_username_len(palm) > 0)
+
+typedef enum {
+	PALMACC_NOERR = 0,
+	PALMACC_FAIL
+} palm_accessor_stat_t;
+
 
 /* struct Palm
  * A 'struct Palm' is a local cached representation of information
@@ -48,9 +56,6 @@
 /* XXX - Might be good to include a 'palm_disconnect()' function that
  * sets theh Palm's PConnection to NULL, so that later functions don't
  * try to talk to a Palm that isn't there.
- */
-/* XXX - Need an 'int palm_ok()' function that indicates whether the
- * last accessor worked fine, or whether there was an error.
  */
 struct Palm
 {
@@ -80,7 +85,14 @@ struct Palm
 	int num_dbs_;			/* # of databases */
 	struct dlp_dbinfo *dblist_;	/* Database list */
 	int dbit_;			/* Iterator for palm_nextdb() */
+
+	palm_accessor_stat_t accessor_status_;
+					/* Whether the latest accessor called */
+					/* worked or not. */
 };
+
+/* XXX - Maybe this should be a function */
+#define palm_ok(palm) (palm->accessor_status_ == PALMACC_NOERR)
 
 /* Constructor, destructor */
 extern struct Palm *new_Palm(PConnection *pconn);
@@ -108,13 +120,16 @@ extern const int palm_reload(struct Palm *palm);
 /* XXX - This needs to be redone as a whole set of accessors */
 /*  extern int ListDBs(PConnection *pconn, struct Palm *palm); */
 extern int palm_fetch_all_DBs(struct Palm *palm);
+extern void palm_fetch_some_DBs(struct Palm *palm, udword creator, udword type);
 extern const int palm_num_dbs(struct Palm *palm);
 extern void palm_resetdb(struct Palm *palm);
 extern const struct dlp_dbinfo *palm_nextdb(struct Palm *palm);
 extern const struct dlp_dbinfo *palm_find_dbentry(struct Palm *palm,
 						  const char *name);
-extern int palm_append_dbentry(struct Palm *palm,
+extern int palm_append_pdbentry(struct Palm *palm,
 			       struct pdb *pdb);
+extern int palm_append_dbentry(struct Palm *palm,
+			       struct dlp_dbinfo *newdb);
 extern const char *palm_netsync_hostname(struct Palm *palm);
 extern const char *palm_netsync_hostaddr(struct Palm *palm);
 extern const char *palm_netsync_netmask(struct Palm *palm);

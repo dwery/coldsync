@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 2.6 2002-04-27 18:00:07 azummo Exp $
+ * $Id: pref.c,v 2.7 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -138,8 +138,6 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_SAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
-			update_cs_errno_p(pconn);
-
 			prefitem->description.flags = flags;
 			return err;
 		}
@@ -165,8 +163,6 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_UNSAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
-			update_cs_errno_p(pconn);
-
 			prefitem->description.flags = flags;
 			return err;
 		}
@@ -238,13 +234,12 @@ DownloadPrefItem(PConnection *pconn,
 				   NULL);
 
 	/* Check for any errors */
+	/* XXX - What if we get any DLPSTAT_XXX here? */ 
 	if (err < 0)
 	{
 		/* If there was no error, contents_info doesn't exist,
 		 * because the preference was simply not found.
 		 */
-		update_cs_errno_p(pconn);
-
 		free(contents_info);
 		return err;
 	}
@@ -290,10 +285,9 @@ DownloadPrefItem(PConnection *pconn,
 				   contents_info,
 				   contents);
 
+	/* XXX - Check error more thoroughly */
 	if (err < 0)
 	{
-		update_cs_errno_p(pconn);
-
 		free(contents_info);
 		free(contents);
 		return err;

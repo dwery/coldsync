@@ -6,12 +6,17 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.30 2002-07-04 21:03:27 azummo Exp $
+ * $Id: PConnection.c,v 1.31 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+
+#ifndef HAVE_ENODEV
+#  define ENODEV	999	/* Some hopefully-impossible value */
+#endif  /* HAVE_ENODEV */
 
 #if  HAVE_SYS_SELECT_H
 #  include <sys/select.h>		/* To make select() work rationally
@@ -26,7 +31,7 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-#include "pconn/PConnection.h"
+#include <pconn/PConnection.h>
 
 int	io_trace = 0;
 
@@ -64,8 +69,8 @@ new_PConnection(char *device,
 	}
 
 	/* Initialize the common part, if only in case the constructor fails */
-	pconn->fd			= -1;
-	pconn->flags	    = flags;
+	pconn->fd		= -1;
+	pconn->flags		= flags;
 	pconn->io_bind		= NULL;
 	pconn->io_read		= NULL;
 	pconn->io_write		= NULL;
@@ -77,6 +82,11 @@ new_PConnection(char *device,
 	pconn->io_private	= NULL;
 	pconn->whosonfirst	= 0;
 	pconn->speed		= -1;
+
+
+	/* Initialize callbacks */
+	pconn->palm_errno_set_callback = NULL;
+	pconn->palm_status_set_callback = NULL;
 
 	switch (listenType) {
 	    case LISTEN_SERIAL:
@@ -166,6 +176,21 @@ PConnClose(PConnection *pconn)
 	return err;
 }
 
+static void
+_PConn_handle_ioerr(struct PConnection *p)
+{
+	switch (errno)
+	{
+		case ENODEV:
+		case ENXIO:
+			p->fd = -1;
+			break;
+		default:
+			break;
+	}
+}
+
+
 /* PConn_bind
  * This function is mainly here to try to adhere to the socket API.
  * XXX - For now, it's hardwired to set a SLP address, which is highly
@@ -188,7 +213,8 @@ PConn_read(struct PConnection *p,
 
 	if (err < 0)
 	{
-		PConn_set_palmerrno(p, PALMERR_SYSTEM);
+		_PConn_handle_ioerr(p);
+		PConn_set_palmerrno(p, (palmerrno_t) PALMERR_SYSTEM);
 	}
 	else if (err == 0)
 	{
@@ -207,12 +233,13 @@ PConn_write(struct PConnection *p,
 
 	if (err < 0)
 	{
+		_PConn_handle_ioerr(p);
 		PConn_set_palmerrno(p, PALMERR_SYSTEM);
 	}
 
 	return err;
 }
-			
+
 int
 PConn_connect(struct PConnection *p,
 		  const void *addr,
@@ -263,14 +290,20 @@ PConn_get_palmerrno(PConnection *p)
 }
 
 void
-PConn_set_palmerrno(PConnection *p, palmerrno_t errno)
+PConn_set_palmerrno(PConnection *p, palmerrno_t palm_errno)
 {
+	if (p->palm_errno_set_callback)
+		(*p->palm_errno_set_callback)(p, palm_errno);
+
 	p->palm_errno = errno;
 }
 
 void
 PConn_set_status(PConnection *p, pconn_stat status)
 {
+	if (p->palm_status_set_callback)
+		(*p->palm_status_set_callback)(p, status);
+
 	p->status = status;
 }
 
