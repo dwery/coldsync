@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.144 2002-04-14 06:14:55 arensb Exp $
+dnl # $Id: configure.in,v 1.145 2002-04-21 13:08:44 azummo Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -466,6 +466,17 @@ if test x"$ac_cv_search_gethostbyname2" = xno; then
 	fi
 fi
 #'
+
+# getopt_long() support (optional, enabled by default).
+AC_ARG_WITH(getopt_long,dnl
+[  --without-getopt_long   Turn off getopt_long() support.],dnl
+	with_getopt_long=no,
+	with_getopt_long=yes)
+
+if test x"$with_getopt_long" != x"no"; then
+	AC_SEARCH_LIBS(getopt_long, gnugetopt, AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG))
+fi
+
 
 # Check for ENODEV error code, for Linux.
 AC_CACHE_CHECK([whether ENODEV is defined], ac_cv_enodev,
