@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.58 2001-10-06 21:45:26 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.59 2002-04-27 17:25:48 azummo Exp $
  */
 
 /* Note on I/O:
@@ -78,7 +78,8 @@ int
 run_GenericConduit(
 	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
-	const conduit_block *block)
+	const conduit_block *block,
+	const pda_block *pda)
 {
 	// XXX - Ctor or run() should take 'block' as well, for the user
 	// headers and preferences.

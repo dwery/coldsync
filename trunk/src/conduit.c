@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.51 2002-04-24 17:07:22 arensb Exp $
+ * $Id: conduit.c,v 2.52 2002-04-27 17:25:48 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -73,7 +73,8 @@ static int run_conduits(const struct dlp_dbinfo *dbinfo,
 			char *flavor,
 			unsigned short flavor_mask,
 			const Bool with_spc,
-			PConnection *pconn);
+			PConnection *pconn,
+			pda_block *pda);
 static const char *find_in_path(const char *conduit);
 static pid_t spawn_conduit(const char *path,
                            const char *cwd,
@@ -94,15 +95,23 @@ static INLINE Bool crea_type_matches(
 
 typedef int (*ConduitFunc)(PConnection *pconn,
 			   const struct dlp_dbinfo *dbinfo,
-			   const conduit_block *block);
+			   const conduit_block *block,
+			   const pda_block *pda);
 
 int run_DummyConduit(PConnection *pconn,
 		     const struct dlp_dbinfo *dbinfo,
-		     const conduit_block *block);
+		     const conduit_block *block,
+		     const pda_block *pda);
 extern int run_GenericConduit(
 	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
-	const conduit_block *block);
+	const conduit_block *block,
+	const pda_block *pda);
+extern int run_GroupConduit(
+	PConnection *pconn,
+	const struct dlp_dbinfo *dbinfo,
+	const conduit_block *block,
+	const pda_block *pda);
 struct ConduitDef *findConduitByName(const char *name);
 
 struct ConduitDef
@@ -249,7 +258,8 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	    unsigned short flavor_mask,	/* Mask of the flavor */
 	    conduit_block *conduit,	/* Conduit to be run */
 	    const Bool with_spc,	/* Allow SPC calls? */
-	    PConnection *pconn)		/* Connection to Palm */
+	    PConnection *pconn,		/* Connection to Palm */
+	    pda_block *pda)
 {
 	int err;
 	int i;
@@ -1092,7 +1102,8 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 					 */
 	     unsigned short flavor_mask,
 	     const Bool with_spc,	/* Allow SPC calls? */
-	     PConnection *pconn)	/* Connection to Palm */
+	     PConnection *pconn,	/* Connection to Palm */
+	     pda_block *pda)
 {
 	int err;
 	conduit_block *conduit;
@@ -1186,7 +1197,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		if ((builtin = findConduitByName(conduit->path)) == NULL)
 			/* It's an external program. Run it */
 			err = run_conduit(dbinfo, flavor, flavor_mask,
-					  conduit, with_spc, pconn);
+					  conduit, with_spc, pconn, pda);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1200,7 +1211,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				continue;
 			}
 
-			err = (*builtin->func)(pconn, dbinfo, conduit);
+			err = (*builtin->func)(pconn, dbinfo, conduit, pda);
 		}
 
 		/* Error-checking */
@@ -1247,7 +1258,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		if ((builtin = findConduitByName(def_conduit->path)) == NULL)
 			/* It's an external program. Run it */
 			err = run_conduit(dbinfo, flavor, flavor_mask,
-					  def_conduit, with_spc, pconn);
+					  def_conduit, with_spc, pconn, pda);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1261,7 +1272,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				return -1;
 			}
 
-			err = (*builtin->func)(pconn, dbinfo, def_conduit);
+			err = (*builtin->func)(pconn, dbinfo, def_conduit, pda);
 		}
 
 		/* Error-checking */
@@ -1293,7 +1304,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
  * applicable for the database 'dbinfo'.
  */
 int
-run_Fetch_conduits(const struct dlp_dbinfo *dbinfo)
+run_Fetch_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
@@ -1306,7 +1317,7 @@ run_Fetch_conduits(const struct dlp_dbinfo *dbinfo)
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False, NULL);
+	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False, NULL, pda);
 }
 
 /* run_Dump_conduits
@@ -1320,7 +1331,7 @@ run_Fetch_conduits(const struct dlp_dbinfo *dbinfo)
  * it.
  */
 int
-run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
+run_Dump_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
@@ -1333,7 +1344,7 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False, NULL);
+	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False, NULL, pda);
 }
 
 /* run_Sync_conduits
@@ -1342,7 +1353,7 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
  */
 int
 run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
-		  PConnection *pconn)
+		  PConnection *pconn, pda_block *pda)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running sync conduits for \"%s\".\n",
@@ -1355,7 +1366,7 @@ run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
 	 */
 
-	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn);
+	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn, pda);
 }
 
 /* run_Install_conduits 
@@ -1363,13 +1374,13 @@ run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
  * whichever ones are applicable for that database.
  */
 int
-run_Install_conduits(struct dlp_dbinfo *dbinfo)
+run_Install_conduits(struct dlp_dbinfo *dbinfo, pda_block *pda)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running install conduits for \"%s\".\n",
 			dbinfo != NULL ? dbinfo->name : "(none)");
 
-	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
+	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL, pda);
 }
 
 /* find_in_path
@@ -2257,7 +2268,8 @@ crea_type_matches(const conduit_block *cond,
 /* XXX - Experimental */
 int run_DummyConduit(PConnection *pconn,
 		     const struct dlp_dbinfo *dbinfo,
-		     const conduit_block *block)
+		     const conduit_block *block,
+		     const pda_block *pda)
 {
 	fprintf(stderr, _("Inside run_DummyConduit.\n"));
 	return 0;
