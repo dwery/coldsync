@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.13 2000-09-03 07:31:19 arensb Exp $
+ * $Id: backup.c,v 2.14 2000-09-08 14:52:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -130,6 +130,9 @@ int backup(struct PConnection *pconn,
 int
 full_backup(struct PConnection *pconn,
        struct Palm *palm)
+	/* XXX - Should take argc, argv arguments. If databases are named
+	 * explicitly, only back up those databases.
+	 */
 {
 	int err;
 	int i;
