@@ -1,0 +1,59 @@
+.\" pdb_Read.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_Read.3,v 1.1 2001-11-20 14:35:26 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_Read 3
+.Sh NAME
+.Nm pdb_Read
+.Nm pdb_Write
+.Nd read, write Palm database files
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft struct pdb *
+.Fn pdb_Read "int fd"
+.Ft int
+.Fn pdb_Write "const struct pdb *db" "int fd"
+.Sh DESCRIPTION
+.Nm pdb_Read
+reads a Palm PDB or PRC file from the file descriptor
+.Fa fd ,
+which must already have been opened for reading.
+.Fa fd
+must be seekable.
+.Pp
+.Nm pdb_Read
+allocates a new
+.Ft struct pdb
+and returns a pointer to it. This should later be freed using
+.Fn free_pdb .
+.Pp
+.Fn pdb_Write
+writes the PDB pointed to by
+.Fa db
+to the file descriptor
+.Fa fd ,
+which must already be opened for writing.
+.Fa fd
+need not be seekable.
+.Sh RETURN VALUE
+.Nm pdb_Read
+returns a pointer to a newly-allocated
+.Ft struct pdb
+if successful, or NULL in case of error.
+.Pp
+.Nm pdb_Write
+returns 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr new_pdb 3 ,
+.Xr free_pdb 3 .

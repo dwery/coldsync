@@ -1,0 +1,36 @@
+.\" PConnClose.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: PConnClose.3,v 1.1 2001-09-05 07:29:39 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 15, 2001
+.Dt PConnClose 3
+.Sh NAME
+.Nm PConnClose
+.Nd shut down a connection to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn PConnClose "PConnection *pconn"
+.Sh DESCRIPTION
+.Nm
+closes the
+.Ft PConnection
+pointed to by
+.Fa pconn ,
+and frees it.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .

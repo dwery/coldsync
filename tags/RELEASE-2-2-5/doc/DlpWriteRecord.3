@@ -1,0 +1,83 @@
+.\" DlpWriteRecord.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpWriteRecord.3,v 1.1 2001-09-05 07:29:36 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpWriteRecord 3
+.Sh NAME
+.Nm DlpWriteRecord
+.Nd write a record to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fo DlpWriteRecord
+.Fa "PConnection *pconn"
+.Fa "const ubyte handle"
+.Fa "const ubyte flags"
+.Fa "const udword id"
+.Fa "const ubyte attributes"
+.Fa "const ubyte category"
+.Fa "const udword len"
+.Fa "const ubyte *data"
+.Fa "udword *recid"
+.Fc
+.Sh DESCRIPTION
+.Nm
+writes a record to a database on a Palm. The database must already be
+open for writing.
+.Pp
+.Fa handle
+is a database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+.Fa flags
+specifies flags. There are no useful flags. Set this argument to 0.
+.Pp
+.Fa id
+specifies the record's ID.
+.Pp
+.Fa attributes
+specifies the record's attributes. See the
+.Dv DLPCMD_DBFLAG_*
+flags in
+.Pa <pconn/dlp_cmd.h> .
+.Pp
+.Fa category
+specifies the record's category (but see the
+.Sx BUGS
+section).
+.Pp
+.Fa len
+specifies the length of
+.Fa data .
+.Pp
+.Fa data
+points to the record data.
+.Pp
+.Fa recid
+is filled in with the record ID on the Palm. The Palm may assign the
+record an ID other than that given by
+.Fa id .
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpWriteResource 3 .
+.Sh BUGS
+The
+.Fa category
+argument might refer to the 8-bit category identifier, or it might
+refer to the 4-bit index of the category identifier in the AppInfo
+block. I think it's the latter.

@@ -1,0 +1,135 @@
+.\" libpdb.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: libpdb.3,v 1.2 2001-11-20 14:41:52 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd July 10, 2001
+.Dt LIBPDB 3
+.Sh NAME
+.Nm libpdb
+.Nd library for reading and writing Palm database files
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pdb.h>
+.Pp
+Function prototypes are given in their respective man pages.
+.Pp
+If
+.Nm
+was built with I18N support, you may need to link with
+.Ar -lintl
+.Sh DESCRIPTION
+The
+.Nm
+library provides functions for reading and writing Palm database
+files, both PDB (record database) and PRC (resource database).
+.Sh INTRODUCTION
+A Palm database file has the following overall structure:
+.Bl -bullet
+.It
+Header.
+.Pp
+This includes the database's name; attribute flags; version; creation,
+modification, and backup time; modification number; type; creator; and
+unique ID number seed. It also specifies whether or not the database
+has an AppInfo and/or sort block.
+.Pp
+The creator field identifies the application with which the database
+is associated: it will be the same as the creator field of the
+application database.
+.It
+Index header.
+.It
+Record/resource index.
+.Pp
+The index lists the locations of records or resources in the database.
+The index header specifies the number of records in the index, and may
+optionally point to another index in the database.
+.Nm
+manages the index and index header.
+.It
+Optional AppInfo block.
+.Pp
+The AppInfo block contains application-specific data that pertains to
+the database as a whole. Typically, it contains category information,
+as well as user preference settings.
+.It
+Optional sort block.
+.Pp
+I'm not sure what this is. I think it specifies the order in which to
+display the records.
+.It
+Records/resources.
+.Pp
+.El
+
+.\" XXX
+.Sh FUNCTIONS
+.Nm
+includes the following functions, which are described in their
+respective manual pages:
+
+.Ft void
+.Fn free_pdb "struct pdb *db"
+
+.Ft struct pdb *
+.Fn new_Record "const ubyte flags" "const ubyte category" "const udword id" "const uword len" "const ubyte *data"
+
+.Ft struct pdb_resource *
+.Fn new_Resource "const udword type" "const uword id" "const uword len" "const ubyte *data"
+
+.Ft void
+.Fn pdb_FreeRecord "struct pdb_record *rec"
+
+.Ft void
+.Fn pdb_FreeResource "struct pdb_resource *rsrc"
+
+.Ft struct pdb *
+.Fn pdb_Read "int fd"
+
+.Ft int
+.Fn pdb_Write "const struct pdb *db" "int fd"
+
+.Ft struct pdb_record *
+.Fn pdb_FindRecordByID "const struct pdb *db" "const udword id"
+
+.Ft struct pdb_record *
+.Fn pdb_FindRecordByIndex "const struct pdb *db" "const uword index"
+
+.Ft int
+.Fn pdb_DeleteRecordByID "struct pdb *db" "const udword id"
+
+.Ft int
+.Fn pdb_AppendRecord "struct pdb *db" "struct pdb_record *newrec"
+
+.Ft int
+.Fn pdb_AppendResource "struct pdb *db" "struct pdb_resource *newrsrc"
+
+.Ft int
+.Fn pdb_InsertRecord "struct pdb *db" "struct pdb_record *prev" "struct pdb_record *newrec"
+
+.Ft int
+.Fn pdb_InsertResource "struct pdb *db" "struct pdb_resource *prev" "struct pdb_resource *newrsrc"
+
+.Ft struct pdb_record *
+.Fn new_Record "const ubyte attributes" "const ubyte category" "const udword id" "const uword len" "const ubyte *data"
+
+.Ft struct pdb_record *
+.Fn pdb_CopyRecord "const struct pdb *db" "const struct pdb_record *rec"
+
+.Ft struct pdb_resource *
+.Fn pdb_CopyResource "const struct pdb *db" "const struct pdb_resource *rsrc"
+
+.Ft int
+.Fn pdb_LoadHeader "int fd" "struct pdb *db"
+
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.Sh LIMITATIONS
+Does not support multiple indexes in one database.

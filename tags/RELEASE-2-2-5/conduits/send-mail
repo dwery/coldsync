@@ -1,0 +1,175 @@
+#!/usr/bin/perl
+#
+# ColdSync Mail conduit
+#
+# $Id: send-mail,v 1.9 2001-11-13 13:51:00 arensb Exp $
+#
+use strict;
+use Palm::Mail;
+use ColdSync;
+use Text::Wrap;
+
+# Default values for headers
+%HEADERS = (
+	# XXX - This ought to be determined at configure-time
+	"Sendmail"	=> "/usr/sbin/sendmail",
+	"My-Address"	=> (getpwuid($>))[0],
+	"Wrap"		=> 74,
+	"Outbox-name"	=> "Outbox",	# Name of category for outgoing mail
+
+	"Paragraph"	=> "",		# Paragraph indent
+	"Line-Indent"	=> "",		# Line indentation
+);
+
+my $VERSION = (qw( $Revision: 1.9 $ ))[1];	# Conduit version
+
+# print_header
+# Print a valid mail header. Headers with empty values are ignored.
+# Newlines are replaced with newline-whitespace, per RFC822.
+sub print_header
+{
+	my $header_name = shift;
+	my $header_content = shift;
+
+	if (!defined($header_content) || ($header_content eq ""))
+	{
+		# Empty header
+		return;
+	}
+
+	$header_content =~ s/\n(?!\s)/\n\t/mg;
+	print SENDMAIL "$header_name: $header_content\n";
+}
+
+StartConduit("dump");
+
+$Text::Wrap::columns = $HEADERS{Wrap};
+my $record;
+foreach $record (@{$PDB->{records}})
+{
+	# Skip everything except the Outbox folder
+	next unless $PDB->{appinfo}{categories}[$record->{category}]{name}
+		eq $HEADERS{"Outbox-name"};
+
+	my $whoami = $HEADERS{"My-Address"};
+	my @sm_args;		# Sendmail command-line arguments
+
+	@sm_args = ("-t", "-i");	# -t: get addressee from the
+					# body of the message
+					# -i: ignore lines consisting of
+					# a single dot.
+	if ($record->{confirm_delivery})
+	{
+		push @sm_args, "-N", "success,failure";
+	}
+
+	open SENDMAIL, "| $HEADERS{Sendmail} @sm_args" or
+		die "502 Can't run $HEADERS{Sendmail}: $!\n";
+	select SENDMAIL;
+
+	# Print header fields so that they conform to RFC822 (a continuation
+	# line must start with a whitespace or tab character).
+	&print_header("From", $whoami);
+	&print_header("To", $record->{"to"});
+	&print_header("Cc", $record->{"cc"});
+	&print_header("Bcc", $record->{bcc});
+	&print_header("Reply-To", $record->{reply_to})
+	&print_header("X-Sent-To", $record->{send_to});
+	&print_header("X-Mailer",
+	    "$HEADERS{Daemon} $HEADERS{Version}/send-mail conduit $VERSION");
+	&print_header("Subject", $record->{subject});
+
+	my $body = $record->{body};
+
+	$body .= "\n" if $body !~ /\n$/m;	# Make sure message ends in \n
+
+	# Wrap the text if requested
+	$body = wrap($HEADERS{"Paragraph"}, $HEADERS{"Line-Indent"},
+			$record->{body})
+		if $HEADERS{Wrap} > 0;
+
+	print "\n", $body;
+
+	select STDOUT;
+	close SENDMAIL;
+
+	$PDB->delete_Record($record, 1);
+}
+
+$PDB->Write($HEADERS{OutputDB} || $HEADERS{InputDB});
+
+EndConduit;
+
+__END__
+
+=head1 NAME
+
+send-mail - ColdSync conduit to send Palm mail
+
+=head1 SYNOPSIS
+
+    conduit dump {
+        type: mail/DATA;
+        path: "<...>/send-mail";
+      arguments:
+        Sendmail:	/path/to/sendmail;
+        My-Address:	user@my.dom.ain;
+        Outbox-name:	Outbox;
+    }
+
+=head1 DESCRIPTION
+
+The C<send-mail> conduit reads the Palm Mail database, finds the
+outgoing messages, and passes them on to C<sendmail> for further
+processing.
+
+Once each message has been successfully passed along to C<sendmail>,
+it is deleted.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<Sendmail>
+
+Specifies the path to the C<sendmail> executable. The default is
+F</usr/sbin/sendmail>.
+
+=item C<My-Address>
+
+Specifies the return address to put on outgoing messages. If omitted,
+defaults to your username (or, more precisely, the username of the
+first user with your uid).
+
+=item C<Wrap>
+
+Specifies the column at which to wrap long lines. Defaults to 74. A
+value of 0 specifies that text should not be wrapped.
+
+=item C<Outbox-name>
+
+Specifies the category where outgoing messages are stored.
+If omitted, the default F<Outbox> is used. For German use F<Ausgang>.
+
+=head1 BUGS
+
+Messages that were successfully sent are not immediately deleted on
+the Palm, but remain until the next sync. This is a limitation of
+ColdSync's conduit model.
+
+The ``Confirm Read'' flag, as well as the various conduit-related
+options on the Palm, are ignored.
+
+The ``Signature'' option on the Palm is ignored; this will most likely
+not be fixed. Nor is there an option to include a F<.signature> file
+on the desktop machine; this will most likely be fixed.
+
+=head1 AUTHOR
+
+Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+F<ColdSync Conduits>, in the ColdSync documentation.

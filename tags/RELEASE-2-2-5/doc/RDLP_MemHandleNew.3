@@ -1,0 +1,63 @@
+.\" RDLP_MemHandleNew.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: RDLP_MemHandleNew.3,v 1.1 2001-09-05 07:29:47 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt RDLP_MemHandleNew 3
+.Sh NAME
+.Nm RDLP_MemHandleNew ,
+.Nm RDLP_MemMove ,
+.Nm RDLP_MemReadable
+.Nd PalmOS memory-manipulation functions
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn RDLP_MemHandleNew "PConnection *pconn" "udword size"
+.Ft int
+.Fn RDLP_MemMove "PConnection *pconn" "ubyte *dst" "const udword src" "const udword len"
+.Ft int
+.Fn RDLP_MemReadable "PConnection *pconn" "udword addr"
+.Sh DESCRIPTION
+Presumably,
+.Nm RDLP_MemHandleNew
+allocates a new memory chunk of
+.Fa size
+bytes, and returns a pointer to it.
+.Pp
+.Nm RDLP_MemMove
+reads a region of memory, and returns it.
+.Pp
+.Fa dst
+is a pointer to a buffer that will be filled in with the desired
+memory region.
+.Pp
+.Fa src
+is the starting address of the region to read.
+.Pp
+.Fa len
+specifies the length of the region to read.
+.Pp
+Presumably
+.Nm RDLP_MemReadable
+tests whether a given memory address exists and is readable.
+.Sh RETURN VALUE
+These functions all return the contents of the Palm's D0 register
+after the function call, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpRPC 3 .
+.Sh BUGS
+.Nm RDLP_MemHandleNew
+and
+.Nm RDLP_MemReadable
+are untested.

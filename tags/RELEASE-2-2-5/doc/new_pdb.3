@@ -1,0 +1,46 @@
+.\" new_pdb.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: new_pdb.3,v 1.1 2001-11-20 14:35:18 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt new_pdb 3
+.Sh NAME
+.Nm new_pdb
+.Nm free_pdb
+.Nd create and destroy Palm database structures
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft struct pdb *
+.Fn new_pdb
+.Ft void
+.Fn free_pdb "struct pdb *db"
+.Sh DESCRIPTION
+.Nm new_pdb
+allocates and initializes a new, empty
+.Ft struct pdb
+structure.
+.Pp
+.Nm free_pdb
+frees the memory used by a
+.Ft struct pdb
+previously returned by
+.Nm new_pdb ,
+as well as any records, resources, AppInfo or sort blocks the database
+may contain.
+.Sh RETURN VALUE
+.Nm new_pdb
+returns a pointer to the newly-allocated
+.Ft struct pdb,
+or NULL in case of error.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr pdb_Read 3 .

@@ -1,0 +1,43 @@
+.\" pdb_DeleteRecordByID.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_DeleteRecordByID.3,v 1.1 2001-11-20 14:35:21 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_DeleteRecordByID 3
+.Sh NAME
+.Nm pdb_DeleteRecordByID
+.Nd short description
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft int
+.Fn pdb_DeleteRecordByID "struct pdb *db" "const udword id"
+.Sh DESCRIPTION
+.Nm pdb_DeleteRecordByID
+looks for a record in the database pointed to by
+.Fa db
+whose ID is
+.Fa id ,
+removes it from the database, and frees the memory taken up by that
+record.
+.Sh RETURN VALUE
+.Nm pdb_DeleteRecordByID
+returns 0 if successful, or a negative value otherwise. If there was
+no record in
+.Fa db
+with ID
+.Fa id ,
+that is considered a success, since the record was to be deleted
+anyway.
+.Sh SEE ALSO
+.Xr libpdb 3 .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
