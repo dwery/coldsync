@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.40 2002-11-27 23:10:33 azummo Exp $
+ * $Id: install.c,v 2.41 2003-09-30 20:10:19 azummo Exp $
  */
 
 #include "config.h"
@@ -53,9 +53,12 @@
  * upload_database() records this change in 'db', but it is the caller's
  * responsibility to save this change to the appropriate file, if
  * applicable.
+ * In some cases, a database may already exist (i.e. restoring to a clean
+ * PDA). If force is true, existing databases will be wiped clean
+ * before the upload. Otherwise the upload will fail.
  */
 int
-upload_database(PConnection *pconn, struct pdb *db)
+upload_database(PConnection *pconn, struct pdb *db, Bool force)
 {
 	int err;
 	ubyte dbh;			/* Database handle */
@@ -92,8 +95,35 @@ upload_database(PConnection *pconn, struct pdb *db)
 	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
 
 	err = DlpCreateDB(pconn, &newdb, &dbh);
-	/* XXX - Check err */
-	if (err != (int) DLPSTAT_NOERR)
+	if (force && err == DLPSTAT_EXISTS)
+	{
+		/* just open it and delete all the records. But only if the force
+		flag is set. We don't want to stomp on live data. */
+		err = DlpOpenDB(pconn, newdb.card, db->name, DLPCMD_MODE_WRITE, &dbh );
+		if (err != (int) DLPSTAT_NOERR)
+		{
+			Error(_("Unable to create or open database \"%s\"."), db->name);
+			print_latest_dlp_error(pconn);
+			return -1;
+		}
+
+		/* In order to do a proper install you need an empty database */
+		if (IS_RSRC_DB(db))
+		{
+			err = DlpDeleteResource(pconn, dbh, DLPCMD_DELRSRCFLAG_ALL, 0, 0);
+		} else {
+			err = DlpDeleteRecord(pconn, dbh, DLPCMD_DELRECFLAG_ALL, 0);
+		}
+
+		if (err != (int) DLPSTAT_NOERR)
+		{
+			Error(_("Unable to empty database \"%s\"."), db->name);
+			print_latest_dlp_error(pconn);
+			err = DlpCloseDB(pconn, dbh, 0);
+
+			return -1;
+		}
+	} else if (err != (int) DLPSTAT_NOERR)
 	{
 		Error(_("Error creating database \"%s\"."),
 			db->name);
@@ -573,21 +603,16 @@ InstallNewFiles(struct Palm *palm,
 		{
 			/* Delete the existing database */
 			err = DlpDeleteDB(palm_pconn(palm), CARD0, pdb->name);
-			if (err != (int) DLPSTAT_NOERR)
-			{
-				Error(_("%s: Error deleting \"%s\" on the Palm."),
-				      "InstallNewFiles",
-				      pdb->name);
-				print_latest_dlp_error(palm_pconn(palm)); 
-				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
-					      _("Install"),
-					      pdb->name,
-					      _("Error"));
-				free_pdb(pdb);
-			}
+
+			/* A failure to delete isn't critical. If we've reached this
+			 * point with an existing database the force_install flag is
+			 * set or we're installing a newer version.
+			 *
+			 * upload_database() will get rid of it.
+			 */
 		}
 
-		err = upload_database(palm_pconn(palm), pdb);
+		err = upload_database(palm_pconn(palm), pdb, force_install || dbinfo);
 		if (err < 0)
 		{
 			Error(_("%s: Error uploading \"%s\"."),

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.75 2003-06-26 21:01:07 azummo Exp $
+ * $Id: coldsync.h,v 1.76 2003-09-30 20:10:18 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -430,7 +430,7 @@ extern int restore_dir(PConnection *pconn,
 		       const char *dirname);
 
 /* install.c */
-extern int upload_database(PConnection *pconn, struct pdb *db);
+extern int upload_database(PConnection *pconn, struct pdb *db, Bool force);
 extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
 extern int InstallNewFiles(struct Palm *palm,
 			   char *newdir,

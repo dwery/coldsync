@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.33 2002-09-07 15:08:20 azummo Exp $
+ * $Id: restore.c,v 2.34 2003-09-30 20:10:19 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,6 +46,67 @@
 #include "coldsync.h"
 #include "cs_error.h"
 
+/* is_database_restorable
+ * determines if restoring this database would be at all possible
+ * or sane.
+ * the rules for deciding restorability include attributes and database
+ * versions.
+ * XXX PalmOS version compatibility would be a real nice thing to check
+ * if we had that information.
+ */
+static Bool
+is_database_restorable(PConnection *pconn,
+                       struct Palm *palm,
+                       struct pdb *pdb)
+{
+	struct dlp_dbinfo *dbinfo = NULL;
+
+	if (pdb->attributes & PDB_ATTR_RO) {
+		/* don't even bother if the local database says it's read only. */
+		return False;
+	}
+
+	dbinfo = palm_find_dbentry(palm, pdb->name);
+	if (dbinfo == NULL)
+	{
+		/* A NULL return means either DLP failed or there's no database
+	 	 * on the PDA. Anything more subtle than a dropped connection
+		 * has to be handled elsewhere. Fortunately, in the case of a restore,
+		 * failure _is_ an option.
+		 */
+		return PConn_isonline(pconn) ? True : False;
+	}
+
+	/* We already checked with the local database, but the read only
+	 * flag that really matters is the one on the PDA. If the PDA says it's
+	 * read only, we're unlikely to convince it otherwise regardless of what
+	 * the local database file says.
+	 */
+	if (dbinfo->db_flags & DLPCMD_DBFLAG_RO )
+	{
+		return False;
+	}
+
+	/* Keep in mind that we're looking at restoring here. If the database
+	 * versions aren't identical it's a pretty good bet that the database
+	 * we're trying to upload _isn't_ from a backup of this particular PDA.
+	 * Trying to force it, even if flags would allow it, leads to all
+	 * sorts of problems.
+	 */
+	if (pdb->version != dbinfo->version)
+	{
+		return False;
+	}
+
+	/* this should never happen, but it's a cheap stupidity shield */
+	if (pdb->type != dbinfo->type || pdb->creator != dbinfo->creator)
+	{
+		return False;
+	}
+
+	return True;
+}
+
 /* restore_file
  * Restore an individual file.
  */
@@ -79,88 +140,18 @@ restore_file(PConnection *pconn,
 
 	close(bakfd);
 
-	err = DlpDeleteDB(pconn, CARD0, pdb->name);
-		/* XXX - It isn't immediately clear what would be returned
-		 * if you tried deleting a read-only database. Try it and
-		 * find out.
-		 */
-		/* It's DLPSTAT_READONLY. Maybe we could check pdb->attributes
-		 * to see if the RO flag is set and avoid the call to
-		 * DlpDeleteDB()? btw, as is, will allow you to upload
-		 * system updates like FATFS.prc .
-		 */
-
-	switch ((dlp_stat_t) err)
+	if (!is_database_restorable(pconn,palm,pdb))
 	{
-	    case DLPSTAT_NOERR:
-	    case DLPSTAT_NOTFOUND:
-		/* If the database wasn't found, that's not an error */
-		break;
-	    case DLPSTAT_READONLY:
-	    	/* The db is read only or ROM based */
-	    	break;
-	    case DLPSTAT_DBOPEN:
-		/* Database is already open by someone else. If the
-		 * OKNEWER flag is set, then it's okay to overwrite it
-		 * anyway (e.g., "Graffiti Shortcuts").
-		 */
-	    {
-		    const struct dlp_dbinfo *remotedb;
-
-		    /* Look up the database on the Palm. If it has the
-		     * OKNEWER flag set, then go ahead and upload the
-		     * new database anyway.
-		     */
-		    remotedb = palm_find_dbentry(palm, pdb->name);
-		    if (remotedb == NULL)
-		    {
-			    /* This should never happen */
-			    Warn(_("%s: Database %s doesn't exist, "
-				   "yet it is open. Huh?"),
-				 "Restore",
-				 pdb->name);
-			    /* But it shouldn't bother us any */
-			    break;
-		    }
-
-		    if ((remotedb->db_flags & DLPCMD_DBFLAG_OKNEWER)
-			== 0)
-		    {
-			    Warn(_("%s: Can't restore %s: it is "
-				   "opened by another application."),
-				 "Restore",
-				 pdb->name);
-			    return -1;
-		    }
-
-		    /* XXX - Even if OKNEWER is set, pdb_Upload() will fail
-		     * later on, because it tries to create the database
-		     * anew. This fails because the database couldn't be
-		     * deleted.
-		     * Presumably, the thing to do is to add a special
-		     * function for this case, one that deletes all of the
-		     * records in the database, and uploads new ones.
-		     */
-
-		    break;	/* Okay to overwrite */
-	    }
-
-	    default:
-		Warn(_("Restore: Can't delete database \"%s\"."),
-		     pdb->name);
-		print_latest_dlp_error(pconn);
-		return -1;
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Restore"), pdb->name, _("Not restorable"));
+		return 0;
 	}
 
-	/* Call pdb_Upload() to install the file. It shouldn't exist
-	 * any more by now.
+	/* Call pdb_Upload() to install the file. Enable the force
+	 * option so that existing databases that aren't newer than
+    * the one were trying to install are wiped first.
 	 */
-	err = upload_database(pconn, pdb);
-		/* XXX - This appears to fail for "Graffiti Shortcuts": it
-		 * tries to create the database on the Palm, but since the
-		 * database already exists (it can't be deleted because
-		 * it's already open), it fails.
-		 */
+	err = upload_database(pconn, pdb, True);
 	SYNC_TRACE(4)
 		fprintf(stderr, "pdb_Upload returned %d\n", err);  
 	if (err < 0)
