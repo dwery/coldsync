@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.25 2001-03-27 14:11:17 arensb Exp $
+ * $Id: restore.c,v 2.26 2001-03-29 05:38:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -172,7 +172,7 @@ restore_file(PConnection *pconn,
 	}
 
 	/* Call pdb_Upload() to install the file. It shouldn't exist
-	 * anymore by now.
+	 * any more by now.
 	 */
 	add_to_log(_("Restore "));
 	add_to_log(pdb->name);
@@ -196,7 +196,23 @@ restore_file(PConnection *pconn,
 			break;
 		}
 
-		add_to_log(_("Error\n"));
+		/* XXX - Ugh. Hack-ptui! */
+		switch (cs_errno)
+		{
+		    case CSE_CANCEL:
+			add_to_log(_("Cancelled\n"));
+			free_pdb(pdb);
+			return -1;
+		    case CSE_NOCONN:
+			free_pdb(pdb);
+			return -1;
+		    default:
+			/* Anything else, we hope is transient.
+			 * Continue and hope for the best.
+			 */
+			add_to_log(_("Error\n"));
+			break;
+		}
 	} else
 		add_to_log(_("OK\n"));
 
@@ -274,6 +290,10 @@ restore_dir(PConnection *pconn,
 		{
 			switch (cs_errno)
 			{
+			    case CSE_CANCEL:
+				Error(_("Cancelled by Palm."));
+				closedir(dir);
+				return -1;
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
 				closedir(dir);

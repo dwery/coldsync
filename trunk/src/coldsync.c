@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.89 2001-03-27 14:08:53 arensb Exp $
+ * $Id: coldsync.c,v 1.90 2001-03-29 05:36:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1000,12 +1000,21 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	/* See how the above loop terminated */
-	if (cs_errno == CSE_NOCONN)
+	switch (cs_errno)
 	{
+	    case CSE_CANCEL:
+		Error(_("Sync cancelled by Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	    case CSE_NOCONN:
 		Error(_("Lost connection with Palm."));
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
+	    default:
+		/* No error, nor not an important one */
+		break;
 	}
 
 	/* XXX - If it's configured to install new databases last, install
@@ -1287,6 +1296,11 @@ run_mode_Backup(int argc, char *argv[])
 		{
 			switch (cs_errno)
 			{
+			    case CSE_CANCEL:
+				Error(_("Cancelled by Palm."));
+				goto done;	/* Still want to upload
+						 * log */
+
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
 				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -1331,6 +1345,11 @@ run_mode_Backup(int argc, char *argv[])
 			{
 				switch (cs_errno)
 				{
+				    case CSE_CANCEL:
+					Error(_("Cancelled by Palm."));
+					goto done;	/* Still want to
+							 * upload log */
+
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
 					Disconnect(pconn,
@@ -1345,6 +1364,7 @@ run_mode_Backup(int argc, char *argv[])
 		}
 	}
 
+  done:
 	/* Upload sync log */
 	if (synclog != NULL)
 	{
@@ -1438,7 +1458,7 @@ run_mode_Restore(int argc, char *argv[])
 	 */
 	if (global_opts.do_restore)
 	{
-		/* Compatibility mode: the user has specified "-mr <dir>".
+		/* Compatibility mode: the user has specified "-r <dir>".
 		 * Restore everything in <dir>.
 		 */
 		err = restore_dir(pconn, palm, global_opts.backupdir);
@@ -1446,6 +1466,9 @@ run_mode_Restore(int argc, char *argv[])
 		{
 			switch (cs_errno)
 			{
+			    case CSE_CANCEL:
+				Error(_("Cancelled by Palm."));
+				goto done;
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
 				break;
@@ -1467,6 +1490,9 @@ run_mode_Restore(int argc, char *argv[])
 				{
 					switch (cs_errno)
 					{
+					    case CSE_CANCEL:
+						Error(_("Cancelled by Palm."));
+						goto done;
 					    case CSE_NOCONN:
 						Error(_("Lost connection to "
 							"Palm."));
@@ -1488,6 +1514,9 @@ run_mode_Restore(int argc, char *argv[])
 				{
 					switch (cs_errno)
 					{
+					    case CSE_CANCEL:
+						Error(_("Cancelled by Palm."));
+						goto done;
 					    case CSE_NOCONN:
 						Error(_("Lost connection to "
 							"Palm."));
@@ -1505,6 +1534,7 @@ run_mode_Restore(int argc, char *argv[])
 		}
 	}
 
+  done:
 	/* Upload sync log */
 	if (synclog != NULL)
 	{
