@@ -3,7 +3,7 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 1.3 1999-02-23 01:37:38 arensb Exp $
+ * $Id: backup.c,v 1.4 1999-02-24 13:23:31 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <string.h>		/* For memcpy() et al. */
 #include "config.h"
 #include "palm/palm_types.h"
 #include "pconn/palm_errno.h"
@@ -19,6 +20,10 @@
 #include "palm/pdb.h"
 #include "coldsync.h"
 
+/* XXX - Can these two monster functions be broken down into smaller
+ * pieces? */
+
+/* XXX - This should build a struct pdb, then dump it to a file */
 int
 Cold_RecordBackup(struct PConnection *pconn,
 		  struct ColdPalm *palm,
@@ -224,11 +229,11 @@ printf("  %s has %d records\n", dbinfo->name, num_recs);
 		/* Read the record info structs, and the record data */
 		for (i = 0; i < num_recs; i++)
 		{
-extern int slp_debug;
-extern int padp_debug;
+/*  extern int slp_debug; */
+/*  extern int padp_debug; */
 
-slp_debug = 100;
-padp_debug = 100;
+/*  slp_debug = 100; */
+/*  padp_debug = 100; */
 			/* XXX - Need a const for "everything" */
 			err = DlpReadRecordByID(pconn, dbh,
 						recids[i],
@@ -452,6 +457,7 @@ fprintf(stderr, "### Resetting sync flags\n");
 	return err;
 }
 
+/* XXX - This should build a struct pdb, then dump it to a file */
 int
 Cold_ResourceBackup(struct PConnection *pconn,
 		    struct ColdPalm *palm,
@@ -659,11 +665,11 @@ printf("  %s has %d resources\n", dbinfo->name, num_rsrcs);
 		/* Read the resource info structs, and the resource data */
 		for (i = 0; i < num_rsrcs; i++)
 		{
-extern int slp_debug;
-extern int padp_debug;
+/*  extern int slp_debug; */
+/*  extern int padp_debug; */
 
-slp_debug = 100;
-padp_debug = 100;
+/*  slp_debug = 100; */
+/*  padp_debug = 100; */
 			/* XXX - Need a const for "everything" */
 			err = DlpReadResourceByIndex(
 				pconn, dbh,
