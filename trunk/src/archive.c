@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.7 1999-11-09 06:22:54 arensb Exp $
+ * $Id: archive.c,v 1.8 1999-11-20 05:13:09 arensb Exp $
  */
 
 #include "config.h"
@@ -31,6 +31,11 @@
 #include <unistd.h>		/* For write(), lseek() */
 #include <time.h>		/* For time() */
 #include <errno.h>		/* For errno */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "pconn/pconn.h"
 #include "coldsync.h"
 #include "archive.h"
@@ -73,7 +78,7 @@ arch_create(char *fname,
 	 */
 	if ((fd = open(fnamebuf, O_RDWR | O_CREAT | O_TRUNC, 0600)) < 0)
 	{
-		fprintf(stderr, "arch_create: Can't open file \"%s\"\n",
+		fprintf(stderr, _("arch_create: Can't open file \"%s\"\n"),
 			fnamebuf);
 		perror("open");
 		return -1;
@@ -93,7 +98,7 @@ arch_create(char *fname,
 	/* Write the archive header to the file */
 	if ((err = write(fd, headerbuf, ARCH_HEADERLEN)) < 0)
 	{
-		fprintf(stderr, "arch_create: Can't write archive file header\n");
+		fprintf(stderr, _("arch_create: Can't write archive file header\n"));
 		perror("write");
 		close(fd);
 		return -1;
@@ -142,7 +147,7 @@ arch_open(char *fname,
 	{
 		if (errno != ENOENT)
 		{
-			fprintf(stderr, "arch_open: Can't open \"%s\"\n",
+			fprintf(stderr, _("arch_open: Can't open \"%s\"\n"),
 				fnamebuf);
 			perror("open");
 		}
@@ -152,7 +157,7 @@ arch_open(char *fname,
 	/* Seek to the end of the file */
 	if ((err = lseek(fd, 0L, SEEK_END)) < 0)
 	{
-		fprintf(stderr, "arch_open: Can't seek to end of file\n");
+		fprintf(stderr, _("arch_open: Can't seek to end of file\n"));
 		perror("lseek");
 		close(fd);
 		return -1;

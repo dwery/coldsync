@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.12 1999-11-10 06:46:19 arensb Exp $
+ * $Id: coldsync.c,v 1.13 1999-11-20 05:13:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,6 +23,9 @@
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
 #include "pconn/pconn.h"
 #include "coldsync.h"
 #include "pdb.h"
@@ -125,10 +128,16 @@ main(int argc, char *argv[])
 	int err;
 	int i;
 
+#if HAVE_LIBINTL
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+#endif	/* HAVE_LIBINTL */
+
 	/* Parse arguments and read config file(s) */
 	if ((err = get_config(argc, argv)) < 0)
 	{	
-		fprintf(stderr, "Error loading configuration\n");
+		fprintf(stderr, _("Error loading configuration\n"));
 		exit(1);
 	}
 
@@ -170,7 +179,7 @@ main(int argc, char *argv[])
 	/* Make sure at least one port was specified */
 	if (config.listen == NULL)
 	{
-		fprintf(stderr, "Error: no port specified.\n");
+		fprintf(stderr, _("Error: no port specified.\n"));
 		exit(1);
 	}
 
@@ -188,17 +197,17 @@ main(int argc, char *argv[])
 			config.listen[0].device);
 	if ((pconn = new_PConnection(config.listen[0].device)) == NULL)
 	{
-		fprintf(stderr, "Error: can't open connection.\n");
+		fprintf(stderr, _("Error: can't open connection.\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
 
-	printf("Please press the HotSync button.\n");
+	printf(_("Please press the HotSync button.\n"));
 
 	/* Connect to the Palm */
-	if ((err = Connect(pconn, config.listen[0].device)) < 0)
+	if ((err = Connect(pconn)) < 0)
 	{
-		fprintf(stderr, "Can't connect to Palm\n");
+		fprintf(stderr, _("Can't connect to Palm\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -206,7 +215,7 @@ main(int argc, char *argv[])
 	/* Get system, NetSync and user info */
 	if ((err = GetPalmInfo(pconn, &palm)) < 0)
 	{
-		fprintf(stderr, "Can't get system/user/NetSync info\n");
+		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -216,7 +225,7 @@ main(int argc, char *argv[])
 	 */
 	if ((err = load_palm_config(&palm)) < 0)
 	{
-		fprintf(stderr, "Can't get per-Palm config.\n");
+		fprintf(stderr, _("Can't get per-Palm config.\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -227,14 +236,14 @@ main(int argc, char *argv[])
 
 	if ((err = init_conduits(&palm)) < 0)
 	{
-		fprintf(stderr, "Can't initialize conduits\n");
+		fprintf(stderr, _("Can't initialize conduits\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
 
 	if ((err = GetMemInfo(pconn, &palm)) < 0)
 	{
-		fprintf(stderr, "GetMemInfo() returned %d\n", err);
+		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -268,7 +277,7 @@ main(int argc, char *argv[])
 	/* Get a list of all databases on the Palm */
 	if ((err = ListDBs(pconn, &palm)) < 0)
 	{
-		fprintf(stderr, "ListDBs returned %d\n", err);
+		fprintf(stderr, _("ListDBs returned %d\n"), err);
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -366,7 +375,7 @@ main(int argc, char *argv[])
 				      False);*/
 		if (err < 0)
 		{
-			fprintf(stderr, "Error installing new files.\n");
+			fprintf(stderr, _("Error installing new files.\n"));
 			/* XXX - Clean up */
 			exit(1);
 		}
@@ -380,7 +389,7 @@ main(int argc, char *argv[])
 			if (err < 0)
 			{
 				fprintf(stderr,
-					"Error %d running pre-fetch conduits.\n",
+					_("Error %d running pre-fetch conduits.\n"),
 					err);
 				/* XXX - Clean up */
 				exit(1);
@@ -393,7 +402,7 @@ main(int argc, char *argv[])
 			err = HandleDB(pconn, &palm, i);
 			if (err < 0)
 			{
-				fprintf(stderr, "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n");
+				fprintf(stderr, _("!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"));
 				/* XXX - Ought to be able to recover from
 				 * this: if it's a problem with the conduit
 				 * or with the local copy of the backup
@@ -423,7 +432,7 @@ main(int argc, char *argv[])
 		/* Write updated user info */
 		if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
 		{
-			fprintf(stderr, "Error writing user info\n");
+			fprintf(stderr, _("Error writing user info\n"));
 			/* XXX - Clean up */
 			exit(1);
 		}
@@ -435,7 +444,7 @@ main(int argc, char *argv[])
 
 			if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 			{
-				fprintf(stderr, "Error writing sync log.\n");
+				fprintf(stderr, _("Error writing sync log.\n"));
 				/* XXX - Clean up */
 				exit(1);
 			}
@@ -447,7 +456,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Closing connection to Palm\n");
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
-		fprintf(stderr, "Error disconnecting\n");
+		fprintf(stderr, _("Error disconnecting\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -463,7 +472,7 @@ main(int argc, char *argv[])
 		if (err < 0)
 		{
 			fprintf(stderr,
-				"Error %d running post-dump conduits.\n",
+				_("Error %d running post-dump conduits.\n"),
 				err);
 			/* XXX - Clean up */
 			break;
@@ -475,7 +484,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Cleaning up conduits\n");
 	if ((err = tini_conduits()) < 0)
 	{
-		fprintf(stderr, "Error cleaning up conduits\n");
+		fprintf(stderr, _("Error cleaning up conduits\n"));
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -496,8 +505,7 @@ main(int argc, char *argv[])
  * might also be the place to fork().
  */
 int
-Connect(struct PConnection *pconn,
-	  const char *name)
+Connect(struct PConnection *pconn)
 {
 	int err;
 	struct slp_addr pcaddr;
@@ -520,7 +528,7 @@ Connect(struct PConnection *pconn,
 		{
 			if (palm_errno == PALMERR_TIMEOUT)
 				continue;
-			fprintf(stderr, "Error during cmp_read: (%d) %s\n",
+			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
 				palm_errno,
 				palm_errlist[palm_errno]);
 			exit(1); /* XXX */
@@ -539,7 +547,7 @@ Connect(struct PConnection *pconn,
 
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Sending INIT packet\n");
-	cmp_write(pconn, &cmpp);
+	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
 
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Finished sending INIT packet\n");
@@ -592,7 +600,7 @@ Disconnect(struct PConnection *pconn, const ubyte status)
 	err = DlpEndOfSync(pconn, status);
 	if (err < 0)
 	{
-		fprintf(stderr, "Error during DlpEndOfSync: (%d) %s\n",
+		fprintf(stderr, _("Error during DlpEndOfSync: (%d) %s\n"),
 			palm_errno,
 			palm_errlist[palm_errno]);
 		return err;
@@ -708,8 +716,8 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		{
 			/* XXX - Fix this */
 			fprintf(stderr,
-				"### Error: you have an old Palm, one that doesn't say how many\n"
-				"databases it has. I can't cope with this.\n");
+				_("### Error: you have an old Palm, one that doesn't say how many\n"
+				"databases it has. I can't cope with this.\n"));
 			return -1;
 		}
 
@@ -795,7 +803,7 @@ CheckLocalFiles(struct Palm *palm)
 
 	if ((dir = opendir(backupdir)) == NULL)
 	{
-		fprintf(stderr, "CheckLocalFiles: can't open \"%s/\"\n",
+		fprintf(stderr, _("CheckLocalFiles: can't open \"%s/\"\n"),
 			backupdir);
 		perror("opendir");
 		return -1;
@@ -923,7 +931,7 @@ CheckLocalFiles(struct Palm *palm)
 			 */
 			if (errno != ENOENT)
 			{
-				fprintf(stderr, "CheckLocalFiles: Error in checking for \"%s\"\n",
+				fprintf(stderr, _("CheckLocalFiles: Error in checking for \"%s\"\n"),
 					toname);
 				perror("stat");
 				closedir(dir);
@@ -940,7 +948,7 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				fprintf(stderr, "CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n",
+				fprintf(stderr, _("CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n"),
 					fromname, toname);
 				perror("rename");
 				closedir(dir);
@@ -985,7 +993,7 @@ CheckLocalFiles(struct Palm *palm)
 			if (errno != ENOENT)
 			{
 				fprintf(stderr,
-					"CheckLocalFiles: Error in checking for \"%s\"\n",
+					_("CheckLocalFiles: Error in checking for \"%s\"\n"),
 					toname);
 				perror("stat");
 				closedir(dir);
@@ -1002,7 +1010,7 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				fprintf(stderr, "CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n",
+				fprintf(stderr, _("CheckLocalFiles: Can't rename \"%s\" to \"%s\"\n"),
 					fromname, toname);
 				perror("rename");
 				closedir(dir);
@@ -1019,7 +1027,7 @@ CheckLocalFiles(struct Palm *palm)
 			 * there's nothing we can do about that right now.
 			 */
 			fprintf(stderr,
-				"Too many files named \"%s\" in the attic.\n",
+				_("Too many files named \"%s\" in the attic.\n"),
 				file->d_name);
 		}
 	}
@@ -1040,7 +1048,7 @@ GetPalmInfo(struct PConnection *pconn,
 	/* Get system information about the Palm */
 	if ((err = DlpReadSysInfo(pconn, &(palm->sysinfo))) < 0)
 	{
-		fprintf(stderr, "Can't get system info\n");
+		fprintf(stderr, _("Can't get system info\n"));
 		return -1;
 	}
 	MISC_TRACE(3)
@@ -1076,17 +1084,17 @@ GetPalmInfo(struct PConnection *pconn,
 		}
 		break;
 	    case DLPSTAT_NOTFOUND:
-		printf("No NetSync info.\n");
+		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		fprintf(stderr, "Error reading NetSync info\n");
+		fprintf(stderr, _("Error reading NetSync info\n"));
 		return -1;
 	}
 
 	/* Get user information from the Palm */
 	if ((err = DlpReadUserInfo(pconn, &(palm->userinfo))) < 0)
 	{
-		fprintf(stderr, "Can't get user info\n");
+		fprintf(stderr, _("Can't get user info\n"));
 		return -1;
 	}
 	MISC_TRACE(3)
@@ -1221,13 +1229,14 @@ UpdateUserInfo(struct PConnection *pconn,
 			       &uinfo);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "DlpWriteUserInfo failed: %d\n", err);
+		fprintf(stderr, _("DlpWriteUserInfo failed: %d\n"), err);
 		return -1;
 	}
 
 	return 0;		/* Success */
 }
 
+/* XXX - Not used anywhere yet */
 /* find_max_speed
  * Find the maximum speed at which the serial port (pconn->fd) is able to
  * talk. Returns an index into the 'speeds' array, or -1 in case of error.
@@ -1320,7 +1329,7 @@ set_debug_level(const char *str)
 	else if (strncasecmp(str, "misc:", 5) == 0)
 		misc_trace = lvl;
 	else {
-		fprintf(stderr, "Unknown facility \"%s\"\n", str);
+		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
 	}
 }
 
@@ -1329,10 +1338,11 @@ set_debug_level(const char *str)
  * XXX - Move this to "config.c"
  * XXX - Need to update this to conform to reality.
  */
+/* ARGSUSED */
 void
 usage(int argc, char *argv[])
 {
-	printf("Usage: %s [options] -p port\n"
+	printf(_("Usage: %s [options] -p port\n"
 	       "Options:\n"
 	       "\t-h:\t\tPrint this help message and exit.\n"
 	       "\t-V:\t\tPrint version and exit.\n"
@@ -1342,7 +1352,7 @@ usage(int argc, char *argv[])
 	       "\t-F:\t\tForce fast sync.\n"
 	       "\t-R:\t\tCheck ROM databases.\n"
 	       "\t-p <port>:\tListen on device <port>\n"
-	       "\t-d <fac[:level]>:\tSet debugging level.\n"
+	       "\t-d <fac[:level]>:\tSet debugging level.\n")
 	       ,
 	       argv[0]);
 }
@@ -1353,7 +1363,7 @@ usage(int argc, char *argv[])
 void
 print_version(void)
 {
-	printf("%s version %s\n",
+	printf(_("%s version %s\n"),
 	       /* These two strings are defined in "config.h" */
 	       PACKAGE,
 	       VERSION);
@@ -1361,19 +1371,23 @@ print_version(void)
 	 * compile-time flags, optional packages, maybe OS name and
 	 * version, who compiled it and when, etc.
 	 */
-	printf("Compile-type options:\n"
+	printf(_("Compile-type options:\n"));
 
 #if WITH_EFENCE
-"    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
+	printf(
+_("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
 #endif	/* WITH_EFENCE */
 
 #if HAVE_STRCASECMP && HAVE_STRNCASECMP
-"    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
-"        to case, whenever possible.\n"
+	printf(
+_("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
+"        to case, whenever possible.\n"));
 #endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
-"\n"
-"    Default global configuration file: " DEFAULT_GLOBAL_CONFIG "\n"
-	       );
+/* XXX */
+	printf(
+_("\n"
+"    Default global configuration file: %s\n"),
+		DEFAULT_GLOBAL_CONFIG);
 }
 
 /* find_dbinfo
@@ -1421,7 +1435,7 @@ append_dbentry(struct Palm *palm,
 			    (palm->num_dbs+1) * sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
-		fprintf(stderr, "Error resizing palm->dblist\n");
+		fprintf(stderr, _("Error resizing palm->dblist\n"));
 		return -1;
 	}
 	palm->dblist = newdblist;

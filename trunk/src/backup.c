@@ -7,13 +7,18 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.7 1999-11-09 06:23:30 arensb Exp $
+ * $Id: backup.c,v 2.8 1999-11-20 05:13:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
 #include <string.h>		/* For strncpy(), strncat() */
 #include <ctype.h>		/* For isprint() */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "coldsync.h"
@@ -74,8 +79,8 @@ Backup(struct PConnection *pconn,
 		bakfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
 		if (bakfd < 0)
 		{
-			fprintf(stderr, "Backup: can't create new backup file %s\n"
-				"It may already exist.\n",
+			fprintf(stderr, _("Backup: can't create new backup file %s\n"
+				"It may already exist.\n"),
 				bakfname);
 			perror("open");
 			return -1;
@@ -86,7 +91,7 @@ Backup(struct PConnection *pconn,
 		err = DlpOpenConduit(pconn);
 		if (err != DLPSTAT_NOERR)
 		{
-			fprintf(stderr, "Can't open backup conduit.\n");
+			fprintf(stderr, _("Can't open backup conduit.\n"));
 			close(bakfd);
 			return -1;
 		}
@@ -106,7 +111,7 @@ Backup(struct PConnection *pconn,
 				&dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			fprintf(stderr, "Can't open database \"%s\"\n",
+			fprintf(stderr, _("Can't open database \"%s\"\n"),
 				dbinfo->name);
 			close(bakfd);
 			return -1;
@@ -124,7 +129,7 @@ Backup(struct PConnection *pconn,
 		err = pdb_Write(pdb, bakfd);
 		if (err < 0)
 		{
-			fprintf(stderr, "Backup: can't write database \"%s\" to \"%s\"\n",
+			fprintf(stderr, _("Backup: can't write database \"%s\" to \"%s\"\n"),
 				dbinfo->name, bakfname);
 			close(bakfd);
 			return -1;
