@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.20 2001-07-26 06:58:18 arensb Exp $
+ * $Id: PConnection.h,v 1.21 2001-07-28 22:48:39 arensb Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -105,6 +105,10 @@ typedef struct PConnection
 	struct {
 		/* XXX - Does there need to be an address/protocol family
 		 * field?
+		 */
+		/* XXX - Add a "with_header" field: netsync and m50x both
+		 * exchange ritual packets, but m50x doesn't send the
+		 * header part.
 		 */
 		ubyte xid;		/* Transaction ID */
 		udword inbuf_len;	/* Current length of 'inbuf' */
