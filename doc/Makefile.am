@@ -1,10 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.1 1999-02-19 22:50:04 arensb Exp $
+# $Id: Makefile.am,v 1.2 1999-03-17 03:54:10 arensb Exp $
 #
 
-info_TEXINFOS = libpalm.texi
+info_TEXINFOS = \
+	libpalm.texi \
+	pdb.texi
 
 EXTRA_DIST = \
 	Makefile \
-	libpalm.ps
+	libpalm.ps \
+	pdb.ps
