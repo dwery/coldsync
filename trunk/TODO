@@ -1,3 +1,4 @@
+- Add and document "init" type conduits.
 - Document the SyncType conduit header.
 - Document the noprompt config file option.
 - Document the filter_dbs config file option.
