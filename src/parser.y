@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.33 2000-11-20 10:19:38 arensb Exp $
+ * $Id: parser.y,v 2.34 2000-12-08 06:32:23 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -93,6 +93,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 
 %token SERIAL
 %token USB
+%token NET
 
 %type <commtype> comm_type
 %type <crea_type> creator_type
@@ -170,7 +171,8 @@ listen_stmt:
 		{
 			fprintf(stderr, "Found listen+listen_block:\n");
 			fprintf(stderr, "\tDevice: [%s]\n",
-				cur_listen->device);
+				(cur_listen->device == NULL ? "(null)" :
+				 cur_listen->device));
 			fprintf(stderr, "\tSpeed: [%ld]\n", cur_listen->speed);
 		}
 
@@ -214,6 +216,12 @@ comm_type:
 		PARSE_TRACE(5)
 			fprintf(stderr, "Found commtype: USB\n");
 		$$ = LISTEN_USB;
+	}
+	| NET
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found commtype: Net\n");
+		$$ = LISTEN_NET;
 	}
 	| error
 	{
