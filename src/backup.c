@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.35 2001-09-08 00:22:01 arensb Exp $
+ * $Id: backup.c,v 2.36 2001-10-06 21:58:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -546,10 +546,6 @@ backup(PConnection *pconn,
 	bakfname = mkpdbname(dirname, dbinfo, True);
 				/* Construct the backup file name */
 
-	add_to_log(_("Backup "));
-	add_to_log(dbinfo->name);
-	add_to_log(" - ");
-
 	Verbose(1, _("Backing up \"%s\""), dbinfo->name);
 
 	/* Create and open the backup file */
@@ -563,7 +559,8 @@ backup(PConnection *pconn,
 		      "backup",
 		      bakfname);
 		Perror("open");
-		add_to_log(_("Error\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 	/* XXX - Lock the file */
@@ -580,7 +577,8 @@ backup(PConnection *pconn,
 		cs_errno = CSE_CANCEL;
 		close(bakfd);
 		unlink(bakfname);
-		add_to_log(_("Cancelled\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Cancelled"));
 		return -1;
 	    default:			/* All other errors */
 		switch (palm_errno)
@@ -594,7 +592,8 @@ backup(PConnection *pconn,
 
 		Error(_("Can't open backup conduit."));
 		close(bakfd);
-		add_to_log(_("Error\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -625,7 +624,8 @@ backup(PConnection *pconn,
 		Error(_("Can't open database \"%s\"."),
 		      dbinfo->name);
 		close(bakfd);
-		add_to_log(_("Error\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -651,7 +651,8 @@ backup(PConnection *pconn,
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */
 		close(bakfd);
-		add_to_log(_("Error\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -670,7 +671,8 @@ backup(PConnection *pconn,
 		err = DlpCloseDB(pconn, dbh);
 		free_pdb(pdb);
 		close(bakfd);
-		add_to_log(_("Error\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Backup"), dbinfo->name, _("Error"));
 		return -1;
 	}
 	SYNC_TRACE(3)
@@ -680,7 +682,8 @@ backup(PConnection *pconn,
 	err = DlpCloseDB(pconn, dbh);
 	free_pdb(pdb);
 	close(bakfd);
-	add_to_log(_("OK\n"));
+	va_add_to_log(pconn, "%s %s - %s\n",
+		      _("Backup"), dbinfo->name, _("OK"));
 	return 0;
 }
 
