@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.5 2002-11-02 17:17:19 azummo Exp $
+$Id: README.daemon,v 2.6 2003-09-11 13:37:19 arensb Exp $
 
 Introduction
 ============
@@ -66,12 +66,21 @@ V derivatives, you'll need to edit /etc/inittab.
 
 	Add a line similar to the following to /etc/ttys:
 
-ttyd0  "/usr/local/bin/coldsync -md -t serial -s"	unknown on
+ttyd0  "/usr/local/bin/coldsync -md -s -n"	unknown on
 
 Replace "ttyd0" with the appropriate device. If you use /dev/cuaa2 in
 standalone mode, then you'll need to use "ttyd2" here.
 
-	Once this is done, you'll need to
+	Note that there is a pun here: the "-n" option takes an
+argument, the name of a "listen" block in the config file. 'init' will
+append the tty name to the command line, so in this case, ColdSync
+will be invoked as
+	/usr/local/bin/coldsync -md -s -n ttyd0
+Thus, you need to have a named listen block in
+/usr/local/etc/coldsync/coldsync.conf, with the same name as the tty:
+	listen serial "ttyd0" { ... }
+
+	Once you've edited /etc/ttys, you'll need to
 
 	# kill -HUP 1
 
@@ -83,7 +92,7 @@ messages on the console: this is a sign that ColdSync didn't start up
 properly. To debug this, try running ColdSync as root the same way as
 specified in /etc/ttys, with the device as the last argument, e.g.:
 
-	# /usr/local/bin/coldsync -md -t serial -s ttyd0
+	# /usr/local/bin/coldsync -md -s -n ttyd0
 
 USB Connection
 === ==========
