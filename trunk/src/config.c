@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.114 2002-12-28 23:58:37 azummo Exp $
+ * $Id: config.c,v 1.115 2003-06-24 12:36:59 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -159,6 +159,7 @@ parse_args(int argc, char *argv[])
 		{"debug",		required_argument,	NULL, 'd'},
 		{"auto-init",		no_argument,		NULL, 'a'},
 		{"listen-block",	required_argument,	NULL, 'n'},
+		{0, 0, 0, 0},
 		/* XXX - Would it be possible to have translated versions
 		 * of the long options here as well? In some cases, the
 		 * translated version remains the same ("--mode" stays
