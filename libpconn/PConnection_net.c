@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.18 2001-08-06 00:29:02 arensb Exp $
+ * $Id: PConnection_net.c,v 1.19 2001-09-07 09:44:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -480,7 +480,7 @@ net_drain(PConnection *p)
 int
 pconn_net_open(PConnection *pconn,
 	       const char *device,
-	       const int protocol,
+	       const pconn_proto_t protocol,
 	       const Bool prompt)
 {
 	IO_TRACE(1)
@@ -518,6 +518,9 @@ pconn_net_open(PConnection *pconn,
 		}
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol stack */
 		return -1;
