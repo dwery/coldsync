@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.5 1999-12-01 06:15:04 arensb Exp $
+# $Id: Makefile.in,v 1.6 2000-01-22 05:10:04 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -83,11 +83,12 @@ lib${LIBNAME}.a:	${OBJS}
 	${RANLIB} $@
 
 install:	lib${LIBNAME}.a
-	if test ! -d ${LIBDIR}; then \
-		mkdir ${LIBDIR}; \
-		chmod 755 ${LIBDIR}; \
-	fi
-	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
+# XXX - It might be a good idea to install this stuff eventually, but not yet.
+# 	if test ! -d ${LIBDIR}; then \
+# 		mkdir ${LIBDIR}; \
+# 		chmod 755 ${LIBDIR}; \
+# 	fi
+# 	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
 
 depend:
 	${MKDEP} ${CPPFLAGS} ${SRCS}
