@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.20 2002-10-19 12:07:45 azummo Exp $
+# $Id: ColdSync.pm,v 1.21 2002-11-02 22:41:46 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.20 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.21 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -258,6 +258,9 @@ sub ParseArgs
 	} elsif (lc($ARGV[1]) eq "install")
 	{
 		$FLAVOR = "install";
+	} elsif (lc($ARGV[1]) eq "init")
+	{
+		$FLAVOR = "init";
 	} else {
 		print STDOUT "402 Invalid conduit flavor: $ARGV[1]\n";
 		exit 1;
@@ -273,6 +276,11 @@ sub ReadHeaders
 				#	[ creator, ID, length ]
 	my $len;
 	my $i;
+
+	# Some default headers
+
+	$HEADERS{'CS-AutoLoad'} = 1;
+	$HEADERS{'CS-AutoSave'} = 1;
 
 	while (<STDIN>)
 	{
@@ -372,8 +380,9 @@ sub StartConduit
 
 	# Read the input database, if one was specified.
 	$PDB = new Palm::PDB;
-	if (defined($HEADERS{InputDB}) and not defined($HEADERS{NoAutoLoadDB}))
+	if (defined $HEADERS{InputDB} and $HEADERS{'CS-AutoLoad'} eq 1)
 	{
+		# XXX Maybe we shouldn't die() here.
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
 	}
@@ -413,7 +422,8 @@ sub EndConduit
 	if (($FLAVOR eq "fetch") or ($FLAVOR eq "sync"))
 	{
 		# XXX - Barf if $PDB undefined
-		if (defined $PDB and defined $HEADERS{OutputDB} and not defined($HEADERS{NoAutoWriteDB}))
+		if (defined $PDB and defined $HEADERS{OutputDB}
+			and $HEADERS{'CS-AutoSave'} eq 1)
 		{
 			$PDB->Write($HEADERS{OutputDB}) or
 				die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
@@ -491,8 +501,9 @@ sub ConduitMain
 	ReadHeaders;
 
 	$PDB = new Palm::PDB;
-	if (defined($HEADERS{InputDB}))
+	if (defined $HEADERS{InputDB} and $HEADERS{'CS-AutoLoad'} eq 1)
 	{
+		# XXX Maybe we shouldn't die here.
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
 	}
