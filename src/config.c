@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.75 2001-10-12 02:22:08 arensb Exp $
+ * $Id: config.c,v 1.76 2001-10-18 01:36:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -196,7 +196,7 @@ parse_args(int argc, char *argv[])
 				 * <file>.
 				 */
 			global_opts.log_fname = optarg;
- 			put_symbol("LOGFILE", strdup(optarg));
+ 			put_symbol("LOGFILE", optarg);
 				/* XXX - Now would also be a good time to
 				 * set 'final' on the LOGFILE symbol: if it
 				 * was specified on the command line, that
