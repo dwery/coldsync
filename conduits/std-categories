@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
-#	Copyright (C) 1999, 2000, Andrew Arensburger.
+#	Copyright (C) 2000, Andrew Arensburger.
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: std-categories,v 3.2 2000-11-27 14:22:16 arensb Exp $
+# $Id: std-categories,v 3.3 2000-11-28 01:43:20 arensb Exp $
 #
 # This is a ColdSync Sync conduit for synchronizing the categories between
 # a database on the Palm and one on the desktop.
@@ -365,7 +365,7 @@ for (my $i = 0; $i < NumCategories; $i++)
 $Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
 #$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
 # XXX - Error-checking
-#$err = &dlp_CloseDB($dbh);
+$err = &dlp_CloseDB($dbh);
 # XXX - Error-checking
 
 #die "599 Dying for no good reason";
