@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.22 2001-01-28 22:39:30 arensb Exp $
+ * $Id: restore.c,v 2.23 2001-02-20 12:40:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -248,6 +248,7 @@ restore_dir(PConnection *pconn,
 		 * middle, but strnprintf() isn't portable. Then
 		 * again, is it worth caring about?
 		 */
+		/* XXX - Replace with snprintf() */
 		strncpy(fname, dirname, MAXPATHLEN);
 		strncat(fname, "/", MAXPATHLEN-strlen(fname));
 		strncat(fname, file->d_name, MAXPATHLEN-strlen(fname));
