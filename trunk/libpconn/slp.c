@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.20 2001-08-06 00:29:33 arensb Exp $
+ * $Id: slp.c,v 1.21 2001-11-05 00:26:57 arensb Exp $
  */
 
 #include "config.h"
@@ -165,11 +165,12 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in preamble\n");
-			close(pconn->fd);	/* Prevent others from
-						 * writing to this broken
-						 * file descriptor.
-						 */
-			pconn->fd = -1;
+			/* XXX - At this point, it would be nice to close
+			 * the file descriptor pconn->fd to prevent others
+			 * from writing to it, but that involves a whole
+			 * lot of other changes, and doesn't really seem
+			 * worth it.
+			 */
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
@@ -498,11 +499,12 @@ slp_write(PConnection *pconn,
 		{
 			perror("slp_write: write");
 			palm_errno = PALMERR_SYSTEM;
-			close(pconn->fd);
-			pconn->fd = -1;		/* Prevent others from
-						 * writing to this broken
-						 * file descriptor.
-						 */
+			/* XXX - At this point, it would be nice to close
+			 * the file descriptor pconn->fd to prevent others
+			 * from writing to it, but that involves a whole
+			 * lot of other changes, and doesn't really seem
+			 * worth it.
+			 */
 			return -1;
 		}
 		sent += err;
