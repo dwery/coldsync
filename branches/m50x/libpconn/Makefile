@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000-12-10 21:27:12 arensb Exp $
+# $Id: Makefile,v 1.6.4.1 2001-07-25 04:15:31 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -18,7 +18,8 @@ LIBSRCS =	cfmakeraw.c \
 		PConnection.c \
 		PConnection_serial.c \
 		PConnection_usb.c \
-		PConnection_net.c
+		PConnection_net.c \
+		PConnection_usbm50x.c
 
 LIBOBJS =	cfmakeraw.o \
 		dlp_cmd.o \
@@ -33,7 +34,8 @@ LIBOBJS =	cfmakeraw.o \
 		PConnection.o \
 		PConnection_serial.o \
 		PConnection_usb.o \
-		PConnection_net.o
+		PConnection_net.o \
+		PConnection_usbm50x.o
 
 CLEAN =		${LIBOBJS} ${LIBRARY} \
 		*.ln *.bak *~ core *.core .depend
