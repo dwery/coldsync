@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.39 2000-06-18 07:08:23 arensb Exp $
+ * $Id: coldsync.c,v 1.40 2000-06-23 11:34:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -63,6 +63,7 @@ int CheckLocalFiles(struct Palm *palm);
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
+int reserve_fd(int fd, int flags);
 
 /* speeds
  * This table provides a list of speeds at which the serial port might be
@@ -134,6 +135,33 @@ main(int argc, char *argv[])
 	struct PConnection *pconn;
 	int err;
 	int i;
+
+	/* Make sure that file descriptors 0-2 (stdin, stdout, stderr) are
+	 * in use. This avoids some nasty problems that can occur when
+	 * these file descriptors are initially closed (e.g., if ColdSync
+	 * is run from a daemon). Specifically, open() opens the
+	 * lowest-numbered available file descriptor. If stdin is closed,
+	 * then a file that ColdSync opens might have file descriptor 0.
+	 * Then, when ColdSync fork()s to run a conduit, it shuffles its
+	 * file descriptors around to set stdin and stdout to specific
+	 * values. If file descriptors 0 or 1 are important file
+	 * descriptors, they will get clobbered.
+	 *
+	 * Stevens[1] addresses this problem to some extent, but his
+	 * solution is limited to checking known file descriptors to make
+	 * sure that they're not 0 (for stdin) or 1 (for stdout). This is
+	 * fine for his example programs, but ColdSync opens too many files
+	 * for this approach to work. Hence, we opt for a somewhat uglier
+	 * solution and just make sure from the start that file descriptors
+	 * 0-2 are in use.
+	 *
+	 * [1] Stevens, W. Richard, "Advanced Programming in the UNIX
+	 * Environment", Addison-Wesley, 1993
+	 */
+	reserve_fd(0, O_RDONLY);
+	reserve_fd(1, O_WRONLY);
+	reserve_fd(2, O_RDONLY);
+	/* XXX - Error-checking, just for completeness */
 
 #if HAVE_GETTEXT
 	/* Set things up so that i18n works. The constants PACKAGE and
@@ -1530,6 +1558,8 @@ print_version(void)
 	       /* These two strings are defined in "config.h" */
 	       PACKAGE,
 	       VERSION);
+	printf(_("ColdSync homepage at http://www.ooblick.com/software/"
+		 "coldsync/"));
 	/* XXX - Ought to print out other information, e.g., copyright,
 	 * compile-time flags, optional packages, maybe OS name and
 	 * version, who compiled it and when, etc.
@@ -1710,6 +1740,77 @@ open_tempfile(char *name_template)
 #endif	/* HAVE_MKSTEMP */
 
 	return retval;
+}
+
+/* reserve_fd
+ * Make sure that file descriptor number 'fd' is in use. This allows us to
+ * guarantee that, even if stdin, stdout or stderr is closed (e.g., if
+ * ColdSync was run by a daemon), file descriptors 0-2 are nonetheless
+ * valid. This avoids headaches down the road.
+ * Returns 0 if successful, or a negative value otherwise.
+ */
+int
+reserve_fd(int fd,		/* File descriptor to check */
+	   int flags)		/* Flags to pass to open(), if necessary */
+{
+	int err;
+	int new_fd;
+
+	/* BTW, these MISC_TRACE() statements are pretty useless, since the
+	 * command-line arguments haven't been read yet.
+	 */
+	MISC_TRACE(7)
+		fprintf(stderr, "reserve_fd: checking fd %d\n", fd);
+
+	/* See if 'fd' is open. We do this by calling a semi-random
+	 * function (in this case, fcntl(F_GETFD)), and seeing if it fails
+	 * with errno == EBADF.
+	 */
+	if (((err = fcntl(fd, F_GETFD)) >= 0) ||
+	    (errno != EBADF))
+	{
+		/* 'fd' is an active file descriptor. Don't do anything */
+		MISC_TRACE(6)
+			fprintf(stderr, "reserve_fd: doing nothing.\n");
+		return 0;
+	}
+
+	MISC_TRACE(6)
+		/* No, I haven't missed the potential problems inherent in
+		 * writing to stderr in a function that checks to see
+		 * whether stderr is closed. I just don't know what to do
+		 * about it.
+		 */
+		fprintf(stderr, "reserve_fd: fd %d is closed\n",
+			fd);
+
+	/* The file descriptor is closed. Open it to /dev/null */
+	if ((new_fd = open("/dev/null", flags)) < 0)
+	{
+		/* This can't happen, can it? */
+		MISC_TRACE(6)
+			perror("reserve_fd: open");
+		return -1;
+	}
+
+	/* Make sure we've opened the right file descriptor: copy the new
+	 * file descriptor to 'fd' if it isn't already.
+	 */
+	if (new_fd != fd)
+	{
+		MISC_TRACE(6)
+			fprintf(stderr, "reserve_fd: moving fd %d to %d\n",
+				new_fd, fd);
+
+		if (dup2(new_fd, fd) != fd)
+		{
+			perror("reserve_fd: dup2");
+			return -1;
+		}
+		close(new_fd);
+	}
+
+	return 0;		/* Success */
 }
 
 /* This is for Emacs's benefit:
