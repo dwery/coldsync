@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.3 2000-11-18 23:55:50 arensb Exp $
+ * $Id: palm.c,v 2.4 2000-11-19 00:12:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,6 +23,10 @@
 #include "palm.h"
 #include "pconn/palm_types.h"
 
+/* Private helper functions: the fetch_*() functions do the actual work of
+ * fetching data from the Palm. Other functions give access to specific
+ * bits that the caller cares about.
+ */
 static int fetch_meminfo(struct Palm *palm);
 static int fetch_sysinfo(struct Palm *palm);
 static int fetch_netsyncinfo(struct Palm *palm);
