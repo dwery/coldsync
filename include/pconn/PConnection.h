@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.16 2001-04-15 04:32:50 arensb Exp $
+ * $Id: PConnection.h,v 1.16.8.1 2001-07-29 07:26:05 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -39,6 +39,7 @@ typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
 #define LISTEN_NET	2	/* Listen on TCP/UDP port (not
 				 * implemented yet). */
 #define LISTEN_USB	3	/* USB for Handspring Visor */
+#define LISTEN_USB_M50x  4	/* USB for Palm m50x */
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
