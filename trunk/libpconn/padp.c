@@ -3,7 +3,7 @@
  * Implementation of the Palm PADP (Packet Assembly/Disassembly
  * Protocol).
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.10 2000-11-25 22:27:54 arensb Exp $
+ * $Id: padp.c,v 1.11 2000-11-27 09:52:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -118,8 +118,6 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 
 	palm_errno = PALMERR_NOERR;
 
-	/* XXX - Multi-packet messages */
-
   retry:		/* It can take several attempts to read a packet,
 			 * if the Palm sends tickles.
 			 */
@@ -181,12 +179,15 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 		/* It's a data fragment. This is what we wanted */
 		break;
 	    case PADP_FRAGTYPE_ACK:
-		/* XXX - I'm not sure what to do in this case. Drop
-		 * the packet and wait for a new one?
+		/* Received a bogus ACK packet. ACK packets aren't
+		 * themselves acknowledged, so don't send anything back to
+		 * the Palm.
+		 * Retrying the read may not be the Right Thing to do, but
+		 * it might add robustness.
 		 */
 		fprintf(stderr, _("##### I just got an unexpected ACK. "
 			"I'm confused!\n"));
-		return -1;
+		goto retry;
 	    case PADP_FRAGTYPE_TICKLE:
 		/* Tickle packets aren't acknowledged, but the connection
 		 * doesn't time out as long as they keep coming in. Just
@@ -415,14 +416,18 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 				 */
 				break;
 			    case PADP_FRAGTYPE_ACK:
-				/* XXX - I'm not sure what to do in this
-				 * case. Drop the packet and wait for a new
-				 * one?
+				/* It's an ACK packet, which doesn't
+				 * belong here.
+				 * As in the case of the first fragment, I
+				 * really don't know that retrying is the
+				 * Right Thing to do, but it's all I can
+				 * think of right now, and who knows? It
+				 * might help.
 				 */
 				fprintf(stderr,
 					_("##### I just got an unexpected "
 					  "ACK. I'm confused!\n"));
-				return -1;
+				goto mpretry;
 			    case PADP_FRAGTYPE_TICKLE:
 				/* Tickle packets aren't acknowledged, but
 				 * the connection doesn't time out as long
@@ -603,6 +608,15 @@ padp_write(struct PConnection *pconn,
 		/* Try to send the packet */
 		for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
 		{
+			ubyte ackout[PADP_HEADER_LEN];
+					/* Buffer in which to construct an
+					 * ACK packet, in case we need to
+					 * send one (see unexpected data
+					 * packet, below).
+					 */
+			ubyte *ackoutptr;	/* Pointer into 'ackout' */
+
+		  mpretry:
 			/* Set the timeout length, for select() */
 			timeout.tv_sec = PADP_ACK_TIMEOUT;
 			timeout.tv_usec = 0L;
@@ -641,7 +655,8 @@ padp_write(struct PConnection *pconn,
 			{
 				/* select() timed out */
 				fprintf(stderr,
-					_("Timeout. Attempting to resend\n"));
+					_("ACK Timeout. Attempting to "
+					  "resend\n"));
 				continue;
 			}
 			err = slp_read(pconn, &ack_buf, &ack_len);
@@ -671,10 +686,68 @@ padp_write(struct PConnection *pconn,
 			switch (ack_header.type)
 			{
 			    case PADP_FRAGTYPE_DATA:
+				/* This might happen if:
+				 * Palm sends data packet to PC.
+				 * PC sends ACK, but it gets lost.
+				 * PC sends data packet.
+				 * PC expects ACK.
+				 * Palm never saw the original ACK, so it
+				 *    resends the previous data packet.
+				 *
+				 * This might also happen if someone killed
+				 * a coldsync process and started a new one
+				 * without telling the Palm: the first
+				 * thing the second coldsync would see
+				 * would be a PADP data packet.
+				 *
+				 * The problem is that we have no idea what
+				 * the Palm is trying to resend, so
+				 * presumably the least bad thing to do is
+				 * to send the Palm an ACK so it'll shut up
+				 * and let us go on with what we want to
+				 * send.
+				 */
 				fprintf(stderr,
 					_("##### Got an unexpected data "
-					  "packet. I'm confused!\n"));
-				return -1;
+					  "packet. Sending an ACK to shut "
+					  "it up.\n"));
+				PADP_TRACE(5)
+					fprintf(stderr,
+						"sending ACK: type %d, flags "
+						"0x%02x, size 0x%02x, xid "
+						"0x%02x\n",
+						PADP_FRAGTYPE_ACK,
+						ack_header.flags,
+						ack_header.size,
+						pconn->slp.last_xid);
+				ackoutptr = ackout;
+				put_ubyte(&ackoutptr, PADP_FRAGTYPE_ACK);
+				put_ubyte(&ackoutptr, ack_header.flags);
+				put_uword(&ackoutptr, ack_header.size);
+				pconn->padp.xid = pconn->slp.last_xid;
+
+				/* Send the ACK */
+				err = slp_write(pconn, ackout,
+						PADP_HEADER_LEN);
+				if (err < 0)
+				{
+					/* If even this gives us an error,
+					 * things are seriously fscked up.
+					 */
+					fprintf(stderr,
+						_("%s: Error sending dummy "
+						  "ACK. This is serious.\n"),
+						"padp_write");
+					return -1;
+				}
+				bump_xid(pconn);
+					/* Increment SLP XID, so we don't
+					 * reuse the one from this
+					 * ACK.
+					 */
+
+				/* Try sending this fragment again */
+				goto mpretry;
 			    case PADP_FRAGTYPE_ACK:
 				/* An ACK. Just what we wanted */
 				break;
