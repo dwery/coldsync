@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.5 1999-12-01 06:14:36 arensb Exp $
+# $Id: Makefile.in,v 1.6 2000-01-22 05:08:36 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -69,12 +69,13 @@ LDFLAGS =	@LDFLAGS@ ${LIBS}
 all::	
 
 install::	${HEADERS}
-	if test ! -d ${INCLUDEDIR}; then \
-		mkdir ${INCLUDEDIR}; \
-	fi
-	for i in ${HEADERS}; do \
-		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/"$$i"; \
-	done
+# XXX - It might be a good idea to install this stuff eventually, but not yet.
+# 	if test ! -d ${INCLUDEDIR}; then \
+# 		mkdir ${INCLUDEDIR}; \
+# 	fi
+# 	for i in ${HEADERS}; do \
+# 		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/"$$i"; \
+# 	done
 
 depend::
 
