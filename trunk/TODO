@@ -61,6 +61,8 @@
   descriptions, and combine "libpalm.texi" with "pdb.texi" into a
   single, more general document that describes all sorts of things
   programmers ought to know about Palm formats.
+	Possibly turn 'libpalm.texi' into a couple of appendixes in
+  the combined document.
 - Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
   "System"
 	Fix: when opening a database with DlpOpenDB, if the database
@@ -267,8 +269,6 @@
 	ColdSync 1.2.3, FreeBSD 4.0
 	ColdSync 1.2.0, FreeBSD 4.0
 	ColdSync 1.2.0, Redhat 6.2
-- When a record is moved from one category to another on the Palm, it
-  isn't updated on the desktop.
 - Describe 'pref:' statements in the manual.
 - Describe new preference API in the conduit writer's guide.
 - Fix ColdSync.pm to deal with preferences on stdin.
@@ -284,7 +284,6 @@
   database.
 	At the end of the local sync, if the dirty flag is still
   false, don't bother writing the database to disk.
-- Go through GenericConduit.cc line by line. Make sure that the
-  category is considered part of the record everywhere, especially
-  when one of them is dirty. Yes, changing the category does mark the
-  record as being dirty.
+- Use sigsetjmp()/siglongjmp() in SIGCHLD handler: this allows
+  immediate notification of change in child's state, and hence cleaner
+  code.
