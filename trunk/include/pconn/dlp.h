@@ -57,7 +57,7 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.5 2001-06-26 05:45:12 arensb Exp $
+ * $Id: dlp.h,v 1.6 2001-09-08 00:20:42 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
@@ -82,34 +82,36 @@
 					/* Max. length of long argument data */
 
 /* DLP response status codes */
-#define DLPSTAT_NOERR		0x00	/* No error */
-#define DLPSTAT_SYSTEM		0x01	/* General Palm system error */
-#define DLPSTAT_ILLEGALREQ	0x02	/* Unknown request ID */
-#define DLPSTAT_NOMEM		0x03	/* Insufficient memory */
-#define DLPSTAT_PARAM		0x04	/* Invalid parameter */
-#define DLPSTAT_NOTFOUND	0x05	/* Database, record or
+typedef enum {
+	DLPSTAT_NOERR		= 0x00,	/* No error */
+	DLPSTAT_SYSTEM		= 0x01,	/* General Palm system error */
+	DLPSTAT_ILLEGALREQ	= 0x02,	/* Unknown request ID */
+	DLPSTAT_NOMEM		= 0x03,	/* Insufficient memory */
+	DLPSTAT_PARAM		= 0x04,	/* Invalid parameter */
+	DLPSTAT_NOTFOUND	= 0x05,	/* Database, record or
 					 * resource not found */
-#define DLPSTAT_NONEOPEN	0x06	/* There are no open databases */
-#define DLPSTAT_DBOPEN		0x07	/* Database is open by someone else */
-#define DLPSTAT_TOOMANYOPEN	0x08	/* Too many open databases */
-#define DLPSTAT_EXISTS		0x09	/* Database already exists */
-#define DLPSTAT_CANTOPEN	0x0a	/* Can't open database */
-#define DLPSTAT_RECDELETED	0x0b	/* Record is deleted */
-#define DLPSTAT_RECBUSY		0x0c	/* Record is busy */
-#define DLPSTAT_UNSUPP		0x0d	/* Requested operation is not
+	DLPSTAT_NONEOPEN	= 0x06,	/* There are no open databases */
+	DLPSTAT_DBOPEN		= 0x07,	/* Database is open by someone else */
+	DLPSTAT_TOOMANYOPEN	= 0x08,	/* Too many open databases */
+	DLPSTAT_EXISTS		= 0x09,	/* Database already exists */
+	DLPSTAT_CANTOPEN	= 0x0a,	/* Can't open database */
+	DLPSTAT_RECDELETED	= 0x0b,	/* Record is deleted */
+	DLPSTAT_RECBUSY		= 0x0c,	/* Record is busy */
+	DLPSTAT_UNSUPP		= 0x0d,	/* Requested operation is not
 					 * supported on the given
 					 * database type */
-#define DLPSTAT_UNUSED1		0x0e
-#define DLPSTAT_READONLY	0x0f	/* You do not have write
+	DLPSTAT_UNUSED1		= 0x0e,
+	DLPSTAT_READONLY	= 0x0f,	/* You do not have write
 					 * access, or database is in
 					 * ROM */
-#define DLPSTAT_SPACE		0x10	/* Not enough space for
+	DLPSTAT_SPACE		= 0x10,	/* Not enough space for
 					 * record/resource/whatever */
-#define DLPSTAT_LIMIT		0x11	/* Size limit exceeded */
-#define DLPSTAT_CANCEL		0x12	/* Cancel the sync */
-#define DLPSTAT_BADWRAP		0x13	/* Bad arg wrapper */
-#define DLPSTAT_NOARG		0x14	/* Required argument not found */
-#define DLPSTAT_ARGSIZE		0x15	/* Invalid argument size */
+	DLPSTAT_LIMIT		= 0x11,	/* Size limit exceeded */
+	DLPSTAT_CANCEL		= 0x12,	/* Cancel the sync */
+	DLPSTAT_BADWRAP		= 0x13,	/* Bad arg wrapper */
+	DLPSTAT_NOARG		= 0x14,	/* Required argument not found */
+	DLPSTAT_ARGSIZE		= 0x15	/* Invalid argument size */
+} dlp_stat_t;
 
 /* dlp_req_header
  * DLP request header.
