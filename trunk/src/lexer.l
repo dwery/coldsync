@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.55 2002-11-23 16:30:55 azummo Exp $
+ * $Id: lexer.l,v 2.56 2002-12-30 17:05:39 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -717,9 +717,9 @@ static int
 qstr_append(const char *data,		/* Data to append */
 	    const int len)		/* Length of 'data' */
 {
-	if (len <= 0)
+/*	if (len <= 0)
 		return 0;
-
+*/
 	PARSE_TRACE(7)
 		fprintf(stderr, "qstr_append(\"%.*s\", %d)\n",
 			len, data, len);
