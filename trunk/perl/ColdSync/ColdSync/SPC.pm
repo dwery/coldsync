@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.14 2002-06-21 14:52:30 azummo Exp $
+# $Id: SPC.pm,v 1.15 2002-06-22 14:05:53 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.14 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.15 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -615,7 +615,9 @@ sub dlp_ReadSysInfo
 	my $retval;
 
 	# Send the request
-	my ($errno, @argv) = dlp_req(DLPCMD_ReadSysInfo);
+	my ($err, @argv) = dlp_req(DLPCMD_ReadSysInfo);
+
+	return undef unless defined $err;
 
 	# Unpack the arguments further
 
@@ -706,7 +708,7 @@ sub dlp_OpenDB
 					$cardNo, $mode, $dbname),
 			});
 
-	return undef if !defined($err);
+	return undef unless defined $err;
 
 	# Parse the return arguments
 	my $retval;
@@ -742,6 +744,7 @@ sub dlp_CloseDB
 				id	=> dlpFirstArgID,
 				data	=> pack("C", $dbh),
 			});
+
 	return $err;
 }
 
@@ -764,6 +767,7 @@ sub dlp_DeleteDB
 				id	=> dlpFirstArgID,
 				data	=> pack("C x Z*", $cardno, $dbname),
 			});
+
 	return $err;
 }
 
@@ -829,8 +833,6 @@ sub dlp_CleanUpDatabase
 				id	=> dlpFirstArgID,
 				data	=> pack("C", $dbh),
 			});
-
-	return undef unless defined $err;
 
 	return $err;
 }
@@ -1038,8 +1040,6 @@ sub dlp_DeleteRecord
 						$dbh, $flags, $recordid),
 			});
 
-	return undef unless defined $err;
-
 	return $err;
 }
 
@@ -1163,7 +1163,6 @@ sub _dlp_ReadRecord
 			});
 
 	return undef unless defined $err;
-	return undef unless $err eq dlpRespErrNone;
 
 	# XXX - I think there should be a way for the caller
 	# to retrieve the original error code. Any idea?
@@ -1248,7 +1247,6 @@ sub dlp_WriteRecord
 			});
 
 	return undef unless defined $err;
-	return undef unless $err eq dlpRespErrNone;
 
 	my $retval = {};
 
@@ -1260,7 +1258,7 @@ sub dlp_WriteRecord
 		}
 	}
 
-	return $retval;
+	return ($err, $retval, $retval->{'newid'});
 }
 
 
@@ -1301,6 +1299,8 @@ sub dlp_ReadAppBlock
 				data	=> pack("Cx n n",
 						$dbh, $offset, $len),
 			});
+
+	return undef unless defined $err;
 
 	# Parse the return arguments
 	my $retval;
@@ -1345,7 +1345,6 @@ sub dlp_WriteAppBlock
 						$data),
 			});
 	# No return arguments to parse
-
 	return $err;
 }
 
@@ -1361,7 +1360,9 @@ containing the date, with fields
 
 sub dlp_GetSysDateTime
 {
-	my ($errno, @argv) = dlp_req(DLPCMD_GetSysDateTime);
+	my ($err, @argv) = dlp_req(DLPCMD_GetSysDateTime);
+
+	return undef unless defined $err;
 
 	my $retval = {};
 

@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.1 2002-04-24 13:28:09 azummo Exp $
+# $Id: ExpSlot.pm,v 1.2 2002-06-22 14:09:57 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::ExpSlot::ISA	 = qw( Exporter );
-$ColdSync::SPC::ExpSlot::VERSION = sprintf "%d.%03d", '$Revision: 1.1 $ ' =~ m{(\d+)\.(\d+)};
+$ColdSync::SPC::ExpSlot::VERSION = sprintf "%d.%03d", '$Revision: 1.2 $ ' =~ m{(\d+)\.(\d+)};
 
 
 @ColdSync::SPC::ExpSlot::EXPORT = qw( 
@@ -58,6 +58,8 @@ sub dlp_ExpSlotMediaType
 				 }
 				 );
 
+	return undef unless defined $err;
+
 	# Parse the return arguments.
 	my $retval = {};
 
@@ -69,7 +71,7 @@ sub dlp_ExpSlotMediaType
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
 
 sub dlp_ExpSlotEnumerate
@@ -77,6 +79,8 @@ sub dlp_ExpSlotEnumerate
 	my $slotnum = shift;	# Slot number
 
 	my ($err, @argv) = dlp_req(DLPCMD_ExpSlotEnumerate);
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -105,7 +109,7 @@ sub dlp_ExpSlotEnumerate
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
 
 sub dlp_ExpCardInfo
@@ -118,6 +122,8 @@ sub dlp_ExpCardInfo
 					 data => pack("n", $slotnum),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -159,7 +165,7 @@ sub dlp_ExpCardInfo
 		}
 	}
 
-	return $retval;
+	return ($err,$retval);
 }
 
 __END__

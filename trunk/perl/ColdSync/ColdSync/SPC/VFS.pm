@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.3 2002-05-20 13:29:44 azummo Exp $
+# $Id: VFS.pm,v 1.4 2002-06-22 14:09:57 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.3 $ ' =~ m{(\d+)\.(\d+)};
+$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.4 $ ' =~ m{(\d+)\.(\d+)};
 
 
 
@@ -139,6 +139,8 @@ sub dlp_VFSVolumeEnumerate
 
 	my ($err, @argv) = dlp_req(DLPCMD_VFSVolumeEnumerate);
 
+	return undef unless defined $err;
+
 	# Parse the return arguments.
 	my $retval = {};
 
@@ -181,6 +183,8 @@ sub dlp_VFSVolumeInfo
 				 }
 				 );
 
+	return undef unless defined $err;
+
 	# Parse the return arguments.
 	my $retval = {};
 
@@ -215,6 +219,8 @@ sub dlp_VFSVolumeGetLabel
 					 data => pack("n", $refNum),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -256,6 +262,8 @@ sub dlp_VFSVolumeGetSize
 				 }
 				 );
 
+	return undef unless defined $err;
+
 	# Parse the return arguments.
 	my $retval = {};
 
@@ -286,6 +294,8 @@ sub dlp_VFSFileOpen
 					 data => pack("n n Z*", $volRefNum, $openMode, $path),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -328,6 +338,8 @@ sub dlp_VFSFileRead
 				 }
 				 );
 
+	return undef unless defined $err;
+
 	# Parse the return arguments.
 	my $retval = {};
 
@@ -357,6 +369,8 @@ sub dlp_VFSFileWrite
 					 data => pack("N N", $fileRef, length( $data )),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	print STDERR "File write failed: $err\n" unless $err eq 0;
 
@@ -389,6 +403,8 @@ sub dlp_VFSFileSize
 					 data => pack("N", $fileRef),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -433,6 +449,8 @@ sub dlp_VFSDirEntryEnumerate
 					 data => pack("N N N", $dirRefNum, $dirEntryIterator, $bufferSize),
 				 }
 				 );
+
+	return undef unless defined $err;
 
 	# Parse the return arguments.
 	my $retval = {};
