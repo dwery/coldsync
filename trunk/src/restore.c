@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.15 2000-11-19 00:13:13 arensb Exp $
+ * $Id: restore.c,v 2.16 2000-12-09 13:00:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -56,6 +56,9 @@ restore_file(struct PConnection *pconn,
 	int err;
 	int bakfd;		/* Backup file descriptor */
 	struct pdb *pdb;	/* The backup database */
+
+	SYNC_TRACE(1)
+		fprintf(stderr, "Uploading \"%s\"\n", fname);
 
 	/* Read the PDB file */
 	if ((bakfd = open(fname, O_RDONLY | O_BINARY)) < 0)
