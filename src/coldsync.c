@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.91 2001-03-29 06:52:47 arensb Exp $
+ * $Id: coldsync.c,v 1.92 2001-03-30 06:29:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -513,6 +513,28 @@ run_mode_Standalone(int argc, char *argv[])
 	pda = find_pda_block(palm, True);
 	if (pda == NULL)
 	{
+		/* Error-checking (not to be confused with "pda == NULL"
+		 * because the Palm doesn't have a serial number).
+		 */
+		switch (cs_errno)
+		{
+		    case CSE_NOERR:	/* No error */
+			break;
+		    case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			/* Don't even try to Disconnect(), since that tries
+			 * to talk to the Palm.
+			 */
+			return -1;
+		    default:
+			Error(_("Can't look up Palm."));
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+	}
+
+	if (pda == NULL)
+	{
 		/* There's no PDA block defined in .coldsyncrc that matches
 		 * this Palm. Hence, the username on the Palm should be the
 		 * current user's name from /etc/passwd, and the userid
@@ -538,11 +560,23 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* See if the userid matches. */
 	p_userid = palm_userid(palm);
-	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	if (p_userid == 0)
 	{
-		Error(_("Can't get user ID from Palm."));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
+		switch (cs_errno)
+		{
+		    case CSE_NOERR:	/* No error */
+			break;
+		    case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			/* Don't even try to Disconnect(), since that tries
+			 * to talk to the Palm.
+			 */
+			return -1;
+		    default:
+			Error(_("Can't get user ID from Palm."));
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
 	}
 
 	if (p_userid != want_userid)
@@ -579,12 +613,23 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* See if the username matches */
 	p_username = palm_username(palm);
-	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	if (p_username == NULL)
 	{
-		/* Something went wrong */
-		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
+		switch (cs_errno)
+		{
+		    case CSE_NOERR:	/* No error */
+			break;
+		    case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			/* Don't even try to Disconnect(), since that tries
+			 * to talk to the Palm.
+			 */
+			return -1;
+		    default:
+			Error(_("Can't get user name from Palm."));
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
 	}
 
 	if (strncmp(p_username, want_username, DLPCMD_USERNAME_LEN)
@@ -772,12 +817,6 @@ run_mode_Standalone(int argc, char *argv[])
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
-
-	/* XXX - In daemon mode, presumably load_palm_config() (or
-	 * something) should tell us which user to run as. Therefore fork()
-	 * an instance, have it setuid() to the appropriate user, and load
-	 * that user's configuration.
-	 */
 
 	/* Initialize (per-user) conduits */
 	MISC_TRACE(1)
