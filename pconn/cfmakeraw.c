@@ -3,7 +3,7 @@
  * cfmakeraw(), for systems that don't have it. Ripped bodily from the
  * FreeBSD 3.0 distribution (/usr/src/lib/libc/gen/termios.c)
  *
- * $Id: cfmakeraw.c,v 1.2 1999-02-24 13:12:48 arensb Exp $
+ * $Id: cfmakeraw.c,v 1.3 1999-06-24 02:45:24 arensb Exp $
  */
 /*-
  * Copyright (c) 1989, 1993
@@ -56,3 +56,9 @@ cfmakeraw(struct termios *t)
 	t->c_cc[VMIN] = 1;
 	t->c_cc[VTIME] = 0;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

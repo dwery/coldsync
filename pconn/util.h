@@ -2,7 +2,7 @@
  *
  * Misc. useful stuff.
  *
- * $Id: util.h,v 1.2 1999-02-22 11:05:12 arensb Exp $
+ * $Id: util.h,v 1.3 1999-06-24 02:48:09 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
@@ -48,3 +48,9 @@ extern void debug_dump(FILE *outfile, const char *prefix,
 extern uword crc16(const ubyte *buf, const uword len, const uword start);
 
 #endif	/* _util_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

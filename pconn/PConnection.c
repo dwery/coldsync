@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.5 1999-03-16 11:01:49 arensb Exp $
+ * $Id: PConnection.c,v 1.6 1999-06-24 02:45:12 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -127,3 +127,9 @@ PConn_bind(struct PConnection *pconn, struct slp_addr *addr)
 {
 	return slp_bind(pconn, addr);
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

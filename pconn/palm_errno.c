@@ -2,7 +2,7 @@
  *
  * Error-related stuff for libpalm.
  *
- * $Id: palm_errno.c,v 1.2 1999-02-21 08:14:33 arensb Exp $
+ * $Id: palm_errno.c,v 1.3 1999-06-24 02:47:16 arensb Exp $
  */
 #include "palm_errno.h"
 
@@ -25,4 +25,10 @@ const char *palm_errlist[] = {		/* Error messages */
 /* XXX - Need something to check the size of this array, so if someone adds
  * an error code and forgets to update this array, you can keep from
  * reading off the end of the array.
+ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
  */

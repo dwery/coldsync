@@ -2,7 +2,7 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.5 1999-03-16 11:56:46 arensb Exp $
+ * $Id: upload.c,v 1.6 1999-06-24 02:53:32 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcmp() */
@@ -197,3 +197,9 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 
 	return 0;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

@@ -2,7 +2,7 @@
  *
  * Error codes for libpalm.
  *
- * $Id: palm_errno.h,v 1.2 1999-02-21 08:14:23 arensb Exp $
+ * $Id: palm_errno.h,v 1.3 1999-06-24 02:47:29 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -26,3 +26,9 @@ extern const char *palm_errlist[];	/* List of error messages */
 /* XXX - palm_perror(), perhaps? */
 
 #endif	/* _palm_errno_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

@@ -43,7 +43,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.2 1999-02-22 11:04:11 arensb Exp $
+ * $Id: slp.h,v 1.3 1999-06-24 02:48:03 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -117,3 +117,9 @@ extern int slp_write(struct PConnection *pconn, const ubyte *buf,
 		     const uword len);
 
 #endif	/* _slp_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

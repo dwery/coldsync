@@ -51,7 +51,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.3 1999-03-11 03:15:11 arensb Exp $
+ * $Id: padp.h,v 1.4 1999-06-24 02:47:07 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
@@ -111,3 +111,9 @@ extern int padp_write(struct PConnection *pconn, ubyte *buf, uword len);
 extern int padp_unget(struct PConnection *pconn);	/* XXX - Is this desirable? */
 
 #endif	/* _padp_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
