@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.4 2000-12-23 11:29:39 arensb Exp $
+# $Id: AUTHORS,v 2.5 2001-01-11 09:24:39 arensb Exp $
 
 Authors and Contributors:
 
@@ -27,6 +27,8 @@ Andreas J. Koenig <andreas.koenig@anima.de>: $VERSION in Perl.
 John-David Smith <jdsmith@astro.cornell.edu>: Install conduits.
 Philipp Matthias Hahn <pmhahn@titan.lahn.de>: Updated German
 	translation, various patches.
+Ted Faber <faber@lunabase.org>.
+Zachary P. Landau <kapheine@hypa.net>: Added -z option.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
