@@ -17,6 +17,11 @@ apply to ColdSync. I hope to address this in a future release.
 	This product includes software developed by the University of
 California, Berkeley and its contributors.
 
+	This product includes software developed by the Apache Group
+for use in the Apache HTTP server project (http://www.apache.org/).
+	(Actually, the Apache code in question was written by Panos
+Tsirigotis. See comments in "src/ap_snprintf.c".)
+
 	       ----------------------------------------
 
 * WHAT IS COLDSYNC?
