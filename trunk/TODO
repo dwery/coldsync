@@ -1,3 +1,4 @@
+- Review this list ;)
 - Document CS_DOTPALM, CS_PALMUSERNAME, CS_PALMSERIALNUM and CS_LOCALUSERNAME symbols. 
 - Document CS-AutoLoad and CS-AutoSave conduit headers/arguments
 - Add and document "init" type conduits.
@@ -5,6 +6,9 @@
 - Document the noprompt config file option.
 - Document the filter_dbs config file option.
 - Investigate the exact meaning of modnum.
+- Windows appears to use an ioctl() on the USB device to get the
+  serial number. Is this possible here as well? If so, how to
+  communicate this to the appropriate levels?
 - Built-in conduits receive information about the PDA block (Keni's
   patch), but external conduits don't. It'd be nice if they did. The
   obvious way to do this is by sending them additional headers, e.g.:
@@ -14,8 +18,8 @@
 	PDA-Default: 1;				(done)
 	PDA-Username: Gorko the Invincible;	(done)
 	PDA-UID: 31337;				(done)
-	PDA-DLPmaj: 1;
-	PDA-DLPmin: 3;
+	PDA-DLPmaj: 1;				(done)
+	PDA-DLPmin: 3;				(done)
 - Add the PDA-xxx headers to the conduits development documentation.
 - Add a warning about listen usb under linux.
 - Fix --with-getlong 
