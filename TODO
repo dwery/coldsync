@@ -286,3 +286,8 @@
 	A GUI front end would be nice.
 - Grab "mkinstalldirs" from Emacs distro. Use it to create any
   necessary installation directories.
+- Parser: if user specifies multiple "path", "type", etc. directives
+  in a block, the old value is not freed properly. This should also
+  generate a warning.
+- When (after?) reading config file, check the specified conduits to
+  make sure they exist and are executable. Warn if they aren't.
