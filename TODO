@@ -1,3 +1,6 @@
+- Document the "force_install" and "install_first" .coldsyncrc
+  options.
+- Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
 - Devfs: At configure-time, check for the existence of /dev/.devfsd.
   This is created by Linux's devfs daemon. If it exists, assume
   HAVE_DEVFS.
