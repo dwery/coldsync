@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.6 1999-02-14 05:24:15 arensb Exp $
-@c $Revision: 1.6 $
+@c $Id: libpalm.texi,v 1.7 1999-02-21 08:55:38 arensb Exp $
+@c $Revision: 1.7 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -36,7 +36,7 @@
 % This is rather kludgy, actually: argument #1 is the colon from the RCS
 % string. It's only there so that RCS/CVS won't expand the wrong thing.
 @xdef@seteditionone$Revision#1 #2 ${#2}
-@xdef@edition{@seteditionone$Revision: 1.6 $}
+@xdef@edition{@seteditionone$Revision: 1.7 $}
 @end tex
 @c %** End of header
 
@@ -136,12 +136,6 @@ DLP Request
 * DLP Response::                
 * DLP Arguments::               
 
-DLP Commands
-
-* User Info::                   
-* System Info::                 
-* Other Commands::              
-
 @end detailmenu
 @end menu
 
@@ -234,7 +228,7 @@ byte, word (2 bytes) and double word (4 bytes) or dword.
 @tyindex udword
 @cindex Integer types
 @cindex Types
-        The file @file{palm_types.h} defines several integer types:
+        The file @file{palm/palm_types.h} defines several integer types:
 
 @table @code
 @item ubyte
@@ -756,7 +750,7 @@ high-level @samp{Dlp*} functions. @xref{DLP Commands}.
 @tyindex cmp_packet
         The @code{libpalm} library defines several functions for sending
 and receiving CMP packets. Each takes a pointer to a @code{struct
-cmp_packet}, defined in @file{cmp.h}.
+cmp_packet}, defined in @file{pconn/cmp.h}.
 
 @cindex Low-level functions
 @cindex Reading CMP packets
@@ -765,8 +759,7 @@ cmp_packet}, defined in @file{cmp.h}.
 @var{packet}.
 
         If successful, returns 0. In case of error, returns -1 and sets
-@var{cmp_errno} to indicate the error.
-@c XXX
+@var{palm_errno} to indicate the error.
 @end deftypefun
 
 @cindex Writing CMP packets
@@ -775,8 +768,7 @@ cmp_packet}, defined in @file{cmp.h}.
 in @var{packet}.
 
         If successful, returns 0. In case of error, returns -1 and sets
-@var{cmp_errno} to indicate the error.
-@c XXX
+@var{palm_errno} to indicate the error.
 @end deftypefun
 
 @c ************************************************************
@@ -957,13 +949,28 @@ high-level @samp{Dlp*} functions. @xref{DLP Commands}.
 @tyindex dlp_req_header
 @tyindex dlp_arg
 @deftypefun int dlp_send_req (int @var{fd}, struct dlp_req_header *@var{header}, struct dlp_arg @var{argv}[])
-@c XXX
+        Sends the DLP request defined by @var{header}. The function's
+arguments, if any, are in @var{argv}. If there are no arguments,
+@var{argv} may be NULL.
+
+        Returns 0 if successful. In case of error, returns a negative
+value and sets @var{palm_errno} to indicate the error.
 @end deftypefun
 
 @tyindex dlp_resp_header
 @tyindex dlp_arg
-@deftypefun int dlp_recv_resp (int @var{fd}, const ubyte @var{id}, struct dlp_resp_header *@var{header}, int argc, struct dlp_arg @var{argv}[])
-@c XXX
+@deftypefun int dlp_recv_resp (int @var{fd}, const ubyte @var{id}, struct dlp_resp_header *@var{header}, const struct dlp_arg **@var{argv})
+        Waits for the response to a DLP request. The response header
+will be put in @var{header}. @var{argv} is set to point to an array of
+@samp{struct dlp_arg}s containing the response arguments.
+
+        @var{argv} is temporary: if the calling function needs any of
+the data in the response arguments, it should copy that data before the
+next DLP call.
+
+        @samp{dlp_recv_resp()} returns 0 if successful. In case of
+error, it returns a negative value, and sets @var{palm_errno} to
+indicate the error.
 @end deftypefun
 
 @c ==================================================
@@ -974,43 +981,57 @@ high-level @samp{Dlp*} functions. @xref{DLP Commands}.
 
 @cindex DLP command data structures
         In each of these commands, the first argument @var{fd} refers to
-the file descriptor for a connection with the Palm. The second argument
-is generally a custom data structure that holds all of the information
-involved in the command. These data structures are defined in
-@file{dlp_cmd.h}.
+the file descriptor for a connection with the Palm.
 
-@menu
-* User Info::                   
-* System Info::                 
-* Other Commands::              
-@end menu
+        Each of these functions returns 0 if successful. In case of
+error, they return a negative value and set @var{palm_errno} to indicate
+the error.
 
-@c ----------------------------------------
-@node User Info, System Info, DLP Commands, DLP Commands
-@comment  node-name,  next,  previous,  up@cindex User info
-@subsection User Info
+@c XXX - They should tell the caller about other stuff, like the DLP status
+@c code.
 
+@cindex User info
+@cindex userid
+@cindex viewerid
 @tyindex dlp_userinfo
 @deftypefun int DlpReadUserInfo (int @var{fd}, struct dlp_userinfo *@var{userinfo})
         Read the user info from the Palm, and put the information in
 @var{userinfo}.
+
+        The user info includes the user and viewer IDs (I'm not sure
+what these are), the ID of the machine the Palm was last synced with (I
+don't know how this is determined), the time of the last sync attempt,
+the time of the last successful sync, and the user's name and encrypted
+password.
+
+@cindex Password
+@cindex DES
+        I don't know how the password is encrypted. In my experience,
+it's always 32 bytes long, and might therefore be something encrypted
+with DES. I don't know what that something might be, though.
 @end deftypefun
 
 @cindex User info
 @tyindex dlp_setuserinfo
-@deftypefun int DlpWriteUserInfo (int @var{fd}, struct dlp_setuserinfo *@var{userinfo})
-        Writes the information in @var{userinfo} to the Palm.
+@deftypefun int DlpWriteUserInfo (int @var{fd}, const struct dlp_setuserinfo *@var{userinfo})
+        Writes the information in @var{userinfo} to the Palm. See
+@samp{DlpReadUserInfo()}.
 @end deftypefun
-
-@c ----------------------------------------
-@node System Info, Other Commands, User Info, DLP Commands
-@comment  node-name,  next,  previous,  up
-@subsection System Info
 
 @cindex System info
 @tyindex dlp_sysinfo
 @deftypefun int DlpReadSysInfo (int @var{fd}, struct dlp_sysinfo *@var{sysinfo})
         Read system info from the Palm and put it in @var{sysinfo}.
+
+@cindex ROM version
+@cindex Localization ID
+@cindex Product ID
+        System info includes the version of the Palm's ROM, the
+localization ID (I don't know what this is), and a product ID (I'm not
+sure what this is; it appears to be the same on both a PalmPilot Pro and
+on a Palm III.
+
+@c XXX - DLP version number, under DLP v1.2
 @end deftypefun
 
 @cindex Date
@@ -1024,7 +1045,7 @@ involved in the command. These data structures are defined in
 @cindex Date
 @cindex Time
 @tyindex dlp_time
-@deftypefun int DlpSetSysDateTime (int @var{fd}, struct dlp_time *@var{ptime})
+@deftypefun int DlpSetSysDateTime (int @var{fd}, const struct dlp_time *@var{ptime})
         Write to the Palm the date and time defined by @var{ptime}.
 
         Note that this function does not attempt to be smart: if it
@@ -1039,53 +1060,126 @@ you're that interested in sub-second precision, port @code{xntpd} to the
 Palm.
 @end deftypefun
 
-@deftypefun int DlpReadStorageInfo
+@cindex Storage
+@cindex ROM
+@cindex RAM
+@cindex Memory
+@deftypefun int DlpReadStorageInfo (int @var{fd}, int @var{card})
+        Reads information about the Palm's storage, @i{i.e.}, memory:
+the number of memory cards, their capacity and so forth.
+
 @c XXX
+        Sorry to be so vague, but this function doesn't seem to work
+quite right yet.
 @end deftypefun
 
-@c ----------------------------------------
-@node Other Commands,  , System Info, DLP Commands
-@comment  node-name,  next,  previous,  up
-@subsection Other commands
-
-@deftypefun int DlpReadDBList
+@deftypefun int DlpReadDBList (int @var{fd}, ubyte @var{flags}, int @var{card}, uword @var{start})
 @c XXX
+        Get information about databases on the Palm.
+
+        Sorry to be so vague, but this function doesn't seem to work
+quite right yet.
 @end deftypefun
 
-@deftypefun int DlpOpenDB
-@c XXX
+@deftypefun int DlpOpenDB (int @var{fd}, int @var{card}, const char *@var{name}, ubyte @var{mode}, ubyte *@var{dbhandle})
+        Opens a database on the Palm.
+
+        @var{name} specifies the name of the database (without the
+trailing .prc or .pdb extension that the databases in the backup
+directory have).
+
+        @var{card} specifies the memory card on which the database is
+located.
+
+        @var{mode} specifes flags that determine how to open the
+database. The allowed flags are:
+@table @code
+@item DLPCMD_MODE_READ
+        Open the database for reading.
+@item DLPCMD_MODE_WRITE
+        Open the database for writing.
+@item DLPCMD_MODE_EXCLUSIVE
+        ?
+@item DLPCMD_MODE_SECRET
+        Show secret records(?).
+@end table
+
+@noindent
+These flags may be OR-ed together.
+
+        @var{dbhandle} is set to a database hande, similar to a Unix
+file descriptor, which will be used to identify the database during
+subsequent operations.
+
 @end deftypefun
 
-@deftypefun int DlpCreateDB
-@c XXX
+@deftypefun int DlpCreateDB (int @var{fd}, const struct dlp_createdbreq *@var{newdb}, ubyte *@var{dbhandle})
+        Create a new database according to the specifications given in
+@var{newdb}. These include the database creator and type, the memory
+card on which to create the database, the database open mode (the same
+flags as for @samp{DlpOpenDB()}), the database version, and its name.
+
+        The database is created and opened. Its handle (similar to a
+Unix file descriptor) is returned in @var{dbhandle}.
 @end deftypefun
 
-@deftypefun int DlpCloseDB
-@c XXX
+@deftypefun int DlpCloseDB (int @var{fd}, ubyte @var{handle})
+        Close a previously-opened database, whose handle is
+@var{handle}.
+
+        If @var{handle} has the special value @code{DLPCMD_CLOSEALLDBS},
+then all open databases will be closed.
 @end deftypefun
 
-@deftypefun int DlpDeleteDB
-@c XXX
+@deftypefun int DlpDeleteDB (int @var{fd}, const int @var{card}, const char *@var{name})
+        Delete the database named @var{name} on memory card @var{card}.
+The database must be closed.
 @end deftypefun
 
-@deftypefun int DlpReadAppBlock
-@c XXX
+@cindex Application info block
+@cindex AppInfo block
+@cindex App block
+@deftypefun int DlpReadAppBlock (int @var{fd}, struct dlp_appblock *@var{appblock}, uword *@var{len}, ubyte *@var{data})
+        Reads the application info block for an open database.
+@var{appblock} includes the database handle, an offset from the
+beginning of the application info block at which to begin reading, and
+the number of bytes to read.
+
+        @var{len} is set to the number of bytes actually read.
+
+        @var{data} is set to point to the beginning of the data that was
+read. @var{data} is fragile: if the calling function needs this data, it
+should copy it before the next DLP call.
 @end deftypefun
 
-@deftypefun int DlpWriteAppBlock
-@c XXX
+@cindex Application info block
+@cindex AppInfo block
+@cindex App block
+@deftypefun int DlpWriteAppBlock (int @var{fd}, const struct dlp_appblock *@var{appblock}, const ubyte *@var{data})
+        Writes an application info block. @var{appblock} gives the
+specifics of the block (see @samp{DlpReadAppBlock()}), and @var{data}
+points to the data to write.
 @end deftypefun
 
-@deftypefun int DlpReadSortBlock
-@c XXX
+@cindex Sort block
+@deftypefun int DlpReadSortBlock (int @var{fd}, struct dlp_sortblock *@var{sortblock}, uword *@var{len}, ubyte *@var{data})
+        Reads the sort block for an open database. This is very similar
+to @samp{ReadAppInfoBlock()}.
 @end deftypefun
 
-@deftypefun int DlpWriteSortBlock
-@c XXX
+@deftypefun int DlpWriteSortBlock (int @var{fd}, const struct dlp_sortblock *@var{sortblock}, const ubyte *@var{data})
+        Writes the sort block for a database. This is similar to
+@samp{DlpWriteAppBlock()}.
 @end deftypefun
 
-@deftypefun int DlpReadNextModifiedRec
-@c XXX
+@deftypefun int DlpReadNextModifiedRec (int @var{fd}, const ubyte @var{handle}, struct dlp_readrecret *@var{record})
+        Read the next modified record in an open database. @var{handle}
+is the database handle returned by @samp{DlpOpenDB()}.
+
+        The record is returned in @var{record}. Note that @var{record}
+contains a pointer to the record data; this data is fragile: if the
+calling function needs to save this data, it should make a copy before
+the next DLP call.
 @end deftypefun
 
 @deftypefun int DlpReadRecord
