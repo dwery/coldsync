@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.21 2000-04-05 05:45:47 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.22 2000-04-09 10:39:06 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1140,9 +1140,11 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
-				cerr << "FastSync: Error deleting record 0x"
-				     << hex << setw(8) << setfill('0')
-				     << ": " << err << endl;
+				fprintf(stderr,
+					_("%s: Error deleting record "
+					  "0x%08lx: %d\n"),
+					"FastSync",
+					localrec->id, err);
 				break;
 			}
 		} else if (EXPUNGED(localrec))
@@ -1168,9 +1170,11 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
-				cerr << "FastSync: Error deleting record 0x"
-				     << hex << setw(8) << setfill('0')
-				     << ": " << err << endl;
+				fprintf(stderr,
+					_("%s: Error deleting record "
+					  "0x%08lx: %d\n"),
+					"FastSync",
+					localrec->id, err);
 				continue;
 			}
 		} else if (DIRTY(localrec))
@@ -1904,9 +1908,11 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "SlowSync: Warning: can't delete record "
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id << ": " << err << endl;
+				fprintf(stderr,
+					_("%s: Warning: can't delete record "
+					  "0x%08lx: %d\n"),
+					"SlowSync",
+					localrec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -1929,9 +1935,11 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "SlowSync: Warning: can't delete record "
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id << ": " << err << endl;
+				fprintf(stderr,
+					_("%s: Warning: can't delete record "
+					  "0x%08lx: %d\n"),
+					"SlowSync",
+					localrec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
