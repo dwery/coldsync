@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.72 2001-07-30 07:09:38 arensb Exp $
+ * $Id: config.c,v 1.73 2001-09-07 10:06:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -104,7 +104,7 @@ struct userinfo userinfo;	/* Information about the Palm's owner */
 static void set_debug_level(const char *str);
 static int set_mode(const char *str);
 static void usage(int argc, char *argv[]);
-static int name2listen_type(const char *str);
+static pconn_listen_t name2listen_type(const char *str);
 static int name2protocol(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
@@ -240,7 +240,7 @@ parse_args(int argc, char *argv[])
 				 * of type <device type>
 				 */
 			global_opts.devtype = name2listen_type(optarg);
-			if (global_opts.devtype < 0)
+			if (global_opts.devtype == LISTEN_NONE)
 			{
 				Error(_("Unknown device type: \"%s\"."),
 				      optarg);
@@ -253,7 +253,7 @@ parse_args(int argc, char *argv[])
 				 * for talking to the cradle.
 				 */
 			global_opts.protocol = name2protocol(optarg);
-			if (global_opts.protocol < 0)
+			if (global_opts.protocol == PCONN_STACK_NONE)
 			{
 				Error(_("Unknown protocol: \"%s\"."),
 				      optarg);
@@ -470,7 +470,7 @@ load_config(const Bool read_user_config)
 			return -1;
 		}
 
-		if (global_opts.devtype >= 0)
+		if (global_opts.devtype != LISTEN_NONE)
 			l->listen_type = global_opts.devtype;
 
 		/* Prepend the new listen block to the list of listen blocks */
@@ -527,10 +527,10 @@ load_config(const Bool read_user_config)
 		for (l = sync_config->listen; l != NULL; l = l->next)
 		{
 			fprintf(stderr, "Listen:\n");
-			fprintf(stderr, "\tType: %d\n", l->listen_type);
+			fprintf(stderr, "\tType: %d\n", (int) l->listen_type);
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
 			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
-			fprintf(stderr, "\tProtocol: %d\n", l->protocol);
+			fprintf(stderr, "\tProtocol: %d\n", (int) l->protocol);
 		}
 
 		fprintf(stderr, "Known PDAs:\n");
@@ -1296,7 +1296,7 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
  * Convert the name of a listen type to its integer value. See the LISTEN_*
  * defines in "pconn/PConnection.h".
  */
-static int
+static pconn_listen_t
 name2listen_type(const char *str)
 {
 	/* XXX - It'd be really nice if these strings were translatable */
@@ -1308,7 +1308,7 @@ name2listen_type(const char *str)
 		return LISTEN_USB;
 	if (strcasecmp(str, "usb_m50x") == 0)
 		return LISTEN_USB_M50x;
-	return -1;		/* None of the above */
+	return LISTEN_NONE;		/* None of the above */
 }
 
 /* name2protocol
@@ -1316,7 +1316,7 @@ name2listen_type(const char *str)
  * corresponding integer value. See the PCONN_STACK_* defines in
  * "pconn/PConnection.h"
  */
-static int
+static pconn_proto_t
 name2protocol(const char *str)
 {
 	if (strcasecmp(str, "default") == 0)
@@ -1328,7 +1328,7 @@ name2protocol(const char *str)
 		return PCONN_STACK_SIMPLE;
 	if (strcasecmp(str, "net") == 0)
 		return PCONN_STACK_NET;
-	return -1;		/* None of the above */
+	return PCONN_STACK_NONE;		/* None of the above */
 }
 
 /* find_pda_block

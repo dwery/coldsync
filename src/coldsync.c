@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.99 2001-09-07 03:26:46 arensb Exp $
+ * $Id: coldsync.c,v 1.100 2001-09-07 10:05:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -96,7 +96,7 @@ main(int argc, char *argv[])
 	global_opts.conf_fname		= NULL;
 	global_opts.conf_fname_given	= False;
 	global_opts.devname		= NULL;
-	global_opts.devtype		= -1;
+	global_opts.devtype		= LISTEN_NONE;
 	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
 	global_opts.log_fname		= NULL;
@@ -327,9 +327,9 @@ main(int argc, char *argv[])
 			global_opts.devname == NULL ?
 			"(null)" : global_opts.devname);
 		fprintf(stderr, "\tdevtype: %d\n",
-			global_opts.devtype);
+			(int) global_opts.devtype);
 		fprintf(stderr, "\tprotocol: %d\n",
-			global_opts.protocol);
+			(int) global_opts.protocol);
 		fprintf(stderr, "\tdo_backup: %s\n",
 			global_opts.do_backup ? "True" : "False");
 		fprintf(stderr, "\tbackupdir: \"%s\"\n",
@@ -2067,8 +2067,8 @@ run_mode_Daemon(int argc, char *argv[])
 	char *devname;			/* Name of device to open */
 	char devbuf[MAXPATHLEN];	/* In case we need to construct
 					 * device name */
-	int devtype;			/* Listen block type */
-	int protocol;			/* Software protocol for talking
+	pconn_listen_t devtype;		/* Listen block type */
+	pconn_proto_t protocol;		/* Software protocol for talking
 					 * to cradle. */
 	const struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
@@ -2103,13 +2103,13 @@ run_mode_Daemon(int argc, char *argv[])
 		devtype = global_opts.devtype;
 
 		SYNC_TRACE(3)
-			fprintf(stderr, "Listen type: %d\n", devtype);
+			fprintf(stderr, "Listen type: %d\n", (int) devtype);
 
 		/* Use the protocol stack specified by the '-P' option */
 		protocol = global_opts.protocol;
 
 		SYNC_TRACE(3)
-			fprintf(stderr, "Protocol: %d\n", protocol);
+			fprintf(stderr, "Protocol: %d\n", (int) protocol);
 
 		/* Figure out which device to use */
 		if (strcmp(argv[0], "-") == 0)
@@ -2155,7 +2155,7 @@ run_mode_Daemon(int argc, char *argv[])
 		SYNC_TRACE(3)
 		{
 			fprintf(stderr, "Device: [%s]\n", devname);
-			fprintf(stderr, "Listen type: %d\n", devtype);
+			fprintf(stderr, "Listen type: %d\n", (int) devtype);
 		}
 	}
 
