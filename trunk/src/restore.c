@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.29 2001-10-06 22:16:34 arensb Exp $
+ * $Id: restore.c,v 2.30 2002-04-16 14:16:46 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -84,12 +84,21 @@ restore_file(PConnection *pconn,
 		 * if you tried deleting a read-only database. Try it and
 		 * find out.
 		 */
+		/* It's DLPSTAT_READONLY. Maybe we could check pdb->attributes
+		 * to see if the RO flag is set and avoid the call to
+		 * DlpDeleteDB()? btw, as is, will allow you to upload
+		 * system updates like FATFS.prc .
+		 */
+
 	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
 	    case DLPSTAT_NOTFOUND:
 		/* If the database wasn't found, that's not an error */
 		break;
+	    case DLPSTAT_READONLY:
+	    	/* The db is read only or ROM based */
+	    	break;
 	    case DLPSTAT_DBOPEN:
 		/* Database is already open by someone else. If the
 		 * OKNEWER flag is set, then it's okay to overwrite it
