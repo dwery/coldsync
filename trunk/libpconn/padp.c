@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.18 2001-03-29 05:34:58 arensb Exp $
+ * $Id: padp.c,v 1.19 2001-04-15 04:40:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -285,7 +285,8 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			{
 				PADP_TRACE(7)
 					fprintf(stderr,
-						"MP: Can't allocate new MP buffer\n");
+						"MP: Can't allocate new "
+						"MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
 				/* XXX - Should return an ACK to the Palm
 				 * that says we're out of memory.
@@ -304,7 +305,8 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			{
 				PADP_TRACE(7)
 					fprintf(stderr,
-						"MP: Can't resize existing MP buffer\n");
+						"MP: Can't resize existing "
+						"MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
 				return -1;
 			}
@@ -317,7 +319,8 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		cur_offset = inlen-PADP_HEADER_LEN;
 		PADP_TRACE(7)
 			fprintf(stderr,
-				"MP: Copied first fragment. cur_offset == %d\n",
+				"MP: Copied first fragment. cur_offset == "
+				"%d\n",
 				cur_offset);
 
 		/* Send an ACK for the first fragment */
@@ -788,6 +791,7 @@ padp_write(PConnection *pconn,
 				fprintf(stderr, _("##### Expected XID 0x%02x, "
 					"got 0x%02x.\n"),
 					pconn->padp.xid, pconn->slp.last_xid);
+				palm_errno = PALMERR_ACKXID;
 				return -1;
 			}
 			PADP_TRACE(5)
