@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.31 2000-06-03 06:30:04 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.32 2000-06-03 08:07:08 arensb Exp $
  */
 
 /* Note on I/O:
@@ -37,7 +37,6 @@
 #include "config.h"
 #include <stdio.h>		// For perror(), rename(), printf()
 #include <stdlib.h>		// For free()
-#include <fcntl.h>		// For open()
 #include <sys/stat.h>
 #include <sys/param.h>		// For MAXPATHLEN
 #include <string.h>
@@ -2153,8 +2152,6 @@ GenericConduit::write_backup(struct pdb *db)
 	int outfd;			// Output file descriptor
 	char bakfname[MAXPATHLEN+1];	// Name of output file
 	char stage_fname[MAXPATHLEN+1];	// Name of staging file
-	// XXX - ARGH. Really need to convert this XXXXXX into a unique
-	// temporary file name. Or maybe just use mkstemp() later on.
 	const char* stage_ext = ".XXXXXX";	// Staging file extension
 	const int stage_ext_len = strlen(stage_ext);
 					// Length of staging file extension
@@ -2169,30 +2166,8 @@ GenericConduit::write_backup(struct pdb *db)
 	strncpy(stage_fname, bakfname, MAXPATHLEN-stage_ext_len);
 	strncat(stage_fname, stage_ext, stage_ext_len);
 
-	/* XXX - FreeBSD's libc complains about mktemp() possibly being
-	 * used unsafely. True, but mkstemp() isn't portable.
-	 */
-	/* XXX - ... however, mkstemp() is a superset of what we're doing
-	 * here, so I guess it's okay. Presumably, we should add a
-	 * 'make_tempfile()' at the end of this file, with an #if
-	 * defined(HAVE_MKSTEMP) block. Or something.
-	 */
-	if (mktemp(stage_fname) == 0)
-	{
-		fprintf(stderr, _("%s: Can't create staging file name\n"),
-			"GenericConduit::write_backup");
-		return -1;
-	}
-
-	/* Open the output file */
-	if ((outfd = open(stage_fname,
-			  O_WRONLY | O_CREAT | O_EXCL,
-			  0600)) < 0)
-	{
-		fprintf(stderr, _("%s: Can't create staging file \"%s\"\n"),
-			"GenericConduit::write_backup", stage_fname);
-		return -1;
-	}
+	/* Open the temporary file */
+	outfd = open_tempfile(stage_fname);
 	/* XXX - Lock the file */
 
 	err = pdb_Write(db, outfd);
