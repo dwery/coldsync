@@ -7,13 +7,15 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.9 2001-06-04 10:19:34 arensb Exp $
+# $Id: todo-text,v 1.10 2004-10-05 21:01:49 christophe Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
 
 # XXX - When syncing a category whose name is empty, use #NNN, where NNN is
 # the category ID.
+
+# added ability to deal with dates 2004/07/28 aneal
 
 use strict;
 use Palm::ToDo;
@@ -26,6 +28,8 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 	"Where"		=> "$ENV{HOME}/ToDo",	# Directory to sync with
 	"Item-Prefix"	=> "- ",	# Start of unfinished item
 	"Done-Prefix"	=> "* ",	# Start of completed item
+	"Date-Start"	=> "(",		# Start of Date Field
+	"Date-Stop"	=> ") ",	# End of Date Field
 	"Item-Cont"	=> "  ",	# Continuation of item description
 	"Note-Indent"	=> "  ",	# Continuation of note
 	"Paragraph"	=> "\t",	# Marks new paragraph in note
@@ -34,7 +38,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.9 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.10 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -107,6 +111,13 @@ sub DoFetch
 				$record->{description} = $item->{title};
 				$record->{note} = $item->{note}
 					if $item->{note} ne "";
+				# Set due date if defined
+				if ($item->{due_day})
+				{
+					$record->{due_month} = $item->{due_month};
+					$record->{due_day} = $item->{due_day};
+					$record->{due_year} = $item->{due_year};
+				}
 				$record->{_seen} = 1;
 					# Mark this record as seen
 			} else {
@@ -127,9 +138,21 @@ sub DoFetch
 					$record->{attributes}{dirty} = 1;
 				}
 
+				# Here we update the due date if different
+				if ((defined($item->{due_day}) or defined($record->{due_day})) and 
+					(($item->{due_day} ne $record->{due_day})
+					||  ($item->{due_month} ne $record->{due_month})
+					||  ($item->{due_year} ne $record->{due_year})))
+				{
+					$record->{due_month} = $item->{due_month};
+					$record->{due_day} = $item->{due_day};
+					$record->{due_year} = $item->{due_year};
+					$record->{attributes}{dirty} = 1;
+				}
+
 				# The description is the same, we know
 				# that. Also, we don't touch the record's
-				# priority or due date.
+				# priority. 
 
 				$priority = $record->{priority};
 					# Record this record's priority
@@ -214,6 +237,31 @@ sub collect
 
 			$_ = $';
 			$intitle = 1;
+		}
+		
+		# Date Processing
+		if (/^\Q$HEADERS{"Date-Start"}\E/)
+		{
+			# This todo item has a due date assigned
+			$_ = $';
+			# parse date
+			if (/^\d{1,2}\/\d{1,2}\/\d{2,4}/)
+			{
+				my $date = $&;
+				$_ = $';
+				my ($month, $day, $year) = split('/', $date);
+				$item->{due_month} = $month;
+				$item->{due_day} = $day;
+				$item->{due_year} = $year;
+			# day month year and date should go out of scope here
+			}
+			else { 
+				warn "403 Date malformed :$_"; 
+			}
+			if (/^\Q$HEADERS{"Date-Stop"}\E/)
+			{
+				$_ = $';
+			}
 		}
 
 		# Common processing for all title lines.
@@ -362,6 +410,17 @@ sub DumpCategory
 			print OUT $HEADERS{"Item-Prefix"};
 		}
 
+		# Due Date printing if it's set
+		if ($record->{due_day})
+		{
+			print OUT $HEADERS{"Date-Start"};
+			print OUT $record->{due_month} . '/';
+			print OUT $record->{due_day} . '/';
+			print OUT $record->{due_year};
+			print OUT $HEADERS{"Date-Stop"};
+		}
+				
+
 		my $desc = $record->{description};
 
 		# There have to be two expressions here, to deal with
@@ -508,10 +567,6 @@ doesn't allow you to set them to other sane values.
 =head1 LIMITATIONS
 
 (aka "Bugs that I don't intend to fix".)
-
-C<todo-text> doesn't deal with due dates, mainly because I don't use them.
-If an existing item has a due date attached, C<todo-text> doesn't modify
-it, though.
 
 C<todo-text> deals with priorities in the following way: when it is run as
 a Dump conduit, it writes the to do list in order of decreasing priority
