@@ -1,3 +1,13 @@
+- Fix restore_file() to not assume that there's a list of databases
+  downloaded from the Palm. This should cut down on wall time needed
+  to install/restore files.
+	Bleah. Before installing the new file, you need to delete it,
+  unless the OKNEWER flag is set. But the only way to get the OKNEWER
+  flag is to run ListDBs, which takes a long time.
+	Possible workaround: if the database can't be deleted, punt.
+  Tell the user to run a full sync.
+- Bug: Under FreeBSD, when both Visor and Rio 600 are plugged in,
+  Coldsync doesn't find the Visor correctly.
 - Bug: interaction with HotSync:
 	HotSync gets cranky if you give it a Palm with a user ID
   assigned by ColdSync. The Right Thing appears to be:
