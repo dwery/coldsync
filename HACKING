@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.8 2002-03-08 02:44:22 arensb Exp $
+  $Id: HACKING,v 1.9 2002-03-18 08:05:50 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -7,6 +7,11 @@
   right, put an XXX comment (with explanation) next to it. Otherwise,
   odds are you won't be able to easily find it and fix it next week;
   certainly no one else will.
+
+- Nobody likes to write documentation, but it _is_ important. If you
+  add a feature, at the very least add an item to the "TODO" file,
+  e.g., "Documentation: describe the `foo' keyword in pda{} blocks."
+	Better yet, write the documentation now, before you forget.
 
 - Priorities: when you're deciding how to implement such-and-such
   feature, remember that the cardinal sin in syncing is loss of data:
