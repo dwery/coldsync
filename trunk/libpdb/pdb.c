@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.26 2000-09-17 01:09:05 arensb Exp $
+ * $Id: pdb.c,v 1.27 2000-11-14 16:23:28 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -52,7 +52,8 @@ int pdb_trace = 0;		/* Debugging level for PDB stuff */
 
 /* Helper functions */
 static uword get_file_length(int fd);
-static int pdb_LoadHeader(int fd, struct pdb *db);
+int pdb_LoadHeader(int fd, struct pdb *db);
+			/* pdb_LoadHeader() is visible to other files */
 static int pdb_LoadRecListHeader(int fd, struct pdb *db);
 static int pdb_LoadRsrcIndex(int fd, struct pdb *db);
 static int pdb_LoadRecIndex(int fd, struct pdb *db);
@@ -1428,7 +1429,7 @@ get_file_length(int fd)
  * Read the header of a pdb file, and fill in the appropriate fields in
  * 'db'.
  */
-static int
+int
 pdb_LoadHeader(int fd,
 	       struct pdb *db)
 {
