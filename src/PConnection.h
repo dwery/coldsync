@@ -3,11 +3,12 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: PConnection.h,v 1.2 1999-08-25 08:19:46 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
 
+#include "config.h"
 #include <termios.h>		/* For speed_t */
 #include "palm_types.h"
 #include "slp.h"

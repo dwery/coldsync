@@ -3,9 +3,10 @@
  * Defines the ppack() and punpack() functions, which facilitate
  * reading and writing data structures.
  *
- * $Id: pack.c,v 2.2 1999-08-25 04:06:21 arensb Exp $
+ * $Id: pack.c,v 2.3 1999-08-25 08:20:07 arensb Exp $
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdarg.h>	/* For va_* */
 #include "palm_types.h"
