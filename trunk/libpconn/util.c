@@ -12,7 +12,7 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.4 2001-07-06 05:42:26 arensb Exp $
+ * $Id: util.c,v 1.5 2003-08-05 13:32:45 arensb Exp $
  */
 
 #include "config.h"
@@ -113,6 +113,28 @@ put_udword(ubyte **buf, udword value)
 	++(*buf);
 	**buf = value & 0xff;
 	++(*buf);
+}
+
+/* reverse_uword
+ * Reverse the endianness of a 16-bit uword
+ */
+INLINE uword
+reverse_uword(const uword value)
+{
+	return  ((value & 0xff00) >> 8) |
+		((value & 0x00ff) << 8);
+}
+
+/* reverse_udword
+ * Reverse the endianness of a 32-bit udword
+ */
+INLINE udword
+reverse_udword(const udword value)
+{
+	return  ((value & 0xff000000) >> 24) |
+		((value & 0x00ff0000) >>  8) |
+		((value & 0x0000ff00) <<  8) |
+		((value & 0x000000ff) << 24);
 }
 
 /* XXX - Figure out the timezone hairiness:
