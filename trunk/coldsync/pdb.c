@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.1 1999-02-19 23:00:14 arensb Exp $
+ * $Id: pdb.c,v 1.2 1999-02-21 08:57:26 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -241,8 +241,8 @@ debug_dump(stdout, "RecIx", buf, PDB_RECORDIX_LEN * retval->reclist_header.len);
 
 			retval->rec_index.rec[i].offset = get_udword(&rptr);
 			retval->rec_index.rec[i].attributes = get_ubyte(&rptr);
-/*  			memcpy(&(retval->rec_index.rec[i].uniqueID), &rptr, 3); */
-			memcpy(&(retval->rec_index.rec[i].uniqueID[0]), rptr, 3);
+			/* XXX - Should this '3' be a 'sizeof(uniqueID)'? */
+			memcpy(retval->rec_index.rec[i].uniqueID, rptr, 3);
 			rptr += 3;
 
 			printf("\t* Record %d\n", i);
