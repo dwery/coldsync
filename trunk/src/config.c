@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.9 1999-11-09 05:54:33 arensb Exp $
+ * $Id: config.c,v 1.10 1999-11-09 06:25:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,7 +53,6 @@ udword hostid;			/* This machine's host ID, so you can tell
 				 * Palm synced with.
 				 */
 uid_t user_uid;
-char user_fullname[DLPCMD_USERNAME_LEN];
 char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
@@ -1045,19 +1044,10 @@ load_palm_config(struct Palm *palm)
 
 	user_uid = pwent->pw_uid;	/* Get the user's UID */
  
-	/* Copy the user's full name to 'user_fullname' */
-	if (get_fullname(user_fullname, DLPCMD_USERNAME_LEN, pwent) < 0)
-	{
-		fprintf(stderr, "Can't get user's full name\n");
-		return -1;
-	}
-	MISC_TRACE(2)
-		fprintf(stderr, "Full name: \"%s\"\n", user_fullname);
-
 	/* Make sure the various directories (~/.palm/...) exist, and create
 	 * them if necessary.
 	 */
-	if (stat(pwent->pw_dir, &statbuf) < 0)
+	if (stat(userinfo.homedir, &statbuf) < 0)
 	{
 		/* Home directory doesn't exist. Not much we can do about
 		 * that.
@@ -1067,16 +1057,16 @@ load_palm_config(struct Palm *palm)
 	}
 
 	/* Construct the various directory paths */
+	/* XXX - Should the directory names be configurable? Independent? */
 	/* XXX - By default, the backup directory should be of the form
 	 * ~<user>/.palm/<palm ID>/backup or something. <palm ID> should be
 	 * the serial number for a Palm III, not sure what for others.
 	 * Perhaps 'ColdSync' could create a resource database with this
 	 * information?
-	 * XXX - For now, let it be ~/.palm/backup
 	 */
 
 	/* ~/.palm */
-	strncpy(palmdir, pwent->pw_dir, MAXPATHLEN);
+	strncpy(palmdir, userinfo.homedir, MAXPATHLEN);
 	strncat(palmdir, "/.palm", MAXPATHLEN - strlen(palmdir));
 
 	if (stat(palmdir, &statbuf) < 0)
