@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.11 2000-03-04 12:04:54 arensb Exp $
+ * $Id: lexer.l,v 2.12 2000-04-10 09:33:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -87,11 +87,15 @@ ALNUM		[a-zA-Z0-9]
  /* Keywords */
 "conduit"	{ return CONDUIT; }
 "device"	{ return DEVICE; }
+"directory"	{ return DIRECTORY; }
 "listen"	{ return LISTEN; }
 "name"		{ return NAME; }
 "path"		{ return PATH; }
+"pda"		{ return PDA; }
+"palm"		{ return PDA; /* Synonym */}
 "serial"	{ return SERIAL; }
 "usb"		{ return USB; }
+"snum"		{ return SNUM; }
 "speed"		{ return SPEED; }
 "type"		{ return TYPE; }
 
