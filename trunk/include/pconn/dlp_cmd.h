@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.2 1999-11-10 09:04:37 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.3 1999-11-12 09:50:45 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -834,7 +834,6 @@ extern int DlpReadAppBlock(
 extern int DlpWriteAppBlock(
 	struct PConnection *pconn,
 	const ubyte handle,
-	const uword offset,
 	const uword len,
 	const ubyte *data);
 extern int DlpReadSortBlock(
@@ -847,7 +846,6 @@ extern int DlpReadSortBlock(
 extern int DlpWriteSortBlock(
 	struct PConnection *pconn,
 	const ubyte handle,
-	const uword offset,
 	const uword len,
 	const ubyte *data);
 extern int DlpReadNextModifiedRec(	/* XXX - Bogus API */

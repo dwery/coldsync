@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.5 1999-11-10 09:05:14 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.6 1999-11-12 09:51:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1380,7 +1380,6 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 int
 DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
 		 const ubyte handle,	/* Database handle */
-		 const uword offset,	/* Offset at which to start writing */
 		 const uword len,	/* Length of data */
 		 const ubyte *data)	/* The data to write */
 {
@@ -1555,7 +1554,6 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 int
 DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
 		  const ubyte handle,	/* Database handle */
-		  const uword offset,	/* Offset at which to start writing */
 		  const uword len,	/* Length of data */
 		  const ubyte *data)	/* The data to write */
 {
