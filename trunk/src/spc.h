@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.h,v 2.5 2001-09-07 04:31:09 arensb Exp $
+ * $Id: spc.h,v 2.6 2004-11-05 02:17:43 christophe Exp $
  *
  * Structure of an SPC request:
  *	[request header] [data]
@@ -17,8 +17,6 @@
  */
 #ifndef _spc_h_
 #define _spc_h_
-
-#include "config.h"
 
 /* SPC opcodes. The response opcodes have the same values as the request
  * opcodes, but with the high bit set.
