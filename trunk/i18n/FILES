@@ -20,7 +20,6 @@ src/handledb.c
 src/install.c
 #src/lexer.l
 src/log.c
-src/pack.c
 src/parser.y
 src/restore.c
 src/GenericConduit.cc
