@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.2 2000-07-03 07:57:23 arensb Exp $
+ * $Id: conduit.c,v 2.3 2000-07-06 04:03:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -58,6 +58,10 @@ static int cond_readline(char *buf,
 			 FILE *fromchild);
 static int cond_readstatus(FILE *fromchild);
 static RETSIGTYPE sigchld_handler(int sig);
+static INLINE Bool crea_type_matches(
+	const conduit_block *cond,
+	const udword creator,
+	const udword type);
 
 /* The following variables describe the state of the conduit process. They
  * are global variables because this data is set and used in different
@@ -354,47 +358,15 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 			continue;
 		}
 
-		/* See if the creator matches */
-		if ((conduit->dbcreator != 0) &&
-		    (conduit->dbcreator != dbinfo->creator))
+		/* See if any of the creator/type pairs match */
+		if (!crea_type_matches(conduit,
+				       dbinfo->creator,
+				       dbinfo->type))
 		{
 			SYNC_TRACE(5)
 				fprintf(stderr,
-					"  Creator: database is 0x%08lx "
-					"(%c%c%c%c), conduit is 0x%08lx "
-					"(%c%c%c%c).\n\t=>Not applicable.\n",
-					dbinfo->creator,
-					(char) ((dbinfo->creator >>24) & 0xff),
-					(char) ((dbinfo->creator >>16) & 0xff),
-					(char) ((dbinfo->creator >> 8) & 0xff),
-					(char) (dbinfo->creator & 0xff),
-					conduit->dbcreator,
-					(char) ((conduit->dbcreator>>24)&0xff),
-					(char) ((conduit->dbcreator>>16)&0xff),
-					(char) ((conduit->dbcreator>> 8)&0xff),
-					(char) (conduit->dbcreator & 0xff));
-			continue;
-		}
-
-		/* See if the type matches */
-		if ((conduit->dbtype != 0) &&
-		    (conduit->dbtype != dbinfo->type))
-		{
-			SYNC_TRACE(5)
-				fprintf(stderr,
-					"  Type: database is 0x%08lx "
-					"(%c%c%c%c), conduit is 0x%08lx "
-					"(%c%c%c%c).\n\t=>Not applicable.\n",
-					dbinfo->type,
-					(char) ((dbinfo->type >>24) & 0xff),
-					(char) ((dbinfo->type >>16) & 0xff),
-					(char) ((dbinfo->type >> 8) & 0xff),
-					(char) (dbinfo->type & 0xff),
-					conduit->dbtype,
-					(char) ((conduit->dbtype >>24) & 0xff),
-					(char) ((conduit->dbtype >>16) & 0xff),
-					(char) ((conduit->dbtype >> 8) & 0xff),
-					(char) (conduit->dbtype & 0xff));
+					"  Creator/Type doesn't match\n"
+					"\t=>Not applicable.\n");
 			continue;
 		}
 
@@ -1085,6 +1057,86 @@ sigchld_handler(int sig)
 		fprintf(stderr, "Conduit is still running.\n");
 
 	return;		/* Nothing to do */
+}
+
+/* crea_type_matches
+ * Given a conduit_block, a conduit and a type, crea_type_matches() returns
+ * True iff at least one entry in the array of acceptable creator/type
+ * pairs in the conduit_block matches the given creator and type.
+ */
+static INLINE Bool
+crea_type_matches(const conduit_block *cond,
+		  const udword creator,
+		  const udword type)
+{
+	int i;
+	Bool retval;
+
+	retval = False;			/* Start by assuming that it
+					 * doesn't match.
+					 */
+
+	SYNC_TRACE(7)
+		fprintf(stderr, "crea_type_matches: "
+			"conduit \"%s\",\n"
+			"\tcreator: [%c%c%c%c] (0x%08lx) / "
+			"type: [%c%c%c%c] (0x%08lx)\n",
+
+			cond->path,
+
+			(char) ((creator >>24) & 0xff),
+			(char) ((creator >>16) & 0xff),
+			(char) ((creator >> 8) & 0xff),
+			(char) (creator & 0xff),
+			creator,
+
+			(char) ((type >>24) & 0xff),
+			(char) ((type >>16) & 0xff),
+			(char) ((type >> 8) & 0xff),
+			(char) (type & 0xff),
+			type);
+
+	/* Iterate over the array of creator/type pairs defined in the
+	 * conduit_block.
+	 */
+	for (i = 0; i < cond->num_ctypes; i++)
+	{
+		/* Both the creator and the type need to match. However,
+		 * either one may be a wildcard (0), which matches
+		 * anything.
+		 */
+		SYNC_TRACE(7)
+			fprintf(stderr, "crea_type_matches: Comparing "
+				"[%c%c%c%c/%c%c%c%c] (0x%08lx/0x%08lx)\n",
+
+				(char) ((cond->ctypes[i].creator >>24) & 0xff),
+				(char) ((cond->ctypes[i].creator >>16) & 0xff),
+				(char) ((cond->ctypes[i].creator >> 8) & 0xff),
+				(char) (cond->ctypes[i].creator & 0xff),
+
+				(char) ((cond->ctypes[i].type >>24) & 0xff),
+				(char) ((cond->ctypes[i].type >>16) & 0xff),
+				(char) ((cond->ctypes[i].type >> 8) & 0xff),
+				(char) (cond->ctypes[i].type & 0xff),
+
+				cond->ctypes[i].creator,
+				cond->ctypes[i].type);
+
+		if (((cond->ctypes[i].creator == creator) ||
+		     (cond->ctypes[i].creator == 0L)) &&
+		    ((cond->ctypes[i].type == type) ||
+		     (cond->ctypes[i].type == 0L)))
+		{
+			SYNC_TRACE(7)
+				fprintf(stderr, "crea_type_matches: "
+					"Found a match.\n");
+			return True;
+		}
+	}
+
+	SYNC_TRACE(7)
+		fprintf(stderr, "crea_type_matches: No match found.\n");
+	return False;
 }
 
 /* This is for Emacs's benefit:
