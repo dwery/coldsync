@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.46 2001-10-18 01:57:52 arensb Exp $
+.\" $Id: coldsync.8,v 1.47 2001-10-18 02:46:44 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -179,6 +179,15 @@ option. Legal values are
 .Dv usb ,
 and
 .Dv net .
+.It Fl P Ar protocol
+Specifies the serial protocol. Legal values are
+.Dv default ,
+.Dv full ,
+and
+.Dv simple .
+(See the description of the
+.Li protocol
+option, below.)
 .It Fl s
 Log errors and warnings through
 .Xr syslog 3 .
@@ -231,27 +240,6 @@ file,
 will print a summary of what
 .Nm ColdSync
 thinks your configuration file contains.
-.It Fl b Ar directory
-.Em This option is deprecated. Please use
-.Fl mb
-.Em instead.
-.Pp
-Perform a full backup of the Palm, and put the files in
-.Ar directory .
-.Em NB:
-This will not overwrite any existing files: if a backup file for a
-database already exists in the backup directory, that database will
-simply be skipped.
-.It Fl r Ar directory
-.Em This option is deprecated. Please use
-.Fl mr
-.Em instead.
-.Pp
-Restore files from
-.Ar directory .
-.Em Warning:
-If you restore a database that already exists on the Palm, that
-database will be overwritten.
 .El
 .Sh OVERVIEW
 To sync,
@@ -382,6 +370,7 @@ directives are of the following forms:
 .Bd -literal -offset indent
 listen serial {
 	device: /dev/palm;
+	protocol: default;
 	speed: 57600;
 }
 
@@ -391,7 +380,6 @@ listen usb {			# BSD only
 
 listen net {
 }
-
 .Ed
 .Pp
 .Li listen serial
@@ -420,6 +408,42 @@ directive specifies the device to use. If omitted, it defaults to
 .Pp
 .Li listen net
 is used to listen for an incoming network HotSync connection.
+.Pp
+The
+.Li protocol
+directive specifies the protocol stack to use over this connection.
+Think of it this way: the
+.Li listen
+line specifies whether you're using a regular phone, a cell phone, or
+two tin cans and a string. The
+.Li protocol
+option specifies which language you'll be speaking.
+.Pp
+Legal values are
+.Li default ,
+.Li full ,
+.Li simple ,
+and
+.Li net .
+If omitted, the
+.Li protocol
+option defaults to
+.Li default .
+Most of the time,
+.Li default
+does the right thing. The main exception is for Palm m50x-es with USB
+cradles. Under Linux, use:
+.Bd -literal -offset indent
+listen serial {
+	protocol: simple;
+}
+.Ed
+Under {Free,Net}BSD, use
+.Bd -literal -offset indent
+listen usb {
+	protocol: full;
+}
+.Ed
 .Pp
 Currently, a configuration file should contain only one
 .Li listen
