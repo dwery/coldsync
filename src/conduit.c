@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.62 2002-11-09 15:06:28 azummo Exp $
+ * $Id: conduit.c,v 2.63 2002-11-13 12:06:35 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1429,14 +1429,14 @@ run_Install_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo, pda_block *pd
 }
 
 /* find_in_path
- * Looks for an executable conduit in the appropriate path. $CONDUIT_PATH
+ * Looks for an executable conduit in the appropriate path. $CS_CONDUIT_PATH
  * is a colon-separated list of directories in which to look for conduits.
  * If a path component is empty, that means to look in "the usual places";
- * currently, this means $CONDUITDIR, although in the future this might be
+ * currently, this means $CS_CONDUITDIR, although in the future this might be
  * a system-wide path.
  *
- * If $CONDUIT_PATH isn't set, find_in_path() tries "the usual places"
- * which, again, means $CONDUITDIR.
+ * If $CS_CONDUIT_PATH isn't set, find_in_path() tries "the usual places"
+ * which, again, means $CS_CONDUITDIR.
  *
  * If none of these approaches work, return NULL, meaning that there is no
  * executable for this conduit.
@@ -1447,8 +1447,8 @@ run_Install_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo, pda_block *pd
 static const char *
 find_in_path(const char *conduit)
 {
-	const char *path;		/* $CONDUIT_PATH */
-	const char *conduitdir;		/* $CONDUITDIR */
+	const char *path;		/* $CS_CONDUIT_PATH */
+	const char *conduitdir;		/* $CS_CONDUITDIR */
 	const char *colon;		/* Pointer to path separator */
 	static char buf[MAXPATHLEN];	/* Holds current pathname attempt */
 
@@ -1463,28 +1463,31 @@ find_in_path(const char *conduit)
 		return conduit;
 	}
 
-	path = get_symbol("CONDUIT_PATH");
-	conduitdir = get_symbol("CONDUITDIR");
+	/* XXX Shouldn't we free path and conduitdir somewhere? */
+
+	path = get_symbol("CS_CONDUIT_PATH");
+	conduitdir = get_symbol("CS_CONDUITDIR");
+
 	CONDUIT_TRACE(4)
 	{
-		fprintf(stderr, "find_in_path: $CONDUIT_PATH == [%s]\n",
+		fprintf(stderr, "find_in_path: $CS_CONDUIT_PATH == [%s]\n",
 			path);
-		fprintf(stderr, "find_in_path: $CONDUITDIR == [%s]\n",
+		fprintf(stderr, "find_in_path: $CS_CONDUITDIR == [%s]\n",
 			conduitdir);
 	}
 
-	/* If $CONDUIT_PATH is empty, try $CONDUITDIR */
+	/* If $CS_CONDUIT_PATH is empty, try $CS_CONDUITDIR */
 	if ((path == NULL) || (path[0] == '\0'))
 	{
 		CONDUIT_TRACE(4)
-			fprintf(stderr, "find_in_path: no $CONDUIT_PATH\n");
-		/* Empty or unset $CONDUIT_PATH. */
+			fprintf(stderr, "find_in_path: no $CS_CONDUIT_PATH\n");
+		/* Empty or unset $CS_CONDUIT_PATH. */
 		if ((conduitdir == NULL) || (conduitdir[0] == '\0'))
 		{
-			/* Empty or unset $CONDUITDIR. */
+			/* Empty or unset $CS_CONDUITDIR. */
 			CONDUIT_TRACE(4)
 				fprintf(stderr, "find_in_path: no "
-					"$CONDUITDIR, either. Returning "
+					"$CS_CONDUITDIR, either. Returning "
 					"NULL\n");
 			return NULL;
 		}
@@ -1498,7 +1501,7 @@ find_in_path(const char *conduit)
 			return buf;
 		}
 
-		/* No $CONDUIT_PATH, and $CONDUITDIR/conduit isn't
+		/* No $CS_CONDUIT_PATH, and $CS_CONDUITDIR/conduit isn't
 		 * executable. Give up. */
 		CONDUIT_TRACE(3)
 			fprintf(stderr, "find_in_path: returning NULL\n");
@@ -1515,7 +1518,7 @@ find_in_path(const char *conduit)
 			if (strlen(path) == 0)
 			{
 				/* Empty final path component. Try
-				 * $CONDUITDIR/conduit
+				 * $CS_CONDUITDIR/conduit
 				 */
 				if ((conduitdir != NULL) &&
 				    (conduitdir[0] != '\0'))
@@ -1533,7 +1536,7 @@ find_in_path(const char *conduit)
 			if (colon == path)
 			{
 				/* Empty path component. Try
-				 * $CONDUITDIR/conduit
+				 * $CS_CONDUITDIR/conduit
 				 */
 				if ((conduitdir != NULL) &&
 				    (conduitdir[0] != '\0'))
@@ -1763,7 +1766,7 @@ spawn_conduit(
 	if (fname == NULL)
 	{
 		Error(_("%s: No executable \"%s\" in $CONDUIT_PATH or "
-			"$CONDUITDIR.\n"),
+			"$CS_CONDUITDIR.\n"),
 		      "spawn_conduit", path);
 		exit(1);
 	}
