@@ -1,5 +1,3 @@
-- Document the "force_install" and "install_first" .coldsyncrc
-  options.
 - Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
 - Devfs: At configure-time, check for the existence of /dev/.devfsd.
   This is created by Linux's devfs daemon. If it exists, assume
@@ -42,6 +40,11 @@
   int?
 - For man pages that cover several functions, write short ".so
   somefunc.3" man pages for the secondary ones.
+	Actually, it looks as if FreeBSD uses either the whatis
+  database or hard links instead of .so files. Perhaps the Right Thing
+  is to make links (hard or soft) at install time, perhaps from some
+  database. Or better yet, have a script or something find the various
+  .Nm lines before the first .Nd line, and make appropriate symlinks.
 - PConnection_net.c uses tini_slp() et al. even when it isn't
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
