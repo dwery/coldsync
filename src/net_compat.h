@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: net_compat.h,v 2.1 2000-12-23 11:28:28 arensb Exp $
+ * $Id: net_compat.h,v 2.2 2001-01-30 08:13:35 arensb Exp $
  */
 #include "config.h"
 #include <netdb.h>
@@ -18,3 +18,20 @@ extern const char *inet_ntop(int af, const void *src, char *dst, size_t size);
 #if !HAVE_INET_PTON
 extern int inet_pton(int af, const char *src, void *dst);
 #endif	/* HAVE_INET_NTOP */
+
+/* Maximum length of the printed representation of an IPv4 address */
+#ifndef INET_ADDRSTRLEN
+#  define INET_ADDRSTRLEN	16
+#endif	/* INET_ADDRSTRLEN */
+
+/* Maximum length of the printed representation of an IPv6 address */
+#ifndef INET6_ADDRSTRLEN
+#  define INET6_ADDRSTRLEN	46
+#endif	/* INET6_ADDRSTRLEN */
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * mode: C		***
+ * fill-column:	75	***
+ * End:			***
+ */
