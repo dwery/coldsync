@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.12 2002-05-20 13:29:44 azummo Exp $
+# $Id: SPC.pm,v 1.13 2002-06-21 10:20:36 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.12 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.13 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -1424,122 +1424,6 @@ sub dlp_SetSysDateTime
 
 	# No return arguments to parse
 	return $err;
-}
-
-sub dlp_ExpSlotMediaType
-{
-	my $slotnum = shift;	# Slot number
-
-	my ($err, @argv) = dlp_req(DLPCMD_ExpSlotMediaType,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("n", $slotnum),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			$retval->{'mediatype'} = unpack("a4",$arg->{data});
-
-			$retval->{'slot'} = $slotnum;
-		}
-	}
-
-	return $retval;
-}
-
-sub dlp_ExpSlotEnumerate
-{
-	my $slotnum = shift;	# Slot number
-
-	my ($err, @argv) = dlp_req(DLPCMD_ExpSlotEnumerate);
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval
-			{
-				'numSlots',
-				'_data',
-			} = unpack("n a*",$arg->{data});
-
-			$retval->{'slots'} = [];
-
-			for (my $i = 0; $i < $retval->{'numSlots'}; $i++)
-			{
-				my $ref;
-
-				( $ref, $retval->{'_data'} ) = unpack('n a*', $retval->{'_data'});
-
-				$retval->{'slots'}[$i] = $ref;
-			}
-
-			delete $retval->{'_data'};
-		}
-	}
-
-	return $retval;
-}
-
-sub dlp_ExpCardInfo
-{
-	my $slotnum = shift;	# Slot number
-
-	my ($err, @argv) = dlp_req(DLPCMD_ExpCardInfo,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("n", $slotnum),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			my $data;
-			my $ns;
-
-			(
-				$retval->{'capabilities'},
-				$ns,
-				$data
-			) = unpack("N n a*",$arg->{data});
-
-
-			# Retrieve the strings
-			my @s = split( /\0/, $data, $ns + 1 );
-
-
-			# Remove the last one, if array len > $ns
-			pop(@s) if scalar @s > $ns;
-
-
-			# Store them
-			$retval->{'strings'} = \@s;
-
-
-			# Expand capability flags
-
-			use constant expCapabilityHasStorage	=> 0x00000001; # card supports reading (and maybe writing)
-			use constant expCapabilityReadOnly	=> 0x00000002; # card is read only
-			use constant expCapabilitySerial	=> 0x00000004; # card supports dumb serial interface
-
-			$retval->{'capability'}{'HasStorage'}	= $retval->{'capabilities'} & expCapabilityHasStorage ? 1 : 0;
-			$retval->{'capability'}{'ReadOnly'}	= $retval->{'capabilities'} & expCapabilityReadOnly ? 1 : 0;
-			$retval->{'capability'}{'Serial'}	= $retval->{'capabilities'} & expCapabilitySerial ? 1 : 0;
-		}
-	}
-
-	return $retval;
 }
 
 1;
