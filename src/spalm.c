@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.17 2003-06-26 21:01:07 azummo Exp $
+ * $Id: spalm.c,v 2.18 2003-08-05 13:39:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -544,7 +544,9 @@ fetch_expcard_serial(struct Palm *palm)
 	}
 
 	/* The Palm's ROM is v3.0 or later, so it may have an expansion card. */
-	
+	/* XXX - gcc complains about the multibyte character constant
+	 * 'expn'. Shouldn't this be MAKE_CHUNKID('e','x','p','n') ?
+	 */
 	if (DlpReadFeature(palm_pconn(palm), (udword) 'expn', 0, &version) == 0)
 	{
 		struct dlp_expcardinfo einfo;
