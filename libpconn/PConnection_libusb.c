@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.1 2002-11-23 16:32:40 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.2 2002-11-23 17:21:58 azummo Exp $
  */
 
 #include "config.h"
@@ -254,7 +254,6 @@ usb_accept(PConnection *pconn)
 					 * cmp_accept().
 					 */
 
-printf("usb_accept: %d\n", pconn->protocol);
 	switch (pconn->protocol)
 	{
 	    case PCONN_STACK_FULL:
