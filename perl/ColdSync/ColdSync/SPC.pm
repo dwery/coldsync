@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.26 2004-02-21 21:47:40 azummo Exp $
+# $Id: SPC.pm,v 1.27 2004-02-25 11:33:53 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.26 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -209,6 +209,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	spc_send
 	dlp_ReadSysInfo
 	dlp_OpenDB
+	dlp_CreateDB
 	dlp_CloseDB
 	dlp_DeleteDB
 	dlp_ReadAppBlock
@@ -750,6 +751,63 @@ sub dlp_OpenDB
 
 	return $retval;
 }
+
+=head2 dlp_CreateDB
+
+	$dbh = dlp_CreateDB($creator,$type,$cardno,$flags,$version,$dbname);
+
+Creates and opens a new database called C<$dbname> on the
+Palm. C<$creator> and C<$type> are the usual Palm database
+identifiers. C<$cardno> is the card on which the database is created
+(zero usually meaning RAM).  C<$flags> is the database attributes
+such as read-only, streamable, etc.  See the PDB_ATTR_ flags in
+L<pdb.h>. C<$version> is the database version.
+
+If successful, C<dlp_CreateDB> returns a database handle: a small
+integer that refers to the database that was just opened. The database
+handle will be passed to various other functions that operate on the
+database.
+
+If unsuccessful, C<dlp_CreateDB> returns C<undef>.
+
+=cut
+sub dlp_CreateDB
+{
+	my $creator = shift;
+	my $type = shift;
+	my $cardno = shift;
+	my $flags = shift;
+	my $version = shift;
+	my $dbname = shift;	# Name of database to open
+
+	# Sanity checks on arguments
+	$dbname = substr($dbname, 0, 31);
+				# XXX - Hard-coded constants are bad, m'kay?
+	$cardno = 0 if !defined($cardno);
+
+	# Send the request
+
+	my $retval;
+	my ($err, @argv) = dlp_req(DLPCMD_CreateDB,
+			{
+				id	=> dlpFirstArgID,
+				data	=> pack("a4 a4 C x n n a*x",
+					$creator, $type, $cardno, $flags, $version, $dbname),
+			});
+
+	for (@argv)
+	{
+		if ($_->{id} == dlpFirstArgID)
+		{
+			$retval = unpack("C", $_->{data});
+		} else {
+			# XXX - Now what? Barf or something?
+		}
+	}
+
+	return $retval;
+}
+
 
 =head2 dlp_CloseDB
 
@@ -1397,6 +1455,20 @@ sub dlp_ReadNextModifiedRecInCategory($$) {
 	return _unpackRecord(@argv);
 }
 
+=head2 dlp_WriteRecord
+
+	($err, $retval, $newid) = dlp_WriteRecord($dbh, $id, $data,
+	                                          $category, $attributes,
+															$flags);
+
+Writes a record to the open database handle C<$dbh>. If a record with
+C<$id> already exists, it will be overwritten with the new data. Otherwise,
+a new record will be created and a new identifier C<$newid> will be
+created (which may or may not be the same as C<$id>). C<$data> is the
+raw record bytes, C<$category> is the record category, C<$attributes>
+is the bitwise record attributes, and C<$flags> are WriteRecord flags.
+
+=cut
 sub dlp_WriteRecord
 {
 	my($dbh,	# Database handle
@@ -1903,14 +1975,24 @@ sub dlp_FindDBByCreatorType
 
 =head2 dlp_FindDBByName
 
-	my $dbinfo = &dlp_FindDBByName( $dbname, $card );
+	my $dbinfo = &dlp_FindDBByName( $dbname, $card, $getsize );
 	my $maildb = &dlp_FindDBByName( 'MailDB' );
 
 Fetches database info by a given database name C<$dbname> on the specified
-C<$card>. If C<$card> is undefined, zero is assumed.
+C<$card>. If C<$card> is undefined, zero is assumed. If C<$getsize> is
+non-zero, size information will be fetched. Getting database sizes is
+supposed to be fairly slow, so use with caution.
 
 All the usual database info fields are returned (see dlp_ReadDBList)
-along with the C<cardno> and C<localid> fields.
+along with the C<cardno> and C<localid> fields. If C<$getsize> is set, the
+following size fields will also be fetched:
+
+		{dbsize}{num_records}
+		{dbsize}{total_bytes}
+		{dbsize}{data_bytes}
+		{dbsize}{appinfo_bytes}
+		{dbsize}{sortinfo_bytes}
+		{dbsize}{maxrec_size}
 
 =cut
 #'
@@ -1918,8 +2000,12 @@ sub dlp_FindDBByName
 {
 	my $dbname = shift;
 	my $card = shift;
+	my $getsize = shift;
 
 	return undef unless dlp_version() >= 1.2;
+
+	$card = 0 unless defined $card;
+	$getsize = 0 unless defined $getsize;
 
 	# XXX The Palm OS 5 sdk DLCommon.h suggests that the FindByName request
 	# has a 4 byte header followed by a NUL terminated name. Of the 4 bytes,
@@ -1927,10 +2013,13 @@ sub dlp_FindDBByName
 	# the comments are wrong or Palm forgot those details in the implementation
 	# because a 2 byte header works and a 4 byte header doesn't work.
 
+	my $optflags = 0x80; # always get attributes, that's cheap
+	$optflags |= (0x40|0x20) if $getsize;  # get size and maxrecsize
+
 	my ($err, @argv) = dlp_req(DLPCMD_FindDB,
 		{
 			'id' => dlpFirstArgID,
-			'data' => pack("CC a*x", 0x80, $card, $dbname ),
+			'data' => pack("CC a*x", $optflags, $card, $dbname ),
 		});
 
 	return undef unless defined $err;
@@ -1975,6 +2064,14 @@ sub dlp_FindDBByName
 			 $retval->{name},
 			) = unpack("C C N N C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n A*",
 				$_->{'data'});
+		} elsif($_->{'id'} == dlpFirstArgID + 1) {
+			($retval->{dbsize}{num_records},
+				$retval->{dbsize}{total_bytes},
+				$retval->{dbsize}{data_bytes},
+				$retval->{dbsize}{appinfo_bytes},
+				$retval->{dbsize}{sortinfo_bytes},
+				$retval->{dbsize}{maxrec_size},
+			) = unpack("N N N N N N", $_->{'data'});
 		}
 	}
 
