@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.12 2000-01-22 05:00:36 arensb Exp $
+ * $Id: coldsync.h,v 1.12.2.1 2000-01-24 07:43:44 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -28,11 +28,14 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 #define MISC_TRACE(n)	if (misc_trace >= (n))
 
 /* Types of listen blocks */
-/* XXX - Should this be an enum? */
+/* XXX - This should go elsewhere, in PConnection.h or something */
 #define LISTEN_NONE	0	/* Dunno if this will be useful */
 #define LISTEN_SERIAL	1	/* Listen on serial port */
 #define LISTEN_TCP	2	/* Listen on TCP port (not
 				 * implemented yet). */
+#define LISTEN_USB	3	/* USB for Handspring Visor */
+
+typedef int comm_type;
 
 /* userinfo
  * Information about the user whose Palm we're syncing.
