@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.83 2001-11-19 17:14:46 arensb Exp $
+ * $Id: config.c,v 1.84 2001-12-09 19:51:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -80,7 +80,7 @@ extern void debug_dump(FILE *outfile, const char *prefix,
 /* XXX - This should probably be hidden inside a "struct config{..}" or
  * something. I don't like global variables.
  */
-udword hostid;			/* This machine's host ID, so you can tell
+udword hostid = 0L;		/* This machine's host ID, so you can tell
 				 * whether this was the last machine the
 				 * Palm synced with.
 				 */
