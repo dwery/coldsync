@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.57 2000-11-19 00:10:59 arensb Exp $
+ * $Id: coldsync.c,v 1.58 2000-11-20 10:13:29 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,7 +57,6 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 #define SYNC_RATE		38400L
 #define BSYNC_RATE		B38400
 
-extern int load_palm_config(struct Palm *palm);
 int CheckLocalFiles(struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
@@ -258,9 +257,6 @@ main(int argc, char *argv[])
 		    case mode_Restore:
 			fprintf(stderr, "Restore\n");
 			break;
-		    case mode_Install:
-			fprintf(stderr, "Install\n");
-			break;
 		    case mode_Daemon:
 			fprintf(stderr, "Daemon\n");
 			break;
@@ -333,11 +329,9 @@ main(int argc, char *argv[])
 	    case mode_Restore:
 		err = run_mode_Restore(argc, argv);
 		break;
-#if 0
-	    case mode_Install:
-		err = run_mode_Install(argc, argv);
+	    case mode_Init:
+		err = run_mode_Init(argc, argv);
 		break;
-#endif	/* 0 */
 	    default:
 		/* This should never happen */
 		fprintf(stderr,
@@ -1032,6 +1026,360 @@ run_mode_Restore(int argc, char *argv[])
 	return 0;
 }
 
+/* run_mode_Init
+ * This mode merely initializes the Palm: it writes the appropriate user
+ * information (name and userid), as well as NetSync information.
+ * The point behind having this mode is that the username/userid identifies
+ * the Palm and its user, both to ColdSync, and to HotSync. If ColdSync
+ * overwrites this information, it will lead to problems when the user
+ * syncs with HotSync.
+ * In addition, a blank (factory-fresh, newly-reset, or never-synced) Palm
+ * will have a userid of 0. In this case, doing a plain sync is the Wrong
+ * Thing to do, as it will erase everything on the Palm (the Bargle bug).
+ * Hence, Standalone mode doesn't modify the username/userid, but does
+ * require it to match what's in the config file.
+ */
+int
+run_mode_Init(int argc, char *argv[])
+{
+	int err;
+	struct PConnection *pconn;	/* Connection to the Palm */
+	struct Palm *palm;
+	Bool do_update;			/* Should we update the info on
+					 * the Palm? */
+	pda_block *pda;			/* PDA block from config file */
+	const char *p_username;		/* Username on the Palm */
+	const char *new_username;	/* What the username should be */
+	udword p_userid;		/* Userid on the Palm */
+	udword new_userid;		/* What the userid should be */
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
+	 */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			sync_config->listen->device);
+
+	/* Set up a PConnection to the Palm */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 1))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+	pconn->speed = sync_config->listen->speed;
+
+	/* Connect to the Palm */
+	if ((err = Connect(pconn)) < 0)
+	{
+		fprintf(stderr, _("Can't connect to Palm\n"));
+		PConnClose(pconn);
+		return -1;
+	}
+
+	/* Allocate a new Palm description */
+	if ((palm = new_Palm(pconn)) == NULL)
+	{
+		fprintf(stderr, _("Error: can't allocate struct Palm.\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Get the Palm's serial number, if possible */
+	if (palm_serial_len(palm) > 0)
+	{
+		char checksum;		/* Serial number checksum */
+
+		/* Calculate the checksum for the serial number */
+		checksum = snum_checksum(palm_serial(palm),
+					 palm_serial_len(palm));
+		SYNC_TRACE(2)
+			fprintf(stderr, "Serial number is \"%s-%c\"\n",
+				palm_serial(palm), checksum);
+	}
+
+	/* Get the PDA block for this Palm, from the config file(s) */
+	pda = find_pda_block(palm);
+
+	/* Decide what to update, if anything.
+	 * The "do no harm" rule applies here. If the Palm already has
+	 * non-default values for anything and the .coldsyncrc doesn't,
+	 * then don't clobber what's already on the Palm: instead, tell the
+	 * user what's there.
+	 */
+	do_update = True;		/* Assume we're going to update
+					 * information on the Palm. */
+
+	/* Username */
+	p_username = palm_username(palm);
+					/* Get username from the Palm */
+	SYNC_TRACE(4)
+	{
+		fprintf(stderr, "user name on Palm == [%s]\n",
+			(p_username == NULL ? "NULL" : p_username));
+		fprintf(stderr, "(Unix) userinfo.fullname == [%s]\n",
+			userinfo.fullname);
+	}
+
+	if ((p_username == NULL) || (p_username[0] == '\0'))
+	{
+		/* The Palm doesn't specify a user name */
+		if ((pda == NULL) || (pda->username == NULL))
+		{
+			/* .coldsyncrc doesn't specify a user name, either. */
+			new_username = userinfo.fullname;
+					/* This was set by load_config() */
+		} else {
+			/* The PDA block specifies a user name.
+			 * NB: this name might be the empty string, but if
+			 * the user wants to shoot himself in the foot this
+			 * way, that's fine by me.
+			 */
+			new_username = pda->username;
+		}
+	} else {
+		/* The Palm already specifies a user name */
+		if ((pda == NULL) || (pda->username == NULL))
+		{
+			/* .coldsyncrc doesn't specify a user name */
+			if (strncmp(p_username, userinfo.fullname,
+				    DLPCMD_USERNAME_LEN) != 0)
+			{
+				/* The username on the Palm doesn't match
+				 * what's in /etc/passwd.
+				 * Don't clobber the information on the
+				 * Palm; tell the user what's going on.
+				 */
+				do_update = False;
+				new_username = pda->username;
+			} else {
+				/* .coldsyncrc doesn't specify a user name,
+				 * but what's on the Palm matches what's in
+				 * /etc/passwd, so that's okay.
+				 */
+				new_username = userinfo.fullname;
+			}
+		} else {
+			/* .coldsyncrc specifies a user name. This should
+			 * be uploaded.
+			 */
+			new_username = pda->username;
+		}
+	}
+
+	/* User ID */
+	p_userid = palm_userid(palm);	/* Get userid from Palm */
+
+	SYNC_TRACE(4)
+	{
+		fprintf(stderr, "userid on Palm == %ld\n", p_userid);
+		fprintf(stderr, "(Unix) userid == %ld\n",
+			(long) userinfo.uid);
+	}
+
+	if (p_userid == 0)
+	{
+		/* The Palm doesn't specify a userid */
+		if ((pda == NULL) || (!pda->userid_given))
+		{
+			/* .coldsyncrc doesn't specify a user ID either */
+			new_userid = userinfo.uid;
+					/* This was set by load_config() */
+		} else {
+			/* The PDA block specifies a user ID.
+			 * NB: this might be 0, but if the user chooses to
+			 * shoot himself in the foot this way, I'm not
+			 * going to stop him.
+			 */
+			new_userid = pda->userid;
+		}
+	} else {
+		/* The Palm already specifies a user ID */
+		if ((pda == NULL) || (!pda->userid_given))
+		{
+			/* .coldsynrc doesn't specify a user ID */
+			if (p_userid != userinfo.uid)
+			{
+				/* The userid on the Palm doesn't match
+				 * this user's (Unix) uid.
+				 * Don't clobber the information on the
+				 * Palm; tell the user what's going on.
+				 */
+				do_update = False;
+			} else {
+				/* .coldsyncrc doesn't specify a user ID,
+				 * but the one on the Palm matches the
+				 * user's uid, so that's okay.
+				 */
+				new_userid = userinfo.uid;
+			}
+		} else {
+			/* .coldsyncrc specifies a user ID. This should be
+			 * updated.
+			 */
+			new_userid = pda->userid;
+		}
+	}
+
+	if (!do_update)
+	{
+		/* Tell the user what the PDA block should look like */
+		printf(_(
+"\n"
+"This Palm already has user information that matches neither what's in your\n"
+"configuration file, nor the defaults. Please edit your .coldsyncrc and\n"
+"reinitialize.\n"
+"\n"
+"Your .coldsyncrc should contain something like the following:\n"
+"\n"));
+
+		/* First line of PDA block */
+		if ((pda == NULL) || (pda->name == NULL) ||
+		    (pda->name[0] == '\0'))
+			printf("pda {");
+		else
+			printf("pda \"%s\" {\n", pda->name);
+
+		/* "snum:" line in PDA block */
+		if ((pda != NULL) && (pda->snum != NULL) &&
+		    (pda->snum[0] != '\0'))
+			printf("\tsnum: \"%s-%c\";\n",
+			       palm_serial(palm),
+			       snum_checksum(palm_serial(palm),
+					     palm_serial_len(palm)));
+
+		/* "directory:" line in PDA block */
+		if ((pda != NULL) && (pda->directory != NULL) &&
+		    (pda->directory[0] != '\0'))
+			printf("\tdirectory: \"%s\";\n", pda->directory);
+
+		/* "username:" line in PDA block */
+		if ((p_username == NULL) || (p_username[0] == '\0'))
+			printf("\tusername: \"%s\";\n", userinfo.fullname);
+		else
+			printf("\tusername: \"%s\";\n", p_username);
+
+		/* "userid:" line in PDA block */
+		if (p_userid == 0)
+			printf("\tuserid: %ld;\n",
+			       (long) userinfo.uid);
+		else
+			printf("\tuserid: %ld;\n", p_userid);
+
+		/* PDA block closing brace. */
+		printf("}\n");
+	} else {
+		/* Update the user information on the Palm */
+		/* XXX - This section mostly duplicates UpdateUserInfo().
+		 * Is this a bad idea? Is UpdateUserInfo() broken?
+		 */
+		struct dlp_setuserinfo uinfo; 
+
+		SYNC_TRACE(1)
+			fprintf(stderr, "Updating user info.\n");
+
+		uinfo.modflags = 0; 
+
+		/* User ID */
+		/* XXX - Should see if it's necessary to update this */
+		SYNC_TRACE(4)
+			fprintf(stderr, "Setting the userid to %ld\n",
+				new_userid);
+
+		uinfo.userid = new_userid;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
+
+		/* XXX - Set viewer ID? */
+
+		/* Last sync PC */
+		SYNC_TRACE(3)
+			fprintf(stderr, "Setting lastsyncPC to 0x%08lx\n",
+				hostid);
+		uinfo.lastsyncPC = hostid;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCPC;
+
+		/* Time of last successful sync */
+		{
+			time_t now;		/* Current time */
+
+			SYNC_TRACE(3)
+				fprintf(stderr,
+					"Setting last sync time to now\n");
+			time(&now);		/* Get current time */
+			time_time_t2dlp(now, &uinfo.lastsync);
+						/* Convert to DLP time */
+			uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
+		}
+
+		/* User name */
+		/* XXX - Should see if it's necessary to update this */
+		SYNC_TRACE(4)
+			fprintf(stderr, "Setting the username to [%s]\n",
+				(new_username == NULL ? "NULL" :
+				 new_username));
+		uinfo.usernamelen = strlen(new_username);
+		uinfo.username = new_username;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
+
+		/* XXX - Update last sync PC */
+		/* XXX - Update last sync time */
+		/* XXX - Update last successful sync time */
+
+		err = DlpWriteUserInfo(pconn, &uinfo);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr,
+				_("DlpWriteUserInfo failed: %d\n"),
+				err);
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+			return -1;
+		}
+	}
+
+	/* Upload sync log */
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
+		{
+			fprintf(stderr, _("Error writing sync log.\n"));
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+
+			return -1;
+		}
+	}
+
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	{
+		fprintf(stderr, _("Error disconnecting\n"));
+		return -1;
+	}
+
+	pconn = NULL;
+
+	free_Palm(palm);
+
+	return 0;
+}
+
 /* XXX - run_mode_Daemon() */
 /* XXX
 int
@@ -1069,7 +1417,6 @@ run_mode_Getty()
 	XXX - Sync normally
 }
 */
-/* XXX - run_mode_Init() */
 
 /* Connect
  * Wait for a Palm to show up on the other end.
