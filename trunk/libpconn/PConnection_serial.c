@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.9 2000-12-10 21:34:41 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.10 2000-12-11 09:01:29 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -30,8 +30,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
-#include "pconn/cmp.h"		/* For serial_accept(), which uses CMP */
-#include "pconn/palm_errno.h"	/* For PALMERR_* */
+#include "pconn/cmp.h"		/* For cmp_accept() */
 
 #if !HAVE_CFMAKERAW
 extern void cfmakeraw(struct termios *t);
@@ -58,6 +57,12 @@ extern void cfmakeraw(struct termios *t);
  * than their corresponding numeric values.
  */
 static struct {
+	int usable;		/* Flag: can the serial port go at this
+				 * rate? */
+				/* XXX - Need to initialize this, probably
+				 * by calling init_speeds() in
+				 * pconn_serial_open().
+				 */
 	udword bps;		/* Speed in bits per second, as used by the
 				 * CMP layer.
 				 */
@@ -120,16 +125,17 @@ serial_write(struct PConnection *p, unsigned char *buf, int len)
 	return write(p->fd, buf, len);
 }
 
+/* XXX - There ought to be a way to specify "connect as fast as possible",
+ * separate from "whatever the Palm suggests". If the Palm suggests 300 bps
+ * but the user doesn't know how fast the serial port can go, this would
+ * set the speed to be as fast as the serial port can go.
+ */
 static int
 serial_accept(struct PConnection *pconn)
 {
-	/* XXX - Perhaps most of this stuff ought to be moved into a new
-	 * function cmp_accept() or some such, which both
-	 * PConnection_serial and PConnection_usb can call.
-	 */
 	int err;
 	int i;
-	struct cmp_packet cmpp;
+	udword newspeed;
 	udword bps = SYNC_RATE;		/* Connection speed, in bps */
 	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
 					 * (a necessary distinction because
@@ -137,33 +143,11 @@ serial_accept(struct PConnection *pconn)
 					 * B19200 != 19200.
 					 */
 
-	do {
-		IO_TRACE(5)
-			fprintf(stderr, "===== Waiting for wakeup packet\n");
-
-		err = cmp_read(pconn, &cmpp);
-		if (err < 0)
-		{
-			if (palm_errno == PALMERR_TIMEOUT)
-				continue;
-			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
-				palm_errno,
-				_(palm_errlist[palm_errno]));
-			exit(1); /* XXX */
-		}
-	} while (cmpp.type != CMP_TYPE_WAKEUP);
-
-	IO_TRACE(5)
-		fprintf(stderr, "===== Got a wakeup packet\n");
-
 	/* Find the speed at which to connect.
 	 * If the listen block in .coldsyncrc specifies a speed, use that.
 	 * If it doesn't (or the speed is set to 0), then go with what the
 	 * Palm suggests.
 	 */
-	if (pconn->speed == 0)
-		pconn->speed = cmpp.rate;
-
 	IO_TRACE(3)
 		fprintf(stderr, "pconn->speed == %ld\n",
 			pconn->speed);
@@ -174,6 +158,9 @@ serial_accept(struct PConnection *pconn)
 	 */
 	for (i = 0; i < num_speeds; i++)
 	{
+		/* XXX - Make sure the speed is usable (when
+		 * speeds[i].usable has been set).
+		 */
 		IO_TRACE(7)
 			fprintf(stderr, "Comparing %ld ==? %ld\n",
 				speeds[i].bps, pconn->speed);
@@ -215,27 +202,13 @@ serial_accept(struct PConnection *pconn)
 		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
 			(long) bps, (long) tcspeed);
 
-	/* Compose a reply */
-	/* XXX - This ought to be in a separate function in cmp.c */
-	cmpp.type = CMP_TYPE_INIT;
-	cmpp.ver_major = CMP_VER_MAJOR;
-	cmpp.ver_minor = CMP_VER_MINOR;
-	if (cmpp.rate != bps)
-	{
-		cmpp.rate = bps;
-		cmpp.flags = CMP_IFLAG_CHANGERATE;
-	}
+	newspeed = cmp_accept(pconn, pconn->speed);
+	/* XXX - Error-checking */
+	/* XXX - Find 'tcspeed' from 'newspeed' */
 
-	IO_TRACE(5)
-		fprintf(stderr, "===== Sending INIT packet\n");
-	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
-
-	IO_TRACE(5)
-		fprintf(stderr, "===== Finished sending INIT packet\n");
+	pconn->speed = newspeed;
 
 	/* Change the speed */
-	/* XXX - This probably goes in Pconn_accept() or something */
-
 	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
 	{
 		fprintf(stderr, _("Error trying to set speed"));
@@ -257,7 +230,7 @@ serial_drain(struct PConnection *p)
 	return err;
 }
 
-int
+static int
 serial_close(struct PConnection *p)
 {
 	/* Clean up the protocol stack elements */
@@ -365,7 +338,6 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 	/* Set the methods used by the serial connection */
 	pconn->io_read = &serial_read;
 	pconn->io_write = &serial_write;
-fprintf(stderr, "set io_write to &serial_write\n");
 	pconn->io_accept = &serial_accept;
 	pconn->io_close = &serial_close;
 	pconn->io_select = &serial_select;
