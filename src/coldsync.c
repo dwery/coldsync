@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.123 2002-03-30 15:23:48 azummo Exp $
+ * $Id: coldsync.c,v 1.124 2002-03-30 15:43:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2026,6 +2026,57 @@ lookup_palment(struct Palm *palm)
 	return find_palment(p_snum, p_username, p_userid);
 }
 
+/* getpasswd_from_palment
+ * Given a palment struture tries to find a matching passwd.
+ */
+
+static struct passwd *
+getpasswd_from_palment(struct palment *palment)
+{	
+	struct passwd *pwent = getpwnam(palment->luser);
+
+	if (pwent == NULL)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "User name [%s] not found, checking if it's numeric.\n",
+				palment->luser);
+
+		/* See if it's a numeric uid */
+		if (strspn(palment->luser, "0123456789")
+		    == strlen(palment->luser))
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, " Yes.\n");
+
+			pwent = getpwuid(strtoul(palment->luser, NULL, 10));
+			if (pwent == NULL)
+			{
+				SYNC_TRACE(3)
+					fprintf(stderr,
+						"Numeric uid [%s] not found\n",
+						palment->luser);
+			}
+		}
+		else
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, " No.\n");
+		}
+	}
+
+	/* If found, dump some useful values. */
+	if (pwent)
+	{
+		SYNC_TRACE(3)
+		{
+			fprintf(stderr, "pw_name: [%s]\n", pwent->pw_name);
+			fprintf(stderr, "pw_uid: [%ld]\n", (long) pwent->pw_uid);
+		}
+	}
+
+	return pwent;
+}
+
 
 static int
 run_mode_Daemon(int argc, char *argv[])
@@ -2117,6 +2168,7 @@ run_mode_Daemon(int argc, char *argv[])
 			fprintf(stderr, "Using port from config file.\n");
 	}
 
+	/* Connect to the Palm */
 	if( (palm = palm_Connect()) == NULL )
 		return -1;
 
@@ -2135,37 +2187,18 @@ run_mode_Daemon(int argc, char *argv[])
 		return -1; 
 	}
 
-	pwent = getpwnam(palment->luser);
-	if (pwent == NULL)
+	/* Find the matching passwd structure */
+	pwent = getpasswd_from_palment(palment);
+	
+	if( pwent == NULL)
 	{
-		SYNC_TRACE(3)
-			fprintf(stderr, "User name [%s] not found.\n",
-				palment->luser);
+		Error(_("Unknown user/uid: \"%s\"."),
+			palment->luser);
 
-		/* See if it's a numeric uid */
-		if (strspn(palment->luser, "0123456789")
-		    == strlen(palment->luser))
-		{
-			pwent = getpwuid(strtoul(palment->luser, NULL, 10));
-			if (pwent == NULL)
-			{
-				SYNC_TRACE(3)
-					fprintf(stderr,
-						"numeric uid [%s] not found\n",
-						palment->luser);
-				Error(_("Unknown user/uid: \"%s\"."),
-				      palment->luser);
-				/* XXX - Write reason to Palm log */
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-			}
-		}
-	}
+		/* XXX - Write reason to Palm log */
 
-	SYNC_TRACE(3)
-	{
-		fprintf(stderr, "pw_name: [%s]\n", pwent->pw_name);
-		fprintf(stderr, "pw_uid: [%ld]\n", (long) pwent->pw_uid);
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
 	}
 
 	/* Setuid to the user whose Palm this is */
