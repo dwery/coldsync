@@ -34,7 +34,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.5 2001-07-30 07:06:15 arensb Exp $
+ * $Id: netsync.h,v 1.5.2.1 2001-10-10 23:42:09 arensb Exp $
  */
 
 #ifndef _netsync_h_
@@ -43,31 +43,6 @@
 #include <sys/param.h>		/* For MAXHOSTNAMELEN */
 #include "pconn.h"
 #include "palm.h"
-
-/*
- * Ritual statements
- * These packets are sent back and forth during the initial handshaking
- * phase. I don't know what they mean. The sequence is:
- * client sends UDP wakeup packet
- * server sends UDP wakeup ACK
- * client sends ritual response 1
- * server sends ritual statement 2
- * client sends ritual response 2
- * server sends ritual statement 3
- * client sends ritual response 3
- *
- * The comments are mostly conjecture and speculation.
- */
-extern ubyte ritual_resp1[];
-#define ritual_resp1_size 22
-extern ubyte ritual_stmt2[];
-#define ritual_stmt2_size 50
-extern ubyte ritual_resp2[];
-#define ritual_resp2_size 50
-extern ubyte ritual_stmt3[];
-#define ritual_stmt3_size 46
-extern ubyte ritual_resp3[];
-#define ritual_resp3_size 8
 
 /* struct netsync_wakeup
  * At the beginning of the NetSync process, the client sends one or more
