@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.19 2001-01-11 08:27:04 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.20 2001-02-20 12:38:06 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -368,8 +368,15 @@ serial_select(PConnection *p,
 				     : select(p->fd+1, NULL, &fds, NULL, tvp);
 }
 
+/* pconn_serial_open
+ * Initialize a new serial connection.
+ * 'pconn' is a partly-initialized PConnection; it must still be
+ * initialized as a serial PConnection.
+ * 'device' is the pathname of the serial port. If it is NULL, use stdin.
+ * 'prompt': if set, prompt the user to press the HotSync button.
+ */
 int
-pconn_serial_open(PConnection *pconn, char *device, int prompt)
+pconn_serial_open(PConnection *pconn, char *device, Bool prompt)
 {
 	struct termios term;
 
@@ -411,15 +418,22 @@ pconn_serial_open(PConnection *pconn, char *device, int prompt)
 	pconn->io_drain = &serial_drain;
 	pconn->io_private = 0;
 
-	/* Open the device. */
-	if ((pconn->fd = open(device, O_RDWR | O_BINARY)) < 0) 
+	if (device == NULL)
 	{
-		fprintf(stderr, _("Error: Can't open \"%s\".\n"), device);
-		perror("open");
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return pconn->fd;
+		/* Use stdin */
+		pconn->fd = STDIN_FILENO;
+	} else {
+		/* Open the device. */
+		if ((pconn->fd = open(device, O_RDWR | O_BINARY)) < 0) 
+		{
+			fprintf(stderr, _("Error: Can't open \"%s\".\n"),
+				device);
+			perror("open");
+			dlp_tini(pconn);
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return pconn->fd;
+		}
 	}
 
 	IO_TRACE(5)
