@@ -8,11 +8,12 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.1 1999-02-19 22:51:55 arensb Exp $
+ * $Id: util.c,v 1.2 1999-02-22 11:04:49 arensb Exp $
  */
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
 #include "util.h"
+#include "palm/pdb.h"	/* For EPOCH_1904 */
 
 INLINE ubyte
 peek_ubyte(const ubyte *buf)
@@ -96,6 +97,123 @@ put_udword(ubyte **buf, udword value)
 	++(*buf);
 	**buf = value & 0xff;
 	++(*buf);
+}
+
+/* XXX - Figure out the timezone hairiness:
+ * Palms don't have timezones. Hence, the Palm's epoch is Jan. 1, 1904 in
+ * the local timezone.
+ * Unless you're syncing across the network, in which case its epoch is
+ * Jan. 1, 1904 in the timezone it happens to be in (which may not be the
+ * same as the desktop's timezone).
+ * Except that there are (I'm sure) tools that add timezones to the Palm.
+ * These should be consulted.
+ * Times generated locally are in the local timezone (i.e., the one that
+ * the desktop machine is in).
+ */
+
+/* time_dlp2time_t
+ * Convert the DLP time structure into a Unix time_t, and return it.
+ */
+time_t
+time_dlp2time_t(const struct dlp_time *dlpt)
+{
+	struct tm tm;
+
+	/* Convert the dlp_time into a struct tm, then just use mktime() to
+	 * do the conversion.
+	 */
+	tm.tm_sec = dlpt->second;
+	tm.tm_min = dlpt->minute;
+	tm.tm_hour = dlpt->hour;
+	tm.tm_mday = dlpt->day;
+	tm.tm_mon = dlpt->month;
+	tm.tm_year = dlpt->year - 1900;
+	tm.tm_wday = 0;
+	tm.tm_yday = 0;
+	tm.tm_isdst = 0;
+	tm.tm_gmtoff = 0;
+	tm.tm_zone = NULL;
+
+	return mktime(&tm);
+}
+
+/* time_dlp2palmtime
+ * Convert a DLP time structure into a Palm time_t (number of seconds since
+ * Jan. 1. 1904), and return it.
+ */
+udword
+time_dlp2palmtime(const struct dlp_time *dlpt)
+{
+	time_t now;		/* The time, as a Unix time_t */
+	struct tm tm;
+
+	/* Convert the dlp_time into a struct tm, use mktime() to do the
+	 * conversion, and add the difference in epochs.
+	 */
+	tm.tm_sec = dlpt->second;
+	tm.tm_min = dlpt->minute;
+	tm.tm_hour = dlpt->hour;
+	tm.tm_mday = dlpt->day;
+	tm.tm_mon = dlpt->month;
+	tm.tm_year = dlpt->year - 1900;
+	tm.tm_wday = 0;
+	tm.tm_yday = 0;
+	tm.tm_isdst = 0;
+	tm.tm_gmtoff = 0;
+	tm.tm_zone = NULL;
+
+	now = mktime(&tm);
+	now += EPOCH_1904;
+
+	return now;
+}
+
+/* time_time_t2dlp
+ * Convert a Unix time_t into a DLP time structure. Put the result in
+ * 'dlpt'.
+ */
+void
+time_time_t2dlp(const time_t t,
+		struct dlp_time *dlpt)
+{
+	struct tm *tm;
+
+	tm = localtime(&t);	/* Break 't' down into components */
+
+	/* Copy the relevant fields over to 'dlpt' */
+	dlpt->year = tm->tm_year + 1900;
+	dlpt->month = tm->tm_mon;
+	dlpt->day = tm->tm_mday;
+	dlpt->hour = tm->tm_hour;
+	dlpt->minute = tm->tm_min;
+	dlpt->second = tm->tm_sec;
+}
+
+/* time_palmtime2dlp
+
+ * Convert a Palm time (seconds since the Jan. 1, 1904) to a DLP time
+ * structure. Put the result in 'dlpt'.
+ */
+void
+time_palmtime2dlp(const udword palmt,
+		  struct dlp_time *dlpt)
+{
+	struct tm *tm;
+	time_t t;
+
+	/* Convert the Palm time to a Unix time_t */
+	t = palmt - EPOCH_1904;
+
+	/* Break the Unix time_t into components */
+	tm = localtime(&t);
+
+	/* Copy the relevant fields over to 'dlpt' */
+	dlpt->year = tm->tm_year + 1900;
+	dlpt->month = tm->tm_mon;
+	dlpt->day = tm->tm_mday;
+	dlpt->hour = tm->tm_hour;
+	dlpt->minute = tm->tm_min;
+	dlpt->second = tm->tm_sec;
 }
 
 /* debug_dump
@@ -204,3 +322,9 @@ crc16(const ubyte *buf,
 		crc = icrctb[*buf++ ^ (crc >> 8)] ^ ((crc & 0xff) << 8);
 	return crc;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
