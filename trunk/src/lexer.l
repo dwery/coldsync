@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.14 2000-05-19 12:12:44 arensb Exp $
+ * $Id: lexer.l,v 2.15 2000-05-20 19:22:20 arensb Exp $
  */
 /* XXX - 'flex' by itself can (apparently) deal with infinitely-long
  * tokens. 'flex -l' (and presumably 'lex') can't. Figure out some way of
@@ -83,12 +83,10 @@ XDIGIT		[0-9a-fA-F]
 WS		[ \t\f\r]
  /* Alphanumeric character */
 ALNUM		[a-zA-Z0-9]
- /* Leading character for an identifier */
+ /* Leading character for an identifier (anything that looks like a word) */
 ID1		[a-zA-Z_]
  /* Subsequent characters for an identifier */
-ID		[a-zA-Z_0-9]
- /* Subsequent characters for a header identifier */
-HID		[-a-zA-Z_0-9]
+ID		[-a-zA-Z_0-9]
 
 %%
 
@@ -119,7 +117,7 @@ HID		[-a-zA-Z_0-9]
 	return STRING;
 	}
 
-<HEADER>^{WS}*{ID1}{HID}*:{WS}*.*	{
+<HEADER>^{WS}*{ID1}{ID}*:{WS}*.*	{
 		/* It's actually easier to just recognize the entire line
 		 * all at once and parse it here.
 		 */
@@ -199,7 +197,6 @@ HID		[-a-zA-Z_0-9]
 "device"	{ return DEVICE;	}
 "directory"	{ return DIRECTORY;	}
 "listen"	{ return LISTEN;	}
-"name"		{ return NAME;		}
 "path"		{ return PATH;		}
 "pda"		{ return PDA;		}
 "palm"		{ return PDA; /* Synonym */	}
@@ -332,7 +329,6 @@ HID		[-a-zA-Z_0-9]
 		return NUMBER;
 	}
 
- /* XXX - Is this actually used anywhere? */
 {ID1}{ID}*	{
 		if ((yylval.string = malloc(yyleng+1)) == NULL)
 		{
@@ -342,7 +338,6 @@ HID		[-a-zA-Z_0-9]
 		}
 		strncpy(yylval.string, yytext, yyleng);
 		yylval.string[yyleng] = '\0';
-fprintf(stderr, "Returning WORD [%s]\n", yylval.string);
 		return WORD;
 	}
 
