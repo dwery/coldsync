@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.30 2000-12-11 08:43:53 arensb Exp $
+.\" $Id: coldsync.8,v 1.31 2000-12-18 04:50:20 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -308,51 +308,56 @@ and
 directives.
 .Ss listen
 .Li listen
-directives are of the form
+directives are of the following forms:
 .\" XXX - It'd be nice to have font changes inside the display, to
 .\" indicate pathnames and whatnot.
 .Bd -literal -offset indent
-listen <type> {
+listen serial {
 	device: /dev/palm;
+	speed: 57600;
 }
+
+listen usb {			# BSD only
+	device: /dev/ugen0;
+}
+
+listen net {
+}
+
 .Ed
-where
-.Li <type>
-is either
-.Li serial
-for a serial connection (PalmPilot, Palm V, Visor under Linux, etc.),
-or
-.Li usb
-for a USB connection (Visor under FreeBSD);
-.Pa /dev/palm
-is the pathname to your serial or USB device. Currently, only one
-device may be specified.
 .Pp
-If you are using IrCOMM to sync via the infrared port, you will need
-to specify
-.Li <type>
-as
-.Li serial ,
-since IrCOMM effectively makes an infrared port emulate a serial port.
+.Li listen serial
+is used for serial Palms, infrared syncing, and for Handspring Visors
+under Linux.
 .Pp
 The
-.Li usb
-listen type is only used under *BSD.
+.Li device
+directive specifies the device to use; if omitted, it defaults to
+.Pa /dev/palm .
+The
+.Li speed
+directive specifies the speed at which to sync, in bytes per second.
+If omitted or set to 0, the speed defaults to the speed suggested by
+the Palm, or the fastest speed supported by the serial port, whichever
+is slower.
 .Pp
-For serial devices, the
+.Li listen usb
+is used to sync a Handspring Visor using native USB mode. This only
+works under *BSD.
+.Pp
+The
+.Li device
+directive specifies the device to use. If omitted, it defaults to
+.Pa /dev/palm .
+.Pp
+.Li listen net
+is used to listen for an incoming network HotSync connection.
+.Pp
+Currently, a configuration file should contain only one
 .Li listen
-block may also contain a line of the form
-.Bd -literal -offset indent
-        speed: <speed>;
-.Ed
-This specifies the speed at which the sync will take place. If this
-line is omitted (or if
-.Li <speed>
-is 0),
-.Nm ColdSync
-will use whatever the Palm suggests. You will generally want to set
-this to the highest speed supported by both your Palm and your
-machine's serial port.
+block. If more than one
+.Li listen
+block is specified, only the first one will be used.
 .Pp
 If a device was specified on the command line with the
 .Fl p
@@ -751,7 +756,9 @@ instructions.
 .Sh FILES
 .Bl -tag -width ~/.palm/archive -compact
 .It Pa ~/.coldsyncrc
-configuration file.
+user's configuration file.
+.It Pa /usr/local/etc/coldsync.conf
+site-wide configuration file.
 .It Pa ~/.palm
 The default root of the backup tree (\,
 .Em palmdir ,
@@ -777,6 +784,10 @@ contains files to be installed at the next sync.
 .Re
 .Rs
 .%T ColdSync Conduits
+.Re
+.Rs
+.%T http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
+explains how to sync a Handspring Visor under Linux.
 .Re
 .Sh AUTHORS
 .An Andrew Arensburger Aq arensb@ooblick.com
