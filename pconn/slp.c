@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.4 1999-03-11 03:14:17 arensb Exp $
+ * $Id: slp.c,v 1.5 1999-06-05 11:22:29 arensb Exp $
  */
 
 #include <stdio.h>
@@ -27,15 +27,11 @@ int slp_debug = 0;
 #endif	/* SLP_DEBUG */
 
 /* slp_preamble
- * This is the preamble of every SLP packet. It never changes, so it
- * and its CRC are here to save time.
+ * This is the preamble of every SLP packet.
  */
 static const ubyte slp_preamble[] = {
 	0xbe, 0xef, 0xed,
 };
-static const ubyte slp_preamble_checksum = 0x9a;
-	/* Sum of the preamble elements, mod 0xff */
-static const uword slp_preamble_crc = 0xc9f1;	/* CRC of the preamble */
 
 /* slp_init
  * Initialize a new PConnection.
