@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.46 2000-11-28 00:45:43 arensb Exp $
+ * $Id: config.c,v 1.47 2000-12-08 06:30:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -71,6 +71,9 @@ char conf_fname[MAXPATHLEN+1];	/* ~/.coldsyncrc */
 struct userinfo userinfo;	/* Information about the Palm's owner */
 	/* XXX - Probably should go in sync_config */
 
+static void set_debug_level(const char *str);
+static int set_mode(const char *str);
+static void usage(int argc, char *argv[]);
 static int name2listen_type(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
@@ -568,7 +571,7 @@ load_config()
  *	FAC	Set facility FAC to level 1
  *	FAC:N	Set facility FAC to level N
  */
-void
+static void
 set_debug_level(const char *str)
 {
 	const char *lvlstr;	/* Pointer to trace level in 'str' */
@@ -617,7 +620,7 @@ set_debug_level(const char *str)
  * successful, or a negative value in case of error. Currently, the only
  * error is "unknown mode".
  */
-int
+static int
 set_mode(const char *str)
 {
 	if (str == NULL)	/* Sanity check */
@@ -677,7 +680,7 @@ set_mode(const char *str)
  * Print out a usage string.
  */
 /* ARGSUSED */
-void
+static void
 usage(int argc, char *argv[])
 {
 	printf(_("Usage: %s [options] <mode> <mode args>\n"
@@ -738,6 +741,69 @@ _("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 _("\n"
 "    Default global configuration file: %s\n"),
 		DEFAULT_GLOBAL_CONFIG);
+}
+
+/* get_hostid
+ * Figures out the hostid for this host, and returns it in 'hostid'.
+ * Returns 0 if successful, or a negative value in case of error.
+ *
+ * NB: AFAICT, there's nothing that says that the hostid has to be its IP
+ * address. It only has to be a 32-bit integer, one that's unique among the
+ * set of all hosts with which the user will sync.
+ */
+int
+get_hostid(udword *hostid)
+{
+	int err;
+	char hostname[MAXHOSTNAMELEN+1];
+					/* Buffer to hold the host name. */
+	struct hostent *myaddr;		/* This host's address */
+
+	/* Get the hostname */
+	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
+	{
+		fprintf(stderr, _("Can't get host name\n"));
+		perror("gethostname");
+		return -1;
+	}
+
+	if ((myaddr = gethostbyname(hostname)) == NULL)
+	{
+		fprintf(stderr, _("Can't look up my address\n"));
+		perror("gethostbyname");
+		return -1;
+	}
+
+	/* XXX - There should probably be functions to deal with other
+	 * address types (e.g., IPv6). Maybe just hash them down to 4
+	 * bytes. Hm... actually, that might work for all address types, so
+	 * no need to test for AF_INET specifically.
+	 */
+	if (myaddr->h_addrtype != AF_INET)
+	{
+		fprintf(stderr, _("Hey! This isn't an AF_INET address!\n"));
+		return -1;
+	} 
+
+	/* Make sure there's at least one address */
+	if (myaddr->h_addr_list[0] == NULL)
+	{
+		fprintf(stderr,
+			_("This host doesn't appear to have an "
+			  "IP address.\n"));
+		return -1;
+	}
+
+	/* Use the first address as the host ID */
+	*hostid =
+		(((udword) myaddr->h_addr_list[0][0] & 0xff) << 24) |
+		(((udword) myaddr->h_addr_list[0][1] & 0xff) << 16) |
+		(((udword) myaddr->h_addr_list[0][2] & 0xff) << 8) |
+		 ((udword) myaddr->h_addr_list[0][3] & 0xff);
+	MISC_TRACE(2)
+		fprintf(stderr, "My hostid is 0x%08lx\n", *hostid);
+
+	return 0;
 }
 
 /* print_pda_block
