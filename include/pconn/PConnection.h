@@ -3,11 +3,11 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a Palm device.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.14 2000-12-24 21:24:22 arensb Exp $
+ * $Id: PConnection.h,v 1.15 2001-01-09 16:31:52 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_

@@ -2,11 +2,11 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.13 2000-12-24 21:24:24 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.14 2001-01-09 16:33:04 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_

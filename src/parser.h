@@ -1,11 +1,11 @@
 /* parser.h
  * Structures and such used by the config file parser.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.8 2000-06-15 07:33:01 arensb Exp $
+ * $Id: parser.h,v 2.9 2001-01-09 16:28:14 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_

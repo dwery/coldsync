@@ -3,7 +3,7 @@
  * Types and definitions for Palm Packet Assembly/Disassembly Protocol
  * (PADP).
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -55,7 +55,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.5 2000-12-13 16:20:42 arensb Exp $
+ * $Id: padp.h,v 1.6 2001-01-09 16:33:37 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
