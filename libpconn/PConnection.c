@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.1 1999-09-09 05:17:17 arensb Exp $
+ * $Id: PConnection.c,v 1.2 1999-11-09 04:04:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -106,9 +106,14 @@ PConnClose(struct PConnection *pconn)
 	 * ACK for the DLP EndOfSync command, and hangs until it times out,
 	 * which wastes the user's time.
 	 */
+	/* XXX - Why does this hang until the Palm times out, under
+	 * FreeBSD? (But only with 'xcopilot', it appears.)
+	 */
 	MISC_TRACE(4)
 		fprintf(stderr, "Calling tcdrain()\n");
-	tcdrain(pconn->fd);
+	err = tcdrain(pconn->fd);
+	if (err < 0)
+		perror("tcdrain");
 
 	/* Clean up the DLP part of the PConnection */
 	dlp_tini(pconn);
