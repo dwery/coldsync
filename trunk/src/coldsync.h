@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.29 2000-09-09 21:27:12 arensb Exp $
+ * $Id: coldsync.h,v 1.30 2000-10-22 03:13:02 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -82,33 +82,35 @@ struct Palm
 	struct dlp_dbinfo *dblist;	/* Database list */
 };
 
-typedef enum { Standalone, Daemon } run_mode;
-				/* XXX - Daemon mode hasn't been
-				 * implemented yet.
-				 */
-				/* XXX - Ought to have a better name than
-				 * 'Standalone'.
-				 */
-
-/* XXX - Configuration
- * There should be three config files:
- *
- * In standalone mode, ~/.coldsyncrc contains the user's listen and conduit
- * blocks. /etc/coldsync.common (?) contains the system-wide defaults
- * (e.g., the list of listen blocks for this machine, the default conduit
- * setup, etc.).
- *
- * In daemon mode, /etc/coldsync.common contains the system-wide defaults,
- * as above. /etc/coldsync.conf contains the specific configuration for
- * running in daemon mode.
+/* run_mode
+ * Lists the various overall modes.
  */
+typedef enum {
+	mode_None = 0,		/* No mode selected yet */ 
+	mode_Standalone,	/* Single-shot mode: sync once, then exit */
+	mode_Backup,		/* Back up a Palm */
+	mode_Restore,		/* Restore from backups */
+	mode_Daemon,		/* Daemon mode: run continuously in the
+				 * background, waiting for connections and
+				 * forking as necessary.
+				 */
+				/* XXX - Not implemented yet */
+	mode_Getty,		/* getty mode: the Palm is on stdin */
+				/* XXX - Not implemented yet */
+	mode_Init		/* Initialize a Palm */
+				/* XXX - Not implemented yet */
+} run_mode;
 
 /* cmd_opts
  * Command-line options. This nameless struct acts sort of like a C++
  * namespace, and just serves to make sure there are no name collisions.
  */
 struct cmd_opts {
-	run_mode mode;		/* How to run: standalone or daemon */
+	run_mode mode;		/* Mode in which to run */
+	/* XXX - do_backup and do_restore will be obsoleted by run modes */
+	/* XXX - backupdir and restoredir will be obsoleted by
+	 * mode-specific functions.
+	 */
 	Bool do_backup;		/* True iff we should do a full backup */
 	char *backupdir;	/* Where to put the files when doing a 
 				 * backup */
@@ -280,7 +282,6 @@ typedef struct pda_block
 
 struct config
 {
-	run_mode mode;
 	listen_block *listen;		/* List of listen blocks */
 	pda_block *pda;			/* List of known PDAs */
 	conduit_block *conduits;	/* List of all conduits */
@@ -343,6 +344,7 @@ extern int InstallNewFiles(struct PConnection *pconn,
 extern void usage(int argc, char *argv[]);
 extern void print_version(void);
 extern void set_debug_level(const char *str);
+extern int set_mode(const char *str);
 extern const char *mkfname(const char *dirname,
 			   const struct dlp_dbinfo *dbinfo,
 			   Bool add_suffix);
