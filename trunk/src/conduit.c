@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.16 2000-02-07 04:42:28 arensb Exp $
+ * $Id: conduit.c,v 1.17 2000-02-07 19:09:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -615,10 +615,10 @@ cond_sendline(const char *data,	/* Data to send */
 				"cond_sendline: select() returned %d\n",
 				err);
 
-		/* XXX - Several things may have happened at this point:
-		 * err < 0: means that select() was interrupted (maybe by
-		 * SIGCHLD, maybe not); the conduit may or may not still be
-		 * running, and it may or may not have printed anything.
+		/* Several things may have happened at this point: err < 0:
+		 * means that select() was interrupted (maybe by SIGCHLD,
+		 * maybe not); the conduit may or may not still be running,
+		 * and it may or may not have printed anything.
 		 *
 		 * err == 0: This should never happen.
 		 *
@@ -874,10 +874,10 @@ cond_readline(char *buf,	/* Buffer to read into */
 				err);
 
 
-		/* XXX - Several things may have happened at this point:
-		 * err < 0: means that select() was interrupted (maybe by
-		 * SIGCHLD, maybe not); the conduit may or may not still be
-		 * running, and it may or may not have printed anything.
+		/* Several things may have happened at this point: err < 0:
+		 * means that select() was interrupted (maybe by SIGCHLD,
+		 * maybe not); the conduit may or may not still be running,
+		 * and it may or may not have printed anything.
 		 *
 		 * err == 0: This should never happen.
 		 *
@@ -1053,9 +1053,6 @@ cond_readline(char *buf,	/* Buffer to read into */
  *	3yz - Warning
  *	4yz - ColdSync (caller) Error
  *	5yz - Conduit Error
- * XXX - Perhaps 11z can be used for progress reports: the message will
- * sent to the user (presumably across a Unix domain socket to a listening
- * application). "111 23% done" can be used to display a progress bar.
  *
  * Returns 0 at end of file, or -1 in case of error. Otherwise, returns the
  * error code; if none was given (i.e., the line doesn't match the pattern
