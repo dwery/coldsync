@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.22 2000-06-11 18:49:33 arensb Exp $
+ * $Id: conduit.c,v 1.23 2000-06-18 07:04:40 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -582,22 +582,21 @@ spawn_conduit(
 	close(inpipe[1]);
 	close(outpipe[0]);
 
-	/* Close stdin and stdout */
-	if (close(STDIN_FILENO) < 0)
-	{
-		perror("close(STDIN_FILENO)");
-		exit(1);
-	}
-	if (close(STDOUT_FILENO) < 0)
-	{
-		perror("close(STDIN_FILENO)");
-		exit(1);
-	}
+	/* We don't close stdin and stdout for two reasons:
+	 *
+	 * 1) dup2() is supposed to do this (at least, it does so under
+	 * FreeBSD, DU, and Solaris. It appears to be mandated by POSIX).
+	 *
+	 * 2) I don't know why, but closing stdin causes a bug: if stdin is
+	 * already closed (e.g., if coldsync is run by certain daemons),
+	 * then the first dup2() fails with EBADF. I have no idea why this
+	 * would happen, but it does.
+	 */
 
 	/* Dup stdin to the pipe */
 	if ((err = dup2(inpipe[0], STDIN_FILENO)) < 0)
 	{
-		perror("dup2(stdio)");
+		perror("dup2(stdin)");
 		exit(1);
 	}
 	close(inpipe[0]);
@@ -765,6 +764,13 @@ if (err <= 0)
 		/* See if the conduit is ready to read input */
 		if (FD_ISSET(tochild_fd, &outfds))
 		{
+			/* XXX - Grrr... apparently, these two trace
+			 * statements introduce a heisenbug: if the conduit
+			 * exits quickly enough, then the delay introduced
+			 * by these two trace statements is long enough
+			 * that 'tochild_fd' has closed, and writing to it
+			 * causes a segfault.
+			 */
 			SYNC_TRACE(6)
 				fprintf(stderr, "cond_sendline: Conduit is "
 					"ready to read\n");
