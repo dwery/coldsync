@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.15 1999-11-12 09:49:14 arensb Exp $
+# $Id: Makefile.in,v 1.16 1999-11-28 15:41:02 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -130,7 +130,7 @@ install:	coldsync
 	${INSTALL} ${INSTALLARGS} coldsync ${BINDIR}
 
 depend:
-	${MKDEP} ${DEFS} ${INCLUDES} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
+	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
 distdir:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
