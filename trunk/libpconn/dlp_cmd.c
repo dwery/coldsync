@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.36 2002-11-03 00:14:33 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.37 2003-06-26 21:04:50 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -31,6 +31,7 @@
 #endif	/* STDC_HEADERS */
 
 #include <stdlib.h>		/* For malloc() */
+#include <netinet/in.h>
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -3812,6 +3813,102 @@ DlpFindDB_ByTypeCreator(PConnection *pconn,		/* Connection to Palm */
 					_("##### %s: Unknown argument type: "
 					  "0x%02x.\n"),
 					"DlpFindDB",
+					ret_argv[i].id);
+				continue;
+			}
+		}
+	}
+
+	return 0;		/* Success */
+}
+
+int
+DlpExpCardInfo(PConnection *pconn,		/* Connection to Palm */
+		const uword slotnum,		/* Slot number */
+		struct dlp_expcardinfo *info)
+{
+	int i;
+	int err;
+	struct dlp_req_header header;		/* Request header */
+	struct dlp_resp_header resp_header;	/* Response header */
+	struct dlp_arg argv[1];			/* Request argument list */
+	const struct dlp_arg *ret_argv;		/* Response argument list */
+
+	static ubyte outbuf[DLPARGLEN_ExpCardInfo_Req];
+						/* Output buffer */
+
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ExpCardInfo\n");
+
+	/* Fill in the header values */
+	header.id	= (ubyte) DLPCMD_ExpCardInfo;
+	header.argc	= 1;
+
+	/* Fill in the argument */
+
+	wptr = outbuf;
+
+	put_uword(&wptr, slotnum);
+
+	argv[0].id	= DLPARG_ExpCardInfo_Req;
+	argv[0].size	= DLPARGLEN_ExpCardInfo_Req;
+	argv[0].data	= outbuf;
+
+
+	/* Send the DLP request */
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
+	if (err < 0)
+		return err;
+		
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
+		return resp_header.error;
+
+	/* Parse the argument(s) */
+	for (i = 0; i < resp_header.argc; i++)
+	{
+		rptr = ret_argv[i].data;
+		switch (ret_argv[i].id)
+		{
+			case DLPRET_ExpCardInfo_Info:
+			{
+				info->capabilities = get_udword(&rptr);
+				info->nstrings = get_uword(&rptr);
+
+				/* Check for PalmOS 5.x bug */
+				 
+				if (info->nstrings == 1024)
+				{
+					info->nstrings = __bswap_16(info->nstrings);
+					info->capabilities = __bswap_32(info->capabilities);
+					
+					/* Throw away two bytes */
+					 
+					 get_uword(&rptr);
+				}
+
+				
+				info->strings = malloc(ret_argv[i].size - DLPRETLEN_ExpCardInfo_Info);
+				
+				if (info->strings)
+				{
+					memcpy(info->strings,
+						rptr,
+						ret_argv[i].size - DLPRETLEN_ExpCardInfo_Info); 
+				}
+			}
+			break;
+
+			default:	/* Unknown argument type */
+			{
+				fprintf(stderr,
+					_("##### %s: Unknown argument type: "
+					  "0x%02x.\n"),
+					"DlpExpCardInfo",
 					ret_argv[i].id);
 				continue;
 			}
