@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.6 1999-11-27 05:55:33 arensb Exp $
+ * $Id: restore.c,v 2.7 2000-02-07 01:46:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -40,14 +40,6 @@
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL */
-
-#if !HAVE_STRCASECMP
-/* For OSes that don't have case-insensitive string matching functions.
- *	"Here's a nickel, kid, get yourself a better OS"
- *			-- Scott Adams, paraphrased.
- */
-#  define strcasecmp(s1,s2)	strcmp((s1),(s2))
-#endif	/* !HAVE_STRCASECMP */
 
 #include "pconn/pconn.h"
 #include "pdb.h"
