@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.9 2000-05-19 12:40:00 arensb Exp $
+# $Id: Make.rules.in,v 1.10 2000-05-25 12:04:36 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -27,6 +27,7 @@ LIBDIR =	@libdir@
 INCLUDEDIR =	@includedir@
 INFODIR =	@infodir@
 MANDIR =	@mandir@
+MAN1DIR =	${MANDIR}/man1
 MAN8DIR =	${MANDIR}/man8
 
 # Compilation-related programs and flags
@@ -54,6 +55,8 @@ RANLIB =	@RANLIB@
 
 # Other programs and utilities
 PERL =		@PERL@
+POD2MAN =	@POD2MAN@
+SED =		@SED@
 TAR =		@TAR@
 GZIP =		@GZIP@
 DATE =		@DATE@
