@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.25 2001-10-18 01:58:06 arensb Exp $
+ * $Id: PConnection.h,v 1.26 2001-11-12 01:00:41 arensb Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -60,6 +60,13 @@ typedef enum {
 		 */
 } pconn_proto_t;
 
+/* Flags */
+#define PCONNFL_TRANSIENT	0x0001	/* The device might not exist */
+#define PCONNFL_PROMPT		0x0002	/* Prompt the user to press the
+					 * HotSync button once the
+					 * connection has been established.
+					 */
+
 /* PConnection
  * This struct is an opaque type that contains all of the state about
  * a connection to a given Palm device at a given time.
@@ -74,6 +81,7 @@ typedef struct PConnection
 {
 	/* Common part */
 	int fd;				/* File descriptor */
+	unsigned short flags;		/* Flags. See PCONNFL_*, above */
 
 	/* The following io_* fields are really virtual functions that
 	 * allow you to choose between serial and USB I/O.
@@ -197,7 +205,7 @@ typedef struct PConnection
 extern PConnection *new_PConnection(char *fname,
 				    const pconn_listen_t listenType,
 				    const pconn_proto_t protocol,
-				    int prompt_for_hotsync);
+				    unsigned short flags);
 extern int PConnClose(PConnection *pconn);
 extern int PConn_bind(PConnection *pconn,
 		      const void *addr,

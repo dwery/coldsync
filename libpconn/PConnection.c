@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.26 2001-10-18 01:58:36 arensb Exp $
+ * $Id: PConnection.c,v 1.27 2001-11-12 01:01:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -54,7 +54,7 @@ PConnection *
 new_PConnection(char *device,
 		const pconn_listen_t listenType,
 		const pconn_proto_t protocol,
-		int promptHotSync)
+		const unsigned short flags)
 {
 	PConnection *pconn;		/* New connection */
 
@@ -81,7 +81,7 @@ new_PConnection(char *device,
 
 	switch (listenType) {
 	    case LISTEN_SERIAL:
-		if (pconn_serial_open(pconn, device, protocol, promptHotSync)
+		if (pconn_serial_open(pconn, device, protocol, flags)
 		    < 0)
 		{
 			free(pconn);
@@ -90,7 +90,7 @@ new_PConnection(char *device,
 		return pconn;
 
 	    case LISTEN_NET:
-		if (pconn_net_open(pconn, device, protocol, promptHotSync) < 0)
+		if (pconn_net_open(pconn, device, protocol, flags) < 0)
 		{
 			free(pconn);
 			return NULL;
@@ -102,7 +102,7 @@ new_PConnection(char *device,
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
-		if (pconn_usb_open(pconn, device, protocol, promptHotSync) < 0)
+		if (pconn_usb_open(pconn, device, protocol, flags) < 0)
 		{
 			free(pconn);
 			return NULL;

@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.20 2001-10-18 01:34:42 arensb Exp $
+ * $Id: PConnection_net.c,v 1.21 2001-11-12 01:02:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -487,7 +487,7 @@ int
 pconn_net_open(PConnection *pconn,
 	       const char *device,
 	       const pconn_proto_t protocol,
-	       const Bool prompt)
+	       const unsigned short flags)
 {
 	IO_TRACE(1)
 		fprintf(stderr, "Opening net connection.\n");
