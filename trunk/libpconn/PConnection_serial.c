@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.31 2001-09-22 09:22:31 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.32 2001-11-12 01:02:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -486,7 +486,7 @@ int
 pconn_serial_open(PConnection *pconn,
 		  const char *device,
 		  const pconn_proto_t protocol,
-		  const Bool prompt)
+		  const unsigned short flags)
 {
 	struct termios term;
 
@@ -636,7 +636,7 @@ pconn_serial_open(PConnection *pconn,
 	/* XXX - Error-checking */
 					/* Make it so */
 
-	if (prompt)
+	if (flags & PCONNFL_PROMPT)
 		printf(_("Please press the HotSync button.\n"));
 
 	return pconn->fd;

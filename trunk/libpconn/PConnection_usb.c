@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.30 2001-10-12 01:22:51 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.31 2001-11-12 01:03:32 arensb Exp $
  */
 
 #include "config.h"
@@ -337,7 +337,7 @@ int
 pconn_usb_open(PConnection *pconn,
 	       const char *device,
 	       const pconn_proto_t protocol,
-	       const Bool prompt)
+	       const unsigned short flags)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;
@@ -431,7 +431,7 @@ pconn_usb_open(PConnection *pconn,
 	 *  operation on the Visor logically plugs it into the USB
 	 *  hub port, where it's noticed and enumerated.
 	 */
-	if (prompt)
+	if (flags & PCONNFL_PROMPT)
 		printf(_("Please press the HotSync button.\n"));
 
 	/*
