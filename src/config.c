@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.109 2002-11-02 13:07:48 azummo Exp $
+ * $Id: config.c,v 1.110 2002-11-13 12:08:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -238,7 +238,7 @@ parse_args(int argc, char *argv[])
 			global_opts.force_install = True3;
 			break;
 
-		    case 'a':	/* -a: Auutoinitialize palm in daemon mode */
+		    case 'a':	/* -a: Autoinitialize palm in daemon mode */
 			global_opts.autoinit = True3;
 			break;
 
@@ -452,6 +452,9 @@ load_config(const Bool read_user_config)
 			Error(_("Can't get user info."));
 			return -1;
 		}
+
+		/* Make sure $HOME is set correctly */
+		setenv("HOME", userinfo.homedir, 1);
 
 		if (global_opts.conf_fname_given &&
 		    !exists(global_opts.conf_fname))
