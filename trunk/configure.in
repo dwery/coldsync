@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.50 2000-01-27 05:58:49 arensb Exp $
+dnl # $Id: configure.in,v 1.51 2000-02-03 02:49:07 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -136,6 +136,7 @@ AC_AIX
 # XXX - Fails due to -Wall
 dnl # AC_C_INLINE
 
+AC_PATH_PROG(PERL, perl)
 AC_CHECK_PROGS(DATE, date)
 AC_CHECK_PROGS(MKDEP,[mkdep makedepend], true)
 AC_CHECK_PROGS(MKID, mkid, true)
