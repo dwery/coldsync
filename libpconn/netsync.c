@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.27 2003-02-24 23:57:20 azummo Exp $
+ * $Id: netsync.c,v 1.28 2004-10-20 22:37:15 azummo Exp $
  */
 
 #include "config.h"
@@ -207,6 +207,7 @@ ritual_exch_server(PConnection *pconn)
 	int err;
 	const ubyte *inbuf;
 	uword inlen;
+
 
 	/* Receive ritual response 1 */
 	IO_TRACE(6)
@@ -656,11 +657,11 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	return 1;			/* Success */
 }
 
-/* netsync_write_old - Old version.
- * Write a NetSync message.
+/* netsync_write - Old version.
+ * Write a NetSync message. Header and data are written separately.
  */
 int
-netsync_write_old(PConnection *pconn,
+netsync_write(PConnection *pconn,
 	      const ubyte *buf,
 	      const uword len)		/* XXX - Is this enough? */
 {
@@ -729,7 +730,7 @@ netsync_write_old(PConnection *pconn,
  */
 
 int
-netsync_write(PConnection *pconn,
+netsync_write_new(PConnection *pconn,
 	      const ubyte *buf,
 	      const uword len)		/* XXX - Is this enough? */
 {
