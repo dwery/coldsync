@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.14 2001-03-19 09:24:32 arensb Exp $
+@c $Id: conduits.texi,v 1.15 2001-05-05 05:02:42 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -183,8 +183,8 @@ resources of the same type apart.
 	Not coincidentally, resource databases are very similar to the
 resource fork in MacOS files.
 
-@cindex E-mail
-@cindex Signature, e-mail
+@cindex Email
+@cindex Signature, email
 	One big difference between record and resource databases is that
 the contents of resource databases are fairly static. For instance, the
 signature that the built-in Mail program appends to messages is actually
@@ -585,7 +585,7 @@ writes the contents of @code{$PDB} to the file specified by the
 @subsection @code{&DoFetch}
 
 	The @code{&DoFetch} function reads Pine's alias file. For each
-address that it finds there, it updates the e-mail address in the
+address that it finds there, it updates the email address in the
 appropriate record in the Palm database.
 
 @example
@@ -646,13 +646,13 @@ specified by @code{OutputDB}.
 
 	The body of @code{&DoFetch} is divided into two phases: in the
 first phase, it reads the Pine alias file and builds a hash,
-@code{%aliases}, that maps each full name to its e-mail address. The
+@code{%aliases}, that maps each full name to its email address. The
 second phase goes through this map and updates each record in
 @code{$PDB}. This two-phase approach may seem overly complex; the
 reasons for it are discussd in @ref{pine-aliases Limitations}.
 
 	Each line in the Pine address book contains a set of
-tab-separated fields: the person's alias, full name, e-mail address, and
+tab-separated fields: the person's alias, full name, email address, and
 a few others that we don't use.
 
 	We'll need some way of figuring out which Pine alias goes with
@@ -663,8 +663,8 @@ on the full name as the next best way of uniquely identifying a person.
 	The second phase of @code{&DoFetch} uses a number of helper
 functions: @var{&find_person} takes a person's full name and returns a
 reference to the corresponding record in @code{$PDB};
-@code{&get_address} extracts the e-mail address from that record; and
-@code{&set_address} sets the e-mail address in the record.
+@code{&get_address} extracts the email address from that record; and
+@code{&set_address} sets the email address in the record.
 
 	One important thing to note is that @code{&set_address} marks
 the record as dirty. During a normal sync, ColdSync only considers those
@@ -727,7 +727,7 @@ sub DoDump
                         next;
                 @}
 
-                # The PDB record doesn't have an e-mail address. Mark it
+                # The PDB record doesn't have an email address. Mark it
                 # as deleted.
                 my $year;
                 my $month;
@@ -764,7 +764,7 @@ untouched, rather than risk corrupting it.
 
 	Again, we use @code{&find_person} to look up the Palm record
 corresponding to a person's full name, and @code{&get_address} to
-extract the e-mail address from the record. There are three cases we
+extract the email address from the record. There are three cases we
 need to consider:
 
 @itemize @bullet
@@ -779,24 +779,24 @@ need to consider:
 	every Palm record has a corresponding Pine alias, we'll take the
 	latter approach.
 
-@item There is a record, and it has an e-mail address.
+@item There is a record, and it has an email address.
 @ifhtml
 <P>
 @end ifhtml
 
-	We write the alias to @code{ALIASES_NEW}, with the e-mail
+	We write the alias to @code{ALIASES_NEW}, with the email
 	address listed in the Palm record. This may or may not be
 	different from what was there before, but it doesn't matter:
 	this is the most up-to-date address.
 
-@item There is a record, but it doesn't have an e-mail address.
+@item There is a record, but it doesn't have an email address.
 @ifhtml
 <P>
 @end ifhtml
 
-	In this case, we'll assume that the e-mail address was deleted
+	In this case, we'll assume that the email address was deleted
 	on the Palm, otherwise the Fetch conduit would have uploaded the
-	e-mail address. Hence, this e-mail address is obsolete and
+	email address. Hence, this email address is obsolete and
 	should be commented out. In general, it is preferable to comment
 	things out rather than delete them: that way, if there's a bug
 	somewhere, the information isn't permanently lost.
@@ -842,7 +842,7 @@ Support''.
 
 @cindex @code{get_address}
 	@code{&get_address} takes a reference to a Palm record, and
-extracts the e-mail address, if any:
+extracts the email address, if any:
 
 @example
 sub get_address
@@ -855,7 +855,7 @@ sub get_address
         @{
                 next unless $record->@{"phoneLabel"@}@{$field@} == 4;
 
-                # Found the (or an) e-mail field
+                # Found the (or an) email field
                 my $addr = $record->@{"fields"@}@{$field@};
 
                 $addr =~ s/\n.*//;      # Keep only first line
@@ -874,12 +874,12 @@ sub get_address
 
 	This was made into a separate function for clarity: the Palm
 Address Book record format does not contain a separate field for the
-e-mail address. Rather, it has five fields named @code{phone1} through
+email address. Rather, it has five fields named @code{phone1} through
 @code{phone5}, each of which can be a home phone, work phone, fax
-number, e-mail address, etc. See Palm::Address(1) for details.
+number, email address, etc. See Palm::Address(1) for details.
 
 	@code{&get_address} looks at each phone field in turn until it
-finds one whose @code{phoneLabel} is 4, meaning ``E-mail''. It extracts
+finds one whose @code{phoneLabel} is 4, meaning ``Email''. It extracts
 the useful part of the address and returns it.
 
 	Note that this function is very simplistic: all it does is
@@ -893,7 +893,7 @@ JDoe@@ooblick.com (John Doe)
 The general case is much more complex.
 
 	@code{&set_address} is the converse of @code{&get_address}: it
-stores an e-mail address in a record:
+stores an email address in a record:
 
 @example
 sub set_address
@@ -902,7 +902,7 @@ sub set_address
         my $addr = shift;
         my $field;
 
-        # Find the E-mail phone field
+        # Find the Email phone field
         foreach $field ( qw( phone1 phone2 phone3 phone4 phone5 ) )
         @{
                 next unless $record->@{"phoneLabel"@}@{$field@} == 4;
@@ -913,7 +913,7 @@ sub set_address
                 return;
         @}
 
-        # No E-mail field found.
+        # No Email field found.
         foreach $field ( qw( phone1 phone2 phone3 phone4 phone5 ) )
         @{
                 next if $record->@{"phoneLabel"@}@{$field@} =~ /\S/;
@@ -925,7 +925,7 @@ sub set_address
                 return;
         @}
 
-        # No E-mail fields, and no empty fields. Fail silently.
+        # No Email fields, and no empty fields. Fail silently.
         return;
 @}
 @end example
@@ -934,18 +934,18 @@ sub set_address
 function is more complicated than it seems that it ought to be.
 
 	In the simplest case, we look at all of the phone fields, find
-one marked ``E-mail'', and update it.
+one marked ``Email'', and update it.
 
-	If there is no e-mail field, @code{&set_address} tries to find
-an empty field and turn it into an e-mail field, then writes the address
+	If there is no email field, @code{&set_address} tries to find
+an empty field and turn it into an email field, then writes the address
 to that field.
 
 	If there are no empty fields, we'll give up, since this is just
 a tutorial. A real conduit ought to keep trying: it might consider
-adding the e-mail address to the ``Other'' phone field, if there is one.
-As a last resort, it might add the e-mail address to the note. Of
+adding the email address to the ``Other'' phone field, if there is one.
+As a last resort, it might add the email address to the note. Of
 course, @code{&get_address} also needs to know about all of the places
-where an e-mail address might lurk.
+where an email address might lurk.
 
 	In any case, @code{&set_address} marks the record as being
 dirty, so that it will be uploaded to the Palm at the next sync.
@@ -959,17 +959,17 @@ simplicity, we've ignored several real-world considerations that would
 have made the code even harder to read.
 
 	The first simplifying assumption we've made is that there is
-only one e-mail address per person. In the real world, people often have
+only one email address per person. In the real world, people often have
 a home address and a work address. To deal with this, @code{&DoFetch}
 should collect an array of addresses for each person, then make sure
 that each address in the array exists in the Palm record (this is why
 @code{&DoFetch} is split up into two phases).
 
 	One issue that complicates matters is that a Palm Address Book
-record might contain multiple phone fields marked ``E-mail''.
+record might contain multiple phone fields marked ``Email''.
 @code{&get_address} ought to handle this case. The other side of the
-issue is that @code{&set_address} shouldn't just dump all of the e-mail
-addresses into the first ``E-mail'' phone record that it finds,
+issue is that @code{&set_address} shouldn't just dump all of the email
+addresses into the first ``Email'' phone record that it finds,
 otherwise the second and subsequent addresses will be duplicated.
 
 	Secondly, we've assumed that each full name uniquely identifies
@@ -982,10 +982,10 @@ Palm record IDs, since those are unique identifiers in their respective
 domains.
 
 	Finally, @code{&set_address} shouldn't fail so easily: if it
-fails to add an e-mail address to the record, then at the next sync, the
+fails to add an email address to the record, then at the next sync, the
 corresponding Pine alias will be commented out. If a record is so full
 that there are no empty phone records, then obviously it's very
-important, and the user would be rather upset at losing this e-mail
+important, and the user would be rather upset at losing this email
 address.
 
 @node Style and Warnings,  , pine-aliases, Tutorial
