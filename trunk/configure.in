@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.25 1999-09-09 05:49:12 arensb Exp $
+dnl # $Id: configure.in,v 1.26 1999-10-21 14:15:36 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -41,10 +41,7 @@ fi
 
 ## Checks for programs.
 
-# Find the C compiler
 AC_PROG_CC
-
-# Find the C++ compiler
 AC_PROG_CXX
 
 # I know how to be pedantic with gcc. Other compilers, I'm not sure.
@@ -61,6 +58,10 @@ AC_SUBST(CFLAGS)
 
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+AC_PROG_LEX
+AC_SUBST(LEXARGS)		# Not defined by 'configure'. Just a hook.
+AC_PROG_YACC
+AC_SUBST(YACCARGS)		# Not defined by 'configure'. Just a hook.
 
 # AIX sucks so bad, it requires its own special check.
 AC_AIX
@@ -169,10 +170,16 @@ fi
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT([Makefile
 	src/Makefile
+	libpconn/Makefile
+	libpdb/Makefile
+	include/Makefile
+	include/pconn/Makefile
+	conduits/memodump/Makefile
 	doc/Makefile
 	doc/version.texi])
 AC_MSG_RESULT(dnl
 [
 	Don't forget to run \"make depend\"
 ])
+dnl #'	# For Emacs
 exit "$EXIT_STATUS"
