@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.5 2000-08-08 13:10:38 arensb Exp $
+ * $Id: dlp.c,v 1.5.2.1 2000-09-03 03:01:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -56,9 +56,9 @@ dlp_init(struct PConnection *pconn)
 {
 	/* Allocate a new argv[] of some default size */
 	if ((pconn->dlp.argv =
-	    (struct dlp_arg *) calloc(sizeof(struct dlp_arg),
-				      DLP_DEFAULT_ARGV_LEN))
-		== NULL)
+	    (struct dlp_arg *) calloc(DLP_DEFAULT_ARGV_LEN,
+				      sizeof(struct dlp_arg)))
+	    == NULL)
 	{
 		return -1;
 	}
