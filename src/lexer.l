@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.20 2000-06-15 07:32:24 arensb Exp $
+ * $Id: lexer.l,v 2.21 2000-11-14 16:36:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -193,6 +193,7 @@ ID		[-a-zA-Z_0-9]
 "pre-fetch"	{ KEYWORD(FETCH);	/* Synonym */	}
 "dump"		{ KEYWORD(DUMP);	}
 "post-dump"	{ KEYWORD(DUMP);	/* Synonym */	}
+"install"	{ KEYWORD(INSTALL);	}
 
  /* Conduit options */
 "final"		{ KEYWORD(FINAL);	}
