@@ -6,11 +6,11 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.85 2002-01-23 15:54:15 arensb Exp $
+ * $Id: config.c,v 1.86 2002-03-10 23:39:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
-#include <unistd.h>		/* For getuid(), gethostname() */
+#include <unistd.h>		/* For getuid(), gethostname(), getopt() */
 #include <stdlib.h>		/* For atoi() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
 #include <sys/stat.h>		/* For mkdir() */
@@ -142,10 +142,6 @@ parse_args(int argc, char *argv[])
 					 * stderr */
 	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:p:t:P:d:"))
 	       != -1)
-		/* XXX - The "-b" and "-r" options are obsolete, and should
-		 * be removed some time after v1.4.6.
-		 * How about 2.0.0? Sounds like a good breakpoint.
-		 */
 	{
 		switch (arg)
 		{
