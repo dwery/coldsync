@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.22 2001-07-30 07:05:50 arensb Exp $
+ * $Id: PConnection.h,v 1.23 2001-09-07 09:36:27 arensb Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -29,31 +29,37 @@ typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
 /* Types of listen blocks. These specify what kind of device (the file in
  * /dev) is like: serial, network, or what.
  */
-#define LISTEN_NONE	0	/* Dunno if this will be useful */
-#define LISTEN_SERIAL	1	/* Listen on serial port */
-#define LISTEN_NET	2	/* Listen on TCP/UDP port (not
-				 * implemented yet). */
-#define LISTEN_USB	3	/* USB for Handspring Visor */
-#define LISTEN_USB_M50x	4	/* USB for Palm m50x */
+typedef enum {
+	LISTEN_NONE = -1,	/* No listen type. Used for errors */
+	LISTEN_SERIAL = 0,	/* Listen on serial port */
+	LISTEN_NET,		/* Listen on TCP/UDP port */
+	LISTEN_USB,		/* USB for Handspring Visor */
+	LISTEN_USB_M50x,	/* USB for Palm m50x */
+	LISTEN_SPC		/* SPC over an existing file descriptor */
+				/* XXX - Not implemented yet */
+} pconn_listen_t;
 
 /* Types of protocol stacks. These specify which protocols to use in
  * communicating with the cradle. These lie on top of the LISTEN_*
  * protocols.
  */
-#define PCONN_STACK_DEFAULT	0	/* Use whatever the underlying line
+typedef enum {
+	PCONN_STACK_NONE = -1,		/* No protocol. Used for errors */
+	PCONN_STACK_DEFAULT = 0,	/* Use whatever the underlying line
 					 * protocol thinks is appropriate.
 					 */
-#define PCONN_STACK_FULL	1	/* DLP -> PADP -> SLP -> whatever */
-#define PCONN_STACK_SIMPLE	2	/* DLP -> netsync -> whatever
+	PCONN_STACK_FULL,		/* DLP -> PADP -> SLP -> whatever */
+	PCONN_STACK_SIMPLE,		/* DLP -> netsync -> whatever
 					 * This is used by the M50* Palms.
 					 */
-#define PCONN_STACK_NET		3	/* DLP -> netsync -> whatever
+	PCONN_STACK_NET			/* DLP -> netsync -> whatever
 					 * This is for NetSync. */
 		/* SIMPLE and NET are very similar: the difference is that
 		 * when they exchange ritual packets at the beginning of
 		 * the sync, NET adds a header to the packets, and SIMPLE
 		 * doesn't.
 		 */
+} pconn_proto_t;
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
@@ -89,7 +95,7 @@ typedef struct PConnection
 	long speed;		/* Speed at which to listen, for serial
 				 * connections.
 				 */
-	int protocol;		/* Protocol stack identifier. See
+	pconn_proto_t protocol;	/* Protocol stack identifier. See
 				 * PCONN_STACK_* in "pconn/PConnection.h".
 				 * PConnection.c doesn't set this directly;
 				 * this field is for the benefit of the
@@ -190,7 +196,7 @@ typedef struct PConnection
 } PConnection;
 
 extern PConnection *new_PConnection(char *fname,
-				    const int listenType,
+				    const pconn_listen_t listenType,
 				    const int protocol,
 				    int prompt_for_hotsync);
 extern int PConnClose(PConnection *pconn);
