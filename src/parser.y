@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.52 2001-11-05 00:27:25 arensb Exp $
+ * $Id: parser.y,v 2.53 2001-11-10 03:04:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -76,7 +76,9 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token DEVICE
 %token DIRECTORY
 %token FINAL
+%token FORCE_INSTALL
 %token FORWARD
+%token INSTALL_FIRST
 %token LISTEN
 %token OPTIONS
 %token PATH
@@ -751,14 +753,29 @@ options_stmt: OPTIONS open_brace
 	'}'
 	;
 
-options_list: options_list
+options_list: options_list option
+	| /* Empty */
+	;
+
+option:	FORCE_INSTALL ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found force_install.\n");
+		global_opts.force_install = True;
+	}
+	| INSTALL_FIRST ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found install_first.\n");
+		global_opts.install_first = True;
+	}
 	/* XXX - This is still broken: it accepts assignments of the form
 	 *	options {
 	 *		"var-iable": value;
 	 *	}
 	 * Which may or may not be wrong, but doesn't feel right.
 	 */
-        STRING colon
+        | STRING colon
     	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -766,17 +783,12 @@ options_list: options_list
 	{
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found symbol: %s ==> %s\n",
-				$2, $5);
+				$1, $4);
 		lex_expect(LEX_NONE);
-		put_symbol($2, $5);
-		$2 = NULL;
-		$5 = NULL;
+		put_symbol($1, $4);
+		$1 = NULL;
+		$4 = NULL;
 		lex_expect(LEX_VAR);		/* Prepare for the next line */
-	}
-	|	/* Empty */
-	{
-		PARSE_TRACE(3)
-			fprintf(stderr, "Found empty option list\n");
 	}
 	| error ';'
 	{
