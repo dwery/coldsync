@@ -1,0 +1,171 @@
+.\" coldsync.8
+.\" $Id: coldsync.8,v 1.5 1999-11-09 04:05:16 arensb Exp $
+.\" 
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.Dd July 12, 1999
+.Dt COLDSYNC 8 SMM
+.Os
+.Sh NAME
+.Nm coldsync
+.Nd synchronize files between a Palm and a workstation.
+.Sh SYNOPSIS
+.Nm coldsync
+.\" -u<user|uid> -b<dir> -r<dir> -p<port> -F -S -R
+.\" -d<fac[:level]>
+.Op Fl hVSFR
+.Op Fl d Ar debug
+.Op Fl u Ar user|uid
+.Op Fl f Ar config_file
+.Fl p Ar device
+.Nm coldsync
+.Op Fl FSR
+.Op Fl d Ar debug
+.Fl b Ar dir
+.Fl p Ar device
+.Nm coldsync
+.Op Fl FSR
+.Op Fl d Ar debug
+.Fl r Ar dir
+.Fl p Ar device
+.Sh DESCRIPTION
+.Nm coldsync
+synchronizes databases between a Palm device and a workstation. If the
+.Fl b Ar directory
+option is specified,
+.Nm coldsync
+performs a full backup of the Palm to
+.Ar directory .
+When the
+.Fl r Ar directory
+option is specified,
+.Nm coldsync
+restores files from
+.Ar directory
+to the Palm. By default,
+.Nm coldsync
+performs a full sync (see below) with a Palm device listening on the
+device given by the
+.Fl p
+option. Normally, the only reason to do a backup is to save the
+contents of your Palm before doing something that might cause you to
+lose data.
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Fl h
+(Help) Print a usage message and exit.
+.It Fl V
+Print the version number and exit.
+.It Fl f Ar config_file
+Tells
+.Nm coldsync
+to read its configuration from
+.Pa config_file .
+.It Fl S
+Force a slow sync. Don't use this unless you know what you're doing.
+.It Fl F
+Force a fast sync. Don't use this unless you know what you're doing.
+.It Fl R
+Consider read-only (ROM) databases when syncing or doing a backup or
+restore. Normally, these are ignored.
+.It Fl p Ar device
+Specifies the serial device, e.g.
+.Pa /dev/cuaa0 ,
+that the Palm is connected to. If not specified, this defaults to
+.Pa /dev/palm .
+.It Fl b Ar directory
+Perform a full backup of the Palm, and put the files in
+.Ar directory .
+.Em NB:
+This will not overwrite any existing files: if a backup file for a
+database already exists in the backup directory, that database will
+simply be skipped.
+.It Fl r Ar directory
+Restore files from
+.Ar directory .
+.Em Warning:
+If you restore a database that already exists on the Palm, that
+database will be overwritten.
+.\" XXX - Not implemented yet
+.\".It Fl u Aq user|uid
+.\"Run as the specified user. This may be either a user name or a numeric
+.\"UID.
+.It Fl d Ar debug
+Set debugging level. The argument
+.Ar debug
+can be either of the form
+.Ar facility 
+or
+.Ar facility:level .
+This sets the debugging level for the named facility. Facilities
+currently include
+.Dv SLP , CMP , PADP , DLP , DLPC , SYNC ,
+and
+.Dv MISC .
+The
+.Ar level
+argument is an integer that specifies the verbosity of the output.
+Unless you are a developer, you should probably never need to go above
+5.
+.El
+.Ss Conduits and Syncing
+(Note: conduits have not yet been fully implemented.)
+.Pp
+Syncing refers to the process of synchronizing the databases on the
+Palm with a workstation. Typically, every database on the Palm will
+have a corresponding backup file in the user's home directory. When a
+Palm is synced with a machine, the two are updated with respect to
+each other: records (e.g., address book entries or To Do items)
+created on the Palm are copied to the workstation and vice-versa.
+Records that were deleted on the Palm are deleted in the workstation's
+file (and archived, if necessary), and vice-versa.
+.Pp
+However, the notion of syncing is broader than this: when you compose
+a new mail message on the Palm, you don't want it to be copied to some
+backup file, you want it to be sent to its recipient. This is
+accomplished through the use of conduits.
+.Pp
+A conduit is a module that can be imagined as being connected to the
+Palm on one end, and to the workstation on the other. Its job is to
+make sure that everything is up to date: that anything that has
+changed on the Palm has been dealt with on the workstation end, and
+that any changes on the workstation have been uploaded to the Palm.
+.\"  .Sh ENVIRONMENT
+.\"  .Sh EXAMPLES
+.Sh FILES
+.Bl -tag -width ~/.palm/archive -compact
+.It Pa ~/.coldsyncrc
+default configuration file.
+.It Pa ~/.palm/backup
+contains backup files for the Palm.
+.It Pa ~/.palm/archive
+contains records deleted from the Palm, but with the "Save archive on
+PC" box checked.
+.It Pa ~/.palm/install
+contains files to be installed at the next sync.
+.El
+.Sh SEE ALSO
+.Xr pilot-xfer 1
+.Rs
+.%T Palm Database Files
+.Re
+.\" XXX - Not yet written
+.\".Rs
+.\".%T Conduit Tutorial
+.\".Re
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.Sh DIAGNOSTICS
+Many and hopefully self-explanatory.
+.Sh BUGS
+It is not possible to have more than one Palm device and keep their
+contents separate.
+.Pp
+Configuration files are not yet implemented.
+.Pp
+If you've been syncing with one Palm, then get a replacement and
+immediately sync with it, all of your old data will be archived. This
+is probably not what you want.
+.Pp
+Probably many others.
