@@ -3,11 +3,11 @@
  * Miscellaneous functions.
  * (This used to be "handledb.c")
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.10 2000-12-17 09:52:28 arensb Exp $
+ * $Id: misc.c,v 2.11 2001-01-09 16:05:19 arensb Exp $
  */
 
 #include "config.h"
@@ -48,6 +48,26 @@ static int stat_err;		/* Return value from last stat() or
 static struct stat statbuf;	/* Results of last stat() or lstat(), used
 				 * by (l)exists() and is_*(), below.
 				 */
+
+int
+Warn(const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	fprintf(stderr, _("Warning: "));
+	return vfprintf(stderr, format, ap);
+}
+
+int
+Error(const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	fprintf(stderr, _("Error: "));
+	return vfprintf(stderr, format, ap);
+}
 
 /* mkfname
  * Concatenate all of the arguments, and return a pointer to the resulting
