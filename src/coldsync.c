@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.46 2000-09-03 05:04:59 arensb Exp $
+ * $Id: coldsync.c,v 1.47 2000-09-03 07:35:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1775,7 +1775,10 @@ open_tempfile(char *name_template)
 {
 	int retval;
 
-#if HAVE_MKSTEMP
+/* Apparently, Windows has mkstemp(), but it doesn't define O_BINARY on the
+ * temporary file. So we can't use mkstemp().
+ */
+#if HAVE_MKSTEMP && !defined(_WIN32)
 
 	retval =  mkstemp(name_template);
 	if (retval < 0)
