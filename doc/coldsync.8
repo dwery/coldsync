@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.17 2000-05-21 00:16:36 arensb Exp $
+.\" $Id: coldsync.8,v 1.18 2000-06-03 06:37:19 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -299,8 +299,10 @@ defaults to
 directives are of the form
 .Bd -literal -offset indent
 pda "My Palm" {
-	snum: 10BX13C22K99-9;
+	snum: 10BX13C22K98-M;
 	directory: /folks/arensb/.palmIII;
+	username: "Gorko the Invincible";
+	userid: 1234;
 	default;
 }
 .Ed
@@ -318,9 +320,9 @@ The
 line gives the Palm's serial number. You can get this number by selecting
 .Dq Info
 from the Palm's application launcher. In the above example,
-.Li 10BX13C22K99
+.Li 10BX13C22K98
 is the serial number, and the
-.Li 9
+.Li M
 after the dash is the checksum. If you omit the checksum,
 .Nm ColdSync
 will calculate it for you and suggest that you add it to your
@@ -337,6 +339,23 @@ line specifies the root of the tree where
 .Nm ColdSync
 will put its files. If this line is omitted, the directory defaults to
 .Pa ~/.palm .
+.Pp
+The
+.Li username
+and
+.Li userid
+entries allow you to specify the full name and user ID associated with
+this Palm. This can be useful if you have licensed applications whose
+license key depends on the user name. If the
+.Li userid
+is omitted, it defaults to the UID under which
+.Nm ColdSync
+is run. If
+.Li username
+is omitted, it defaults to the full name of the user running
+.Nm ColdSync ,
+as returned by
+.Fn getpwuid .
 .Pp
 The
 .Li default
