@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.111 2001-11-19 17:11:10 arensb Exp $
+ * $Id: coldsync.c,v 1.112 2001-11-28 15:48:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,9 +23,6 @@
 #  include <strings.h>		/* For strcasecmp() under AIX */
 #endif	/* HAVE_STRINGS_H */
 
-/* XXX - Solaris 2.6, 7 appear to choke on these next two, at least when
- * there's no inet_ntop(). Make them conditional.
- */
 #if HAVE_INET_NTOP
 #  include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #  include <resolv.h>		/* For inet_ntop() under Solaris */
@@ -2167,7 +2164,7 @@ run_mode_Daemon(int argc, char *argv[])
 		 */
 		if (palment->serial != NULL)
 		{
-			strncpy(entserial, p_snum, SNUM_MAX);
+			strncpy(entserial, palment->serial, SNUM_MAX);
 			dashp = strrchr(entserial, '-');
 			if (dashp != NULL)
 				*dashp = '\0';
@@ -2188,12 +2185,12 @@ run_mode_Daemon(int argc, char *argv[])
 				fprintf(stderr,
 					"Serial number [%s]/[%s] "
 					"doesn't match.\n",
-					palment->serial, entserial);
+					palment->serial, p_snum);
 			continue;
 		}
 		SYNC_TRACE(5)
 			fprintf(stderr, "Serial number [%s]/[%s] matches.\n",
-				palment->serial, entserial);
+				palment->serial, p_snum);
 
 		if ((palment->username != NULL) &&
 		    (palment->username[0] != '\0') &&
