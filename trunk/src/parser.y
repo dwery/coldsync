@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.43 2001-07-26 07:02:33 arensb Exp $
+ * $Id: parser.y,v 2.44 2001-07-30 07:10:45 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -97,11 +97,16 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token USB_M50X
 %token NET
 
+%token PROTOCOL
+%token FULL
+%token SIMPLE
+
 %type <commtype> comm_type
 %type <crea_type> creator_type
 %type <string> opt_name
 %type <integer> opt_pref_flag
 %type <string> opt_string
+%type <integer> protocol_stack
 
 /* Conduit flavors */
 %token SYNC
@@ -176,6 +181,8 @@ listen_stmt:
 				(cur_listen->device == NULL ? "(null)" :
 				 cur_listen->device));
 			fprintf(stderr, "\tSpeed: [%ld]\n", cur_listen->speed);
+			fprintf(stderr, "\tProtocol: %d\n",
+				cur_listen->protocol);
 		}
 
 		if (file_config->listen == NULL)
@@ -295,6 +302,16 @@ listen_directive:
 
 		cur_listen->speed = $3;
 	}
+	| PROTOCOL opt_colon protocol_stack semicolon
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "Listen: protocol %ld\n", $3);
+
+		cur_listen->protocol = $3;
+			/* XXX - Would be nice to be able to tell whether
+			 * the protocol has already been specified.
+			 */
+	}
 	| error
 	{
 		Error(_("\tError near \"%s\"."),
@@ -386,6 +403,40 @@ flavor:
 	{
 		ANOTHER_ERROR;
 		Error(_("\tUnrecognized conduit flavor \"%s\"."),
+		      yytext);
+		yyclearin;
+	}
+	;
+
+protocol_stack:
+	DEFAULT
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a protocol stack: default\n");
+		$$ = (int) PCONN_STACK_DEFAULT;
+	}
+	| FULL
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a protocol stack: full\n");
+		$$ = (int) PCONN_STACK_FULL;
+	}
+	| SIMPLE
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a protocol stack: simple\n");
+		$$ = (int) PCONN_STACK_SIMPLE;
+	}
+	| NET
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a protocol stack: net\n");
+		$$ = (int) PCONN_STACK_NET;
+	}
+	| error
+	{
+		ANOTHER_ERROR;
+		Error(_("\tUnrecognized protocol: \"%s\"."),
 		      yytext);
 		yyclearin;
 	}
