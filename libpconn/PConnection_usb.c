@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.32 2001-11-12 05:49:09 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.33 2001-11-19 17:10:40 arensb Exp $
  */
 
 #include "config.h"
@@ -455,6 +455,7 @@ pconn_usb_open(PConnection *pconn,
 
 		if ((errno == ENOENT) && ((flags & PCONNFL_TRANSIENT) != 0))
 			/* Just ignore this error */
+			;
 		else if (errno != ENXIO) {
 			fprintf(stderr, _("Error: Can't open \"%s\".\n"),
 				device);
@@ -727,7 +728,8 @@ pconn_usb_open(PConnection *pconn,
 			slp_tini(pconn);
 			return -1;	  
 		}
-	}
+		break;		/* Success */
+	} while (1);
 
 	if ((i = fcntl(pconn->fd, F_GETFL, 0))!=-1) {
 		i &= ~O_NONBLOCK;
