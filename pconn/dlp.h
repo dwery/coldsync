@@ -53,7 +53,7 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: dlp.h,v 1.2 1999-02-21 08:48:09 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
@@ -164,11 +164,21 @@ struct dlp_arg
 	ubyte *data;		/* The argument data itself */
 };
 
+struct PConnection;		/* Forward declaration */
+
+extern int dlp_init(struct PConnection *pconn);
+extern int dlp_tini(struct PConnection *pconn);
+
 /* Protocol functions */
 extern int dlp_send_req(int fd, struct dlp_req_header *header,
 			struct dlp_arg argv[]);
 extern int dlp_recv_resp(int fd, const ubyte id,
 			 struct dlp_resp_header *header,
-			 int argc,
-			 struct dlp_arg argv[]);
+			 const struct dlp_arg **argv);
 #endif	/* _dlp_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
