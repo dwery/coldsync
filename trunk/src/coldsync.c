@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.36 2000-06-03 06:32:19 arensb Exp $
+ * $Id: coldsync.c,v 1.37 2000-06-03 07:02:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1342,13 +1342,13 @@ UpdateUserInfo(struct PConnection *pconn,
 	 * doesn't match?
 	 */
 	if ((palm->userinfo.userid == 0) ||
-	    (palm->userinfo.userid != user_uid))
+	    (palm->userinfo.userid != userinfo.uid))
 	{
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting UID to %d (0x%04x)\n",
-				(int) user_uid,
-				(unsigned int) user_uid);
-		uinfo.userid = (udword) user_uid;
+				(int) userinfo.uid,
+				(unsigned int) userinfo.uid);
+		uinfo.userid = (udword) userinfo.uid;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
 					/* Set modification flag */
 	}
