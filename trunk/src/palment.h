@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.2 2001-02-16 11:16:18 arensb Exp $
+ * $Id: palment.h,v 2.3 2001-03-28 04:55:36 arensb Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
@@ -39,6 +39,9 @@ struct palment
 	const char *luser;		/* Local user (Unix user) */
 	const char *name;		/* Palm name */
 	const char *conf_fname;		/* Path to config file to use */
+	/* XXX - Should this also include an entry for a Palm to forward
+	 * the connection to?
+	 */
 };
 
 extern const struct palment *getpalment(void);
