@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.27 2003-11-09 18:50:19 azummo Exp $
+# $Id: ColdSync.pm,v 1.28 2004-10-26 12:31:12 christophe Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.28 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -433,9 +433,12 @@ sub StartConduit
 		ReadHeaders;
 	}
 
-	# Read the input database, if one was specified.
+	# Read the input database, if one was specified. Note that the file
+	# won't exist if if wasn't already created by a fetch conduit or
+	# the generic sync/backup.
 	$PDB = new Palm::PDB;
-	if (defined $HEADERS{InputDB} and $HEADERS{'CS-AutoLoad'} eq 1)
+	if (defined $HEADERS{InputDB} and -f $HEADERS{InputDB}
+		and $HEADERS{'CS-AutoLoad'} eq 1)
 	{
 		# XXX Maybe we shouldn't die() here.
 		$PDB->Load($HEADERS{InputDB}) or
@@ -584,8 +587,12 @@ sub ConduitMain
 		ReadHeaders;
 	}
 
+	# Read the input database, if one was specified. Note that the file
+	# won't exist if if wasn't already created by a fetch conduit or
+	# the generic sync/backup.
 	$PDB = new Palm::PDB;
-	if (defined $HEADERS{InputDB} and $HEADERS{'CS-AutoLoad'} eq 1)
+	if (defined $HEADERS{InputDB} and -f $HEADERS{InputDB}
+		and $HEADERS{'CS-AutoLoad'} eq 1)
 	{
 		# XXX Maybe we shouldn't die here.
 		$PDB->Load($HEADERS{InputDB}) or
