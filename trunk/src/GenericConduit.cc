@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.10 1999-11-27 05:49:35 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.11 1999-12-02 09:16:15 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -878,18 +878,61 @@ GenericConduit::FastSync()
 		{
 			SYNC_TRACE(6)
 				cerr << "localrec == 0" << endl;
+
+			/* If the record was created and deleted since the
+			 * last sync, it requires special handling.
+			 */
+			if (DELETED(remoterec))
+			{
+				if (ARCHIVE(remoterec))
+				{
+					/* This record was created,
+					 * deleted, and marked for
+					 * archival, all since the last
+					 * sync. Add it to the archive
+					 * file.
+					 */
+					SYNC_TRACE(5)
+						cerr << "This is a new archived record" << endl;
+					remoterec->attributes &= 0x0f;
+						/* XXX - Presumably, this
+						 * should just become a
+						 * zero assignment, when/if
+						 * attributes and
+						 * categories get
+						 * separated.
+						 */
+
+					SYNC_TRACE(5)
+						cerr << "Archiving this record"
+						     << endl;
+					this->archive_record(remoterec);
+					pdb_FreeRecord(remoterec);
+					continue;
+				}
+
+				if (EXPUNGED(remoterec))
+				{
+					/* This record was created,
+					 * deleted, and expunged, all since
+					 * the last sync. Ignore it.
+					 */
+					SYNC_TRACE(5)
+						cerr << "This is a new expunged record" << endl;
+					pdb_FreeRecord(remoterec);
+					continue;
+				}
+
+				cerr << "I have a new, deleted record that is neither archived nor expunged."
+				     << endl
+				     << "What am I supposed to do?"
+				     << endl;
+			}
+
 			/* This record is new. Add it to the local
 			 * database.
 			 */
-			/* XXX - Actually, the record may have been
-			 * created and deleted since the last sync. In
-			 * particular, if it's been deleted and marked
-			 * for archival, it needs to go in the archive
-			 * file, not the backup file.
-			 * Alternately, just don't clear the flags:
-			 * then it'll get picked up and get deleted or
-			 * archived in the next phase.
-			 */
+
 			/* Clear the flags in remoterec before adding
 			 * it to the local database: it's fresh and
 			 * new.
