@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.12 1999-03-16 11:56:43 arensb Exp $
+ * $Id: pdb.c,v 1.13 1999-05-31 21:07:59 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -33,7 +33,6 @@ static int pdb_DownloadResources(struct PConnection *pconn,
 static int pdb_DownloadRecords(struct PConnection *pconn,
 			       ubyte dbh,
 			       struct pdb *db);
-/* XXX - Document the format of database files */
 
 /* new_pdb
  * struct pdb constructor.
