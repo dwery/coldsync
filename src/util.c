@@ -8,8 +8,10 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.2 1999-07-12 09:28:57 arensb Exp $
+ * $Id: util.c,v 1.3 1999-08-01 08:08:54 arensb Exp $
  */
+
+#include "config.h"
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
 #include "config.h"
@@ -127,7 +129,6 @@ time_dlp2time_t(const struct dlp_time *dlpt)
 	tm.tm_min = dlpt->minute;
 	tm.tm_hour = dlpt->hour;
 	tm.tm_mday = dlpt->day;
-/*  	tm.tm_mon = dlpt->month; */
 	tm.tm_mon = dlpt->month - 1;
 	tm.tm_year = dlpt->year - 1900;
 	tm.tm_wday = 0;
@@ -137,7 +138,10 @@ time_dlp2time_t(const struct dlp_time *dlpt)
 	tm.tm_gmtoff = 0;
 	tm.tm_zone = NULL;
 #else
-#warning You do not have tm_zone
+/* XXX - ANSI doesn't allow #warning, and we're not using the timezone for
+ * anything yet.
+ */
+/*  #warning You do not have tm_zone */
 #endif
 
 	return mktime(&tm);
