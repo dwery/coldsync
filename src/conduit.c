@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9 2000-08-07 00:55:47 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.1 2000-08-31 15:41:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -45,6 +45,7 @@
 
 #include "conduit.h"
 #include "spc.h"
+#include "pref.h"
 
 typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
@@ -277,6 +278,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				/* Pointer into spc_inbuf or spc_outbuf */
 	sigset_t sigmask;
 				/* Signal mask for {,un}block_sigchld() */
+	struct pref_item **pref_list;
+				/* Array of pointers to preference items in
+				 * the cache */
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -288,6 +292,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		 * useful for defining a do-nothing default.
 		 */
 		return 201;		/* Success (trivially) */
+
 
 	/* If this conduit might understand SPC, set up a pipe for the
 	 * child to communicate to the parent.
@@ -330,6 +335,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		perror("signal");
 		return -1;
 	}
+
+	/* Before all the jumping stuff, make sure the pref_list is allocated */
+	pref_list = calloc(sizeof *pref_list,conduit->num_prefs);
 
 	/* When the child exits, sigchld_handler() will longjmp() back to
 	 * here. This way, none of the other code has to worry about
@@ -408,6 +416,28 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	headers[last_header].value = (char *) bakfname;
 				/* The cast is just to stop the compiler
 				 * from complaining. */
+
+	/* Then we add the preference items as headers */
+	for(i = 0; i < conduit->num_prefs; i++)
+	{
+	    char tmpvalue[20];
+
+	    /* Set the pointer to the right preference in the cache list
+	     * and if necessary, download it */
+	    pref_list[i] = GetPrefItem(conduit->prefs[i]);
+
+	    /* Set the header */
+	    ++last_header;
+	    headers[last_header].name = "Preference";
+	    snprintf(tmpvalue,20,"%c%c%c%c/%d/%d\n",
+		    (char) (conduit->prefs[i].creator >> 24) & 0xff,
+		    (char) (conduit->prefs[i].creator >> 16) & 0xff,
+		    (char) (conduit->prefs[i].creator >> 8) & 0xff,
+		    (char) conduit->prefs[i].creator & 0xff,
+		    conduit->prefs[i].id,
+		    pref_list[i]->contents_info->len);
+	    headers[last_header].value = tmpvalue;
+	}
 
 	/* If the conduit might understand SPC, tell it what file
 	 * descriptor to use to talk to the parent.
@@ -499,8 +529,15 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		}
 	}
 
-	/* Send an empty line to the child (end of input) */
+	/* Send an empty line to the child (end of headers) */
 	fprintf(tochild, "\n");
+
+	/* Now write all the raw data to the child */
+	for(i = 0; i < conduit->num_prefs; i++)
+		fwrite(pref_list[i]->contents,
+			1,
+			pref_list[i]->contents_info->len,
+			tochild);
 	fflush(tochild);
 
 	/* Listen for the child to either a) print a status message on its
@@ -888,6 +925,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				fileno(fromchild));
 		fclose(fromchild);
 	}
+
+	/* Let's not hog memory */
+	free(pref_list);
 
 	return laststatus;
 }
