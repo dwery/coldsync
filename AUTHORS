@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.10 2001-07-28 22:48:12 arensb Exp $
+# $Id: AUTHORS,v 2.11 2001-09-07 22:14:11 arensb Exp $
 
 Authors and Contributors:
 
@@ -33,6 +33,8 @@ Mark Reed <markjreed@mail.com>.
 Alessandro Gatti <rigel@telemail.it>: Italian translation.
 Koen Deforche <kdf@irule.be>: support for Palm M50x series.
 Mike Durian <durian@boogie.com>.
+Fred Gylys-Colwell <fredgc@ktb.net>.
+Nicholas J Kreucher <kreucher@msu.edu>: Info on Sony Clie.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
