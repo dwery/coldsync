@@ -1,3 +1,18 @@
+- Separate libpconn and libpdb into separate packages. pdb_Upload()
+  and pdb_Download() should go into the main ColdSync tree.
+	The main hairy part is the headers that they all have in
+  common. These should go in /usr/local/include/palm.h.
+	Keep everything in the same source tree:
+	coldsync/src
+	coldsync/include	# Common headers
+	coldsync/libpconn
+	coldsync/libpconn/include/pconn	# ?
+	coldsync/libpdb
+  Fix Makefiles so that
+	cd libpconn; make dist
+  copies common headers into the tarball. This is ugly, but seems the
+  best solution for an ugly problem.
+- Tell conduits (esp. Sync conduits) whether this is a slow or fast sync.
 - Consider allowing database-at-a-time syncing.
   Databases (or files?) named on the command line.
 - Consider "none" database type, to specify conduits to run without an
@@ -231,9 +246,6 @@
   devices.
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
-- With BSD make, always reruns 'ar' in the library directories. Why?
-  According to 'make -dm', it seems to recognize the target as a
-  library.
 - Should variables set in .coldsyncrc be propagated to the
   environment? Should this be done as soon as they're set, or when the
   conduit is run?
