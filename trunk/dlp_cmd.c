@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them
  * back for return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.3 1999-01-31 22:04:45 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.4 1999-02-04 10:02:06 arensb Exp $
  */
 #include <stdio.h>
 #include "dlp.h"
@@ -120,7 +120,7 @@ return err;	/* XXX */
 
 int
 DlpWriteUserInfo(int fd,	/* File descriptor */
-		 struct dlp_setuserinfo *userinfo)
+		 const struct dlp_setuserinfo *userinfo)
 				/* Bits of user information to set */
 {
 	int err;
@@ -282,7 +282,7 @@ DlpGetSysDateTime(int fd,
 
 int
 DlpSetSysDateTime(int fd,	/* File descriptor */
-		  struct dlp_time *ptime)
+		  const struct dlp_time *ptime)
 				/* Time to set */
 {
 	int err;
@@ -596,7 +596,7 @@ return list_header.flags;
  */
 int
 DlpAddSyncLogEntry(int fd,	/* File descriptor */
-		   char *msg)	/* Log message */
+		   const char *msg)	/* Log message */
 {
 	int err;
 	struct dlp_req_header header;		/* Request header */
@@ -612,7 +612,7 @@ DlpAddSyncLogEntry(int fd,	/* File descriptor */
 	/* Fill in the argument */
 	argv[0].id = DLPARG_AddSyncLogEntry_Msg;
 	argv[0].size = strlen(msg)+1;	/* Include the final NUL */
-	argv[0].data = msg;
+	argv[0].data = (ubyte *) msg;
 
 	/* Send the DLP request */
 	err = dlp_send_req(fd, &header, argv);

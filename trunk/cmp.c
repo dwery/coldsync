@@ -2,7 +2,7 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.3 1999-01-31 21:55:47 arensb Exp $
+ * $Id: cmp.c,v 1.4 1999-02-04 10:03:23 arensb Exp $
  */
 #if 0
 #include <stdio.h>
@@ -180,7 +180,7 @@ cmp_read(int fd,
 
 int
 cmp_write(int fd,			/* File descriptor */
-	  struct cmp_packet *packet)	/* The packet to send */
+	  const struct cmp_packet *packet)	/* The packet to send */
 {
 	int err;
 	static ubyte outbuf[CMP_PACKET_LEN];
