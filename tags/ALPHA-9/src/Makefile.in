@@ -1,0 +1,119 @@
+# Makefile.in
+# $Id: Makefile.in,v 1.2 1999-07-12 09:12:16 arensb Exp $
+
+# XXX - Explicitly write .c.o , .cc.o and executable targets:
+# different compilers have different default rules, and I don't want
+# to deal with them.
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	src
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+
+CC =		@CC@
+DEFS =		@DEFS@
+CXX =		@CXX@
+CCC =		${CXX}		# For Sun's 'make'
+# Grrr... For some reason, 'makedepend' and egcs under Redhat 6.0 insist
+# on having "-I.". I thought it was implied.
+INCLUDES =	-I. -I${top_srcdir}
+CXXINCLUDES =	${INCLUDES}
+CFLAGS =	${DEFS} ${INCLUDES} @CFLAGS@
+CPPFLAGS =	@CPPFLAGS@ ${INCLUDES}
+LDFLAGS =	@LDFLAGS@
+
+MKDEP =		@MKDEP@
+
+# Compatibility functions, included for systems that don't have them.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		PConnection.c \
+		util.c \
+		slp.c \
+		cmp.c \
+		padp.c \
+		dlp.c \
+		dlp_cmd.c \
+		palm_errno.c \
+		pdb.c \
+		coldsync.c \
+		archive.c \
+		backup.c \
+		upload.c \
+		config.c \
+		handledb.c \
+		log.c \
+		conduit.c \
+		GenericConduit.cc \
+		@COMPAT@
+
+OBJS =		PConnection.o \
+		util.o \
+		slp.o \
+		cmp.o \
+		padp.o \
+		dlp.o \
+		dlp_cmd.o \
+		palm_errno.o \
+		pdb.o \
+		coldsync.o \
+		archive.o \
+		backup.o \
+		upload.o \
+		config.o \
+		handledb.o \
+		log.o \
+		conduit.o \
+		GenericConduit.o \
+		@COMPATOBJS@
+
+HEADERS =	PConnection.h \
+		util.h \
+		slp.h \
+		cmp.h \
+		padp.h \
+		dlp.h \
+		dlp_cmd.h \
+		palm_types.h \
+		palm_errno.h \
+		pdb.h \
+		coldsync.h \
+		archive.h \
+		conduit.h \
+		GenericConduit.hh
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in \
+		cfmakeraw.c
+
+CLEAN =		coldsync ${OBJS} *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+all:	coldsync
+
+coldsync:	${OBJS}
+	${CXX} ${CFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
+# specify -I/usr/include/g++
+depend:
+	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
+
+distdir:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}

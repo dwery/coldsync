@@ -1,0 +1,154 @@
+dnl #
+dnl # $Id: configure.in,v 1.17 1999-07-12 08:21:20 arensb Exp $
+dnl #
+
+dnl # XXX - Test to see whether cpp accepts macro definitions with
+dnl # "..." as argument.
+
+dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
+dnl # XXX - See if printf() and friends accept %q format.
+dnl # XXX - Under Solaris 2.5, gcc fusses if you print a 'uid_t' with
+dnl # %ld. Figure out how to set this properly.
+dnl # See AC_CHECK_SIZEOF(TYPE)
+
+dnl # XXX - Check for existence of 'tar' (gtar, tar). If "tar
+dnl # --version" exits with zero status and contains the string "GNU",
+dnl # then it's GNU tar, and we can use
+dnl #	GZIP="--best" ${TAR} chozf ${TARBALL} ${DISTDIR}
+dnl # Otherwise, fall back on that old stand-by
+dnl #	tar cf ${TARBALL} ${DISTDIR}
+dnl #	${COMPRESS} ${TARBALL}
+dnl # So also check for 'gzip'; if it doesn't exist, fall back on
+dnl # 'compress'
+
+AC_INIT(src/PConnection.c)
+
+EXIT_STATUS=0
+
+PACKAGE="coldsync"
+VERSION="0.4.2"
+
+AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
+AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
+if test x"$EDITION" = x ; then
+	EDITION="$VERSION"
+fi
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+AC_SUBST(EDITION)
+
+## Checks for programs.
+
+# Find the C compiler
+AC_PROG_CC
+
+# Find the C++ compiler
+AC_PROG_CXX
+
+# I know how to be pedantic with gcc. Other compilers, I'm not sure.
+if test x"$GCC" = x"yes" ; then
+		CFLAGS="$CFLAGS -Wall -ansi -pedantic"
+else
+	AC_MSG_RESULT(dnl
+[	You don't seem to be using gcc, so various anal retentive
+	compiler options won't be turned on. If you know what they
+	are for your compiler, you may wish to turn them on, e.g.
+		CFLAGS=\"-Wall -ansi -pedantic\" ./configure])
+fi
+AC_SUBST(CFLAGS)
+
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+
+# Find a tool with which to build dependencies
+# XXX - Fix dependencies under 'makedepend' (C++ doesn't work right)
+AC_CHECK_PROGS(MKDEP,[mkdep makedepend true])
+
+AC_CHECK_PROG(MKID, mkid, mkid, true)
+AC_SUBST(MKID)
+
+AC_CHECK_PROGS(TAR,[gtar tar])
+AC_SUBST(TAR)
+
+AC_CHECK_PROGS(GZIP,[gzip compress])
+AC_SUBST(GZIP)
+
+dnl ## Checks for libraries.
+
+dnl ## Checks for header files.
+
+dnl # XXX - I believe some OSes require <string.h>, while some 
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS([\
+	fcntl.h \
+	termios.h \
+	unistd.h \
+	sys/time.h \
+	sys/types.h
+])
+
+#echo "ac_cv_header_blah_h == <$ac_cv_header_blah_h>"	# <>
+#echo "ac_cv_header_fcntl_h == <$ac_cv_header_fcntl_h>"	# <yes>
+
+dnl ## Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_UID_T
+AC_HEADER_TIME
+dnl AC_STRUCT_TM
+AC_STRUCT_TIMEZONE
+
+dnl ## Checks for library functions.
+AC_CHECK_FUNCS(getopt \
+	select \
+	rename \
+	strncpy \
+	cfmakeraw \
+	strcasecmp \
+	strncasecmp
+)
+
+# XXX - Under Redhat 6.0 (egcs), need to compile with -D_BSD_SOURCE
+# -D_POSIX_C_SOURCE=2 to kill a lot of the warnings. How to detect
+# this?
+# Under gcc, can use 'gcc -Werror', which turns all warnings into
+# errors.
+
+# Tell the various Makefiles to use the compatibility function provided
+if test -z "$ac_cv_func_cfmakeraw" -o x"$ac_cv_func_cfmakeraw" = xno ; then
+	COMPAT="$COMPAT cfmakeraw.c"
+	COMPATOBJS="$COMPATOBJS cfmakeraw.o"
+fi
+
+AC_SUBST(COMPAT)
+AC_SUBST(COMPATOBJS)
+
+# Print error messages for various required bits that couldn't be found.
+if test -z "$ac_cv_func_getopt" -o x"$ac_cv_func_getopt" = x"no" ; then
+	AC_MSG_WARN([
+	The getopt() function not be found. This package
+	may not compile properly])
+	EXIT_STATUS=1
+fi
+
+if test -z "$ac_cv_func_select" -o x"$ac_cv_func_select" = x"no" ; then
+	AC_MSG_WARN([
+	The select() function not be found. This package
+	may not compile properly])
+	EXIT_STATUS=1
+fi
+
+AC_CONFIG_HEADER(config.h)
+AC_OUTPUT([Makefile
+	src/Makefile
+	doc/Makefile
+	doc/version.texi])
+AC_MSG_RESULT(dnl
+[
+	Don't forget to run \"make depend\"
+])
+exit "$EXIT_STATUS"
