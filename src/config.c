@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.44 2000-11-20 10:17:52 arensb Exp $
+ * $Id: config.c,v 1.45 2000-11-24 23:01:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -926,86 +926,132 @@ load_palm_config(struct Palm *palm)
 		/* Either there is no applicable PDA, or else it doesn't
 		 * specify a directory. Use the default (~/.palm).
 		 */
-		strncpy(palmdir, userinfo.homedir, MAXPATHLEN);
-		strncat(palmdir, "/.palm", MAXPATHLEN - strlen(palmdir));
+		strncpy(palmdir,
+			mkfname(userinfo.homedir, "/.palm", NULL),
+			MAXPATHLEN);
 	}
 	MISC_TRACE(3)
 		fprintf(stderr, "Base directory is [%s]\n", palmdir);
 
+	err = make_sync_dirs(palmdir);
+	if (err < 0)
+		return -1;
+
+	return 0; 
+}
+
+/* make_sync_dirs
+ * Make sure that the various directories that ColdSync will be using for
+ * the PDA 'pda' exist; create them if necessary:
+ *	<basedir>
+ *	<basedir>/archive
+ *	<basedir>/backup
+ *	<basedir>/install
+ * ('basedir' will be ~/.palm by default)
+ *
+ * XXX - This also initializes the global variables 'backupdir',
+ * 'atticdir', 'archivedir', and 'installdir'. This seems nonintuitive.
+ *
+ * Returns 0 if successful, or a negative value in case of error.
+ */
+int
+make_sync_dirs(const char *basedir)
+{
+	int err;
+
+	MISC_TRACE(3)
+		fprintf(stderr, "Creating backup directories.\n");
+
 	/* ~/.palm */
-	if (!is_directory(palmdir))
+	if (!is_directory(basedir))
 	{
-		/* ~/.palm doesn't exist. Create it */
-		if ((err = mkdir(palmdir, DIR_MODE)) < 0)
+		/* ~/.palm doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", basedir);
+
+		if ((err = mkdir(basedir, DIR_MODE)) < 0)
 		{
-			/* Can't create the directory */
-			perror("load_palm_config: mkdir(~/.palm)\n");
+			fprintf(stderr,
+				_("Error: can't create base sync "
+				  "directory.\n"));
+			perror("mkdir");
 			return -1;
 		}
 	}
 
 	/* ~/.palm/backup */
-	strncpy(backupdir, palmdir, MAXPATHLEN);
-	strncat(backupdir, "/backup", MAXPATHLEN - strlen(palmdir));
-
+	strncpy(backupdir, mkfname(basedir, "/backup", NULL), MAXPATHLEN);
+	backupdir[MAXPATHLEN] = '\0';
 	if (!is_directory(backupdir))
 	{
-		/* ~/.palm/backup doesn't exist. Create it */
+		/* ~/.palm/backup doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", backupdir);
+
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
-			/* Can't create the directory */
-			perror("load_palm_config: mkdir(~/.palm/backup)\n");
+			fprintf(stderr,
+				_("Error: can't create backup directory.\n"));
+			perror("mkdir");
 			return -1;
 		}
 	}
 
 	/* ~/.palm/backup/Attic */
-	strncpy(atticdir, backupdir, MAXPATHLEN);
-	strncat(atticdir, "/Attic", MAXPATHLEN - strlen(backupdir));
-
+	strncpy(atticdir, mkfname(basedir, "/backup/Attic", NULL), MAXPATHLEN);
+	atticdir[MAXPATHLEN] = '\0';
 	if (!is_directory(atticdir))
 	{
-		/* ~/.palm/backup/Attic doesn't exist. Create it */
+		/* ~/.palm/backup doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", atticdir);
+
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
-			/* Can't create the directory */
-			perror("load_palm_config: "
-			       "mkdir(~/.palm/backup/Attic)\n");
+			fprintf(stderr,
+				_("Error: can't create attic directory.\n"));
+			perror("mkdir");
 			return -1;
 		}
 	}
 
 	/* ~/.palm/archive */
-	strncpy(archivedir, palmdir, MAXPATHLEN);
-	strncat(archivedir, "/archive", MAXPATHLEN - strlen(palmdir));
-
+	strncpy(archivedir, mkfname(basedir, "/archive", NULL), MAXPATHLEN);
+	archivedir[MAXPATHLEN] = '\0';
 	if (!is_directory(archivedir))
 	{
-		/* ~/.palm/archive doesn't exist. Create it */
+		/* ~/.palm/archive doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", archivedir);
+
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
-			/* Can't create the directory */
-			perror("load_palm_config: mkdir(~/.palm/archive)\n");
+			fprintf(stderr,
+				_("Error: can't create archive directory.\n"));
+			perror("mkdir");
 			return -1;
 		}
 	}
 
 	/* ~/.palm/install */
-	strncpy(installdir, palmdir, MAXPATHLEN);
-	strncat(installdir, "/install", MAXPATHLEN - strlen(palmdir));
-
+	strncpy(installdir, mkfname(basedir, "/install", NULL), MAXPATHLEN);
+	installdir[MAXPATHLEN] = '\0';
 	if (!is_directory(installdir))
 	{
-		/* ~/.palm/install doesn't exist. Create it */
+		/* ~/.palm/install doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", installdir);
+
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
-			/* Can't create the directory */
-			perror("load_palm_config: mkdir(~/.palm/install)\n");
+			fprintf(stderr,
+				_("Error: can't create install directory.\n"));
+			perror("mkdir");
 			return -1;
 		}
 	}
 
-	return 0; 
+	return 0;		/* Success */
 }
 
 /* get_fullname
