@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.9 2002-04-21 17:01:51 azummo Exp $
+# $Id: SPC.pm,v 1.10 2002-04-24 13:28:09 azummo Exp $
 
 # XXX - Write POD
 
@@ -50,35 +50,10 @@ Protocol (SPC) requests in ColdSync conduits.
 use ColdSync;
 use Exporter;
 
-use vars qw( $VERSION @ISA *SPC @EXPORT );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.9 $ ' =~ m{(\d+)\.(\d+)};
+use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
+$VERSION = sprintf "%d.%03d", '$Revision: 1.10 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
-@EXPORT = qw( spc_req *SPC
-	dlp_req
-	spc_get_dbinfo
-	dlp_ReadSysInfo
-	dlp_OpenDB
-	dlp_CloseDB
-	dlp_DeleteDB
-	dlp_ReadAppBlock
-	dlp_WriteAppBlock
-	dlp_GetSysDateTime
-	dlp_SetSysDateTime
-	dlp_ReadOpenDBInfo
-	dlp_CleanUpDatabase
-	dlp_ReadUserInfo
-	dlp_ReadRecordByIndex
-	dlp_ReadRecordById
-	dlp_AddSyncLogEntry
-	dlp_DeleteRecord
-	dlp_DeleteAllRecords
-	dlp_WriteRecord
-	dlp_ExpSlotMediaType
-	dlp_ExpSlotEnumerate
-	dlp_ExpCardInfo
-	dlp_VFSVolumeEnumerate
-);
 
 # Various useful constants
 use constant SPCOP_NOP		=> 0;
@@ -91,8 +66,8 @@ use constant SPCERR_BADOP	=> 1;
 use constant SPCERR_NOMEM	=> 2;
 
 use constant dlpRespErrNone	=> 0;
-
 use constant dlpFirstArgID	=> 0x20;
+
 
 use constant DLPCMD_ReadUserInfo			=> 0x10;
 use constant DLPCMD_WriteUserInfo			=> 0x11;
@@ -177,7 +152,80 @@ use constant DLPCMD_WriteRecordStream			=> 0x5f;
 use constant DLPCMD_ReadResourceStream			=> 0x60;
 use constant DLPCMD_ReadRecordStream			=> 0x61;
 
+%EXPORT_TAGS = (
+	'dlp_vfs' => [ qw(
+			DLPCMD_VFSCustomControl
+			DLPCMD_VFSGetDefaultDirectory		
+			DLPCMD_VFSImportDatabaseFromFile	
+			DLPCMD_VFSExportDatabaseToFile		
+			DLPCMD_VFSFileCreate			
+			DLPCMD_VFSFileOpen			
+			DLPCMD_VFSFileClose			
+			DLPCMD_VFSFileWrite			
+			DLPCMD_VFSFileRead			
+			DLPCMD_VFSFileDelete			
+			DLPCMD_VFSFileRename			
+			DLPCMD_VFSFileEOF			
+			DLPCMD_VFSFileTell			
+			DLPCMD_VFSFileGetAttributes		
+			DLPCMD_VFSFileSetAttributes		
+			DLPCMD_VFSFileGetDates			
+			DLPCMD_VFSFileSetDates			
+			DLPCMD_VFSDirCreate			
+			DLPCMD_VFSDirEntryEnumerate		
+			DLPCMD_VFSGetFile			
+			DLPCMD_VFSPutFile			
+			DLPCMD_VFSVolumeFormat			
+			DLPCMD_VFSVolumeEnumerate		
+			DLPCMD_VFSVolumeInfo			
+			DLPCMD_VFSVolumeGetLabel		
+			DLPCMD_VFSVolumeSetLabel		
+			DLPCMD_VFSVolumeSize			
+			DLPCMD_VFSFileSeek			
+			DLPCMD_VFSFileResize			
+			DLPCMD_VFSFileSize			
+	) ],
 
+	'dlp_expslot' => [ qw(
+			DLPCMD_ExpSlotEnumerate
+			DLPCMD_ExpSlotMediaType
+			DLPCMD_ExpCardPresent
+			DLPCMD_ExpCardInfo
+	) ],
+
+	'dlp_args'=> [ qw(
+			dlpRespErrNone
+			dlpFirstArgID
+	) ],
+);
+
+@EXPORT = qw( spc_req *SPC
+	dlp_req
+	spc_get_dbinfo
+	dlp_ReadSysInfo
+	dlp_OpenDB
+	dlp_CloseDB
+	dlp_DeleteDB
+	dlp_ReadAppBlock
+	dlp_WriteAppBlock
+	dlp_GetSysDateTime
+	dlp_SetSysDateTime
+	dlp_ReadOpenDBInfo
+	dlp_CleanUpDatabase
+	dlp_ReadUserInfo
+	dlp_ReadRecordByIndex
+	dlp_ReadRecordById
+	dlp_AddSyncLogEntry
+	dlp_DeleteRecord
+	dlp_DeleteAllRecords
+	dlp_WriteRecord
+	dlp_ExpSlotMediaType
+	dlp_ExpSlotEnumerate
+	dlp_ExpCardInfo
+);
+
+Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
+		
 
 # spc_init
 # Initialize a conduit for SPC.
@@ -277,17 +325,14 @@ sub dlp_req
 	return undef if !defined($status);
 
 	# Read results
-	my $code;
-	my $argc;
-	my $errno;
-	my @argv;
 
-	($code, $argc, $errno) = unpack("C C n", $data);
+	my ($code, $argc, $errno) = unpack("C C n", $data);
 			# $code should be $cmd | 0x80, but I'm not checking.
+
 	$data = substr($data, 4);	# Just the arguments
 
 	# Do minimal unpacking of return args into { id => X, data => Y }
-	@argv = unpack_dlp_args($argc, $data);
+	my @argv = unpack_dlp_args($argc, $data);
 
 	return ($errno, @argv);
 }
@@ -299,10 +344,9 @@ sub dlp_req
 # result.
 sub pack_dlp_args
 {
-	my $arg;
 	my $retval = "";
 
-	foreach $arg (@_)
+	foreach my $arg (@_)
 	{
 		if (length($arg->{data}) <= 0xff)
 		{
@@ -342,13 +386,12 @@ sub unpack_dlp_args
 	my $argc = shift;
 	my $data = shift;
 	my @retval;
-	my $i;
 
 	# Set the length of @retval
 	$#retval = $argc-1;
 
 	# Unpack each argument in turn
-	for ($i = 0; $i < $argc; $i++)
+	for (my $i = 0; $i < $argc; $i++)
 	{
 		my $id;			# Argument ID
 		my $len;		# Length of argument data
@@ -532,18 +575,15 @@ use constant dlpReadSysInfoVerRespArgID	=> 0x21;
 
 sub dlp_ReadSysInfo
 {
-	my $errno;
-	my @argv;
 	my $retval;
 
 	# Send the request
-	($errno, @argv) = dlp_req(DLPCMD_ReadSysInfo);
+	my ($errno, @argv) = dlp_req(DLPCMD_ReadSysInfo);
 
 	# Unpack the arguments further
-	my $arg;
 
 	$retval = {};
-	foreach $arg (@argv)
+	foreach my $arg (@argv)
 	{
 		if ($arg->{id} == dlpFirstArgID)
 		{
@@ -621,10 +661,8 @@ sub dlp_OpenDB
 	$cardNo = 0 if !defined($cardNo);
 
 	# Send the request
-	my $err;
-	my @argv;
 
-	($err, @argv) = dlp_req(DLPCMD_OpenDB,
+	my ($err, @argv) = dlp_req(DLPCMD_OpenDB,
 			{
 				id	=> dlpFirstArgID,
 				data	=> pack("C C a*x",
@@ -661,10 +699,8 @@ L</dlp_OpenDB>).
 sub dlp_CloseDB
 {
 	my $dbh = shift;	# Database handle
-	my $err;
-	my @argv;
 
-	($err, @argv) = dlp_req(DLPCMD_CloseDB,
+	my ($err, @argv) = dlp_req(DLPCMD_CloseDB,
 			{
 				id	=> dlpFirstArgID,
 				data	=> pack("C", $dbh),
@@ -685,10 +721,8 @@ sub dlp_DeleteDB
 {
 	my $cardno = shift;	# Card number
 	my $dbname = shift;	# Database name
-	my $err;
-	my @argv;
 
-	($err, @argv) = dlp_req(DLPCMD_DeleteDB,
+	my ($err, @argv) = dlp_req(DLPCMD_DeleteDB,
 			{
 				id	=> dlpFirstArgID,
 				data	=> pack("C x Z*", $cardno, $dbname),
@@ -747,8 +781,6 @@ sub dlp_ReadOpenDBInfo
 
 	dlp_CleanUpDatabase($dbh);
 
-I don't think this command does anything right now.
-
 =cut
 #'
 sub dlp_CleanUpDatabase
@@ -784,8 +816,6 @@ sub dlp_AddSyncLogEntry
 				id	=> dlpFirstArgID,
 				data	=> pack("Z*", $text),
 			});
-
-	return undef unless defined $err;
 
 	return $err;
 }
@@ -921,8 +951,8 @@ sub dlp_ReadUserInfo
 				$retval->{'username'} = undef;
 			}
 
-			# XXX - ColdSync has some problems when
-			# syncing with a Palm with a password, so this
+			# XXX - I had some problems when
+			# syncing a Palm with a password, so this
 			# section has not been tested.
 			if ($retval->{'passwordlen'} ne 0)
 			{
@@ -957,9 +987,9 @@ I don't know what $flags does (you can omit it for now).
 #'
 sub dlp_DeleteRecord
 {
-	my $dbh = shift;	# Database handle
-	my $recordid = shift;	# Id of the record to delete
-	my $flags = shift;	# Flags. Set to 0 for normal use.
+	my $dbh		= shift;	# Database handle
+	my $recordid	= shift;	# Id of the record to delete
+	my $flags	= shift;	# Flags. Set to 0 for normal use.
 
 
 	$flags = 0 unless defined $flags;
@@ -1022,11 +1052,11 @@ C<$numbytes> is the number of characters to read.
 
 sub dlp_ReadRecordById
 {
-	my $dbh = shift;	# Database handle
-	my $id = shift;		# Record id
-	my $offset = shift;	# Offset into the record
-	my $numbytes = shift;	# Number of bytes to read starting at 
-				# the offset (-1 = "to the end")
+	my $dbh		= shift;	# Database handle
+	my $id		= shift;	# Record id
+	my $offset	= shift;	# Offset into the record
+	my $numbytes	= shift;	# Number of bytes to read starting at 
+					# the offset (-1 = "to the end")
 
 	return _dlp_ReadRecord(1, $dbh, $id, $offset, $numbytes);
 }
@@ -1063,11 +1093,11 @@ C<$numbytes> is the number of characters to read.
 
 sub dlp_ReadRecordByIndex
 {
-	my $dbh = shift;	# Database handle
-	my $index = shift;	# Record index
-	my $offset = shift;	# Offset into the record
-	my $numbytes = shift;	# Number of bytes to read starting at
-				# the offset (-1 = "to the end")
+	my $dbh		= shift;	# Database handle
+	my $index	= shift;	# Record index
+	my $offset	= shift;	# Offset into the record
+	my $numbytes	= shift;	# Number of bytes to read starting at
+					# the offset (-1 = "to the end")
 
 	return dlp_ReadRecord(0, $dbh, $index, $offset, $numbytes);
 }
@@ -1076,16 +1106,16 @@ sub dlp_ReadRecordByIndex
 
 sub _dlp_ReadRecord
 {
-	my $readbyid = shift;	# Read record (1: by id, 0: by index)
-	my $dbh = shift;	# Database handle
-	my $idindex = shift;	# Record index (or record id)
-	my $offset = shift;	# Offset into the record
+	my $readbyid	= shift;	# Read record (1: by id, 0: by index)
+	my $dbh		= shift;	# Database handle
+	my $idindex	= shift;	# Record index (or record id)
+	my $offset	= shift;	# Offset into the record
 
-	my $numbytes = shift;	# Number of bytes to read starting at
-				# the offset (-1 = "to the end")
+	my $numbytes	= shift;	# Number of bytes to read starting at
+					# the offset (-1 = "to the end")
 
-	$offset = 0 unless defined $offset;
-	$numbytes = -1 unless defined $numbytes;
+	$offset		= 0 unless defined $offset;
+	$numbytes	= -1 unless defined $numbytes;
 
 	my ($err, @argv) = dlp_req(DLPCMD_ReadRecord,
 			{
@@ -1102,20 +1132,21 @@ sub _dlp_ReadRecord
 	# to retrieve the original error code. Any idea?
 	# (Should be implemented coherently in every dlp
 	# function) - az.
+
 	my $retval = {};
-	
 
 	for (@argv)
 	{
 		if ($_->{id} == dlpFirstArgID)
 		{
-			($retval->{'id'},
-			 $retval->{'index'},
-			 $retval->{'size'},
-			 $retval->{'attrs'},
-			 $retval->{'category'},
-			 $retval->{'data'},
-			) = unpack("N n n C C a*", $_->{data});
+			@$retval{
+			 'id',
+			 'index',
+			 'size',
+			 'attrs',
+			 'category',
+			 'data',
+			} = unpack("N n n C C a*", $_->{'data'});
 
 			# XXX - I used the names in DLCommon.h for the
 			# attributes. This leads to an incompatibility
@@ -1128,15 +1159,19 @@ sub _dlp_ReadRecord
 			#
 			# What should we do ?
 
-			$retval->{'attributes'}{'deleted'}	=
+			$retval->{'attributes'}{'deleted'} =
 				$retval->{'attrs'} & 0x80 ? 1 : 0;
-			$retval->{'attributes'}{'dirty'}	=
+
+			$retval->{'attributes'}{'dirty'} =
 				$retval->{'attrs'} & 0x40 ? 1 : 0;
-			$retval->{'attributes'}{'busy'}		=
+
+			$retval->{'attributes'}{'busy'} =
 				$retval->{'attrs'} & 0x20 ? 1 : 0;
-			$retval->{'attributes'}{'secret'}	=
+
+			$retval->{'attributes'}{'secret'} =
 				$retval->{'attrs'} & 0x10 ? 1 : 0;
-			$retval->{'attributes'}{'archived'}	=
+
+			$retval->{'attributes'}{'archived'} =
 				$retval->{'attrs'} & 0x08 ? 1 : 0;
 
 			my $recsize = length($retval->{'data'});
@@ -1214,19 +1249,16 @@ It is not parsed in any way.
 #'
 sub dlp_ReadAppBlock
 {
-	my $dbh = shift;	# Database handle
-	my $offset = shift;	# Offset into AppInfo block. Optional,
-				# defaults to 0
-	my $len = shift;	# # bytes to read. Optional, defaults
-				# to "to end of AppInfo block".
+	my $dbh		= shift;	# Database handle
+	my $offset	= shift;	# Offset into AppInfo block. Optional,
+					# defaults to 0
+	my $len		= shift;	# bytes to read. Optional, defaults
+					# to "to end of AppInfo block".
 
-	$offset = 0 if !defined($offset);
-	$len = -1 if !defined($len);
+	$offset	= 0	unless defined $offset;
+	$len	= -1	unless defined $len;
 
-	my $err;
-	my @argv;
-
-	($err, @argv) = dlp_req(DLPCMD_ReadAppBlock,
+	my ($err, @argv) = dlp_req(DLPCMD_ReadAppBlock,
 			{
 				id	=> dlpFirstArgID,
 				data	=> pack("Cx n n",
@@ -1265,12 +1297,10 @@ Returns the DLP error code.
 #'
 sub dlp_WriteAppBlock
 {
-	my $dbh = shift;	# Database handle
-	my $data = shift;	# AppInfo block to upload
-	my $err;
-	my @argv;
+	my $dbh		= shift;	# Database handle
+	my $data	= shift;	# AppInfo block to upload
 
-	($err, @argv) = dlp_req(DLPCMD_WriteAppBlock,
+	my ($err, @argv) = dlp_req(DLPCMD_WriteAppBlock,
 			{
 				id	=> dlpFirstArgID,
 				data	=> pack("Cx n a*",
@@ -1294,13 +1324,10 @@ containing the date, with fields
 
 sub dlp_GetSysDateTime
 {
-	my $errno;
-	my @argv;
-	my $retval;
+	my ($errno, @argv) = dlp_req(DLPCMD_GetSysDateTime);
 
-	($errno, @argv) = dlp_req(DLPCMD_GetSysDateTime);
+	my $retval = {};
 
-	$retval = {};
 	foreach my $arg (@argv) {
 		if ($arg->{id} == dlpFirstArgID) {
 			@$retval{"year", "month", "day",
@@ -1332,14 +1359,12 @@ Returns the DLP error code.
 sub dlp_SetSysDateTime
 {
 
-	my $year = shift;
-	my $mon = shift;
-	my $day = shift;
-	my $hour = shift;
-	my $min = shift;
-	my $sec = shift;
-	my $err;
-	my @argv;
+	my $year	= shift;
+	my $mon		= shift;
+	my $day		= shift;
+	my $hour	= shift;
+	my $min		= shift;
+	my $sec		= shift;
 
 	if (ref($year) eq 'HASH')
 	{
@@ -1352,7 +1377,7 @@ sub dlp_SetSysDateTime
 				'second'};
 	}
 
-	($err, @argv) = dlp_req(DLPCMD_SetSysDateTime,
+	my ($err, @argv) = dlp_req(DLPCMD_SetSysDateTime,
 				 {
 					 id   => dlpFirstArgID,
 					 data => pack("nC5x",
@@ -1368,10 +1393,8 @@ sub dlp_SetSysDateTime
 sub dlp_ExpSlotMediaType
 {
 	my $slotnum = shift;	# Slot number
-	my @argv;
-	my $err;
 
-	($err, @argv) = dlp_req(DLPCMD_ExpSlotMediaType,
+	my ($err, @argv) = dlp_req(DLPCMD_ExpSlotMediaType,
 				 {
 					 id   => dlpFirstArgID,
 					 data => pack("n", $slotnum),
@@ -1384,7 +1407,7 @@ sub dlp_ExpSlotMediaType
 	foreach my $arg (@argv) {
 		if ($arg->{id} == dlpFirstArgID)
 		{
-			@$retval{'mediatype'} = unpack("a4",$arg->{data});
+			$retval->{'mediatype'} = unpack("a4",$arg->{data});
 
 			$retval->{'slot'} = $slotnum;
 		}
@@ -1396,10 +1419,8 @@ sub dlp_ExpSlotMediaType
 sub dlp_ExpSlotEnumerate
 {
 	my $slotnum = shift;	# Slot number
-	my @argv;
-	my $err;
 
-	($err, @argv) = dlp_req(DLPCMD_ExpSlotEnumerate);
+	my ($err, @argv) = dlp_req(DLPCMD_ExpSlotEnumerate);
 
 	# Parse the return arguments.
 	my $retval = {};
@@ -1434,10 +1455,8 @@ sub dlp_ExpSlotEnumerate
 sub dlp_ExpCardInfo
 {
 	my $slotnum = shift;	# Slot number
-	my @argv;
-	my $err;
 
-	($err, @argv) = dlp_req(DLPCMD_ExpCardInfo,
+	my ($err, @argv) = dlp_req(DLPCMD_ExpCardInfo,
 				 {
 					 id   => dlpFirstArgID,
 					 data => pack("n", $slotnum),
@@ -1486,45 +1505,6 @@ sub dlp_ExpCardInfo
 
 	return $retval;
 }
-
-sub dlp_VFSVolumeEnumerate
-{
-	my $slotnum = shift;	# Slot number
-	my @argv;
-	my $err;
-
-	($err, @argv) = dlp_req(DLPCMD_VFSVolumeEnumerate);
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval
-			{
-				'numVolumes',
-				'_data',
-			} = unpack("n a*",$arg->{data});
-
-			$retval->{'volumes'} = [];
-
-			for (my $i = 0; $i < $retval->{'numVolumes'}; $i++)
-			{
-				my $ref;
-
-				( $ref, $retval->{'_data'} ) = unpack('n a*', $retval->{'_data'});
-
-				$retval->{'volumes'}[$i] = $ref;
-			}
-
-			delete $retval->{'_data'};
-		}
-	}
-
-	return $retval;
-}
-
 
 1;
 
