@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.4 1999-02-24 13:13:57 arensb Exp $
+ * $Id: PConnection.c,v 1.5 1999-03-16 11:01:49 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -17,6 +17,7 @@
 extern void cfmakeraw(struct termios *t);
 #endif	/* HAVE_CFMAKERAW */
 
+/* XXX - Aw, just use cfsetispeed() and cfsetospeed() in the code. */
 #if !HAVE_CFSETSPEED
 static int
 cfsetspeed(struct termios *t, speed_t speed)
@@ -25,8 +26,6 @@ cfsetspeed(struct termios *t, speed_t speed)
 	return cfsetospeed(t, speed);
 }
 #endif	/* HAVE_CFSETSPEED */
-
-/*  static struct PConnection *pconn_list = NULL; */
 
 /* new_PConnection
  * Opens a new connection on the named port. Returns a handle to the
