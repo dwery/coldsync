@@ -65,8 +65,6 @@
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
 - Write a utility to just dump the contents of a pdb file.
-- Add CTRACE() macro for debugging, like the *_TRACE() ones.
-- Turn the pdb stuff into its own library.
 - Test with xcopilot (and real Palm) under Linux and other OSes.
 - Test under Purify.
 - Installing new databases: if the database to be installed already
@@ -135,7 +133,8 @@
 - Lock files while syncing.
 - Separate the distribution into 'coldsync' and 'coldsync-doc', since
   the documentation is almost three times as large as everything else.
-- Split up the doc directory into directories, one per document.
+  At least, get rid of the .ps files, or distribute them separately.
+  Is it possible to make 'make dist' create two distributions?
 - Write a license (Artistic? Adapt it?).
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -176,7 +175,8 @@
 	#  define memmove(d, s, n) bcopy ((s), (d), (n))
 	# endif
 	#endif
-- Fix core dumps under Linux.
+- Split up the doc directory into directories, one per document. (But
+  see next item.)
 - Combine the documentation: there's no 'libpalm' anymore, and I'm
   probably not going to have time to maintain the documentation for
   all of the various functions defined in
@@ -186,3 +186,16 @@
   programmers ought to know about Palm formats.
 - Write a few tutorials on writing conduits.
 - Perl PDB library for manipulating .pdb and .prc files.
+- Bug?: when doing a first sync, prints
+	arch_open: Can't open "/usr/folks/arensb/.palm/archive/System MIDI Sounds"
+	open: No such file or directory
+	Can't open "System MIDI Sounds". Attempting to create
+- Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
+  "System"
+	Fix: when opening a database with DlpOpenDB, if the database
+  is read-only (ROM), don't open it for writing. In fact, Backup()
+  probably shouldn't open databases read-write at all.
+- Write a README file.
+- Might be nice if there were some "canned" debug levels, so you could
+  say "-d3" and that would give you a fair amount of information,
+  without you having to specify each level independently.
