@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.7 2004-11-02 04:38:41 christophe Exp $
+$Id: README.daemon,v 2.8 2004-11-02 13:46:02 christophe Exp $
 
 Introduction
 ============
@@ -32,18 +32,18 @@ Common Setup
 ====== =====
 
 	For all three connection types, you'll need to set up two
-configuration files: <sysconfdir>/coldsync.conf and <sysconfdir>/palms.
-<sysconfdir> is determined by the package installation location. By default
-it should be /usr/local/etc.
+configuration files: <prefix>/etc/coldsync.conf and <prefix>/etc/palms.
+<prefix> is determined by the package installation location the builder
+picked when running "configure".  By default it should be /usr/local.
 
-	The first configuration file, <sysconfdir>/coldsync.conf ,
+	The first configuration file, <prefix>/etc/coldsync.conf ,
 is optional, but it's a good idea to set it up anyway. Its format is
 the same as that of ~/.coldsyncrc, which is described in coldsync(8).
 This file allows you to specify conduits to run on each Palm at your
 site. In addition, you can prevent users from running their own
 conduits on certain database types, or any conduits at all.
 
-	The second config file is <sysconfdir>/palms . This file is
+	The second config file is <prefix>/etc/palms . This file is
 also described in coldsync(8). It
 
 	- maps Palm devices to users, i.e., it specifies that before
@@ -80,7 +80,7 @@ will be invoked as
 	/usr/local/bin/coldsync -md -s -n ttyd0
 
 Thus, you need to have a named listen block in
-<sysconfdir>/coldsync.conf, with the same name as the tty:
+<prefix>/etc/coldsync.conf, with the same name as the tty:
 	listen serial "ttyd0" { ... }
 
 	Once you've edited /etc/ttys, you'll need to
@@ -159,7 +159,7 @@ the standard error stream to the logfile. If omitted, the stderr will be connect
 to the network socket and will break your connection.
 
 Obviously you should have a suitable netsync-inetd profile in your
-<sysconfdir>/coldsync.conf , just like this one:
+<prefix>/etc/coldsync.conf , just like this one:
 
 	listen serial "netsync-inetd" {
 		protocol: net;
