@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.33 2000-09-03 07:32:57 arensb Exp $
+ * $Id: config.c,v 1.34 2000-09-08 15:53:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -335,15 +335,6 @@ get_config(int argc, char *argv[])
 		}
 	}
 
-	/* XXX - Check for trailing arguments. If they're of the form
-	 * "FOO=bar", set the variable $FOO to value "bar". Otherwise,
-	 * complain and exit.
-	 */
-	/* XXX - Or, possibly, trailing arguments can mean different thing
-	 * in different modes, e.g.: "-mb foo.pdb bar.pdb" to just back up
-	 * "foo.pdb" and "bar.pdb", etc.
-	 */
-
 	/* Sanity checks */
 
 	/* Can't back up and restore at the same time */
@@ -414,6 +405,37 @@ get_config(int argc, char *argv[])
 	{
 		fprintf(stderr, _("Can't allocate new configuration.\n"));
 		return -1;
+	}
+
+	/* Add a default conduit to the head of the queue, equivalent
+	 * to:
+	 * 	conduit sync {
+	 *		type: * / *;
+	 *		path: [generic];
+	 *	}
+	 */
+	{
+		conduit_block *fallback;	/* The generic default
+						 * conduit */
+
+		/* Allocate a new conduit block */
+		if ((fallback = new_conduit_block()) == NULL)
+		{
+			fprintf(stderr,
+				_("Can't allocate new conduit block.\n"));
+			return -1;
+		}
+
+		/* Initialize the fallback conduit. */
+		fallback->flavors = FLAVORFL_SYNC;	/* Sync flavor */
+		append_crea_type(fallback, 0x0000, 0x0000);
+					/* Handles all creators and types */
+		fallback->flags |= CONDFL_DEFAULT;
+					/* This is a default conduit */
+		fallback->path = "[generic]";
+
+		/* Append this conduit to the (empty) conduit queue */
+		user_config->conduits = fallback;
 	}
 
 	/* Make sure this file exists. If it doesn't, fall back on
