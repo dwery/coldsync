@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.5 2002-09-04 14:19:09 azummo Exp $
+ * $Id: cs_error.c,v 2.6 2002-09-29 12:40:33 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -38,8 +38,7 @@ update_cs_errno_pconn(PConnection *pconn, palmerrno_t palm_errno)
 				cs_errno = CSE_NOCONN;
 				break;
 			default:
-				/* XXX - Temp. debugging message */
-				Warn("Setting CSE_PALMERR due to palm_errno = %d.", palm_errno);
+				/* Warn("Setting CSE_PALMERR due to palm_errno = %d.", palm_errno); */
 				cs_errno = CSE_PALMERR;
 				break;
 		}
@@ -68,7 +67,6 @@ update_cs_errno_dlp(PConnection *pconn)
 				cs_errno = CSE_CANCEL;
 				break;
 			default:
-				/* XXX - Temp. debugging message */
 				/* Warn("Setting CSE_DLPERR due to dlp error = %d.", pconn->dlp.resp.error); */
 				cs_errno = CSE_DLPERR;
 				break;
