@@ -72,7 +72,7 @@ A: Preferences, such as your e-mail signature, your preferred time and date
 Q: Does ColdSync work with the Handspring Visor?
 A: From several accounts, yes, at least under FreeBSD and Linux.
 	Under FreeBSD 4.x, use /dev/ugen0 as the device, and specify
-   "listen serial" in your .coldsyncrc . ColdSync should find the Visor on
+   "listen usb" in your .coldsyncrc . ColdSync should find the Visor on
    its own.
 
 	Linux users can follow the instructions at
