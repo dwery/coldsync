@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.34 2001-12-10 07:29:17 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.35 2002-04-14 05:08:32 arensb Exp $
  */
 
 #include "config.h"
@@ -45,6 +45,27 @@
 #include "palm.h"
 #include "pconn/palm_errno.h"
 #include "pconn/netsync.h"
+
+/* In 'struct usb_device_info' in FreeBSD 4.5 (and later?), the fields
+ * begin with "udi_". In earlier version, they don't. Thus, under FreeBSD
+ * 4.4, we use to 'udi.vendorNo'; under 4.5, we need to use
+ * 'udi.udi_vendorNo'.
+ *
+ * Likewise in 'struct usb_ctl_request', the fields now begin with "ucr_".
+ *
+ * XXX - This relies on the fact that the only difference is a prefix in
+ * the fields' names. If the situation ever becomes more complex (e.g.,
+ * supporting USB under Solaris), it might become necessary to write a set
+ * of inline wrapper functions.
+ * XXX - Peter Haight supplied a patch for this.
+ */
+#if WITH_UDI_PREFIX
+#  define UDI(field)	udi_##field
+#  define UCR(field)	ucr_##field
+#else	/* WITH_UDI_PREFIX */
+#  define UDI(field)	field
+#  define UCR(field)	field
+#endif	/* WITH_UDI_PREFIX */
 
 struct usb_data {
 	unsigned char iobuf[1024];	/* XXX - Is there anything
@@ -97,9 +118,11 @@ typedef struct {
  * Device		Vendor	Product	Revision
  * Handspring Visor	0x82d
  * Palm M505		0x830	0x0002	0x0100
+ * Sony Clie		0x054c
  */
 #define	HANDSPRING_VENDOR_ID	0x082d
 #define PALM_VENDOR_ID		0x0830
+#define SONY_VENDOR_ID		0x054c
 
 static char *hs_usb_functions[] = {
 	"Generic",
@@ -530,18 +553,18 @@ pconn_usb_open(PConnection *pconn,
 	IO_TRACE(1) {
 		fprintf(stderr,
   "Device information: %s vendor %04x (%s) product %04x (%s) rev %s addr %x\n",
-			device,  udi.vendorNo, SURE(udi.vendor), 
-			udi.productNo, SURE(udi.product),
-			SURE(udi.release), udi.addr);
+			device,  udi.UDI(vendorNo), SURE(udi.UDI(vendor)), 
+			udi.UDI(productNo), SURE(udi.UDI(product)),
+			SURE(udi.UDI(release)), udi.UDI(addr));
 
 	}
 
-	if ((udi.vendorNo != HANDSPRING_VENDOR_ID) &&
-	    (udi.vendorNo != PALM_VENDOR_ID))
+	if ((udi.UDI(vendorNo) != HANDSPRING_VENDOR_ID) &&
+	    (udi.UDI(vendorNo) != PALM_VENDOR_ID))
 	{
 		fprintf(stderr,
 			_("%s: Warning: Unexpected USB vendor ID %#x.\n"),
-			"pconn_usb_open", udi.vendorNo);
+			"pconn_usb_open", udi.UDI(vendorNo));
 	}
 
 	/*
@@ -573,14 +596,14 @@ pconn_usb_open(PConnection *pconn,
 	 *  on future hardware platforms.
 	 */
 	bzero((void *) &ur, sizeof(ur));
-	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
-	ur.request.bRequest = usbRequestVendorGetConnectionInfo;
-	USETW(ur.request.wValue, 0);
-	USETW(ur.request.wIndex, 0);
-	USETW(ur.request.wLength, 18);
-	ur.data = (void *) &ci;
-	ur.flags = USBD_SHORT_XFER_OK;
-	ur.actlen = 0;
+	ur.UCR(request).bmRequestType = UT_READ_VENDOR_ENDPOINT;
+	ur.UCR(request).bRequest = usbRequestVendorGetConnectionInfo;
+	USETW(ur.UCR(request).wValue, 0);
+	USETW(ur.UCR(request).wIndex, 0);
+	USETW(ur.UCR(request).wLength, 18);
+	ur.UCR(data) = (void *) &ci;
+	ur.UCR(flags) = USBD_SHORT_XFER_OK;
+	ur.UCR(actlen) = 0;
 	bzero((void *)&ci, sizeof(ci));
 	if (ioctl(usb_ep0, USB_DO_REQUEST, &ur) < 0) {
 		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"));
@@ -635,14 +658,14 @@ pconn_usb_open(PConnection *pconn,
 	}
 
 	bzero((void *) &ur, sizeof(ur));
-	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
-	ur.request.bRequest = usbRequestVendorGetBytesAvailable;
-	USETW(ur.request.wValue, 0);
-	USETW(ur.request.wIndex, 5);
-	USETW(ur.request.wLength, 2);
-	ur.data = &usbresponse[0];
-	ur.flags = USBD_SHORT_XFER_OK;
-	ur.actlen = 0;
+	ur.UCR(request).bmRequestType = UT_READ_VENDOR_ENDPOINT;
+	ur.UCR(request).bRequest = usbRequestVendorGetBytesAvailable;
+	USETW(ur.UCR(request).wValue, 0);
+	USETW(ur.UCR(request).wIndex, 5);
+	USETW(ur.UCR(request).wLength, 2);
+	ur.UCR(data) = &usbresponse[0];
+	ur.UCR(flags) = USBD_SHORT_XFER_OK;
+	ur.UCR(actlen) = 0;
 
 	if (ioctl(usb_ep0, USB_DO_REQUEST, &ur) < 0) {
 		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"));
@@ -650,8 +673,8 @@ pconn_usb_open(PConnection *pconn,
 
 	IO_TRACE(2) {
 		fprintf(stderr, "first setup 0x1 returns %d bytes: ",
-			ur.actlen);
-		for (i = 0; i < ur.actlen; i++) {
+			ur.UCR(actlen));
+		for (i = 0; i < ur.UCR(actlen); i++) {
 		  fprintf(stderr, " 0x%02x", usbresponse[i]);
 		}
 		fprintf(stderr, "\n");
