@@ -6,9 +6,10 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.2 1999-11-04 11:17:47 arensb Exp $
+ * $Id: lexer.l,v 2.3 1999-11-10 06:47:39 arensb Exp $
  */
 #include "config.h"
+#include <stdio.h>
 #include <string.h>
 #include "parser.h"
 #include "y.tab.h"
@@ -101,8 +102,7 @@ WS		[ \t\f\r]
 		return -1;
 	}
 	strncpy(yylval.string, yytext+1, yyleng-2);
-	/*fprintf(stderr, "<<<string: [%s]\n",
-		yylval.string);*/
+	yylval.string[yyleng-2] = '\0';
 	return STRING; 
 	}
 
