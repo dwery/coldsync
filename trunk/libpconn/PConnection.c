@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.15 2000-12-17 09:51:47 arensb Exp $
+ * $Id: PConnection.c,v 1.16 2000-12-24 09:40:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -49,8 +49,10 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 
 	/* Initialize the common part, if only in case the constructor fails */
 	pconn->fd = -1;
+	pconn->io_bind = NULL;
 	pconn->io_read = NULL;
 	pconn->io_write = NULL;
+	pconn->io_connect = NULL;
 	pconn->io_accept = NULL;
 	pconn->io_drain = NULL;
 	pconn->io_close = NULL;
@@ -151,9 +153,11 @@ PConnClose(struct PConnection *pconn)
  * bogus.
  */
 int
-PConn_bind(struct PConnection *pconn, struct slp_addr *addr)
+PConn_bind(struct PConnection *pconn,
+	   const void *addr,
+	   const int addrlen)
 {
-	return slp_bind(pconn, addr);
+	return (*pconn->io_bind)(pconn, addr, addrlen);
 }
 
 /* This is for Emacs's benefit:
