@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001-07-26 06:59:03 arensb Exp $
+# $Id: Makefile,v 1.9 2001-10-12 02:17:59 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -20,7 +20,8 @@ LIBSRCS =	cfmakeraw.c \
 		PConnection_serial.c \
 		PConnection_usb.c \
 		PConnection_net.c \
-		PConnection_usbm50x.c
+		PConnection_usbm50x.c \
+		spc_client.c 
 
 LIBOBJS =	${LIBSRCS:.c=.o}
 
@@ -30,6 +31,8 @@ DISTCLEAN =
 SPOTLESS =
 
 DISTFILES =	Makefile ${LIBSRCS}
+
+OTHERTAGFILES =	${LIBSRCS}
 
 include ${TOP}/Make.rules
 
