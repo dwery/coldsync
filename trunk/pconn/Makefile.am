@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.4 1999-02-24 13:14:40 arensb Exp $
+# $Id: Makefile.am,v 1.5 1999-07-04 02:52:10 arensb Exp $
 #
 
 lib_LIBRARIES = libpconn.a
@@ -29,7 +29,8 @@ pkginclude_HEADERS = \
 # noinst_PROGRAMS = foo
 
 EXTRA_DIST = \
-	Makefile
+	Makefile \
+	cfmakeraw.c
 
 ## foo_SOURCES = foo.c $(libpalm_a_SOURCES)
 #foo_LDADD = -L. -lpconn
