@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.13 2000-11-14 16:39:09 arensb Exp $
+ * $Id: restore.c,v 2.14 2000-11-18 22:47:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -116,13 +116,13 @@ restore_file(struct PConnection *pconn,
 		 * anyway (e.g., "Graffiti Shortcuts").
 		 */
 	    {
-		    struct dlp_dbinfo *remotedb;
+		    const struct dlp_dbinfo *remotedb;
 
 		    /* Look up the database on the Palm. If it has the
 		     * OKNEWER flag set, then go ahead and upload the
 		     * new database anyway.
 		     */
-		    remotedb = find_dbentry(palm, pdb->name);
+		    remotedb = palm_find_dbentry(palm, pdb->name);
 		    if (remotedb == NULL)
 		    {
 			    /* This should never happen */
@@ -147,6 +147,15 @@ restore_file(struct PConnection *pconn,
 			    return -1;
 		    }
 
+		    /* XXX - Even if OKNEWER is set, pdb_Upload() will fail
+		     * later on, because it tries to create the database
+		     * anew. This fails because the database couldn't be
+		     * deleted.
+		     * Presumably, the thing to do is to add a special
+		     * function for this case, one that deletes all of the
+		     * records in the database, and uploads new ones.
+		     */
+
 		    break;	/* Okay to overwrite */
 	    }
 
@@ -165,6 +174,11 @@ restore_file(struct PConnection *pconn,
 	add_to_log(pdb->name);
 	add_to_log(" - ");
 	err = pdb_Upload(pconn, pdb);
+		/* XXX - This appears to fail for "Graffiti Shortcuts": it
+		 * tries to create the database on the Palm, but since the
+		 * database already exists (it can't be deleted because
+		 * it's already open), it fails.
+		 */
 	SYNC_TRACE(4)
 		fprintf(stderr, "pdb_Upload returned %d\n", err);  
 	if (err < 0)
