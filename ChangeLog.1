@@ -1,0 +1,2598 @@
+2001-01-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.6.6 released.
+
+	* doc/coldsync.8: Clarified installation process a bit.
+
+	* src/coldsync.c (bug fix? enhancement?): Previously, ColdSync
+	installed databases before or after the main sync, depending on
+	whether the -z option was given, but ran the Install conduits
+	before the main sync no matter what.
+	Now runs the Install conduits just before installing files, either
+	before or after the main sync.
+
+	* doc/coldsync.8: Clarified -mr option a bit.
+
+	* doc/coldsync.8: Mention -z command-line option.
+
+2001-01-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* AUTHORS: Added two more contributors.
+
+	* src/config.c, src/coldsync.c: Added -z option, to install new
+	databases after the main sync.
+	Zachary P. Landau <kapheine@hypa.net>
+
+	* src/coldsync.c (bug fix): dumped core when .coldsyncrc didn't
+	contain any pda blocks. Fix contributed by
+	Ted Faber <faber@lunabase.org>
+
+	- Version 1.6.5 released.
+
+	* i18n/fr.po: Latest translations.
+
+	* i18n/de.po: Checked in on general principle.
+
+	* src/restore.c, src/parser.y, src/palm.c, src/log.c, src/lexer.l,
+	src/install.c, src/config.c, src/conduit.c, src/coldsync.c,
+	src/backup.c, src/archive.c, src/GenericConduit.cc, libpdb/pdb.c,
+	libpconn/slp.c, libpconn/padp.c, libpconn/dlp_rpc.c,
+	libpconn/dlp_cmd.c, libpconn/dlp.c, libpconn/cmp.c,
+	libpconn/PConnection_usb.c, libpconn/PConnection_serial.c,
+	libpconn/PConnection.c:
+	Anal retentive error message cleanup.
+
+2001-01-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.6.4 released
+
+	* src/restore.c, src/parser.y, src/palm.c, src/config.c,
+	src/conduit.c, src/coldsync.c:
+	Updated error messages to look better with Error() and Warn().
+
+2001-01-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* include/pconn/util.h, include/pconn/slp.h, include/pconn/padp.h,
+	include/pconn/dlp_cmd.h, include/pconn/dlp.h, include/pconn/cmp.h,
+	include/pconn/PConnection.h, include/pdb.h, src/GenericConduit.hh,
+	src/parser.h, doc/conduits.texi, doc/coldsync.8:
+	Updated copyright statement.
+
+	* include/pconn/pconn.h: Added header comment, copyright
+	statement.
+
+	* include/pconn/palm_types.h, configure.in: Added copyright
+	statement.
+
+	* src/restore.c, src/pref.c, src/parser.y, src/palm.c, src/log.c,
+	src/lexer.l, src/install.c, src/conduit.c, src/backup.c,
+	src/archive.c, src/GenericConduit.cc:
+	Changed fprintf(stderr, ...) to Warn() or Error(), as appropriate.
+
+	* src/spc.c: Updated copyright statement.
+
+	* src/coldsync.c: Added abortive logfile. Not used, though.
+	Changed fprintf(stderr, ...) to Warn() or Error(), as appropriate.
+
+	* src/misc.c: Added Warn(), Error().
+
+	* src/coldsync.h: Added abortive global_opts.log_fname. Changed
+	print_version() prototype. Added declarations for Warn(), Error().
+
+	* src/config.c: Added abortive "-l <logfile>" option. Not used,
+	though. print_version() now takes a file handle argument. Replaced
+	fprintf(stderr, ...) with Error() or Warn(), as appropriate.
+
+2001-01-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* configure.in: Added test for vfprintf().
+
+2001-01-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c: Cosmetic modifications.
+
+2000-12-31  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc: Added a comment. Made sure previous fix
+	was okay.
+
+2000-12-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc (bug fix): Fixed the logic for new records
+	from the Palm, to handle the pathological (but not unheard-of)
+	case of an archived or expunged, but not deleted, record. Also,
+	now does _something_ with new, deleted, non-archived, non-expunged
+	records, though it's probably not something very smart.
+
+2000-12-24  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* (almost everything): Added "typedef struct PConnection
+	PConnection". Removed the "struct" where possible.
+
+	* src/coldsync.c: forward_netsync() terminates when it fails to
+	read from or write to either PConnection.
+
+	- Version 1.6.3 released.
+
+	* src/config.c: Added 'hostaddrs', 'num_hostaddrs', 'hostname'.
+	Renamed get_hostid() to get_hostinfo(). Use gethostbyname2()
+	instead of gethostbyname(). Added sockaddr_len(), get_hostaddrs(),
+	free_hotaddrs(). Updated new_pda_block(), free_pda_block().
+
+	* src/coldsync.c: Added mkforw_addr(), forward_netsync(). Use
+	get_hostinfo() instead of get_hostid(). main() now has "done:"
+	label, to simplify termination. Added forwarding support in
+	run_mode_Standalone(). Added "to do" comments in run_mode_Init().
+	Connect() now uses the new PConn_bind(). Removed unused
+	find_max_speed(), since it's in PConnection_serial.c.
+
+	* src/parser.y: Added grammar for "forward:" lines in pda block.
+	Added opt_string.
+
+	* src/coldsync.h: Added forwarding-related fields to pda_block.
+	Added declaration of 'hostaddrs', 'num_hostaddrs',
+	get_hostaddrs(), free_hostaddrs(). Renamed get_hostid() to
+	get_hostinfo(). Added conditional declaration of snprintf(), for
+	systems that don't have it.
+
+	* libpconn/PConnection_usb.c: Added trivial udp_bind(), dummy
+	udp_connect().
+
+	* libpconn/PConnection_serial.c: Added trivial serial_bind(),
+	dummy serial_connect().
+
+	* libpconn/PConnection_net.c: Uncommented the remaining ritual
+	statements, since they're now used. Added net_bind(),
+	net_connect(). pconn_net_open() initializes io_bind, io_connect.
+	Moved bind() out of pconn_net_open() and into net_bind(). Cleaned
+	up some trace statements.
+	(bug fix): net_tcp_listen() read from and wrote to NULL instead of a
+	PConnection.
+
+	* libpconn/PConnection.c: new_PConnection() now initializes
+	io_bind and io_connect. PConn_bind just calls the io_bind method.
+
+	* libpconn/slp.c: slp_bind() now takes a const address.
+
+	* include/pconn/slp.h: Changed slp_bind() declaration to take a
+	const address.
+
+	* include/pconn/PConnection.h: Added io_bind, io_connect methods
+	to struct PConnection. This follows the socket API reasonably
+	closely. Changed PConn_bind() declaration.
+
+	* i18n/fr.po, i18n/de.po: Checking in latest version of strings,
+	on general principle.
+
+	* configure.in: Bumped up version number. Added HAVE_IPV6 (really
+	check for AF_INET6).
+
+	* config.h.in: Added HAVE_IPV6.
+
+2000-12-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/palm.h, src/palm.c: Added palm_netsync_hostaddr(),
+	palm_netsync_netmask().
+
+	* src/Makefile: Added "net_compat.c", "net_compat.h",
+	"ap_snprintf.c".
+
+	* src/GenericConduit.cc: Added a "to do" bug report.
+
+	* include/pconn/dlp_cmd.h: Minor cosmetic cleaning.
+
+	* i18n/Makefile: Added net_compat.c to list of files to check.
+	Removed FILES from distribution.
+
+	* configure.in: Cleaned up some comments. Added test for "long
+	long". Added tests for (struct sockaddr).sa_len, "struct
+	sockaddr6", inet_aton(), inet_ntoa(), inet_ntop(), net_pton(),
+	snprintf().
+
+	* config.h.in: Added checks for "long long", (struct
+	sockaddr).sa_len, "struct sockaddr6", snprintf(), inet_aton(),
+	inet_ntoa(), inet_ntop(), inet_pton(), gethostbyname2().
+
+	* README, AUTHORS: Added Apache Group, for snprintf().
+
+	* src/net_compat.h, src/net_compat.c (added): inet_ntop() and
+	inet_pton() for systems that don't have them.
+
+	* src/ap_snprintf.c (added): snprintf() from the Apache source.
+
+2000-12-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/fr.po, i18n/de.po: Checked in latest version of strings, on
+	general principle.
+
+	* i18n/Makefile: Got rid of dependency on file "FILES". Moved list
+	of files to Makefile, so that message catalogs are rebuilt only if
+	the source files have changed.
+
+	* i18n/FILES (deleted): the list of files has been moved to
+	Makefile, to avoid rebuilding catalogs unnecessarily.
+
+	* AUTHORS: Added list of "bundled" software included in the
+	distribution.
+
+	* doc/coldsync.8: Mention "-t net" option.
+
+	* src/config.c: Added "-t net" command-line option.
+
+	* libpconn/dlp_cmd.c (feature): DlpAddSyncLogEntry(): if the
+	message exceeds DLPC_MAXLOGLEN, keep only the end of it.
+
+	* include/pconn/dlp_cmd.h: Added DLPC_MAXLOGLEN.
+
+2000-12-17  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Rewrote section on listen blocks. Added mention
+	of "listen net". Mention ${prefix}/etc/coldsync.conf in passing.
+	Added reference to Linux Visor HOWTO.
+
+	* src/palm.c, src/misc.c, libpdb/pdb.c, libpconn/slp.c,
+	libpconn/PConnection_usb.c, libpconn/PConnection_net.c: Added some
+	casts for portability.
+
+	* libpconn/PConnection.c: If USB isn't enabled but user tries to
+	listen on a USB port, print an error message to that effect,
+	rather than complaining about "unknown listen type"
+
+	* i18n/Makefile: Use INSTALL_I18N to determine whether message
+	catalogs should be installed or not.
+
+	* configure.in: Redid --with(out)-usb : it now checks to see
+	whether it's possible to build with USB support, so 'configure'
+	should do the Right Thing by default.
+
+	* README: Rewrote section on internationalization. Updated
+	compatibility notes.
+
+	* Make.rules.in: Added INSTALL_I18N, to determine whether message
+	catalogs should be installed or not.
+
+	* AUTHORS: Added UCBerkeley, for cfmakeraw().
+
+	* configure.in: Install i18n stuff if possible. To this end, added
+	INSTALL_I18N variable for Makefiles. Make sure 'makeinfo' is the
+	GNU program of that name. Changed AC_CHECK_PROG to AC_CHECK_PROGS
+	so that error message is more intuitive when the program can't be
+	found ("checking for foo... true" is misleading). Fixed typo.
+
+	* libpconn/PConnection_net.c: Look up ports in /etc/services;
+	default to NETSYNC_*_PORT if not found. Changed listen() backlog
+	to 1. Hopefully this doesn't suck. Cleaned up some trace
+	statements.
+
+	* libpconn/PConnection_usb.c: Print descriptive message if can't
+	open the USB device.
+
+	* libpconn/PConnection_serial.c: Print descriptive message if
+	can't open the serial device.
+
+2000-12-16  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/lexer.l (portability): Cast malloc()'s return value to the
+	proper type.
+
+	* src/config.c: Removed unreached statement, to make some
+	compilers shut up.
+
+	* src/coldsync.c: Fixed lint comment.
+
+	* libpconn/PConnection_net.c (portability): Cast args to
+	recvfrom() and sendto() to (char *) to make compiler shut up under
+	Solaris.
+
+	* configure.in (portability): Added check for GNU libintl; added
+	EXTRA_MSGFMT_ARGS; added check for socklen_t.
+
+	* config.h.in: Added check for socklen_t, since Solaris doesn't
+	define it.
+
+	* aclocal.m4: Added CS_CHECK_GNU, CS_CHECK_GNU_PROGS,
+	CS_CHECK_TYPE.
+
+	* Make.rules.in (Portability): Added EXTRA_MSGFMT_ARGS, to allow
+	or disallow GNU-specific arguments to 'msgfmt', as appropriate.
+
+	* src/coldsync.c: Initialize a variable to make gcc happy.
+
+	* src/palm.c, src/misc.c, libpdb/pdb.c, libpconn/slp.c
+	(portability): Use bzero() rather than memset().
+
+	* configure.in: Added check for bzero() and memset().
+
+	* config.h.in: Check for the existence of bzero() and memset().
+	Define bzero() in terms of memset(), if necessary.
+
+	* src/parser.y, src/lexer.l: Added "forward" keyword, for NetSync
+	forwarding.
+
+	* src/coldsync.c: Added "done:" label in main(), for cleaning up.
+	On abnormal termination, jump to that label. Avoids certain memory
+	leaks.
+
+	* libpconn/slp.c, libpconn/dlp.c: Sanity: when free()ing pointers,
+	set them to NULL afterwards, to avoid double free()ing.
+
+	* libpconn/PConnection_serial.c: Check the file descriptor before
+	tcdrain()ing it.
+
+	* libpconn/PConnection.c: new_PConnection() no longer calls
+	PConnClose on abnormal termination. This avoids problems with
+	double free()ing, since the pconn_*_open() functions also clean up
+	after themselves.
+
+	* src/config.c (bug fix): Plugged memory leak.
+
+2000-12-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.6.2 released.
+
+	* libpconn/PConnection_serial.c: Got rid of io_setspeed. Renamed
+	serial_setspeed() to setspeed(), since it's only used for serial
+	connections.
+
+	* libpconn/PConnection_net.c, libpconn/PConnection_usb.c,
+	libpconn/PConnection.c, include/pconn/PConnection.h: Got rid of
+	io_setspeed.
+
+	* src/lexer.l: Plugged memory leak.
+
+	* src/lexer.l: Ugly hack to make compilation work with memory leak
+	detection.
+
+	* src/misc.c, find-leaks, config.h.in: Added leak-detection
+	support for calloc(), strdup().
+
+2000-12-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.6.1 released.
+
+	* libpconn/padp.c, libpconn/netsync.c, libpconn/dlp.c,
+	libpconn/PConnection_usb.c, libpconn/PConnection_serial.c,
+	libpconn/PConnection_net.c: Added error-checking.
+
+	* include/pconn/PConnection.h: Removed unused ver_maj, ver_min
+	fields.
+
+	* libpconn/PConnection.c: new_PConnection() initializes the common
+	part of 'struct PConnection'.
+
+	* src/palm.c: Added some trace statements.
+
+	* src/coldsync.c: Removed remnants of speeds[] and other
+	development cruft.
+
+	* src/Makefile: Added experimental 'manifest' target.
+
+	* libpconn/netsync.c: Removed extraneous #includes. Removed global
+	variables used for development. Added bump_xid().
+
+	* libpconn/cmp.c: Added some trace statements.
+
+	* libpconn/PConnection_usb.c: pconn_usb_open() cleans up after
+	itself if initialization fails.
+
+	* libpconn/PConnection_serial.c: Added find_available_speeds(),
+	bps_entry(). Added 'usable' initializers to speeds[]. Cleaned up
+	serial_accept(). pconn_serial_open() cleans up after itself
+	(though this may interfere with destructors). pconn_serial_open()
+	now finds the speeds at which the serial port can run.
+
+	* libpconn/PConnection_net.c: Got rid of ugly global variables and
+	other development cruft. net_udp_listen(),
+	net_acknowledge_wakeup() now take extra sockaddr_in arguments.
+
+	* include/pconn/padp.h, libpconn/padp.c: padp_write()'s 'len'
+	argument is now const. Yay!
+
+	* include/pconn/Makefile: Added "netsync.h" to distribution.
+
+	* i18n/FILES: Added newly-added files, as well as a few others
+	that fell through the cracks.
+
+2000-12-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.6.0 released.
+
+	* libpconn/PConnection_usb.c (bug fix): If pconn_usb_open()
+	aborted, its private data got freed twice.
+
+	* libpconn/PConnection_serial.c (bug fix): If user gave a speed of
+	0, serial_accept() complained that it couldn't set the requested
+	speed.
+
+	* src/config.c: Added "net" debugging facility.
+
+	* src/coldsync.c: Added initialization for net_trace.
+
+	* libpconn/netsync.c: net_trace initialized to a sane value of 0.
+
+	* libpconn/cmp.c: Include i18n header. Added cmp_accept(), to
+	negotiate CMP connection.
+
+	* libpconn/PConnection_usb.c: Trimmed usb_accept() down to just
+	the USB-specific parts. usb_close() is static again.
+
+	* libpconn/PConnection_serial.c: Added 'usable' field to the
+	speeds[] struct. Moved CMP negotiations from serial_accept() into
+	cmp_accept().
+	(bug fix): a stray assignment prevented default speed from working.
+
+	* libpconn/PConnection_net.c: net_close() is static again. Added
+	some casts, to make the compiler happy.
+
+	* libpconn/PConnection.c: Removed declarations for
+	<protocol>_close() (they're private, anyway). new_PConnection()
+	uses PConnClose() to clean up afterwards. PConnClose() is more
+	paranoid: doesn't assume that the methods were set.
+
+	* include/pconn/cmp.h: Added declaration for cmp_accept().
+
+	* include/pconn/PConnection.h: Added declaration for net_trace.
+	Removed declaration for PConnSetSpeed (OBE).
+
+	* doc/coldsync.8: Added mention of "net" debugging facility.
+
+2000-12-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Commented out the speed table, since it's now in
+	PConnection_serial.c . Eviscerated Connect(), since most of what
+	it did was serial/USB-specific; replaced this with a call to
+	(*pconn->io_accept)().
+	Commented out find_max_speed(), since it was never used, and was
+	causing compilation problems. Added, then commented out,
+	net_listen(), an experimental NetSync function.
+
+	* libpconn/padp.c: Initialize PConnection->dlp.{read,write} to
+	point to padp_{read,write}().
+
+	* libpconn/netsync.c (added): Code for dealing with NetSync
+	communications.
+
+	* libpconn/dlp_rpc.c, libpconn/dlp.c: Took out references to PADP.
+	Now uses PConnection->dlp.read and PConnection->dlp.write to send
+	the formatted DLP packet to the Palm.
+
+	* libpconn/PConnection_usb.c: Added usb_accept(), with much of the
+	code from Connect(). Added <protocol>_tini() calls to usb_close().
+	Added <protocol>_init() calls to pconn_usb_open().
+
+	* libpconn/PConnection_serial.c: Moved the table of speeds from
+	"src/coldsync.c" to here, since it logically belongs here. Added
+	serial_accept(), which has taken over most of what Connect() used
+	to do. Added <protocol>_tini() calls to serial_close(). Added
+	<protocol>_init() calls to pconn_serial_open().
+
+	* libpconn/PConnection_net.c (added): Support for NetSync.
+
+	* libpconn/PConnection.c: Moved the <protocol>_init() calls out of
+	new_PConnection() and into pconn_<protocol>_open(), and moved the
+	<protocol>_tini() calls into <protocol>_close(), since the
+	protocol stack varies by connection type. Took out the generic
+	cleanup code after the switch, for the same reason. Added support
+	for LISTEN_NET.
+
+	* libpconn/Makefile: Added netsync.c, PConnection_net.c to
+	sources.
+
+	* include/pconn/pconn.h: Added <pconn/netsync.h>.
+
+	* include/pconn/netsync.h (added): Useful definitions for NetSync
+	protocol.
+
+	* include/pconn/PConnection.h: Added io_accept method to
+	PConnection, since different connection types get to where you can
+	send DLP requests differently. PConnection.dlp now has 'read' and
+	'write' methods that indicate how to send DLP requests, since
+	NetSync doesn't use PADP/SLP. Added 'net' section to Pconnection,
+	for NetSync.
+
+	* configure.in: Added some "to do" comments.
+
+2000-12-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.5.5 released.
+
+	* src/misc.c: Added wrappers for malloc(), realloc(), and free(),
+	for primitive memory leak detection.
+
+	* find-leaks (added): Primitive memory leak detector.
+
+	* configure.in: Added support for primitive memory leak detection.
+	Moved the developer-only options to the end. Added a section
+	header for the developer-only options, for "configure --help".
+
+	* config.h.in: Added support for primitive memory leak detection.
+
+	* Makefile: Added "find-leaks" to distribution.
+
+	* src/log.c: Initialize synclog to NULL.
+
+	* src/coldsync.c (bug fix): Plugged a memory leak: the sync log
+	didn't get freed.
+
+	* src/backup.c (bug fix): Plugged a memory leak: backup() didn't
+	free the downloaded PDB.
+
+	* libpdb/pdb.c (bug fix): plugged some memory leaks. Added
+	new_Resource().
+
+	* src/restore.c: Added a useful trace statement.
+
+	* src/backup.c (bug fix): If couldn't download database, error
+	didn't get logged correctly.
+
+	* src/palm.c (bug fix): Due to an off-by-one error, palm_nextdb()
+	didn't return the last database, so it never got synced (or backed
+	up, or whatever).
+
+2000-12-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Use CMP_VER_* constants.
+
+	* include/pconn/dlp.h: Added constants specifying DLP version.
+
+	* include/pconn/cmp.h: Added constants specifying CMP version.
+
+	* doc/coldsync.8: Document the fact that "speed: 0;" makes
+	ColdSync use whatever the Palm suggests.
+
+	* src/coldsync.c (feature): If the .coldsyncrc doesn't specify a
+	speed, go with what the Palm suggests.
+
+	* src/lexer.l: Confirmed hack.
+
+	* src/parser.y: Added new listen type "net".
+
+	* src/lexer.l: Added keywords "net" and "network".
+
+	* src/config.c: Functions used only in this file are now static.
+	Added get_hostid().
+
+	* src/coldsync.h: Rearranged function declarations, to make it
+	easier to find them in source files.
+
+	* src/coldsync.c (bug fix): get this host's hostid, so as to know
+	whether to do a slow or fast sync. The functions that are only
+	used inside coldsync.c are now static.
+
+	* include/pconn/PConnection.h: Renamed LISTEN_TCP to LISTEN_NET,
+	since NetSync also uses UDP.
+
+2000-12-01  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* Make.rules.in: Added a portability comment.
+
+2000-11-27  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.5.4 released.
+
+	* conduits/std-categories (bug fix): close the database when it's
+	done.
+
+	* src/backup.c (bug fix): backup() didn't DlpCloseDB() the
+	database when it was done.
+
+	* src/coldsync.c (bug fix): Check pref_cache before freeing it,
+	lest segmentation violations occur. Got rid of load_palm_config().
+	run_mode_Standalone() now performs those functions differently.
+	run_mode_Standalone() checks username and userid on Palm to make
+	sure they're sane. The run_mode_*() functions no longer worry
+	about freeing pref_cache: it's a global variable, so let main()
+	worry about it. run_mode_Backup() now prints an error message when
+	it fails. D'oh! The part of run_mode_Init() that prints the pda{}
+	block now moved into print_pda_block().
+
+	* src/coldsync.h: Removed load_palm_config() declaration. Fixed
+	find_pda_block() declaration. Added print_pda_block() declaration.
+
+	* src/config.c: Added print_pda_block(). Added 'check_user' option
+	to find_pda_block(). Got rid of load_palm_config(): it was too
+	confusing, and its reason for existence wasn't clear.
+
+	* libpconn/padp.c: Fixed an ugly hack (with a goto, but hey).
+
+	* i18n/fr.po: Updated some strings.
+
+	* doc/coldsync.8: Rewrote section on Bargle Bug in light of Init
+	mode. Mention that you shouldn't run ColdSync as root. More detail
+	on Visors' serial numbers. "Bad CRC" messages under Linux are due
+	to a Linux bug, and are therefore a limitation (not a bug) as far
+	as ColdSync goes.
+
+	* src/backup.c: Added error-checking.
+
+	* libpconn/padp.c: Increased robustness: in several cases, where
+	the old version would simply give up, the new version ignores the
+	offending packet, or retries. In the case of unexpected data
+	packets, sends a dummy ACK to get the Palm to shut up.
+
+2000-11-25  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/padp.c (bug fix): select() modifies its 'timeout'
+	argument on some architectures, hence it must be set before each
+	call to select(), and cannot be factored out of a while(){
+	select() } loop. Put it back in. Fix submitted by Christian Kirsch
+	<ck@held.mind.de>.
+
+2000-11-24  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/install.c: mkfname() and friends no longer return a volatile
+	value. Fixed some misleading error messages.
+
+	* src/config.c: Split off the part of load_palm_config() that
+	creates the backup directories (~/.palm etc.) into its own
+	function: make_sync_dirs().
+
+	* src/coldsync.c: Initialize pref_cache to NULL.
+
+	* src/coldsync.h: Added declaration for make_sync_dirs().
+
+	* src/misc.c, src/conduit.c, src/coldsync.h, src/backup.c,
+	src/archive.c, src/GenericConduit.cc: mkfname() and friends no
+	longer return a volatile value.
+
+2000-11-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/std-categories: Rewritten from scratch. Might actually
+	work this time.
+
+	* include/pconn/dlp_cmd.h: Updated comment: official word from
+	Palm is that the viewer ID is not used.
+
+	* src/coldsync.c (bug fix): Fixed off-by-one error causing
+	username to not be NUL-terminated. Added sync log for (successful)
+	initialization mode.
+
+2000-11-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/std-categories: Rewritten from scratch. About to be
+	rewritten again.
+
+2000-11-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.5.3 released.
+
+	* src/parser.y: Added support for pda_block.userid_given.
+
+	* src/palm.h: Added declarations for the new functions.
+
+	* src/palm.c (bug fix): fetch_userinfo() didn't update
+	have_userinfo_. Added palm_username(), palm_userid(),
+	palm_viewerid().
+
+	* src/config.c: load_config() now always calls get_userinfo(), not
+	just when no config file was specified. This is because
+	information about the current user is rather useful in other
+	cases. Removed remains of Install mode. Added Init mode. Updated
+	usage message. Added find_pda_block(). Update new_pda_block() to
+	initialize new field userid_given.
+
+	* src/coldsync.h: Removed remains of Install mode. Added Init
+	mode. Got rid of some archaic global variables. Added declarations
+	for find_pda_block(), load_palm_config().
+
+	* src/coldsync.c: Removed remains of Install mode. (feature) Added
+	Init mode.
+
+	* libpconn/PConnection_serial.c: That annoying sleep() is now only
+	under FreeBSD.
+
+	* doc/coldsync.8: Added description of Init mode.
+
+	* include/pconn/dlp_cmd.h: Made a string const.
+
+	* i18n/fr.po: Translated some strings.
+
+	* src/archive.c, src/backup.c, src/conduit.c, src/install.c:
+	Update for new volatileness.
+
+	* src/coldsync.h: Added declaration for mkfname(). All other
+	filename-building functions now return a volatile value.
+
+	* src/misc.c: Added mkfname(). All other filename-making functions
+	now use it, directly or indirectly, and now return a volatile
+	value.
+
+	* src/GenericConduit.cc: Replaced stat() with exists(). Cast away
+	the new volatileness of various functions' return values.
+
+2000-11-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/install.c: Removed an unused variable.
+
+	* src/conduit.c: Re-added fpurge(), on general principle.
+
+	* config.h.in: Added test for fpurge(), and redefine it if it
+	doesn't exist.
+
+	* configure.in: Added test for fpurge().
+
+2000-11-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/restore.c: Removed some old code to test whether a file to
+	be restored is a file: it's broken and unnecessary.
+
+	* src/install.c: Use is_database_name(), instead of doing it
+	manually.
+
+	* src/config.c: Removed get_config().
+
+	* src/coldsync.c: Removed the pre-mode version of main().
+
+	* src/misc.c,src/coldsync.h, src/backup.c: Renamed mkfname() to
+	mkpdbname().
+
+	* src/palm.c (bug fix) Stupid typo.
+
+	* src/coldsync.h: Moved the LISTEN_* constants to
+	include/pconn/PConnection.h .
+
+	* libpconn/PConnection.c: Removed inclusion of ColdSync header
+	file. Moved a trace statement from MISC_TRACE to IO_TRACE.
+
+	* include/pconn/PConnection.h: Moved the LISTEN_* constants here,
+	to help remove libpconn's dependency on coldsync.
+
+	- Version 1.5.2 released.
+
+	* src/coldsync.c: Removed global variable 'palm'; all run_mode_*()
+	functions now have their own 'struct Palm *'. They now use the
+	'struct Palm' accessor functions, rather than accessing it
+	directly. Consequently, removed a bunch of unnecessary code. Moved
+	various functions elsewhere: GetMemInfo() (now fetch_meminfo()),
+	ListDBs(), find_dbentry(), append_dbentry(). Got rid of
+	GetPalmInfo() (now split up into three functions in "palm.c"),
+	run_mode_Install() (no one seems to want it).
+
+	* src/palm.c: Fixed up some comments. Removed test to see if Palm
+	has more than one memory card: it doesn't work. ListDBs runs
+	fetch_meminfo() iff it's necessary. Moved (palm_)find_dbentry(),
+	(palm_)append_dbentry() from "coldsync.c". Added
+	palm_netsync_hostname().
+
+	* src/palm.h: Moved (palm_)find_dbentry(), (palm_)append_dbentry()
+	here. Added palm_netsync_hostname().
+
+	* src/restore.c: Minor changes.
+
+	* src/install.c: Use 'struct Palm' accessors, instead of accessing
+	it directly. find_dbentry() renamed to palm_find_dbentry().
+	append_dbentry() renamed to palm_append_dbentry(). Fixed
+	indentation.
+
+	* src/config.c: Use 'struct Palm' accessors, instead of accessing
+	it directly.
+
+	* src/conduit.h, src/conduit.c: run_conduits(), run_conduit(),
+	run_*_conduits() now take a const dbinfo 'cos hey, it seems to
+	work.
+
+	* src/coldsync.h: Moved 'struct Palm' and various related function
+	declarations to "palm.h".
+
+	* src/backup.c: Use 'struct Palm' accessors, instead of accessing
+	it directly.
+
+	* src/palm.c (added) Functions for the 'struct Palm' Proxy.
+
+	* src/palm.h (added) Declarations for the 'struct Palm' Proxy.
+
+	* src/Makefile: Added "palm.c" and "palm.h".
+
+2000-11-17  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: "Synopsis" section is shorter and hopefully
+	clearer, but not as complete. Updated "Options" section to include
+	mode options. "-b" and "-r" are now officially deprecated.
+	"Description" section rewritten. Updated "Overview" section wrt
+	Install conduits. Added mention of Install conduits where
+	applicable. Added description of conduit arguments in conduit
+	blocks. Minor stylistic changes.
+
+2000-11-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+	
+	- Version 1.5.1 released.
+
+	Incorporated J.D. Smith's patch for install conduits:
+
+	* src/coldsync.c: Added support for Install conduits.
+	run_mode_Standalone() now runs Install conduits. Added convenience
+	function dbinfo_fill().
+
+	* src/parser.y: Added support for Install conduits.
+
+	* src/misc.c: Added mkinstfname() function. Arensb: added
+	is_database_name() function.
+
+	* src/lexer.l: Added "install" keyword, for Install conduits.
+
+	* src/config.c: Fixed a couple of debugging statements to support
+	Install conduits.
+
+	* src/conduit.h: Added declaration for run_Install_conduits().
+
+	* src/conduit.c: Added run_Install_conduits(), and support for it
+	throughout.
+
+	* src/coldsync.h: Added Install mode. Added prototypes for
+	NextInstallFile(), mkinstfname(), is_database_name(),
+	dbinfo_fill().
+
+	* perl/ColdSync/ColdSync.pm: Added support for Install conduits.
+
+	* libpdb/pdb.c: Made pdb_LoadHeader() externally visible.
+
+	* include/pdb.h: Added declaration for pdb_LoadHeader().
+
+	END
+
+	* src/coldsync.c: Added, then commented out, run_mode_Install().
+	Not sure if it's useful. Fixed run_mode_*() to return rather than
+	exit().
+
+	* src/restore.c: restore_dir() now uses is_database_name().
+
+	* src/misc.c: Added is_database_name() function.
+
+	* src/install.c: Added (and commented out) first draft of
+	install_file(). Changed InstallNewFiles() to use
+	is_database_name().
+
+2000-11-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/install.c, libpconn/PConnection.c, doc/coldsync.8: Added a
+	"to do" comment.
+
+	* src/Makefile, perl/Makefile, libpdb/Makefile, libpconn/Makefile,
+	include/pconn/Makefile, include/Makefile, i18n/Makefile,
+	doc/Makefile, conduits/Makefile: Added magic Emacs lines.
+
+2000-11-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Massive reorganization: tore out main() and
+	rewrote it from scratch. Each mode has its own run_mode_*()
+	function, for modularity. Currently supported modes are
+	Standalone, Backup, and Restore. Renamed 'config' to
+	'sync_config'. Moved a common trace statement to ListDBs(), to
+	avoid excessive duplication. Replaced stat() calls with exists()
+	and friends. For now, took out the bits that update the user name
+	and ID. Init mode will handle this.
+
+	* src/config.c: Big reorganization: 'config' renamed to
+	'sync_config'; new_config() renamed to new_sync_config();
+	free_config() renamed to free_sync_config(). New global variable:
+	'conf_fname': holds pathname to user's config file. get_config()
+	eliminated, and most of its functionality moved to load_config().
+	stat() calls replaced by exists() and friends. Several global
+	variables moved to 'global_opts'. Added parse_args(), to parse
+	command-line arguments. Added load_config(), to read a config file
+	(.coldsyncrc).
+
+	* src/restore.c: Restore() eliminated. Its functionality is now
+	split up between restore_file() and restore_dir().
+
+	* src/conduit.c: Global variable 'config' renamed to
+	'sync_config'.
+
+	* src/coldsync.h: Site-wide config file is now
+	"/etc/coldsync.conf" instead of "/etc/coldsync.rc" 'struct config'
+	renamed to 'struct sync_config', and its purpose clarified
+	somewhat. 'sync_config' allocated at run-time, so that it can be
+	freed properly. More anal prototypes: "type func()" -> "type
+	func(void)". 'parse_config()' renamed to 'parse_config_file()'.
+	run_mode_*() now take argc, argv arguments. Got rid of Restore()
+	in favor of new functions restore_file() and restore_dir().
+	get_config() eliminated in favor of load_config().
+
+	* src/backup.c: full_backup() now takes a directory name as an
+	argument, instead of looking in global options.
+
+	* src/parser.y: Renamed parse_config() to parse_config_file().
+
+	* src/GenericConduit.hh: More anal prototypes: type func() -> type
+	func(void)
+
+2000-10-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.5.0 released.
+
+	* src/misc.c: Added exists(), lexists(), is_file(),
+	is_directory().
+
+	* src/coldsync.h: Added some fields to cmd_opts (global_opts):
+	conf_fname, conf_fname_given, devname, devtype. Added declarations
+	for new functions.
+
+2000-10-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: Removed references to sys_maxfds in comments,
+	since it doesn't exist anymore.
+
+	* src/config.c: Removed sys_maxfds, get_maxfds(), since they
+	aren't used.
+
+	* src/coldsync.h: Removed sys_maxfds, since it isn't used.
+
+	* config.h.in: Removed HAVE_SYSCONF, since it isn't used.
+
+	* configure.in: Removed test for sysconf(), since it isn't used.
+
+	* src/config.c: Added "-m<mode>" option. Use it to determine what
+	the program as a whole will do. Warn if user uses "-b <dir>" or
+	"-r <dir>". Moved set_debug_level(), usage(), print_version()
+	here. Added set_mode().
+
+	* src/coldsync.h: Redefined run mode; moved it out of 'config' and
+	into 'global_opts'. Added declaration of set_mode().
+
+2000-09-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Minor string cleaning. Added trace statement for
+	run mode. Moved set_debug_level(), usage(), print_version() to
+	config.c, where they make more sense.
+
+2000-09-28  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.4.6 released
+
+2000-09-27  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Updated by Philipp Hahn's patch.
+
+	* i18n/fr.po: Updated by Philipp Hahn's patch.
+
+	* i18n/de.po: Incorporated translations by Philipp Matthias Hahn.
+
+	* i18n/de.po: Latest version of strings, before applying patch.
+
+	* README: Added a blurb about Windows NT.
+
+	* conduits/todo-text: Cleaned up documentation a bit.
+
+	* AUTHORS: Added author. Removed CVS conflict marker.
+
+	* perl/ColdSync/ColdSync.pm (bug fix): Declared some variables so
+	that Perl wouldn't complain about unknown variables.
+	(bug fix): Test to see whether there are any references before blindly
+	assigning them. Rearranged some of the prefrence-related code.
+
+	* conduits/send-mail: Applied Philipp Hahn's patch: Added an
+	argument to allow the user to use a category name other than
+	"Outbox", for non-English Palms.
+	(bug fix) Fixed a bogus error message.
+
+2000-09-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.4.5 released (stable).
+
+	* i18n/fr.po: Added \n to some strings.
+
+	* src/config.c (bug fix): If the user specified an invalid option
+	on the command line, ColdSync would print the wrong option in its
+	error message.
+
+2000-09-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/sample.coldsync.rc: Repeat that "listen usb" only makes
+	sense under FreeBSD right now. Mention that Visors don't have
+	useful serial numbers. Added mention of sync conduits,
+	"[generic]", and preferences.
+
+	* conduits/Makefile: Moved 'std-categories' to where it won't be
+	installed. Added 'memo-text' to distribution.
+
+	* conduits/std-categories: Lots of playing around. Mainly,
+	commented out previous generation of experiments.
+
+2000-09-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/fr.po: Incorporated Nicolas Bouthors's translations.
+
+	* libpconn/slp.c: Added some trace statements.
+
+	* doc/coldsync.8: Added bug.
+
+	* conduits/todo-text (bug fix): Updated to use new category
+	structure.
+
+	* perl/ColdSync/ColdSync.pm: Initialize a variable to make Perl
+	shut up.
+
+	* src/GenericConduit.cc (bug fix): "-F" option now forces a fast
+	sync, even if ColdSync would otherwise attempt a slow sync.
+
+2000-09-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c (bug fix): Dumped core if a conduit block didn't
+	contain a "path:" element.
+
+2000-09-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/ColdSync.pm (feature): "-config" caught up with
+	ColdSync: instead of printing a separate conduit block for each
+	flavor/type combination, combines the supported flavors into one
+	string (e.g., "conduit fetch,dump"). Prints multiple "type:" lines
+	if the conduit supports multiple types.
+
+2000-09-17  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c: Fixed misspelling of __GNUC__.
+
+	* Renamed "src/handledb.c" to "src/misc.c", since it no longer
+	contains handledb().
+
+	* src/Makefile: Changed "handledb.c" to "misc.c", its new name.
+
+	* i18n/FILES: Renamed "src/handledb.c" to "src/misc.c". Get
+	strings from "src/lex.yy.c", since 'xgettext' can't parse lex
+	files.
+
+	* i18n/fr.po: Latest version of strings. Added/fixed some
+	translations.
+
+	* i18n/de.po: Latest version of strings. Attempted some
+	translations.
+
+	* src/conduit.c: Added check for file descriptor leak in
+	run_conduit(). Made certain arguments to run_*Conduit() 'const'.
+	run_conduit() returns valid status on error, not -1. Added other
+	error-checking. If run_conduit() aborts, it kills the conduit
+	before cleaning up.
+	(bug fix): Ensure that built-in conduits aren't run with flavors that
+	they don't support.
+	(bug fix); spawn_conduit() doesn't just exit() if something goes wrong.
+	Added cleanup code to spawn_conduit() for when things go wrong.
+	Added some trace statements.
+
+	* src/config.c: Added declarations of everything related to
+	getopt(), in hopes that that'll make things run properly under
+	Windows NT.
+
+	* src/coldsync.c: Added some error-checking.
+
+	* src/GenericConduit.cc: Added some error-checking.
+
+	* perl/ColdSync/ColdSync/SPC.pm: Changed $VERSION so that it can
+	be collated both numerically and as a string.
+
+	* perl/ColdSync/ColdSync.pm: Changed $VERSION so that it can be
+	collated both numerically and as a string. Added 'use vars'.
+	(bug fix): setup of %PREFERENCES used the wrong variable (I
+	think). Fixed.
+
+	* include/pconn/padp.h: Removed declaration of padp_unget(), since
+	it's never going to exist.
+
+	* doc/coldsync.8: Added documentation for [generic] conduit. Added
+	some bugs.
+
+	* AUTHORS: Added contributor.
+
+2000-09-16  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c (bug fix): Don't read the two useless NULs, since
+	the spec allows but doesn't mandate them. Formerly, pdb_Load()
+	would reject certain well-formed PDBs.
+
+2000-09-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/log.c: Added a 'const', on general principle.
+
+	* src/handledb.c: Took out old declaration of
+	run_GenericConduit().
+
+	* src/coldsync.h: Added some 'const's, on general principle.
+
+	* src/backup.c: Added a 'const', on general principle.
+
+	* src/GenericConduit.hh: Made the _dbinfo protected member
+	'const', on general principle.
+
+	* src/GenericConduit.cc: Added a 'const', on general principle.
+
+2000-09-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.4.3 released
+
+	* src/conduit.c: Added support for built-in conduits: Added table
+	of built-in conduits. Added [dummy] conduit. Added
+	findConduitByName(). run_conduit() looks up the path in table of
+	built-in conduits and calls a function if found; otherwise, spawns
+	a conduit process, as before. Fixed some typos.
+
+	* src/GenericConduit.cc: run_GenericConduit() now takes a
+	conduit_block argument, so that it can look at the user's
+	arguments. GenericConduit::run() backs up resource databases if
+	there's no backup. Moved here from the now-obsolete HandleDB().
+
+	* src/GenericConduit.hh: run_GenericConduit() now takes a
+	conduit_block argument, so that it can look at the user's
+	arguments.
+
+	* src/coldsync.c: run_Sync_conduits() has assumed HandleDB()'s
+	functions, so only run run_Sync_conduits(), and not HandleDB().
+	Added another O_BINARY flag, for Windows.
+
+	* src/coldsync.h: Removed declaration of HandleDB(); it is now
+	obsolete.
+
+	* src/config.c: Before parsing the config file, adds a default
+	conduit, equivalent to running the built-in generic conduit if
+	nothing else is specified.
+
+	* src/handledb.c: Removed HandleDB(), as it is now obsolete.
+
+2000-09-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/ColdSync/SPC.pm: Added POD.
+
+	* configure.in: Fixed check for socketpair() to look in libsocket
+	if it's not in libc
+	(for Solaris).
+
+	* README: Updated OS notes for v1.4.2.
+	
+	* doc/conduits.texi: Added sections on SPC and Sync conduits.
+
+2000-09-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.4.2 released
+
+	* src/conduit.c: Make anal compilers shut up.
+
+	* doc/conduits.texi: Added mention of Sync conduits. Added
+	description of 'Preference' headers and data.
+
+	* doc/coldsync.8: Added mention of Sync conduits. Added
+	description of 'pref:' directives. Added LIMITATIONS section, for
+	bugs that aren't going to be fixed.
+
+	- Version 1.4.1 released
+
+	* configure.in: Added checks for <sys/param.h> and <netinet/in.h>.
+	Added check for O_BINARY, for open().
+
+	* config.h.in (portability): Added HAVE_O_BINARY for Windows;
+	define it for other platforms.
+	(portability): Check for both <sys/param.h> and <netinet/in.h>, since
+	Linux puts definitions of ntohs() and friends in the latter.
+
+	* libpconn/cfmakeraw.c (portability): Windows doesn't know about
+	PENDIN.
+
+	* src/coldsync.c (portability): Don't use mkstemp() under Windows:
+	it assumes text files.
+
+	* src/conduit.c: Try to include <sys/param.h> and <netinet/in.h>,
+	since different systems define ntohs() and friends in different
+	places. Change fdopen() calls to "rb", to open files in binary
+	mode under Windows.
+
+	* src/restore.c, src/install.c, src/backup.c, src/archive.c,
+	src/GenericConduit.cc, libpconn/PConnection_usb.c,
+	libpconn/PConnection_serial.c (portability): Open files with
+	O_BINARY, so it'll have a chance of working under Windows.
+
+	* src/spc.c (portability): Include <netinet/in.h>, since that's
+	where Linux hides ntohs() and friends.
+
+	- Version 1.4.0 released
+	
+	* perl/ColdSync/ColdSync/SPC.pm: Added a bit of POD.
+
+	* perl/ColdSync/ColdSync.pm: Fixed a rather bogus construction.
+
+	* src/conduit.c (portability): Replaced call to good but
+	unportable snprintf() with sprintf().
+	
+	* src/coldsync.c: Don't seed the preference cache if we're doing a
+	backup or a restore.
+
+	* src/coldsync.c (bug fix): 'pref_cache' was being freed too soon.
+	Added some trace statements.
+
+2000-09-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: In run_conduit(), pref_list is 'volatile' to make
+	gcc shut up. If conduit has no preferences, don't allocate a
+	pref_list of length 0.
+
+	* src/pref.c (bug fix): Fixed order of arguments to calloc().
+	(bug fix): Oops! Messed up data structure.
+
+	* libpconn/dlp.c: Fixed order of arguments to calloc().
+
+	* src/pref.c: Rewrote FindPrefItem() as a simple for-loop. Note:
+	if there are multiple preferences that match 'description', then
+	this version returns the first one. The previous version returned
+	the last one. Hopefully, this won't make a big difference.
+
+	* src/conduit.c: Fixed call to GetPrefItem().
+
+	* src/pref.c: Moved a #define out of pref.h to where it's actually
+	used (temporarily). Undid the previous change: several 'const'
+	arguments aren't const after all. FindPrefItem(), GetPrefItem() no
+	longer take a pass-by-value struct argument.
+
+	* src/pref.h: Moved a #define out of this .h file (where it has
+	multi-file scope) to where it's actually used (temporarily). Undid
+	the previous change: several 'const' arguments aren't const after
+	all.
+
+	* src/pref.c: Removed redundant declarations. Made arguments and
+	return values 'const' where possible.
+
+	* src/pref.h: Made arguments and return values 'const' where
+	possible.
+
+	* src/conduit.c: Made variables 'const' where possible.
+
+2000-09-01  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/pref.h, src/pref.c: Added copyright statement. Minor
+	cleaning and stylistic changes. Added some "to do" items.
+
+	* src/conduit.c: Minor cleaning and stylistic changes. Added some
+	"to do" items.
+
+	* src/coldsync.c: Some stylistic changes and minor cleaning.
+	Internationalized an error message.
+
+	* perl/ColdSync/ColdSync.pm: Rewrote the description of
+	%PREFERENCES in the POD. Some stylistic changes.
+	(bug fix): Fixed an off-by-one error in &ReadHeaders.
+
+	* AUTHORS: Added author.
+	
+2000-08-31  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Incorporated Sumant Oemrawsingh's preferences changes:
+
+	* src/pref.h (new): data structures and declarations related to
+	preferences.
+
+	* src/pref.c (new): functions related to preferences.
+
+	* src/conduit.c: run_conduit() now sends a list of preferences to
+	the conduit (in two parts: first the "declarations" as normal
+	headers, then the data after all the headers have been sent).
+
+	* src/coldsync.c: Added global variable 'pref_cache'. main()
+	creates and seeds preference cache, and frees it at the end.
+
+	* perl/ColdSync/ColdSync.pm: New exported variable %PREFERENCES.
+	&ReadHeaders now parses preferences passed on stdin.
+
+	* Makefile: Added "pref.c" and "pref.h" to the source and header
+	file lists.
+
+	End of Sumant Oemrawsingh's changes.
+
+2000-08-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/std-categories (new): Early draft of conduit to sync
+	standard category lists.
+
+	* conduits/Makefile: Added 'std-categories' to list of conduits in
+	distribution.
+
+2000-08-29  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* include/pconn/util.h: Pedantic patch: include <stdio.h> to catch
+	'FILE'. Patch supplied by Niklas Lundberg
+	<niklas.lundberg@cotraveller.com>.
+
+	* src/coldsync.c (feature?): If a conduit fails, continues anyway
+	instead of aborting.
+
+	* perl/ColdSync/ColdSync/SPC.pm: Exports all of the implemented
+	&dlp_* functions. &dlp_get_dbinfo gets database index and name.
+	(feature) Added &dlp_OpenDB, &dlp_CloseDB, &dlp_ReadAppBlock,
+	&dlp_WriteAppBlock. Added AUTHOR and BUGS section to the POD.
+
+	* include/pconn/slp.h: Added some comments, and pointer to Palm's
+	documentation.
+
+2000-08-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/send-mail: Fixed typo.
+
+	* AUTHORS: Added author.
+
+	* conduits/send-mail (feature): Body of message is wrapped. Patch
+	submitted by John Chia <john@ni.yi.org>
+
+2000-08-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/Makefile.PL: Overrode libscan method, to exclude
+	.bak files and such from distributions.
+
+	* perl/ColdSync/MANIFEST: Added ColdSync/SPC.pm to the
+	distribution. Added MANIFEST.SKIP, for completeness.
+
+	* perl/ColdSync/ColdSync.pm: Added copyright statement. Added SPC
+	initializer and finalizer for Sync conduits.
+
+	* libpconn/dlp.c (bug fix): Size bits got stripped off incorrectly
+	when reading long arguments in DLP return value.
+
+2000-08-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/ColdSync.pm: Added mention of "sync" flavor in
+	POD. Removed redundant check for mandatory header.
+
+	* i18n/fr.po: Updated some strings.
+
+	* src/conduit.c: run_conduits(), run_conduit() now take 'pconn'
+	argument. Fixed run_*_conduits() accordingly. run_conduit():
+	several variables are now 'volatile' to make gcc shut up.
+	(bug fix): doesn't hang on zero-length requests.
+
+	* src/spc.c: Added some standard headers. Added functions
+	pack_dlp_time(), pack_dbinfo(). spc_send() now takes 'pconn' and
+	'dbinfo' arguments. spc_send() now handles SPCOP_DBINFO and
+	SPCOP_DLPC requests (albeit without any firewall-like
+	error-checking).
+
+	* src/spc.h: Defined new SPCERR_NOMEM error code. spc_send() now
+	takes 'pconn' and 'dbinfo' arguments.
+
+	* src/conduit.h: run_Sync_conduits() now takes a 'pconn' argument.
+
+	* src/coldsync.c: New syntax for run_Sync_conduits() call. More
+	information in debugging statement.
+
+	* include/pconn/padp.h: padp_write() now takes a const buffer,
+	instead of a non-const one.
+
+	* src/handledb.c: Fixed calls to run_GenericConduit(): doesn't
+	require `palm' argument anymore.
+
+	* src/GenericConduit.cc, src/GenericConduit.hh: Got rid of unused
+	_palm member.
+
+	* FAQ: Added section on Bargle bug.
+
+2000-07-31  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.3.0 released. (Still unstable.)
+	
+	* src/conduit.c 
+	(feature): Added first-draft support for Sync conduits.
+	(feature): Added first-draft of support for SPC.
+	run_conduit() now takes 'with_spc' argument; fixed all functions
+	that call it.
+	run_conduit():
+	  System headers are now stored in an array that gets turned into
+	  a linked list. This allows us to append the user-supplied
+	  headers to the system ones, in a clever/semi-ugly hack.
+	  Create a socket pair (essentially, a portable two-way pipe) to
+	  talk to the child.
+	  (potential bug fix): Make sure SIGCHLD is blocked while
+	  constructing headers.
+	  Send "SPCPipe" header to child, with the SPC pipe's file
+	  descriptor as its value.
+	  Main loop pretty much redone from scratch. Now includes a state
+	  machine for handling SPC requests.
+	sigchld_handler() saves and restores 'errno'.
+
+	* src/spc.c (added): SPC (Serialized Procedure Call) functions.
+
+	* src/spc.h (added): SPC declarations and such.
+
+	* src/Makefile: Added spc.c, spc.h to the package.
+
+	* perl/ColdSync/ColdSync.pm: Added `use Palm::PDB;'. Dunno why it
+	wasn't already there.
+	(feature): Added first draft of support for Sync conduits.
+
+	* doc/Makefile: Removed referenced to "pdb.texi", since it's no
+	longer part of the distribution.
+
+	* configure.in: Added check for socketpair(). Fixed a typo.
+	Complain if rename() or strncpy() could not be found.
+
+	* FAQ: Clarified the problem with reading the Visor's serial
+	number.
+
+	* conduits/send-mail: Exit with 502 status, not 202, if can't run
+	sendmail.
+
+2000-07-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/sample.coldsync.rc: Updated to use colons where necessary.
+	Added some missing semicolons.
+
+	* doc/pdb.texi: Deleted, since Palm have finally gotten their act
+	together and put up an official description of PDB files at
+	http://www.palmos.com/dev/tech/docs/fileformats.zip
+
+2000-07-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.8 released
+
+	* AUTHORS: Added contributor.
+	* conduits/Makefile (bug fix): Make sure ${MAN1DIR} exists before
+	installing to it.
+
+	* src/conduit.c (bug fix): Removed calls fpurge(), since it isn't
+	portable.
+
+	(Patches contributed by Hollis Blanchard <hollis@amulet.co.jp>)
+
+2000-07-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: Added format_header() for convenience, to create
+	a properly-formatted header. The process of sending headers to a
+	conduit is much more robust. Use poll_fd() instead of polling file
+	descriptor manually.
+
+2000-07-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c (bug fix): Fixed stupid bug in block_sigchld().
+	Added poll_fd(), for convenience. run_conduit(): Reorganized the
+	way the standard headers are sent. Make sure the headers conform
+	to the spec. Instead of just pumping headers at the child, check
+	its status. This should make things more robust.
+
+2000-07-12  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: Added block_sigchld(), unblock_sigchld(), to
+	encapsulate those actions.
+
+2000-07-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.7 released
+
+	* src/parser.y: conduit_block now contains a dynamically-allocated
+	array of creator/type pairs. Added a warning if a conduit_block
+	doesn't contain any such pairs.
+
+	* src/config.c: conduit_block now contains a dynamically-allocated
+	array of creator/type pairs.
+
+	* src/conduit.c (feature) run_conduits() now checks array of
+	creator/type pairs in conduit block, instead of just one pair.
+	Added crea_type_matches() function.
+
+	* src/coldsync.h: Replaced single creator/type pair in
+	conduit_type with an array.
+
+	* doc/coldsync.8: Added mention that you can have multiple `type:'
+	lines in .coldsyncrc . Minor housecleaning.
+
+2000-07-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.6 released
+
+	* src/conduit.c: Got rid of cond_sendline() and cond_sendheader(),
+	in favor of good old fprintf(). `conduit_pid' is now volatile, for
+	robustness. run_conduit() now uses a half-baked list of headers,
+	rather than sending each one manually. Also, doesn't check for
+	conduit output while sending headers (yet). run_conduit() now
+	split up into two sections: one while the conduit is running,
+	which blocks on child output, and one that doesn't, for after the
+	child exits. run_conduit() discards all unsent I/O to and from the
+	child before closing file descriptors. Critical section in
+	spawn_conduit() now protected against interrupts that might come
+	up at the wrong moment. Clarified error message in
+	sigchld_handler().
+
+2000-07-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: Use sigsetjmp()/siglongjmp() in SIGCHLD handler
+	to return to run_conduit() immediately as soon as conduit exits.
+	Explicitly initialize 'fromchild' and 'tochild' to NULL, for
+	robustness. Now run_conduit(), rather than run_conduits(), sets
+	the SIGCHLD handler. Simplified cond_sendline() somewhat. Added
+	sanity check to cond_readline().
+
+2000-07-01  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.h: Got rid of init_conduits(), tini_conduits().
+	Added run_Sync_conduits() declaration.
+
+	* src/coldsync.c: Got rid of init_conduits(), tini_conduits().
+	Added experimental run_Sync_conduits() call.
+
+	* README: Added information about Solaris.
+
+	* src/conduit.c: Got rid of unused init_conduits(),
+	tini_conduits(). Added run_Sync_conduits(). Minor housecleaning.
+
+2000-06-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.5 released
+
+	* src/coldsync.c (bug fix): Added reserve_fd(), to reserve file
+	descriptors 0-2, which avoids potential problems later on, if
+	std{in,out,err} were initially closed.
+
+2000-06-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.4 released
+
+	* src/GenericConduit.cc (bug fix): a record's category is now
+	considered part of the record. Now, if the category changes on the
+	Palm, it changes on the desktop as well.
+	(bug fix): generic conduit archived the wrong record sometimes: if
+	you modified a record on the Palm, then deleted and archived it,
+	the desktop's version would wind up in the archive. Fixed. Fixed a
+	case where generic conduit didn't use the compare_rec() method to
+	compare records.
+	Cosmetic changes.
+
+	* FAQ: Added mention of Visor serial number.
+
+	* doc/coldsync.8: Added mention of Visor serial number bug to BUGS
+	section.
+
+	* src/conduit.c (bug fix): don't close child's stdin and stdout.
+	Let dup2() handle it. Fixes a bug whereby dump conduits don't get
+	run if stdin is closed. Fixed a typo.
+
+2000-06-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc: Fixed a bunch of error messages to
+	indicate which record they're talking about.
+
+	- Version 1.2.3 released
+
+	* src/parser.y: Conduit blocks can now contain "preference:
+	cccc/123;" lines.
+
+	* src/parser.h: Added LEX_ID4, for 4-character identifiers.
+
+	* src/lexer.l: Added ID4 start state, for 4-character identifiers.
+	Added keywords "preference", "pref", "saved", "unsaved".
+
+	* src/config.c: Fixed various `conduit_block'-related functions to
+	deal with the preference list. Added append_pref_desc().
+
+	* src/coldsync.h: Added `struct pref_desc', to describe
+	preferences. `conduit_block' now contains an array of `struct
+	pref_desc's, listing the preferences that this conduit cares
+	about.
+
+2000-06-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.2 released
+
+	* i18n/fr.po, i18n/de.po: Latest version of messages.
+
+	* src/parser.y, src/config.c, src/conduit.c, src/coldsync.h:
+	Renamed 'the_q' to 'conduits'.
+	
+	* src/parser.y: Removed INSTALL, UNINSTALL from list of known
+	tokens.
+
+	* src/lexer.l: "install" and "uninstall" flavors no longer used.
+
+	* src/parser.y: `flavor' token type obsoleted. Conduit block now
+	takes comma-separated list of conduit flavors. 'conduit_flavor'
+	rule renamed to 'flavor'. "install" and "uninstall" flavors no
+	longer recognized.
+
+	* src/config.c: Fixed get_config() new_config(), free_config(), to
+	work with only one conduit queue instead of five.
+	new_conduit_block() now works with bitmap of conduit flavors.
+
+	* src/conduit.c: Tweaked run_conduits() to work with only one
+	conduit queue. Fixed run_Fetch_conduits() and run_Dump_conduits()
+	accordingly.
+
+	* src/coldsync.h: Got rid of obsolete ConduitFunc, conduit_flavor
+	types. `conduit_block' can now handle any number of flavors,
+	rather than just one. `struct config' now only has one master
+	queue of conduits, rather than five.
+
+	* doc/sample.coldsync.rc: Updated an example to use conduit flavor
+	lists.
+
+	* doc/coldsync.8: Documented the fact that you can now use lists
+	of conduit flavors.
+
+2000-06-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* README: Took out the bit about mktemp() causing a warning.
+
+	* src/GenericConduit.cc: Use open_tempfile() instead of mktemp().
+
+	* src/coldsync.c: Added open_tempfile(): wrapper for opening
+	unique files (this is to shut the compiler up under FreeBSD).
+
+	* src/coldsync.h: Added declaration for open_tempfile().
+
+	- Version 1.2.1 released
+
+	* src/config.c, src/coldsync.c: Got rid of redundant (global)
+	variable 'user_uid'. Use 'userinfo.uid' instead.
+
+	* config.h.in: Added HAVE_MKSTEMP.
+
+	* configure.in: Added test for mkstemp().
+
+	* doc/coldsync.8: Use a better serial number in the example. Added
+	mention of 'username' and 'userid' statements in PDA block.
+
+	* src/parser.y: Added "userid" and "username" fields to PDA block.
+	Numbers are now 'long' instead of 'int', just in case there are
+	still compilers out there where 'int' == 'short'.
+
+	* src/lexer.l: Added "userid" and "username" keywords. Numbers are
+	now 'long' instead of 'int', just in case there are still
+	compilers out there where 'int' == 'short'.
+
+	* src/config.c: Connection speed is now a long, instead of an int.
+	(feature): PDA block can now override default username and userid.
+
+	* src/coldsync.h: Connection speed is now a long instead of an
+	int.
+	(feature) PDA block now contains username and userid fields, so users
+	can override the defaults.
+
+	* src/coldsync.c: Connection speed is now a long, just in case
+	there are still compilers out there where 'int' == 'short'.
+	((mis?)Feature): If the userid on the Palm isn't what we think it
+	should be, update it.
+	* include/pconn/PConnection.h: PConnection.speed is now a long.
+
+	* HACKING: Added a bit about modifying structs.
+
+2000-05-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 1.2.0 released
+
+	* conduits/Makefile: Changed POD2MAN to POD2MAN_EXE, to avoid
+	problems with Perl-generated Makefiles.
+
+	* Make.rules.in: Changed POD2MAN to POD2MAN_EXE, to avoid problems
+	with Perl-generated Makefiles.
+
+2000-05-25  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/fr.po: Latest version of strings. Updated a bunch of
+	translations.
+
+	* conduits/todo-text: Small addition to documentation.
+
+	* conduits/Makefile: Split conduits up by interpreter. 'make
+	manifypods' generates man pages from Perl pods. 'make install'
+	mungs the #! line. 'make clean' cleans up generated man pages.
+	Install man pages for conduits.
+
+	* configure.in: Added checks for 'sed' and 'pod2man'.
+
+	* Make.rules.in: Added POD2MAN, SED, MAN1DIR, for installing man
+	pages and pods.
+
+2000-05-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y: Use HAVE_LIBINTL_H rather than HAVE_LIBINTL to
+	decide whether to include <libintl.h>
+	(bug fix) Fixed a type bug.
+
+	* src/lexer.l: Use HAVE_LIBINTL_H rather than HAVE_LIBINTL to
+	decide whether to include <libintl.h> Added manual declaration of
+	strdup(), for Linux.
+	* src/coldsync.c: Use HAVE_LIBINTL_H rather than HAVE_LIBINTL to
+	decide whether to include <libintl.h> Use HAVE_GETTEXT rather than
+	HAVE_LIBINTL to decide whether to run setlocale().
+
+	* src/Makefile: Added bison files to list of files to delete
+	during 'make clean'.
+
+	* src/restore.c, src/log.c, src/install.c, src/handledb.c,
+	src/config.c, src/conduit.c, src/backup.c, src/archive.c,
+	src/GenericConduit.cc, libpdb/pdb.c, libpconn/slp.c,
+	libpconn/palm_errno.c, libpconn/padp.c, libpconn/dlp_rpc.c,
+	libpconn/dlp_cmd.c, libpconn/dlp.c, libpconn/PConnection_usb.c,
+	libpconn/PConnection_serial.c, libpconn/PConnection.c: Use
+	HAVE_LIBINTL_H rather than HAVE_LIBINTL to decide whether to
+	include <libintl.h>
+
+	* configure.in: Redhat 6.2 has gettext() and friends in libc.
+	Hence, `configure' now checks separately for gettext(1),
+	<libintl.h>, the libintl library, and gettext(3) (in both libintl
+	and libc).
+
+	* config.h.in: Separated gettext into HAVE_GETTEXT and
+	HAVE_LIBINTL. Now uses HAVE_GETTEXT (whether the function exists)
+	to decide whether to use I18N, rather than HAVE_LIBINTL (whether
+	the library exists).
+
+	* FAQ: Expanded a bit on IR syncing.
+
+2000-05-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y (feature): Now warns when the config file redefines
+	various fields.
+
+	* doc/coldsync.8: Added another example debugging level. Updated
+	all examples to use soon-to-be-mandatory colons, and avoid
+	unnecessary quoting. Added section on quoting. Added tip for IR
+	syncing. Removed old, deleted section.
+
+	* configure.in: 'lex' no longer supported. Requires 'flex'.
+
+	* src/parser.y: In `type cccc/tttt;' statements, the colon is now
+	optional. The name of a PDA may be unquoted.
+
+	* src/parser.y: Conduit headers are parsed more sensibly: as a
+	series of individual tokens, rather than as a single line that
+	must match a regular expression. Got rid of HEADER_PAIR (and its
+	associated types and entry in the %union) and NAME tokens.
+	Extensive use of lex start states to figure out which tokens to
+	look for.
+	(feature) Lots more error-checking, even if it doesn't quite work in
+	all cases.
+
+	* src/parser.h: Redefined lex start state macros. Got rid of
+	obsolete `start_header' declaration.
+
+	* src/lexer.l: Rearranged start states: ERROR no longer exists;
+	HEADER now only refers to header names; added BSTRING (unquoted
+	"bareword" string), and CTPAIR (creator/type pair). Conduit
+	headers are now parsed sensibly, instead of monolithically, a full
+	line at a time. Unquoted header/creator pairs are now only
+	recognized as such if we're looking for them. Defined KEYWORD(k)
+	macro for quick and easy debugging. Decided to use the WORD rule
+	at the end after all, for error-reporting.
+
+	* src/config.c: Print conduit flags in config file summary.
+
+	* src/Makefile: Added "parser.output" to list of things to delete.
+	Added manual dependencies for lex/yacc-generated files.
+
+	* src/lexer.l {HID} character class obsoleted, replaced by {ID}.
+	"name" keyword obsoleted.
+
+	* src/parser.y (feature): Vastly improved error-reporting.
+	(syntax change): Colons are now recommended after all directives.
+	They will become mandatory at some point. "name" directive in
+	conduit blocks is no longer supported.
+
+	Version 1.1.10 released
+
+	* src/parser.y, src/coldsync.c: Cast argument of toupper() to int,
+	so compiler will shut up under DU.
+
+	* perl/ColdSync/Makefile.PL: Added a backward-compatibility
+	message.
+
+2000-05-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* Make.rules.in: Oops! Restored previous distdir-building
+	behavior.
+
+	* i18n/fr.po, i18n/de.po: Latest set of strings.
+
+	* src/parser.y: Use lex_expect() instead of start_header. Some
+	progress toward better error-detection. All punctuation characters
+	now have a rule of their own for this.
+
+	* src/parser.h: Added declaration for lex_expect(), and symbols
+	for start states.
+
+	* src/lexer.l: Replaced `start_header' variable with more generic
+	lex_expect() function. Baby steps toward improving error-detection
+	and -reporting.
+
+	* src/Makefile: Use 'mkinstalldirs' to create installation
+	directories.
+
+	* perl/ColdSync/Makefile.PL (feature): Now allows one to specify
+	different run-time and install-time PREFIXes.
+
+	* perl/ColdSync/ColdSync.pm: DumpConfig() handles wildcard types
+	and creators correctly now.
+
+	* i18n/Makefile: Use 'mkinstalldirs' to create installation
+	directories.
+
+	* doc/sample.coldsync.rc (added): A bunch of configuration
+	examples.
+
+	* doc/coldsync.8: Changed a comment. I'm not sure why.
+
+	* doc/Makefile: Added sample.coldsync.rc to distribution. It gets
+	installed now, too. Make sure directories exist before installing
+	stuff in them.
+
+	* conduits/Makefile: Use 'mkinstalldirs' to create installation
+	directories.
+
+	* configure.in: Specify $PREFIX when building the Perl Makefile.
+
+	* Makefile: Use 'mkinstalldirs' to create installation
+	directories. Added 'mkinstalldirs' to the distribution.
+
+	* Make.rules.in: Use 'mkinstalldirs' to create installation
+	directories. Tweaked INSTALL_SCRIPT to avoid giving options twice.
+
+	* INSTALL: Added lots of specific installation instructions.
+
+	* FAQ: Fixed thinko.
+
+	* mkinstalldirs (added): The standard "mkdir -p" replacement.
+
+2000-05-17  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc (bug fix): Don't reset sync flags on open
+	databases, since it causes the Palm to reset (guru).
+
+	* libpconn/dlp_cmd.c (bug fix): Fixed a buffer overflow.
+
+2000-05-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c: Added warning when writing zero-length records.
+	Explanation of why they're not shot on sight.
+
+	* config.h.in: Tweaked preprocessor games to make things compile
+	cleanly on non-Linux machines. Johnny C. Lam <lamj@stat.cmu.edu>
+
+2000-05-07  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y (bug fix): When conduit type is specified with
+	double-quoted strings, the creator and type weren't being set
+	correctly. (Dirk-Willem van Gulik <dirkx@covalent.net>).
+
+2000-05-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.9 released.
+
+	* src/parser.y (feature): Conduit block may now contain
+	user-supplied headers.
+	(feature): PDA block may now have an (optional) name.
+
+	* src/parser.h: First draft of magic to recognize user-supplied
+	headers.
+
+	* src/lexer.l: First cut of magic to distinguish between
+	predefined keywords and arbitrary strings that just happen to look
+	like reserved words. First cut at recognizing user-supplied
+	headers. Added character classes for identifiers. Added
+	"arguments" keyword. Added rule for recognizing standalone
+	identifier. Not sure why.
+
+	* src/cs_error.h (added): ColdSync error codes and such.
+
+	* src/config.c: Conduit blocks now contain user-supplied headers.
+	Ctor and dtor now deal with this. PDA blocks can specify a name.
+	Ctor and dtor deal with this. Print user-supplied headers when
+	debugging.
+
+	* src/conduit.h: Header names can now only be 31 characters long,
+	to allow for terminating NUL.
+
+	* src/conduit.c (feature): Conduit block with no path is
+	equivalent to ignoring the database. Mainly useful for specifying
+	default or final conduits.
+	(feature): Send user-supplied header lines to conduit.
+	(feature): `final' conduits work as advertised.
+
+	* src/coldsync.h: Added type for conduit header-value pairs.
+	`pda_block' now includes a name.
+
+	* src/coldsync.c (feature): If a conduit fails, try to figure out
+	why. If the sync was cancelled by the user, abort. Fixed
+	compile-time warning under Solaris.
+
+	* src/Makefile: Added cs_error.h to distribution. Removed unneeded
+	${PROG}.
+
+	* perl/ColdSync/ColdSync.pm: Added @HEADERS, for cases where order
+	matters.
+	(feature): <conduit> -config now prints the default headers.
+	(bug fix): Header names may now include dashes.
+	Removed unnecessary quoting.
+
+	* libpdb/pdb.c: Hack to avoid uploading zero-length records (which
+	oughtn't exist in the first place).
+	* libpconn/padp.c: Dump PADP ACK packets correctly when debugging.
+
+	* doc/conduits.texi: Fixed bug in example conduit.
+
+	* doc/coldsync.8: Added "overview" section, for newbies, and got
+	rid of the ponderous "conduits and syncing" section. Description
+	of "pda" directive now mentions PDA names. Description of
+	"default" and "final" flags for conduits. "Files" section updated.
+
+	* conduits/todo-text (added): Conduit for converting to do lists
+	to/from plain text files.
+
+	* conduits/send-mail: Removed unnecessary quoting.
+
+	* conduits/memo-text (added): Conduit for converting memos to/from
+	text format.
+
+	* conduits/Makefile (added) Makefile for conduits subdirectory.
+
+	* configure.in: Require automake version 2.13 or higher.
+
+	* Makefile: Added 'conduits' to list of subdirectories. Added FAQ
+	to distribution.
+
+	* Make.rules.in: Added CONDUITDIR. Pass along 'prefix' and
+	'PREFIX' to makes in subdirectories, so that user can install with
+	a prefix different from the one ColdSync was built with.
+
+	* FAQ (added) Frequently (and not-so-frequently) asked questions.
+
+2000-05-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c (bug fix): split record attribute when there was no
+	need to do so.
+
+	* (bug fix): records in the 8th category are no longer seen as
+	deleted and archived.
+
+	* src/GenericConduit.cc: Use "cs_error.h" instead of "error.h".
+	'struct pdb_record' now has separate fields for flags and
+	category.
+
+	* libpdb/pdb.c: The single-byte "attributes" field in a PDB record
+	is now split into separate "flags" and "category" fields. The pdb
+	functions split and merge these fields when necessary.
+
+	* include/pdb.h: Split the single "attributes" PDB record field
+	into "flags" and "category", to simplify the code that uses it.
+
+	* config.h.in: Uncommented "inline".
+
+	* configure.in: Moved pedantic-compilation checking back to the
+	beginning, since "inline" is illegal with -ansi, but you can use
+	"__inline__".
+
+2000-05-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* configure.in: Moved pedantic compiler flags to the end, so that
+	checks that fail with pedantic compilation won't. Reinstated test
+	for `inline' Added "--disable-pedantic" configure option.
+
+2000-04-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/send-mail (added). Conduit to send Palm Mail messages.
+
+2000-04-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc: Better error handling: detect when user
+	has cancelled sync on Palm.
+
+2000-04-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Added description of 'speed' directive. Added
+	description of pda { } blocks. Suggested a workaround for the
+	Bargle bug. Removed description of a bug, since it's no longer
+	true.
+
+	Version 1.1.8 released.
+
+	* i18n/de.po: Translated a string. New serial-number-related
+	strings have appeared.
+
+	* src/config.c: Rearranged tests when looking for a pda_block: a
+	pda_block that specifies a serial number can also be a default. It
+	doesn't automatically match.
+
+	* src/GenericConduit.cc: Changed capitalization of some strings,
+	for translators' benefit.
+
+	* i18n/fr.po: Translated latest strings.
+
+	* src/parser.y: .coldsyncrc can now contain pda { } or palm { }
+	blocks to describe individual devices by serial number, and
+	specify a directory to sync them with.
+	* src/lexer.l: Added pda_block-related keywords.
+
+	* src/config.c: Main and user configurations now include list of
+	'pda_block's, to describe individual PDAs. Added various functions
+	to allocate and free pda_blocks, and manage the configuration
+	sanely.
+
+	* src/coldsync.c: ROM serial number checksum is now a plain
+	character, rather than a ubyte. So there. Serial number checksum
+	calculation is now in a separate function.
+
+	* src/coldsync.h: ROM serial number is now a string of signed
+	chars. So there. Configuration now includes a list of
+	'pda_block's, for users (or sites) who have more than one PDA.
+
+2000-04-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.7 released.
+
+	* src/log.c (bug fix): Log didn't get initialized properly.
+	Cleaned up sucky code.
+
+	* configure.in: Incremented patch-level number.
+
+	* src/conduit.c: Rearranged order of arguments to run_conduits();
+	seems more sensible this way. Added run_conduit() function, which
+	runs a single conduit; putting this a separate function makes
+	default conduits possible. Default conduits seem to work now.
+
+	* src/coldsync.c: Added 19200 to list of allowable connection
+	speeds. Reads the serial number from Palm's ROM, if possible. User
+	can now specify connection speed in .coldsyncrc .
+
+	* src/install.c: Pay attention to the "force install" flag.
+
+	* src/coldsync.h: Added fields for ROM serial number to 'struct
+	Palm'.
+
+	* src/Makefile: Fixed "include" statement to use ${TOP} instead of
+	hard-wired path.
+
+	* src/GenericConduit.cc: SlowSync: moved 'remoterec' down to where
+	it's used.
+	(bug fix): Deleting a record in the remote database would break
+	iteration over that database. Fixed a possibly erroneous error
+	message.
+
+	* perl/ColdSync/Makefile.PL: Replaced a godawful hack with a
+	slightly less ugly one.
+
+	* perl/Makefile: Fixed ${TOP}. Came up with a slightly less ugly
+	hack to clean up Perl-generated Makefile.
+	* libpconn/dlp_rpc.c (added). Functions for RPC over DLP.
+
+	* libpconn/Makefile: Added "dlp_rpc.c" to list of source files.
+
+	* include/pconn/slp.h: Removed old prototype.
+
+	* include/pconn/pconn.h: Added "dlp_rpc.h" to the standard
+	includes.
+
+	* include/pconn/dlp_rpc.h (added). Declarations and such for RPC
+	over DLP.
+
+	* include/pconn/Makefile: Added "dlp_rpc.h".
+
+	* i18n/fr.po: Brought up to date with v1.1.7, mostly.
+
+	* i18n/de.po: Latest update from Christian Kirsch.
+
+	* i18n/Makefile: Added a "to do" comment.
+
+	* README: Updated FreeBSD section for v1.1.7.
+
+	* Makefile: Added NEWS file to distribution.
+
+	* Make.rules.in: Added ${PERL} variable.
+
+	* AUTHORS: Added more contributors.
+
+	Version 1.1.6 released.
+
+	* src/GenericConduit.cc (bug fix): Fixed a bunch of lingering
+	"cerr <<" statements.
+
+2000-04-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.5 released.
+
+	* GenericConduit.cc (bug fix): Records deleted locally didn't get
+	deleted on the Palm. Fix by Ward Vandewege
+	<ward@penguinpowered.com>. Fixed some typos.
+
+2000-03-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/restore.c: Check flags on database being uploaded: if it's
+	open, don't overwrite it unless it also has OKNEWER set.
+
+	* include/pconn/PConnection.h: Added `pconn_direction' type to
+	replace "forReading" and "forWriting" cpp macros.
+
+	* libpconn/PConnection_usb.c, libpconn/PConnection_serial.c: Fixed
+	to use `pconn_direction'.
+
+	* src/coldsync.h: Added 'force_install' global option flag, for
+	"-I" option.
+
+	* src/config.c, doc/coldsync.8: Added "-I" option.
+
+	* perl/ColdSync/Makefile.PL: Ugly hack to make 'make clean' not
+	delete the Makefile.
+
+2000-03-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* configure.in: Made GNU 'gettext' the official supported version.
+	Fixed a bug on machines that happen not to have GNU gettext.
+
+2000-03-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* README: Clarified i18n.
+
+	* libpconn/dlp_cmd.c: Removed lingering traces of ppack(),
+	punpack().
+
+	* libpconn/padp.c: Added header magic to include the appropriate
+	headers to memcpy() works correctly.
+
+	* src/GenericConduit.cc: Added to an XXX comment.
+
+	* i18n/fr.po: Incorporated Jorge's changes. Got rid of some
+	obsolete entries.
+
+	* i18n/de.po (added) German translation.
+
+	* i18n/.cvsignore: Added. Ignore .mo files.
+
+	* AUTHORS: Added more contributors.
+
+2000-03-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/Makefile: Added German .po file.
+
+	* i18n/FILES: Took out obsolete src/pack.c file.
+
+2000-02-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.4 (bug fix) released.
+
+	* libpdb/pdb.c (bug fix): sanity check gone horribly wrong.
+
+2000-02-07  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.3 released.
+
+	* perl/Makefile: Oops! Forgot to remove "ColdSync.pm" from
+	distribution.
+
+	* libpdb/pdb.c: Added some sanity checks and trace statements.
+
+2000-02-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/ColdSync.pm: &DumpConfig prints creator/type pair
+	without quotes.
+
+	* doc/conduits.texi: Changed preferred notation for creator/type
+	pairs to not have quotes.
+
+	* doc/coldsync.8: Changed preferred notation for creator/type
+	pairs to not have quotes.
+
+	* src/parser.y: Conduit creator/type pair moved into its own rule.
+	Accepts either two strings and a slash, or a single creator/type
+	pair token (defined in "lexer.l")
+
+	* src/parser.h: Added type for creator-type pair.
+
+	* src/lexer.l (feature) Can now specify creator-type pairs without
+	quotes all over the place. Added PARSE_TRACE.
+
+	* src/conduit.c (feature) "final" conduit keyword now works. Added
+	sketch for "default" keyword.
+
+	* configure.in: Create the Perl Makefile(s) as part of the
+	configuration process.
+
+	* src/restore.c, src/install.c, src/coldsync.c: Removed the
+	str(n)casecmp() compatibility macros, since they're now in
+	"config.h".
+
+	* src/coldsync.c: Added "-t" option to usage string.
+
+	* config.h.in: Moved the str(n)casecmp() compatibility cpp macros
+	into here, so they're not duplicated all over the place.
+
+	* src/config.c, doc/coldsync.8: "-t" option now takes a string as
+	its argument.
+
+	* src/coldsync.h: Removed a few unused types.
+
+	* perl/ColdSync/MANIFEST.SKIP (added): Stuff that isn't part of
+	the distribution, but Perl shouldn't gripe about.
+
+	Moved ColdSync perl module into its own directory.
+
+	* perl/ColdSync/test.pl, perl/ColdSync/Makefile.PL,
+	perl/ColdSync/MANIFEST (added): Added as part of standard Perl
+	module.
+
+	* perl/ColdSync/ColdSync.pm (moved from previous location)
+
+	* perl/Makefile: Moved the real ColdSync module stuff under its
+	own directory. Added ${SUBDIRS} to reflect this.
+	* i18n/Makefile: (bug fix) Shouldn't barf if i18n isn't turned on.
+
+	* configure.in (bug fix) I18n stuff should now work if you don't
+	have i18n enabled.
+
+	(feature) Added embryonic i18n support (details below).
+
+	* i18n/Makefile: Added the usual things to ${CLEAN}.
+
+	* Makefile: Added "TAGS" to ${CLEAN}.
+
+	* i18n/fr.po (added) French translation of ColdSync messages.
+
+	* i18n/README (added) Draft README.
+
+	* i18n/Makefile (added) Makefile for building catalogs of
+	translatable strings.
+
+	* i18n/GLOSSARY.fr (added) Tentative glossary to help
+	English-to-French translators.
+
+	* i18n/FILES (added) List of files in which to look for
+	translatable strings.
+
+	* Make.rules.in: Added i18n-related variables and rules.
+
+	* Makefile: Added "i18n" to list of subdirectories.
+
+	* README: Added a note on internationalization.
+
+	* config.h.in: Added N_() macro for internationalizable strings
+	that shouldn't be translated immediately.
+
+	* configure.in: Fixed check for static_cast<> to work under egcs.
+	Fixed i18n to work when it's turned off.
+
+	* libpconn/PConnection_usb.c: Fixed some internationalized
+	strings. Left something outside of the outermost #if block so gcc
+	won't complain about empty source files.
+
+	* libpconn/palm_errno.c: Internationalized error message strings.
+
+	* libpdb/pdb.c: Fixed some i18n-ed strings.
+
+	* src/GenericConduit.cc: Converted from C++-style "cout << foo" to
+	C-style fprintf() throughout. Added internationalization.
+
+	* src/coldsync.c: Tweaked "io" debugging facility.
+
+	* src/Makefile: Fixed stupid typo.
+
+	* src/conduit.c: Fixed error message to make sense.
+
+2000-02-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/Makefile, libpdb/Makefile, doc/Makefile, Makefile: Makefiles
+	now use "OBJS = ${SRCS:.c=.o}"-like constructs, since it appears
+	to be portable.
+	
+2000-02-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* configure.in: Rearranged tests so that the C++-related tests are
+	all together.
+
+2000-02-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Incorporated Louis Mamakos's changes to 1.1.2:
+
+	<<<<< BEGIN
+
+	* libpconn/PConnection_usb.c: Lots of changes:
+	
+	- got actual documentation from Handspring on what their vendor
+	specific setup commands do. The biggest result of this is that we
+	now use a "portmapper" type mechanism to find the USB endpoint
+	that does the Hot Sync service, rather than just "knowing" that
+	it's 2.
+	
+	- Access the fields of the USB request using some accessor macros.
+	The data is in little endian order, so it just works now. But it
+	would have had problems on a big-endian CPU.
+	
+	- moved printing of the "Press HotSync button" message into the
+	device specific I/O functions. In the case of USB, this needs to
+	be pressed to cause the device to attach to the USB port. Before,
+	it would pring the message after you pushed the button.
+	
+	- reflect that the USB header file is installed in
+	/usr/include/dev/usb/usb.h now. I don't know if you want to use
+	this in the autoconf process or not.
+	
+	- picked up the string.h macros in PConnection_usb.c
+	
+	- cleaned up the error handling in the USB code to not just exit()
+	at the slightest provocation.
+	
+	- added an io_trace variable and IO_TRACE() macro to control
+	debugging in the USB code. This could also be used in the serial
+	code if you wanted to add I/O specific debugging messages there.
+	
+	- added a somewhat unsatisfactory way of specifing the device type
+	on the command line. E.g., you can now say -t 3 along with -p
+	/dev/ugen0 to indicate it's a USB device. Certainly you'd prefer
+	to say -t usb, but I'm not sure how to do this and keep the config
+	parser in sync.
+
+	* src/config.c: Added "io" debugging facility. Added "-t <type>"
+	command-line argument, to specify connection type.
+
+	* src/coldsync.c: new_PConnection() now takes argument specifying
+	whether to prompt the user. Added "io" debugging facility.
+
+	* libpconn/PConnection_serial.c: new_PConnection() now takes
+	argument specifying whether to prompt the user.
+
+	* PConnection.c: new_PConnection() now takes argument specifying
+	whether to prompt the user.
+
+	* include/pconn/PConnection.h: new_PConnection() now takes
+	argument specifying whether to prompt the user.
+
+	>>>>> END
+
+	* configure.in: Make sure C++ compiler understands 'bool'(!) and
+	new-style casts ("static_cast<int>(foo)").
+	Cosmetic changes.
+
+	* src/install.c (bug fix): Make the Palm log come out right when
+	installing a file that already exists in the backup directory.
+
+	* src/Makefile (bug fix): Fixed bogus arguments to 'install'.
+
+	* doc/conduits.texi: Fixed 'dir' title, to go along with what the
+	rest of the documentation says.
+
+	* perl/ColdSync.pm: New API: added &ConduitMain, &StartConduit,
+	&EndConduit. Added &DumpConfig, &ReadHeaders for convenience.
+	Added documentation. Added $VERSION, per CPAN. Renamed $pdb to
+	$PDB, and %headers to %HEADERS. The 'warn' and 'die' wrappers are
+	now set later on. &ReadHeaders now makes sure that mandatory
+	headers for each flavor are set.
+
+	* libpdb/pdb.c (bug): Zero-length records cause problems. Added a
+	mediocre workaround.
+
+	* include/pconn/Makefile: Added a ${HEADERS} variable.
+	* include/Makefile: Added a ${HEADERS} variable.
+	* doc/conduits.texi: Rewrote 'todo-dump' example with the new
+	ColdSync.pm module. Added 'pine-aliases' example. Status codes 301
+	and 501 are now in the spec.
+
+	* doc/Makefile (bug fix): Install man pages in ${MAN8DIR}, not the
+	top of the man tree. Duh. Added targets for various file formats.
+
+	* configure.in: Now finds 'perl'.
+
+	* Makefile: Added the 'tags' and 'TAGS' targets.
+
+	* Make.rules.in: Added MAN8DIR. Took out the ownership options to
+	the ${INSTALL_*} variables, since they screw things up in the *BSD
+	port. Added the 'tags' (and 'TAGS') targets, as recursive targets.
+
+	* src/handledb.c (bug fix): (mkfname) Characters with ASCII values
+	>= 128 in database names weren't getting escaped properly when
+	converted to filenames.
+
+	* src/coldsync.c (bug fix): Used to barf on "-dfac". Now this is
+	equivalent to "-dfac:1", just like the documentation says.
+
+	* src/lexer.l (configuration): Added "%option noyywrap", which
+	should make things compile cleanly with flex under Irix.
+
+2000-01-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/conduits.texi: Added `pine-aliases' two-way syncing
+	tutorial. Added a few .coldsyncrc examples. Fixed indentation for
+	a few paragraphs. Got rid of cartouches for long code listings,
+	since they screw up the page formatting in the printed manual.
+
+2000-01-27  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c (bug fix) Applied Pace Willisson's patch: fixed
+	bug where ColdSync wouldn't find the second and subsequent
+	conduits of the same flavor.
+
+	Version 1.1.2 released.
+
+	* src/handledb.c: Cast to avoid compiler warning.
+
+	* Make.rules.in (bug fix) Can't have comments at the end of the
+	line. They get interpreted as part of the macro.
+
+	* src/Makefile, doc/Makefile: Added 'install::' target.
+
+	* Make.rules.in: Added rules for installing.
+
+	* libpdb/Makefile, libpconn/Makefile: Added comment saying why
+	'make install' doesn't do anything.
+
+	* doc/coldsync.8: Added `WARNINGS' section, to make the Bargle Bug
+	more obvious. Updated, clarified `BUGS' section.
+
+	* src/handledb.c (bug fix) If the database being synced is a
+	resource database, and there's no backup of it, make on. This
+	isn't perfect, but it means that all of your applications get
+	backed up at some point.
+
+	* src/backup.c: Created a separate function to back up a single
+	database, and shuffled function names around a bit.
+
+2000-01-26  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.1.1 released.
+	
+	* src/GenericConduit.cc: Updated call to arch_create().
+
+	* src/archive.h: Fixed arch_create() declaration.
+
+	* src/archive.c: arch_create() no longer takes a filename
+	argument, but builds it from the database info. Use mkarchfname()
+	instead of building the archive filename by hand.
+
+	* src/install.c: When installing new files, now uses mkbakfname()
+	to check for an already-installed version in the backup directory,
+	rather than constructing the filename by hand.
+
+	* src/handledb.c: Added fname2dbname(), hex2int(). mkfname() now
+	uses isprint() rather than isgraph() for testing weird characters.
+	Escaped hex digits are now in upper case.
+
+	* src/coldsync.c: Use fname2dbname() when checking for files to
+	move to the Attic, instead of doing it by hand.
+	* src/coldsync.h: Added fname2dbname().
+
+	* config.h.in, configure.in: Check for memcpy(), strchr().
+	
+	* src/handledb.c: Added mkfname(), mkarchfname(). Fixed
+	mkbakfname() to use mkfname(). Now escapes weird characters in
+	file names.
+
+	* src/GenericConduit.cc: More rational use of mkbakfname().
+
+	* src/coldsync.h: Updated mkfname(), mkarchfname().
+
+	* src/coldsync.c: Moved the print_version() call to where it'll
+	actually get called. D'oh!
+
+	* src/backup.c: Use mkfname() instead of constructing backup file
+	name by hand.
+
+	* src/GenericConduit.cc: More trace statements. Use new
+	arch_open() call.
+
+	* src/archive.c: More trace statements.
+
+	* config.h.in: Added placeholder for `inline', in case that ever
+	becomes useful.
+
+	* README: Removed Y2K compliance bit, now that Y2K is past.
+	Updated notes for v1.1.0. Added mention of bug with
+	new+deleted+archived Memo records.
+
+	* src/archive.h: Updated arch_open() prototype.
+
+	* src/archive.c: Changed arch_open() to take a struct dlp_dbinfo
+	instead of a full pathname: in reality, we're not going to archive
+	to more than one place, and this allows us to use mkarchfname(),
+	which simplifies the caller code.
+
+	Version 1.1.0 released
+
+	* configure.in, Makefile, Make.rules.in: Due to inconsistencies
+	between `make's, can't have multiple levels of inclusion in
+	Makefiles. (That is, can't have "Makefile" include
+	"../Make.rules", which in turn includes "Make.vars"). So
+	"Make.rules" contains the variables as well, and is generated by
+	`configure'.
+
+	* Make.rules: renamed to "Make.rules.in".
+
+	* Make.rules: Merged the variables back in from "Make.vars".
+
+	* Make.rules: Fixed to work with Sun's 'sh'.
+
+	* perl/Makefile: Fixed `clean' target.
+
+	* libpconn/Makefile, libpdb/Makefile, include/pconn/Makefile,
+	include/Makefile, src/Makefile, perl/Makefile, doc/Makefile,
+	configure.in, Makefile, Make.vars.in, Make.rules: Redid the 'make'
+	structure: instead of having `configure' generate each Makefile,
+	individual Makefiles now "include Make.rules", which includes
+	Make.vars. In this scheme, only "Make.vars" is generated by
+	`configure'. The rules for building targets are kept in
+	"Make.rules", so it's easier to add or modify how things get
+	built.
+
+2000-01-25  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Incorporated changes from `usb' branch:
+
+	<<<<< USB
+
+	* src/log.c: Moved the log-related global variables here, and hid
+	two of them. Bug fix: Rewrote add_to_log() to fix a problem with
+	it not updating the log properly.
+
+	* src/coldsync.c: Moved the log-related variables to "log.c" and
+	made two of them 'static', to hide the ugliness.
+
+2000-01-24  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y: Allow specifying listen type: serial or usb.
+
+	* src/lexer.l: (Louis Mamakos) Added "usb" keyword.
+
+	* src/coldsync.h: (Louis Mamakos) Added LISTEN_USB listen type.
+
+	* src/coldsync.c: Fixed call to new_PConnection. Moved
+	serial-specific stuff out to PConnection*.c. 'coldsync -h' now
+	prints whether it was compiled with USB support or not.
+
+	* src/Makefile.in: Added extra dependencies for 'coldsync', so it
+	gets rebuilt when the libraries change.
+
+	* libpdb/Makefile.in: (Louis Mamakos) Fixed 'ar' flags.
+
+	* libpconn/slp.c: (Louis Mamakos) Fixed to use the PConnection
+	"virtual methods".
+
+	* libpconn/padp.c: (Louis Mamakos) Fixed to use the PConnection
+	"virtual methods".
+
+	* libpconn/cfmakeraw.c: Added #if !HAVE_CFMAKERAW block around
+	most of the file, so we don't have to play silly buggers in the
+	Makefiles.ins.
+
+	* libpconn/PConnection_usb.c (added): (Louis Mamakos) The USB part
+	of PConnection.
+
+	* libpconn/PConnection_serial.c (added): (Louis Mamakos) The
+	serial port part of PConnection.
+
+	* libpconn/PConnection.c: (Louis Mamakos) Fixed the PConnection
+	functions to use "virtual methods", depending on whether we're
+	listening to a serial or USB port.
+
+	* libpconn/Makefile.in: Got rid of the COMPAT* nonsense.
+	(Louis Mamakos) fixed the 'ar' flags.
+
+	* include/pconn/PConnection.h: (Louis Mamakos) Modified struct
+	PConnection to allow either serial or USB port connection.
+
+	* doc/coldsync.8: Describe USB listen blocks. Cosmetic changes.
+
+	* configure.in: Got rid of the COMPAT* abomination. Added
+	"--with-usb" option. Cosmetic changes.
+
+	* config.h.in: Added WITH_USB symbol.
+	* README: Added mention of Visor.
+
+	* AUTHORS: Added Louis Mamakos.
+
+	>>>>> USB
+
+	* src/coldsync.c: When running with -dmisc, print version and
+	features, so I'll know what people are using when they send me
+	stderr.
+
+	* src/Makefile.in: Don't strip executables when installing, for
+	debugging.
+
+	* perl/ColdSync.pm (added) Perl module to simplify writing
+	conduits.
+
+2000-01-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Version 1.0.1 released.
+
+	* src/GenericConduit.cc: Cosmetic changes.
+
+	* configure.in: Look for gethostbyname() in libsocket, as well as
+	libnsl (for UnixWare).
+
+	* src/coldsync.c: Debugging output goes to stderr, not stdout,
+	dammit! Print the program name and version when debugging, just
+	for completeness.
+
+	* libpdb/pdb.c: Debugging output goes to stderr, not stdout,
+	dammit!
+
+	* doc/conduits.texi: Fixed typo in tutorial script.
+
+	* doc/conduits.texi: Cosmetic changes to the HTML version.
+
+	* Makefile.in: Rotated ChangeLog file. Added ChangeLog.0 to the
+	distribution.
+
