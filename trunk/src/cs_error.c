@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.6 2002-09-29 12:40:33 azummo Exp $
+ * $Id: cs_error.c,v 2.7 2002-10-30 19:55:00 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -120,7 +120,7 @@ print_latest_dlp_error(PConnection *pconn)
 	dlp_stat_t err = dlp_latest_error(pconn);
  	
 	if (err != DLPSTAT_NOERR)
-		Error(_("DLP error: [%d] %s\n"),
+		Error(_("DLP error %d: %s."),
 			err,
 			dlp_strerror(err));
 }
