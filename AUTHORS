@@ -1,7 +1,7 @@
 <<<<<<< AUTHORS
-# $Id: AUTHORS,v 1.15 2000-09-17 21:18:05 arensb Exp $
+# $Id: AUTHORS,v 1.16 2000-09-21 15:45:16 arensb Exp $
 =======
-# $Id: AUTHORS,v 1.15 2000-09-17 21:18:05 arensb Exp $
+# $Id: AUTHORS,v 1.16 2000-09-21 15:45:16 arensb Exp $
 >>>>>>> 1.12.2.1
 
 Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
@@ -32,3 +32,4 @@ Patches and such:
 	John Chia <john@ni.yi.org>: Added text-wrap feature to 'send-mail'
 	Sumant S.R. Oemrawsingh <sikander@stad.dsl.nl>: Preferences.
 	Andreas J. Koenig <andreas.koenig@anima.de>: $VERSION in Perl.
+	John-David Smith <jdsmith@astro.cornell.edu>.
