@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.19 2001-07-09 10:36:35 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.20 2001-07-09 11:47:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -3546,7 +3546,8 @@ DlpReadNextRecInCategory(
 	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
-	struct dlp_readrecret *record)	/* The record will be returned here */
+	struct dlp_recinfo *recinfo,	/* Record description returned here */
+	const ubyte **data)		/* Record data returned here */
 {
 	int i;
 	int err;
@@ -3609,12 +3610,12 @@ DlpReadNextRecInCategory(
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadNextRecInCategory_Rec:
-			record->recid = get_udword(&rptr);
+			record->id = get_udword(&rptr);
 			record->index = get_uword(&rptr);
 			record->size = get_uword(&rptr);
 			record->attributes = get_ubyte(&rptr);
 			record->category = get_ubyte(&rptr);
-			record->data = rptr;
+			*data = rptr;
 
 			DLPC_TRACE(6)
 			{
@@ -3622,7 +3623,7 @@ DlpReadNextRecInCategory(
 					"Read record in category %d:\n",
 					category);
 				fprintf(stderr, "\tID == 0x%08lx\n",
-					record->recid);
+					record->id);
 				fprintf(stderr, "\tindex == 0x%04x\n",
 					record->index);
 				fprintf(stderr, "\tsize == 0x%04x\n",
@@ -3655,7 +3656,8 @@ DlpReadNextModifiedRecInCategory(
 	PConnection *pconn,		/* Connection to Palm */
 	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
-	struct dlp_readrecret *record)	/* The record will be returned here */
+	struct dlp_recinfo *recinfo,	/* Record description returned here */
+	const ubyte **data)		/* Record data returned here */
 {
 	int i;
 	int err;
@@ -3720,12 +3722,12 @@ DlpReadNextModifiedRecInCategory(
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadNextModifiedRecInCategory_Rec:
-			record->recid = get_udword(&rptr);
+			record->id = get_udword(&rptr);
 			record->index = get_uword(&rptr);
 			record->size = get_uword(&rptr);
 			record->attributes = get_ubyte(&rptr);
 			record->category = get_ubyte(&rptr);
-			record->data = rptr;
+			*data = rptr;
 
 			DLPC_TRACE(6)
 			{
@@ -3733,7 +3735,7 @@ DlpReadNextModifiedRecInCategory(
 					"Read record in category %d:\n",
 					category);
 				fprintf(stderr, "\tID == 0x%08lx\n",
-					record->recid);
+					record->id);
 				fprintf(stderr, "\tindex == 0x%04x\n",
 					record->index);
 				fprintf(stderr, "\tsize == 0x%04x\n",
