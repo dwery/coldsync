@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.10 2000-02-07 04:43:09 arensb Exp $
+ * $Id: lexer.l,v 2.11 2000-03-04 12:04:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -105,9 +105,6 @@ ALNUM		[a-zA-Z0-9]
 "uninstall" 	{ return UNINSTALL; }
 
  /* Conduit options */
- /* XXX - Implement in parser. Add flags in conduit descriptor. Make
-  * the run_*_conduits() functions check for these.
-  */
 "final"		{ return FINAL; }
 "default"	{ return DEFAULT; }
 
