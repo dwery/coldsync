@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.145 2002-04-21 13:08:44 azummo Exp $
+dnl # $Id: configure.in,v 1.146 2002-04-27 19:06:15 azummo Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -522,7 +522,7 @@ AC_ARG_WITH(usb,dnl
 		AC_MSG_CHECKING([for USB support])
 		AC_MSG_RESULT()
 	],dnl
-	[AC_CACHE_CHECK([for USB support],cs_cv_usb,[])])
+	[AC_CACHE_CHECK([for USB support],cs_cv_usb,AC_MSG_RESULT(no))])
 
 if test x"$cs_cv_usb" != xno; then
 	# This code snippet checks several things:
