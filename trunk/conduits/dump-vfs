@@ -1,0 +1,31 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::VFS qw(:DEFAULT :vfs_opentags);
+
+use Data::Dumper;
+
+
+StartConduit('sync');
+
+	print "Enumerating VFS volumes...\n";
+	my $v = dlp_VFSVolumeEnumerate();
+	print "\n";
+
+	print Data::Dumper->Dump( [ $v ] );
+
+	print "\nDumping volume(s) info..\n";
+
+	foreach my $volume ( @{$v->{'volumes'}} )
+	{
+		my $info = dlp_VFSVolumeInfo($volume);
+
+		print "\nVolume $volume: " . Data::Dumper->Dump( [ $info ] );
+	}
+
+	print "\n";
+
+EndConduit();

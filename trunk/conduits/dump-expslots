@@ -27,7 +27,7 @@ StartConduit('sync');
 		print "\nSlot $slot: " . Data::Dumper->Dump( [ $exp ] );
 
 		$exp = dlp_ExpCardInfo($slot);
-		print "\n\tCard: " .Data::Dumper->Dump( [ $exp ] );
+		print "\n\tCard: " . Data::Dumper->Dump( [ $exp ] );
 	}
 
 	print "\n";
