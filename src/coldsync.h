@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.49 2001-01-30 08:10:20 arensb Exp $
+ * $Id: coldsync.h,v 1.50 2001-02-08 07:40:27 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -95,6 +95,14 @@ struct cmd_opts {
 				 * ~/.palm/install, even if the modnum of
 				 * the database to be installed is smaller
 				 * than that of the existing database.
+				 */
+	int verbosity;		/* Level of verbosity. This is different
+				 * from debugging messages, in that
+				 * debugging messages are purely for the
+				 * developer's sake; these are for the
+				 * curious user's sake. Hence, these
+				 * messages should be translated, for
+				 * instance.
 				 */
 };
 
@@ -362,6 +370,7 @@ extern int parse_config_file(const char *fname, struct sync_config *config);
 extern int Warn(const char *format, ...);
 extern int Error(const char *format, ...);
 extern void Perror(const char *str);
+extern int Verbose(const int level, const char *str, ...);
 extern const char *mkfname(const char *first, ...);
 extern const char *mkpdbname(const char *dirname,
 			     const struct dlp_dbinfo *dbinfo,
