@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.68 2000-12-13 16:31:50 arensb Exp $
+ * $Id: coldsync.c,v 1.69 2000-12-16 19:51:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -176,7 +176,7 @@ main(int argc, char *argv[])
 	if ((err = load_config()) < 0)
 	{
 		fprintf(stderr, _("Error loading configuration.\n"));
-		exit(1);
+		goto done;
 	}
 
 	MISC_TRACE(1)
@@ -294,6 +294,7 @@ main(int argc, char *argv[])
 		err = -1;
 	}
 
+  done:
 	if (sync_config != NULL)
 	{
 		free_sync_config(sync_config);
