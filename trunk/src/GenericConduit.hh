@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.hh,v 1.8 2000-09-09 21:26:49 arensb Exp $
+ * $Id: GenericConduit.hh,v 1.9 2000-11-04 07:44:17 arensb Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
@@ -26,8 +26,8 @@ class GenericConduit
     public:
 	GenericConduit(struct PConnection *pconn,
 		       const struct dlp_dbinfo *db);
-	virtual ~GenericConduit();
-	virtual int run();
+	virtual ~GenericConduit(void);
+	virtual int run(void);
 	virtual int SyncRecord(ubyte dbh,
 			       struct pdb *localdb,
 			       struct pdb_record *localrec,
@@ -41,13 +41,13 @@ class GenericConduit
 	struct pdb *_localdb;		// Local database (from backup dir)
 	struct pdb *_remotedb;		// Remote database (from Palm)
 
- 	virtual int FirstSync();	// Sync a database for the first time
- 	virtual int SlowSync();		// Do a slow sync
-	virtual int FastSync();		// Do a fast sync
-	virtual int open_archive();
+ 	virtual int FirstSync(void);	// Sync a database for the first time
+ 	virtual int SlowSync(void);	// Do a slow sync
+	virtual int FastSync(void);	// Do a fast sync
+	virtual int open_archive(void);
 	virtual int archive_record(const struct pdb_record *rec);
-	virtual int close_archive();
-	virtual int read_backup();	// Load backup file from disk
+	virtual int close_archive(void);
+	virtual int read_backup(void);	// Load backup file from disk
 	virtual int write_backup(struct pdb *db);
 					// Write backup file to disk
 		/* XXX - Ideally, the conduit should open the staging
