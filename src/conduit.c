@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.64 2002-12-10 12:04:04 azummo Exp $
+ * $Id: conduit.c,v 2.65 2003-06-12 18:34:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -100,11 +100,6 @@ typedef int (*ConduitFunc)(PConnection *pconn,
 			   const conduit_block *block,
 			   const pda_block *pda);
 
-extern int run_GenericConduit(
-	PConnection *pconn,
-	const struct dlp_dbinfo *dbinfo,
-	const conduit_block *block,
-	const pda_block *pda);
 struct ConduitDef *findConduitByName(const char *name);
 
 struct ConduitDef
@@ -1108,6 +1103,22 @@ run_conduit(struct Palm *palm,
 					 */
 		fclose(fromchild);
 	}
+
+	if (with_spc)
+	{
+		/* A Palm doesn't allow all that many open databases
+		 * at once. If a conduit terminates with a database open
+		 * (prematurely or otherwise) it can lock out any other conduits
+		 * that do DlpOpenDB calls. Since this includes essentially _all_
+		 * sync conduits, we want to prevent it by just closing all the
+		 * databases.
+		 */
+
+		DlpCloseDB(palm_pconn(palm), DLPCMD_CLOSEALLDBS, 0);
+
+		close(spcpipe[0]);
+		close(spcpipe[1]);
+  	}
 
 	/* Let's not hog memory */
 	if (pref_list != NULL)
