@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.5 2001-09-08 00:22:08 arensb Exp $
+ * $Id: spalm.c,v 2.6 2002-03-29 18:20:17 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -685,6 +685,17 @@ ListDBs(struct Palm *palm)
 
 	return 0;
 }
+
+/* palm_pconn
+ * Gives back a PConnection pointer.
+ */
+
+PConnection *
+palm_pconn(struct Palm *palm)
+{
+	return palm->pconn_;
+}
+
 
 /* palm_rom_version
  * Returns the version of the Palm's ROM, or 0 if case of error.
