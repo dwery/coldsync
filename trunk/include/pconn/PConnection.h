@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.12 2000-12-15 07:24:58 arensb Exp $
+ * $Id: PConnection.h,v 1.13 2000-12-24 09:38:51 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -58,8 +58,12 @@ struct PConnection
 	/* The following io_* fields are really virtual functions that
 	 * allow you to choose between serial and USB I/O.
 	 */
+	int (*io_bind)(struct PConnection *p, const void *addr,
+		       const int addrlen);
 	int (*io_read)(struct PConnection *p, unsigned char *buf, int len);
 	int (*io_write)(struct PConnection *p, unsigned char *buf, int len);
+	int (*io_connect)(struct PConnection *p, const void *addr,
+			  const int addrlen);
 	int (*io_accept)(struct PConnection *p);
 	int (*io_drain)(struct PConnection *p);
 	int (*io_close)(struct PConnection *p);
@@ -104,6 +108,9 @@ struct PConnection
 
 	/* NetSync protocol */
 	struct {
+		/* XXX - Does there need to be an address/protocol family
+		 * field?
+		 */
 		ubyte xid;		/* Transaction ID */
 		udword inbuf_len;	/* Current length of 'inbuf' */
 		ubyte *inbuf;		/* Buffer to hold incoming packets */
@@ -163,7 +170,9 @@ struct PConnection
 extern struct PConnection *new_PConnection(char *fname, int listenType,
 					   int prompt_for_hotsync);
 extern int PConnClose(struct PConnection *pconn);
-extern int PConn_bind(struct PConnection *pconn, struct slp_addr *addr);
+extern int PConn_bind(struct PConnection *pconn,
+		      const void *addr,
+		      const int addrlen);
 
 extern int io_trace;
 #define	IO_TRACE(n)	if (io_trace >= (n))
