@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.3 2001-08-06 00:29:56 arensb Exp $
+ * $Id: spalm.c,v 2.4 2001-08-22 06:44:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -84,7 +84,7 @@ new_Palm(PConnection *pconn)
 	retval->have_sysinfo_ = False;
 	retval->have_userinfo_ = False;
 	retval->have_netsyncinfo_ = False;
-	bzero((void *) &(retval->serial_), SNUM_MAX);
+	bzero((void *) (retval->serial_), SNUM_MAX);
 	retval->serial_len_ = -1;
 	retval->num_cards_ = -1;
 	retval->cardinfo_ = NULL;
