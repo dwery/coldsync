@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.13 1999-11-27 05:53:23 arensb Exp $
+ * $Id: config.c,v 1.14 2000-01-13 18:20:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -50,6 +50,8 @@ extern struct config config;
 extern void debug_dump(FILE *outfile, const char *prefix,
 		       const ubyte *buf, const udword len);
 
+int sys_maxfds;			/* Size of file descriptor table */
+
 /* XXX - This should probably be hidden inside a "struct config{..}" or
  * something. I don't like global variables.
  */
@@ -69,6 +71,24 @@ struct userinfo userinfo;	/* Information about the Palm's owner */
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
+static int get_maxfds(void);
+
+/* get_maxfds
+
+ * Return the size of the file descriptor table, using whichever method is
+ * available.
+ */
+#if HAVE_SYSCONF
+
+static int
+get_maxfds(void)
+{
+	return sysconf(_SC_OPEN_MAX);
+}
+
+#else	/* !HAVE_SYSCONF */
+#  error "Don't know how to get size of file descriptor table."
+#endif	/* HAVE_SYSCONF */
 
 #if 0
 /* load_config
@@ -166,7 +186,7 @@ fprintf(stderr, "Reading site-wide config file [%s]\n",
 #endif	/* 0 */
 
 /* get_config
- * XXX - Once this is working, get rid of parse_args() and load_config()
+ * XXX - Once this is working, get rid of load_config().
  * Get the initial configuration: parse command-line arguments and load the
  * configuration file, if any.
  * For now, this assumes standalone mode, not daemon mode.
@@ -221,6 +241,13 @@ get_config(int argc, char *argv[])
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
 					 */
+
+	sys_maxfds = get_maxfds();	/* Get the size of the file
+					 * descriptor table.
+					 */
+	/* XXX - Any other system-dependent values that should be
+	 * determined at runtime?
+	 */
 
 	/* Start by reading command-line options. */
 	config_fname_given = False;
@@ -303,6 +330,12 @@ get_config(int argc, char *argv[])
 		}
 	}
 
+	MISC_TRACE(6)
+		/* This really belongs earlier in this function, but the
+		 * -dmisc flag hasn't been parsed then.
+		 */
+		fprintf(stderr, "sys_maxfds == %d\n", sys_maxfds);
+
 	/* XXX - Check for trailing arguments. If they're of the form
 	 * "FOO=bar", set the variable $FOO to value "bar". Otherwise,
 	 * complain and exit.
@@ -330,6 +363,9 @@ get_config(int argc, char *argv[])
 		return -1;
 	}
 
+	/* XXX - If running in daemon mode, don't run this here. Wait for a
+	 * connection, fork(), setuid(), and _then_ run get_userinfo().
+	 */
 	if (get_userinfo(&userinfo) < 0)
 	{
 		fprintf(stderr, _("Can't get user info\n"));
@@ -1062,6 +1098,7 @@ new_conduit_block()
 	retval->flavor = Sync;
 	retval->dbtype = 0L;
 	retval->dbcreator = 0L;
+	retval->flags = 0;
 	retval->path = NULL;
 
 	return retval;
