@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.3 2000-02-07 00:51:11 arensb Exp $
+# $Id: Makefile,v 1.4 2000-03-04 01:03:59 arensb Exp $
 
 TOP =		..
 SUBDIR =	i18n
 
-LANGS =		fr
+# LANGS: list of all languages/locales for which there is a translation
+LANGS =		fr de
 POFILES =	${LANGS:=.po}
 MOFILES =	${LANGS:=.mo}
 
