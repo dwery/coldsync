@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.5 2000-11-20 10:18:53 arensb Exp $
+ * $Id: palm.c,v 2.6 2000-12-09 09:29:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -805,7 +805,7 @@ palm_nextdb(struct Palm *palm)
 	}
 
 	/* Have we reached the end of the list yet? */
-	if (palm->dbit_ >= palm_num_dbs(palm) - 1)
+	if (palm->dbit_ > palm_num_dbs(palm) - 1)
 	{
 		MISC_TRACE(6)
 			fprintf(stderr, "Reached end of list\n");
