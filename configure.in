@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.71 2000-05-21 07:58:09 arensb Exp $
+dnl # $Id: configure.in,v 1.72 2000-05-25 12:04:58 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -206,6 +206,8 @@ if test -z "$YACC"; then
 fi
 
 AC_PATH_PROG(PERL, perl)
+AC_PATH_PROGS(POD2MAN, pod2man, true)
+AC_PATH_PROG(SED, sed)
 AC_CHECK_PROGS(DATE, date)
 AC_CHECK_PROGS(MKDEP,[mkdep makedepend], true)
 AC_CHECK_PROGS(MKID, mkid, true)
