@@ -113,12 +113,11 @@ is believed to work on all platforms with a Uniforum-compliant libintl
 
 COMPATIBILITY NOTES
 
-* ColdSync 2.1.1
+* ColdSync 2.2.0
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x/4.x, and compiles
-	cleanly with no modification under 3.3-RELEASE, 4.0-RELEASE,
-	and 4.2-RELEASE.
+	cleanly with no modification under 4.2-RELEASE.
 
 	On newer versions of FreeBSD (4.0 and beyond), it's possible
 	to communicate with the Handspring Visor using its USB
@@ -136,9 +135,9 @@ Redhat Linux 6.2 (also Debian, and probably others):
 
 	messages.
 
-Solaris 2.5.1/2.7:
-	(as of v1.6.6-20010130)
-	Compiles with gcc 2.95.2.
+Solaris 2.7:
+	(as of v2.2.0-20010805)
+	Compiles with Sun Forte 6U1.
 
 	ColdSync is known not to work with Sun's i18n utilities.
 	ColdSync should detect this, and disable i18n.
