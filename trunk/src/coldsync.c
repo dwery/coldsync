@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.43 2000-07-06 04:01:24 arensb Exp $
+ * $Id: coldsync.c,v 1.44 2000-08-07 00:37:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -540,7 +540,7 @@ main(int argc, char *argv[])
 			/* XXX - First draft: run sync conduits for this
 			 * database.
 			 */
-			err = run_Sync_conduits(&(palm.dblist[i]));
+			err = run_Sync_conduits(&(palm.dblist[i]), pconn);
 			/* XXX - Error-checking */
 
 			err = HandleDB(pconn, &palm, i);
@@ -1237,6 +1237,15 @@ GetPalmInfo(struct PConnection *pconn,
 			palm->sysinfo.localization);
 		fprintf(stderr, "\tproduct ID: 0x%08lx\n",
 			palm->sysinfo.prodID);
+		fprintf(stderr, "\tDLP version: %d.%d\n",
+			palm->sysinfo.dlp_ver_maj,
+			palm->sysinfo.dlp_ver_min);
+		fprintf(stderr, "\tProduct compatibility version: %d.%d\n",
+			palm->sysinfo.comp_ver_maj,
+			palm->sysinfo.comp_ver_min);
+		fprintf(stderr, "\tMax. record size: %ld (0x%08lx)\n",
+			palm->sysinfo.max_rec_size,
+			palm->sysinfo.max_rec_size);
 	}
 
 	/* Get NetSync information from the Palm */
