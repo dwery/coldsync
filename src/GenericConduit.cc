@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.36 2000-08-07 00:32:28 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.37 2000-09-03 07:31:02 arensb Exp $
  */
 
 /* Note on I/O:
@@ -2091,7 +2091,7 @@ GenericConduit::archive_record(const struct pdb_record *rec)
 	 */
 	if (_archfd < 0)
 	{
-		if ((_archfd = arch_open(_dbinfo, O_WRONLY)) < 0)
+		if ((_archfd = arch_open(_dbinfo, O_WRONLY | O_BINARY)) < 0)
 		{
 			SYNC_TRACE(2)
 				fprintf(stderr, "Can't open \"%s\". "
@@ -2175,7 +2175,7 @@ GenericConduit::read_backup()
 
 	/* Load backup file to _localdb */
 	int infd;		// File descriptor for backup file
-	if ((infd = open(bakfname, O_RDONLY)) < 0)
+	if ((infd = open(bakfname, O_RDONLY | O_BINARY)) < 0)
 	{
 		fprintf(stderr, _("%s error: Can't open \"%s\"\n"),
 			"read_backup", bakfname);

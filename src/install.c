@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.13 2000-05-21 08:00:05 arensb Exp $
+ * $Id: install.c,v 2.14 2000-09-03 07:31:42 arensb Exp $
  */
 
 #include "config.h"
@@ -113,7 +113,7 @@ InstallNewFiles(struct PConnection *pconn,
 		strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
 
 		/* Open the file, and load it as a Palm database */
-		if ((fd = open(fname, O_RDONLY)) < 0)
+		if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
 		{
 			fprintf(stderr, _("%s: Can't open \"%s\"\n"),
 				"InstallNewFiles",
@@ -262,7 +262,8 @@ InstallNewFiles(struct PConnection *pconn,
 
 		/* If the file exists already, don't overwrite it */
 		err = 0;
-		outfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		outfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
+			     0600);
 		if (outfd < 0)
 		{
 			if (errno == EEXIST)
