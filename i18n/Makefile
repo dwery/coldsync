@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2002-01-23 15:09:07 arensb Exp $
+# $Id: Makefile,v 1.17 2002-05-02 23:52:44 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -11,7 +11,7 @@ TOP =		..
 SUBDIR =	i18n
 
 # LANGS: list of all languages/locales for which there is a translation
-LANGS =		fr de it cs ru
+LANGS =		fr de it cs ru ja
 POFILES =	${LANGS:=.po}
 MOFILES =	${LANGS:=.mo}
 
