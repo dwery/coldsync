@@ -1,17 +1,18 @@
 #ifndef _palm_types_h_
 #define _palm_types_h_
 
-#include <sys/types.h>
-	/* XXX - Make sure the various [u_]int{8,16,32,64}_t types are
-	 * defined
-	 */
-
 /* Convenience types */
-typedef int8_t byte;
-typedef u_int8_t ubyte;
-typedef int16_t word;
-typedef u_int16_t uword;
-typedef int32_t dword;
-typedef u_int32_t udword;
+typedef signed   char  byte;		/* Signed 8-bit quantity */
+typedef unsigned char  ubyte;		/* Unsigned 8-bit quantity */
+typedef signed   short word;		/* Signed 16-bit quantity */
+typedef unsigned short uword;		/* Unsigned 16-bit quantity */
+typedef signed   long  dword;		/* Signed 32-bit quantity */
+typedef unsigned long  udword;		/* Unsigned 32-bit quantity */
+
+/* XXX - There ought to be something to make sure that the sizes and
+ * signedness above are true.
+ */
+
+typedef enum { false = 0, true = 1 } bool;
 
 #endif	/* _palm_types_h_ */
