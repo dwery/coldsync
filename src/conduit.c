@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9.2.5 2000-09-03 03:13:43 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.6 2000-09-03 04:27:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -336,8 +336,11 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	}
 
 	/* Before all the jumping stuff, make sure the pref_list is
-	 * allocated
+	 * allocated.
 	 */
+	SYNC_TRACE(6)
+		fprintf(stderr, "run_conduit: %d prefs in this conduit\n",
+			conduit->num_prefs);
 	if (conduit->num_prefs > 0)
 		pref_list = calloc(conduit->num_prefs, sizeof *pref_list);
 
@@ -422,28 +425,41 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	/* Then we add the preference items as headers */
 	for (i = 0; i < conduit->num_prefs; i++)
 	{
-		static char tmpvalue[20];
+		static char tmpvalue[64];
+				/* Since 2^64 is a 20-digit number
+				 * (decimal), this should be big enough to
+				 * hold the longest possible preference
+				 * line.
+				 */ 
 
 		/* Set the pointer to the right preference in the cache
 		 * list and if necessary, download it
 		 */
+
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"run_conduit: sending preference %d: "
+				"0x%08lx/%d\n",
+				i,
+				conduit->prefs[i].creator,
+				conduit->prefs[i].id);
+
 		pref_list[i] = GetPrefItem(&(conduit->prefs[i]));
 
 		/* Set the header */
 		++last_header;
 		headers[last_header].name = "Preference";
-		/* XXX - snprintf() isn't portable. Do this some other way.
-		 * In this case, it should be sufficient to use sprintf()
-		 * and use a buffer large enough to hold the string when
-		 * everything is MAXINT.
+
+		/* Build the preference line with sprintf() because
+		 * snprintf() isn't portable.
 		 */
-		snprintf(tmpvalue,20,"%c%c%c%c/%d/%d\n",
-			 (char) (conduit->prefs[i].creator >> 24) & 0xff,
-			 (char) (conduit->prefs[i].creator >> 16) & 0xff,
-			 (char) (conduit->prefs[i].creator >> 8) & 0xff,
-			 (char) conduit->prefs[i].creator & 0xff,
-			 conduit->prefs[i].id,
-			 pref_list[i]->contents_info->len);
+		sprintf(tmpvalue, "%c%c%c%c/%d/%d\n",
+			(char) (conduit->prefs[i].creator >> 24) & 0xff,
+			(char) (conduit->prefs[i].creator >> 16) & 0xff,
+			(char) (conduit->prefs[i].creator >> 8) & 0xff,
+			(char) conduit->prefs[i].creator & 0xff,
+			conduit->prefs[i].id,
+			pref_list[i]->contents_info->len);
 		headers[last_header].value = tmpvalue;
 	}
 
@@ -936,7 +952,11 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 
 	/* Let's not hog memory */
 	/* XXX - This is an array of pointers, but the individual elements
-	 * are not freed. Does this leak memory?
+	 * are not freed. This might leak memory: most of the elements are
+	 * really pointers into pref_cache (which gets freed later on), but
+	 * some of these elements might get initialized from
+	 * DownloadPrefItem(), and I'm not convinced that they get freed
+	 * correctly.
 	 */
 	if (pref_list != NULL)
 		free(pref_list);
