@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.10 1999-10-21 14:11:47 arensb Exp $
+# $Id: Makefile.in,v 1.11 1999-10-24 19:38:53 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -10,6 +10,7 @@ SUBDIRS =	include libpconn libpdb src doc
 
 TAR =		@TAR@
 GZIP =		@GZIP@
+DATE =		@DATE@
 
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
@@ -61,6 +62,11 @@ ${RECURSIVE_TARGETS}::
 		(cd $$dir && ${MAKE} $@); \
 		echo "$@: Leaving directory \`${CURDIR}/$$dir'"; \
 	done
+
+snapshot:	distdir
+	date=`${DATE} "+%Y%m%d"`; \
+	GZIP="--best" ${TAR} chozf "${PACKAGE}-$${date}.tar.gz" ${DISTDIR}
+	rm -rf ${DISTDIR}
 
 # Targets for various progressive levels of cleanliness. Each one is
 # cleaner than the previous.
