@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.27 2001-08-20 09:13:00 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.28 2001-08-22 06:42:39 arensb Exp $
  */
 
 #include "config.h"
@@ -93,6 +93,11 @@ typedef struct {
 #define	hs_usbfun_RemoteFileSys	4
 #define	hs_usbfun_MAX		4
 
+/* Expected device vendor IDs.
+ * Device		Vendor	Product	Revision
+ * Handspring Visor	0x82d
+ * Palm M505		0x830	0x0002	0x0100
+ */
 #define	HANDSPRING_VENDOR_ID	0x082d
 #define PALM_VENDOR_ID		0x0830
 
