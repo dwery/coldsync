@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.73 2004-10-11 18:52:09 christophe Exp $
+ * $Id: conduit.c,v 2.74 2004-10-21 20:08:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -531,7 +531,7 @@ run_conduit(struct Palm *palm,
 	add_header(&headers, &num_headers, &max_headers, "Daemon", PACKAGE);
 	add_header(&headers, &num_headers, &max_headers, "Version", VERSION);
 	add_header(&headers, &num_headers, &max_headers,
-		"SyncType", need_slow_sync ? "Slow" : "Fast");
+		"SyncType", global_opts.force_slow || need_slow_sync ? "Slow" : "Fast");
 	add_header(&headers, &num_headers, &max_headers,
 		"PDA-Snum", palm_serial(palm));
 	add_header(&headers, &num_headers, &max_headers,
