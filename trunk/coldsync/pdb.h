@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.6 1999-03-16 11:06:16 arensb Exp $
+ * $Id: pdb.h,v 1.7 1999-03-16 11:56:44 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -116,7 +116,7 @@ struct pdb_record
 		 * attributes byte. Deal with this: separate them when the
 		 * record is read, combine them when it's written.
 		 */
-	udword uniqueID;		/* Record's unique ID. Actually,
+	udword id;			/* Record's unique ID. Actually,
 					 * only the bottom 3 bytes are
 					 * stored in the file, but for
 					 * everything else, it's much
@@ -174,9 +174,10 @@ struct pdb
 	udword type;			/* Database type */
 	udword creator;			/* Database creator */
 
-	udword uniqueIDseed;		/* Used to generate unique IDs.
-					 * Only the lower 3 bytes are used.
-					 * The high byte is for alignment.
+	udword uniqueIDseed;		/* Used to generate unique IDs for
+					 * records and resources. Only the
+					 * lower 3 bytes are used. The high
+					 * byte is for alignment.
 					 */
 
 	localID next_reclistID;		/* ID of next record index in the
@@ -246,7 +247,7 @@ extern int pdb_InsertResource(
 	struct pdb_resource *newrsrc);
 struct pdb_record *new_Record(
 	const ubyte attributes,
-	const udword uniqueID,
+	const udword id,
 	const uword len,
 	const ubyte *data);
 struct pdb_record *pdb_CopyRecord(
@@ -257,8 +258,6 @@ struct pdb_resource *pdb_CopyResource(
 	const struct pdb_resource *rsrc);
 
 /* XXX - Functions to write:
-pdb_Upload		upload to Palm
-pdb_Download		download from Palm
 pdb_setAppInfo		set the appinfo block
 pdb_setSortInfo		set the sortinfo block
 */

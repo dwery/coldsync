@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.5 1999-03-16 11:14:54 arensb Exp $
+ * $Id: sync.c,v 1.6 1999-03-16 11:56:45 arensb Exp $
  */
 
 #include <stdio.h>
@@ -189,7 +189,7 @@ fprintf(stderr, "*** Phase 1:\n");
 	     remoterec = remoterec->next)
 	{
 		printf("Remote Record:\n");
-		printf("\tuniqueID: 0x%08lx\n", remoterec->uniqueID);
+		printf("\tID: 0x%08lx\n", remoterec->id);
 		printf("\tattributes: 0x%02x ",
 		       remoterec->attributes);
 		if (remoterec->attributes & PDB_REC_EXPUNGED)
@@ -205,14 +205,14 @@ fprintf(stderr, "*** Phase 1:\n");
 		printf("\n");
 
 		/* Try to find this record in the local database */
-		localrec = pdb_FindRecordByID(localdb, remoterec->uniqueID);
+		localrec = pdb_FindRecordByID(localdb, remoterec->id);
 		if (localrec == NULL)
 		{
 			/* This record is new. Mark it as modified in the
 			 * remote database.
 			 */
 			fprintf(stderr, "Record 0x%08lx is new.\n",
-				remoterec->uniqueID);
+				remoterec->id);
 			remoterec->attributes |= PDB_REC_DIRTY;
 			continue;
 		}
@@ -220,7 +220,7 @@ fprintf(stderr, "*** Phase 1:\n");
 		/* The record exists. Compare the local and remote versions */
 
 		printf("Local Record:\n");
-		printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
+		printf("\tID: 0x%08lx\n", localrec->id);
 		printf("\tattributes: 0x%02x ",
 		       localrec->attributes);
 		if (localrec->attributes & PDB_REC_EXPUNGED)
@@ -282,7 +282,7 @@ fprintf(stderr, "Checking local database entries\n");
 	     localrec = localrec->next)
 	{
 		/* Try to look this record up in the remote database */
-		remoterec = pdb_FindRecordByID(remotedb, localrec->uniqueID);
+		remoterec = pdb_FindRecordByID(remotedb, localrec->id);
 		if (remoterec != NULL)
 			/* The record exists in the remote database. That
 			 * means we've dealt with it in the previous
@@ -304,7 +304,7 @@ fprintf(stderr, "Checking local database entries\n");
 			 * presumably it was archived elsewhere.
 			 */
 fprintf(stderr, "Deleting this record: it's clean locally but doesn't exist in the remote database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 		}
 	}
 
@@ -323,7 +323,7 @@ fprintf(stderr, "*** Phase 2:\n");
 	     remoterec = remoterec->next)
 	{
 		printf("Remote Record:\n");
-		printf("\tuniqueID: 0x%08lx\n", remoterec->uniqueID);
+		printf("\tID: 0x%08lx\n", remoterec->id);
 		printf("\tattributes: 0x%02x ",
 		       remoterec->attributes);
 		if (remoterec->attributes & PDB_REC_EXPUNGED)
@@ -340,13 +340,13 @@ fprintf(stderr, "*** Phase 2:\n");
 debug_dump(stderr, "REM", remoterec->data, remoterec->data_len);
 
 		/* Find the local version of the record */
-		localrec = pdb_FindRecordByID(localdb, remoterec->uniqueID);
+		localrec = pdb_FindRecordByID(localdb, remoterec->id);
 		if (localrec == NULL)
 		{
 			struct pdb_record *newrec;
 
 			/* This record is new. Add it to the local database */
-fprintf(stderr, "Adding record 0x%08lx to local database\n", remoterec->uniqueID);
+fprintf(stderr, "Adding record 0x%08lx to local database\n", remoterec->id);
 
 			/* Fix flags */
 			remoterec->attributes &= 0x0f;
@@ -373,7 +373,7 @@ fprintf(stderr, "Adding record 0x%08lx to local database\n", remoterec->uniqueID
 		}
 
 		printf("Local Record:\n");
-		printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
+		printf("\tID: 0x%08lx\n", localrec->id);
 		printf("\tattributes: 0x%02x ",
 		       localrec->attributes);
 		if (localrec->attributes & PDB_REC_EXPUNGED)
@@ -528,7 +528,7 @@ fprintf(stderr, "DlpReadNextModifiedRec returned %d\n", err);
 		}
 
 		/* Look up the modified record in the local database */
-		localrec = pdb_FindRecordByID(localdb, remoterec->uniqueID);
+		localrec = pdb_FindRecordByID(localdb, remoterec->id);
 		if (localrec == NULL)
 		{
 			/* This record is new. Add it to the local
@@ -698,12 +698,11 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6, "> Deleting record on Palm\n");
 			err = DlpDeleteRecord(pconn, dbh, 0,
-					      remoterec->uniqueID);
+					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
 				fprintf(stderr, "SlowSync: Warning: can't delete record 0x%08lx: %d\n",
-					remoterec->uniqueID,
-					err);
+					remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -712,7 +711,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DELETED(localrec) && EXPUNGED(localrec))
 		{
@@ -725,12 +724,11 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6, "> Deleting record on Palm\n");
 			err = DlpDeleteRecord(pconn, dbh, 0,
-					      remoterec->uniqueID);
+					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
 				fprintf(stderr, "SlowSync: Warning: can't delete record 0x%08lx: %d\n",
-					remoterec->uniqueID,
-					err);
+					remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -739,7 +737,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
 		{
@@ -761,7 +759,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6, "> Sending local record to Palm\n");
 			err = DlpWriteRecord(pconn, dbh, 0x80,
-					     localrec->uniqueID,
+					     localrec->id,
 					     /* XXX - The category is the
 					      * bottom 4 bits of the
 					      * attributes. Fix this
@@ -776,8 +774,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			{
 				fprintf(stderr,
 					"Error uploading record 0x%08lx: %d\n",
-					localrec->uniqueID,
-					err);
+					localrec->id, err);
 				return -1;
 			}
 
@@ -785,7 +782,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 * ID when it was uploaded. Make sure the local
 			 * database reflects this.
 			 */
-			localrec->uniqueID = newID;
+			localrec->id = newID;
 			SYNC_TRACE(7, "newID == 0x%08lx\n", newID);
 
 		} else {
@@ -797,7 +794,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		}
 	} else if (DELETED(remoterec) && EXPUNGED(remoterec))
@@ -818,7 +815,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DELETED(localrec) && EXPUNGED(localrec))
 		{
@@ -827,7 +824,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
 		{
@@ -839,7 +836,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete remoterec */
 			SYNC_TRACE(6, "> Deleting remote record\n");
-			/* XXX - DlpDeleteRecord(remoterec->uniqueID) */
+			/* XXX - DlpDeleteRecord(remoterec->id) */
 
 			/* Fix flags */
 			localrec->attributes &= 0x0f;
@@ -851,7 +848,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6, "> Uploading local record to Palm\n");
 			err = DlpWriteRecord(pconn, dbh, 0x80,
-					     localrec->uniqueID,
+					     localrec->id,
 					     /* XXX - The bottom nybble of
 					      * the attributes byte is the
 					      * category. Fix this
@@ -866,7 +863,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			{
 				fprintf(stderr,
 					"Error uploading record 0x%08lx: %d\n",
-					localrec->uniqueID,
+					localrec->id,
 					err);
 				return -1;
 			}
@@ -875,7 +872,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 * ID when it was uploaded. Make sure the local
 			 * database reflects this.
 			 */
-			localrec->uniqueID = newID;
+			localrec->id = newID;
 			SYNC_TRACE(7, "newID == 0x%08lx\n", newID);
 
 		} else {
@@ -884,7 +881,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		}
 	} else if (DIRTY(remoterec))
@@ -920,7 +917,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6, "> Copying remote record to local database\n");
 			newrec = new_Record(remoterec->attributes,
-					    remoterec->uniqueID,
+					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
 			if (newrec == NULL)
@@ -947,12 +944,12 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting local record\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6, "> Copying remote record to local database\n");
 			newrec = new_Record(remoterec->attributes,
-					    remoterec->uniqueID,
+					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
 			if (newrec == NULL)
@@ -997,7 +994,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 */
 			SYNC_TRACE(6, "> Copying remote record to local database\n");
 			newrec = new_Record(remoterec->attributes,
-					    remoterec->uniqueID,
+					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
 			if (newrec == NULL)
@@ -1017,12 +1014,12 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			if (err < 0)
 			{
 				fprintf(stderr, "SlowSync: Can't insert record 0x%08lx\n",
-					newrec->uniqueID);
+					newrec->id);
 				pdb_FreeRecord(newrec);
 				return -1;
 			}
 
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 				/* We don't check for errors here, because,
 				 * well, we wanted to delete it anyway.
 				 */
@@ -1050,7 +1047,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DELETED(localrec) && EXPUNGED(localrec))
 		{
@@ -1059,7 +1056,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete localrec */
 			SYNC_TRACE(6, "> Deleting record in local database\n");
-			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
 		{
@@ -1078,7 +1075,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6, "> Uploading local record to Palm\n");
 			err = DlpWriteRecord(pconn, dbh, 0x80,
-					     localrec->uniqueID,
+					     localrec->id,
 					     /* XXX - The bottom nybble of
 					      * the attributes byte is the
 					      * category. Fix this
@@ -1093,7 +1090,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			{
 				fprintf(stderr,
 					"Error uploading record 0x%08lx: %d\n",
-					localrec->uniqueID,
+					localrec->id,
 					err);
 				return -1;
 			}
@@ -1102,7 +1099,7 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 * ID when it was uploaded. Make sure the local
 			 * database reflects this.
 			 */
-			localrec->uniqueID = newID;
+			localrec->id = newID;
 			SYNC_TRACE(7, "newID == 0x%08lx\n", newID);
 
 		} else {
