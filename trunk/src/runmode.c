@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.6 2002-10-31 15:30:20 azummo Exp $
+ * $Id: runmode.c,v 2.7 2002-11-09 15:06:28 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -784,33 +784,50 @@ run_mode_Daemon(int argc, char *argv[])
 	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
-	/* Check if this palm is uninitialized and if autoinit is true*/
+	/* Check if this palm is uninitialized and if autoinit is true */
 	if (palm_userid(palm) == 0 && global_opts.autoinit == True)
 	{
-		/* XXX If the palm hasn't a serial number autoinit will not work.
-		 * We may want to upload some special program (like ChangeName)
-		 * to allow the user to manually initialize his palm.
-		 */
-	
-		/* Yes, get the best match */
+		SYNC_TRACE(3)
+			fprintf(stderr, "autoinit: trying snum match.\n");	
+
+		/* Search for a matching serial number */
 		palment = lookup_palment(palm, PMATCH_SERIAL);
 
 		if (palment != NULL)
 		{
 			struct dlp_setuserinfo newinfo;					
 	
+			SYNC_TRACE(3)
+				fprintf(stderr, "autoinit: got a snum match.\n");	
+	
 			newinfo.username = palment->username;
 			newinfo.userid	 = palment->userid;
 			
 			err = UpdateUserInfo2(palm, &newinfo); 
-			
-			err = palm_reload(palm);		
+
+			/* XXX - Check error */
 		}
 		else
 		{
+			/* Unknown pda, let's try with the init conduits */
+
+			SYNC_TRACE(3)
+				fprintf(stderr, "autoinit: trying init conduits...\n");	
+
+			err = run_Init_conduits(palm);
+
+			/* XXX - Check error */
+		}
+
+		/* Let's see if autoinit worked */
+
+		err = palm_reload(palm);
+
+		if (palm_userid(palm) == 0)
+		{
 			/* XXX here we must send any program in the global autoinit directory */
 		
-			Error(_("No matching entry in %s, couldn't autoinit."), _PATH_PALMS);
+			Error(_("Unknown PDA, couldn't autoinit."));
 			/* XXX - Write reason to Palm log */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1; 
