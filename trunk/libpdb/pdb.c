@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.2 1999-10-24 19:49:30 arensb Exp $
+ * $Id: pdb.c,v 1.3 1999-11-02 03:50:45 arensb Exp $
  */
 
 #include "config.h"
@@ -27,14 +27,6 @@
 
 #define PDB_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
 				 * back */
-
-/* XXX - For now, this is a hack to make conduits compile. In the longer
- * term, logging doesn't really belong in this library. It was originally
- * put in here so that pdb_Upload() could add to the Palm's log.
- * Figure out a better way to do this.
- */
-/*  extern int add_to_log(char *msg); */
-#define add_to_log(msg)
 
 /* Helper functions */
 static uword get_file_length(int fd);
@@ -751,9 +743,6 @@ pdb_Upload(struct PConnection *pconn,
 	PDB_TRACE(1)
 		fprintf(stderr, "Uploading \"%s\"\n", db->name);
 
-	add_to_log(db->name);
-	add_to_log(" - ");
-
 	/* Call OpenConduit to let the Palm (or the user) know that
 	 * something's going on. (Actually, I don't know that that's the
 	 * reason. I'm just imitating HotSync, here.
@@ -763,7 +752,6 @@ pdb_Upload(struct PConnection *pconn,
 	{
 		fprintf(stderr, "Can't open conduit for \"%s\", err == %d\n",
 			db->name, err);
-		add_to_log("Error\n");
 		return -1;
 	}
 
@@ -781,7 +769,6 @@ pdb_Upload(struct PConnection *pconn,
 	{
 		fprintf(stderr, "Error creating database \"%s\", err == %d\n",
 			db->name, err);
-		add_to_log("Error\n");
 		return -1;
 	}
 
@@ -795,10 +782,7 @@ pdb_Upload(struct PConnection *pconn,
 				       0, db->appinfo_len,
 				       db->appinfo);
 		if (err < 0)
-		{
-			add_to_log("Error\n");
 			return err;
-		}
 	}
 
 	/* Upload the sort block, if it exists */
@@ -811,10 +795,7 @@ pdb_Upload(struct PConnection *pconn,
 					0, db->sortinfo_len,
 					db->sortinfo);
 		if (err < 0)
-		{
-			add_to_log("Error\n");
 			return err;
-		}
 	}
 
 	/* Upload each record/resource in turn */
@@ -846,7 +827,6 @@ pdb_Upload(struct PConnection *pconn,
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
-				add_to_log("Error\n");
 				return -1;
 			}
 		}
@@ -891,7 +871,6 @@ pdb_Upload(struct PConnection *pconn,
 			{
 				/* Close the database */
 				err = DlpCloseDB(pconn, dbh);
-				add_to_log("Error\n");
 				return -1;
 			}
 
@@ -902,8 +881,6 @@ pdb_Upload(struct PConnection *pconn,
 
 	/* Clean up */
 	err = DlpCloseDB(pconn, dbh);
-
-	add_to_log("OK (New)\n");
 
 	return 0;		/* Success */
 }
