@@ -101,8 +101,18 @@
 #undef VERSION
 
 #if __GNUC__
+
+   /* The following should fix gcc complaining about missing
+    * 'strcasecmp()' and 'getopt()' declarations on Linux boxen using
+    * glibc1 (e.g., Slackware 4.0).
+    */
+#  if _LINUX_C_LIB_VERSION_MAJOR <= 5
+#     define _POSIX_C_SOURCE  2
+#     define _BSD_SOURCE
+#  endif /* _LINUX_C_LIB_VERSION_MAJOR */
+
 /* For any given version of 'gcc', one of these two should make 'gcc'
- * shut up about "implicit declaration of XXX".
+ * shut up about "implicit declaration of xxx".
  */
 #  define _GNU_SOURCE		1
 #  define __EXTENSIONS__	1
