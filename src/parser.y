@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.37 2001-01-09 16:19:33 arensb Exp $
+ * $Id: parser.y,v 2.38 2001-01-10 09:36:55 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -269,7 +269,7 @@ listen_directive:
 
 		if (cur_listen->device != NULL)
 		{
-			Error(_("%s: %d: Warning: device already defined.\n"),
+			Error(_("%s: %d: Device already defined.\n"),
 			      conf_fname, lineno);
 			free(cur_listen->device);
 		}
@@ -283,7 +283,7 @@ listen_directive:
 
 		if (cur_listen->speed != 0)
 		{
-			Error(_("%s: %d: Warning: speed already defined.\n"),
+			Error(_("%s: %d: Speed already defined.\n"),
 			      conf_fname, lineno);
 		}
 
@@ -316,7 +316,7 @@ conduit_stmt:	CONDUIT
 		/* Sanity check */
 		if (cur_conduit->num_ctypes == 0)
 		{
-			Error(_("%s: Warning: no `type:' line seen\n"
+			Error(_("%s: No `type:' line seen\n"
 				"\tin definition of \"%s\"\n"),
 			      conf_fname,
 			      cur_conduit->path);
@@ -444,7 +444,7 @@ conduit_directive:
 
 		if (cur_conduit->path != NULL)
 		{
-			Warn(_("%s: %d: Warning: path already defined.\n"),
+			Warn(_("%s: %d: Path already defined.\n"),
 			     conf_fname, lineno);
 			free(cur_conduit->path);
 		}
@@ -811,8 +811,7 @@ pda_directive:
 
 		if (cur_pda->snum != NULL)
 		{
-			Warn(_("%s: %d: Warning: serial number already "
-			       "defined.\n"),
+			Warn(_("%s: %d: Serial number already defined.\n"),
 			     conf_fname, lineno);
 			free(cur_pda->snum);
 		}
@@ -837,8 +836,8 @@ pda_directive:
 			 */
 			checksum = snum_checksum(cur_pda->snum,
 						 strlen(cur_pda->snum));
-			Warn(_("%s: %d: Warning: serial number \"%s\" "
-			       "has no checksum.\n"
+			Warn(_("%s: %d: Serial number \"%s\" has no "
+			       "checksum.\n"
 			       "You may want to rewrite it as \"%s-%c\"\n"),
 			     conf_fname, lineno,
 			     cur_pda->snum, cur_pda->snum, checksum);
@@ -858,8 +857,7 @@ pda_directive:
 						 strlen(cur_pda->snum));
 			if (toupper(checksum) != toupper((int) *csum_ptr))
 			{
-				Warn(_("%s: %d: Warning: incorrect "
-				       "checksum\n"
+				Warn(_("%s: %d: Incorrect checksum\n"
 				       "for serial number \"%s-%c\". "
 				       "Should be \"%s-%c\"\n"),
 				     conf_fname, lineno,
@@ -889,8 +887,7 @@ pda_directive:
 
 		if (cur_pda->directory != NULL)
 		{
-			Warn(_("%s: %d: Warning: directory already "
-			       "defined.\n"),
+			Warn(_("%s: %d: Directory already defined.\n"),
 			     conf_fname, lineno);
 			free(cur_pda->directory);
 		}
@@ -911,7 +908,7 @@ pda_directive:
 
 		if (cur_pda->username != NULL)
 		{
-			Warn(_("%s: %d: Warning: username already defined.\n"),
+			Warn(_("%s: %d: Username already defined.\n"),
 			     conf_fname, lineno);
 			free(cur_pda->username);
 		}
@@ -926,7 +923,7 @@ pda_directive:
 
 		if (cur_pda->userid_given)
 		{
-			Warn(_("%s: %d: Warning: userid already defined.\n"),
+			Warn(_("%s: %d: Userid already defined.\n"),
 			     conf_fname, lineno);
 		}
 
@@ -1010,7 +1007,7 @@ opt_colon:	':'
 	{
 		if (!warned_colon)
 		{
-			Warn(_("%s: %d: Warning: missing ':'\n"
+			Warn(_("%s: %d: Missing ':'\n"
 			       "\tColons are now required after most "
 			       "directives.\n"
 			       "\t(This warning will only be shown "

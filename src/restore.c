@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.18 2001-01-09 16:19:36 arensb Exp $
+ * $Id: restore.c,v 2.19 2001-01-10 09:36:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -63,7 +63,7 @@ restore_file(PConnection *pconn,
 	/* Read the PDB file */
 	if ((bakfd = open(fname, O_RDONLY | O_BINARY)) < 0)
 	{
-		Error(_("Error: Can't open %s\n"),
+		Error(_("Can't open %s.\n"),
 		      fname);
 		perror("open");
 		return -1;
@@ -72,7 +72,7 @@ restore_file(PConnection *pconn,
 	pdb = pdb_Read(bakfd);
 	if (pdb == NULL)
 	{
-		Error(_("Error reading %s\n"), fname);
+		Error(_("Can't read %s.\n"), fname);
 		close(bakfd);
 		return -1;
 	}
