@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.5 2000-12-24 21:24:38 arensb Exp $
+ * $Id: netsync.c,v 1.6 2001-04-15 04:44:18 arensb Exp $
  */
 
 #include "config.h"
@@ -201,7 +201,7 @@ netsync_write(PConnection *pconn,
 		debug_dump(stderr, "NET >>>", out_hdr, NETSYNC_HDR_LEN);
 	}
 
-	err = write(pconn->fd, out_hdr, NETSYNC_HDR_LEN);
+	err = (*pconn->io_write)(pconn, out_hdr, NETSYNC_HDR_LEN);
 	NET_TRACE(7)
 		fprintf(stderr, "write() returned %d\n", err);
 	if (err < 0)
@@ -215,7 +215,7 @@ netsync_write(PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = write(pconn->fd, buf+sent, want-sent);
+		err = (*pconn->io_write)(pconn, buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("netsync_write: write");
