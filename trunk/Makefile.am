@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.2 1999-03-16 11:57:12 arensb Exp $
+# $Id: Makefile.am,v 1.3 1999-07-04 02:00:12 arensb Exp $
 #
 
 ## XXX - Use shallow directory structure (then again, with all the
@@ -12,6 +12,7 @@ SUBDIRS = palm pconn coldsync doc
 EXTRA_DIST = \
 	.cvsignore \
 	AUTHORS \
+	HACKING \
 	Makefile
 
 EXTRA_MOSTLYCLEANFILES = *.bak
