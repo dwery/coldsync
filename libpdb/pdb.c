@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.40 2001-08-06 00:29:40 arensb Exp $
+ * $Id: pdb.c,v 1.41 2001-09-29 07:46:02 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -186,7 +186,7 @@ void
 free_pdb(struct pdb *db)
 {
 	PDB_TRACE(7)
-		fprintf(stderr, "Inside free_pdb(%p)\n", db);
+		fprintf(stderr, "Inside free_pdb(%p)\n", (void *) db);
 
 	if (db == NULL)
 		/* Trivial case */
