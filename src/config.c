@@ -9,8 +9,9 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.3 1999-07-14 13:53:14 arensb Exp $
+ * $Id: config.c,v 1.4 1999-08-01 08:04:08 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
@@ -315,7 +316,10 @@ get_fullname(char *buf,
 		    case '&':
 			/* Expand '&' */
 			/* XXX - egcs whines about "ANSI C forbids
-			 * braced-groups within expressions".
+			 * braced-groups within expressions", but there
+			 * doesn't seem to be anything I can do about it,
+			 * since it's the __tobody macro inside <ctype.h>
+			 * that's broken in this way.
 			 */
 			buf[bufi] = toupper(pwent->pw_name[0]);
 			bufi++;
