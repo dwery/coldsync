@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2001-06-26 05:47:56 arensb Exp $
+# $Id: Makefile,v 1.6.4.1 2001-10-09 03:10:23 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -14,6 +14,8 @@ DISTCLEAN =
 SPOTLESS =
 
 DISTFILES =	Makefile ${LIBSRCS}
+
+OTHERTAGFILES =	${LIBSRCS}
 
 include ${TOP}/Make.rules
 
