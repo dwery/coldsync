@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.9 1999-11-27 05:50:39 arensb Exp $
+ * $Id: backup.c,v 2.10 2000-01-27 02:34:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,6 +23,9 @@
 #include "pdb.h"
 #include "coldsync.h"
 
+/* XXX - Rename this 'backup_all()' or something. Need another function to
+ * just back up a single database.
+ */
 int
 Backup(struct PConnection *pconn,
        struct Palm *palm)
@@ -37,36 +40,15 @@ Backup(struct PConnection *pconn,
 	for (i = 0; i < palm->num_dbs; i++)
 	{
 		struct dlp_dbinfo *dbinfo;
-		static char bakfname[MAXPATHLEN+1];	/* Backup file name */
+		const char *bakfname;	/* Backup file name */
 		int bakfd;		/* Backup file descriptor */
 		struct pdb *pdb;	/* Database downloaded from Palm */
 		ubyte dbh;		/* Database handle (on Palm) */
 
 		dbinfo = &(palm->dblist[i]);
 
-		/* Construct the backup file name */
-		/* XXX - This can be optimized: only write the backup
-		 * directory and slash once.
-		 */
-		/* XXX - Watch out for weird characters in database name: I
-		 * guess they should be replaced either with underscores
-		 * or, better, %HH, where HH is the hex value of the
-		 * character.
-		 * Slashes aren't allowed. Neither are NULs, but they're a
-		 * separate issue. I guess 'isprint()' is a good enough
-		 * test for allowable characters (of course, '%' should be
-		 * escaped, too).
-		 */
-		strncpy(bakfname, global_opts.backupdir, MAXPATHLEN);
-		strncat(bakfname, "/", MAXPATHLEN - strlen(bakfname));
-		strncat(bakfname, dbinfo->name, MAXPATHLEN - strlen(bakfname));
-		if (DBINFO_ISRSRC(dbinfo))
-			strncat(bakfname, ".prc",
-				MAXPATHLEN - strlen(bakfname));
-		else
-			strncat(bakfname, ".pdb",
-				MAXPATHLEN - strlen(bakfname));
-		bakfname[MAXPATHLEN] = '\0';	/* Terminate the string */
+		bakfname = mkfname(global_opts.backupdir, dbinfo, True);
+					/* Construct the backup file name */
 
 		add_to_log(_("Backup "));
 		add_to_log(dbinfo->name);
