@@ -92,11 +92,12 @@ A: Not directly, but yes.
    start with the IR-HOWTO that comes with the Redhat distribution.
 
 Q: ColdSync doesn't detect my Visor's serial number correctly.
-A: It has been reported that 
-   ColdSync reads the Visor's serial number as 
-	ff:ff:ff:ff:ff:ff:ff:ff:ff:ff:ff:ff
-   which is obviously bogus. Unfortunately, I don't have a Visor with which
-   to experiment, but if someone'll send me a patch, I'll incorporate it.
+A: As far as I've been able to determine, the Handspring Visor does not
+   allow one to get at the serial number in software.
+	The Visor appears to support reading ROM tokens, which is the way
+   one reads the serial number in software. It even appears to have an
+   "snum" ROM token. However, the contents of this token are not a
+   12-character string, but a set of 12 0xff bytes.
 
 # This is for Emacs's benefit:
 # Local Variables:	***
