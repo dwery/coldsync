@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.22 2002-09-10 18:26:41 azummo Exp $
+ * $Id: netsync.c,v 1.23 2002-10-24 17:49:31 azummo Exp $
  */
 
 #include "config.h"
@@ -223,9 +223,9 @@ ritual_exch_server(PConnection *pconn)
 	switch (pconn->protocol)
 	{
 	    case PCONN_STACK_NET:
-		err = netsync_read_method(pconn, &inbuf, &inlen, False);
+/*		err = netsync_read_method(pconn, &inbuf, &inlen, False);
 		break;
-
+*/
 	    case PCONN_STACK_SIMPLE:
 		inlen = ritual_resp1_size;
 		err = netsync_read_method(pconn, &inbuf, &inlen, True);
@@ -476,7 +476,7 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		    const ubyte **buf,	/* Buffer to put the packet in */
 		    uword *len,		/* Length of received message */
 		    			/* XXX - Is a uword enough? */
-		    const Bool no_header)
+		    const Bool first_packet)
 					/* m50x starts without a header! */
 {
 	int err;
@@ -486,76 +486,91 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	udword got;		/* How many bytes we've read so far */
 	udword want;		/* How many bytes we still want to read */
 	struct timeval timeout;	/* How long to wait for incoming data */
+	Bool missing_header = False;
 
 	NET_TRACE(3)
 		fprintf(stderr, "Inside netsync_read()\n");
 
-	if (!no_header)
+	/* Read packet header */
+	NET_TRACE(5)
+		fprintf(stderr,
+			"netsync_read: Reading packet header\n");
+
+	/* Wait for here to be something to read */
+	timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
+	timeout.tv_usec = 0L;
+	err = PConn_select(pconn, forReading, &timeout);
+	if (err == 0)
 	{
-		/* Read packet header */
+		/* select() timed out */
+		PConn_set_palmerrno(pconn, PALMERR_TIMEOUT2);
+		return -1;
+	}
+
+	/* Now we can read the packet */
+  	err = PConn_read(pconn, hdr_buf, NETSYNC_HDR_LEN);
+	if (err < 0)
+	{
+		fprintf(stderr,
+			_("Error reading NetSync packet header.\n"));
+		perror("read");
+			/* XXX - Does PConn_read set errno? */
+		return -1;
+	} else if (err != NETSYNC_HDR_LEN)
+	{
+		fprintf(stderr,
+			_("Error: only read %d bytes of NetSync "
+			  "packet header.\n"),
+			err);
+		PConn_set_palmerrno(pconn, PALMERR_SYSTEM);
+		return -1;
+	}
+
+	NET_TRACE(7)
+	{
+		fprintf(stderr, "netsync_read: read %d header bytes:\n", err);
+		debug_dump(stderr, "NET <<<", hdr_buf, err);
+	}
+
+	/* Parse the header */
+	rptr = hdr_buf;
+	hdr.cmd = get_ubyte(&rptr);
+	hdr.xid = get_ubyte(&rptr);
+	hdr.len = get_udword(&rptr);
+
+	/* If we have initiated the connection, we must use the
+	 * server provided XID in our packets
+	 */
+
+	if (pconn->whosonfirst)
+		pconn->net.xid = hdr.xid;
+	
+
+	NET_TRACE(5)
+		fprintf(stderr,
+			"Got header: cmd 0x%02x, xid 0x%02x, "
+			"len 0x%08lx\n",
+			hdr.cmd, hdr.xid, hdr.len);
+
+	/* XXX - What to do if cmd != 1? */
+
+	/* Check if we have really got a valid netsync header
+	 * or if this is the first part of the ritual message
+	 * on buggy devices.
+	 */ 
+
+	if (first_packet && 
+		hdr.cmd == 0x90 &&
+		hdr.xid == 0x01 &&
+		hdr.len == 0x0000)
+	{
 		NET_TRACE(5)
 			fprintf(stderr,
-				"netsync_read: Reading packet header\n");
-
-		/* Wait for there to be something to read */
-		timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
-		timeout.tv_usec = 0L;
-		err = PConn_select(pconn, forReading, &timeout);
-		if (err == 0)
-		{
-			/* select() timed out */
-			PConn_set_palmerrno(pconn, PALMERR_TIMEOUT2);
-			return -1;
-		}
-
-		/* Now we can read the packet */
-	  	err = PConn_read(pconn, hdr_buf, NETSYNC_HDR_LEN);
-		if (err < 0)
-		{
-			fprintf(stderr,
-				_("Error reading NetSync packet header.\n"));
-			perror("read");
-				/* XXX - Does PConn_read set errno? */
-			return -1;
-		} else if (err != NETSYNC_HDR_LEN)
-		{
-			fprintf(stderr,
-				_("Error: only read %d bytes of NetSync "
-				  "packet header.\n"),
-				err);
-			PConn_set_palmerrno(pconn, PALMERR_SYSTEM);
-			return -1;
-		}
-
-		NET_TRACE(7)
-		{
-			fprintf(stderr, "netsync_read: read %d bytes:\n", err);
-			debug_dump(stderr, "NET <<<", hdr_buf, err);
-		}
-
-		/* Parse the header */
-		rptr = hdr_buf;
-		hdr.cmd = get_ubyte(&rptr);
-		hdr.xid = get_ubyte(&rptr);
-		hdr.len = get_udword(&rptr);
-
-		/* If we have initiated the connection, we must use the
-		 * server provided XID in our packets
-		 */
-
-		if (pconn->whosonfirst)
-			pconn->net.xid = hdr.xid;
-		
-
-		NET_TRACE(5)
-			fprintf(stderr,
-				"Got header: cmd 0x%02x, xid 0x%02x, "
-				"len 0x%08lx\n",
-				hdr.cmd, hdr.xid, hdr.len);
-
-		/* XXX - What to do if cmd != 1? */
-	} else
-		hdr.len = *len;
+				"Bad header, workaround activated\n");
+	 
+		hdr.len = *len; 
+		missing_header = True;
+	}
 
 	/* Allocate space for the payload */
 	if (pconn->net.inbuf == NULL)
@@ -571,8 +586,20 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	/* Read the payload */
 	NET_TRACE(5)
 		fprintf(stderr, "netsync_read: Reading packet data\n");
+
 	want = hdr.len;
 	got = 0;
+
+	/* If we haven't got an header we should copy the 
+	 * data we've got into the payload buffer
+	 */
+
+	if (missing_header == True)
+	{
+		memcpy(pconn->net.inbuf, hdr_buf, NETSYNC_HDR_LEN);
+		got = NETSYNC_HDR_LEN;	
+	}
+
 	while (want > got)
 	{
 		/* Wait for there to be something to read */
@@ -608,7 +635,10 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	}
 
 	NET_TRACE(6)
+	{
+		fprintf(stderr, "netsync_read: read %ld packet bytes\n", got);
 		debug_dump(stderr, "NET <<<", pconn->net.inbuf, got);
+	}
 
 	*buf = pconn->net.inbuf;	/* Tell caller where to find the
 					 * data */
