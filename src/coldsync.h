@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.24 2000-06-11 06:52:07 arensb Exp $
+ * $Id: coldsync.h,v 1.25 2000-06-11 18:49:28 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -209,7 +209,9 @@ typedef struct conduit_block
 #define CONDFL_FINAL	0x02	/* If this conduit matches, don't run any
 				 * other conduits for this database.
 				 */
-/* Conduit flavor flags */
+/* Conduit flavor flags. These are really bitmasks for
+ * conduit_block.flavors.
+ */
 #define FLAVORFL_FETCH	(1 << 0)
 #define FLAVORFL_DUMP	(1 << 1)
 #define FLAVORFL_SYNC	(1 << 2)
@@ -243,8 +245,7 @@ struct config
 	run_mode mode;
 	listen_block *listen;		/* List of listen blocks */
 	pda_block *pda;			/* List of known PDAs */
-	conduit_block *the_q;		/* List of all conduits */
-			/* XXX - Rename this */
+	conduit_block *conduits;	/* List of all conduits */
 };
 
 extern int sys_maxfds;			/* Max # of file descriptors

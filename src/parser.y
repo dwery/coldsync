@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.26 2000-06-11 07:01:36 arensb Exp $
+ * $Id: parser.y,v 2.27 2000-06-11 18:49:53 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -306,10 +306,10 @@ conduit_stmt:	CONDUIT
 	{
 		lex_expect(0);		/* No special lexer context */
 
-		if (file_config->the_q == NULL)
+		if (file_config->conduits == NULL)
 		{
 			/* First conduit on this list */
-			file_config->the_q = cur_conduit;
+			file_config->conduits = cur_conduit;
 			cur_conduit = NULL;	/* So it doesn't get freed
 						 * twice.
 						 */
@@ -318,7 +318,7 @@ conduit_stmt:	CONDUIT
 			conduit_block *last;
 
 			/* Go to the end of the list */
-			last = file_config->the_q;
+			last = file_config->conduits;
 			while (last->next != NULL)
 				last = last->next;
 

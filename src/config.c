@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.29 2000-06-11 06:58:12 arensb Exp $
+ * $Id: config.c,v 1.30 2000-06-11 18:49:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -538,10 +538,10 @@ get_config(int argc, char *argv[])
 	/* Set up the conduit list in the main configuration */
 	if (user_config == NULL)
 	{
-		config.the_q = NULL;
+		config.conduits = NULL;
 	} else {
-		config.the_q		= user_config->the_q;
-		user_config->the_q	= NULL;
+		config.conduits		= user_config->conduits;
+		user_config->conduits	= NULL;
 	}
 
 	SYNC_TRACE(4)
@@ -581,7 +581,7 @@ get_config(int argc, char *argv[])
 		}
 
 		fprintf(stderr, "The queue of conduits:\n");
-		for (c = config.the_q; c != NULL; c = c->next)
+		for (c = config.conduits; c != NULL; c = c->next)
 		{
 			struct cond_header *hdr;
 
@@ -961,7 +961,7 @@ new_config()
 	retval->mode = Standalone;
 	retval->listen		= NULL;
 	retval->pda		= NULL;
-	retval->the_q		= NULL;
+	retval->conduits		= NULL;
 
 	MISC_TRACE(5)
 		fprintf(stderr,
@@ -997,8 +997,8 @@ free_config(struct config *config)
 		free_pda_block(p);
 	}
 
-	/* Free the_q */
-	for (c = config->the_q, nextc = NULL; c != NULL; c = nextc)
+	/* Free conduits */
+	for (c = config->conduits, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
 		free_conduit_block(c);
