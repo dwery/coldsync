@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.61 2002-10-31 15:30:20 azummo Exp $
+ * $Id: conduit.c,v 2.62 2002-11-09 15:06:28 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1393,6 +1393,25 @@ run_Sync_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo,
 	 */
 
 	return run_conduits(palm, dbinfo, "sync", FLAVORFL_SYNC, True, pda);
+}
+
+/* run_Init_conduits
+ * Run the Init conduits.
+ */
+int
+run_Init_conduits(struct Palm *palm)
+{
+	CONDUIT_TRACE(1)
+		fprintf(stderr, "Running init conduits.\n");
+
+	/* Note: If there are any open file descriptors that the conduit
+	 * shouldn't have access to (other than stdin and stdout, which are
+	 * handled separately, here would be a good place to close them.
+	 * Use
+	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
+	 */
+
+	return run_conduits(palm, NULL, "init", FLAVORFL_INIT, True, NULL);
 }
 
 /* run_Install_conduits 
