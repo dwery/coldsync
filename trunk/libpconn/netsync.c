@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.1 2000-12-10 21:40:54 arensb Exp $
+ * $Id: netsync.c,v 1.2 2000-12-11 09:08:42 arensb Exp $
  */
 
 #include "config.h"
@@ -34,7 +34,7 @@
 #include "pconn/PConnection.h"
 #include "pconn/netsync.h"
 
-int net_trace = 10;		/* Debugging level for NetSync */
+int net_trace = 0;		/* Debugging level for NetSync */
 #define NET_TRACE(n)	if (net_trace >= (n))
 
 extern int sockfd;		/* XXX - This is very bogus */
