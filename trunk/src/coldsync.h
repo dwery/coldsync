@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.43 2000-12-08 06:30:16 arensb Exp $
+ * $Id: coldsync.h,v 1.44 2000-12-24 09:47:05 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -233,6 +233,7 @@ typedef struct conduit_block
 typedef struct pda_block
 {
 	struct pda_block *next;
+	unsigned char flags;		/* PDAFL_* flags */
 	char *name;			/* Name of this PDA */
 	char *snum;			/* Serial number */
 	char *directory;		/* Base directory, where the
@@ -242,7 +243,13 @@ typedef struct pda_block
 	char *username;			/* Owner's full name */
 	Bool userid_given;		/* Was a user ID specified? */
 	udword userid;			/* Owner's user ID */
-	unsigned char flags;		/* PDAFL_* flags */
+
+	Bool forward;			/* Should we consider forwarding
+					 * this PDA's data to another host? */
+	char *forward_host;		/* Host to which to forward the
+					 * connection. */
+	char *forward_name;		/* Name to give in the NetSync
+					 * wakeup packet. */
 	/* XXX - List of preferences that the conduit is interested in */
 } pda_block;
 
@@ -267,6 +274,8 @@ struct sync_config {
 extern int need_slow_sync;
 extern udword hostid;			/* This host's ID */
 					/* XXX - This shouldn't be global */
+extern struct sockaddr **hostaddrs;
+extern int num_hostaddrs;
 extern struct userinfo userinfo;	/* Information about the (Unix)
 					 * user */
 
@@ -293,7 +302,9 @@ extern int open_tempfile(char *name_template);
 extern int parse_args(int argc, char *argv[]);
 extern int load_config(void);
 extern void print_version(void);
-extern int get_hostid(udword *hostid);
+extern int get_hostinfo(void);
+extern int get_hostaddrs(void);
+extern void free_hostaddrs(void);
 extern void print_pda_block(FILE *outfile,
 			    const pda_block *pda,
 			    struct Palm *palm);
@@ -359,6 +370,10 @@ extern const Bool lexists(const char *fname);
 extern const Bool is_file(const char *fname);
 extern const Bool is_directory(const char *fname);
 extern const Bool is_database_name(const char *fname);
+
+#if !HAVE_SNPRINTF
+extern int snprintf(char *buf, size_t len, const char *format, ...);
+#endif	/* HAVE_SNPRINTF */
 
 #endif	/* _coldsync_h_ */
 
