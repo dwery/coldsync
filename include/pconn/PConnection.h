@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.37 2003-11-30 17:19:34 azummo Exp $
+ * $Id: PConnection.h,v 1.38 2004-03-27 15:23:57 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -101,6 +101,8 @@ typedef struct PConnection
 	int fd;				/* File descriptor */
 	unsigned short flags;		/* Flags. See PCONNFL_*, above */
 
+	int bytes_read,bytes_write;
+	time_t start_time,stop_time;
 	/* The following io_* fields are really virtual functions that
 	 * allow you to choose between serial and USB I/O.
 	 */
@@ -273,7 +275,7 @@ extern int PConn_close(struct PConnection *p);
 extern int PConn_select(struct PConnection *p,
                  pconn_direction direction,
                  struct timeval *tvp);
-extern int PConn_tselect(struct PConnection *p,
+extern int PConn_timedselect(struct PConnection *p,
 		 pconn_direction direction,
 		 int secs);
 extern palmerrno_t PConn_get_palmerrno(PConnection *p);
