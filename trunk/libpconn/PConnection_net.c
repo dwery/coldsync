@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.16 2001-07-26 07:01:01 arensb Exp $
+ * $Id: PConnection_net.c,v 1.17 2001-07-30 07:25:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -177,8 +177,6 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	socklen_t servaddr_len;
 	struct netsync_wakeup wakeup_pkt;
 	struct servent *service;
-	const ubyte *netbuf;		/* Buffer from netsync layer */
-	uword inlen;
 
 	/* XXX - Break this monster function up into parts */
 
@@ -394,50 +392,9 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	}
 
 	/* Exchange ritual packets with server */
-	/* Send ritual response 1 */
-	err = netsync_write(pconn, ritual_resp1, ritual_resp1_size);
-	/* XXX - Error-checking */
-	IO_TRACE(5)
-		fprintf(stderr, "netsync_write(ritual resp 1) returned %d\n",
-			err);
-
-	/* Receive ritual statement 2 */
-	err = netsync_read(pconn, &netbuf, &inlen);
-	/* XXX - Error-checking */
-	IO_TRACE(5)
-	{
-		fprintf(stderr,
-			"netsync_read(ritual stmt 2) returned %d\n",
-			err);
-		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
-	}
-
-	/* Send ritual response 2 */
-	err = netsync_write(pconn, ritual_resp1, ritual_resp2_size);
-	/* XXX - Error-checking */
-	IO_TRACE(5)
-		fprintf(stderr, "netsync_write(ritual resp 2) returned %d\n",
-			err);
-
-	/* Receive ritual statement 3 */
-	err = netsync_read(pconn, &netbuf, &inlen);
-	/* XXX - Error-checking */
-	IO_TRACE(5)
-	{
-		fprintf(stderr,
-			"netsync_read(ritual stmt 3) returned %d\n",
-			err);
-		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
-	}
-
-	/* Send ritual response 3 */
-	err = netsync_write(pconn, ritual_resp1, ritual_resp3_size);
-	/* XXX - Error-checking */
-	IO_TRACE(5)
-		fprintf(stderr, "netsync_write(ritual resp 3) returned %d\n",
-			err);
+	err = ritual_exch_client(pconn);
+	if (err < 0)
+		return -1;
 
 	return 0;
 }
@@ -449,6 +406,10 @@ net_accept(PConnection *p)
 	struct netsync_wakeup wakeup_pkt;
 	struct sockaddr_in cliaddr;	/* Client's address */
 	socklen_t cliaddr_len;		/* Length of client's address */
+
+	if (p->protocol != PCONN_STACK_NET)
+		/* No other protocol stack is supported (for now, at least) */
+		return -1;
 
 	cliaddr_len = sizeof(cliaddr);
 	net_udp_listen(p, &wakeup_pkt,
@@ -469,8 +430,21 @@ static int
 net_close(PConnection *p)
 {
 	/* Clean up the protocol stack elements */
-	dlp_tini(p);
-	netsync_tini(p);
+
+	switch (p->protocol)
+	{
+	    case PCONN_STACK_DEFAULT:	/* Fall through */
+	    case PCONN_STACK_NET:
+		dlp_tini(p);
+		netsync_tini(p);
+		break;
+
+	    case PCONN_STACK_FULL:	/* Fall through */
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    default:
+		/* Fail silently */
+		break;
+	}
 
 	return (p->fd >= 0 ? close(p->fd) : 0);
 }
@@ -495,30 +469,53 @@ net_drain(PConnection *p)
 	/* I don't think there's a network equivalent of flushing a stream
 	 * or tty connection.
 	 */
+	/* We ignore the p->protocol field because they don't matter */
 	return 0;
 }
 
 int
-pconn_net_open(PConnection *pconn, char *device, int prompt)
+pconn_net_open(PConnection *pconn,
+	       const char *device,
+	       const int protocol,
+	       const Bool prompt)
 {
 	IO_TRACE(1)
 		fprintf(stderr, "Opening net connection.\n");
 
+	if (protocol == PCONN_STACK_DEFAULT)
+		pconn->protocol = PCONN_STACK_NET;
+	else
+		pconn->protocol = protocol;
+
 	/* Initialize the various protocols that the network connection
 	 * will use.
 	 */
-	/* Initialize the DLP part of the PConnection */
-	if (dlp_init(pconn) < 0)
+	switch (pconn->protocol)
 	{
-		dlp_tini(pconn);
+	    case PCONN_STACK_FULL:
+	    case PCONN_STACK_SIMPLE:
+		/* XXX - Should these even be supported? Not for now */
 		return -1;
-	}
 
-	/* Initialize the NetSync part of the PConnnection */
-	if (netsync_init(pconn) < 0)
-	{
-		dlp_tini(pconn);
-		netsync_tini(pconn);
+	    case PCONN_STACK_NET:
+		/* Initialize the DLP part of the PConnection */
+		if (dlp_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			return -1;
+		}
+
+		/* Initialize the NetSync part of the PConnnection */
+		if (netsync_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			netsync_tini(pconn);
+			return -1;
+		}
+		break;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol stack */
 		return -1;
 	}
 
@@ -676,8 +673,6 @@ net_tcp_listen(PConnection *pconn)
 	struct sockaddr_in cliaddr;	/* Client's address */
 	socklen_t cliaddr_len;		/* Length of client's address */
 	struct servent *service;	/* "netsync" entry in /etc/services */
-	const ubyte *inbuf;
-	uword inlen;
 	int data_sock;			/* Data socket (TCP). Will replace
 					 * the UDP socket pconn->fd.
 					 */
@@ -781,49 +776,15 @@ net_tcp_listen(PConnection *pconn)
 	/* We've accepted a TCP connection, so we don't need the UDP socket
 	 * anymore. Replace the UDP socket with the TCP one.
 	 */
-	close(pconn->fd);
+	close(pconn->fd);		/* XXX - Wasn't this done already
+					 * in net_acknowledge_wakeup()?
+					 */
 	pconn->fd = data_sock;
 
-	/* Receive ritual response 1 */
-	err = netsync_read(pconn, &inbuf, &inlen);
-	IO_TRACE(5)
-	{
-		fprintf(stderr,
-			"netsync_read(ritual resp 1) returned %d\n",
-			err);
-		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
-	}
-
-	/* Send ritual statement 2 */
-	err = netsync_write(pconn, ritual_stmt2, ritual_stmt2_size);
-	IO_TRACE(5)
-		fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
-			err);
-
-	/* Receive ritual response 2 */
-	err = netsync_read(pconn, &inbuf, &inlen);
-	IO_TRACE(5)
-	{
-		fprintf(stderr, "netsync_read returned %d\n", err);
-		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
-	}
-
-	/* Send ritual statement 3 */
-	err = netsync_write(pconn, ritual_stmt3, ritual_stmt3_size);
-	IO_TRACE(5)
-		fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
-			err);
-
-	/* Receive ritual response 3 */
-	err = netsync_read(pconn, &inbuf, &inlen);
-	IO_TRACE(5)
-	{
-		fprintf(stderr, "netsync_read returned %d\n", err);
-		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
-	}
+	/* Exchange ritual packets with the client */
+	err = ritual_exch_server(pconn);
+	if (err < 0)
+		return -1;
 
 	return 0;
 }
