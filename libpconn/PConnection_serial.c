@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.37 2002-05-02 22:45:46 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.38 2002-07-04 21:03:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -276,7 +276,11 @@ serial_read(PConnection *p, unsigned char *buf, int len)
 static int
 serial_write(PConnection *p, unsigned const char *buf, const int len)
 {
-	return write(p->fd, buf, len);
+	if (p->fd == STDIN_FILENO) {
+	    return write(STDOUT_FILENO, buf, len);
+        } else {
+	    return write(p->fd, buf, len);
+	}
 }
 
 static int
@@ -335,6 +339,7 @@ serial_accept(PConnection *pconn)
 			}
 		}
 
+
 		newspeed = cmp_accept(pconn, pconn->speed);
 		if (newspeed == ~0)
 		{
@@ -373,10 +378,17 @@ serial_accept(PConnection *pconn)
 		tcspeed = speeds[speed_ix].tcspeed;
 
 		/* Change the speed */
-		if ((err = setspeed(pconn, tcspeed)) < 0)
-		{
-			fprintf(stderr, _("Error trying to set speed.\n"));
-			return -1;
+		if (pconn->flags & PCONNFL_MODEM) {
+			IO_TRACE(5)
+				fprintf(stderr, "This is a modem, so not changing speed.\n");
+		} else {
+			if ((err = setspeed(pconn, tcspeed)) < 0)
+			{
+				fprintf(stderr, _("Error trying to set speed.\n"));
+				return -1;
+			}
+			IO_TRACE(5)
+				fprintf(stderr, "This is not a modem, so changing speed.\n");
 		}
 		break;
 
@@ -481,6 +493,7 @@ serial_select(PConnection *p,
  * 'pconn' is a partly-initialized PConnection; it must still be
  * initialized as a serial PConnection.
  * 'device' is the pathname of the serial port. If it is NULL, use stdin.
+ * Also the special string 'stdin' use stdin.
  * 'protocol' is the software protcol stack to use: ordinary serial devices
  * use DLP->PADP->SLP, whereas Palm m50x'es use DLP->netsync
  * 'prompt': if set, prompt the user to press the HotSync button.
@@ -488,8 +501,7 @@ serial_select(PConnection *p,
 int
 pconn_serial_open(PConnection *pconn,
 		  const char *device,
-		  const pconn_proto_t protocol,
-		  const unsigned short flags)
+		  const pconn_proto_t protocol)
 {
 	struct termios term;
 
@@ -566,7 +578,7 @@ pconn_serial_open(PConnection *pconn,
 	pconn->io_drain = &serial_drain;
 	pconn->io_private = 0;
 
-	if (device == NULL)
+	if ((device == NULL) || strcasecmp("stdin", device) == 0 )
 	{
 		/* Use stdin */
 		pconn->fd = STDIN_FILENO;
@@ -586,7 +598,7 @@ pconn_serial_open(PConnection *pconn,
 		 * hacks.
 		 */
 
-		if (flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT))
+		if (pconn->flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT))
 			printf(_("Please press the HotSync button.\n"));
 
 		while (1)
@@ -598,7 +610,7 @@ pconn_serial_open(PConnection *pconn,
 			switch (errno)
 			{
 			    case ENOENT:
-				if ((flags & PCONNFL_TRANSIENT) == 0)
+				if ((pconn->flags & PCONNFL_TRANSIENT) == 0)
 					goto abort;
 				/* If PCONNFL_TRANSIENT is set, fall
 				 * through */
@@ -644,8 +656,15 @@ pconn_serial_open(PConnection *pconn,
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
 
 	/* Set initial rate. 9600 bps required for handshaking */
-	cfsetispeed(&term, B9600);
-	cfsetospeed(&term, B9600);
+	if (pconn->flags & PCONNFL_MODEM) {
+		IO_TRACE(5)
+			fprintf(stderr, "This is a modem, so not setting initial speed.\n");
+	} else {
+		cfsetispeed(&term, B9600);
+		cfsetospeed(&term, B9600);
+		IO_TRACE(5)
+			fprintf(stderr, "This is a not modem, so setting initial speed.\n");
+	}
 
 	cfmakeraw(&term);		/* Make it raw */
 	/* XXX - Error-checking */
@@ -653,7 +672,7 @@ pconn_serial_open(PConnection *pconn,
 	/* XXX - Error-checking */
 					/* Make it so */
 
-	if ((flags & PCONNFL_PROMPT) && !(flags & PCONNFL_TRANSIENT))
+	if ((pconn->flags & PCONNFL_PROMPT) && !(pconn->flags & PCONNFL_TRANSIENT))
 		printf(_("Please press the HotSync button.\n"));
 
 	return pconn->fd;

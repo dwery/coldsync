@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.52 2002-03-14 19:01:32 arensb Exp $
+.\" $Id: coldsync.8,v 1.53 2002-07-04 21:03:26 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -118,7 +118,11 @@ in which case the given pathname is assumed to be relative to
 .Pa /dev ,
 or the string
 .Dq -
-(a single dash), meaning stdin.
+(a single dash), or meaning stdin and stdout.  The special string 'stdin'
+also means stdin and stdout (useful with mgetty and modems).  ***PLEASE NOTE
+THIS FUNCTIONALITY IS DISABLED IN CURRENT DEVELOPMENT BUILDS (use config
+files with -f on the command line and specify the device there instead,
+using stdin instead of '-' if necessary)***
 .Pp
 .Nm ColdSync
 waits for a connection on the given port, reads the username and user
@@ -381,6 +385,11 @@ listen usb {			# BSD only
 
 listen net {
 }
+
+listen serial {
+	device: stdin;
+	modem;
+}
 .Ed
 .Pp
 .Li listen serial
@@ -404,6 +413,12 @@ directive indicates that the device may not exist when
 .Nm ColdSync
 starts, but will be created later on, when the Palm connects to the
 workstation. Use this if you are using devfs.
+.Pp
+The
+.Li modem
+directive indicates that the device is a modem, so
+.Nm ColdSync
+will not attempt to change the line speed and break the connection.
 .Pp
 .Li listen usb
 is used to sync a Handspring Visor using native USB mode. This only
@@ -935,11 +950,11 @@ single line, with fields separated by vertical bar (pipe) characters:
 .Ed
 .Bl -tag -width password -offset indent
 .It serial
-The serial number of the Palm, or the empty string if none or missing.
+The serial number of the Palm. The empty string or '*' will match any palm.
 .It username
-The username on the Palm.
+The username on the Palm. The empty string or '*' will match any palm.
 .It userid
-The user ID on the Palm.
+The user ID on the Palm. The number '0' will match any palm.
 .It luser
 The local (Unix) username or UID to setuid() to.
 .It name
