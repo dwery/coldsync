@@ -97,6 +97,8 @@
 /* Name of package */
 #undef PACKAGE
 
+#undef SYSCONFDIR
+
 /* Version number of package */
 #undef VERSION
 
@@ -107,8 +109,12 @@
     * glibc1 (e.g., Slackware 4.0).
     */
 #  if _LINUX_C_LIB_VERSION_MAJOR <= 5
-#     define _POSIX_C_SOURCE  2
-#     define _BSD_SOURCE
+#    ifndef _POSIX_C_SOURCE
+#      define _POSIX_C_SOURCE  2
+#    endif	/* _POSIX_C_SOURCE */
+#    ifndef _BSD_SOURCE
+#      define _BSD_SOURCE
+#    endif	/* _BSD_SOURCE */
 #  endif /* _LINUX_C_LIB_VERSION_MAJOR */
 
 /* For any given version of 'gcc', one of these two should make 'gcc'
