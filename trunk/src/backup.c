@@ -3,8 +3,9 @@
  * Functions for backing up Palm databases (both .pdb and .prc) from
  * the Palm to the desktop.
  *
- * $Id: backup.c,v 2.2 1999-07-14 12:24:29 arensb Exp $
+ * $Id: backup.c,v 2.3 1999-08-01 08:02:20 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
 #include <string.h>		/* For strncpy(), strncat() */

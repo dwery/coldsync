@@ -2,8 +2,9 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.2 1999-07-12 09:21:27 arensb Exp $
+ * $Id: cmp.c,v 1.3 1999-08-01 08:02:36 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include "coldsync.h"
 #include "palm_types.h"

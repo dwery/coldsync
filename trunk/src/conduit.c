@@ -3,11 +3,11 @@
  * Functions for dealing with conduits: looking them up, loading
  * libraries, invoking them, etc.
  *
- * $Id: conduit.c,v 1.2 1999-07-12 09:32:45 arensb Exp $
+ * $Id: conduit.c,v 1.3 1999-08-01 08:03:45 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <string.h>
-#include "config.h"
 #include "conduit.h"
 
 extern int run_GenericConduit(struct PConnection *pconn,

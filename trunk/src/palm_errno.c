@@ -2,8 +2,9 @@
  *
  * Error-related stuff for libpalm.
  *
- * $Id: palm_errno.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: palm_errno.c,v 1.2 1999-08-01 08:06:20 arensb Exp $
  */
+#include "config.h"
 #include "palm_errno.h"
 
 int palm_errno;				/* Current error code */
