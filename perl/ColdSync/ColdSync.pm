@@ -1,9 +1,9 @@
 # ColdSync.pm
 # A module to simplify writing ColdSync conduits.
 #
-# $Id: ColdSync.pm,v 1.4 2000-05-19 12:09:38 arensb Exp $
+# $Id: ColdSync.pm,v 1.5 2000-07-31 08:59:02 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.4 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.5 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -47,6 +47,7 @@ perform a certain amount of sanity-checking on the conduit's input.
 #'
 
 use Exporter;
+use Palm::PDB;
 
 @ISA = qw( Exporter );
 @EXPORT = qw( $PDB %HEADERS @HEADERS
@@ -221,10 +222,10 @@ sub ParseArgs
 	} elsif (lc($ARGV[1]) eq "dump")
 	{
 		$FLAVOR = "dump";
-# Not supported yet
-#  	} elsif (lc($ARGV[1]) eq "sync")
-#  	{
-#  		$argflavor = "sync";
+# XXX - Not finished yet
+	} elsif (lc($ARGV[1]) eq "sync")
+	{
+		$FLAVOR = "sync";
 	} else {
 		print STDOUT "402 Invalid conduit flavor: $ARGV[1]\n";
 		exit 1;
