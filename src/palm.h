@@ -1,18 +1,18 @@
-/* spalm.h
+/* palm.h
  *
  * Declarations and definitions pertaining to 'struct Palm's.
  *
- *	Copyright (C) 2000-2001, Andrew Arensburger.
+ *	Copyright (C) 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.1 2001-06-26 06:18:52 arensb Exp $
+ * $Id: palm.h,v 2.7 2000-12-24 21:24:55 arensb Exp $
  */
-#ifndef _spalm_h_
-#define _spalm_h_
+#ifndef _palm_h_
+#define _palm_h_
 
 #include "pconn/pconn.h"
-#include "palm.h"
+#include "pconn/palm_types.h"
 
 #define SNUM_MAX	32		/* Max. length of serial number
 					 * information, including the
@@ -35,7 +35,7 @@
  * efficient code.
  *
  * NB: All of the members of this struct are private! Don't touch them
- * outside of "spalm.c"!
+ * outside of "palm.c"!
  *
  * [1] Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides,
  * "Design Patterns," Addison-Wesley.
@@ -114,7 +114,7 @@ extern const char *palm_netsync_hostname(struct Palm *palm);
 extern const char *palm_netsync_hostaddr(struct Palm *palm);
 extern const char *palm_netsync_netmask(struct Palm *palm);
 
-#endif	/* _spalm_h_ */
+#endif	/* _palm_h_ */
 
 /* This is for Emacs's benefit:
  * Local Variables:	***

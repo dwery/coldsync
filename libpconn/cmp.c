@@ -6,11 +6,11 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.12 2001-06-26 05:47:15 arensb Exp $
+ * $Id: cmp.c,v 1.11 2001-03-30 06:27:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
-#include "palm.h"
+#include <pconn/palm_types.h>
 #include <pconn/palm_errno.h>
 #include <pconn/padp.h>
 #include <pconn/cmp.h>

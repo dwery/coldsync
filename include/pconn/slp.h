@@ -52,12 +52,12 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.6 2001-06-26 05:46:49 arensb Exp $
+ * $Id: slp.h,v 1.5 2001-01-09 16:36:32 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
 
-#include "palm.h"
+#include "palm_types.h"
 
 /* Predefined port numbers (Palm calls them Socket IDs) */
 #define SLP_PORT_DEBUGGER	0	/* Debugger port */

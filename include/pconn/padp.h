@@ -55,12 +55,12 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.7 2001-06-26 05:46:38 arensb Exp $
+ * $Id: padp.h,v 1.6 2001-01-09 16:33:37 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
 
-#include "palm.h"
+#include "palm_types.h"
 
 /* PADP fragment types */
 #define PADP_FRAGTYPE_DATA	1	/* User data */

@@ -6,10 +6,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.9 2001-06-26 05:44:15 arensb Exp $
+ * $Id: pdb.h,v 1.8 2001-01-09 16:30:57 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
+
+#include "pconn/pconn.h"
 
 /* XXX - Add a type (and support functions) for those ubitquitous
  * 4-character IDs.
@@ -24,6 +26,7 @@
 					 * header */
 
 /* Database attribute flags */
+/* XXX - Move these to a common area */
 #define PDB_ATTR_RESDB		0x0001	/* This is a resource database.
 					 * Resource databases are usually
 					 * saved in files with ".prc"
@@ -43,11 +46,7 @@
 					 */
 #define PDB_ATTR_RESET		0x0020	/* Reset the Palm after the
 					 * database is installed */
-#define PDB_ATTR_NOCOPY		0x0040	/* Database should not be copied(?) */
-#define PDB_ATTR_STREAM		0x0080	/* Database is used for file stream
-					 * implementation(?).
-					 */
-#define PDB_ATTR_OPEN		0x8000	/* Database is open */
+#define PDB_ATTR_OPEN		0x0040	/* Database is open */
 
 /* Record attributes
  * These are the attributes that individual records in a database can have.
@@ -221,6 +220,13 @@ extern void pdb_FreeResource(struct pdb_resource *rsrc);
 extern struct pdb *pdb_Read(int fd);	/* Load a pdb from a file. */
 extern int pdb_Write(const struct pdb *db, int fd);
 					/* Write a pdb to a file */
+extern struct pdb *pdb_Download(
+	PConnection *pconn,
+	const struct dlp_dbinfo *dbinfo,
+	ubyte dbh);
+extern int pdb_Upload(
+	PConnection *pconn,
+	struct pdb *pdb);
 extern struct pdb_record *pdb_FindRecordByID(
 	const struct pdb *db,
 	const udword id);
@@ -230,6 +236,7 @@ extern struct pdb_record *pdb_FindRecordByIndex(
 extern int pdb_DeleteRecordByID(
 	struct pdb *db,
 	const udword id);
+extern int UploadDatabase(PConnection *pconn, const struct pdb *db);
 extern int pdb_AppendRecord(struct pdb *db, struct pdb_record *newrec);
 extern int pdb_AppendResource(struct pdb *db, struct pdb_resource *newrsrc);
 extern int pdb_InsertRecord(

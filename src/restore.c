@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.27 2001-06-26 05:52:35 arensb Exp $
+ * $Id: restore.c,v 2.26 2001-03-29 05:38:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -177,7 +177,7 @@ restore_file(PConnection *pconn,
 	add_to_log(_("Restore "));
 	add_to_log(pdb->name);
 	add_to_log(" - ");
-	err = upload_database(pconn, pdb);
+	err = pdb_Upload(pconn, pdb);
 		/* XXX - This appears to fail for "Graffiti Shortcuts": it
 		 * tries to create the database on the Palm, but since the
 		 * database already exists (it can't be deleted because

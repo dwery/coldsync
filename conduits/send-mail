@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.8 2001-06-04 02:29:12 arensb Exp $
+# $Id: send-mail,v 1.7 2001-03-16 03:47:53 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -22,7 +22,7 @@ use Text::Wrap;
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.8 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.7 $ ))[1];	# Conduit version
 
 StartConduit("dump");
 
@@ -158,6 +158,6 @@ Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
 
 =head1 SEE ALSO
 
-coldsync(8)
+coldsync(1)
 
 F<ColdSync Conduits>, in the ColdSync documentation.
