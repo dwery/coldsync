@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.55 2001-11-12 01:11:13 arensb Exp $
+ * $Id: parser.y,v 2.56 2001-11-12 05:50:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -89,6 +89,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token SAVED
 %token SPEED
 %token SNUM
+%token TRANSIENT
 %token TYPE
 %token UNSAVED
 
@@ -311,6 +312,14 @@ listen_directive:
 			/* XXX - Would be nice to be able to tell whether
 			 * the protocol has already been specified.
 			 */
+	}
+	| TRANSIENT semicolon
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "This is a transient device.\n");
+
+		/* Mark this device as being transient */
+		cur_listen->flags |= LISTENFL_TRANSIENT;
 	}
 	| error
 	{
