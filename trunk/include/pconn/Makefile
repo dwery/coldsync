@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000-12-13 16:13:38 arensb Exp $
+# $Id: Makefile,v 1.6 2001-10-12 02:16:39 arensb Exp $
 
 TOP =		../..
 SUBDIR =	include/pconn
@@ -14,7 +14,8 @@ HEADERS =	PConnection.h \
 		palm_types.h \
 		pconn.h \
 		slp.h \
-		util.h
+		util.h \
+		spc_client.h
 
 DISTFILES =	Makefile \
 		${HEADERS}
