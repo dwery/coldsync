@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.4 2000-05-21 07:58:56 arensb Exp $
+ * $Id: dlp.c,v 1.5 2000-08-08 13:10:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -309,12 +309,16 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 			DLP_TRACE(5)
 				fprintf(stderr, "Arg %d is long\n", i);
 			pconn->dlp.argv[i].id = get_uword(&rptr);
+			pconn->dlp.argv[i].id &= 0x3f;
+					/* Strip off the size bits */
 			pconn->dlp.argv[i].size = get_udword(&rptr);
 			break;
 		    case 0x80:		/* Small argument */
 			DLP_TRACE(5)
 				fprintf(stderr, "Arg %d is small\n", i);
 			pconn->dlp.argv[i].id = get_ubyte(&rptr);
+			pconn->dlp.argv[i].id &= 0x3f;
+					/* Strip off the size bits */
 			get_ubyte(&rptr);	/* Skip over padding */
 			pconn->dlp.argv[i].size = get_uword(&rptr);
 			break;
@@ -322,10 +326,11 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 			DLP_TRACE(5)
 				fprintf(stderr, "Arg %d is tiny\n", i);
 			pconn->dlp.argv[i].id = get_ubyte(&rptr);
+			pconn->dlp.argv[i].id &= 0x3fff;
+					/* Strip off the size bits */
 			pconn->dlp.argv[i].size = get_ubyte(&rptr);
 			break;
 		}
-		pconn->dlp.argv[i].id &= 0x3f;	/* Stip off the size bits */
 		DLP_TRACE(6)
 			fprintf(stderr, "Got arg %d, id 0x%02x, size %ld\n",
 				i, pconn->dlp.argv[i].id,
