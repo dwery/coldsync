@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.20 2003-11-30 17:19:34 azummo Exp $
+ * $Id: dlp.c,v 1.21 2004-03-27 15:26:54 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -497,7 +497,7 @@ dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
 	fprintf(stderr,
 		"dlp_send_resp: Calculating outgoing request buffer\n");
     
-    buflen = 2L;		/* Request id and argc */
+    buflen = 4L;		/* Request id, argc and status */
     for (i = 0; i < header->argc; i++){
 	
 	if (argv[i].size <= DLP_TINYARG_MAXLEN){
