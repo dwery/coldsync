@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.55 2002-11-13 12:10:20 azummo Exp $
+.\" $Id: coldsync.8,v 1.56 2002-11-26 18:32:32 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -127,7 +127,7 @@ using stdin instead of '-' if necessary)***
 .Nm ColdSync
 waits for a connection on the given port, reads the username and user
 ID from the Palm, and looks them up in
-.Pa /usr/local/etc/palms .
+.Pa /usr/local/etc/coldsync/palms .
 If it finds a matching entry, it sets its UID to the appropriate user
 (relinquishing root privileges in the process) and runs a normal sync.
 .El
@@ -942,7 +942,7 @@ but not
 	type: "addr/DATA";
 .Ed
 .Sh THE PALMS FILE
-.Pa /usr/local/etc/palms
+.Pa /usr/local/etc/coldsync/palms
 lists known Palms and their associated users. Each entry is on a
 single line, with fields separated by vertical bar (pipe) characters:
 .Bd -literal -offset indent
@@ -1006,9 +1006,9 @@ instructions.
 .Bl -tag -width ~/.palm/archive -compact
 .It Pa ~/.coldsyncrc
 user's configuration file.
-.It Pa /usr/local/etc/coldsync.conf
+.It Pa /usr/local/etc/coldsync/coldsync.conf
 site-wide configuration file.
-.It Pa /usr/local/etc/palms
+.It Pa /usr/local/etc/coldsync/palms
 list of known Palms
 .It Pa ~/.palm
 The default root of the backup tree (\,
