@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.6 1999-03-16 11:01:06 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.7 1999-03-16 11:30:17 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -66,7 +66,7 @@ dlpcmd_puttime(ubyte **wptr, const struct dlp_time *t)
  * 'time_t's and 'dlp_time's? */
 
 int
-DlpReadUserInfo(struct PConnection *pconn,		/* File descriptor */
+DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		struct dlp_userinfo *userinfo)
 				/* Will be filled in with user information. */
 {
@@ -172,7 +172,7 @@ DlpReadUserInfo(struct PConnection *pconn,		/* File descriptor */
 }
 
 int
-DlpWriteUserInfo(struct PConnection *pconn,	/* File descriptor */
+DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		 const struct dlp_setuserinfo *userinfo)
 				/* Bits of user information to set */
 {
@@ -251,7 +251,7 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* File descriptor */
 
 /* XXX - Add v1.2 support: tell which version of DLP we're using */
 int
-DlpReadSysInfo(struct PConnection *pconn,		/* File descriptor */
+DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 	       struct dlp_sysinfo *sysinfo)
 				/* Will be filled in with system
 				 * information */
@@ -377,9 +377,8 @@ DlpGetSysDateTime(struct PConnection *pconn,
 }
 
 int
-DlpSetSysDateTime(struct PConnection *pconn,	/* File descriptor */
-		  const struct dlp_time *ptime)
-				/* Time to set */
+DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
+		  const struct dlp_time *ptime)	/* Time to set */
 {
 	int i;
 	int err;
@@ -612,7 +611,7 @@ DlpReadStorageInfo(struct PConnection *pconn,
 }
 
 int
-DlpReadDBList(struct PConnection *pconn,			/* File descriptor */
+DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 	      const ubyte iflags,	/* Search flags */
 	      const int card,		/* Card number */
 	      const uword start,	/* Database index to start at */
@@ -795,11 +794,11 @@ DlpReadDBList(struct PConnection *pconn,			/* File descriptor */
  * Open a database.
  */
 int
-DlpOpenDB(struct PConnection *pconn,		/* File descriptor */
+DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	  int card,		/* Memory card */
 	  const char *name,	/* Database name */
 	  ubyte mode,		/* Open mode */
-	  ubyte *dbhandle)	/* Handle to open database will be put here */
+	  ubyte *handle)	/* Handle to open database will be put here */
 {
 	int i;
 	int err;
@@ -858,9 +857,9 @@ DlpOpenDB(struct PConnection *pconn,		/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_OpenDB_DB:
-			*dbhandle = get_ubyte(&rptr);
+			*handle = get_ubyte(&rptr);
 
-			DLPC_TRACE(3, "Database handle: %d\n", *dbhandle);
+			DLPC_TRACE(3, "Database handle: %d\n", *handle);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -875,13 +874,13 @@ DlpOpenDB(struct PConnection *pconn,		/* File descriptor */
 /* DlpCreateDB
  * Create a new database according to the specifications given in
  * 'newdb'.
- * Puts a handle for the newly-created database in 'dbhandle'.
+ * Puts a handle for the newly-created database in 'handle'.
  */
 int
-DlpCreateDB(struct PConnection *pconn,		/* File descriptor */
+DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	    const struct dlp_createdbreq *newdb,
 				/* Describes the database to create */
-	    ubyte *dbhandle)	/* Database handle */
+	    ubyte *handle)	/* Database handle will be put here */
 {
 	int i;
 	int err;
@@ -950,9 +949,9 @@ DlpCreateDB(struct PConnection *pconn,		/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_CreateDB_DB:
-			*dbhandle = get_ubyte(&rptr);
+			*handle = get_ubyte(&rptr);
 
-			DLPC_TRACE(3, "Database handle: %d\n", *dbhandle);
+			DLPC_TRACE(3, "Database handle: %d\n", *handle);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -969,7 +968,7 @@ DlpCreateDB(struct PConnection *pconn,		/* File descriptor */
  * DLPCMD_CLOSEALLDBS, then all open databases will be closed.
  */
 int
-DlpCloseDB(struct PConnection *pconn,		/* File descriptor */
+DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
 	   ubyte handle)	/* Handle of database to delete */
 {
 	int i;
@@ -1040,7 +1039,7 @@ DlpCloseDB(struct PConnection *pconn,		/* File descriptor */
  * Deletes a database. The database must be closed.
  */
 int
-DlpDeleteDB(struct PConnection *pconn,		/* File descriptor */
+DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 	    const int card,	/* Memory card */
 	    const char *name)	/* Name of the database */
 {
@@ -1203,7 +1202,7 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
  */
 int
 DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
-		 const ubyte handle,	/* Handle */
+		 const ubyte handle,	/* Database handle */
 		 const uword offset,	/* Offset at which to start writing */
 		 const uword len,	/* Length of data */
 		 const ubyte *data)	/* The data to write */
@@ -1364,10 +1363,8 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
  * XXX - Not terribly well-tested.
  */
 int
-DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
-/*  		  const struct dlp_sortblock *sortblock, */
-				/* Sort block descriptor */
-		  const ubyte handle,	/* Handle */
+DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
+		  const ubyte handle,	/* Database handle */
 		  const uword offset,	/* Offset at which to start writing */
 		  const uword len,	/* Length of data */
 		  const ubyte *data)	/* The data to write */
@@ -1445,15 +1442,13 @@ return -1;
  * 'handle'.
  * When there are no more modified records to be read, the DLP response
  * code will be DLPSTAT_NOTFOUND.
- * XXX - The caller needs access to this.
  */
 int
 DlpReadNextModifiedRec(
-	struct PConnection *pconn,	/* File descriptor */
-	const ubyte handle,		/* Database ID (handle) */
-				/* Record will be put here */
-	struct dlp_recinfo *recinfo,
-	const ubyte **data)
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
+	struct dlp_recinfo *recinfo,	/* Record will be put here */
+	const ubyte **data)		/* Record data returned here */
 {
 	int i;
 	int err;
@@ -1463,8 +1458,7 @@ DlpReadNextModifiedRec(
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadNextModifiedRec: db %d\n",
-		   handle);
+	DLPC_TRACE(1, ">>> ReadNextModifiedRec: db %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadNextModifiedRec;
@@ -1535,7 +1529,7 @@ DlpReadNextModifiedRec(
 }
 
 int
-DlpReadRecordByID(struct PConnection *pconn,	/* File descriptor */
+DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 		  const ubyte handle,	/* Database handle */
 		  const udword id,	/* ID of record to read */
 		  const uword offset,	/* Where to start reading */
@@ -1556,7 +1550,7 @@ DlpReadRecordByID(struct PConnection *pconn,	/* File descriptor */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecord ByID: dbid %d, recid %ld, offset %d, "
+	DLPC_TRACE(1, ">>> ReadRecord ByID: handle %d, recid %ld, offset %d, "
 		   "len %d\n",
 		   handle, id, offset, len);
 
@@ -1663,7 +1657,7 @@ DlpReadRecordByIndex(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecord ByIndex: dbid %d, index %d\n",
+	DLPC_TRACE(1, ">>> ReadRecord ByIndex: handle %d, index %d\n",
 		   handle,
 		   index);
 
@@ -1739,15 +1733,15 @@ DlpReadRecordByIndex(
  * Write a record.
  */
 int
-DlpWriteRecord(struct PConnection *pconn,	/* Connection */
+DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	       const ubyte handle,	/* Database handle */
 	       const ubyte flags,
-	       const udword id,
-	       const ubyte attributes,
-	       const ubyte category,
+	       const udword id,		/* Record ID */
+	       const ubyte attributes,	/* Record attributes */
+	       const ubyte category,	/* Record category */
 	       const udword len,	/* Length of record data */
 	       const ubyte *data,	/* Record data */
-	       udword *recid)		/* Record ID returned here */
+	       udword *recid)		/* Record's new ID returned here */
 {
 	int i;
 	int err;
@@ -1760,7 +1754,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteRecord: dbid %d, flags 0x%02x, "
+	DLPC_TRACE(1, ">>> WriteRecord: handle %d, flags 0x%02x, "
 		   "recid 0x%08lx, attr 0x%02x, category %d, len %ld\n",
 		   handle,
 		   flags,
@@ -1851,7 +1845,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection */
  */
 int
 DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
-		const ubyte dbid,	/* Database ID (handle) */
+		const ubyte handle,	/* Database handle */
 		const ubyte flags,	/* Flags */
 		const udword recid)	/* Unique record ID */
 {
@@ -1865,9 +1859,9 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 						/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> DeleteRecord: dbid %d, flags 0x%02x, "
+	DLPC_TRACE(1, ">>> DeleteRecord: handle %d, flags 0x%02x, "
 		   "recid 0x%08lx\n",
-		   dbid, flags, recid);
+		   handle, flags, recid);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_DeleteRecord;
@@ -1875,7 +1869,7 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, flags);
 	put_udword(&wptr, recid);
 
@@ -1919,17 +1913,15 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 }
 
 int
-DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
-		       const ubyte dbid,	/* Database ID (handle) */
-		       const uword index,	/* Resource index */
-		       const uword offset,	/* Offset into resource */
-		       const uword len,		/* #bytes to read (-1 == to
-						 * the end) */
-		       struct dlp_resource *value,
-						/* Resource info returned
-						 * here */
-		       const ubyte **data)	/* Resource data returned
-						 * here */
+DlpReadResourceByIndex(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
+	const uword index,		/* Resource index */
+	const uword offset,		/* Offset into resource */
+	const uword len,		/* #bytes to read (~0n == to the
+					 * end) */
+	struct dlp_resource *value,	/* Resource info returned here */
+	const ubyte **data)		/* Resource data returned here */
 {
 	int i;
 	int err;
@@ -1942,9 +1934,9 @@ DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadResourceByIndex: dbid %d, index %d, "
+	DLPC_TRACE(1, ">>> ReadResourceByIndex: handle %d, index %d, "
 		   "offset %d, len %d\n",
-		   dbid, index, offset, len);
+		   handle, index, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadResource;
@@ -1952,7 +1944,7 @@ DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Padding */
 	put_uword(&wptr, index);
 	put_uword(&wptr, offset);
@@ -2020,17 +2012,15 @@ DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 }
 
 int
-DlpReadResourceByType(struct PConnection *pconn,			/* File descriptor */
-		      const ubyte dbid,		/* Database ID (handle) */
-		      const udword type,	/* Resource type */
-		      const uword id,		/* Resource ID */
-		      const uword offset,	/* Offset into resource */
-		      const uword len,		/* # bytes to read */
-		      struct dlp_resource *value,
-						/* Resource info returned
-						 * here */
-		      ubyte *data)		/* Resource data returned
-						 * here */
+DlpReadResourceByType(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
+	const udword type,		/* Resource type */
+	const uword id,			/* Resource ID */
+	const uword offset,		/* Offset into resource */
+	const uword len,		/* # bytes to read */
+	struct dlp_resource *value,	/* Resource info returned here */
+	ubyte *data)			/* Resource data returned here */
 {
 	int i;
 	int err;
@@ -2043,9 +2033,9 @@ DlpReadResourceByType(struct PConnection *pconn,			/* File descriptor */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadResourceByType: dbid %d, type %ld, id %d, "
+	DLPC_TRACE(1, ">>> ReadResourceByType: handle %d, type %ld, id %d, "
 		   "offset %d, len %d\n",
-		   dbid, type, id, offset, len);
+		   handle, type, id, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadResource;
@@ -2053,7 +2043,7 @@ DlpReadResourceByType(struct PConnection *pconn,			/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Padding */
 	put_udword(&wptr, type);
 	put_uword(&wptr, id);
@@ -2121,8 +2111,8 @@ DlpReadResourceByType(struct PConnection *pconn,			/* File descriptor */
 }
 
 int
-DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
-		 const ubyte dbid,	/* Database ID (handle) */
+DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
+		 const ubyte handle,	/* Database handle */
 		 const udword type,	/* Resource type */
 		 const uword id,	/* Resource ID */
 		 const uword size,	/* Size of resource */
@@ -2158,7 +2148,7 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 		return -1;
 	}
 	wptr = outbuf;
-	put_ubyte(&wptr, dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Padding */
 	put_udword(&wptr, type);
 	put_uword(&wptr, id);
@@ -2218,8 +2208,8 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 }
 
 int
-DlpDeleteResource(struct PConnection *pconn,	/* Connection */
-		  const ubyte dbid,	/* Database ID (handle) */
+DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
+		  const ubyte handle,	/* Database handle */
 		  const ubyte flags,	/* Request flags */
 		  const udword type,	/* Resource type */
 		  const uword id)	/* Resource ID */
@@ -2234,9 +2224,9 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection */
 					/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> DeleteResource: dbid %d, flags 0x%02x, "
+	DLPC_TRACE(1, ">>> DeleteResource: handle %d, flags 0x%02x, "
 		   "type '%c%c%c%c' (0x%08lx), id %d\n",
-		   dbid, flags,
+		   handle, flags,
 		   (char) (type >> 24) & 0xff,
 		   (char) (type >> 16) & 0xff,
 		   (char) (type >> 8) & 0xff,
@@ -2250,7 +2240,7 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, flags);
 	put_udword(&wptr, type);
 	put_uword(&wptr, id);
@@ -2299,9 +2289,10 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection */
  * Delete any records that were marked as archived or deleted in the record
  * database.
  */
-int DlpCleanUpDatabase(
+int
+DlpCleanUpDatabase(
 	struct PConnection *pconn,	/* Connection to Palm */
-	const ubyte dbid)		/* Database handle */
+	const ubyte handle)		/* Database handle */
 {
 	int i;
 	int err;
@@ -2310,7 +2301,7 @@ int DlpCleanUpDatabase(
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> CleanUpDatabase: dbid %d\n", dbid);
+	DLPC_TRACE(1, ">>> CleanUpDatabase: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_CleanUpDatabase;
@@ -2319,7 +2310,7 @@ int DlpCleanUpDatabase(
 	/* Fill in the argument */
 	argv[0].id = DLPARG_CleanUpDatabase_DB;
 	argv[0].size = DLPARGLEN_CleanUpDatabase_DB;
-	argv[0].data = (void *) &dbid;
+	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
@@ -2358,9 +2349,9 @@ int DlpCleanUpDatabase(
 /* DlpResetSyncFlags
  * Reset any dirty flags on the database.
  */
-int DlpResetSyncFlags(struct PConnection *pconn,		/* File descriptor */
-		      const ubyte dbid)
-					/* Database ID (handle) */
+int
+DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
+		  const ubyte handle)		/* Database handle */
 {
 	int i;
 	int err;
@@ -2369,7 +2360,7 @@ int DlpResetSyncFlags(struct PConnection *pconn,		/* File descriptor */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> ResetSyncFlags: dbid %d\n", dbid);
+	DLPC_TRACE(1, ">>> ResetSyncFlags: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ResetSyncFlags;
@@ -2378,7 +2369,7 @@ int DlpResetSyncFlags(struct PConnection *pconn,		/* File descriptor */
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ResetSyncFlags_DB;
 	argv[0].size = DLPARGLEN_ResetSyncFlags_DB;
-	argv[0].data = (void *) &dbid;
+	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
@@ -2554,7 +2545,7 @@ DlpCallApplication(
  * Indicate that the Palm needs to be reset at the end of the sync.
  */
 int
-DlpResetSystem(struct PConnection *pconn)		/* File descriptor */
+DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
 {
 	int i;
 	int err;
@@ -2611,8 +2602,8 @@ DlpResetSystem(struct PConnection *pconn)		/* File descriptor */
  * a bit too easy :-(
  */
 int
-DlpAddSyncLogEntry(struct PConnection *pconn,	/* File descriptor */
-		   const char *msg)	/* Log message */
+DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
+		   const char *msg)		/* Log message */
 {
 	int i;
 	int err;
@@ -2805,7 +2796,8 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 /* DlpOpenConduit
  * Sent before each conduit is opened by the desktop.
  */
-int DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
+int
+DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 {
 	int i;
 	int err;
@@ -2855,9 +2847,9 @@ int DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 }
 
 int
-DlpEndOfSync(struct PConnection *pconn,		/* File descriptor */
-	     const ubyte status)
-				/* Exit status, reason for termination */
+DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
+	     const ubyte status)	/* Exit status, reason for
+					 * termination */
 {
 	int i;
 	int err;
@@ -2919,9 +2911,10 @@ DlpEndOfSync(struct PConnection *pconn,		/* File descriptor */
 /* DlpResetRecordIndex
  * Reset the "next modified record" index to the beginning.
  */
-int DlpResetRecordIndex(
+int
+DlpResetRecordIndex(
 	struct PConnection *pconn,	/* Connection to Palm */
-	const ubyte dbid)		/* Database handle */
+	const ubyte handle)		/* Database handle */
 {
 	int i;
 	int err;
@@ -2930,7 +2923,7 @@ int DlpResetRecordIndex(
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> ResetRecordIndex: dbid %d\n", dbid);
+	DLPC_TRACE(1, ">>> ResetRecordIndex: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ResetRecordIndex;
@@ -2939,7 +2932,7 @@ int DlpResetRecordIndex(
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ResetRecordIndex_DB;
 	argv[0].size = DLPARGLEN_ResetRecordIndex_DB;
-	argv[0].data = (void *) &dbid;
+	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
@@ -3074,7 +3067,7 @@ DlpReadRecordIDList(
 int
 DlpReadNextRecInCategory(
 	struct PConnection *pconn,	/* Connection to Palm */
-	const ubyte handle,		/* Database ID (handle) */
+	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
 {
@@ -3535,7 +3528,7 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpWriteNetSyncInfo(struct PConnection *pconn,	/* File descriptor */
+DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 		    const struct dlp_writenetsyncinfo *netsyncinfo)
 {
 	int i;
