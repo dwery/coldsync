@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.7 2002-12-10 13:54:23 azummo Exp $
+ * $Id: spalm.h,v 2.8 2003-06-26 21:01:07 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -70,6 +70,7 @@ struct Palm
 
 	char serial_[SNUM_MAX];		/* Serial number */
 	signed char serial_len_;	/* Length of serial number */
+	Bool serial_hack_;		/* Read serial number from expcard */
 
 	/* Memory information */
 	int num_cards_;			/* # memory cards */
@@ -115,6 +116,7 @@ extern PConnection *palm_pconn(const struct Palm *palm);
 extern const udword palm_rom_version(struct Palm *palm);
 extern const int palm_serial_len(struct Palm *palm);
 extern const char *palm_serial(struct Palm *palm);
+extern void palm_serial_hack(struct Palm *palm, Bool state);
 extern const int palm_num_cards(struct Palm *palm);
 
 extern const char *palm_username(struct Palm *palm);

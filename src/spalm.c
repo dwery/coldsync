@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.16 2003-06-24 12:42:12 azummo Exp $
+ * $Id: spalm.c,v 2.17 2003-06-26 21:01:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -38,6 +38,7 @@ static int fetch_sysinfo(struct Palm *palm);
 static int fetch_netsyncinfo(struct Palm *palm);
 static int fetch_userinfo(struct Palm *palm);
 static int fetch_serial(struct Palm *palm);
+static int fetch_expcard_serial(struct Palm *palm);
 
 /* special_snums
  * This exists mainly to accomodate the Handspring Visor: although it has a
@@ -89,6 +90,7 @@ new_Palm(PConnection *pconn)
 	bzero((void *) (retval->serial_), SNUM_MAX);
 
 	retval->serial_len_	= -1;
+	retval->serial_hack_	= 0;
 	retval->num_cards_	= -1;
 	retval->cardinfo_	= NULL;
 	retval->have_all_DBs_	= False;
@@ -468,9 +470,7 @@ fetch_serial(struct Palm *palm)
 	}
 	else
 	{
-		/* OS 5 or newer does not support reading the
-		 * serial number with a RDLP call.
-		 */
+		/* On OS5 we will always return the empty string */
 	
 		/* Set the serial number to the empty string */
 		palm->serial_[0] = '\0';
@@ -512,6 +512,86 @@ fetch_serial(struct Palm *palm)
 	}
 
 	return 0;
+}
+
+/* fetch_expcard_serial
+ * Fetch the serial number (and its length) from the expansion card, if possible. If
+ * not, the serial number is set to the empty string, and its length is set
+ * to 0.
+ */
+static int
+fetch_expcard_serial(struct Palm *palm)
+{
+	uword snum_len;		/* Length of serial number string */
+	udword p_rom_version;	/* Palm's ROM version */
+	udword version; 	/* Expansion manager version */
+
+	p_rom_version = palm_rom_version(palm);
+	if (p_rom_version == 0)
+		return -1;
+
+	if (p_rom_version < 0x03000000)
+	{
+		SYNC_TRACE(1)
+			fprintf(stderr, "This Palm is too old to have an "
+				"expansion card\n");
+
+		/* Set the serial number to the empty string */
+		palm->serial_[0] = '\0';
+		palm->serial_len_ = 0;
+
+		return 0;	/* Success, in a way */
+	}
+
+	/* The Palm's ROM is v3.0 or later, so it may have an expansion card. */
+	
+	if (DlpReadFeature(palm_pconn(palm), (udword) 'expn', 0, &version) == 0)
+	{
+		struct dlp_expcardinfo einfo;
+
+		/* This unit has the Expansion Manager
+		 * try to get the serial number on the card, if present.
+		 */
+
+		if (DlpExpCardInfo(palm_pconn(palm), 1, &einfo) == 0)
+		{
+			char *p = einfo.strings;
+		
+			/* Skip the first three strings */		
+				
+			while (*p++ != '\0');
+			while (*p++ != '\0');
+			while (*p++ != '\0');
+			
+			snum_len = strlen(p);
+
+			/* Sanity check: make sure we have space for the serial number. */
+			if (snum_len > SNUM_MAX-1)
+			{
+				Error(_("Warning: Card serial number is %d characters long. "
+					"Please notify the\n"
+					"maintainer."),
+				      snum_len);
+				snum_len = SNUM_MAX;
+			}
+		
+			strncpy(palm->serial_, p, snum_len);
+
+			palm->serial_[snum_len] = '\0';
+			palm->serial_len_ = snum_len;
+
+			if (einfo.strings)
+				free(einfo.strings);
+
+			return 0;	/* Success, in a way */
+		}
+	}
+
+	/* Set the serial number to the empty string */
+	palm->serial_[0] = '\0';
+	palm->serial_len_ = 0;
+
+	return 0;	/* Success, in a way */
 }
 
 /* ListDBs
@@ -853,6 +933,15 @@ palm_serial_len(struct Palm *palm)
 			palm->accessor_status_ = PALMACC_FAIL;
 			return -1;
 		}
+
+		if (palm->serial_hack_ && (palm->serial_len_ == 0))
+		{
+			if ((err = fetch_expcard_serial(palm)) < 0)
+			{
+				palm->accessor_status_ = PALMACC_FAIL;
+				return -1;
+			}
+		}
 	}
 
 	return palm->serial_len_;
@@ -878,10 +967,29 @@ palm_serial(struct Palm *palm)
 			palm->accessor_status_ = PALMACC_FAIL;
 			return NULL;
 		}
+
+		if (palm->serial_hack_ && (palm->serial_len_ == 0))
+		{
+			if ((err = fetch_expcard_serial(palm)) < 0)
+			{
+				palm->accessor_status_ = PALMACC_FAIL;
+				return NULL;
+			}
+		}
 	}
 
 	return palm->serial_;
 }
+
+void
+palm_serial_hack(struct Palm *palm, Bool state)
+{
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
+	palm->serial_hack_ = state;
+}
+
 
 /* palm_num_cards
  * Returns the number of memory cards on the Palm.

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.115 2003-06-24 12:36:59 azummo Exp $
+ * $Id: config.c,v 1.116 2003-06-26 21:01:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -377,8 +377,10 @@ load_config(const Bool read_user_config)
 	sync_config->options.install_first	= Undefined;
 	sync_config->options.autoinit		= Undefined;
 	sync_config->options.autorescue		= False;
-	sync_config->options.filter_dbs		= False;	 /* We don't have an equivalent cmd line option
-								  * for the last twos, so they defaults to 
+	sync_config->options.filter_dbs		= False;
+	sync_config->options.use_card_serial	= False;
+								 /* We don't have an equivalent cmd line option
+								  * for the last options, so they default to 
 								  * False here.
 								  */
 
@@ -556,6 +558,12 @@ load_config(const Bool read_user_config)
 			global_opts.autoinit =
 				sync_config->options.autoinit;
 	}
+
+
+	/* Handle global options without a command line equivalent */
+	
+	global_opts.use_card_serial = sync_config->options.use_card_serial;
+
 
 	/* Make sure there's at least one listen block: if a port was
 	 * specified on the command line, use that. If nothing was
