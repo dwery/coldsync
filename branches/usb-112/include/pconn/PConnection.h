@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.2 2000-01-25 11:25:43 arensb Exp $
+ * $Id: PConnection.h,v 1.2.2.1 2000-02-03 04:15:01 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -139,10 +139,14 @@ struct PConnection
 	} slp;
 };
 
-extern struct PConnection *new_PConnection(char *fname, int listenType);
+extern struct PConnection *new_PConnection(char *fname, int listenType,
+					   int prompt_for_hotsync);
 extern int PConnClose(struct PConnection *pconn);
 extern int PConn_bind(struct PConnection *pconn, struct slp_addr *addr);
 extern int PConnSetSpeed(struct PConnection *pconn, speed_t speed);	/* XXX */
+
+extern int io_trace;
+#define	IO_TRACE(n)	if (io_trace >= (n))
 
 #endif	/* _PConn_h_ */
 
