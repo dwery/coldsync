@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.26 2000-11-17 07:15:09 arensb Exp $
+.\" $Id: coldsync.8,v 1.27 2000-11-20 10:12:29 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -18,6 +18,9 @@
 .Nm coldsync
 .Op Ar options
 .Op Fl ms
+.Nm coldsync
+.Op Ar options
+.Fl mI
 .Nm coldsync
 .Op Ar options
 .Fl mb
@@ -51,6 +54,24 @@ databases on the Palm.
 .Sh OPTIONS
 .Ss Modes
 .Bl -tag -width indent
+.It Fl mI
+Initialization mode. Before you can sync a Palm, you must initialize
+its user information. This may seem annoying, but it can prevent other
+annoyances (e.g., losing all of your information the next time you
+reset your Palm, or failing to work with HotSync).
+.Pp
+In this mode,
+.Nm coldsync
+sets the user name and ID on the Palm from values specified in your
+.Pa .coldsyncrc .
+If no values are specified there, the user name and ID default to your
+full name and user ID from
+.Pa /etc/passwd .
+If the Palm already has non-default values that you haven't explicitly
+overridden,
+.Nm coldsync
+will suggest what to add to your
+.Pa .coldsyncrc .
 .It Fl ms
 Sync mode (or Standalone mode). This is the default mode, in which
 .Nm coldsync
