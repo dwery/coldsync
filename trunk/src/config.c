@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.66 2001-03-27 14:09:41 arensb Exp $
+ * $Id: config.c,v 1.67 2001-04-08 08:26:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1327,6 +1327,9 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 		 *	snum "";
 		 * This does mean that you shouldn't have more than one
 		 * pda_block with an empty string.
+		 */
+		/* XXX - Bug: I've gotten a core dump here, where p_snum ==
+		 * NULL.
 		 */
 		if ((cur->snum != NULL) &&
 		    (strncasecmp(cur->snum, p_snum, SNUM_MAX)
