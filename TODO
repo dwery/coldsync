@@ -176,17 +176,6 @@
   complicated, just something better than the default "All records
   successfully synchronized." Maybe just "Backup successful" or
   something.
-- When printing "questionable" types (uid_t, etc.), cast them to long,
-  or whatever the largest type is, to shut compilers up.
-- Under DU 4.0 (and a few others), 'make' doesn't appear to know how
-  to build .cc->.o
-- AIX 4.1: linker complains about:
-	ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
-	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
-	ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
-	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
-  This appears to be something in GenericConduit.cc, but I haven't
-  been able to find anything more.
 - Optimization: don't sync a database if its modification number is
   the same as the desktop copy. We already know that this database
   hasn't changed, so there's no need to open the database, send a
@@ -208,3 +197,4 @@
   is for information about whether to exit with the "-e" flag to be
   carried upwards through the parse tree.
 	Until this gets fixed, I don't want to use 'automake'.
+- Write a 'bool has_db_extension(char *fname)' function, for convenience.
