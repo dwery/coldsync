@@ -1,3 +1,12 @@
+/* pconn.h
+ * Simple include file that includes all of the pconn-related .h files
+ *
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: pconn.h,v 1.5 2001-01-09 16:36:10 arensb Exp $
+ */
 #ifndef __pconn_h__
 #define __pconn_h__
 
