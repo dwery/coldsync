@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.101 2002-05-03 15:11:33 arensb Exp $
+ * $Id: config.c,v 1.102 2002-05-03 16:39:57 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -158,7 +158,7 @@ parse_args(int argc, char *argv[])
 		{"logfile",		required_argument,	NULL, 'l'},
 		{"debug",		required_argument,	NULL, 'd'},
 		{"auto-init",		no_argument,		NULL, 'a'},
-		/* XXX - "-n" option */
+		{"listen-block",	required_argument,	NULL, 'n'},
 		/* XXX - Would it be possible to have translated versions
 		 * of the long options here as well? In some cases, the
 		 * translated version remains the same ("--mode" stays
@@ -177,6 +177,9 @@ parse_args(int argc, char *argv[])
 		 * first place; they can use comments for the translation.
 		 *
 		 * And what about Japanese? Will we need iconv()? Ugh.
+		 *
+		 * azummo: I don't think options nees to be translated
+		 *  ... and would be a nightmare to maintain.
 		 */
 	};	 
 #endif	/* HAVE_GETOPT_LONG */
@@ -965,8 +968,8 @@ usage(int argc, char *argv[])
 		N_("\t-l: <file>:\tWrite error/debugging messages to "
 		   "<file>.\n"),
 		N_("\t-v:\t\tIncrease verbosity.\n"),
+		N_("\t-n <listen-block>:\tChoice the named listen block.\n"),
 		N_("\t-d <fac[:level]>:\tSet debugging level.\n"),
-		/* XXX - "-n" option */
 		NULL
 	};
 	int i;
