@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.9 2002-11-26 18:30:44 azummo Exp $
+ * $Id: palment.h,v 2.10 2002-12-28 23:59:11 azummo Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
@@ -29,9 +29,9 @@
 #include "config.h"
 #include "pconn/pconn.h"	/* For Palm types */
 
-/* Path to /etc/pallms */
-#define _PATH_PALMS_OLD	SYSCONFDIR "/palms"
-#define _PATH_PALMS	SYSCONFDIR "/coldsync/palms"
+/* Path to /etc/palms */
+#define _PATH_PALMS_OLD	SYSCONFDIR "/../palms"
+#define _PATH_PALMS	SYSCONFDIR "/palms"
 
 
 /* Match types */
