@@ -1,3 +1,4 @@
+- Fix the bogosity with libpconn including ../src/spc.h
 - Create a manifest file when installing, to help package-management
   utilities. Preferably add a rule to create the manifest without
   installing.
