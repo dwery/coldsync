@@ -5,14 +5,15 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.21 2002-11-02 22:41:46 azummo Exp $
+# $Id: ColdSync.pm,v 1.22 2002-11-03 16:37:32 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.21 $ ' =~ m{(\d+)\.(\d+)};
+# One liner, to allow MakeMaker to work.
+$VERSION = do { my @r = (q$Revision: 1.22 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 

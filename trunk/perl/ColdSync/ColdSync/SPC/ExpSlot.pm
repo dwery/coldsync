@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.2 2002-06-22 14:09:57 azummo Exp $
+# $Id: ExpSlot.pm,v 1.3 2002-11-03 16:37:32 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::ExpSlot::ISA	 = qw( Exporter );
-$ColdSync::SPC::ExpSlot::VERSION = sprintf "%d.%03d", '$Revision: 1.2 $ ' =~ m{(\d+)\.(\d+)};
+$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.3 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 @ColdSync::SPC::ExpSlot::EXPORT = qw( 
