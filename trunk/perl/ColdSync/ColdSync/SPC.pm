@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.3 2000-09-03 05:34:24 arensb Exp $
+# $Id: SPC.pm,v 1.4 2000-09-04 07:03:50 arensb Exp $
 
 # XXX - Write POD
 
@@ -35,15 +35,26 @@ package ColdSync::SPC;
 
 SPC - Allows ColdSync conduits to communicate with the Palm.
 
+=head1 SYNOPSIS
+
+    use ColdSync;
+    use ColdSync::SPC;
+
+=head1 DESCRIPTION
+
+The SPC package includes functions for sending Serialized Request
+Protocol (SPC) requests in ColdSync conduits.
+
 =cut
 
 use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-($VERSION) = '$Revision: 1.3 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.4 $ ' =~ /\$Revision:\s+([^\s]+)/;
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
+	dlp_req
 	spc_get_dbinfo
 	dlp_ReadSysInfo
 	dlp_OpenDB
@@ -115,6 +126,24 @@ sub spc_req
 	return ($status, $buf);
 }
 
+=head1 FUNCTIONS
+
+=head2 dlp_req
+
+    ($err, @argv) = &dlp_req($reqno, @args)
+
+Sends a DLP request over SPC. C<$reqno> is the DLP request number;
+C<@args> is the array of DLP arguments.
+
+C<$err> is the DLP return status; C<@argv> is the array of values
+returned from the Palm.
+
+This is a fairly low-level function. It is much easier to use one of
+the DLP wrapper functions. However, not every DLP function has been
+implemented yet.
+
+=cut
+
 # dlp_req
 # Send a DLP request over SPC.
 #
@@ -161,7 +190,6 @@ sub dlp_req
 }
 
 # pack_dlp_args
-
 # Takes a set of arguments of the form
 #	{ id => 123, data => "abc" }
 # Packs each one as a DLP argument, concatenates them, and returns the
@@ -264,6 +292,53 @@ sub unpack_dlp_args
 	return @retval;
 }
 
+=head2 spc_get_dbinfo
+
+	$dbinfo = &spc_get_dbinfo();
+
+Returns a reference to a hash containing information about the
+database currently being synchronized:
+
+	$dbinfo->{size}
+	$dbinfo->{misc_flags}
+	$dbinfo->{db_flags}
+	$dbinfo->{type}
+	$dbinfo->{creator}
+	$dbinfo->{version}
+	$dbinfo->{modnum}
+	%{$dbinfo->{ctime}}
+	%{$dbinfo->{mtime}}
+	%{$dbinfo->{baktime}}
+	$dbinfo->{db_index}
+	$dbinfo->{name}
+
+The C<size> field indicates the size of the database information
+block, and is not at all useful here.
+
+The C<creator> and C<type> fields are four-character strings
+specifying the creator and type of the databse.
+
+The C<version> field indicates the version of the database.
+
+The C<modnum> field indicates the modification number of the database.
+Each time the database is modified, this number is incremented. Since
+there is no mechanism within ColdSync to keep this number consistent
+between the Palm and the desktop, this number is not very useful.
+
+The C<name> field gives the name of the database.
+
+C<$dbinfo-E<gt>{ctime}>, C<$dbinfo-E<gt>{mtime}>, and
+C<$dbinfo-E<gt>{baktime}> indicate the creation, modification, and
+backup time of the database. They are all of the following form:
+
+	$dbinfo->{ctime}{year}
+	$dbinfo->{ctime}{month}
+	$dbinfo->{ctime}{day}
+	$dbinfo->{ctime}{hour}
+	$dbinfo->{ctime}{minute}
+	$dbinfo->{ctime}{second}
+
+=cut
 # spc_get_dbinfo
 # Convenience function to read dbinfo information about current database.
 # Returns a hash with the dbinfo information, or undef in case of error.
@@ -316,6 +391,38 @@ sub spc_get_dbinfo
 	return $retval;
 }
 
+=head2 dlp_ReadSysInfo
+
+	$sysinfo = &dlp_ReadSysInfo();
+
+Returns a reference to a hash containing information about the Palm:
+
+	$sysinfo->{ROM_version}
+	$sysinfo->{localization_ID}
+	$sysinfo->{product_ID}
+The C<ROM_version> field indicates the version of the Palm's ROM.
+
+I don't know what the C<localization_ID> field is.
+
+The C<product_ID> indicates which particular model of Palm this is.
+
+The following fields may not be returned by all Palms:
+
+	$sysinfo->{DLP_version}
+	$sysinfo->{compat_version}
+	$sysinfo->{maxrec}
+
+The C<DLP_version> indicates the version of the DLP protocol that the
+Palm implements.
+
+I'm not sure what the C<compat_version> field is. I suspect that it
+gives the earliest version of DLP with which this Palm is compatible.
+
+The C<maxrec> field indicates the maximum size of a record or
+resource.
+
+=cut
+#'
 sub dlp_ReadSysInfo
 {
 	my $errno;
@@ -368,6 +475,30 @@ sub dlp_ReadSysInfo
 	return $retval;
 }
 
+=head2 dlp_OpenDB
+
+	$dbh = &dlp_OpenDB($dbname, $mode);
+
+Opens a database on the Palm. C<$dbname> is a string indicating the
+name of the database; the name of the current database can be gotten
+from C<&spc_get_dbinfo>.
+
+C<$mode> indicates how to open the database. It is the bitwise-or of
+any of the following values:
+
+	0x80		Open for reading
+	0x40		Open for writing
+	0x20		Exclusive access
+	0x10		Show secret records
+
+If successful, C<&dlp_OpenDB> returns a database handle: a small
+integer that refers to the database that was just opened. The database
+handle will be passed to various other functions that operate on the
+database.
+
+If unsuccessful, C<&dlp_OpenDB> returns C<undef>.
+
+=cut
 sub dlp_OpenDB
 {
 	my $dbname = shift;	# Name of database to open
@@ -411,6 +542,15 @@ sub dlp_OpenDB
 	return $retval;
 }
 
+=head2 dlp_CloseDB
+
+	&dlp_CloseDB($dbh);
+
+Closes the database associated with the database handle C<$dbh> (see
+L</dlp_OpenDB>).
+
+=cut
+#'
 sub dlp_CloseDB
 {
 	my $dbh = shift;	# Database handle
@@ -425,6 +565,25 @@ sub dlp_CloseDB
 	return $err;
 }
 
+=head2 dlp_ReadAppBlock
+
+	$appinfo = &dlp_ReadAppBlock($dbh [, $offset, $len]);
+
+Reads the AppInfo block of the database associated with database
+handle C<$dbh> (see L</dlp_OpenDB>).
+
+C<$offset> is an integer specifying an offset from the beginning of
+the AppInfo block at which to start reading. C<$len> is the length of
+the data to return.
+
+If omitted, C<$offset> defaults to 0 (read from the beginning) and
+C<$len> defaults to -1 (read to the end).
+
+The value returned by C<&dlp_ReadAppBlock> is a string of binary data.
+It is not parsed in any way.
+
+=cut
+#'
 sub dlp_ReadAppBlock
 {
 	my $dbh = shift;	# Database handle
@@ -464,6 +623,18 @@ sub dlp_ReadAppBlock
 	return $retval;
 }
 
+=head2 dlp_WriteAppBlock
+
+	$err = &dlp_WriteAppBlock($dbh, $appinfo);
+
+Writes a new AppInfo block to the database indicated by database
+handle C<$dbh>. C<$appinfo> is a string of binary data, the raw
+AppInfo block; it is not parsed in any way.
+
+Returns the DLP error code.
+
+=cut
+#'
 sub dlp_WriteAppBlock
 {
 	my $dbh = shift;	# Database handle
@@ -487,6 +658,14 @@ sub dlp_WriteAppBlock
 
 __END__
 
+=head1 SEE ALSO
+
+ColdSync(3)
+
+Palm::PDB(3)
+
+F<ColdSync Conduits: Specification and Hacker's Guide>
+
 =head1 AUTHOR
 
 Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
@@ -496,3 +675,4 @@ Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
 ``SPC'' is a stupid name.
 
 =cut
+#'
