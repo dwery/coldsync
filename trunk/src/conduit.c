@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.10 2000-09-03 05:06:31 arensb Exp $
+ * $Id: conduit.c,v 2.11 2000-09-03 07:34:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -18,7 +18,15 @@
 #include <sys/time.h>			/* For select() */
 #include <sys/wait.h>			/* For waitpid() */
 #include <sys/socket.h>			/* For socketpair() */
-#include <sys/param.h>			/* For ntohs() and friends */
+
+#if HAVE_SYS_PARAM_H
+#  include <sys/param.h>		/* For ntohs() and friends */
+#endif	/* HAVE_SYS_PARAM_H */
+#if HAVE_NETINET_IN_H
+#  include <netinet/in.h>		/* For ntohs() and friends, under
+					 * Linux */
+#endif	/* HAVE_NETINET_IN_H */
+
 #include <unistd.h>			/* For select(), write() */
 #include <signal.h>			/* For signal() */
 #include <setjmp.h>			/* For sigsetjmp()/siglongjmp() */
@@ -1205,7 +1213,7 @@ spawn_conduit(
 		fprintf(stderr, "spawn_conduit: tochild fd == %d\n",
 			inpipe[1]);
 
-	if ((fh = fdopen(inpipe[1], "w")) == NULL)
+	if ((fh = fdopen(inpipe[1], "wb")) == NULL)
 	{
 		fprintf(stderr,
 			_("%s: Can't create file handle to child's stdin\n"),
@@ -1228,7 +1236,7 @@ spawn_conduit(
 		fprintf(stderr, "spawn_conduit: fromchild fd == %d\n",
 			outpipe[0]);
 
-	if ((fh = fdopen(outpipe[0], "r")) == NULL)
+	if ((fh = fdopen(outpipe[0], "rb")) == NULL)
 	{
 		fprintf(stderr,
 			_("%s: Can't create file handle to child's stdout\n"),
