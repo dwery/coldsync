@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.24 2003-04-05 01:32:26 azummo Exp $
+# $Id: ColdSync.pm,v 1.25 2003-10-10 10:56:52 azummo Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.24 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.25 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -413,35 +413,45 @@ sub StartConduit
 	}
 }
 
-=item EndConduit()
+=item EndConduit([status,message])
 
-Cleans up after a single-flavor conduit. For Fetch and Sync conduits,
-writes $PDB to the file given by $HEADERS{OutputDB}. If everything went
-well, exits with status 0.
+Cleans up after a single-flavor conduit. If defined, outputs the given
+status code and message to STDOUT. If left undefined, the status will
+be 202 and the message "Success!".
 
-Dump conduits are not expected to write a Palm database, so
-EndConduit() does not do so. Any Dump conduit that wishes to write a
-database must do so explicitly.
+In the case of a success code (2xx), the open database C<$PDB> will be
+written to the file C<$HEADERS{OutputDB}> if necessary. In cases where the
+database C<$PDB> hasn't been modified (and C<$HEADERS{OutputDB}> is the
+same as C<$HEADERS{InputDB}>) nothing will happen.
+
+EndConduit returns zero on success.
 
 =cut
 
 # EndConduit
 sub EndConduit
 {
-	# Do the necessary per-flavor cleanup
-	if (($FLAVOR eq "fetch") or ($FLAVOR eq "sync"))
-	{
-		# XXX - Barf if $PDB undefined
-		if (defined $PDB and defined $HEADERS{OutputDB}
-			and $HEADERS{'CS-AutoSave'} eq 1)
-		{
-			$PDB->Write($HEADERS{OutputDB}) or
-				die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
-		}
-	}
-	# Nothing to do for "Dump" conduits
+	my ($status,$msg) = @_;
+	($status,$msg) = (202,'Success!') if @_ < 2;
 
-	print STDOUT "202 Success!\n";
+	# XXX - Barf if $PDB undefined
+	# XXX - Why? "none" is legit.
+
+	# only write the database on success
+	if (int($status / 100) == 2
+		and defined $PDB and defined $HEADERS{OutputDB}
+		and $HEADERS{'CS-AutoSave'} eq 1
+		and ($PDB->is_Dirty() or $HEADERS{InputDB} ne $HEADERS{OutputDB}))
+	{
+		# XXX - The current implementation guarantees that InputDB and
+		# OutputDB are identical. But I guess the conduit could override
+		# them...
+
+		$PDB->Write($HEADERS{OutputDB}) or
+			die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
+	}
+
+	print STDOUT "$status $msg\n";
 	exit 0;
 }
 
@@ -532,7 +542,7 @@ sub ConduitMain
 
 	&{$handler} or die "501 Conduit failed\n";
 
-	&EndConduit;
+	&EndConduit();
 }
 
 1;
