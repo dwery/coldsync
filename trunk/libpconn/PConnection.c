@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.27 2001-11-12 01:01:59 arensb Exp $
+ * $Id: PConnection.c,v 1.28 2002-04-27 17:17:35 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -67,17 +67,18 @@ new_PConnection(char *device,
 	}
 
 	/* Initialize the common part, if only in case the constructor fails */
-	pconn->fd = -1;
-	pconn->io_bind = NULL;
-	pconn->io_read = NULL;
-	pconn->io_write = NULL;
-	pconn->io_connect = NULL;
-	pconn->io_accept = NULL;
-	pconn->io_drain = NULL;
-	pconn->io_close = NULL;
-	pconn->io_select = NULL;
-	pconn->speed = -1;
-	pconn->io_private = NULL;
+	pconn->fd		= -1;
+	pconn->io_bind		= NULL;
+	pconn->io_read		= NULL;
+	pconn->io_write		= NULL;
+	pconn->io_connect	= NULL;
+	pconn->io_accept	= NULL;
+	pconn->io_drain		= NULL;
+	pconn->io_close		= NULL;
+	pconn->io_select	= NULL;
+	pconn->io_private	= NULL;
+	pconn->whosonfirst	= 0;
+	pconn->speed		= -1;
 
 	switch (listenType) {
 	    case LISTEN_SERIAL:

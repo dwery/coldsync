@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.18 2001-12-10 07:27:46 arensb Exp $
+ * $Id: netsync.c,v 1.19 2002-04-27 17:17:35 azummo Exp $
  */
 
 #include "config.h"
@@ -84,11 +84,12 @@ static ubyte ritual_resp1[] = {
 	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
 	0x00, 0x00, 0x00, 0x08,		/* Arg length */
 	/* Arg data */
-	0x00, 0x00, 0x00, 0x01,
-	0x80, 0x00, 0x00, 0x00,
+	0x01, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00,
 };
 static const int ritual_resp1_size =
 	sizeof(ritual_resp1) / sizeof(ritual_resp1[0]);
+
 /* First packet sent by NetSync daemon, when forwarding a NetSync
  * connection:
         01 ff 00 00 00 16
@@ -131,14 +132,14 @@ static ubyte ritual_resp2[] = {
 	0xff, 0xff, 0xff, 0xff,
 	0x00, 0x3c,
 	0x00, 0x3c,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x01,
-	0xc0, 0xa8, 0x84, 0x3c,		/* 192.168.132.60
+	0x40, 0x00, 0x00, 0x00,
+	0x01, 0x00, 0x00, 0x00,
+	0xc0, 0xa8, 0xa5, 0x1e,		/* 192.168.132.60
 					 * Presumably, this is the IP
 					 * address (or hostid) of the
 					 * sender.
 					 */
-	0x04, 0x1c, 0x00, 0x00,
+	0x04, 0x01, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
@@ -391,6 +392,9 @@ static void
 bump_xid(PConnection *pconn)
 {
 	pconn->net.xid++;		/* Increment the current xid */
+
+	if( pconn->net.xid == 0x00 )
+		pconn->net.xid = 0x01;
 }
 
 /* netsync_init
@@ -512,6 +516,14 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		hdr.xid = get_ubyte(&rptr);
 		hdr.len = get_udword(&rptr);
 
+		/* If we have initiated the connection, we must use the
+		 * server provided XID in our packets
+		 */
+
+		if (pconn->whosonfirst)
+			pconn->net.xid = hdr.xid;
+		
+
 		NET_TRACE(5)
 			fprintf(stderr,
 				"Got header: cmd 0x%02x, xid 0x%02x, "
@@ -602,7 +614,11 @@ netsync_write(PConnection *pconn,
 		fprintf(stderr, "Inside netsync_write()\n");
 
 	/* Construct the NetSync header */
-	bump_xid(pconn);		/* Increment the XID for new request */
+
+	if (pconn->whosonfirst == 0)
+		bump_xid(pconn);	/* Get the XID for new request */
+
+
 	wptr = out_hdr;
 	put_ubyte(&wptr, 1);
 	put_ubyte(&wptr, pconn->net.xid);
@@ -612,7 +628,7 @@ netsync_write(PConnection *pconn,
 	NET_TRACE(5)
 	{
 		fprintf(stderr, "Sending NetSync header (%d bytes)\n",
-			len);
+			NETSYNC_HDR_LEN);
 		debug_dump(stderr, "NET -->", out_hdr, NETSYNC_HDR_LEN);
 	}
 

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.27 2002-04-27 13:36:06 azummo Exp $
+ * $Id: PConnection.h,v 1.28 2002-04-27 17:17:35 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -66,6 +66,10 @@ typedef enum {
 					 * HotSync button once the
 					 * connection has been established.
 					 */
+
+/* Misc defines */
+#define PCONN_NET_CONNECT_RETRIES 10	/* connect() retries */
+#define PCONN_NET_CONNECT_DELAY	  1	/* Delay after each connect() */
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
