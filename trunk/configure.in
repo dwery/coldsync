@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.65 2000-05-03 04:37:23 arensb Exp $
+dnl # $Id: configure.in,v 1.66 2000-05-06 11:19:31 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -25,13 +25,9 @@ EXIT_STATUS=0
 PACKAGE="coldsync"
 VERSION="1.1.8"
 
-dnl # XXX - The three-argument version of AC_DEFINE_UNQUOTED was
-dnl # introduced in 2.13, and doesn't work in earlier version (the
-dnl # PACKAGE and VERSION macros are defined to be 1 in "config.h").
-dnl # Check for this. The check ought to be in m4, so that it'll only
-dnl # show up for people who run 'automake', and not people who just
-dnl # run the configure file from the distribution.
-dnl # The version of automake is in AC_ACVERSION.
+dnl # Autoconf 2.13 or higher required for the three-argument version
+dnl # of AC_DEFINE_UNQUOTED
+AC_PREREQ(2.13)
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
 if test x"$EDITION" = x ; then
