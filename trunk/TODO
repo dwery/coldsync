@@ -23,15 +23,8 @@
   out some way printing the appropriate messages ("coldsync" domain
   for the main program, "libpdb" for libpdb messages, etc.)
 	dlopen() calls _init(). Can this be used?
-- Separate libpconn and libpdb into separate packages. pdb_Upload()
-  and pdb_Download() should go into the main ColdSync tree.
-	Actually, this presents a number of problems. Perhaps better
-  to just fix the Makefiles to create shared libraries and install
-  them with 'make install'.
-	Also need to fix header files so that they don't depend on
-  anything that won't be installed (e.g., "config.h").
+- Separate libpconn and libpdb into separate packages.
 	Separate i18n files.
-	Where does debug_dump() go?
 - Tell conduits (esp. Sync conduits) whether this is a slow or fast sync.
 - Consider allowing database-at-a-time syncing.
   Databases (or files?) named on the command line.
