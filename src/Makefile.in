@@ -1,5 +1,9 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.1 1999-07-04 13:40:32 arensb Exp $
+# $Id: Makefile.in,v 1.2 1999-07-12 09:12:16 arensb Exp $
+
+# XXX - Explicitly write .c.o , .cc.o and executable targets:
+# different compilers have different default rules, and I don't want
+# to deal with them.
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -11,10 +15,17 @@ curdir =	${top_srcdir}/${subdir}
 
 CC =		@CC@
 DEFS =		@DEFS@
-INCLUDES =	-I${top_srcdir}
+CXX =		@CXX@
+CCC =		${CXX}		# For Sun's 'make'
+# Grrr... For some reason, 'makedepend' and egcs under Redhat 6.0 insist
+# on having "-I.". I thought it was implied.
+INCLUDES =	-I. -I${top_srcdir}
+CXXINCLUDES =	${INCLUDES}
 CFLAGS =	${DEFS} ${INCLUDES} @CFLAGS@
-# CPPFLAGS =	@CPPFLAGS@ ${INCLUDES}
+CPPFLAGS =	@CPPFLAGS@ ${INCLUDES}
 LDFLAGS =	@LDFLAGS@
+
+MKDEP =		@MKDEP@
 
 # Compatibility functions, included for systems that don't have them.
 COMPAT =	@COMPAT@
@@ -38,7 +49,6 @@ SRCS =		PConnection.c \
 		log.c \
 		conduit.c \
 		GenericConduit.cc \
-		sync.c \
 		@COMPAT@
 
 OBJS =		PConnection.o \
@@ -59,21 +69,22 @@ OBJS =		PConnection.o \
 		log.o \
 		conduit.o \
 		GenericConduit.o \
-		sync.o \
 		@COMPATOBJS@
 
-HEADERS =	GenericConduit.hh \
-		PConnection.h \
-		archive.h \
+HEADERS =	PConnection.h \
+		util.h \
+		slp.h \
 		cmp.h \
-		coldsync.h \
-		conduit.h \
+		padp.h \
 		dlp.h \
 		dlp_cmd.h \
+		palm_types.h \
 		palm_errno.h \
 		pdb.h \
-		slp.h \
-		util.h
+		coldsync.h \
+		archive.h \
+		conduit.h \
+		GenericConduit.hh
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
@@ -81,13 +92,18 @@ DISTFILES =	${SRCS} ${HEADERS} \
 		cfmakeraw.c
 
 CLEAN =		coldsync ${OBJS} *.bak *~ core *.core
-DISTCLEAN =	Makefile
+DISTCLEAN =	Makefile .depend
 SPOTLESS =
 
 all:	coldsync
 
 coldsync:	${OBJS}
 	${CXX} ${CFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
+# specify -I/usr/include/g++
+depend:
+	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
 
 distdir:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
