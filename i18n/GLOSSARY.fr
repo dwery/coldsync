@@ -12,6 +12,7 @@ buffer				tampon
 bug				bogue
 byte				octet
 canonical			officiel (?)
+checksum			total de contrôle (?)
 compile-time X			X lors de la compilation
 conduit				conduit (perhaps `tuyau'?)
 connection			connexion
