@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.3 2002-09-04 14:19:09 azummo Exp $
+ * $Id: palmconn.c,v 2.4 2002-09-04 14:47:39 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -149,25 +149,6 @@ palm_Connect( void )
 	return palm;
 }
 
-void
-palm_Disconnect(struct Palm *palm, ubyte status)
-{
-	int err;
-
-	/* Close the connection */
-
-	SYNC_TRACE(3)
-		fprintf(stderr, "Closing connection to Palm\n");
-
-	if((err = Disconnect(palm_pconn(palm), status)) < 0)
-		Error(_("Couldn't disconnect."));
-
-	free_Palm(palm);
-}
-
-/* The same as palm_Disconnet but doesn't free the palm
- * structure.
- */
 
 void
 palm_Release(struct Palm *palm, ubyte status)
@@ -181,6 +162,16 @@ palm_Release(struct Palm *palm, ubyte status)
 
 	if((err = Disconnect(palm_pconn(palm), status)) < 0)
 		Error(_("Couldn't disconnect."));
+}
+
+
+void
+palm_Disconnect(struct Palm *palm, ubyte status)
+{
+	/* Release the connection */
+	palm_Release(palm, status);
+
+	free_Palm(palm);
 }
 
 
