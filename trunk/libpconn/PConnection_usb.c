@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.26 2001-07-30 07:23:56 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.27 2001-08-20 09:13:00 arensb Exp $
  */
 
 #include "config.h"
@@ -94,6 +94,7 @@ typedef struct {
 #define	hs_usbfun_MAX		4
 
 #define	HANDSPRING_VENDOR_ID	0x082d
+#define PALM_VENDOR_ID		0x0830
 
 static char *hs_usb_functions[] = {
 	"Generic",
@@ -505,7 +506,9 @@ pconn_usb_open(PConnection *pconn,
 
 	}
 
-	if (udi.vendorNo != HANDSPRING_VENDOR_ID) {
+	if ((udi.vendorNo != HANDSPRING_VENDOR_ID) &&
+	    (udi.vendorNo != PALM_VENDOR_ID))
+	{
 		fprintf(stderr,
 			_("%s: Warning: Unexpected USB vendor ID %#x.\n"),
 			"pconn_usb_open", udi.vendorNo);
