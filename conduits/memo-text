@@ -7,7 +7,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: memo-text,v 1.1 2000-05-06 11:20:19 arensb Exp $
+# $Id: memo-text,v 1.2 2000-05-25 12:08:43 arensb Exp $
+
+# XXX - Write pod.
 
 # XXX - Would be nice to replace \x95 with some other character (and
 # back).
@@ -41,7 +43,8 @@ use ColdSync;
 # Set default values
 %HEADERS = (
 	File		=> "$ENV{HOME}/Memos",
-	Delete		=> "no",		# [yes|no|archive]
+	Delete		=> "no",		# [yes|no|archive|expunge]
+						# XXX - Same as todo-text
 
 	# XXX - Should be able to specify multiple schemes:
 	# - One file containing all memos
@@ -50,7 +53,7 @@ use ColdSync;
 
 );
 
-my $VERSION = (qw( $Revision: 1.1 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.2 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
