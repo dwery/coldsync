@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.h,v 1.1.2.2 2000-09-01 06:14:54 arensb Exp $
+ * $Id: pref.h,v 1.1.2.3 2000-09-03 02:12:55 arensb Exp $
  */
 #ifndef _pref_h_
 #define _pref_h_
@@ -48,18 +48,22 @@ typedef struct pref_item
 				 */
 } pref_item;
 
-/* XXX - See whicharguments can be made 'const' */
-extern int CacheFromConduits(conduit_block *conduits,
+extern int CacheFromConduits(const conduit_block *conduits,
 			     struct PConnection *pconn);
 extern int FetchPrefItem(struct PConnection *pconn,
 			 pref_item *prefitem);
 extern int DownloadPrefItem(struct PConnection *pconn,
 			    pref_item *prefitem);
-extern struct pref_item *FindPrefItem(struct pref_desc description,
-				      struct pref_item *list);
-extern struct pref_item *GetPrefItem(struct pref_desc description);
+/* XXX - 'description' in the next few functions, is a struct that's passed
+ * by value. Yuck! See if 'const struct pref_desc *description' will work.
+ */
+extern const struct pref_item *FindPrefItem(
+	const struct pref_desc description,
+	const struct pref_item *list);
+extern const struct pref_item *GetPrefItem(
+	const struct pref_desc description);
 extern void FreePrefItem(struct pref_item *prefitem);
-extern void FreePrefList(struct pref_item *list);
+extern void FreePrefList(const struct pref_item *list);
 
 #endif	/* _pref_h_ */
 
