@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.26 2003-06-29 19:37:13 azummo Exp $
+ * $Id: dlp_cmd.h,v 1.27 2003-11-30 17:19:34 azummo Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -257,7 +257,10 @@ struct dlp_sysinfo
 #define DLPARGLEN_ReadStorageInfo_Req	2
 
 #define DLPRET_ReadStorageInfo_Info	DLPRET_BASE
+#define DLPRETLEN_ReadStorageInfo_Info	64
+
 #define DLPRET_ReadStorageInfo_Ext	DLPRET_BASE+1	/* v1.1 */
+#define DLPRETLEN_ReadStorageInfo_Ext	32
 
 #define DLPCMD_MEMCARD_LEN	32	/* Max. length of card and
 					 * manufacturer name, including

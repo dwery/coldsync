@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.36 2003-06-29 19:37:13 azummo Exp $
+ * $Id: PConnection.h,v 1.37 2003-11-30 17:19:34 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -79,6 +79,7 @@ typedef enum {
 					 */
 #define PCONNFL_NOCHANGESPEED	0x0004	/* This is a modem, don't change speeds */
 #define PCONNFL_DAEMON		0x0008	/* Daemon mode, don't timeout while waiting for the device */
+#define PCONNFL_EMULATEPALM	0x0010	/* Emulate a Palm device, for device -> desktop connections */
 
 /* Misc defines */
 #define PCONN_NET_CONNECT_RETRIES 10	/* connect() retries */
