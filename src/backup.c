@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.30 2001-01-28 22:38:07 arensb Exp $
+ * $Id: backup.c,v 2.31 2001-03-10 05:34:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,6 +46,7 @@ backup(PConnection *pconn,
 	SYNC_TRACE(2)
 		fprintf(stderr, "Backing up \"%s\" to \"%s\"\n",
 			dbinfo->name, bakfname);
+	Verbose(1, _("Backing up \"%s\""), dbinfo->name);
 
 	/* Create and open the backup file */
 	/* XXX - Is the O_EXCL flag desirable? */
