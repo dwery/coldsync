@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.122 2001-03-29 07:11:27 arensb Exp $
+dnl # $Id: configure.in,v 1.123 2001-04-15 05:07:48 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -388,6 +388,7 @@ AC_CHECK_FUNCS(fpurge \
 	strncpy \
 	cfmakeraw \
 	socketpair \
+	usleep \
 	strcasecmp \
 	strncasecmp \
 	snprintf \

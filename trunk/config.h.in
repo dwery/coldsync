@@ -66,6 +66,9 @@
 /* Define if you have the cfmakeraw function.  */
 #undef HAVE_CFMAKERAW
 
+/* Define if you have the usleep function.  */
+#undef HAVE_USLEEP
+
 /* Define if you have the strcasecmp function.  */
 #undef HAVE_STRCASECMP
 
