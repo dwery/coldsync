@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.42 2000-09-21 14:35:25 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.43 2000-09-21 14:54:43 arensb Exp $
  */
 
 /* Note on I/O:
@@ -82,7 +82,7 @@ run_GenericConduit(
 	const conduit_block *block)
 {
 	// XXX - Ctor or run() should take 'block' as well, for the user
-	// headers
+	// headers and preferences.
 	GenericConduit gc(pconn, dbinfo);
 
 	return gc.run();
