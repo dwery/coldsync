@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.31 2001-03-10 05:34:05 arensb Exp $
+ * $Id: backup.c,v 2.32 2001-03-27 14:07:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -22,6 +22,7 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "coldsync.h"
+#include "cs_error.h"
 
 /* XXX - Temporary name */
 /* Back up a single file */
@@ -68,6 +69,15 @@ backup(PConnection *pconn,
 	err = DlpOpenConduit(pconn);
 	if (err != DLPSTAT_NOERR)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Can't open backup conduit."));
 		close(bakfd);
 		add_to_log(_("Error\n"));
@@ -89,6 +99,15 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != DLPSTAT_NOERR)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Can't open database \"%s\"."),
 		      dbinfo->name);
 		close(bakfd);
@@ -105,6 +124,15 @@ backup(PConnection *pconn,
 		 * typically the problem is that the connection to the Palm
 		 * was lost.
 		 */
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		err = DlpCloseDB(pconn, dbh);
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */
@@ -158,8 +186,9 @@ full_backup(PConnection *pconn,
 		fprintf(stderr, "Inside full_backup() -> \"%s\"\n",
 			backupdir);
 
-	palm_fetch_all_DBs(palm);
-	/* XXX - Error-checking */
+	err = palm_fetch_all_DBs(palm);
+	if (err < 0)
+		return -1;
 
 	palm_resetdb(palm);
 	while ((cur_db = palm_nextdb(palm)) != NULL)
@@ -175,10 +204,7 @@ full_backup(PConnection *pconn,
 			 * to the Palm, then abort. Otherwise, hope that
 			 * the problem was transient, and continue.
 			 */
-			/* XXX - Ought to make sure that 'palm_errno' is
-			 * set.
-			 */
-			if (palm_errno == PALMERR_TIMEOUT)
+			if (cs_errno == CSE_NOCONN)
 				return -1;
 		}
 	}

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.16 2001-02-20 14:03:26 arensb Exp $
+ * $Id: palm.c,v 2.17 2001-03-27 14:10:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -21,6 +21,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "palm.h"
+#include "cs_error.h"
 #include "pconn/palm_types.h"
 
 /* Private helper functions: the fetch_*() functions do the actual work of
@@ -132,7 +133,18 @@ fetch_meminfo(struct Palm *palm)
 	 */
 	if ((err = DlpReadStorageInfo(palm->pconn_, CARD0, &last_card, &more,
 				      palm->cardinfo_)) < 0)
+	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		return -1;
+	}
 
 	palm->num_cards_ = 1;	/* XXX - Hard-wired, for the reasons above */
 			/* This also indicates to other functions that
@@ -195,6 +207,15 @@ fetch_sysinfo(struct Palm *palm)
 	/* Get system information about the Palm */
 	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		/* XXX - This message doesn't really belong here */
 		Error(_("Can't get system info."));
 		return -1;
@@ -263,6 +284,15 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Can't read NetSync info."));
 		return -1;
 	}
@@ -288,6 +318,17 @@ fetch_userinfo(struct Palm *palm)
 	if ((err = DlpReadUserInfo(palm->pconn_, &(palm->userinfo_))) < 0)
 	{
 		Error(_("Can't get user info."));
+
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+
+		    default:
+			break;
+		}
+
 		return -1;
 	}
 
@@ -361,8 +402,13 @@ fetch_serial(struct Palm *palm)
 	int i;
 	udword snum_ptr;	/* Palm pointer to serial number */
 	uword snum_len;		/* Length of serial number string */
+	udword p_rom_version;	/* Palm's ROM version */
 
-	if (palm_rom_version(palm) < 0x03000000)
+	p_rom_version = palm_rom_version(palm);
+	if (p_rom_version == 0)
+		return -1;
+
+	if (p_rom_version < 0x03000000)
 	{
 		/* Can't just try to read the serial number and let the RPC
 		 * call fail: the PalmPilot(Pro) panics when you do that.
@@ -389,6 +435,15 @@ fetch_serial(struct Palm *palm)
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Can't get location of serial number."));
 		return -1;
 	}
@@ -413,6 +468,15 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Can't read serial number."));
 		return -1;
 	}
@@ -467,8 +531,11 @@ ListDBs(struct Palm *palm)
 	int card;		/* Memory card number */
 
 	if (palm->num_cards_ < 0)
-		fetch_meminfo(palm);
-	/* XXX - Error-checking */
+	{
+		err = fetch_meminfo(palm);
+		if (err < 0)
+			return -1;
+	}
 
 	/* Iterate over each memory card */
 	for (card = 0; card < palm_num_cards(palm); card++)
@@ -528,11 +595,19 @@ ListDBs(struct Palm *palm)
 			err = DlpReadDBList(palm->pconn_, iflags, card,
 					    start, &last_index, &oflags,
 					    &num, &(palm->dblist_[i]));
-			/* XXX - Until we can get the DLP status code from
-			 * palm_errno, we'll need to ignore 'err'.
-			 */
 			if (err < 0)
+			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				return -1;
+			}
 
 			/* Sanity check: if there are no more databases to
 			 * be read, stop reading now. This shouldn't
@@ -617,13 +692,8 @@ palm_rom_version(struct Palm *palm)
 
 	/* Fetch SysInfo if we haven't done so yet */
 	if (!palm->have_sysinfo_)
-	{
 		if ((err = fetch_sysinfo(palm)) < 0)
-		{
-			/* XXX - Error-checking */
 			return 0;
-		}
-	}
 
 	return palm->sysinfo_.rom_version;
 }
@@ -639,7 +709,6 @@ const char *palm_username(struct Palm *palm)
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 
@@ -660,7 +729,6 @@ const udword palm_userid(struct Palm *palm)
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return 0;
 	}
 
@@ -678,7 +746,6 @@ const udword palm_viewerid(struct Palm *palm)
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return 0;
 	}
 
@@ -700,7 +767,6 @@ palm_lastsyncPC(struct Palm *palm)
 	if (!palm->have_userinfo_)
 	{
 		if ((err = fetch_userinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return 0;
 	}
 
@@ -719,7 +785,6 @@ palm_serial_len(struct Palm *palm)
 	if (palm->serial_len_ < 0)
 	{
 		if ((err = fetch_serial(palm)) < 0)
-			/* XXX - Error-checking */
 			return -1;
 	}
 
@@ -739,7 +804,6 @@ palm_serial(struct Palm *palm)
 	if (palm->serial_len_ < 0)
 	{
 		if ((err = fetch_serial(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 
@@ -758,7 +822,6 @@ palm_num_cards(struct Palm *palm)
 	if (palm->num_cards_ < 0)
 	{
 		if ((err = fetch_meminfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return -1;
 	}
 
@@ -785,7 +848,6 @@ palm_fetch_all_DBs(struct Palm *palm)
 	if (!palm->have_all_DBs_)
 	{
 		if ((err = ListDBs(palm)) < 0)
-			/* XXX - Error-checking */
 			return -1;
 	}
 
@@ -804,7 +866,6 @@ palm_num_dbs(struct Palm *palm)
 	if (!palm->have_all_DBs_)
 	{
 		if ((err = ListDBs(palm)) < 0)
-			/* XXX - Error-checking */
 			return -1;
 	}
 
@@ -843,6 +904,7 @@ palm_nextdb(struct Palm *palm)
 {
 	int err;
 	const struct dlp_dbinfo *retval;
+	int num_dbs;			/* # databases on Palm */
 
 	MISC_TRACE(6)
 		fprintf(stderr, "Palm database iterator++\n");
@@ -863,12 +925,16 @@ palm_nextdb(struct Palm *palm)
 	if (!palm->have_all_DBs_)
 	{
 		if ((err = ListDBs(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 
+	/* Find out how many databases there are */
+	num_dbs = palm_num_dbs(palm);
+	if (num_dbs < 0)
+		return NULL;
+
 	/* Have we reached the end of the list yet? */
-	if (palm->dbit_ > palm_num_dbs(palm) - 1)
+	if (palm->dbit_ > num_dbs - 1)
 	{
 		MISC_TRACE(6)
 			fprintf(stderr, "Reached end of list\n");
@@ -916,14 +982,20 @@ palm_append_dbentry(struct Palm *palm,
 {
 	struct dlp_dbinfo *newdblist;
 	struct dlp_dbinfo *dbinfo;
+	int num_dbs;			/* # databases on Palm */
 
 	MISC_TRACE(4)
 		fprintf(stderr, "append_dbentry: adding \"%s\"\n",
 			pdb->name);
 
+	/* Find out how many databases there are */
+	num_dbs = palm_num_dbs(palm);
+	if (num_dbs < 0)
+		return -1;
+
 	/* Resize the existing 'dblist'. */
 	newdblist = realloc(palm->dblist_,
-			    (palm_num_dbs(palm)+1) *
+			    (num_dbs + 1) *
 			    sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
@@ -934,7 +1006,7 @@ palm_append_dbentry(struct Palm *palm,
 	palm->num_dbs_++;
 
 	/* Fill in the new entry */
-	dbinfo = &(palm->dblist_[palm_num_dbs(palm)-1]);
+	dbinfo = &(palm->dblist_[num_dbs-1]);
 	return dbinfo_fill(dbinfo, pdb);
 }
 
@@ -947,7 +1019,6 @@ palm_netsync_hostname(struct Palm *palm)
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 
@@ -963,7 +1034,6 @@ palm_netsync_hostaddr(struct Palm *palm)
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 
@@ -979,7 +1049,6 @@ palm_netsync_netmask(struct Palm *palm)
 	if (!palm->have_netsyncinfo_)
 	{
 		if ((err = fetch_netsyncinfo(palm)) < 0)
-			/* XXX - Error-checking */
 			return NULL;
 	}
 

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.34 2001-03-16 14:15:46 arensb Exp $
+ * $Id: conduit.c,v 2.35 2001-03-27 14:09:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -54,6 +54,7 @@
 #include "conduit.h"
 #include "spc.h"
 #include "pref.h"
+#include "cs_error.h"
 
 #define MAX_SANE_FD	32	/* Highest-numbered file descriptor one
 				 * might get in a sane universe. Anything
@@ -489,6 +490,19 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				conduit->prefs[i].id);
 
 		pref_list[i] = GetPrefItem(&(conduit->prefs[i]));
+		if (pref_list[i] == NULL)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				break;
+			    default:
+				Error(_("Can't get preference item."));
+				break;
+			}
+			goto abort;
+		}
 
 		/* Set the header */
 		++last_header;
@@ -849,6 +863,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				       dbinfo,
 				       spc_inbuf,
 				       (unsigned char **) &spc_outbuf);
+				/* For error-checking, see below */
 				/* NB: The cast of '&spc_outbuf' is utterly
 				 * bogus, but is required to shut the
 				 * compiler up. The compiler is required to
@@ -866,6 +881,20 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			if (spc_inbuf != NULL)
 				free(spc_inbuf);
 			spc_towrite = spc_req.len;
+
+			/* Error-checking */
+			if (err < 0)
+			{
+				switch (cs_errno)
+				{
+				    case CSE_NOCONN:
+					/* Lost connection to Palm */
+					return 402;
+				    default:
+					/* Unspecified error */
+					return 401;
+				}
+			}
 
 			spc_state = SPC_Write_Header;
 
@@ -1136,8 +1165,20 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			err = (*builtin->func)(pconn, dbinfo, conduit);
 		}
 
-		/* XXX - Error-checking. Report the conduit's exit status
-		 */
+		/* Error-checking */
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm. Aborting."));
+				return -1;
+			    default:
+				Warn(_("Conduit %s exited abnormally. "
+					  "Continuing."),
+					conduit->path);
+			}
+		}
 
 		/* If this is a final conduit, don't look any further. */
 		if (conduit->flags & CONDFL_FINAL)
@@ -1176,7 +1217,22 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 				return -1;
 			}
 
-			(*builtin->func)(pconn, dbinfo, def_conduit);
+			err = (*builtin->func)(pconn, dbinfo, def_conduit);
+		}
+
+		/* Error-checking */
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm. Aborting."));
+				return -1;
+			    default:
+				Warn(_("Conduit %s exited abnormally. "
+					  "Continuing."),
+					conduit->path);
+			}
 		}
 	}
 

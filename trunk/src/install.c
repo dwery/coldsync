@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.29 2001-02-22 14:34:18 arensb Exp $
+ * $Id: install.c,v 2.30 2001-03-27 14:10:04 arensb Exp $
  */
 
 #include "config.h"
@@ -44,6 +44,7 @@
 
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */
+#include "cs_error.h"
 
 #if 0
 /* install_file
@@ -131,6 +132,15 @@ install_file(PConnection *pconn,
 		err = DlpDeleteDB(pconn, CARD0, pdb->name);
 		if (err < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("%s: Error deleting \"%s\"."),
 			      "install_file",
 			      pdb->name);
@@ -143,6 +153,15 @@ install_file(PConnection *pconn,
 	err = pdb_Upload(pconn, pdb);
 	if (err < 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Error uploading \"%s\"."),
 		      "install_file",
 		      pdb->name);
@@ -375,13 +394,30 @@ InstallNewFiles(PConnection *pconn,
 				      pdb->name);
 				add_to_log(_("Error\n"));
 				free_pdb(pdb);
-				continue;
+
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					return -1;
+				    default:
+					continue;
+				}
 			}
 		}
 
 		err = pdb_Upload(pconn, pdb);
 		if (err < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("%s: Error uploading \"%s\"."),
 			      "InstallNewFiles",
 			      pdb->name);
@@ -402,8 +438,12 @@ InstallNewFiles(PConnection *pconn,
 			SYNC_TRACE(4)
 				fprintf(stderr, "InstallNewFiles: "
 					"appending db to palm->dbinfo\n");
-			palm_append_dbentry(palm, pdb);	/* XXX - Error-
-							 * checking */
+
+			if (palm_append_dbentry(palm, pdb) < 0)
+			{
+				free_pdb(pdb);
+				return -1;
+			}
 		}
 
 		/* XXX - This next comment is OBE */

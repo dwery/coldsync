@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.88 2001-03-16 14:14:43 arensb Exp $
+ * $Id: coldsync.c,v 1.89 2001-03-27 14:08:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -78,7 +78,7 @@ int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
 			 * another field in 'struct Palm' or 'sync_config'.
 			 */
 
-int cs_errno;			/* ColdSync error code. */
+int cs_errno = CSE_NOERR;	/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
 struct sync_config *sync_config = NULL;
 				/* Configuration for the current sync */
@@ -461,10 +461,14 @@ run_mode_Standalone(int argc, char *argv[])
 	struct dlp_dbinfo dbinfo;	/* Used when installing files */
 	struct Palm *palm;
 	pda_block *pda;			/* The PDA we're syncing with. */
+	const char *p_username;		/* The username on the Palm */
 	const char *want_username;	/* The username we expect to see on
 					 * the Palm. */
+	udword p_userid;		/* The userid on the Palm */
 	udword want_userid;		/* The userid we expect to see on
 					 * the Palm. */
+	udword p_lastsyncPC;		/* Hostid of last host Palm synced
+					 * with */
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -533,7 +537,15 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	/* See if the userid matches. */
-	if (palm_userid(palm) != want_userid)
+	p_userid = palm_userid(palm);
+	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	{
+		Error(_("Can't get user ID from Palm."));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	if (p_userid != want_userid)
 	{
 		Error(_("This Palm has user ID %ld (I was expecting "
 			"%ld).\n"
@@ -545,15 +557,20 @@ run_mode_Standalone(int argc, char *argv[])
 			"\tYour configuration file should contain a PDA "
 			"block that looks\n"
 			"something like this:"),
-		      palm_userid(palm), want_userid);
+		      p_userid, want_userid);
 		pda = find_pda_block(palm, False);
 				/* There might be a PDA block in the config
 				 * file with the appropriate serial number,
 				 * but the wrong username or userid. Find
 				 * it and use it for suggesting a pda
 				 * block.
+				 * We don't check whether 'pda' is NULL,
+				 * because that's not an error.
 				 */
 		print_pda_block(stderr, pda, palm);
+				/* Don't bother checking cs_errno because
+				 * we're about to abort anyway.
+				 */
 
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -561,7 +578,16 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	/* See if the username matches */
-	if (strncmp(palm_username(palm), want_username, DLPCMD_USERNAME_LEN)
+	p_username = palm_username(palm);
+	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	if (strncmp(p_username, want_username, DLPCMD_USERNAME_LEN)
 	    != 0)
 	{
 		Error(_(
@@ -571,7 +597,7 @@ run_mode_Standalone(int argc, char *argv[])
 "before proceeding.\n"
 "\tYour configuration file should contain a PDA block that looks\n"
 "something like this:"),
-		      DLPCMD_USERNAME_LEN, palm_username(palm),
+		      DLPCMD_USERNAME_LEN, p_username,
 		      DLPCMD_USERNAME_LEN, want_username);
 		pda = find_pda_block(palm, False);
 				/* There might be a PDA block in the config
@@ -579,8 +605,13 @@ run_mode_Standalone(int argc, char *argv[])
 				 * but the wrong username or userid. Find
 				 * it and use it for suggesting a pda
 				 * block.
+				 * We don't check whether 'pda' is NULL,
+				 * because that's not an error.
 				 */
 		print_pda_block(stderr, pda, palm);
+				/* Don't bother checking cs_errno because
+				 * we're about to abort anyway.
+				 */
 
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -765,16 +796,29 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* Find out whether we need to do a slow sync or not */
 	/* XXX - Actually, it's not as simple as this (see comment below) */
-	if (hostid == palm_lastsyncPC(palm))
+	p_lastsyncPC = palm_lastsyncPC(palm);
+	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
+	{
+		Error(_("Can't get last sync PC from Palm"));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	if (hostid == p_lastsyncPC)
+	{
 		/* We synced with this same machine last time, so we can do
 		 * a fast sync this time.
 		 */
+		Verbose(1, _("Doing a fast sync."));
 		need_slow_sync = 0;
-	else
+	} else {
 		/* The Palm synced with some other machine, the last time
 		 * it synced. We need to do a slow sync.
 		 */
+		Verbose(1, _("Doing a slow sync."));
 		need_slow_sync = 1;
+	}
 
 	/* XXX - The desktop needs to keep track of other hosts that it has
 	 * synced with, preferably on a per-database basis.
@@ -789,7 +833,7 @@ run_mode_Standalone(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	palm_fetch_all_DBs(palm);	/* We're going to be looking at all
+	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
 					 * of the databases on the Palm, so
 					 * make sure we get them all.
 					 */
@@ -805,7 +849,21 @@ run_mode_Standalone(int argc, char *argv[])
 			 * Palm to not just say "Identifying", it might
 			 * make things _appear_ significantly faster.
 			 */
-	/* XXX - Error-checking */
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			Error(_("Lost connection with Palm."));
+			break;
+		    default:
+			Error(_("Can't fetch list of databases."));
+			break;
+		}
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
 
 	MISC_TRACE(1)
 		fprintf(stderr, "Doing a sync.\n");
@@ -832,6 +890,14 @@ run_mode_Standalone(int argc, char *argv[])
 		}
 
 		err = InstallNewFiles(pconn, palm, installdir, True);
+		if (err < 0)
+		{
+			Error(_("Can't install new files."));
+
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
 	}
 
 	/* XXX - It should be possible to specify a list of directories to
@@ -839,17 +905,11 @@ run_mode_Standalone(int argc, char *argv[])
 	 * ~/.palm/install, whereas in a larger site, the sysadmin can
 	 * install databases in /usr/local/stuff; they'll be uploaded from
 	 * there, but not deleted.
+	 * E.g.:
+	 *
+	 * err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
+	 * 		      False);
 	 */
-	/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
-			      False);*/
-	if (err < 0)
-	{
-		Error(_("Can't install new files."));
-
-		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
 
 	/* For each database, walk config.fetch, looking for applicable
 	 * conduits for each database.
@@ -888,6 +948,15 @@ run_mode_Standalone(int argc, char *argv[])
 		}
 	}
 
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
 	/* Synchronize the databases */
 	Verbose(1, _("Running Sync conduits"));
 	palm_resetdb(palm);
@@ -911,14 +980,15 @@ run_mode_Standalone(int argc, char *argv[])
 					 * anyway.
 					 */
 				break;
-				/* XXX - Other reasons for premature
-				 * termination.
-				 */
+
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm"));
+				break;
+
 			    default:
 				Warn(_("Conduit failed for unknown "
 				       "reason."));
 				/* Continue, and hope for the best */
-				/*  break; */
 				continue;
 			}
 
@@ -927,6 +997,15 @@ run_mode_Standalone(int argc, char *argv[])
 
 			return -1;
 		}
+	}
+
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
 	}
 
 	/* XXX - If it's configured to install new databases last, install
@@ -940,6 +1019,19 @@ run_mode_Standalone(int argc, char *argv[])
 	 * should be saved to an "attic" directory.
 	 */
 	err = CheckLocalFiles(palm);
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		    default:
+			/* Hope for the best */
+			break;
+		}
+	}
 
 	/* XXX - Write updated NetSync info */
 	/* Write updated user info */
@@ -960,6 +1052,15 @@ run_mode_Standalone(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -984,7 +1085,28 @@ run_mode_Standalone(int argc, char *argv[])
 
 		if (pref_cursor->contents_info == NULL &&
 		    pconn == pref_cursor->pconn)
-			FetchPrefItem(pconn, pref_cursor);
+		{
+			err = FetchPrefItem(pconn, pref_cursor);
+			if (err < 0)
+			{
+				switch (cs_errno)
+				{
+				    case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					free_Palm(palm);
+					Disconnect(pconn,
+						   DLPCMD_SYNCEND_OTHER);
+					return -1;
+				    default:
+					Warn(_("Can't fetch preference "
+					       "0x%08lx/%d."),
+					     pref_cursor->description.creator,
+					     pref_cursor->description.id);
+					/* Continue and hope for the best */
+					break;
+				}
+			}
+		}
 	}
 
 	/* Install new databases after sync */
@@ -1008,6 +1130,15 @@ run_mode_Standalone(int argc, char *argv[])
 		}
 
 		err = InstallNewFiles(pconn, palm, installdir, True);
+		if (err < 0)
+		{
+			Error(_("Can't install new files."));
+
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
 	}
 
 	/* Finally, close the connection */
@@ -1034,6 +1165,15 @@ run_mode_Standalone(int argc, char *argv[])
 			      err);
 			break;
 		}
+	}
+
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
 	}
 
 	free_Palm(palm);
@@ -1143,6 +1283,18 @@ run_mode_Backup(int argc, char *argv[])
 			fprintf(stderr, "Backing everything up.\n");
 
 		err = full_backup(pconn, palm, backupdir);
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				return -1;
+			    default:
+				break;
+			}
+		}
 	} else {
 		/* Individual databases were listed on the command line.
 		 * Back them up.
@@ -1177,8 +1329,18 @@ run_mode_Backup(int argc, char *argv[])
 			err = backup(pconn, db, backupdir);
 			if (err < 0)
 			{
-				Warn(_("Error backing up \"%s\"."),
-				     db->name);
+				switch (cs_errno)
+				{
+				    case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					Disconnect(pconn,
+						   DLPCMD_SYNCEND_CANCEL);
+					return -1;
+				    default:
+					Warn(_("Error backing up \"%s\"."),
+					     db->name);
+					break;
+				}
 			}
 		}
 	}
@@ -1191,6 +1353,15 @@ run_mode_Backup(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -1271,7 +1442,19 @@ run_mode_Restore(int argc, char *argv[])
 		 * Restore everything in <dir>.
 		 */
 		err = restore_dir(pconn, palm, global_opts.backupdir);
-		/* XXX - Error-checking */
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				break;
+			    default:
+				Error(_("Can't restore directory."));
+			}
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
 	} else {
 		for (i = 0; i < argc; i++)
 		{
@@ -1280,12 +1463,44 @@ run_mode_Restore(int argc, char *argv[])
 				/* Restore all databases in argv[i] */
 
 				err = restore_dir(pconn, palm, argv[i]);
-				/* XXX - Error-checking */
+				if (err < 0)
+				{
+					switch (cs_errno)
+					{
+					    case CSE_NOCONN:
+						Error(_("Lost connection to "
+							"Palm."));
+						break;
+					    default:
+						Error(_("Can't restore "
+							"directory."));
+						break;
+					}
+					Disconnect(pconn,
+						   DLPCMD_SYNCEND_CANCEL);
+					return -1;
+				}
 			} else {
 				/* Restore the file argv[i] */
 
 				err = restore_file(pconn, palm, argv[i]);
-				/* XXX - Error-checking */
+				if (err < 0)
+				{
+					switch (cs_errno)
+					{
+					    case CSE_NOCONN:
+						Error(_("Lost connection to "
+							"Palm."));
+						break;
+					    default:
+						Error(_("Can't restore "
+							"directory."));
+						break;
+					}
+					Disconnect(pconn,
+						   DLPCMD_SYNCEND_CANCEL);
+					return -1;
+				}
 			}
 		}
 	}
@@ -1298,6 +1513,15 @@ run_mode_Restore(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -1348,6 +1572,7 @@ run_mode_Init(int argc, char *argv[])
 	const char *new_username;	/* What the username should be */
 	udword p_userid;		/* Userid on the Palm */
 	udword new_userid = 0;		/* What the userid should be */
+	int p_snum_len;			/* Length of serial number on Palm */
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -1387,16 +1612,31 @@ run_mode_Init(int argc, char *argv[])
 	}
 
 	/* Get the Palm's serial number, if possible */
-	if (palm_serial_len(palm) > 0)
+	p_snum_len = palm_serial_len(palm);
+	if (p_snum_len < 0)
 	{
+		Error(_("Can't read length of serial number."));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+	if (p_snum_len > 0)
+	{
+		const char *p_snum;	/* Serial number on Palm */
 		char checksum;		/* Serial number checksum */
 
+		p_snum = palm_serial(palm);
+		if (p_snum == NULL)
+		{
+			Error(_("Can't read serial number."));
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
 		/* Calculate the checksum for the serial number */
-		checksum = snum_checksum(palm_serial(palm),
-					 palm_serial_len(palm));
+		checksum = snum_checksum(p_snum, p_snum_len);
 		SYNC_TRACE(2)
 			fprintf(stderr, "Serial number is \"%s-%c\"\n",
-				palm_serial(palm), checksum);
+				p_snum, checksum);
 	}
 
 	/* Get the PDA block for this Palm, from the config file(s) */
@@ -1413,7 +1653,14 @@ run_mode_Init(int argc, char *argv[])
 
 	/* Username */
 	p_username = palm_username(palm);
-					/* Get username from the Palm */
+	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
 	SYNC_TRACE(4)
 	{
 		fprintf(stderr, "user name on Palm == [%s]\n",
@@ -1470,6 +1717,14 @@ run_mode_Init(int argc, char *argv[])
 
 	/* User ID */
 	p_userid = palm_userid(palm);	/* Get userid from Palm */
+	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		Error(_("Can't get user ID from Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
 
 	SYNC_TRACE(4)
 	{
@@ -1604,6 +1859,15 @@ run_mode_Init(int argc, char *argv[])
 		err = DlpWriteUserInfo(pconn, &uinfo);
 		if (err != DLPSTAT_NOERR)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Warn(_("DlpWriteUserInfo failed: %d."),
 			     err);
 			free_Palm(palm);
@@ -1654,6 +1918,15 @@ run_mode_Init(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -1699,6 +1972,11 @@ run_mode_Daemon(int argc, char *argv[])
 	const struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
 	char *conf_fname = NULL;	/* Config file name from /etc/palms */
+	const char *p_username;		/* Username on Palm */
+	const char *p_snum;		/* Serial number on Palm */
+	udword p_userid;		/* User ID on Palm */
+	udword p_lastsyncPC;		/* Hostid of last host Palm synced
+					 * with */
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "Inside run_mode_Daemon()\n");
@@ -1803,13 +2081,44 @@ run_mode_Daemon(int argc, char *argv[])
 	/* XXX - Figure out exactly what the search criteria should be */
 	/* XXX - Should allow '*' in fields as wildcard */
 	/* XXX - If userid is 0, abort? */
+
+	/* Get username */
+	p_username = palm_username(palm);
+	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Get userid */
+	p_userid = palm_userid(palm);
+	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Get serial number */
+	p_snum = palm_serial(palm);
+	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+	{
+		/* Something went wrong */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
 	SYNC_TRACE(3)
 	{
 		fprintf(stderr, "Looking for PDA in [" _PATH_PALMS "]\n");
 		fprintf(stderr,
 			"Want serial [%s], username [%s], userid %lu\n",
-			palm_serial(palm), palm_username(palm),
-			palm_userid(palm));
+			p_snum, p_username,
+			p_userid);
 	}
 
 	while ((palment = getpalment()) != NULL)
@@ -1828,7 +2137,7 @@ run_mode_Daemon(int argc, char *argv[])
 		 */
 		if (palment->serial != NULL)
 		{
-			strncpy(entserial, palm_serial(palm), SNUM_MAX);
+			strncpy(entserial, p_snum, SNUM_MAX);
 			dashp = strrchr(entserial, '-');
 			if (dashp != NULL)
 				*dashp = '\0';
@@ -1843,8 +2152,7 @@ run_mode_Daemon(int argc, char *argv[])
 				palment->serial, palment->username,
 				palment->userid);
 
-		if (strncasecmp(entserial, palm_serial(palm),
-				SNUM_MAX) != 0)
+		if (strncasecmp(entserial, p_snum, SNUM_MAX) != 0)
 		{
 			SYNC_TRACE(4)
 				fprintf(stderr,
@@ -1859,7 +2167,7 @@ run_mode_Daemon(int argc, char *argv[])
 
 		if ((palment->username != NULL) &&
 		    (palment->username[0] != '\0') &&
-		    strncmp(palment->username, palm_username(palm),
+		    strncmp(palment->username, p_username,
 			    DLPCMD_USERNAME_LEN) != 0)
 		{
 			SYNC_TRACE(4)
@@ -1872,13 +2180,13 @@ run_mode_Daemon(int argc, char *argv[])
 			fprintf(stderr, "Username [%s] matches\n",
 				palment->username);
 
-		if (palment->userid != palm_userid(palm))
+		if (palment->userid != p_userid)
 		{
 			SYNC_TRACE(4)
 				fprintf(stderr,
 					"Userid %lu doesn't match %lu\n",
 					palment->userid,
-					palm_userid(palm));
+					p_userid);
 			continue;
 		}
 		SYNC_TRACE(5)
@@ -2168,7 +2476,16 @@ run_mode_Daemon(int argc, char *argv[])
 
 	/* Find out whether we need to do a slow sync or not */
 	/* XXX - Actually, it's not as simple as this (see comment below) */
-	if (hostid == palm_lastsyncPC(palm))
+	p_lastsyncPC = palm_lastsyncPC(palm);
+	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
+	{
+		Error(_("Can't get last sync PC from Palm"));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	if (hostid == p_lastsyncPC)
 		/* We synced with this same machine last time, so we can do
 		 * a fast sync this time.
 		 */
@@ -2192,7 +2509,7 @@ run_mode_Daemon(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	palm_fetch_all_DBs(palm);	/* We're going to be looking at all
+	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
 					 * of the databases on the Palm, so
 					 * make sure we get them all.
 					 */
@@ -2208,7 +2525,21 @@ run_mode_Daemon(int argc, char *argv[])
 			 * Palm to not just say "Identifying", it might
 			 * make things _appear_ significantly faster.
 			 */
-	/* XXX - Error-checking */
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			Error(_("Lost connection with Palm."));
+			break;
+		    default:
+			Error(_("Can't fetch list of databases."));
+			break;
+		}
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
 
 	MISC_TRACE(1)
 		fprintf(stderr, "Doing a sync.\n");
@@ -2221,6 +2552,7 @@ run_mode_Daemon(int argc, char *argv[])
 		 * Notice that install conduits are *not* run on files
 		 * named for install on the command line.
 		 */
+		Verbose(1, _("Running Install conduits"));
 		while (NextInstallFile(&dbinfo)>=0) {
 			err = run_Install_conduits(&dbinfo);
 			if (err < 0) {
@@ -2234,6 +2566,14 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 
 		err = InstallNewFiles(pconn, palm, installdir, True);
+		if (err < 0)
+		{
+			Error(_("Can't install new files."));
+
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
 	}
 
 	/* XXX - It should be possible to specify a list of directories to
@@ -2241,17 +2581,10 @@ run_mode_Daemon(int argc, char *argv[])
 	 * ~/.palm/install, whereas in a larger site, the sysadmin can
 	 * install databases in /usr/local/stuff; they'll be uploaded from
 	 * there, but not deleted.
+	 * E.g.:
+	 * err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
+	 *		      False);
 	 */
-	/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
-			      False);*/
-	if (err < 0)
-	{
-		Error(_("Can't install new files."));
-
-		free_Palm(palm);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
 
 	/* For each database, walk config.fetch, looking for applicable
 	 * conduits for each database.
@@ -2289,6 +2622,15 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 	}
 
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
 	/* Synchronize the databases */
 	palm_resetdb(palm);
 	while ((cur_db = palm_nextdb(palm)) != NULL)
@@ -2310,14 +2652,15 @@ run_mode_Daemon(int argc, char *argv[])
 					 * anyway.
 					 */
 				break;
-				/* XXX - Other reasons for premature
-				 * termination.
-				 */
+
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm"));
+				break;
+
 			    default:
 				Warn(_("Conduit failed for unknown "
 				       "reason."));
 				/* Continue, and hope for the best */
-				/*  break; */
 				continue;
 			}
 
@@ -2326,6 +2669,15 @@ run_mode_Daemon(int argc, char *argv[])
 
 			return -1;
 		}
+	}
+
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
 	}
 
 	/* XXX - If it's configured to install new databases last, install
@@ -2339,6 +2691,19 @@ run_mode_Daemon(int argc, char *argv[])
 	 * should be saved to an "attic" directory.
 	 */
 	err = CheckLocalFiles(palm);
+	if (err < 0)
+	{
+		switch (cs_errno)
+		{
+		    case CSE_NOCONN:
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		    default:
+			/* Hope for the best */
+			break;
+		}
+	}
 
 	/* XXX - Write updated NetSync info */
 	/* Write updated user info */
@@ -2359,6 +2724,15 @@ run_mode_Daemon(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("Couldn't write sync log."));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -2383,7 +2757,28 @@ run_mode_Daemon(int argc, char *argv[])
 
 		if (pref_cursor->contents_info == NULL &&
 		    pconn == pref_cursor->pconn)
-			FetchPrefItem(pconn, pref_cursor);
+		{
+			err = FetchPrefItem(pconn, pref_cursor);
+			if (err < 0)
+			{
+				switch (cs_errno)
+				{
+				    case CSE_NOCONN:
+					Error(_("Lost connection to Palm."));
+					free_Palm(palm);
+					Disconnect(pconn,
+						   DLPCMD_SYNCEND_OTHER);
+					return -1;
+				    default:
+					Warn(_("Can't fetch preference "
+					       "0x%08lx/%d."),
+					     pref_cursor->description.creator,
+					     pref_cursor->description.id);
+					/* Continue and hope for the best */
+					break;
+				}
+			}
+		}
 	}
 
 	/* Install new databases after sync */
@@ -2393,6 +2788,7 @@ run_mode_Daemon(int argc, char *argv[])
 		 * Notice that install conduits are *not* run on files
 		 * named for install on the command line.
 		 */
+		Verbose(1, _("Running Install conduits"));
 		while (NextInstallFile(&dbinfo)>=0) {
 			err = run_Install_conduits(&dbinfo);
 			if (err < 0) {
@@ -2406,6 +2802,15 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 
 		err = InstallNewFiles(pconn, palm, installdir, True);
+		if (err < 0)
+		{
+			Error(_("Can't install new files."));
+
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
 	}
 
 	/* Finally, close the connection */
@@ -2433,6 +2838,15 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 	}
 
+	/* See how the above loop terminated */
+	if (cs_errno == CSE_NOCONN)
+	{
+		Error(_("Lost connection with Palm."));
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
 	free_Palm(palm);
 
 	return 0;
@@ -2440,10 +2854,6 @@ run_mode_Daemon(int argc, char *argv[])
 
 /* Connect
  * Wait for a Palm to show up on the other end.
- */
-/* XXX - This ought to be able to listen to a whole list of files and
- * establish a connection with the first one that starts talking. This
- * might also be the place to fork().
  */
 static int
 Connect(PConnection *pconn)
@@ -2457,7 +2867,17 @@ Connect(PConnection *pconn)
 	pcaddr.port = SLP_PORT_DLP;
 	PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
 	if ((*pconn->io_accept)(pconn) < 0)
+	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
 		return -1;
+	}
 
 	return 0;
 }
@@ -2471,6 +2891,15 @@ Disconnect(PConnection *pconn, const ubyte status)
 	err = DlpEndOfSync(pconn, status);
 	if (err < 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("Error during DlpEndOfSync: (%d) %s."),
 		      palm_errno,
 		      _(palm_errlist[palm_errno]));
@@ -2775,6 +3204,15 @@ UpdateUserInfo(PConnection *pconn,
 			       &uinfo);
 	if (err != DLPSTAT_NOERR)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("DlpWriteUserInfo failed: %d."), err);
 		return -1;
 	}
@@ -2877,9 +3315,20 @@ mkforw_addr(struct Palm *palm,
 	 */
 	hostname = pda->forward_host;
 	if (hostname == NULL)
+	{
 		hostname = palm_netsync_hostaddr(palm);
+		if ((hostname == NULL) && (cs_errno != CSE_NOERR))
+			/* Something went wrong */
+			return -1;
+	}
+
 	if (hostname == NULL)
+	{
 		hostname = palm_netsync_hostname(palm);
+		if ((hostname == NULL) && (cs_errno != CSE_NOERR))
+			/* Something went wrong */
+			return -1;
+	}
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "forward hostname is [%s]\n",
@@ -3117,6 +3566,16 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
+
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				break;
 			}
 			SYNC_TRACE(5)
@@ -3144,6 +3603,16 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
+
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				break;
 			}
 			SYNC_TRACE(5)

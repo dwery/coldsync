@@ -3,11 +3,11 @@
  * Functions for creating the preference cache, retrieving the preferences
  * from the palm and writing the headers to the conduits.
  *
- *	Copyright (C) 2000, Sumant S.R. Oemrawsingh.
+ *	Copyright (C) 2000-2001, Sumant S.R. Oemrawsingh.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 2.4 2001-01-25 07:47:58 arensb Exp $
+ * $Id: pref.c,v 2.5 2001-03-27 14:10:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -19,6 +19,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "pref.h"
+#include "cs_error.h"
 
 extern struct pref_item *pref_cache;
 
@@ -137,6 +138,15 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_SAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			prefitem->description.flags = flags;
 			return err;
 		}
@@ -162,6 +172,15 @@ FetchPrefItem(PConnection *pconn,
 		prefitem->description.flags = PREFDFL_UNSAVED;
 		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			prefitem->description.flags = flags;
 			return err;
 		}
@@ -238,6 +257,15 @@ DownloadPrefItem(PConnection *pconn,
 		/* If there was no error, contents_info doesn't exist,
 		 * because the preference was simply not found.
 		 */
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		free(contents_info);
 		return err;
 	}
@@ -285,6 +313,15 @@ DownloadPrefItem(PConnection *pconn,
 
 	if (err < 0)
 	{
+	    switch (palm_errno)
+	    {
+	        case PALMERR_TIMEOUT:
+		    cs_errno = CSE_NOCONN;
+		    break;
+		default:
+		    break;
+	    }
+
 	    free(contents_info);
 	    free(contents);
 	    return err;

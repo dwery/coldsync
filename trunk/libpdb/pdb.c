@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.35 2001-02-21 11:20:14 arensb Exp $
+ * $Id: pdb.c,v 1.36 2001-03-27 14:05:43 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -620,6 +620,7 @@ pdb_Write(const struct pdb *db,
  * Download a database from the Palm. The returned 'struct pdb' is
  * allocated by pdb_Download(), and the caller has to free it.
  */
+/* XXX - Probably best to move this to the main ColdSync tree */
 struct pdb *
 pdb_Download(PConnection *pconn,
 	     const struct dlp_dbinfo *dbinfo,
@@ -804,7 +805,7 @@ pdb_Download(PConnection *pconn,
 	{
 		fprintf(stderr, _("Can't download record or resource "
 				  "index.\n"));
-		DlpCloseDB(pconn, dbh);
+		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
 		return NULL;
 	}
@@ -978,6 +979,8 @@ pdb_Upload(PConnection *pconn, struct pdb *db)
 
 	/* Clean up */
 	err = DlpCloseDB(pconn, dbh);
+	if (err != DLPSTAT_NOERR)
+		return -1;
 
 	return 0;		/* Success */
 }
@@ -2400,6 +2403,7 @@ pdb_DownloadResources(PConnection *pconn,
 	return 0;	/* Success */
 }
 
+/* XXX - This probably ought to be moved into the main ColdSync tree */
 static int
 pdb_DownloadRecords(PConnection *pconn,
 		    ubyte dbh,

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.7 2001-01-11 08:27:07 arensb Exp $
+ * $Id: cmp.c,v 1.8 2001-03-27 14:04:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -109,7 +109,7 @@ cmp_write(PConnection *pconn,			/* File descriptor */
 	}
 
 	err = padp_write(pconn, outbuf, CMP_PACKET_LEN);
-	/* XXX - Error-handling */
+		/* Error-handling: just inherit the error from padp_write() */
 
 	return err;
 }
@@ -160,7 +160,9 @@ cmp_accept(PConnection *pconn, udword bps)
 
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Sending INIT packet\n");
-	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
+	err = cmp_write(pconn, &cmpp);
+	if (err < 0)
+		return 0;
 
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Finished sending INIT packet\n");

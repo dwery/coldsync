@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.6 2001-01-11 08:27:12 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.7 2001-03-27 14:05:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -171,7 +171,6 @@ DlpRPC(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, _("%s: Error: dlp.write returned %d.\n"),
 			"DlpRPC",
 			err);
-/*  		free(outbuf); */
 		return err;
 	}
 
@@ -292,8 +291,8 @@ DlpRPC(PConnection *pconn,		/* Connection to Palm */
 
 /* RDLP_Backlight
  * Queries and optionally sets the backlight.
- * Returns 0 if the backlight was turned off just before this call, or 1 if
- * the backlight was on.
+ * Returns 0 if the backlight was turned off just before this call, 1 if
+ * the backlight was on, or a negative value in case of error.
  * If 'set' is true, then this function will turn the backlight on or off,
  * as indicated by 'newState'. If 'set' is false, this function will merely
  * find out whether the backlight is on or off.
@@ -328,14 +327,15 @@ RDLP_Backlight(PConnection *pconn,
 	err = DlpRPC(pconn, RPCTRAP_Backlight, &D0, &A0, 2, argv);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_Backlight: err == %d\n", err);
-	/* XXX - Return -1 if err < 0? */
+	if (err < 0)
+		return err;
 
 	return D0;	/* Result returned in D0 */
 }
 
 /* RDLP_BatteryLevel
  * Returns the battery level, as a number between 0 (empty) and 255 (fully
- * charged).
+ * charged), or a negative value in case of error.
  */
 int
 RDLP_BatteryLevel(PConnection *pconn)
@@ -351,7 +351,8 @@ RDLP_BatteryLevel(PConnection *pconn)
 	err = DlpRPC(pconn, RPCTRAP_BatteryLevel, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_BatteryLevel: err == %d\n", err);
-	/* XXX - Return -1 if err < 0? */
+	if (err < 0)
+		return err;
 
 	return D0;	/* Result returned in D0 */
 }
@@ -360,6 +361,7 @@ RDLP_BatteryLevel(PConnection *pconn)
  * I'm not sure what this does. I think it tells you whether the Palm is in
  * its cradle. Of course, if you're finding this out through an RPC, it's
  * trivially true.
+ * Returns a negative value in case of error.
  */
 int
 RDLP_PluggedIn(PConnection *pconn)
@@ -375,7 +377,8 @@ RDLP_PluggedIn(PConnection *pconn)
 	err = DlpRPC(pconn, RPCTRAP_PluggedIn, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_PluggedIn: err == %d\n", err);
-	/* XXX - Return -1 if err < 0? */
+	if (err < 0)
+		return err;
 
 	return D0;	/* Result returned in D0 */
 }
@@ -394,7 +397,8 @@ RDLP_GetOSVersionString(PConnection *pconn)
 	err = DlpRPC(pconn, RPCTRAP_GetOSVersionString, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_GetOSVersionString: err == %d\n", err);
-	/* XXX - Return -1 if err < 0? */
+	if (err < 0)
+		return err;
 
 	return D0;	/* Result returned in D0 */
 }
@@ -403,6 +407,7 @@ RDLP_GetOSVersionString(PConnection *pconn)
  * Read 'len' bytes starting at address 'src' on the Palm, and copy them to
  * the location specified by 'dst' (on this host). This is a good way to
  * read the contents of a memory location on the Palm.
+ * Returns 0 if successful, or -1 in case of error.
  */
 int
 RDLP_MemMove(PConnection *pconn,
@@ -454,11 +459,15 @@ RDLP_BatteryDialog(PConnection *pconn)
 	udword D0;
 	udword A0;
 
-fprintf(stderr, "Inside RDLP_BatteryDialog()\n");
+	DLPC_TRACE(5)
+		fprintf(stderr, "Inside RDLP_BatteryDialog()\n");
 	D0 = A0 = 0L;
 
 	err = DlpRPC(pconn, RPCTRAP_BatteryDialog, &D0, &A0, 0, NULL);
-fprintf(stderr, "RDLP_BatteryDialog: err == %d\n", err);
+	DLPC_TRACE(5)
+		fprintf(stderr, "RDLP_BatteryDialog: err == %d\n", err);
+	if (err < 0)
+		return err;
 
 	return 0;
 }
@@ -472,7 +481,8 @@ RDLP_MemHandleNew(PConnection *pconn,
 	udword A0;
 	struct DLPRPC_param argv[1];
 
-fprintf(stderr, "Inside MemHandleNew(%ld)\n", size);
+	DLPC_TRACE(5)
+		fprintf(stderr, "Inside MemHandleNew(%ld)\n", size);
 	D0 = A0 = 0L; 
 
 	/* Arg 0: ULong size */
@@ -481,9 +491,15 @@ fprintf(stderr, "Inside MemHandleNew(%ld)\n", size);
 	argv[0].data.dword_v = size;
 
 	err = DlpRPC(pconn, RPCTRAP_MemHandleNew, &D0, &A0, 1, argv);
-fprintf(stderr, "RDLP_MemHandleNew: err == %d\n", err);
-fprintf(stderr, "D0 == 0x%08lx, A0 == 0x%08lx\n", D0, A0);
-return 0;
+	DLPC_TRACE(5)
+	{
+		fprintf(stderr, "RDLP_MemHandleNew: err == %d\n", err);
+		fprintf(stderr, "D0 == 0x%08lx, A0 == 0x%08lx\n", D0, A0);
+	}
+	if (err < 0)
+		return err;
+
+	return 0;
 }
 
 /* RDLP_ROMToken
@@ -534,7 +550,8 @@ RDLP_ROMToken(PConnection *pconn,
 	argv[0].data.word_v = 0;
 
 	err = DlpRPC(pconn, RPCTRAP_GetROMToken, &D0, &A0, 4, argv);
-	/* XXX - Barf if err != 0 */
+	if (err < 0)
+		return err;
 
 	*data_ptr = argv[1].data.dword_v;
 	*data_len = argv[0].data.word_v;
@@ -561,9 +578,12 @@ RDLP_MemReadable(PConnection *pconn,
 
 	err = DlpRPC(pconn, RPCTRAP_MemReadable, &D0, &A0, 1, argv);
 	DLPC_TRACE(5)
+	{
 		fprintf(stderr, "RDLP_MemReadable: err == %d\n", err);
-	/* XXX - Return -1 if err < 0? */
-fprintf(stderr, "D0 == 0x%08lx, A0 == 0x%08lx\n", D0, A0);
+		fprintf(stderr, "D0 == 0x%08lx, A0 == 0x%08lx\n", D0, A0);
+	}
+	if (err < 0)
+		return err;
 
 	return D0;	/* Result returned in D0 */
 }

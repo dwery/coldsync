@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.65 2001-02-22 14:33:56 arensb Exp $
+ * $Id: config.c,v 1.66 2001-03-27 14:09:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -50,6 +50,7 @@ struct rtentry;
 #include "coldsync.h"
 #include "pconn/pconn.h"
 #include "parser.h"		/* For config file parser stuff */
+#include "cs_error.h"
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN	256
@@ -1194,10 +1195,30 @@ free_hostaddrs(void)
 void
 print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 {
-	const udword p_userid = palm_userid(palm);
-	const char *p_username = palm_username(palm);
-	const char *p_snum = palm_serial(palm);
-	const int p_snum_len = palm_serial_len(palm);
+	udword p_userid;
+	const char *p_username;
+	const char *p_snum;
+	int p_snum_len;
+
+	/* Get length of serial number */
+	p_snum_len = palm_serial_len(palm);
+	if (p_snum_len < 0)
+		return;		/* Something went wrong */
+
+	/* Get serial number */
+	p_snum = palm_serial(palm);
+	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+		return;
+
+	/* Get userid */
+	p_userid = palm_userid(palm);
+	if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+		return;		/* Something went wrong */
+
+	/* Get username */
+	p_username = palm_username(palm);
+	if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+		return;		/* Something went wrong */
 
 	/* First line of PDA block */
 	if ((pda == NULL) || (pda->name == NULL) ||
@@ -1207,8 +1228,9 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 		printf("pda \"%s\" {\n", pda->name);
 
 	/* "snum:" line in PDA block */
-	/* XXX - if snum == NULL, just omit that line */
-	if ((p_snum == NULL) || (p_snum[0] == '\0'))
+	if (p_snum == NULL)
+		;	/* Omit the "snum:" line entirely */
+	else if (p_snum[0] == '\0')
 	{
 		/* This Palm doesn't have a serial number. Say so. */
 		printf("\tsnum: \"\";\n");
@@ -1275,6 +1297,7 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 	pda_block *default_pda;	/* pda_block for the default PDA, if no
 				 * better match is found.
 				 */
+	const char *p_snum;	/* Serial number of Palm */
 
 	MISC_TRACE(4)
 	{
@@ -1284,6 +1307,11 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 		else
 			fprintf(stderr, "  But not checking user info\n");
 	}
+
+	/* Get serial number */
+	p_snum = palm_serial(palm);
+	if ((p_snum == NULL) && (cs_errno != CSE_NOERR))
+		return NULL;
 
 	default_pda = NULL;
 	for (cur = sync_config->pda; cur != NULL; cur = cur->next)
@@ -1301,8 +1329,7 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 		 * pda_block with an empty string.
 		 */
 		if ((cur->snum != NULL) &&
-		    (strncasecmp(cur->snum, palm_serial(palm),
-				 SNUM_MAX)
+		    (strncasecmp(cur->snum, p_snum, SNUM_MAX)
 		     != 0))
 		{
 			/* The serial number doesn't match */
@@ -1320,9 +1347,19 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 		/* Check the username and userid, if asked */
 		if (check_user)
 		{
+			const char *p_username;	/* Username on Palm */
+			udword p_userid;	/* User ID on Palm */
+
 			/* Check the user ID */
+			p_userid = palm_userid(palm);
+			if ((p_userid == 0) && (cs_errno != CSE_NOERR))
+			{
+				/* Something went wrong */
+				return NULL;
+			}
+
 			if (cur->userid_given &&
-			    (cur->userid != palm_userid(palm)))
+			    (cur->userid != p_userid))
 			{
 				MISC_TRACE(5)
 					fprintf(stderr,
@@ -1331,8 +1368,15 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 			}
 
 			/* Check the user name */
+			p_username = palm_username(palm);
+			if ((p_username == NULL) && (cs_errno != CSE_NOERR))
+			{
+				/* Something went wrong */
+				return NULL;
+			}
+
 			if ((cur->username != NULL) &&
-			    strncmp(cur->username, palm_username(palm),
+			    strncmp(cur->username, p_username,
 				    DLPCMD_USERNAME_LEN) != 0)
 			{
 				MISC_TRACE(5)
