@@ -18,7 +18,6 @@
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
   sure what for.
-- Modem, IR, network sync
 - NetSync: figure out just how it works and stuff.
   Blargh. From the output of 'tcpdump', it looks as if the host with
   the databases wants to talk NetBIOS to the host with the cradle.
@@ -48,18 +47,6 @@
 - Allow syslog for logging.
 - Allow copious debugging to a file, including a trace of everything
   going back and forth. See tcpdump().
-- Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
-  "The Practice of Programming," section 9.1). Use them in
-  "dlp_cmd.c", to replace the blocks of
-  get_ubyte()/get_uword()/get_udword() and
-  put_ubyte()/put_uword()/put_udword() calls.
-  Generally speaking, use these functions to replace all of the
-  get_*()/put_* calls.
-	Bleah. ppack()/punpack() have been written, but can't just be
-  plugged in yet: some of the structures are of the form <n>, <n-byte
-  string>, which means that currently, you can't just have one
-  function call to unpack a whole structure.
-	Just get rid of them.
 - Lock files while syncing.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -83,22 +70,6 @@
   bother downloading the database from the Palm.
 - Add convenience functions for the various RPC calls, or at least the
   more useful ones. See SysTraps.h for list of traps.
-- For files that include <string.h>, fix them according to the
-  'autoconf' documentation:
-	#if STDC_HEADERS
-	# include <string.h>		/* For memcpy() et al. */
-	#else	/* STDC_HEADERS */
-	# ifndef HAVE_STRCHR
-	#  define strchr index
-	#  define strrchr rindex
-	# endif	/* HAVE_STRCHR */
-	# ifndef HAVE_MEMCPY
-	#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
-	#  define memmove(d,s,n)	bcopy ((s), (d), (n))
-	# endif	/* HAVE_MEMCPY */
-	#endif	/* STDC_HEADERS */
-  (Done, except for libpconn/padp.c, since it already has weirdness
-  for AIX. I'm not sure how the two interact.)
 - Split up the doc directory into directories, one per document. (But
   see next item.)
 - Combine the documentation: there's no 'libpalm' anymore, and I'm
@@ -108,7 +79,6 @@
   descriptions, and combine "libpalm.texi" with "pdb.texi" into a
   single, more general document that describes all sorts of things
   programmers ought to know about Palm formats.
-- Write a few tutorials on writing conduits.
 - Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
   "System"
 	Fix: when opening a database with DlpOpenDB, if the database
@@ -126,32 +96,12 @@
   carried upwards through the parse tree.
 	Until this gets fixed, I don't want to use 'automake'.
 - Write a 'bool has_db_extension(char *fname)' function, for convenience.
-- Might be cool to have something that can deal with a "conduit
-  server": a friend has just beamed you a new application; you sync;
-  coldsync looks in some central repository, finds a conduit that
-  handles your database type, downloads it, and runs it automatically.
-	This has serious security implications, though. Perhaps one
-  solution would be to have the conduit signed with PGP; set up a
-  listed of trusted signers, and if the conduit doesn't come from one
-  of those trusted signers, don't run it.
-	A worse problem, however, is that there can be any number of
-  conduits to do any number of weird things. If there are a dozen
-  conduits, how does ColdSync decide which one(s) to run?
-	Maybe just have a post-dump conduit installed as default for
-  everything; checks its list of conduits (or maybe ~/.coldsyncrc); if
-  there's no conduit listed for this database type, check some central
-  repository and send mail to the user. If the entry is over a month
-  old (or something), check for a newer version of the conduit.
 - Should all of the .h files be lumped under #include <palm/foo.h> ?
 - Perl: Write helper function to parse/pack category blocks, for
   well-behaved applications (i.e., the ones that store categories the
   same way as the built-in ones).
 - Test parser with old lex and yacc. See if it's worth supporting
   them, or whether it's easier to just require flex.
-- Documentation for the config file format.
-- When building, make sure that #include and such find the .h files
-  and libraries in this, the build directory, and not the ones in
-  /usr/local that were presumably installed previously.
 - Add Makefile stuff for rerunning 'autoconf' when necessary. See node
   "Automatic Remaking" in "autoconf.info".
 - Add a "group" field to the listen and conduit blocks, of the form
@@ -204,9 +154,6 @@
 	A simpler way is just to have a command-line argument
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
-- Perl: methods: $pdb->append($record). $pdb->find($ID) or
-  $pdb->find($record). The latter should use
-  $pdb->cmp($record1,$record2) to see if two records are equal.
 - Fix error messages to give some idea which database is involved.
 - With BSD make, always reruns 'ar' in the library directories. Why?
   According to 'make -dm', it seems to recognize the target as a
@@ -235,8 +182,6 @@
 - Variables set in .coldsyncrc should simply be propagated to the
   environment. Should this be done immediately, though?
 - Should send mail to the user with a report of the sync.
-- Merge pdb.texi and libpalm.texi into a more general TeXinfo file
-  that describes the otherwise occult internals.
 - "Thought of the Day" conduit: add a fortune-style message as an
   event for today, and for the next week.
 - Conduit for MH alias file: look for lines of the form
