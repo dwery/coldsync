@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.40 2001-10-12 02:21:51 arensb Exp $
+ * $Id: conduit.c,v 2.41 2001-10-12 03:59:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1663,7 +1663,7 @@ spawn_conduit(
 		exit(1);
 	}
 	err = execv(fname, argv);
-				/* Use exec(), not execvp(): don't look in
+				/* Use execv(), not execvp(): don't look in
 				 * $PATH. We've already checked. */
 
 	/* If we ever get to this point, then something went wrong */
