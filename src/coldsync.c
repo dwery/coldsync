@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.98.2.1 2001-10-09 01:41:26 arensb Exp $
+ * $Id: coldsync.c,v 1.98.2.2 2001-10-11 06:34:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -575,12 +575,10 @@ run_mode_Standalone(int argc, char *argv[])
 			want_username = pda->username;
 	}
 
-	if( pda->name == NULL )
-	{
-	    pda->name = "<unnamed>";
-	}
 	time(&now);
-	Verbose(1, _("Sync for %s at %s"), pda->name, ctime(&now));
+	Verbose(1, _("Sync for %s at %s"),
+		(pda->name == NULL ? "unnamed PDA" : pda->name),
+		ctime(&now));
 
 	/* See if the userid matches. */
 	p_userid = palm_userid(palm);
