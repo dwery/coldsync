@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.34 2001-07-30 07:12:09 arensb Exp $
+ * $Id: lexer.l,v 2.35 2001-09-07 10:38:49 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -379,14 +379,14 @@ ID		[-a-zA-Z_0-9]
 #endif
 
 void
-lex_expect(const int state)
+lex_expect(const lex_state_t state)
 {
 	PARSE_TRACE(5)
 		fprintf(stderr, "Lex: expecting state %d\n", state);
 
 	switch (state)
 	{
-	    case 0:
+	    case LEX_NONE:
 		nextstate = 0;
 		break;
 	    case LEX_HEADER:
@@ -401,11 +401,6 @@ lex_expect(const int state)
 	    case LEX_ID4:
 		nextstate = ID4;
 		break;
-	    default:
-		Error(_("%s: unknown start state %d.\n"
-			"Please tell the maintainer to fix `lexer.l'."),
-		      "lex_expect",
-		      state);
 	}
 	have_nextstate = True;
 }
