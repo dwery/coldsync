@@ -52,6 +52,12 @@
 /* Define if you have the strncasecmp function.  */
 #undef HAVE_STRNCASECMP
 
+/* Define if you have the strchr function */
+#undef HAVE_STRCHR
+
+/* Define if you have the memcpy function */
+#undef HAVE_MEMCPY
+
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
 
