@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.21 2004-03-27 15:26:54 azummo Exp $
+ * $Id: dlp.c,v 1.22 2004-10-21 20:29:05 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -174,7 +174,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 		if (argv[i].size <= DLP_TINYARG_MAXLEN)
 		{
 			/* Tiny argument */
-			DLP_TRACE(10)
+			DLP_TRACE(7)
 				fprintf(stderr,
 					"Tiny argument %d, id 0x%02x, "
 					"size %ld\n",
@@ -188,7 +188,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 		} else if (argv[i].size <= DLP_SMALLARG_MAXLEN)
 		{
 			/* Small argument */
-			DLP_TRACE(10)
+			DLP_TRACE(7)
 				fprintf(stderr,
 					"Small argument %d, id 0x%02x, "
 					"size %ld\n",
@@ -205,7 +205,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 			/* XXX - Check to make sure the comm. protocol
 			 * supports long arguments.
 			 */
-			DLP_TRACE(10)
+			DLP_TRACE(7)
 				fprintf(stderr,
 					"Long argument %d, id 0x%04x, "
 					"size %ld\n",
@@ -224,9 +224,11 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Send the request */
-	DLP_TRACE(7)
+	DLP_TRACE(8)
 		debug_dump(stderr, "DLP>>>", outbuf, wptr-outbuf);
+
 	err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
+
 	if (err < 0)
 	{
 		free(outbuf);
@@ -270,7 +272,7 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 		return -1;
 	}	
 
-	DLP_TRACE(7)
+	DLP_TRACE(8)
 		debug_dump(stderr, "DLP<<<", inbuf, inlen);
 
 	/* Parse the response header */
@@ -278,7 +280,7 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	header->id = get_ubyte(&rptr);
 	header->argc = get_ubyte(&rptr);
 	header->error = get_uword(&rptr);
-	DLP_TRACE(6)
+	DLP_TRACE(2)
 		fprintf(stderr, "Got response, id 0x%02x, argc %d, errno %d\n",
 			header->id,
 			header->argc,
@@ -395,7 +397,7 @@ dlp_recv_req(PConnection *pconn,	/* Connection to Desktop */
 	if (err < 0)
 	    return err;	/* Error */
 	
-	DLP_TRACE(7)
+	DLP_TRACE(8)
 	    debug_dump(stderr, "DLP<<<", inbuf, inlen);
 	
 	/* Parse the request header */
@@ -558,7 +560,7 @@ dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
 	 */
 	if (argv[i].size <= DLP_TINYARG_MAXLEN){
 	    /* Tiny argument */
-	    DLP_TRACE(10)
+	    DLP_TRACE(7)
 		fprintf(stderr,
 			"Tiny argument %d, id 0x%02x, "
 			"size %ld\n",
@@ -572,7 +574,7 @@ dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
 	}
 	else if (argv[i].size <= DLP_SMALLARG_MAXLEN){
 	    /* Small argument */
-	    DLP_TRACE(10)
+	    DLP_TRACE(7)
 		fprintf(stderr,
 			"Small argument %d, id 0x%02x, "
 			"size %ld\n",
@@ -590,7 +592,7 @@ dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
 	    /* XXX - Check to make sure the comm. protocol
 	     * supports long arguments.
 	     */
-	    DLP_TRACE(10)
+	    DLP_TRACE(7)
 		fprintf(stderr,
 			"Long argument %d, id 0x%04x, "
 			"size %ld\n",
@@ -609,7 +611,7 @@ dlp_send_resp(PConnection *pconn,	/* Connection to Desktop */
     }
     
     /* Send the response */
-    DLP_TRACE(7)
+    DLP_TRACE(8)
 	debug_dump(stderr, "DLP>>>", outbuf, wptr-outbuf);
     
     err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
@@ -700,14 +702,14 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 		if (pconn->dlp.io_complete)
 			(*pconn->dlp.io_complete)(pconn);
 
-		DLP_TRACE(2)
+/*		DLP_TRACE(2)
 			fprintf(stderr,
 				"Got response, id 0x%02x, args %d, "
-				"status %d\n",
+				"errno %d\n",
 				resp_header->id,
 				resp_header->argc,
 				resp_header->error);
-
+*/
 		return 0;		/* Success */
 	}
 
