@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.14 2002-12-10 13:54:23 azummo Exp $
+ * $Id: spalm.c,v 2.15 2003-03-14 17:18:38 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -421,48 +421,52 @@ fetch_serial(struct Palm *palm)
 
 	/* The Palm's ROM is v3.0 or later, so it has a serial number. */
 
-	/* Get the location of the ROM serial number */
-	SYNC_TRACE(7)
-		fprintf(stderr,
-			"Getting location of serial number in ROM.\n");
-	/* XXX - Move this into its own function? */
-	err = RDLP_ROMToken(palm_pconn(palm), CARD0, ROMToken_Snum,
+	
+	if (p_rom_version < 0x05000000 )
+	{
+		/* Get the location of the ROM serial number */
+		SYNC_TRACE(7)
+			fprintf(stderr,
+				"Getting location of serial number in ROM.\n");
+		/* XXX - Move this into its own function? */
+		err = RDLP_ROMToken(palm_pconn(palm), CARD0, ROMToken_Snum,
 			    &snum_ptr, &snum_len);
-	if (err < 0)
-	{
-		Error(_("Can't get location of serial number."));
-		return -1;
-	}
-	SYNC_TRACE(7)
-		fprintf(stderr, "Serial number is at 0x%08lx, length %d\n",
-			snum_ptr, snum_len);
+		if (err < 0)
+		{
+			Error(_("Can't get location of serial number."));
+			return -1;
+		}
+		SYNC_TRACE(7)
+			fprintf(stderr, "Serial number is at 0x%08lx, length %d\n",
+				snum_ptr, snum_len);
 
-	/* Sanity check: make sure we have space for the serial number. */
-	if (snum_len > SNUM_MAX-1)
-	{
-		Error(_("Warning: ROM serial number is %d characters long. "
-			"Please notify the\n"
-			"maintainer."),
-		      snum_len);
-		snum_len = SNUM_MAX;
-	}
+		/* Sanity check: make sure we have space for the serial number. */
+		if (snum_len > SNUM_MAX-1)
+		{
+			Error(_("Warning: ROM serial number is %d characters long. "
+				"Please notify the\n"
+				"maintainer."),
+			      snum_len);
+			snum_len = SNUM_MAX;
+		}
 
-	/* Read the serial number out of the location found above */
-	SYNC_TRACE(7)
-		fprintf(stderr, "Reading serial number.\n");
-	err = RDLP_MemMove(palm->pconn_, (ubyte *) palm->serial_,
-			   snum_ptr, snum_len);
-	if (err < 0)
-	{
-		Error(_("Can't read serial number."));
-		return -1;
-	}
-	SYNC_TRACE(7)
-		fprintf(stderr, "Serial number is \"%*s\"\n",
-			snum_len, palm->serial_);
+		/* Read the serial number out of the location found above */
+		SYNC_TRACE(7)
+			fprintf(stderr, "Reading serial number.\n");
+		err = RDLP_MemMove(palm->pconn_, (ubyte *) palm->serial_,
+				   snum_ptr, snum_len);
+		if (err < 0)
+		{
+			Error(_("Can't read serial number."));
+			return -1;
+		}
+		SYNC_TRACE(7)
+			fprintf(stderr, "Serial number is \"%*s\"\n",
+				snum_len, palm->serial_);
 
-	palm->serial_[snum_len] = '\0';
-	palm->serial_len_ = snum_len;
+		palm->serial_[snum_len] = '\0';
+		palm->serial_len_ = snum_len;
+	}
 
 	/* See if this is one of the special serial numbers defined in
 	 * 'special_snums', above.
@@ -510,6 +514,10 @@ ListDBs(struct Palm *palm)
 	int err;
 	int card;		/* Memory card number */
 
+	/* Ask for sysinfo */
+	if (!palm->have_sysinfo_)
+		fetch_sysinfo(palm);
+
 	if (palm->num_cards_ < 0)
 	{
 		err = fetch_meminfo(palm);
@@ -531,8 +539,10 @@ ListDBs(struct Palm *palm)
 		/* Get total # of databases */
 		palm->num_dbs_ =
 			palm->cardinfo_[card].ram_dbs;
+
 		if (global_opts.check_ROM)	/* Also considering ROM */
 			palm->num_dbs_ += palm->cardinfo_[card].rom_dbs;
+
 		if (palm->num_dbs_ <= 0)
 		{
 			/* XXX - Fix this */
