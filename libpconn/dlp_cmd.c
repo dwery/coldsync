@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.18 2001-03-27 14:12:25 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.19 2001-07-09 10:36:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -828,8 +828,8 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 
 			/* Parse the info for this database */
 			/* XXX - There might be multiple 'dlp_dbinfo'
-			 * instances (unless the 'multiple' flag is set?).
-			 * Cope with it.
+			 * instances (unless the 'multiple' flag is set
+			 * (DLPRET_READDBLFLAG_MORE)?). Cope with it.
 			 */
 			dbs->size = get_ubyte(&rptr);
 			dbs->misc_flags = get_ubyte(&rptr);
@@ -1151,6 +1151,10 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 /* DlpCloseDB
  * Close the database with the handle 'handle'. If 'handle' is
  * DLPCMD_CLOSEALLDBS, then all open databases will be closed.
+ */
+/* XXX - Under PalmOS 3.0, you can close a specific database and update the
+ * backup and/or modification times. Support this (add a 'ubyte flags'
+ * argument).
  */
 int
 DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
