@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2004-10-11 18:18:43 christophe Exp $
+# $Id: Makefile,v 1.19 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -97,36 +97,37 @@ all::	${INFOFILES}
 # one (since that's a real man file), and make symlinks for all of the
 # others.
 install::	coldsync.8 ${INFOFILES}
-	-${MKDIR} ${MAN3DIR}
+	-${MKDIR} ${DESTDIR}/${MAN3DIR}
 	@for i in ${MAN3FILES}; do \
-		echo "${INSTALL_MAN} $$i ${MAN3DIR}/$$i"; \
-		${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
+		echo "${INSTALL_MAN} $$i ${DESTDIR}/${MAN3DIR}/$$i"; \
+		${INSTALL_MAN} $$i ${DESTDIR}/${MAN3DIR}/$$i; \
 		set `awk '/^\.Nm/ { print $$2 } /^\.Nd/ {exit 0}' $$i`; \
 		echo "Synonyms for $$i are $$*"; \
 		shift; \
 		for j in "$$@"; do \
-			echo "ln -f -s $$i ${MAN3DIR}/$$j.3"; \
-			ln -f -s "$$i" "${MAN3DIR}/$$j.3"; \
+			echo "ln -f -s $$i ${DESTDIR}/${MAN3DIR}/$$j.3"; \
+			ln -f -s "$$i" "${DESTDIR}/${MAN3DIR}/$$j.3"; \
 		done; \
 	done
-	-${MKDIR} ${MAN8DIR}
+	-${MKDIR} ${DESTDIR}/${MAN8DIR}
 	@for i in ${MAN8FILES}; do \
-		echo ${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
-		${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
+		echo ${INSTALL_MAN} $$i ${DESTDIR}/${MAN8DIR}/$$i; \
+		${INSTALL_MAN} $$i ${DESTDIR}/${MAN8DIR}/$$i; \
 		set `awk '/^\.Nm/ { print $$2 } /^\.Nd/ {exit 0}' $$i`; \
 		echo "Synonyms for $$i are $$*"; \
 		shift; \
 		for j in "$$@"; do \
-			echo "ln -f -s $$i ${MAN8DIR}/$$j.8"; \
-			ln -f -s "$$i" "${MAN8DIR}/$$j.8"; \
+			echo "ln -f -s $$i ${DESTDIR}/${MAN8DIR}/$$j.8"; \
+			ln -f -s "$$i" "${DESTDIR}/${MAN8DIR}/$$j.8"; \
 		done; \
 	done
-	-${MKDIR} ${SYSCONFDIR}
-	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
-	${MKDIR} ${INFODIR}
+	-${MKDIR} ${DESTDIR}/${SYSCONFDIR}
+	${INSTALL_DATA} sample.coldsync.rc \
+		${DESTDIR}/${SYSCONFDIR}/sample.coldsync.rc
+	${MKDIR} ${DESTDIR}/${INFODIR}
 	@for file in ${INFOFILES} ${EXTRA_INFOFILES}; do \
-		echo "${INSTALL_DATA} $${file} ${INFODIR}/"; \
-		${INSTALL_DATA} $${file} ${INFODIR}/; \
+		echo "${INSTALL_DATA} $${file} ${DESTDIR}/${INFODIR}/"; \
+		${INSTALL_DATA} $${file} ${DESTDIR}/${INFODIR}/; \
 	done
 
 dvi:	${DVIFILES}

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2004-03-27 14:57:15 azummo Exp $
+# $Id: Makefile,v 1.6 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	include
@@ -12,8 +12,8 @@ DISTFILES =	Makefile \
 include ${TOP}/Make.rules
 
 install::	${HEADERS}
-	${MKDIR} ${INCLUDEDIR}
-	${INSTALL_DATA} ${HEADERS} ${INCLUDEDIR}
+	${MKDIR} ${DESTDIR}/${INCLUDEDIR}
+	${INSTALL_DATA} ${HEADERS} ${DESTDIR}/${INCLUDEDIR}
 
 # This is for Emacs's benefit:
 # Local Variables:	***

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2002-03-19 12:05:26 arensb Exp $
+# $Id: Makefile,v 1.2 2004-11-02 04:22:19 christophe Exp $
 
 TOP =		..
 SUBDIR =	coldnamed
@@ -26,8 +26,8 @@ depend::
 include ${TOP}/Make.rules
 
 install::	${PROG}
-	${MKDIR} ${SBINDIR}
-	${INSTALL_PROGRAM} ${PROG} ${SBINDIR}/${PROG}
+	${MKDIR} ${DESTDIR}/${SBINDIR}
+	${INSTALL_PROGRAM} ${PROG} ${DESTDIR}/${SBINDIR}/${PROG}
 
 #manifest:
 #	@for i in ${DISTFILES}; do \
