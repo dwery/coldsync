@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.3 1999-11-09 04:04:23 arensb Exp $
+ * $Id: parser.y,v 2.4 1999-11-09 06:26:48 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -104,13 +104,9 @@ listen_stmt:
 		 * substatements inside a 'listen' block will fill in
 		 * fields in this struct.
 		 */
-		/* XXX - Use new_listen_block() */
-		cur_listen = (listen_block *) malloc(sizeof(listen_block));
+		cur_listen = new_listen_block();
 			/* XXX - Error-checking */
-		cur_listen->next = NULL;
 		cur_listen->listen_type = LISTEN_SERIAL;
-		cur_listen->device = NULL;
-		cur_listen->speed = 0;
 	}
 	listen_block '}'
 	{
@@ -178,25 +174,20 @@ listen_directive:
 
 conduit_stmt:	CONDUIT conduit_flavor '{'
 	{
-		/* XXX - Write new_conduit_block() and friends */
-		cur_conduit = (conduit_block *) malloc(sizeof(conduit_block));
+		cur_conduit = new_conduit_block();
 		if (cur_conduit == NULL)
 		{
 			fprintf(stderr, "Can't allocate conduit_block!\n");
 			/* XXX - Try to recover gracefully */
 			exit(1);
 		}
-			/* XXX - Error-checking */
-		cur_conduit->next = NULL;
 		cur_conduit->flavor = $2;
-		cur_conduit->dbtype = 0L;
-		cur_conduit->dbcreator = 0L;
-		cur_conduit->path = NULL;
+		$2 = NULL;		/* Just 'cos */
 
 		PARSE_TRACE(4)
 			fprintf(stderr, "Found start of conduit [");
 
-		switch ($2)
+		switch (cur_conduit->flavor)
 		{
 		    case Sync:
 			PARSE_TRACE(4)
@@ -417,10 +408,10 @@ int parse_config(const char *fname,
 	retval = yyparse();
 	fclose(infile);
 
-	/* XXX - Check the temporary variables (cur_listen) and free them
-	 * if necessary.
-	 */
-	/* XXX - free_listen_block() */
+	if (cur_listen != NULL)
+		free_listen_block(cur_listen);
+	if (cur_conduit != NULL)
+		free_conduit_block(cur_conduit);
 
 	return -retval;
 }
