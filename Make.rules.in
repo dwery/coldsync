@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.19 2001-11-12 04:31:22 arensb Exp $
+# $Id: Make.rules.in,v 1.20 2001-11-19 17:05:33 arensb Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -153,6 +153,8 @@ RECURSIVE_TARGETS = \
 # the ${RECURSIVE_TARGETS} rule.
 all::
 
+# XXX - Should add "-R ${LIBDIR}" or "-rpath ${LIBDIR}" or "-Wl,-rpath
+# ${LIBDIR}", whichever one the linker supports.
 ${PROG}:	${OBJS}
 	${CC} ${CFLAGS} ${OBJS} -o $@ ${LDFLAGS}
 
@@ -167,7 +169,7 @@ ${LIBRARY}:	${LIBOBJS}
 # known to work under FreeBSD 4.2 for now.
 ${SHLIB} ${SHLIBVER}:	${SHLIBOBJS}
 	-rm -f ${SHLIBVER} ${SHLIB}
-	-ln -sf ${SHLIBVER} ${SHLIB}
+	-ln -f -s ${SHLIBVER} ${SHLIB}
 	${CC} -shared -Wl,-x -o ${SHLIBVER} -Wl,-soname,${SHLIBVER} \
 		`lorder ${SHLIBOBJS} | tsort -q`
 
