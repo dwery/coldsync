@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.15 1999-06-24 02:52:24 arensb Exp $
+ * $Id: pdb.c,v 1.16 1999-07-04 02:47:06 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -148,28 +148,30 @@ free_pdb(struct pdb *db)
  * syncing, since you can have a list of databases on disk (and their
  * relevant characteristics, like creator, type, and modification number)
  * without having to load their entire contents.
+ * OTOH, if the desktop machine has infinite memory and CPU, it might be
+ * reasonable to assume that it can keep everything in memory with
+ * negligible overhead.
+ */
+
+/* pdb_Read
+ * Read a PDB from the file descriptor 'fd'. This must already have been
+ * opened for reading and/or writing.
+ *
+ * Note: this function does not to any locking. The caller is responsible
+ * for that.
  */
 struct pdb *
-pdb_Read(char *fname)
+pdb_Read(int fd)
 {
 	int err;
 	struct pdb *retval;
-	int fd;				/* File descriptor */
 	static ubyte useless_buf[2];	/* Buffer for the useless 2 bytes
 					 * after the record index.
 					 */
 
-	/* Open the file */
-	if ((fd = open(fname, O_RDONLY)) < 0)
-	{
-		perror("LoadDatabase: open");
-		return NULL;
-	}
-
 	/* Create a new pdb to return */
 	if ((retval = new_pdb()) == NULL)
 	{
-		close(fd);
 		return NULL;
 	}
 
@@ -181,7 +183,6 @@ pdb_Read(char *fname)
 	{
 		fprintf(stderr, "Can't load header\n");
 		free_pdb(retval);
-		close(fd);
 		return NULL;
 	}
 
@@ -190,7 +191,6 @@ pdb_Read(char *fname)
 	{
 		fprintf(stderr, "Can't load header\n");
 		free_pdb(retval);
-		close(fd);
 		return NULL;
 	}
 
@@ -202,7 +202,6 @@ pdb_Read(char *fname)
 		{
 			fprintf(stderr, "Can't read resource index\n");
 			free_pdb(retval);
-			close(fd);
 			return NULL;
 		}
 	} else {
@@ -211,7 +210,6 @@ pdb_Read(char *fname)
 		{
 			fprintf(stderr, "Can't read record index\n");
 			free_pdb(retval);
-			close(fd);
 			return NULL;
 		}
 	}
@@ -222,7 +220,6 @@ pdb_Read(char *fname)
 		fprintf(stderr, "Can't read the useless two bytes");
 		perror("LoadDatabase: read");
 		free_pdb(retval);
-		close(fd);
 		return NULL;
 	}
 	/* Just a sanity check */
@@ -239,7 +236,6 @@ pdb_Read(char *fname)
 	{
 		fprintf(stderr, "Can't read AppInfo block\n");
 		free_pdb(retval);
-		close(fd);
 		return NULL;
 	}
 
@@ -248,7 +244,6 @@ pdb_Read(char *fname)
 	{
 		fprintf(stderr, "Can't read sort block\n");
 		free_pdb(retval);
-		close(fd);
 		return NULL;
 	}
 
@@ -260,7 +255,6 @@ pdb_Read(char *fname)
 		{
 			fprintf(stderr, "Can't read resources.\n");
 			free_pdb(retval);
-			close(fd);
 			return NULL;
 		}
 	} else {
@@ -269,34 +263,36 @@ pdb_Read(char *fname)
 		{
 			fprintf(stderr, "Can't read records.\n");
 			free_pdb(retval);
-			close(fd);
 			return NULL;
 		}
 	}
-
-	close(fd);
 
 	return retval;			/* Success */
 }
 
 /* pdb_Write
- * Write 'db' to the file given by 'fname'.
+ * Write 'db' to the file descriptor 'fd'. This must already have been
+ * opened for writing.
+ *
+ * Note that while you can open the backup file for reading and writing,
+ * read from it with pdb_Read() and save it with pdb_Write(), this is not
+ * recommended: if anything should go wrong at the wrong time (e.g., the
+ * disk fills up just as you're about to write the database back to disk),
+ * you will lose the entire backup.
+ * A better approach is to use a staging file: read from the backup file,
+ * write to a temporary file, then use rename() to move the temporary file
+ * onto the real one. Alternately, you can copy the original file to a
+ * temporary one, then open the temporary for both reading and writing.
+ * This might have some advantages, in that it allows you to lock a single
+ * file for the duration of the sync.
+ *
+ * Note: this function does not lock the file. The caller is responsible
+ * for that.
  */
 int
 pdb_Write(const struct pdb *db,
-	  const char *fname)
+	  int fd)
 {
-	int err;
-	int fd;			/* File descriptor for staging file */
-	static char tempfname[MAXPATHLEN];
-				/* Name of "staging" file. The database
-				 * will be written to this file first; only
-				 * after the "staging" file has been
-				 * written will it replace the existing
-				 * one. This is so that if something goes
-				 * wrong, the existing file doesn't get
-				 * trashed.
-				 */
 	static ubyte header_buf[PDB_HEADER_LEN];
 				/* Buffer for writing database header */
 	static ubyte rlheader_buf[PDB_RECORDLIST_LEN];
@@ -305,23 +301,6 @@ pdb_Write(const struct pdb *db,
 				/* Buffer for writing the two useless NULs */
 	ubyte *wptr;		/* Pointer into buffers, for writing */
 	udword offset;		/* The next offset we're interested in */
-
-	/* Create the staging file */
-	/* Create the staging file name */
-	strncpy(tempfname, fname, MAXPATHLEN-7);
-	strncat(tempfname, ".XXXXXX", 7);
-				/* XXX - The temp file extension and its
-				 * length ought to become preprocessor
-				 * symbols. */
-fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
-	if ((fd = mkstemp(tempfname)) < 0)
-	{
-		perror("pdb_Write: mkstemp");
-		return -1;
-	}
-	/* XXX - Lock the file. Use fcntl, since it's the most
-	 * reliable method.
-	 */
 
 	/* Initialize 'offset': the next variable-sized item will go after
 	 * the header, after the index header, after the index, after the
@@ -388,7 +367,6 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	{
 		fprintf(stderr, "pdb_Write: can't write record list header\n");
 		perror("write");
-		close(fd);
 		return -1;
 	}
 
@@ -399,7 +377,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 		struct pdb_resource *rsrc;	/* Current resource */
 
 		/* Go through the list of resources, writing each one */
-		for (rsrc = db->rec_index.rsrc; rsrc != NULL; rsrc = rsrc->next)
+		for (rsrc = db->rec_index.rsrc;
+		     rsrc != NULL;
+		     rsrc = rsrc->next)
 		{
 			static ubyte rsrcbuf[PDB_RESOURCEIX_LEN];
 					/* Buffer to hold the resource
@@ -416,9 +396,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			if (write(fd, rsrcbuf, PDB_RESOURCEIX_LEN) !=
 			    PDB_RESOURCEIX_LEN)
 			{
-				fprintf(stderr, "pdb_Write: Can't write resource index entry\n");
+				fprintf(stderr, "pdb_Write: "
+					"Can't write resource index entry\n");
 				perror("write");
-				close(fd);
 				return -1;
 			}
 
@@ -451,9 +431,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			if (write(fd, recbuf, PDB_RECORDIX_LEN) !=
 			    PDB_RECORDIX_LEN)
 			{
-				fprintf(stderr, "pdb_Write: Can't write RECORD index entry\n");
+				fprintf(stderr, "pdb_Write: "
+					"Can't write RECORD index entry\n");
 				perror("write");
-				close(fd);
 				return -1;
 			}
 
@@ -468,9 +448,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	nul_buf[0] = nul_buf[1] = '\0';
 	if (write(fd, nul_buf, 2) != 2)
 	{
-		fprintf(stderr, "pdb_Write: Can't write the two useless NULs\n");
+		fprintf(stderr, "pdb_Write: "
+			"Can't write the two useless NULs\n");
 		perror("write");
-		close(fd);
 		return -1;
 	}
 
@@ -480,9 +460,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 		if (write(fd, db->appinfo, db->appinfo_len) !=
 		    db->appinfo_len)
 		{
-			fprintf(stderr, "pdb_Write: Can't write AppInfo block\n");
+			fprintf(stderr, "pdb_Write: "
+				"Can't write AppInfo block\n");
 			perror("write");
-			close(fd);
 			return -1;
 		}
 	}
@@ -495,7 +475,6 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 		{
 			fprintf(stderr, "pdb_Write: Can't write sort block\n");
 			perror("write");
-			close(fd);
 			return -1;
 		}
 	}
@@ -509,15 +488,17 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 		/* Go through the list of resources, writing each one's
 		 * data.
 		 */
-		for (rsrc = db->rec_index.rsrc; rsrc != NULL; rsrc = rsrc->next)
+		for (rsrc = db->rec_index.rsrc;
+		     rsrc != NULL;
+		     rsrc = rsrc->next)
 		{
 			/* Write the data */
 			if (write(fd, rsrc->data, rsrc->data_len) !=
 			    rsrc->data_len)
 			{
-				fprintf(stderr, "pdb_Write: Can't write resource data\n");
+				fprintf(stderr, "pdb_Write: "
+					"Can't write resource data\n");
 				perror("write");
-				close(fd);
 				return -1;
 			}
 		}
@@ -532,30 +513,13 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			if (write(fd, rec->data, rec->data_len) !=
 			    rec->data_len)
 			{
-				fprintf(stderr, "pdb_Write: Can't write record data\n");
+				fprintf(stderr, "pdb_Write: "
+					"Can't write record data\n");
 				perror("write");
-				close(fd);
 				return -1;
 			}
 		}
 	}
-
-	/* If everything successful so far, rename the staging file to the
-	 * real file.
-	 */
-	err = rename(tempfname, fname);
-	if (err < 0)
-	{
-		fprintf(stderr, "Error renaming \"%s\" to \"%s\"\n",
-			tempfname, fname);
-		perror("rename");
-		close(fd);
-		return -1;	/* XXX - Not a show-stopper */
-	}
-
-	/* XXX - Unlock the file */
-
-	close(fd);		/* Clean up */
 
 	return 0;		/* Success */
 }
@@ -796,7 +760,6 @@ pdb_NextRecord(const struct pdb *db,	/* Database to look in */
  * record isn't found, well, that's okay; we wanted to delete it anyway.
  * Returns 0 if successful, -1 in case of error.
  */
-/* XXX - This really ought to be redone with a linked list */
 int
 pdb_DeleteRecordByID(
 	struct pdb *db,
