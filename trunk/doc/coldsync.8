@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.12 2000-02-07 04:45:00 arensb Exp $
+.\" $Id: coldsync.8,v 1.13 2000-03-14 06:16:44 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -16,7 +16,7 @@
 .Nd synchronize files between a Palm and a workstation.
 .Sh SYNOPSIS
 .Nm coldsync
-.Op Fl hVSFR
+.Op Fl hVSFRI
 .Op Fl p Ar device
 .Op Fl t Ar type
 .Op Fl d Ar debug
@@ -74,6 +74,14 @@ instead of
 Force a slow sync. Don't use this unless you know what you're doing.
 .It Fl F
 Force a fast sync. Don't use this unless you know what you're doing.
+.It Fl I
+Install all databases in
+.Pa ~/.palm/install .
+Normally,
+.Nm coldsync
+does not install databases if doing so would overwrite an existing
+database with a higher modification number. This flag overrides this
+behavior.
 .It Fl R
 Consider read-only (ROM) databases when syncing or doing a backup or
 restore. Normally, these are ignored.
