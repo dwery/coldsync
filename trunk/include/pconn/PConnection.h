@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.15 2001-01-09 16:31:52 arensb Exp $
+ * $Id: PConnection.h,v 1.16 2001-04-15 04:32:50 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -61,7 +61,8 @@ typedef struct PConnection
 	int (*io_bind)(struct PConnection *p, const void *addr,
 		       const int addrlen);
 	int (*io_read)(struct PConnection *p, unsigned char *buf, int len);
-	int (*io_write)(struct PConnection *p, unsigned char *buf, int len);
+	int (*io_write)(struct PConnection *p, unsigned const char *buf,
+			const int len);
 	int (*io_connect)(struct PConnection *p, const void *addr,
 			  const int addrlen);
 	int (*io_accept)(struct PConnection *p);
