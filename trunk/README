@@ -113,7 +113,7 @@ is believed to work on all platforms with a Uniforum-compliant libintl
 
 COMPATIBILITY NOTES
 
-* ColdSync 2.2.1
+* ColdSync 2.2.4
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x/4.x, and compiles
@@ -136,6 +136,11 @@ Redhat Linux 6.2 (also Debian, and probably others):
 	messages.
 
 Solaris 2.7:
+	(as of v2.2.4)
+	There are still some problems with ColdSync's IPv6 code under
+	Solaris 2.6 and later. You'll need to use
+		./configure --without-ipv6
+
 	(as of v2.2.0-20010805)
 	Compiles with Sun Forte 6U1.
 
