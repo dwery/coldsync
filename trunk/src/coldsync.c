@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.25 2000-01-27 04:18:08 arensb Exp $
+ * $Id: coldsync.c,v 1.26 2000-01-27 05:21:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -371,9 +371,9 @@ main(int argc, char *argv[])
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a backup to %s\n",
 				global_opts.backupdir);
-		err = Backup(pconn, &palm);
+		err = full_backup(pconn, &palm);
 		MISC_TRACE(2)
-			fprintf(stderr, "Backup() returned %d\n", err);
+			fprintf(stderr, "full_backup() returned %d\n", err);
 	} else if (global_opts.do_restore) {
 		MISC_TRACE(1)
 			fprintf(stderr, "Restoring from %s\n",
