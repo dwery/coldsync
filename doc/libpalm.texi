@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.7 1999-02-21 08:55:38 arensb Exp $
-@c $Revision: 1.7 $
+@c $Id: libpalm.texi,v 1.8 1999-02-22 10:40:36 arensb Exp $
+@c $Revision: 1.8 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -30,15 +30,7 @@
 @set html
 @end ifhtml
 
-@tex
-% Set the manual edition number to the RCS revision number, and have it
-% be automatically generated, just to keep things simple.
-% This is rather kludgy, actually: argument #1 is the colon from the RCS
-% string. It's only there so that RCS/CVS won't expand the wrong thing.
-@xdef@seteditionone$Revision#1 #2 ${#2}
-@xdef@edition{@seteditionone$Revision: 1.7 $}
-@end tex
-@c %** End of header
+@include version.texi
 
 @c XXX - PConnection functions
 @c XXX - palm_errno et al.
@@ -57,9 +49,9 @@ are preserved on all copies.
 @titlepage
 @title The @code{libpalm} Library
 @subtitle Syncing With PalmOS Devices
-@iftex
-@subtitle Edition @edition
-@end iftex
+@subtitle Version @value{VERSION}
+@subtitle Edition @value{EDITION}
+@subtitle Updated @value{UPDATED}
 @author Andrew Arensburger
 
 @page
