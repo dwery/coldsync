@@ -72,6 +72,12 @@
 /* Define if you have the snprintf function.  */
 #undef HAVE_SNPRINTF
 
+/* Define if you have the vfprintf function.  */
+#undef HAVE_VFPRINTF
+
+/* Define if you have the vsnprintf function.  */
+#undef HAVE_VSNPRINTF
+
 /* Define if you have the strchr function */
 #undef HAVE_STRCHR
 
@@ -105,6 +111,9 @@
 /* Define if you have the inet_pton function.  */
 #undef HAVE_INET_PTON
 
+/* Define if you have the gethostbyname function.  */
+#undef HAVE_GETHOSTBYNAME
+
 /* Define if you have the gethostbyname2 function.  */
 #undef HAVE_GETHOSTBYNAME2
 
@@ -132,14 +141,26 @@
 /* Define if you have the <libintl.h> header file.  */
 #undef HAVE_LIBINTL_H
 
+/* Define if you have the <locale.h> header file.  */
+#undef HAVE_LOCALE_H
+
+/* Define if you have the <resolv.h> header file.  */
+#undef HAVE_RESOLV_H
+
 /* Define if you have the <strings.h> header file.  */
 #undef HAVE_STRINGS_H
+
+/* Define if you have the <stropts.h> header file.  */
+#undef HAVE_STROPTS_H
 
 /* Define if you have the <termios.h> header file.  */
 #undef HAVE_TERMIOS_H
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the <arpa/nameser.h> header file.  */
+#undef HAVE_ARPA_NAMESER_H
 
 /* Define if you have the <sys/dir.h> header file.  */
 #undef HAVE_SYS_DIR_H
@@ -149,6 +170,9 @@
 
 /* Define if you have the <sys/select.h> header file.  */
 #undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/sockio.h> header file.  */
+#undef HAVE_SYS_SOCKIO_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
@@ -289,6 +313,19 @@
 				 */
 #endif	/* HAVE_O_BINARY */
 
+#ifndef _POSIX_C_SOURCE
+#  define _POSIX_C_SOURCE  2
+#endif	/* _POSIX_C_SOURCE */
+
+#ifndef __EXTENSIONS__
+#  define __EXTENSIONS__	1
+#endif
+
+#ifndef _XOPEN_SOURCE_EXTENDED
+   /* Provides declaration for lstat() under DU, and strdup() under Linux */
+#  define _XOPEN_SOURCE_EXTENDED
+#endif	/* _XOPEN_SOURCE_EXTENDED */
+
 #if __GNUC__
 
    /* The following should fix gcc complaining about missing
@@ -296,9 +333,6 @@
     * glibc1 (e.g., Slackware 4.0).
     */
 #  if defined(_LINUX_C_LIB_VERSION_MAJOR) && (_LINUX_C_LIB_VERSION_MAJOR <= 5)
-#    ifndef _POSIX_C_SOURCE
-#      define _POSIX_C_SOURCE  2
-#    endif	/* _POSIX_C_SOURCE */
 #    ifndef _BSD_SOURCE
 #      define _BSD_SOURCE
 #    endif	/* _BSD_SOURCE */
@@ -308,7 +342,6 @@
    * shut up about "implicit declaration of xxx".
    */
 #  define _GNU_SOURCE		1
-#  define __EXTENSIONS__	1
 #endif	/* __GNUC__ */
 
 /* OSF1/Digital Unix/Tru64 apparently requires this, to catch certain
