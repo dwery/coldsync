@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.76 2001-01-10 09:36:48 arensb Exp $
+ * $Id: coldsync.c,v 1.77 2001-01-11 08:27:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -141,24 +141,24 @@ main(int argc, char *argv[])
 	 */
 	if (reserve_fd(0, O_RDONLY) < 0)
 	{
-		Error(_("can't reserve file descriptor %d\n"), 0);
+		Error(_("Can't reserve file descriptor %d.\n"), 0);
 		exit(1);
 	}
 	if (reserve_fd(1, O_WRONLY) < 0)
 	{
-		Error(_("can't reserve file descriptor %d\n"), 1);
+		Error(_("Can't reserve file descriptor %d.\n"), 1);
 		exit(1);
 	}
 	if (reserve_fd(2, O_RDONLY) < 0)
 	{
-		Error(_("can't reserve file descriptor %d\n"), 2);
+		Error(_("Can't reserve file descriptor %d.\n"), 2);
 		exit(1);
 	}
 
 	/* Get this host's hostid */
 	if ((err = get_hostinfo()) < 0)
 	{
-		Error(_("can't get host ID.\n"));
+		Error(_("Can't get host ID.\n"));
 		goto done;
 	}
 
@@ -208,7 +208,7 @@ main(int argc, char *argv[])
 		logfile = fopen(global_opts.log_fname, "a");
 		if (logfile == NULL)
 		{
-			fprintf(stderr, _("Can't open log file \"%s\"\n"),
+			fprintf(stderr, _("Can't open log file \"%s\".\n"),
 				global_opts.log_fname);
 			goto done;
 		}
@@ -339,7 +339,7 @@ main(int argc, char *argv[])
 		break;
 	    default:
 		/* This should never happen */
-		Error(_("unknown mode: %d\n"
+		Error(_("Unknown mode: %d.\n"
 			"This is a bug. Please report it to the "
 			"maintainer.\n"),
 		      global_opts.mode);
@@ -407,7 +407,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* Get listen block */
 	if (sync_config->listen == NULL)
 	{
-		Error(_("no port specified.\n"));
+		Error(_("No port specified.\n"));
 		return -1;
 	}
 
@@ -426,7 +426,7 @@ run_mode_Standalone(int argc, char *argv[])
 				     sync_config->listen->listen_type, 1))
 	    == NULL)
 	{
-		Error(_("can't open connection.\n"));
+		Error(_("Can't open connection.\n"));
 		return -1;
 	}
 	pconn->speed = sync_config->listen->speed;
@@ -434,7 +434,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
 	{
-		Error(_("Can't connect to Palm\n"));
+		Error(_("Can't connect to Palm.\n"));
 		PConnClose(pconn);
 		return -1;
 	}
@@ -507,7 +507,7 @@ run_mode_Standalone(int argc, char *argv[])
 	    != 0)
 	{
 		Error(_(
-"Error: This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
+"This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
 "Syncing would most likely destroy valuable data. Please update your\n"
 "configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
 "before proceeding.\n"
@@ -586,7 +586,7 @@ run_mode_Standalone(int argc, char *argv[])
 		err = mkforw_addr(palm, pda, &sa, &sa_len);
 		if (err < 0)
 		{
-			Error(_("can't resolve forwarding address.\n"));
+			Error(_("Can't resolve forwarding address.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			return -1;
@@ -695,7 +695,7 @@ run_mode_Standalone(int argc, char *argv[])
 		fprintf(stderr,"Initializing preference cache\n");
 	if ((err = CacheFromConduits(sync_config->conduits, pconn)) < 0)
 	{
-		Error(_("CacheFromConduits() returned %d\n"), err);
+		Error(_("CacheFromConduits() returned %d.\n"), err);
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
@@ -849,7 +849,7 @@ run_mode_Standalone(int argc, char *argv[])
 				 */
 			    default:
 				Warn(_("Conduit failed for unknown "
-					  "reason\n"));
+				       "reason.\n"));
 				/* Continue, and hope for the best */
 				/*  break; */
 				continue;
@@ -878,7 +878,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* Write updated user info */
 	if ((err = UpdateUserInfo(pconn, palm, 1)) < 0)
 	{
-		Error(_("Can't write user info\n"));
+		Error(_("Can't write user info.\n"));
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
@@ -998,7 +998,7 @@ run_mode_Backup(int argc, char *argv[])
 			Error(_("\"%s\" exists, but is not a directory.\n"),
 			      backupdir);
 		} else {
-			Error(_("No such directory: \"%s\"\n"),
+			Error(_("No such directory: \"%s\".\n"),
 			      backupdir);
 		}
 
@@ -1032,7 +1032,7 @@ run_mode_Backup(int argc, char *argv[])
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
 	{
-		Error(_("Can't connect to Palm\n"));
+		Error(_("Can't connect to Palm.\n"));
 		PConnClose(pconn);
 		return -1;
 	}
@@ -1163,7 +1163,7 @@ run_mode_Restore(int argc, char *argv[])
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
 	{
-		Error(_("Can't connect to Palm\n"));
+		Error(_("Can't connect to Palm.\n"));
 		PConnClose(pconn);
 		return -1;
 	}
@@ -1291,7 +1291,7 @@ run_mode_Init(int argc, char *argv[])
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
 	{
-		Error(_("Can't connect to Palm\n"));
+		Error(_("Can't connect to Palm.\n"));
 		PConnClose(pconn);
 		return -1;
 	}
@@ -1522,7 +1522,7 @@ run_mode_Init(int argc, char *argv[])
 		err = DlpWriteUserInfo(pconn, &uinfo);
 		if (err != DLPSTAT_NOERR)
 		{
-			Warn(_("DlpWriteUserInfo failed: %d\n"),
+			Warn(_("DlpWriteUserInfo failed: %d.\n"),
 			     err);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
@@ -1669,7 +1669,7 @@ Disconnect(PConnection *pconn, const ubyte status)
 	err = DlpEndOfSync(pconn, status);
 	if (err < 0)
 	{
-		Error(_("Error during DlpEndOfSync: (%d) %s\n"),
+		Error(_("Error during DlpEndOfSync: (%d) %s.\n"),
 		      palm_errno,
 		      _(palm_errlist[palm_errno]));
 		PConnClose(pconn);
@@ -1707,7 +1707,7 @@ CheckLocalFiles(struct Palm *palm)
 
 	if ((dir = opendir(backupdir)) == NULL)
 	{
-		Error(_("%s: can't open \"%s/\"\n"),
+		Error(_("%s: Can't open directory \"%s\".\n"),
 		      "CheckLocalFiles",
 		      backupdir);
 		perror("opendir");
@@ -1816,7 +1816,8 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				Error(_("%s: Can't rename \"%s\" to \"%s\"\n"),
+				Error(_("%s: Can't rename \"%s\" to "
+					"\"%s\".\n"),
 				      "CheckLocalFiles",
 				      fromname, toname);
 				perror("rename");
@@ -1863,7 +1864,8 @@ CheckLocalFiles(struct Palm *palm)
 			err = rename(fromname, toname);
 			if (err < 0)
 			{
-				Error(_("%s: Can't rename \"%s\" to \"%s\"\n"),
+				Error(_("%s: Can't rename \"%s\" to "
+					"\"%s\".\n"),
 				      "CheckLocalFiles",
 				      fromname, toname);
 				perror("rename");
@@ -1985,7 +1987,7 @@ UpdateUserInfo(PConnection *pconn,
 			       &uinfo);
 	if (err != DLPSTAT_NOERR)
 	{
-		Error(_("DlpWriteUserInfo failed: %d\n"), err);
+		Error(_("DlpWriteUserInfo failed: %d.\n"), err);
 		return -1;
 	}
 
@@ -2418,7 +2420,7 @@ open_tempfile(char *name_template)
 	retval =  mkstemp(name_template);
 	if (retval < 0)
 	{
-		Error(_("%s: Can't create staging file \"%s\"\n"),
+		Error(_("%s: Can't create staging file \"%s\".\n"),
 		      "open_tempfile", name_template);
 		perror("mkstemp");
 		return -1;
@@ -2428,7 +2430,7 @@ open_tempfile(char *name_template)
 
 	if (mktemp(name_template) == 0)
 	{
-		Error(_("%s: Can't create staging file name\n"),
+		Error(_("%s: Can't create staging file name.\n"),
 		      "open_tempfile");
 		return -1;
 	}
@@ -2438,7 +2440,7 @@ open_tempfile(char *name_template)
 			   O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
 			   0600)) < 0)
 	{
-		Error(_("%s: Can't create staging file \"%s\"\n"),
+		Error(_("%s: Can't create staging file \"%s\".\n"),
 		      "open_tempfile", name_template);
 		return -1;
 	}

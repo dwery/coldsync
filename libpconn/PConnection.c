@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.17 2000-12-24 21:24:28 arensb Exp $
+ * $Id: PConnection.c,v 1.18 2001-01-11 08:27:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,7 +46,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 	if ((pconn = (PConnection *) malloc(sizeof(PConnection)))
 	    == NULL)
 	{
-		fprintf(stderr, _("Can't allocate new connection\n"));
+		fprintf(stderr, _("Can't allocate new connection.\n"));
 		return NULL;
 	}
 
@@ -107,7 +107,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 #endif
 
 	    default:
-		fprintf(stderr, _("%s: unknown listen type %d\n"),
+		fprintf(stderr, _("%s: unknown listen type %d.\n"),
 			"new_PConnection", listenType);
 		free(pconn);
 		return NULL;

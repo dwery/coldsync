@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.38 2001-01-10 09:36:55 arensb Exp $
+ * $Id: parser.y,v 2.39 2001-01-11 08:27:36 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -160,7 +160,7 @@ listen_stmt:
 		 */
 		if ((cur_listen = new_listen_block()) == NULL)
 		{
-			Error(_("%s: Can't allocate listen block\n"),
+			Error(_("%s: Can't allocate listen block.\n"),
 			      "yyparse");
 			return -1;
 		}
@@ -229,10 +229,10 @@ comm_type:
 		ANOTHER_ERROR;
 		if (yytext[0] == '{')
 		{
-			Error(_("\tMissing listen block type\n"));
+			Error(_("\tMissing listen block type.\n"));
 		} else {
 			Error(_("\tUnrecognized listen type "
-				"\"%s\"\n"),
+				"\"%s\".\n"),
 			      yytext);
 			yyclearin; 
 		}
@@ -291,7 +291,7 @@ listen_directive:
 	}
 	| error
 	{
-		Error(_("\tError near \"%s\"\n"),
+		Error(_("\tError near \"%s\".\n"),
 		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
@@ -317,7 +317,7 @@ conduit_stmt:	CONDUIT
 		if (cur_conduit->num_ctypes == 0)
 		{
 			Error(_("%s: No `type:' line seen\n"
-				"\tin definition of \"%s\"\n"),
+				"\tin definition of \"%s\".\n"),
 			      conf_fname,
 			      cur_conduit->path);
 		}
@@ -379,7 +379,7 @@ flavor:
 	| error
 	{
 		ANOTHER_ERROR;
-		Error(_("\tUnrecognized conduit flavor \"%s\"\n"),
+		Error(_("\tUnrecognized conduit flavor \"%s\".\n"),
 		      yytext);
 		yyclearin;
 	}
@@ -518,7 +518,7 @@ conduit_directive:
 	}
 	| error
 	{
-		Error(_("\tError near \"%s\"\n"),
+		Error(_("\tError near \"%s\".\n"),
 		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
@@ -547,7 +547,7 @@ creator_type:	STRING '/' STRING
 			/* Stated creator */
 			if (strlen($1) != 4)
 			{
-				Error(_("%s: %d: Bogus creator \"%s\"\n"),
+				Error(_("%s: %d: Bogus creator \"%s\".\n"),
 				      conf_fname, lineno,
 				      $1);
 				free($1); $1 = NULL;
@@ -571,7 +571,7 @@ creator_type:	STRING '/' STRING
 			/* Stated type */
 			if (strlen($3) != 4)
 			{
-				Error(_("%s: %d: Bogus type \"%s\"\n"),
+				Error(_("%s: %d: Bogus type \"%s\".\n"),
 				      conf_fname, lineno,
 				      $3);
 				free($1); $1 = NULL;
@@ -641,7 +641,7 @@ header_list:	header_list
 		if ((new_hdr = (struct cond_header *)
 		     malloc(sizeof(struct cond_header))) == NULL)
 		{
-			Error(_("%s: Can't allocate conduit header\n"),
+			Error(_("%s: Can't allocate conduit header.\n"),
 			      "yyparse");
 			return -1;
 		}
@@ -706,7 +706,7 @@ pda_stmt:	PDA
 		 */
 		if ((cur_pda = new_pda_block()) == NULL)
 		{
-			Error(_("%s: Can't allocate PDA block\n"),
+			Error(_("%s: Can't allocate PDA block.\n"),
 			      "yyparse");
 			return -1;
 		}
@@ -838,7 +838,7 @@ pda_directive:
 						 strlen(cur_pda->snum));
 			Warn(_("%s: %d: Serial number \"%s\" has no "
 			       "checksum.\n"
-			       "You may want to rewrite it as \"%s-%c\"\n"),
+			       "You may want to rewrite it as \"%s-%c\".\n"),
 			     conf_fname, lineno,
 			     cur_pda->snum, cur_pda->snum, checksum);
 		} else {
@@ -859,7 +859,7 @@ pda_directive:
 			{
 				Warn(_("%s: %d: Incorrect checksum\n"
 				       "for serial number \"%s-%c\". "
-				       "Should be \"%s-%c\"\n"),
+				       "Should be \"%s-%c\".\n"),
 				     conf_fname, lineno,
 				     cur_pda->snum, *csum_ptr,
 				     cur_pda->snum, checksum);
@@ -985,7 +985,7 @@ pda_directive:
 	}
 	| error
 	{
-		Error(_("\tError near \"%s\"\n"),
+		Error(_("\tError near \"%s\".\n"),
 		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
@@ -1022,7 +1022,7 @@ colon:	':'
 	| error
 	{
 		ANOTHER_ERROR;
-		Error(_("\tMissing ':'\n"));
+		Error(_("\tMissing ':'.\n"));
 	}
 
 
@@ -1030,14 +1030,14 @@ open_brace:	'{'
 	| error
 	{
 		ANOTHER_ERROR;
-		Error(_("\tMissing '{'\n"));
+		Error(_("\tMissing '{'.\n"));
 	}
 
 semicolon:	';'
 	| error
 	{
 		ANOTHER_ERROR;
-		Error(_("\tMissing ';'\n"));
+		Error(_("\tMissing ';'.\n"));
 	}
 
 %%
@@ -1077,7 +1077,7 @@ int parse_config_file(const char *fname,
 
 	if ((infile = fopen(fname, "r")) == NULL)
 	{
-		Error(_("%s: Can't open \"%s\"\n"),
+		Error(_("%s: Can't open \"%s\".\n"),
 		      "parse_config_file", fname);
 		perror("fopen");
 		return -1;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.6 2000-12-24 21:24:33 arensb Exp $
+ * $Id: cmp.c,v 1.7 2001-01-11 08:27:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -137,7 +137,7 @@ cmp_accept(PConnection *pconn, udword bps)
 		{
 			if (palm_errno == PALMERR_TIMEOUT)
 				continue;
-			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
+			fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
 				palm_errno,
 				_(palm_errlist[palm_errno]));
 			return -1;

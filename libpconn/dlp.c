@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.10 2000-12-24 21:24:34 arensb Exp $
+ * $Id: dlp.c,v 1.11 2001-01-11 08:27:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -149,7 +149,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	if (outbuf == NULL)
 	{
 		fprintf(stderr,
-			_("%s: Can't allocate %ld-byte buffer\n"),
+			_("%s: Can't allocate %ld-byte buffer.\n"),
 			"dlp_send_req",
 			buflen);
 		return -1;
@@ -279,7 +279,7 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	/* Make sure the response ID matches the request ID */
 	if ((header->id & 0x7f) != id)
 	{
-		fprintf(stderr, _("##### Bad response ID: expected 0x%02x, got 0x%02x\n"),
+		fprintf(stderr, _("##### Bad response ID: expected 0x%02x, got 0x%02x.\n"),
 			id | 0x80, header->id);
 		palm_errno = PALMERR_BADID;
 		return -1;

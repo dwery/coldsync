@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.16 2000-12-24 21:24:39 arensb Exp $
+ * $Id: padp.c,v 1.17 2001-01-11 08:27:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -205,7 +205,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		return -1;
 	    default:
 		/* XXX */
-		fprintf(stderr, _("##### Unexpected packet type %d\n"),
+		fprintf(stderr, _("##### Unexpected packet type %d.\n"),
 			header.type);
 		return -1;
 	};
@@ -447,7 +447,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				/* XXX */
 				fprintf(stderr,
 					_("##### Unexpected packet type "
-					  "%d\n"),
+					  "%d.\n"),
 					header.type);
 				return -1;
 			};
@@ -470,7 +470,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				/* XXX */
 				fprintf(stderr,
 					_("##### Bad offset: wanted %d, got "
-					  "%d\n"),
+					  "%d.\n"),
 					cur_offset, header.size);
 				return -1;
 			}
@@ -662,7 +662,7 @@ padp_write(PConnection *pconn,
 				/* select() timed out */
 				fprintf(stderr,
 					_("ACK Timeout. Attempting to "
-					  "resend\n"));
+					  "resend.\n"));
 				continue;
 			}
 			err = slp_read(pconn, &ack_buf, &ack_len);
@@ -769,7 +769,8 @@ padp_write(PConnection *pconn,
 			    default:
 				/* XXX */
 				fprintf(stderr,
-					_("##### Unexpected packet type %d\n"),
+					_("##### Unexpected packet type "
+					  "%d.\n"),
 					ack_header.type);
 				return -1;
 			};
@@ -781,7 +782,7 @@ padp_write(PConnection *pconn,
 			if (pconn->slp.last_xid != pconn->padp.xid)
 			{
 				fprintf(stderr, _("##### Expected XID 0x%02x, "
-					"got 0x%02x\n"),
+					"got 0x%02x.\n"),
 					pconn->padp.xid, pconn->slp.last_xid);
 				return -1;
 			}

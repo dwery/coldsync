@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.12 2000-12-24 21:24:40 arensb Exp $
+ * $Id: slp.c,v 1.13 2001-01-11 08:27:15 arensb Exp $
  */
 
 #include "config.h"
@@ -241,7 +241,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	if (checksum != header.checksum)
 	{
 		fprintf(stderr, _("%s: bad checksum: expected 0x%02x, "
-				  "got 0x%02x\n"),
+				  "got 0x%02x.\n"),
 			"slp_read",
 			checksum, header.checksum);
 		goto redo;		/* Drop the packet on the floor */
@@ -381,7 +381,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	{
 		rptr = pconn->slp.crc_inbuf;
 		fprintf(stderr,
-			_("SLP: bad CRC: expected 0x%04x, got 0x%04x\n"),
+			_("SLP: bad CRC: expected 0x%04x, got 0x%04x.\n"),
 			my_crc, peek_uword(rptr));
 		goto redo;
 	}

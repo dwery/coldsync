@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.18 2000-12-24 21:24:31 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.19 2001-01-11 08:27:06 arensb Exp $
  */
 
 #include "config.h"
@@ -162,7 +162,7 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 			if (u->iobuflen > 0) {
 				fprintf(stderr,
 					_("usb: trying to fill a non-empty "
-					  "buffer\n"));
+					  "buffer.\n"));
 				abort();
 			}
 
@@ -341,7 +341,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 			perror(device);
 
 		if (errno != ENXIO) {
-			fprintf(stderr, _("Error: Can't open \"%s\"\n"),
+			fprintf(stderr, _("Error: Can't open \"%s\".\n"),
 				device);
 			perror("open");
 			/*  If some other error, don't bother waiting
@@ -372,7 +372,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 	 *  preparation of doing I/O for the actual hot sync operation.
 	 */
 	if (usb_ep0 < 0) {
-		fprintf(stderr, _("%s: Can't open USB device"),
+		fprintf(stderr, _("%s: Can't open USB device.\n"),
 			"pconn_usb_open");
 		perror("open");
 		free(u);
@@ -386,7 +386,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 
 	if (ioctl(usb_ep0, USB_GET_DEVICEINFO, &udi)) {
 		fprintf(stderr,
-			_("%s: Can't get information about USB device"),
+			_("%s: Can't get information about USB device.\n"),
 			"pconn_usb_open");
 		perror("ioctl(USB_GET_DEVICEINFO)");
 		(void) close(usb_ep0);
@@ -417,7 +417,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 
 	if (udi.vendorNo != HANDSPRING_VENDOR_ID) {
 		fprintf(stderr,
-			_("%s: Warning: Unexpected USB vendor ID 0x%x\n"),
+			_("%s: Warning: Unexpected USB vendor ID 0x%x.\n"),
 			"pconn_usb_open", udi.vendorNo);
 	}
 
@@ -537,7 +537,8 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 
 	if (UGETW(usbresponse) != 1) {
 		fprintf(stderr,
-			_("%s: unexpected response %d to GetBytesAvailable\n"),
+			_("%s: unexpected response %d to "
+			  "GetBytesAvailable.\n"),
 			"PConnection_usb", UGETW(usbresponse));
 	}
 
@@ -576,7 +577,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 	pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
 
 	if (pconn->fd < 0) {
-		fprintf(stderr, _("%s: Can't open %s\n"),
+		fprintf(stderr, _("%s: Can't open \"%s\".\n"),
 			"pconn_usb_open", hotsync_ep_name);
 		perror("open");
 		(void) close(usb_ep0);
