@@ -306,3 +306,7 @@
   function. See whether it makes sense to rename this file and put
   some of the more generally useful functions in there. Or something.
 - Document "[generic]" conduit.
+- In Perl modules, make $VERSION be a floating-point number. See mail
+  from Andreas J. Koenig <andreas.koenig@anima.de>
+- Do something with Daniel Klein's <bilderzeitung@hotmail.com> Doc
+  stuff.
