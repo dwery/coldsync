@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.22 1999-08-25 05:25:20 arensb Exp $
+dnl # $Id: configure.in,v 1.23 1999-08-25 08:01:42 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -80,6 +80,10 @@ AC_SUBST(TAR)
 
 AC_CHECK_PROGS(GZIP,[gzip compress])
 AC_SUBST(GZIP)
+
+AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo, true)
+AC_CHECK_PROG(TEXI2DVI, texi2dvi, texi2dvi, true)
+AC_CHECK_PROG(DVIPS, dvips, dvips, true)
 
 dnl ## Checks for libraries.
 
