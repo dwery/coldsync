@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.146 2002-11-13 20:14:38 azummo Exp $
+ * $Id: coldsync.c,v 1.147 2002-11-13 22:42:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -123,15 +123,23 @@ main(int argc, char *argv[])
 
 #if USE_CAPABILITIES
 
-	/* Drop all capabilities */
-	err = cap_set_proc(cap_from_text("= cap_setuid+ep"));
-	
-	if (err < 0)
-	{
-		Error(_("Failed to set process capabilities/privileges."));
-		exit(1);		
-	}
+	/* Drop all capabilities if we are running as root. */
 
+	{
+		uid_t ego = getuid();
+
+		if (ego == 0)
+		{
+			err = cap_set_proc(cap_from_text("= cap_setuid+ep"));
+	
+			if (err < 0)
+			{
+				Error(_("Failed to set process capabilities/privileges."));
+				exit(1);		
+			}
+		}
+	}
+	
 #endif /* USE_CAPABILITIES */
 
 	/* Make sure that file descriptors 0-2 (stdin, stdout, stderr) are
