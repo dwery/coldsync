@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.40 2000-11-14 16:33:17 arensb Exp $
+ * $Id: config.c,v 1.41 2000-11-18 22:45:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1293,7 +1293,8 @@ load_palm_config(struct Palm *palm)
 			 * one pda_block with an empty string.
 			 */
 			if ((cur->snum != NULL) &&
-			    (strncasecmp(cur->snum, palm->serial, SNUM_MAX)
+			    (strncasecmp(cur->snum, palm_serial(palm),
+					 SNUM_MAX)
 			     != 0))
 			{
 				/* The serial number doesn't match */
