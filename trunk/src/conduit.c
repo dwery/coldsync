@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.69 2004-06-23 22:43:00 christophe Exp $
+ * $Id: conduit.c,v 2.70 2004-10-11 04:25:26 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -392,6 +392,8 @@ run_conduit(struct Palm *palm,
 	const struct pref_item ** volatile pref_list = NULL;
 				/* Array of pointers to preference items in
 				 * the cache */
+	char numbuf[16]; /* big enough for a fd value or a version */
+
 
 	if (conduit->path == NULL)
 		/* This conduit has no path. It does nothing. This can be
@@ -534,6 +536,9 @@ run_conduit(struct Palm *palm,
 		"PDA-Snum", palm_serial(palm));
 	add_header(&headers, &num_headers, &max_headers,
 		"PDA-Username", palm_username(palm));
+	sprintf(numbuf, "%d", palm_userid(palm));
+	add_header(&headers, &num_headers, &max_headers,
+		"PDA-UID", numbuf);
 
 	if (pda)
 	{
@@ -616,8 +621,6 @@ run_conduit(struct Palm *palm,
 	 */
 	if (with_spc)
 	{
-		char numbuf[16]; /* big enough for a fd value or a version */
-
 		sprintf(numbuf, "%d", spcpipe[0]);
 		add_header(&headers, &num_headers, &max_headers,
 			"SPCPipe", numbuf);

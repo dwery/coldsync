@@ -13,7 +13,7 @@
 	PDA-Directory: /folks/arensb/.palm-m105;(done)
 	PDA-Default: 1;				(done)
 	PDA-Username: Gorko the Invincible;	(done)
-	PDA-UID: 31337;
+	PDA-UID: 31337;				(done)
 	PDA-DLPmaj: 1;
 	PDA-DLPmin: 3;
 - Add the PDA-xxx headers to the conduits development documentation.
