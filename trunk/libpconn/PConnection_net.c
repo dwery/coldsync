@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>		/* For socket() */
 #include <netinet/in.h>		/* For sockaddr_in, htonl() etc. */
+#include <netdb.h>		/* For getservbyname() */
 #include <string.h>		/* For bzero() */
 
 #if HAVE_LIBINTL_H
@@ -211,6 +212,7 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 {
 	int err;
 	struct sockaddr_in myaddr;
+	struct servent *service;	/* NetSync wakeup service entry */
 
 	IO_TRACE(1)
 		fprintf(stderr, "Opening net connection.\n");
@@ -253,6 +255,31 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	IO_TRACE(5)
 		fprintf(stderr, "UDP socket == %d\n", pconn->fd);
 
+	service = getservbyname("netsync-wakeup", "udp");
+				/* Try to get the entry for
+				 * "netsync-wakeup" from /etc/services
+				 */
+	IO_TRACE(2)
+	{
+		if (service != NULL)
+		{
+			int i;
+
+			fprintf(stderr, "Got entry for netsync-wakeup/udp:\n");
+			fprintf(stderr, "\tname: \"%s\"\n", service->s_name);
+			fprintf(stderr, "\taliases:\n");
+			for (i = 0; service->s_aliases[i] != NULL; i++)
+				fprintf(stderr, "\t\t\"%s\"\n",
+					service->s_aliases[i]);
+			fprintf(stderr, "\tport: %d\n",
+				ntohs(service->s_port));
+			fprintf(stderr, "\tprotocol: \"%s\"\n",
+				service->s_proto);
+		} else {
+			fprintf(stderr, "No entry for netsync-wakeup/udp\n");
+		}
+	}
+
 	/* Bind the UDP socket to the NetSync wakeup port */
 	bzero(&myaddr, sizeof(myaddr));
 	myaddr.sin_family = AF_INET;
@@ -260,11 +287,11 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 				/* Listen on all interfaces */
 				/* XXX - Perhaps this ought to be
 				 * configurable. */
-	myaddr.sin_port = htons(NETSYNC_WAKEUP_PORT);
-				/* XXX - Ought to look this up in
-				 * /etc/services, and default to
-				 * NETSYNC_WAKEUP_PORT if not found.
-				 */
+	if (service == NULL)
+		myaddr.sin_port = htons(NETSYNC_WAKEUP_PORT);
+	else
+		myaddr.sin_port = service->s_port;
+				/* Port is already in network byte order */
 
 	IO_TRACE(4)
 		fprintf(stderr, "bind()ing to %d\n",
@@ -408,6 +435,7 @@ net_tcp_listen(struct PConnection *pconn)
 	struct sockaddr_in servaddr;	/* Local host's (server's) address */
 	struct sockaddr_in cliaddr;	/* Client's address */
 	socklen_t cliaddr_len;		/* Length of client's address */
+	struct servent *service;	/* "netsync" entry in /etc/services */
 	const ubyte *inbuf;
 	uword inlen;
 	int data_sock;			/* Data socket (TCP). Will replace
@@ -424,16 +452,43 @@ net_tcp_listen(struct PConnection *pconn)
 		return -1;
 	}
 
+	service = getservbyname("netsync", "tcp");
+				/* Try to get the entry for "netsync" from
+				 * /etc/services
+				 */
+	IO_TRACE(2)
+	{
+		if (service != NULL)
+		{
+			int i;
+
+			fprintf(stderr, "Got entry for netsync-wakeup/udp:\n");
+			fprintf(stderr, "\tname: \"%s\"\n", service->s_name);
+			fprintf(stderr, "\taliases:\n");
+			for (i = 0; service->s_aliases[i] != NULL; i++)
+				fprintf(stderr, "\t\t\"%s\"\n",
+					service->s_aliases[i]);
+			fprintf(stderr, "\tport: %d\n",
+				ntohs(service->s_port));
+			fprintf(stderr, "\tprotocol: \"%s\"\n",
+				service->s_proto);
+		} else {
+			fprintf(stderr, "No entry for netsync-wakeup/udp\n");
+		}
+	}
+
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(NETSYNC_DATA_PORT);
-				/* XXX - Ought to look this up in
-				 * /etc/services and default to
-				 * NETSYNC_DATA_PORT if not found.
-				 */
 
-	fprintf(stderr, "binding\n");
+	if (service == NULL)
+		servaddr.sin_port = htons(NETSYNC_DATA_PORT);
+	else
+		servaddr.sin_port = service->s_port;
+				/* Port is already in network byte order */
+
+	IO_TRACE(5)
+		fprintf(stderr, "binding\n");
 	err = bind(pconn->fd, (struct sockaddr *) &servaddr, sizeof(servaddr));
 	if (err < 0)
 	{
@@ -441,17 +496,24 @@ net_tcp_listen(struct PConnection *pconn)
 		return -1;
 	}
 
-	fprintf(stderr, "listening\n");
-	err = listen(pconn->fd, 5);	/* XXX - What's a good value for
-					 * the backlog?
-					 */
+	IO_TRACE(5)
+		fprintf(stderr, "listening\n");
+	err = listen(pconn->fd, 1);
+				/* NB: the backlog is set to 1 because we
+				 * know for sure that there's one incoming
+				 * connection, and if there's a second one,
+				 * this process isn't going to handle it.
+				 * In other circumstances, a different
+				 * value would be required.
+				 */
 	if (err < 0)
 	{
 		perror("listen");
 		return -1;
 	}
 
-	fprintf(stderr, "accepting\n");
+	IO_TRACE(5)
+		fprintf(stderr, "accepting\n");
 	cliaddr_len = sizeof(cliaddr);
 	data_sock = accept(pconn->fd, (struct sockaddr *) &cliaddr,
 			   &cliaddr_len);
@@ -460,15 +522,16 @@ net_tcp_listen(struct PConnection *pconn)
 		perror("accept");
 		return -1;
 	}
-	fprintf(stderr,
-		"Accepted TCP connection from 0x%08lx (%d.%d.%d.%d), "
-		"port %d\n",
-		(unsigned long) cliaddr.sin_addr.s_addr,
-		(int)  (cliaddr.sin_addr.s_addr        & 0xff),
-		(int) ((cliaddr.sin_addr.s_addr >>  8) & 0xff),
-		(int) ((cliaddr.sin_addr.s_addr >> 16) & 0xff),
-		(int) ((cliaddr.sin_addr.s_addr >> 24) & 0xff),
-		cliaddr.sin_port);
+	IO_TRACE(1)
+		fprintf(stderr,
+			"Accepted TCP connection from 0x%08lx (%d.%d.%d.%d), "
+			"port %d\n",
+			(unsigned long) cliaddr.sin_addr.s_addr,
+			(int)  (cliaddr.sin_addr.s_addr        & 0xff),
+			(int) ((cliaddr.sin_addr.s_addr >>  8) & 0xff),
+			(int) ((cliaddr.sin_addr.s_addr >> 16) & 0xff),
+			(int) ((cliaddr.sin_addr.s_addr >> 24) & 0xff),
+			cliaddr.sin_port);
 
 	/* We've accepted a TCP connection, so we don't need the UDP socket
 	 * anymore. Replace the UDP socket with the TCP one.
@@ -478,28 +541,39 @@ net_tcp_listen(struct PConnection *pconn)
 
 	/* Receive ritual response 1 */
 	err = netsync_read(NULL, &inbuf, &inlen);
-	fprintf(stderr, "netsync_read returned %d\n", err);
-	debug_dump(stderr, "<<<", inbuf, inlen);
+	IO_TRACE(5)
+	{
+		fprintf(stderr, "netsync_read returned %d\n", err);
+		debug_dump(stderr, "<<<", inbuf, inlen);
+	}
 
 	/* Send ritual statement 2 */
 	err = netsync_write(NULL, ritual_stmt2, sizeof(ritual_stmt2));
-	fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
-		err);
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
+			err);
 
 	/* Receive ritual response 2 */
 	err = netsync_read(NULL, &inbuf, &inlen);
-	fprintf(stderr, "netsync_read returned %d\n", err);
-	debug_dump(stderr, "<<<", inbuf, inlen);
+	IO_TRACE(5)
+	{
+		fprintf(stderr, "netsync_read returned %d\n", err);
+		debug_dump(stderr, "<<<", inbuf, inlen);
+	}
 
 	/* Send ritual statement 3 */
 	err = netsync_write(NULL, ritual_stmt3, sizeof(ritual_stmt3));
-	fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
-		err);
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
+			err);
 
 	/* Receive ritual response 3 */
 	err = netsync_read(NULL, &inbuf, &inlen);
-	fprintf(stderr, "netsync_read returned %d\n", err);
-	debug_dump(stderr, "<<<", inbuf, inlen);
+	IO_TRACE(5)
+	{
+		fprintf(stderr, "netsync_read returned %d\n", err);
+		debug_dump(stderr, "<<<", inbuf, inlen);
+	}
 
 	return 0;
 }
