@@ -4,12 +4,12 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: PConn_bind.3,v 1.1 2001-09-05 07:29:41 arensb Exp $
+.\" $Id: PConn_bind.3,v 1.2 2001-09-07 10:58:33 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
 .\"
-.Dd Aug 16, 2001
+.Dd Sep 7, 2001
 .Dt PConn_bind 3
 .Sh NAME
 .Nm PConn_bind
@@ -38,7 +38,7 @@ use
         struct slp_addr pcaddr;
 
         pcaddr.protocol = SLP_PKTTYPE_PAD;
-        pcaddr.port = SLP_PORT_DLP;
+        pcaddr.port = (ubyte) SLP_PORT_DLP;
         PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
 .Ed
 .Pp
