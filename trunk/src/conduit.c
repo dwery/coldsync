@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.36 2001-03-29 05:36:32 arensb Exp $
+ * $Id: conduit.c,v 2.37 2001-08-15 15:25:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1179,7 +1179,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
-					conduit->path);
+				     (conduit == NULL ||
+				      conduit->path == NULL ? "(null)" :
+				      conduit->path));
 			}
 		}
 
@@ -1237,7 +1239,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			    default:
 				Warn(_("Conduit %s exited abnormally. "
 					  "Continuing."),
-					conduit->path);
+				     (conduit == NULL ||
+				      conduit->path == NULL ? "(null)" :
+				      conduit->path));
 			}
 		}
 	}
