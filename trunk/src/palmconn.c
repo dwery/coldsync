@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.7 2003-06-26 21:01:07 azummo Exp $
+ * $Id: palmconn.c,v 2.8 2003-09-30 20:53:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -150,7 +150,7 @@ palm_Connect( void )
 
 	/* Check if we should enable the read_serial_num_from_expcard hack */
 	
-	if (global_opts.use_card_serial == True3)
+	if (sync_config->options.use_card_serial == True3)
 		palm_serial_hack(palm, 1);
 
 	return palm;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.116 2003-06-26 21:01:07 azummo Exp $
+ * $Id: config.c,v 1.117 2003-09-30 20:53:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -558,11 +558,6 @@ load_config(const Bool read_user_config)
 			global_opts.autoinit =
 				sync_config->options.autoinit;
 	}
-
-
-	/* Handle global options without a command line equivalent */
-	
-	global_opts.use_card_serial = sync_config->options.use_card_serial;
 
 
 	/* Make sure there's at least one listen block: if a port was
