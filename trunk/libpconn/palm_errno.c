@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.5 2001-03-16 14:08:31 arensb Exp $
+ * $Id: palm_errno.c,v 1.6 2001-09-08 01:13:00 arensb Exp $
  */
 #include "config.h"
 
@@ -18,26 +18,51 @@
 
 #include <pconn/palm_errno.h>
 
-int palm_errno;				/* Current error code */
+palmerr_t palm_errno;				/* Current error code */
 
-/* XXX - Need something to keep this array and the error codes in sync */
-/* Error messages corresponding to the PALMERR_* constants in
- * "palm_errno.h". Make sure these stay in sync.
+/* palm_strerror
+ * Given an error code, return the error message corresponding to that
+ * error code.
  */
-const char *palm_errlist[] = {		/* Error messages */
-/* PALMERR_NOERR */	N_("No error"),
-/* PALMERR_SYSTEM */	N_("Error in system call or library function"),
-/* PALMERR_NOMEM */	N_("Out of memory"),
-/* PALMERR_TIMEOUT */	N_("Timeout"),
-/* PALMERR_BADF */	N_("Bad file descriptor"),
-/* PALMERR_EOF */	N_("End of file"),
-/* PALMERR_ABORT */	N_("Transfer aborted"),
-/* PALMERR_BADID */	N_("Invalid request ID"),
-/* PALMERR_BADRESID */	N_("Invalid result ID"),
-/* PALMERR_BADARGID*/	N_("Invalid argument ID"),
-};
+/* XXX - I18N: eventually, presumably this should do the translation
+ * itself, instead of forcing the calling function to do so.
+ */
+const char *
+palm_strerror(const palmerr_t errno)
+{
+	/* This is implemented as a switch statement and not as an array
+	 * lookup in order to allow the compiler to make sure that all
+	 * error codes have an error message.
+	 */
+	switch (errno)
+	{
+	    case PALMERR_NOERR:
+		return N_("No error");
+	    case PALMERR_SYSTEM:
+		return N_("Error in system call or library function");
+	    case PALMERR_NOMEM:
+		return N_("Out of memory");
+	    case PALMERR_TIMEOUT:
+		return N_("Timeout");
+	    case PALMERR_BADF:
+		return N_("Bad file descriptor");
+	    case PALMERR_EOF:
+		return N_("End of file");
+	    case PALMERR_ABORT:
+		return N_("Transfer aborted");
+	    case PALMERR_BADID:
+		return N_("Invalid request ID");
+	    case PALMERR_BADRESID:
+		return N_("Invalid result ID");
+	    case PALMERR_BADARGID:
+		return N_("Invalid argument ID");
+	    case PALMERR_ACKXID:
+		return N_("XID on ACK doesn't match request");
+	}
 
-const int palm_numerrs = sizeof(palm_errlist)/sizeof(palm_errlist[0]);
+	/* This should never be reached */
+	return N_("Unknown error");
+}
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
