@@ -1,4 +1,3 @@
-- Bug: dumps core in FreePrefList() when no matching PDA.
 - Problem: old Palms, and Visors, don't have serial numbers. Hence, if
   a user has two Visors,
 	coldsync -mI
