@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.10 2000-01-13 18:31:42 arensb Exp $
+ * $Id: conduit.c,v 1.11 2000-01-19 06:07:58 arensb Exp $
  */
 /* XXX - At some point, the API for built-in conduits should become much
  * simpler. A lot of the crap in this file will disappear, since it's
@@ -39,6 +39,11 @@
 #  include <libintl.h>			/* For i18n */
 #endif	/* HAVE_LIBINTL */
 
+/* Bleah. AIX doesn't have WCOREDUMP */
+#ifndef WCOREDUMP
+# define WCOREDUMP(status)	0
+#endif	/* WCOREDUMP */
+
 #include "conduit.h"
 
 /* These ought to be defined in <unistd.h>, but just in case */
@@ -61,6 +66,9 @@ extern int run_GenericConduit(struct PConnection *pconn,
 			      struct Palm *palm,
 			      struct dlp_dbinfo *db);
 struct conduit_spec *getconduitbyname(const char *name);
+static int run_conduits(struct dlp_dbinfo *dbinfo,
+			conduit_block *queue,
+			char *flavor);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -390,94 +398,23 @@ find_conduit(const struct dlp_dbinfo *db)
 				 * any */
 }
 
-/* XXX - The run_*_conduits all have a lot in common. It'd probably be best
- * to collapse most of the common functionality into a single function,
- * e.g., run_conduits(queue)
+/* run_conduits
+ * This function encapsulates the common parts of the run_*_conduits()
+ * functions. It takes the dlp_dbinfo for a database and a list of conduit
+ * descriptors, and runs all of the ones that match.
+ *
+ * Returns 0 if successful, or a negative value in case of error.
  */
-/* run_Fetch_conduits
- * Go through the list of Fetch conduits and run whichever ones are
- * applicable for the database 'dbinfo'.
- */
-int
-run_Fetch_conduits(struct Palm *palm,	/* XXX - Unused argument */
-		   struct dlp_dbinfo *dbinfo)
-{
-	conduit_block *conduit;
-
-	SYNC_TRACE(1)
-		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
-			dbinfo->name);
-
-	/* XXX - Set close-on-exec flag fcntl(fd, F_SETFD, FD_CLOEXEC) on
-	 * all file descriptors that should be closed across the exec, and
-	 * clear it on all file descriptors that should remain open.
-	 */
-
-	for (conduit = config.fetch_q;
-	     conduit != NULL;
-	     conduit = conduit->next)
-	{
-		SYNC_TRACE(3)
-			fprintf(stderr, "Trying conduit...\n");
-
-		/* See if the creator matches */
-		if ((conduit->dbcreator != 0) &&
-		    (conduit->dbcreator != dbinfo->creator))
-		{
-			SYNC_TRACE(5)
-				fprintf(stderr,
-					"  Creator: database is 0x%08lx, "
-					"conduit is 0x%08lx. Not "
-					"applicable.\n",
-					dbinfo->creator,
-					conduit->dbcreator);
-			continue;
-		}
-
-		/* See if the creator matches */
-		if ((conduit->dbtype != 0) &&
-		    (conduit->dbtype != dbinfo->type))
-		{
-			SYNC_TRACE(5)
-				fprintf(stderr, "  Type: database is 0x%08lx, "
-					"conduit is 0x%08lx. Not "
-					"applicable.\n",
-					dbinfo->type,
-					conduit->dbtype);
-			continue;
-		}
-
-		/* This conduit matches */
-		SYNC_TRACE(2)
-			fprintf(stderr, "  This conduit matches. "
-				"I ought to run \"%s\"\n",
-				(conduit->path == NULL ? "(null)" :
-				 conduit->path));
-	}
-
-	return 0;		/* XXX */
-}
-
-/* run_Dump_conduits
- * Go through the list of Dump conduits and run whichever ones are
- * applicable for the database 'dbinfo'.
- */
-int
-run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
-		  struct dlp_dbinfo *dbinfo)
+static int
+run_conduits(struct dlp_dbinfo *dbinfo,
+	     conduit_block *queue,
+	     char *flavor)		/* Dump flavor: will be sent to
+					 * conduit.
+					 */
 {
 	int err;
 	conduit_block *conduit;
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
-
-	SYNC_TRACE(1)
-		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
-			dbinfo->name);
-
-	/* XXX - Set close-on-exec flag fcntl(fd, F_SETFD, FD_CLOEXEC) on
-	 * all file descriptors that should be closed across the exec, and
-	 * clear it on all file descriptors that should remain open.
-	 */
 
 	/* Set handler for SIGCHLD, so that we can keep track of what
 	 * happens to conduit child processes.
@@ -486,22 +423,17 @@ run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 	if (old_sigchld == SIG_ERR)
 	{
 		fprintf(stderr, _("%s: Can't set signal handler\n"),
-			"run_Dump_conduits");
+			"run_conduits");
 		perror("signal");
 		return -1;
 	}
 
-	for (conduit = config.dump_q;
+	for (conduit = queue;
 	     conduit != NULL;
-	     conduit = conduit->next)
+	     conduit = queue->next)
 	{
-		pid_t pid;			/* Conduit's PID */
-		static char * argv[4] = {	/* Conduit's argv */
-			NULL,		/* Name */
-			"conduit",
-			"dump",
-			NULL,		/* Terminating NULL */
-		};
+		pid_t pid;		/* Conduit's PID */
+		static char * argv[4];	/* Conduit's argv */
 		FILE *fromchild;	/* File handle to child's stdout */
 		FILE *tochild;		/* File handle to child's stdin */
 		const char *bakfname;	/* Path to backup file */
@@ -509,6 +441,7 @@ run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 					 * the child. This is used as its
 					 * exit status.
 					 */
+		/* XXX - Check for "final" and "default" flags. */
 
 		SYNC_TRACE(3)
 			fprintf(stderr, "Trying conduit...\n");
@@ -552,7 +485,11 @@ run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 		 * corresponding built-in conduit.
 		 */
 
-		argv[0] = conduit->path;
+		argv[0] = conduit->path;	/* Path to conduit */
+		argv[1] = "conduit";		/* Mandatory argument */
+		argv[2] = flavor;		/* Flavor argument */
+		argv[3] = NULL;			/* Terminator */
+
 		pid = spawn_conduit(conduit->path,
 				    argv,
 				    &tochild, &fromchild,
@@ -560,7 +497,7 @@ run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 		if (pid < 0)
 		{
 			fprintf(stderr, "%s: Can't spawn conduit\n",
-				"run_Dump_conduits");
+				"run_conduits");
 
 			/* Let's hope that this isn't a fatal problem */
 			continue;
@@ -570,33 +507,42 @@ run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 
 		/* Feed the various parameters to the child via 'tochild'.
 		 */
+
+		/* Daemon: the name of the ColdSync daemon. Under the terms
+		 * of the Artistic license, you can come up with your own
+		 * version of ColdSync, but you have to call it something
+		 * else. The "Daemon" header is there in case it matters.
+		 */
 		cond_sendheader("Daemon",
 				PACKAGE, strlen(PACKAGE),
 				tochild, fromchild);
 			/* XXX - Error-checking */
+
+		/* Version: version of the program given by "Daemon" */
 		cond_sendheader("Version",
 				VERSION, strlen(VERSION),
 				tochild, fromchild);
 			/* XXX - Error-checking */
-		/* XXX - InputDB: location of existing database */
-		/* XXX - OutputDB: Location of database to dump to */
+
+		/* InputDB: location of existing database */
+		/* XXX - This is only applicable for certain flavors of
+		 * conduit (dump, sync). Deal with this.
+		 */
 		bakfname = mkbakfname(dbinfo);
 		cond_sendheader("InputDB",
 				bakfname, strlen(bakfname),
 				tochild, fromchild);
 			/* XXX - Error-checking */
+
+		/* OutputDB: Location of database to dump to */
+		/* XXX - This is only applicable for certain flavors of
+		 * conduit (fetch, sync). Deal with this.
+		 */
 		cond_sendheader("OutputDB",
 				bakfname, strlen(bakfname),
 				tochild, fromchild);
 			/* XXX - Error-checking */
-{
-char *str = "from parent";
 
-cond_sendheader("Hello",
-		str, strlen(str),
-		tochild,
-		fromchild);
-}
 		/* XXX - "PalmOS": Version of PalmOS running on the Palm
 		 * (For Sync conduit only)
 		 */
@@ -607,13 +553,14 @@ cond_sendheader("Hello",
 		cond_sendline("\n", 1, tochild, fromchild);
 					/* XXX - Error-checking */
 		fflush(tochild);
-fclose(tochild);
 
 		while ((err = cond_readstatus(fromchild)) > 0)
 		{
-/* XXX - Hide this when running normally */
-fprintf(stderr, "run_Dump_conduits: got status %d\n",
-	err);
+			SYNC_TRACE(2)
+				fprintf(stderr,
+					"run_conduits: got status %d\n",
+					err);
+
 			/* XXX - Save the error status for later use: the
 			 * last error status printed is the final result
 			 * from the conduit.
@@ -621,9 +568,11 @@ fprintf(stderr, "run_Dump_conduits: got status %d\n",
 			laststatus = err; 
 		}
 
-/* XXX - Hide this */
-fprintf(stderr, "Closing child's file descriptors\n");
-fclose(fromchild);
+
+		SYNC_TRACE(4)
+			fprintf(stderr, "Closing child's file descriptors\n");
+		fclose(tochild);
+		fclose(fromchild);
 
 		/* XXX - May want to do something with 'laststatus' */
 	}
@@ -632,6 +581,58 @@ fclose(fromchild);
 	signal(SIGCHLD, old_sigchld);
 
 	return 0;
+}
+
+/* run_Fetch_conduits
+ * Go through the list of Fetch conduits and run whichever ones are
+ * applicable for the database 'dbinfo'.
+ */
+int
+run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
+{
+	SYNC_TRACE(1)
+		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
+			dbinfo->name);
+
+	/* Note: If there are any open file descriptors that the conduit
+	 * shouldn't have access to (other than stdin and stdout, which are
+	 * handled separately, here would be a good place to close them.
+	 * Use
+	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
+	 * The global variable 'sys_maxfds' holds the size of the file
+	 * descriptor table.
+	 */
+
+	return run_conduits(dbinfo, config.fetch_q, "fetch");
+}
+
+/* run_Dump_conduits
+ * Go through the list of Dump conduits and run whichever ones are
+ * applicable for the database 'dbinfo'.
+ *
+ * NB: this doesn't take a struct Palm argument, because the Dump conduits
+ * run after the main sync has completed. Then again, the struct Palm
+ * information is still lying around, and contains goodies like the PalmOS
+ * version, which may be useful, so it might be a good idea to reinstate
+ * it.
+ */
+int
+run_Dump_conduits(struct dlp_dbinfo *dbinfo)
+{
+	SYNC_TRACE(1)
+		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
+			dbinfo->name);
+
+	/* Note: If there are any open file descriptors that the conduit
+	 * shouldn't have access to (other than stdin and stdout, which are
+	 * handled separately, here would be a good place to close them.
+	 * Use
+	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
+	 * The global variable 'sys_maxfds' holds the size of the file
+	 * descriptor table.
+	 */
+
+	return run_conduits(dbinfo, config.dump_q, "dump");
 }
 
 /* spawn_conduit
