@@ -1,0 +1,67 @@
+.\" pdb_FindRecordByID.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_FindRecordByID.3,v 1.1 2001-11-20 14:35:23 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_FindRecordByID 3
+.Sh NAME
+.Nm pdb_FindRecordByID
+.Nm pdb_FindRecordByIndex
+.Nd search for records in Palm databases
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft struct pdb_record *
+.Fn pdb_FindRecordByID "const struct pdb *db" "const udword id"
+.Ft struct pdb_record *
+.Fn pdb_FindRecordByIndex "const struct pdb *db" "const uword index"
+.Sh DESCRIPTION
+.Nm pdb_FindRecordByID
+looks for a record in
+.Fa db
+whose ID is
+.Fa id ,
+and returns a pointer to it. Note that
+.Nm pdb_FindRecordByID
+does not make a copy of the record, so the pointer it returns should
+not be freed with
+.Nm pdb_FreeRecord ,
+nor should it be added to another
+.Ft struct pdb
+; for this, use
+.Fn pdb_CopyRecord
+first.
+.Pp
+.Nm pdb_FindRecordByIndex
+returns the
+.Fa index\fRth
+record in
+.Fa db ,
+or NULL if there are fewer than
+.Fa index
+- 1 records in
+.Fa db .
+.Sh RETURN VALUE
+.Nm pdb_FindRecordByID
+and
+.Nm pdb_FindRecordByIndex
+return a pointer to the matching record, or NULL if there is none.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr pdb_FreeRecord 3 ,
+.Xr pdb_CopyRecord 3 .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.Sh LIMITATIONS
+If there is more than one record in a database with the same ID (which
+should never happen),
+.Nm pdb_FindRecordByID
+will only find the first one.

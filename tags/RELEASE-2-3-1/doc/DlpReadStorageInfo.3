@@ -1,0 +1,67 @@
+.\" DlpReadStorageInfo.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadStorageInfo.3,v 1.1 2001-09-05 07:29:27 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadStorageInfo 3
+.Sh NAME
+.Nm DlpReadStorageInfo
+.Nd short description
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadStorageInfo "PConnection *pconn" "const ubyte card" "ubyte *last_card" "ubyte *more" "struct dlp_cardinfo *cinfo"
+.Sh DESCRIPTION
+.Nm
+reads information about a given memory card on the Palm.
+.Fa card
+is the number of the memory card. Card numbers start at 0.
+.Pp
+.Fa last_card
+is filled in with the number of the last card retrieved.
+.Pp
+.Fa more
+is filled in with a value. This ought to be non-zero if there are more
+memory cards; however, this doesn't appear to be the case. This field
+is currently useless.
+.Pp
+.Fa cinfo
+is filled in with memory card information. The
+.Ft dlp_cardinfo
+structure is defined as
+.Bd -literal -offset indent
+struct dlp_cardinfo
+{
+	ubyte totalsize;
+	ubyte cardno;
+	uword cardversion;
+	struct dlp_time ctime;
+	udword rom_size;
+	udword ram_size;
+	udword free_ram;
+	ubyte cardname_size;
+	ubyte manufname_size;
+	char cardname[DLPCMD_MEMCARD_LEN];
+	char manufname[DLPCMD_MEMCARD_LEN];
+	uword rom_dbs;
+	uword ram_dbs;
+};
+.Ed
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
+.SH BUGS
+May not work if the Palm has more than one memory card.

@@ -1,0 +1,82 @@
+# $Id: AUTHORS,v 2.18 2002-03-08 18:03:40 azummo Exp $
+
+Authors and Contributors:
+
+Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
+	benevolent dictator.
+Louis A. Mamakos <louie@TransSys.COM>: USB support.
+Mark Coletti <mcoletti@clark.net>: The original Makefile.am, which was
+	then mangled out of all recognition and finally tossed.
+Rob Fugina <robf@geeks.com>: Alpha-testing at personal risk to his
+	data.
+Justin Ferguson <jferg@lusars.net>: groveled through .h files to come
+	up with a patch for misbehaving 'gcc's.
+Pace Willisson <pace@blitz.com>.
+Jorge Barros <jorge.barros@lecroy.com>: French translation.
+Christian Kirsch <ck@ix.heise.de>: German translation.
+Ward Vandewege <ward@penguinpowered.com>.
+Charles Lepple <clepple@vt.edu>
+Shawn Sorichetti <ssoriche@home.com>: Explained about USB under Linux.
+Dirk-Willem van Gulik <dirkx@covalent.net>.
+Johnny C. Lam <lamj@stat.cmu.edu>.
+Andrew J. Korty <ajk@iu.edu>: Patch for setting username.
+Hollis Blanchard <hollis@amulet.co.jp>: Portability and install patch.
+John Chia <john@ni.yi.org>: Added text-wrap feature to 'send-mail'
+Sumant S.R. Oemrawsingh <sikander@stad.dsl.nl>: Preferences.
+Andreas J. Koenig <andreas.koenig@anima.de>: $VERSION in Perl.
+John-David Smith <jdsmith@astro.cornell.edu>: Install conduits.
+Philipp Matthias Hahn <pmhahn@titan.lahn.de>: Updated German
+	translations, various patches.
+Ted Faber <faber@lunabase.org>.
+Zachary P. Landau <kapheine@hypa.net>: Added -z option.
+Mark Reed <markjreed@mail.com>.
+Alessandro Gatti <rigel@telemail.it>: Italian translation.
+Koen Deforche <kdf@irule.be>: support for Palm M50x series.
+Mike Durian <durian@boogie.com>.
+Fred Gylys-Colwell <fredgc@ktb.net>.
+Nicholas J Kreucher <kreucher@msu.edu>: Info on Sony Clie.
+Francisco Castro <fcastro@solucionespalm.com>
+Bob Geer <bgeer@xmission.com>
+Samuel Tardieu <sam@rfc1149.net>: continuation lines in send-mail.
+Petr Kubanek <petr@kubanek.net>: Czech translation.
+Brian Johnson <bjohnson@jecinc.on.ca>: SPC.pm documentation.
+Alessandro Zummo <azummo-coldsync3@towertech.it>: new functions in SPC.pm.
+
+	A big thank you to Kenneth Albanowski and the rest of the
+authors of the pilot-link code, for providing a reference
+implementation.
+
+Other contributors:
+
+* cfmakeraw:
+
+	This product includes software developed by the University of
+California, Berkeley and its contributors.
+
+	Specifically, the cfmakeraw() function comes from the FreeBSD
+3.0 source (modified to conform to ANSI declaration style, rather than
+K&R). See "libpconn/cfmakeraw.c" for copyright and license terms.
+
+* snprintf:
+
+	This product includes software developed by the Apache Group
+for use in the Apache HTTP server project (http://www.apache.org/).
+
+	Specifically, the file "src/ap_snprintf.c" is the file
+<apache-src>/src/ap/ap_snprintf.c from the Apache source, with minor
+modifications. That file, in turn, says:
+
+	This code is based on, and used with the permission of, the
+	SIO stdio-replacement strx_* functions by Panos Tsirigotis
+	<panos@alumni.cs.colorado.edu> for xinetd.
+
+* install-sh:
+
+	The script "install-sh" is Copyright 1991 by the Massachusetts
+Institute of Technology. See "install-sh" for copyright and license
+terms.
+
+* mkinstalldirs:
+
+	The script "mkinstalldirs" was written by Noah Friedman
+<friedman@prep.ai.mit.edu>, and is in the public domain.

@@ -1,0 +1,50 @@
+.\" RDLP_Backlight.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: RDLP_Backlight.3,v 1.1 2001-09-05 07:29:42 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt RDLP_Backlight 3
+.Sh NAME
+.Nm RDLP_Backlight
+.Nd query and/or set backlight on a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn RDLP_Backlight "PConnection *pconn" "Bool set" "Bool newState"
+.Sh DESCRIPTION
+.Nm
+queries whether the backlight is turned on on a Palm, and optionally
+turns it on or off.
+.Pp
+If
+.Fa set
+is true,
+.Nm
+turns the backlight on or off, according to
+.Fa newState .
+If
+.Fa newState
+is true, the backlight is turned on; otherwise the backlight is turned
+off. If
+.Fa set
+is false,
+.Fa newState
+is ignored.
+.Sh RETURN VALUE
+.Nm
+returns 0 if the backlight was turned off prior to the call to
+.Nm RDLP_Backlight ,
+or a non-zero value if the backlight was turned on.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpRPC 3 .

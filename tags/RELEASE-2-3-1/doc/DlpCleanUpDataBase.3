@@ -1,0 +1,41 @@
+.\" DlpCleanUpDatabase.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpCleanUpDataBase.3,v 1.1 2001-09-05 07:29:01 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpCleanUpDatabase 3
+.Sh NAME
+.Nm DlpCleanUpDatabase
+.Nd purge deleted and archived records in a Palm database
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpCleanUpDatabase "PConnection *pconn" "const ubyte handle"
+.Sh DESCRIPTION
+.Nm
+deletes any records in a database that were marked
+.Dq deleted
+or
+.Dq expunged .
+.Pp
+.Fa handle
+specifies the database to clean up, as returned by
+.Xr DlpOpenDB .
+The database must be open for writing.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpResetSyncFlags 3 .

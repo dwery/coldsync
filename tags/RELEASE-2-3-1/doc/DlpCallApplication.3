@@ -1,0 +1,89 @@
+.\" DlpCallApplication.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpCallApplication.3,v 1.1 2001-09-05 07:29:00 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpCallApplication 3
+.Sh NAME
+.Nm DlpCallApplication
+.Nd run a program on a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpCallApplication "PConnection *pconn" "const udword version" "const struct dlp_appcall *appcall" "const udword paramsize" "const ubyte *param" "struct dlp_appresult *appresult"
+.Sh DESCRIPTION
+.Nm
+calls a Palm application via an action code.
+.Pp
+.Fa version
+specifies the version of PalmOS on the Palm. This is because the API
+of this function changed between 1.0 and 2.0. In practice, you can simply set
+.Fa version
+to 0x02000000 for a Palm running PalmOS 2.0 or later.
+.Pp
+.Fa appcall
+specifies the application to run. It is of the following form:
+.Bd -literal -offset indent
+struct dlp_appcall
+{
+	udword creator;
+	udword type;
+	uword action;
+};
+.Ed
+where
+.Fa appcall.creator
+is the application's four-letter creator,
+.Fa appcall.type
+is its executable type, and
+.Fa appcall.action
+is the action code. Presumably this makes sense to people who write
+PalmOS programs.
+.Pp
+.Fa paramsize
+specifies the size of the parameter.
+.Pp
+.Fa param
+is the parameter data.
+.Pp
+.Fa appresult
+will be filled in with the result of running the program. It is of the
+following form:
+.Bd -literal -offset indent
+struct dlp_appresult
+{
+	uword action;
+	udword result;
+	udword size;
+	ubyte data[2048];
+};
+.Ed
+where
+.Fa appresult.action
+is the action code with which the application was called,
+.Fa appresult.result
+is the exit value,
+.Fa appresult.size
+is the size of
+.Fa appresult.data ,
+and
+.Fa appresult.data
+is the returned data.
+.Sh RETURN VALUE
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
+.Sh BUGS
+This function has barely been tested. It may not work.
+.Pp
+The API could use a lot of work.

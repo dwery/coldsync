@@ -1,0 +1,55 @@
+.\" DlpReadSysInfo.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadSysInfo.3,v 1.1 2001-09-05 07:29:28 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadSysInfo 3
+.Sh NAME
+.Nm DlpReadSysInfo ,
+.Nd read system information from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadSysInfo "PConnection *pconn" "struct dlp_sysinfo *sysinfo"
+.Sh DESCRIPTION
+.Fn DlpReadSysInfo
+reads system information from
+.Fa pconn
+and stores it in
+.Fa sysinfo .
+The
+.Ft dlp_sysinfo
+structure is defined in
+.Pa <pconn/dlp_cmd.h>
+as
+.Bd -literal -offset indent
+struct dlp_sysinfo
+{
+	udword rom_version;
+	udword localization;
+	ubyte unused;
+	ubyte prodIDsize;
+	udword prodID;
+	uword dlp_ver_maj;
+	uword dlp_ver_min;
+	uword comp_ver_maj;
+	uword comp_ver_min;
+	udword max_rec_size;
+};
+.Ed
+.Sh RETURN VALUE
+.Fn DlpReadSysInfo
+returns 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .

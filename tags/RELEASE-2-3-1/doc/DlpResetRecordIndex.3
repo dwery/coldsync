@@ -1,0 +1,44 @@
+.\" DlpResetRecordIndex.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpResetRecordIndex.3,v 1.1 2001-09-05 07:29:31 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpResetRecordIndex 3
+.Sh NAME
+.Nm DlpResetRecordIndex
+.Nd reset a Palm database's
+.Dq next modified record
+index
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpResetRecordIndex "PConnection *pconn" "const ubyte handle"
+.Sh DESCRIPTION
+.Nm
+resets a database's
+.Dq next modified record
+index to the beginning, so that the next call to
+.Nm DlpReadNextModifiedRec
+will return the first modified record in the database.
+.Pp
+.Fa handle
+is the database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpReadNextModifiedRec 3 ,
+.Xr DlpReadNextModifiedRecInCategory 3 .

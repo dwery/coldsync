@@ -1,0 +1,103 @@
+.\" DlpReadNetSyncInfo.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadNetSyncInfo.3,v 1.1 2001-09-05 07:29:20 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadNetSyncInfo 3
+.Sh NAME
+.Nm DlpReadNetSyncInfo ,
+.Nm DlpWriteNetSyncInfo
+.Nd read/write network HotSync information to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadNetSyncInfo "PConnection *pconn" "struct dlp_netsyncinfo *netsyncinfo"
+.Ft int
+.Fn DlpWriteNetSyncInfo "PConnection *pconn" "const ubyte modflags" "const struct dlp_netsyncinfo *newinfo"
+.Sh DESCRIPTION
+.Nm DlpReadNetSyncInfo
+reads network HotSync settings from a Palm.
+.Pp
+.Fa netsyncinfo
+is filled in with this information. The
+.Ft dlp_netsyncinfo
+structure is defined as
+.Bd -literal -offset indent
+struct dlp_netsyncinfo
+{
+        ubyte lansync_on;
+        uword hostnamesize;
+        uword hostaddrsize;
+        uword hostnetmasksize;
+        char hostname[DLPCMD_MAXHOSTNAMELEN];
+        char hostaddr[DLPCMD_MAXADDRLEN];
+        char hostnetmask[DLPCMD_MAXNETMASKLEN];
+};
+.Ed
+where
+.Fa lansync_on
+is non-zero if LAN sync is enabled;
+.Fa hostnamesize ,
+.Fa hostaddrsize ,
+and
+.Fa hostnetmasksize
+give the length of the strings in
+.Fa hostname ,
+.Fa hostaddr ,
+and
+.Fa hostnetmask ,
+respectively (these lengths include the terminating NUL);
+.Fa hostname
+is filled in with the name of the sync host, as an ASCII string;
+.Fa hostaddr
+is filled in with the IP address of the sync host, as an ASCII string,
+\fIe.g\fR,
+.Dq 192.168.123.5 ;
+.Fa hostnetmask
+is filled in with the sync host's netmask, as an ASCII string,
+\fIe.g.\fR,
+.Dq 255.255.0.0 .
+.Pp
+It is not clear what the relationship between the host name, address,
+and netmask is. Perhaps it is possible for the Palm to send a
+broadcast request to a subnet to request a host with which to sync.
+.Pp
+.Nm DlpWriteNetSyncInfo
+writes new network HotSync information to the Palm.
+.Pp
+.Fa newinfo
+contains the data to upload. It is not necessary to fill in all of the
+fields, only those which one wishes to modify.
+.Pp
+.Fa modflags
+specifies which fields to update:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPCMD_MODNSFLAG_LANSYNC
+.Fa newinfo.lansync_on
+.It Dv DLPCMD_MODNSFLAG_HOSTNAME
+.Fa newinfo.hostnamesize
+and
+.Fa newinfo.hostname
+.It Dv DLPCMD_MODNSFLAG_HOSTADDR
+.Fa newinfo.hostaddrsize
+and
+.Fa newinfo.hostaddr
+.It Dv DLPCMD_MODNSFLAG_NETMASK
+.Fa newinfo.hostnetmasksize
+and
+.Fa newinfo.hostnetmask
+.El
+.Sh RETURN VALUE
+These functions return 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 .

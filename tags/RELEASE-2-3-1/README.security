@@ -1,0 +1,75 @@
+$Id: README.security,v 2.1 2001-05-24 06:30:33 arensb Exp $
+
+	ColdSync Security Considerations
+
+
+No Security
+== ========
+
+	ColdSync uses Palm's HotSync communications protocols, which
+are inherently insecure. There is no equivalent of ssh or Kerberos.
+There is no encryption or authentication between the Palm and the
+desktop host.
+	It is trivial to spoof a connection using a laptop with a Palm
+emulator such as POSE or xcopilot, or with a custom program.
+
+	In this respect, an incoming sync connection is similar to an
+incoming SMTP connection, so ColdSync aims to be about as secure (in
+principle) as procmail.
+
+
+Setuid-ness
+===========
+
+	ColdSync is not setuid. It does not need to be.
+
+	In standalone mode, ColdSync runs with the privileges of the
+user running it, so it can only do as much damage as that user.
+
+	In daemon mode, ColdSync normally starts out running as root.
+When it receives an incoming connection, it reads the serial number,
+username, and userid from the Palm, looks them up in
+/usr/local/etc/palms, and setuid()s to the appropriate user. If no
+match is found in /usr/local/etc/palms, ColdSync aborts the sync.
+
+
+Conduits
+========
+
+	Conduits are programs that ColdSync runs on Palm databases. In
+this respect, they are similar to procmail recipes that run on certain
+messages.
+	As the system administrator, you have a certain amount of
+control over which conduits may be run by users.
+	The file /usr/local/etc/coldsync.conf is read before the
+user's ~/.coldsyncrc ; logically, ColdSync behaves as if it had one
+configuration file:
+
+	conduit sync {
+		type: */*;
+		path: [generic];
+		default;
+	}
+
+	#include /usr/local/etc/coldsync.conf
+	#include ~/.coldsyncrc
+
+Thus, if /usr/local/etc/coldsync.conf contains the entry
+
+	conduit sync {
+		type: todo/DATA;
+		final;
+	}
+
+then no sync conduits will run on any todo/DATA ("ToDoDB") databases.
+The entry
+
+	conduit fetch, dump, sync, install {
+		type: */*;
+		final;
+	}
+
+prevents any conduits after this entry from running.
+
+	Likewise, you can require certain conduits to be run by adding
+them to /usr/local/etc/coldsync.conf .

@@ -1,0 +1,1448 @@
+2001-12-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/dlp_cmd.c: Removed a to-do comment. Yay!
+
+	* libpconn/dlp.c: Added some trace statements.
+
+2001-12-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/Makefile: When installing man pages, looks for synonyms in
+	the file, and installs them as symlinks.
+
+	* libpconn/palm_errno.c: Added PALMERR_TIMEOUT2 case to
+	palm_strerror().
+
+	* libpconn/netsync.c: netsync_read_method() now waits for input
+	with (*io_select)() instead of waiting forever with read(). This
+	should help with dropped data under Linux.
+
+	* libpconn/dlp_cmd.c: Dlp*() functions now use dlp_dlpc_req().
+
+	* libpconn/dlp.c: dlp_send_req() now takes const arguments. Added
+	dlp_dlpc_req(), a wrapper for sending DLP commands and getting an
+	answer back.
+
+	* include/pconn/palm_errno.h: Added PALMERR_TIMEOUT2, for timeouts
+	that shouldn't happen.
+
+	* include/pconn/netsync.h: Added NETSYNC_WAIT_TIMEOUT.
+
+	* include/pconn/dlp.h: dlp_send_req() now takes const arguments.
+	Added declaration for dlp_dlpc_req().
+
+	* configure.in: Bumped up version number. 2.3.0 is the new
+	development branch.
+
+	* doc/coldsync.8: Added documentation for "hostid: 12345678;"
+
+	* src/parser.y: Allow "hostid: 12345678;" in options block, to set
+	host ID.
+
+	* src/lexer.l: Added "hostid" keyword.
+
+	* src/config.c: Initialize hostid to 0.
+
+	* src/coldsync.c: Get host ID after parsing config file, since it
+	might set the host ID.
+
+	* i18n/Makefile: Echo before creating directories, for
+	explicitness.
+
+	* doc/Makefile: Added quotes, out of paranoia.
+
+	* conduits/Makefile: Echo what it's doing, to make 'make install'
+	logs more explicit.
+
+2001-12-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/cs.po: Latest translation.
+
+2001-12-07  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.2.5 (stable) released.
+
+	* doc/coldsync.8: Added documentation for "transient" keyword.
+
+	* FAQ: Added bit about Palm not documenting USB protocol.
+
+	* i18n/Makefile: Added "cs" to list of languages.
+
+	* README: Added note about --without-ipv6 under Solaris.
+
+	* i18n/cs.po: Split up usage string into multiple strings.
+
+	* AUTHORS: Added Petr Kubanek.
+
+	* i18n/cs.po (added): Czech translations.
+
+	* i18n/fr.po: Latest version of strings.
+
+2001-12-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* configure.in: Added a comment about Solaris.
+
+	* doc/Makefile: Fixed missing backslash.
+
+	* libpconn/PConnection_serial.c (bug fix): Error message didn't
+	check arguments properly, segfaulted.
+
+2001-11-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/it.po, i18n/de.po: Latest version of strings. Split usage
+	message up into individual strings.
+
+2001-11-28  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c (bug fix): lookups in /usr/local/etc/palms
+	weren't comparing the right values. Patch submitted by Alessandro
+	Zummo.
+
+2001-11-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/libpdb.3: Updated with the real list of functions.
+
+	* doc/Makefile: Added libpdb man pages to list of files to be
+	installed.
+
+	* doc/pdb_Read.3, doc/pdb_LoadHeader.3, doc/pdb_FindRecordByID.3,
+	doc/pdb_DeleteRecordByID.3, doc/pdb_CopyRecord.3,
+	doc/pdb_AppendRecord.3, doc/new_pdb.3, doc/new_Record.3:
+	(added) libpdb man pages.
+	
+	* include/pdb.h: Added declaration of new_Resource().
+
+	* include/pdb.h: Added some missing 'extern's.
+
+2001-11-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c (bug fix): Software protocol didn't get set
+	properly when running solely with command-line options.
+
+	* libpconn/PConnection_usb.c: Fix looping on transient devices.
+
+	* src/coldsync.c, libpconn/PConnection_net.c: Don't include
+	problem headers under Solaris with --without-ipv6, so it'll
+	compile. Whee.
+
+	* libpconn/Makefile: Added comments on building shared libraries
+	under Solaris and DU.
+
+	* configure.in: Added --without-ipv6 option, mainly for Solaris.
+
+	* README: Added a complaint about DEC's linker.
+
+	* Make.rules.in: Fixed invocation of 'ln' to work under Solaris
+	(grrr), for shared libraries.
+
+	* FAQ: Added a bit about m50x'es.
+
+2001-11-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* AUTHORS: Added Samuel Tardieu.
+
+	* conduits/send-mail: Insert whitespace in continuation lines.
+	Patch supplied by Samuel Tardieu <sam@rfc1149.net>.
+
+2001-11-12  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* FAQ: Added a bit about Visor serial number bug.
+
+	* src/parser.y, src/lexer.l: Added "transient" keyword.
+	
+	* src/config.c: Print listen{} flags in debugging statement.
+
+	* src/coldsync.h: Added LISTENFL_TRANSIENT.
+
+	* src/coldsync.c: If listen{} block was marked "transient", pass
+	that on to new_PConnection().
+
+	* libpconn/PConnection_usb.c, libpconn/PConnection_serial.c: Added
+	support for transient devices.
+
+2001-11-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.2.4 released.
+
+	* libpdb/Makefile, libpconn/Makefile, Make.rules.in: First stab at
+	making shared libraries.
+	
+	* src/parser.y: Added boolean token type, for boolean options.
+	Allow "force_install [: <bool>]" and "install_first [: <bool>]" in
+	options{} block. Added some missing semicolons.
+
+	* src/misc.c: Added Bool3str(), to return the printed
+	representation of a Bool3.
+
+	* src/lexer.l: Added keywords "true", "false", "yes", and "no",
+	for boolean options.
+
+	* src/config.c: global_opts.force_install and
+	global_opts.install_first are now 'Bool3's. Initialize them to
+	"Undefined", and allow the config file to override values that
+	weren't set on the command line.
+
+	* src/coldsync.h: Added Bool3 type. global_opts.force_install and
+	global_opts.install_first are now 'Bool3's. Added options to
+	struct sync_config, for the options block. Added declaration for
+	Bool3str().
+
+	* src/coldsync.c: Pass flags to new_PConnection().
+	global_opts.force_install and global_opts.install_first are now
+	'Bool3's.
+
+	* libpconn/PConnection_usb.c, libpconn/PConnection_serial.c,
+	libpconn/PConnection_net.c, libpconn/PConnection.c,
+	include/pconn/PConnection.h: Removed 'promptForHotsync' hack,
+	replaced with more general 'flags'.
+
+	* doc/coldsync.8: Added documentation for force_install and
+	install_first options in .coldsyncrc.
+
+	* doc/new_PConnection.3, doc/libpconn.3: Fixed documentation of
+	new_PConnection().
+
+2001-11-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y: Added "force_install" and "install_first"
+	keywords. (Still buggy.)
+
+	* src/lexer.l: Moved the variable name pattern after the keyword
+	patterns, so that keywords keywords take precedence.
+	* AUTHORS: Added Bob Geer.
+
+2001-11-07  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c (bug fix): Changed some offsets from uword (bug!)
+	and udword (non-bug) to localID, since that's how they're
+	represented in struct pdb. Bug reported and fix suggested by Bob
+	Geer <bgeer@xmission.com>
+
+	* libpconn/spc_client.c: Trace statements used to be printed
+	unconditionally. Turned them into more conventional IO_TRACE()
+	statements.
+
+2001-11-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/slp.c (bug fix): Removed bogus close(). It'd be nice to
+	fix this better, but that's too hard right now.
+
+	* doc/coldsync.8: Documented $(CONDUITDIR) and $(CONDUIT_PATH).
+
+2001-11-01  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c: Fixed overly-long usage string, and made it more
+	translatable.
+
+	* i18n/fr.po: Updated usage strings.
+
+2001-10-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* AUTHORS: Added Francisco Castro.
+
+	* src/spc.c (bug fix): Use the proper write method. Patch
+	submitted by Francisco Castro <fcastro@solucionespalm.com>
+
+2001-10-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c (bug fix): Forgot format argument to snprintf().
+	D'oh! Patch submitted by Fred Gylys-Colwell
+
+2001-10-17  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.2.3 released.
+
+	* src/parser.y: Optional colons are now mandatory (it's about
+	time).
+
+	* src/config.c: Removed use of do_{backup,restore},
+	{backup,restore}dir in global_opts. Fixed getopt() call
+	accordingly. Added -P option to usage string.
+
+	* src/coldsync.c: Removed use of do_{backup,restore},
+	{backup,restore}dir in global_opts. The -b and -r options are
+	dead.
+
+	* src/coldsync.h: Removed do_{backup,restore}, {backup,restore}dir
+	from global_opts.
+
+	* doc/coldsync.8: Added mention of -P option and "protocol:"
+	directive. Removed mention of obsolete -b and -r options.
+
+	* libpconn/PConnection_usbm50x.c (deleted): Obsoleted by "simple"
+	software protocol.
+	
+	* src/parser.y: Removed USB_M50X listen type.
+
+	* src/lexer.l: Removed "usb_m50x", "m50x" keywords.
+
+	* src/config.c: Removed "usb_m50x", "m50x" keywords.
+
+	* libpconn/PConnection.c: Removed usb_m50x functions.
+
+	* libpconn/Makefile: Removed PConnection_usbm50x.c
+
+	* include/pconn/PConnection.h: Removed LISTEN_USB_M50X listen
+	type.
+
+	* doc/coldsync.8: Removed references to "usb_m50x".
+
+	* src/symboltable.h: Prettification. Added Emacs magic.
+
+	* src/symboltable.cc: Prettified a bit. Added forward declaration
+	for make_c_string(). Added some "to do" comments.
+
+	* src/parser.y: Fixed improperly-merged lex_expect() calls.
+
+	* src/parser.h: Added LEX_VAR start state, for variable names.
+
+	* src/config.c: Undid my fix: no need to duplicate value passed to
+	put_symbol().
+
+	* libpconn/netsync.c: Added "to do" comment. Made a trace
+	statement conditional.
+
+2001-10-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c (bug fix): Fixed off-by-one error in filename
+	generation.
+	(bug fix): Fixed infinite loop.
+
+2001-10-12  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.2.2 released.
+
+2001-10-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	Incorporated Fred Gylys-Colwell's patches:
+
+	* README: Updated version number.
+
+	* src/symboltable.h: Added __cplusplus guard.
+
+	* libpdb/Makefile: Use tab instead of space.
+
+	* config.h.in: Added c_plusplus.
+
+	* src/parser.y: Set variable strings to NULL on parser stack after
+	storing in symbol table.
+
+	* src/config.c: Don't store static string in symbol table.
+
+	* configure.in: Added check for access().
+
+	* src/symboltable.cc: Added some warning comments.
+
+	* src/parser.h: Added LEX_VAR start state. Added lex_tini().
+
+	* doc/coldsync.8: Incorporated options{} and variable
+	documentation from "fred" branch.
+
+	* doc/sample.coldsync.rc: Added example of option{} block.
+
+	* src/parser.y: Added options{} block.
+
+	* src/lexer.l: Added symbol table support. Added "options"
+	keyword.
+
+	* src/conduit.c: Include symbol table support. Better error
+	logging.
+
+	* src/config.c: Added symbol table: "-l logfile" sets the LOGFILE
+	symbol. Added casts to printf("%p") statements to make gcc shut
+	up.
+
+	* src/conduit.c: Replaced Fred's exec_from_path() with
+	find_in_path(). Use execv(), not execvp(): if find_in_path()
+	didn't find it, don't bother looking in $PATH.
+
+	* src/lexer.l: Added 'qstring', 'qstr_*' variables, qstr_clear(),
+	qstr_append(). Added lex_tini(). Added LEX_VAR start state.
+	Removed YY_NO_UNPUT and YY_NEED_STRLEN, since we now use unput()
+	and yyless(), respectively. Added character classes for variable
+	names and ordinary characters in strings. Redid Fred's
+	double-quoted strings with qstr_append(), for cleanliness. Check
+	variable interpolations for sanity. Variables can now be either
+	$(VAR) or ${VAR}. Strings may now contain escaped characters (all
+	the ones allowable in C strings), octal (\0123) and hex (\x3f)
+	characters. Attempt to find runaway strings.
+
+	* src/symboltable.cc: Made make_c_string() static, and added
+	forward declaration, so it'll compile cleanly.
+
+	* src/parser.y: Removed some "to do" comments. Yay! In options{}
+	block, now knows that variable names should look like variable
+	names, not quoted strings or ordinary barewords. Clean up after
+	lexer.
+
+	* src/parser.h: Added LEX_VAR start state. Added lex_tini(), to
+	clean up after lexer.
+
+	* src/coldsync.c: Rehabilitated global_opts.log_fname. Fixed
+	logging to a file: fixed open_log_file() so that it can be called
+	multiple times and do the Right Thing. Open the log file twice:
+	once after command-line options are parsed, and once after the
+	config file is parsed, in case the config file specified a new log
+	file. Fixed the test to determine whether or not to log the
+	closing of the log file. open_log_file() now returns -1 instead of
+	1 in case of error.
+
+	* src/coldsync.h: Rehabilitated global_opts.log_fname.
+
+	* src/coldsync.c (bug fix): Prevent memory from being free()d
+	twice.
+
+	* src/config.c: Set log file both ways (both in global_opts, and
+	as a symbol in the symbol table). This is but temporary.
+
+	* src/config.c: Un-split the long usage string, since IMHO it
+	makes sense to do it differently.
+
+2001-10-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/Makefile: Added symboltable.{h,cc}
+
+	* src/log.c: Removed logging to stderr (unnecessary).
+
+	* src/symboltable.h: Fixed up comments to fit my style. Enclosed
+	the whole thing in 'extern "C"'
+
+	* src/symboltable.h, src/symboltable.cc (added): Functions for
+	manipulating symbol table.
+
+	* libpconn/netsync.c: Re-added comments, ritual_*_size constants
+	that got lost in the shuffle.
+	(bug fix): wasn't sending ritual response 3
+	properly.
+
+	* libpconn/PConnection.c: Changed "fname" to "device", for
+	consistency with other related functions.
+
+	* include/pconn/Makefile: Added spc_client.h.
+
+	* libpconn/Makefile: Added spc_client.c.
+
+	* libpconn/spc_client.c (added): Definitions for SPC client.
+
+	* include/pconn/spc_client.h (added): Declarations for SPC client.
+
+	* include/pconn/netsync.h: Removed ritual statement lengths.
+
+	* libpconn/netsync.c: Ritual statements are static, since they're
+	only used here.
+
+	* src/misc.c, libpdb/pdb.c, libpconn/slp.c,
+	libpconn/PConnection_net.c: #include <strings.h> on those machines
+	that have it.
+
+	* src/spalm.c: #include <strings.h>, on those systems that need
+	it.
+
+	* src/GenericConduit.cc: Took out extraneous add_to_log() calls.
+	Removed Fred's "local_changed" and "remote_changed" variables: not
+	really useful.
+
+2001-10-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/Makefile, libpconn/Makefile: Added ${OTHERTAGFILES} to
+	build TAGS file correctly.
+
+	* Make.rules.in: Get CONDUITDIR from 'configure'.
+
+	* config.h.in: Added HAVE_BCOPY
+
+	* configure.in: Add standard CPPFLAGS to look for headers and
+	libraries in $prefix only if $prefix isn't /usr: this confuses
+	gcc. Add test for bcopy(). Added --with-conduits=DIR, to specify
+	where conduits should be installed.
+
+	* config.h.in: Added CONDUITDIR.
+
+	END OF FRED'S PATCHES
+
+	- Version 2.2.1 released.
+
+	* i18n/it.po, i18n/fr.po, i18n/de.po: Latest version of strings.
+	
+	* libpconn/netsync.c: Added some "to do" comments, more logging.
+	
+	* libpconn/PConnection_usb.c: Added some "to do" comments, more
+	logging.
+
+	* doc/libpdb.3: First draft of documentation for libpdb.
+
+	* configure.in: Bumped up version number. Don't use
+	-I${prefix}/include or -L${prefix}/lib if $prefix is /usr, since
+	that confuses gcc. Added check for access(). Added
+	--with-conduits=DIR option.
+
+2001-10-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/restore.c: Replaced add_to_log() calls with va_add_to_log().
+	No longer refuses to upload read-only database: rather, lets the
+	user shoot himself in the foot: if the database already exists
+	(and is read-only), then DlpDeleteDB() should fail, and so will
+	the upload.
+
+	* src/log.c: Removed 'synclog' and add_to_log(). Replaced with
+	va_add_to_log().
+
+	* src/install.c: Replaced add_to_log() calls with va_add_to_log().
+	(bug fix): Turn off read-only flag when uploading database, otherwise
+	it's impossible to delete it.
+
+	* src/coldsync.h: Replaced add_to_log() with va_add_to_log().
+
+	* src/coldsync.c: Got rid of 'synclog' and all the crud associated
+	with uploading the sync log only at the end of the script. Use
+	va_add_sync_log().
+
+	* src/backup.c: Replaced add_to_log() calls with va_add_to_log().
+	* src/GenericConduit.cc: Replaced add_to_log() calls with
+	va_add_to_log().
+
+	* libpconn/dlp_cmd.c (bug fix) DlpAddSyncLogEntry() doesn't
+	include the trailing NUL as part of the log message, so when you
+	say to add a log message, it really does that.
+
+	* i18n/it.po, i18n/fr.po, i18n/de.po: Latest version of strings.
+	Updated for va_add_to_log().
+
+2001-09-29  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c: Casts to shut up gcc 3.
+
+	* libpdb/pdb.c: Cast to shut up gcc 3.
+
+2001-09-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* config.h.in: Added CONDUITDIR.
+
+	* Make.rules.in: Added CONDUITDIR from 'configure'.
+
+	* libpconn/PConnection_serial.c (bug fix): check speeds: if either
+	the user or the Palm suggests a speed that the serial port doesn't
+	support, print an error message and abort.
+
+2001-09-07  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/dlp_rpc.c: Cast RPC trap numbers to uword, where
+	necessary. Removed default case from switch(argtype), to allow
+	compiler to catch missing cases.
+
+	* include/pconn/dlp_rpc.h: Added types dlprpc_trap (for RPC trap
+	numbers) and dlprpc_argtype_t
+	(for RPC argument types). Updated DLPRPC_param accordingly.
+
+	* src/coldsync.c: Replaced palm_errlist[] with palm_strerror().
+
+	* src/GenericConduit.cc: Use palmerr_t.
+
+	* libpconn/cmp.c: Replaced palm_errlist[] with palm_strerror().
+
+	* libpconn/palm_errno.c: Use palmerr_t. Removed palm_errlist[],
+	palm_numerrs; replaced with palm_strerror().
+
+	* include/pconn/palm_errno.h: Removed declarations for
+	now-obsolete palm_errrlist[] and palm_numerrs.
+
+	* include/pconn/palm_errno.h: Added type palmerr_t for libpconn
+	status/error codes. Changed palm_errno to palmerr_t. Added
+	declaration for palm_strerror().
+
+	* src/spalm.c, src/restore.c, src/install.c, src/coldsync.c,
+	src/backup.c, src/GenericConduit.cc, libpconn/dlp_cmd.c: Use
+	dlp_stat_t.
+
+	* include/pconn/dlp.h: Added type dlp_stat_t for DLP status codes.
+
+	* libpconn/padp.c: Use padp_frag_t.
+
+	* include/pconn/padp.h: Added type padp_frag_t for PADP packet
+	fragment types.
+
+	* src/coldsync.c: Cast slp_pkttype to ubyte where necessary.
+
+	* include/pconn/slp.h: Added type slp_pkttype for SLP packet
+	types.
+
+	* FAQ: Added a bit about finding username and userid.
+
+	* AUTHORS: Added Fred Gylys-Colwell and Nicholas Kreucher.
+
+	* FAQ: Added info on Sony Clie.
+
+	* src/conduit.c (bug fix): Prevent double free()ing of spc_inbuf.
+
+	* doc/PConn_bind.3: Updated sample code.
+
+	* src/coldsync.c: Cast slp_port to ubyte where necessary.
+
+	* include/pconn/slp.h: Added type slp_port for SLP port numbers
+	(aka socket IDs).
+
+	* libpconn/cmp.c: Cast cmp_pkt_t to ubyte where necessary.
+
+	* include/pconn/cmp.h: Added type cmp_pkt_t for CMP packet types.
+
+	* libpconn/dlp_cmd.c: Cast DLP command operators to short when
+	necessary.
+
+	* include/pconn/dlp_cmd.h: Added dlpc_op_t type, for DLP command
+	IDs.
+
+	* src/parser.y: Use lex_expect(LEX_NONE) instead of lex_expect(0).
+
+	* src/lexer.l: Updated lex_expect() to use lex_state_t. Removed
+	default clause from switch, so gcc can find missing cases.
+
+	* src/parser.h: Added type lex_state_t for Lex states.
+
+	* src/Makefile: Added more dependency lines for Lex/Yacc files.
+
+	* src/parser.y, src/config.c, src/coldsync.c: Converted to new
+	pconn_listen_t and pconn_proto_t.
+
+	* src/coldsync.h: Converted to new pconn_listen_t and
+	pconn_proto_t. Removed useless comm_type type.
+
+	* libpconn/netsync.c: Added cases to a switch(protocol), for
+	completeness.
+
+	* libpconn/PConnection_usbm50x.c: Fixed declaration of
+	pconn_usbm50x_open().
+
+	* libpconn/PConnection_usb.c: Added all protocols to
+	switch(protocol) case statements, for completeness. Fixed
+	declaration of pconn_usb_open().
+
+	* libpconn/PConnection_serial.c: Removed a useless break. Added
+	all protocols to switch(protocol) case statements, for
+	completeness. Fixed declaration of pconn_serial_open().
+
+	* libpconn/PConnection_net.c: Fixed declaration of
+	pconn_net_open(). Included all cases in switch(protocol), for
+	completeness.
+
+	* libpconn/PConnection.c: Fixed declarations of new_PConnection()
+	and pconn_*_open().
+
+	* doc/new_PConnection.3: Fixed declaration for new_PConnection().
+
+	* include/pconn/PConnection.h: Fixed declaration for
+	new_PConnection().
+
+	* include/pconn/PConnection.h: Defined new types: pconn_listen_t
+	and pconn_proto_t; redefined functions accordingly.
+
+	* src/spc.h: Defined enums for SPCOP_* and SPCERR_* constants. Not
+	as useful as might be hoped, but every bit counts.
+
+2001-09-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Updated declaration of 'cs_errno'.
+
+	* src/cs_error.h: Made a separate enum for 'cs_errno', and made it
+	its own type, the better to catch untested cases.
+
+	* FAQ: Updated information about Visor.
+
+2001-09-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/Makefile: Added the new function man pages to distribution;
+	install them with 'make install'. Added ${EXTRA_INFOFILES} to full
+	distribution.
+
+	* doc/libpconn.3 (added): Main man page for libpconn library.
+
+	* doc/time_dlp2palmtime.3, doc/new_PConnection.3,
+	doc/RDLP_ROMToken.3, doc/RDLP_PluggedIn.3,
+	doc/RDLP_MemHandleNew.3, doc/RDLP_GetOSVersionString.3,
+	doc/RDLP_BatteryDialog.3, doc/RDLP_Backlight.3, doc/PConn_bind.3,
+	doc/PConnClose.3, doc/DlpWriteResource.3, doc/DlpWriteRecord.3,
+	doc/DlpResetSystem.3, doc/DlpResetSyncFlags.3,
+	doc/DlpResetRecordIndex.3, doc/DlpReadUserInfo.3,
+	doc/DlpReadSysInfo.3, doc/DlpReadStorageInfo.3,
+	doc/DlpReadResourceByIndex.3, doc/DlpReadRecordIDList.3,
+	doc/DlpReadRecordByID.3, doc/DlpReadOpenDBInfo.3,
+	doc/DlpReadNetSyncInfo.3, doc/DlpReadFeature.3,
+	doc/DlpReadDBList.3, doc/DlpReadAppPreference.3,
+	doc/DlpReadAppBlock.3, doc/DlpRPC.3, doc/DlpOpenDB.3,
+	doc/DlpOpenConduit.3, doc/DlpMoveCategory.3,
+	doc/DlpGetSysDateTime.3, doc/DlpEndOfSync.3,
+	doc/DlpDeleteRecord.3, doc/DlpCleanUpDataBase.3,
+	doc/DlpCallApplication.3, doc/DlpAddSyncLogEntry.3 (added): man
+	pages.
+
+2001-08-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/spalm.c: Removed an "&". Not sure why. Probably because it
+	makes no difference, but some compiler complained.
+
+	* config.h.in: Added entry for bcopy.
+
+	* README: Updated for 2.2.0
+
+	* Make.rules.in: Added directory for function (section 3) man
+	pages.
+
+2001-08-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/PConnection_usb.c: Added Palm to list of expected
+	vendors, along with Handspring.
+
+2001-08-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/Makefile: Split $INFOFILES int $INFOFILES (foo.info) and
+	$EXTRA_INFOFILES
+	(foo.info-*) to work around 'make' complaints when there are no files
+	matching "*.info-*".
+
+	* src/conduit.c (bug fix): Fixed improper cut & paste.
+
+	* src/conduit.c (bug fix): Error message didn't perform sufficient
+	error-checking, dumped core.
+
+	* libpconn/PConnection.c: Renamed "fname" argument to "device",
+	for semi-consistency and creamy nougat filling.
+
+2001-08-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/spalm.c, src/misc.c, libpdb/pdb.c, libpconn/slp.c,
+	libpconn/PConnection_net.c: Include <strings.h>. It might be
+	necessary.
+
+	* configure.in: Added test for bcopy().
+
+2001-08-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/GenericConduit.cc (bug fix): SyncRecord didn't handle
+	correctly the case where a record has changed both on the Palm and
+	the desktop. Added some trace statements.
+
+2001-08-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/netsync.c, include/pconn/netsync.h: Moved ritual packet
+	declarations wholly into netsync.c, since they don't need to be
+	anywhere else.
+
+2001-07-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.2.0 released.
+
+	* i18n/it.po, i18n/fr.po, i18n/de.po: Latest version of strings.
+
+	* libpconn/PConnection_usbm50x.c: Added i18n support. Let
+	ritual_exch_server() do ritual packet exchange, instead of doing
+	it manually. pconn_usbm50x_open() now takes and sets protocol.
+	However, this module should go away soon.
+
+	* libpconn/PConnection_net.c: Moved the ritual packet exchanges
+	into their own functions. pconn_net_open() checks and sets the
+	protocol. The various methods now check pconn->protocol and act
+	accordingly.
+
+	* libpconn/PConnection_usb.c: pconn_usb_open() checks and sets the
+	protocol. The various methods now check pconn->protocol and act
+	accordingly.
+
+	* libpconn/PConnection_serial.c: pconn_serial_open() checks and
+	sets the protocol.
+	The various methods now check pconn->protocol and act accordingly.
+	This means that "serial" with protocol=simple should subsume the
+	usb_m50x stuff.
+
+	* libpconn/netsync.c: Added ritual_exch_server(),
+	ritual_exch_client(). Minor cleaning.
+
+	* src/coldsync.c: Added support for specifying protocol in
+	.coldsyncrc or command line. Pass this on to new_PConnection().
+
+	* src/lexer.l: Added keywords relating to "protocol:" directive,
+	including the names of the various protocols. Rearranged keywords
+	a bit.
+
+	* src/parser.y: Added rule for "protocol: <protocol>;" inside
+	listen {} blocks.
+
+	* src/spc.c: Reduced verbosity.
+
+	* src/config.c: Added "-P <protocol>" option. Fixed typo. Added
+	name2protocol().
+
+	* src/coldsync.h: Added 'protocol' command-line option.
+
+	* libpconn/PConnection.c: The pconn_<dev>_open() functions now
+	take a 'protocol' argument. new_PConnection() takes one, too, but
+	just passes it along to pconn_<dev>_open().
+
+	* include/pconn/netsync.h: Added declarations for ritual packet
+	exchange functions.
+
+	* include/pconn/PConnection.h: Added symbols for "software"
+	protocol stacks. Added protocol field to struct PConnection.
+	new_PConnection() now takes a protocol argument.
+
+	* conduits/copy-appinfo: Commented out a trace statement.
+
+2001-07-28  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* AUTHORS: Added Mike Durian.
+
+	* libpconn/netsync.c: Use (*pconn->io_read)(), for proper
+	object-orientedness. (bug fix): Incorporated fix by Mike Durian
+	<durian@boogie.com>: initialize netsync input buffer before use.
+
+	* libpconn/PConnection_usb.c: Use memcpy() instead of bcopy()
+	(it's more standard).
+
+2001-07-26  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/PConnection_usbm50x.c: Added Emacs magic.
+
+2001-07-25  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/parser.y, src/lexer.l: Added "usb_m50x" keyword.
+
+	* libpconn/netsync.c, include/pconn/netsync.h: Changed "no_header"
+	argument from int to 'const Bool', since that's what was meant.
+
+	* AUTHORS: Added Koen Deforche.
+
+	* include/pconn/PConnection.h, include/pconn/netsync.h,
+	libpconn/Makefile, libpconn/PConnection.c,
+	libpconn/PConnection_net.c, libpconn/PConnection_usbm50x.c,
+	libpconn/netsync.c, src/config.c, include/pconn/pconn.h,
+	doc/coldsync.8: Incorporated Koen Deforche's M50x patch.
+
+2001-07-15  Koen Deforche <kdf@irule.be>
+
+        * PConnection.h, netsync.h, libpconn/Makefile, PConnection.c,
+	  PConnection_net.c, PConnection_usbm50x.c, netsync.c, config.c:
+
+	  Support for Palm m50x USB cradle (Linux).
+
+2001-07-11  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/dlp_cmd.c, include/pconn/dlp_cmd.h: Fixed
+	DlpWriteNetSyncInfo() API so it doesn't suck as bad.
+
+2001-07-09  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* include/pconn/dlp_cmd.h, libpconn/dlp_cmd.c: Got rid of bogus
+	struct dlp_readrecret.
+
+	* Make.rules.in: Take CXXFLAGS from configuration. Why wasn't this
+	done before?
+
+	* include/pconn/dlp_cmd.h: Rearranged into sections, one per DLP
+	call. Added some missing flags and whatnot. General cleanup.
+
+	* configure.in: Changed version number (tag) for development
+	branch.
+
+2001-07-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* include/pconn/pconn.h: Added declaration for crc16().
+
+	* libpconn/Makefile: Added crc.c to source. Generate .o files via
+	a macro, instead of listing them individually.
+
+	* libpconn/slp.c: Took out some useless #includes.
+
+	* libpconn/util.c, include/pconn/util.h: Moved CRC-related stuff
+	elsewhere, since this file is effectively shared with libpdb.
+
+	* libpconn/crc.c (added): Moved CRC-related stuff into a separate
+	file.
+
+2001-07-02  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpdb/pdb.c: More verbose error messages: where possible,
+	indicate which database they pertain to.
+
+2001-06-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	-- On stable branch:
+
+	- Version 2.1.3 released.
+
+	* AUTHORS: Added Alessandro Gatti.
+
+	* i18n/Makefile: Added Italian to list of languages.
+
+	* palm.c (bug fix, #41): Fixed off-by-one error when appending
+	records to dblist.
+	(If you installed a file by putting it in ~/.palm/install, the
+	database list got messed up, and the main sync failed and dumped
+	core.)
+
+	-- End stable branch.
+
+2001-06-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/PConnection.c: "PConnection.h" will eventually get
+	installed in /usr/include, so moved all of the
+	"config.h"-dependent stuff out of there and into here.
+
+	* include/pconn/PConnection.h: Since this file will eventually be
+	installed in /usr/include, removed all of the stuff that obviously
+	depends on "config.h", and moved it to PConnection.c.
+
+	* src/spalm.c (bug fix, #41): Fixed off-by-one error when
+	appending records to dblist.
+	(If you installed a file by putting it in ~/.palm/install, the
+	database list got messed up, and the main sync failed and dumped
+	core.)
+
+2001-06-26  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* include/Makefile: Added palm.h to distribution.
+
+	* src/.cvsignore (added): Oops! Forgot to add this originally!
+
+	- Re-imported current sources after accidentally nuking the real
+	CVS repository.
+
+	* src/cs_error.h: Added CSE_OTHER.
+
+	* doc/conduits.texi: Removed obsolete index entry.
+
+2001-06-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/palm.h: Renamed to spalm.h.
+	* src/palm.c: Renamed to spalm.c
+
+	* include/pconn/palm_types.h (deleted): Obsolete. This file's
+	functionality has been taken over by <palm.h>.
+
+	* include/palm.h (added): A more global replacement for
+	<pconn/palm_types.h>.
+
+	* libpconn/padp.c, libpconn/dlp.c, libpconn/cmp.c,
+	libpconn/PConnection_usb.c, include/pconn/util.h,
+	include/pconn/slp.h, include/pconn/padp.h,
+	include/pconn/netsync.h, include/pconn/dlp_rpc.h,
+	include/pconn/dlp_cmd.h, include/pconn/dlp.h:
+	<pconn/palm_types.h>'s declarations moved to <palm.h>, so #include
+	that instead.
+
+	* include/pconn/PConnection.h, i18n/Makefile: Added
+	Italian to list of languages.
+
+	* AUTHORS: Added Alessandro Gatti.
+
+	* src/spalm.h (renamed): This used to be "palm.h"
+
+	* src/spalm.c (renamed): This used to be "palm.c"
+
+	* src/palm.h, src/palm.c: Changed "palm" to "spalm", in
+	preparation for renaming this file.
+
+2001-06-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/it.po (added): Italian translation by Alessandro Gatti
+	<rigel@telemail.it>.
+
+	* include/pdb.h: Added some database flags that hadn't existed the
+	last time I checked.
+
+2001-06-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/restore.c: Use upload_database() instead of pdb_Upload().
+
+	* src/GenericConduit.cc: Use download_database() instead of
+	pdb_Download().
+
+	* src/coldsync.h: Added declarations for
+	{upload,download}_database().
+
+	* src/backup.c: Moved pdb_Download(), pdb_DownloadResources(),
+	pdb_DownloadRecords() here as download_database(),
+	download_resources(), download_records(). Changed some PDB_TRACE()
+	calls to SYNC_TRACE().
+
+	* src/install.c: Moved pdb_Upload() to here, as upload_database().
+
+	* libpdb/pdb.c: Moved pdb_Download(),
+	pdb_Download{Records,Resources}(), and pdb_Upload() to the main
+	ColdSync source tree.
+
+	* include/pdb.h: Moved pdb_Download() and pdb_Upload() to the main
+	ColdSync source tree. Removed #include of a libpconn header (which
+	was only needed for pdb_{Up,Down}load(). Removed obsolete
+	declaration of UploadDatabase().
+
+2001-06-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c (bug fix): Fixed print_pda_block(): if the PDA has
+	a special serial number ("*Visor*"), don't print a checksum in the
+	suggested PDA block.
+
+2001-06-04  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Updated LIMITATIONS and BUGS sections.
+
+	* conduits/copy-appinfo: Expanded POD a bit.
+
+	* configure.in: Added "--without-perl" option.
+
+	* Makefile: Use $(PERLDIR), so that building Perl modules is
+	optional.
+
+	* Make.rules.in: Added $PERLDIR, to make building Perl modules
+	optional.
+
+2001-06-03  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/de.po: Added Philipp Matthias Hahn <pmhahn@titan.lahn.de>'s
+	patch.
+
+	* src/coldsync.c: Added Philipp Matthias Hahn
+	<pmhahn@titan.lahn.de>'s patch.
+
+	* conduits/todo-text, conduits/send-mail: Fixed typo.
+
+	* conduits/copy-appinfo: Added POD.
+
+	* conduits/Makefile: Oops! Didn't add "copy-appinfo" to the right
+	place the first time.
+
+	* conduits/Makefile: Added "copy-appinfo" to distribution.
+
+	* conduits/std-categories: Added a comment describing what happens
+	with various operations. Far too hairy.
+
+	* conduits/copy-appinfo (added): Simple conduit to copy AppInfo
+	block from Palm to desktop.
+
+2001-05-24  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.1.2 released.
+
+	* i18n/fr.po, i18n/de.po: Latest version of strings.
+	
+	* README.security (added): Security considerations.
+
+	* README: Slightly updated.
+
+	* Makefile: Added README.daemon to distribution.
+
+	* README.daemon: First draft.
+
+2001-05-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c (bug fix): Dumped core with -mI. Patch submitted
+	by Mark Reed <markjreed@mail.com>.
+
+2001-05-06  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.1.1 released.
+
+	* i18n/fr.po: Latest attempt at translation. Unfuzzied some
+	strings.
+
+	* i18n/de.po: Unfuzzied a bunch of strings, where it was simple.
+
+	* src/coldsync.c: Collapsed two similar strings, for translators'
+	benefit.
+
+	* src/config.c (bug fix): Don't use $HOME when looking for
+	.coldsyncrc: it's inherited from usbd (and possibly inetd) in
+	daemon mode. Brought usage message up to date. More explicit error
+	messages.
+
+	* libpconn/PConnection_usb.c: Added trace statement.
+
+	* doc/coldsync.8: Added mention of one-preference bug.
+
+	* doc/Makefile: Added *.info-* to list of auto-generated files
+	(for "make clean").
+
+	* doc/conduits.texi: Brought documentation up to date. Fixed some
+	typos. Added colon in .coldsyncrc examples. Added mention of Sync
+	and Install conduits in introductory section. Added mention of
+	Install conduits in specification section. Added mention of
+	preferences. Removed some obsolete and/or incoherent parts.
+	Officially mention that all-whitespace header values are possible.
+	Updated menus.
+
+2001-05-05  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/conduits.texi: Changed "e-mail" to "email", per Knuth.
+
+2001-04-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.1.0 released.
+
+	* src/coldsync.c (bug fix): Fixed misleading status message when a
+	slow/fast sync was forced.
+
+	* src/coldsync.c (bug fix): Don't call Disconnect() after losing
+	connection to Palm, since Disconnect() tries to send packets.
+
+	* libpconn/PConnection_serial.c: Added usleep() for those OSes
+	that don't already have it. Use usleep() to let the serial driver
+	settle down after tcsetattr(), rather than sleep().
+
+	* config.h.in, configure.in: Added check for usleep().
+
+	* libpconn/netsync.c (design fix): Use io_write() instead of
+	write().
+
+	* libpconn/slp.c (bug fix): Linux's serial USB driver doesn't
+	appear to handle two-byte packets gracefully. Fixed slp_write() to
+	send the whole packet at once.
+
+	* libpconn/padp.c: Mostly cosmetic. padp_write() now uses
+	PALMERR_ACKXID.
+
+	* libpconn/PConnection_usb.c: Updated for new io_write()
+	signature.
+
+	* libpconn/PConnection_serial.c: Updated for new io_write()
+	signature. Changed sleep(1) to usleep(50000).
+
+	* libpconn/PConnection_net.c (bug fix): net_write() called read().
+	Oops! Updated for new io_write() signature.
+
+	* include/pconn/palm_errno.h: Added error code.
+
+	* include/pconn/PConnection.h: io_write() now takes const
+	arguments.
+
+	* INSTALL: Fixed Sun instructions.
+
+2001-04-14  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* libpconn/slp.c (design fix): slp_write() used write(), rather
+	than io_write().
+
+2001-04-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/config.c: Added bug report comment.
+
+2001-04-01  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/lexer.l (bug fix): Anti-memory-leak rule caused a segfault
+	when both system-wide and personal config files existed. Bug found
+	by Alex Tronin <at@urbis.net>.
+
+2001-03-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c: Better error-checking.
+
+	* libpconn/slp.c: Somewhat better error-recovery: close Palm file
+	descriptor and set it to -1 when there's an unrecoverable error.
+
+	* libpconn/cmp.c (bug fix): cmp_accept incorrectly didn't set the
+	CMP_IFLAG_CHANGERATE flag. This caused ColdSync to fail under
+	Linux.
+
+	* libpconn/PConnection_serial.c: Added a test for B9600.
+
+2001-03-29  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.0.2 released.
+
+	* i18n/fr.po: Checked in latest version of strings. Unfuzzied a
+	few.
+
+	* src/coldsync.c: Collapsed some strings, for translators'
+	benefit.
+
+	* i18n/de.po: Checked in latest version of strings.
+
+	* src/spc.c: Added test for EOF from the Palm (i.e., whether it
+	was disconnected).
+
+	* src/restore.c: Check to see whether the sync was cancelled on
+	the Palm.
+
+	* src/install.c: Added error-checking.
+
+	* src/conduit.c, src/coldsync.c, src/backup.c: Check to see
+	whether the sync was cancelled on the Palm.
+
+	* libpdb/pdb.c: pdb_Upload() now checks to see whether the sync
+	was cancelled on the Palm.
+
+	* libpconn/padp.c, libpconn/cmp.c: Better error-checking.
+
+	* libpconn/PConnection_usb.c, libpconn/PConnection_serial.c (bug
+	fix): Fixed bogus error-checking.
+
+2001-03-27  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/spc.c (robustness): test for EOF on Palm file descriptor.
+	* libpconn/slp.c: Make slp_read() work as described.
+
+	* libpconn/cmp.c: Check for EOF on Palm file descriptor.
+	(bug fix): fixes core dump when Palm removed before start of sync.
+
+	* doc/coldsync.8: Added mention of -md, /usr/local/etc/palms.
+	Worked around problem in reference sectin.
+
+	* libpconn/dlp_cmd.c: Fixed misleading error messages.
+
+	* src/spc.c, src/restore.c, src/pref.c, src/palm.c, src/install.c,
+	src/config.c, src/conduit.c, src/coldsync.c, src/backup.c,
+	src/GenericConduit.cc, libpdb/pdb.c, libpconn/dlp_rpc.c,
+	libpconn/cmp.c: Added error-checking.
+
+2001-03-19  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/conduits.texi: Allocated and documented two more error
+	codes.
+
+2001-03-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.0.1 released.
+
+	* src/cs_error.h: Added an error condition.
+
+	* libpconn/PConnection_serial.c: Added a trace statement.
+
+	* i18n/Makefile: mkdir a missing directory.
+
+2001-03-16  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* config.h.in: Added HAVE_ENODEV.
+
+	* configure.in: Added test for ENODEV.
+
+	* libpconn/PConnection_serial.c: Added test to see whether open()
+	returns ENODEV, for Visors under Linux.
+
+	* libpconn/PConnection_net.c: Added INET_NTOP (though it's only
+	for debugging, I think).
+	(portability): Added some casts for portability.
+	Cosmetic cleaning.
+
+	* include/pconn/util.h: Changed prototype of crc16() to match
+	definition.
+
+	* include/pconn/palm_errno.h: Added palm_numerrs.
+
+	* src/restore.c: Changed a trace statement to a Verbose()
+	statement.
+
+	* src/conduit.c: Added "to do" comment/bug report.
+
+	* src/coldsync.c (portability): Cast uid to long, for portability
+	under DU.
+
+	* libpconn/PConnection_serial.c: Reinstated the gratuitous
+	sleep(), since it appears to matter under Linux.
+
+	* libpconn/palm_errno.c: Added palm_numerrs.
+
+	* include/pconn/dlp_cmd.h: Fixed prototype of DlpCloseDB to match
+	definition.
+
+	* config.h.in: Removed HAVE_IPV6. It's useless.
+
+	* configure.in: Removed check for AF_IPV6. It's useless.
+
+2001-03-15  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* README: Added note for DU with DEC's C compiler.
+
+	* conduits/todo-text, conduits/send-mail: Added missing colons in
+	example .coldsyncrc entry.
+
+2001-03-13  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* perl/ColdSync/ColdSync.pm (bug fix): "<conduit> -config" would
+	complain if no %HEADERS were defined.
+
+2001-03-10  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/backup.c: Added a Verbose() statement.
+
+	* libpconn/util.c (bug fix, portability): Replaced sizeof(foo)
+	with SIZEOF_FOO. Fixes size inequality bug on 64-bit Alphas.
+
+	* include/pconn/palm_types.h (portability): Added SIZEOF_*
+	constants.
+
+2001-02-24  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* HACKING: Clarified printf() comment. Fixed typo. Added comment
+	about indentation.
+
+2001-02-23  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/conduit.c: Got rid of format_header(); replaced it with a
+	call to snprintf(), now that it's known to be available.
+
+	* perl/ColdSync/ColdSync/SPC.pm: Fixed indentation etc. to match
+	the rest of the file. Clarified documentation for
+	&dlp_SetSysDateTime. Commented out trace statements.
+
+	* perl/ColdSync/ColdSync/SPC.pm: Added &dlp_GetSysDateTime,
+	&dlp_SetSysDateTime. Patch supplied by JD Smith
+	<jdsmith@astro.cornell.edu>.
+
+2001-02-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/install.c, src/coldsync.c: Use snprintf() instead of ugly
+	chains of strncat().
+
+2001-02-21  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* i18n/fr.po: Latest version of strings. Fixed some translations.
+
+	* i18n/de.po: Latest version of strings. Unfuzzied one
+	translation.
+
+2001-02-20  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- Version 2.0.0 released.
+
+	* src/parser.y: If serial number begins with '*', don't calculate
+	a checksum, since it's probably special.
+
+	* src/palm.c: Added special_snums[]. fetch_serial() knows about
+	special serial numbers.
+
+	* doc/coldsync.8: Added description of special serial number for
+	Visors.
+
+	* src/coldsync.c: Added run_mode_Daemon(). Various modifications
+	to main() to work properly in daemon mode. Got rid of remnants of
+	Getty mode. Added some Verbose() statements. Some cosmetic
+	changes; added some "to do" comments.
+
+	* src/config.c: Added "-v" option. load_config() now takes 'Bool
+	read_user_config' to determine whether to read ~/.coldsyncrc .
+	This sorta simplifies things for daemon mode. In set_mode(),
+	uncommented daemon mode stuff; got rid of getty mode.
+
+	* src/coldsync.h: Got rid of "mode_Getty". Redocumented
+	mode_Daemon. Fixed declaration of load_config().
+
+	* src/Makefile: Added palment.c, palment.h.
+
+	* libpconn/PConnection_serial.c: pconn_serial_open() uses stdin if
+	'device' is NULL. Cosmetic cleaning.
+
+	* libpconn/PConnection.c: pconn_serial_open() now takes a Bool.
+
+2001-02-18  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* conduits/memo-text: Update for newer Palm::StdAppInfo. Patch
+	submitted by <forsberg+coldsync@lysator.liu.se> (Erik Forsberg)
+
+2001-02-16  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/palment.h, src/palment.c (added): Functions for reading
+	/etc/palms.
+
+2001-02-08  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Added mention of "-v" option.
+
+	* src/coldsync.h: Added 'verbosity' global option. Added
+	declaration for Verbose().
+
+	* src/misc.c: Added Verbose().
+
+2001-01-30  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Added description of "-s" and "-l" options.
+
+	* src/coldsync.c (bug fix): When suggesting a pda{} block, print
+	it to stderr. Ugly, but it will avoid problems in getty mode.
+
+	* src/config.c (bug fix): Don't complain if no config file
+	specified on the command line, and ~/.coldsyncrc doesn't exist.
+
+	- Version 1.6.7 released.
+
+	* src/net_compat.h: Added definition of INET_ADDRSTRLEN and
+	INET6_ADDRSTRLEN, for those OSes that don't have them.
+
+	* src/net_compat.c: Added <string.h>.
+	(portability): added declaration for snprintf().
+
+	* src/lexer.l: Removed Solaris and Linux hacks, thanks to
+	"lexhack.c" (which is uglier).
+
+	* src/config.c: Reinstated <sys/ioctl.h>. #include <stropts.h>
+	under DU. Declared some structures because DU's headers are badly
+	fscked. Removed test for EGCS.
+
+	* src/coldsync.h: Added vsnprintf() declaration.
+
+	* src/coldsync.c: Cast bzero()'s argument, for portability.
+
+	* src/Makefile: Added "lexhack.c"
+
+	* src/lexhack.c (added): Icky hack to make lexer compile cleanly.
+
+	* libpconn/PConnection_net.c (portability): now compiles under
+	Solaris.
+
+	* i18n/Makefile: Now builds lex.yy.c if necessary.
+
+	* configure.in: Better test for gethostbyname() under Linux. Added
+	tests for a number of headers and functions. Tests for inet_pton()
+	and friends now use AC_SEARCH_LIBS, since they appear in different
+	libraries on different OSes.
+
+	* config.h.in: Added standard #defines for various functions and
+	headers. Preprocessor symbols _POSIX_C_SOURCE, __EXTENSIONS_,
+	_XOPEN_SOURCE_EXTENDED have been deemed to be Good Things, and are
+	defined in all cases.
+
+	* README: Updated portability notes.
+
+2001-01-28  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* src/coldsync.c (feature): "-l logfile" now sends all debugging
+	output to the log file. Replaced perror() with Perror().
+
+	* src/coldsync.h: Added global_opts.log_fname. Added declaration
+	of Perror().
+
+	* src/misc.c: Added some comments. Warn(), Error() and Perror()
+	now log both to the log file and to syslog, as necessary.
+
+	* src/config.c: Added "-l logfile" option. Replaced perror() with
+	Perror().
+
+	* src/restore.c, src/parser.y, src/log.c, src/install.c,
+	src/conduit.c, src/backup.c, src/archive.c: Replaced perror() with
+	Perror().
+
+2001-01-25  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	* doc/coldsync.8: Added Visor+Rio bug.
+
+	* src/config.c: Futzed around trying to make #includes portable.
+	Added "-s" option for syslog. Trimmed trailing newline from error
+	messages.
+
+	* src/coldsync.c: Added some #includes for portability. Added
+	openlog()/closelog() for syslog. Trimmed trailing newlines from
+	error messages.
+
+	* src/coldsync.h: Added global_opts.use_syslog.
+
+	* src/restore.c, src/pref.c, src/parser.y, src/palm.c, src/log.c,
+	src/lexer.l, src/install.c, src/conduit.c, src/backup.c,
+	src/archive.c, src/GenericConduit.cc: Trimmed trailing newline
+	from error messages.
+
+	* src/misc.c: Warn() and Error() now use syslog if "-s" option
+	given. They also append \n automatically when printing to stderr.
+
+	* Makefile: Added rotated files to distribution.
+
+	* OLDNEWS.1 (added): Rotated NEWS. Numbers go with ChangeLog.
+
+	* ChangeLog.1 (added): Rotated ChangeLog.
+
+2001-01-22  Andrew Arensburger  <arensb@baa.ooblick.com>
+
+	- ColdSync is now two years old. And still fits on a floppy!
