@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.3 2001-11-07 15:17:51 arensb Exp $
+ * $Id: spc_client.c,v 1.4 2002-03-09 05:43:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,10 +36,7 @@
 					 * Linux */
 #endif	/* HAVE_NETINET_IN_H */
 
-
 #include "pconn/spc_client.h"
-
-#include "../src/spc.h"		/* Is it bad manners to leave my directory? */
 
 static int
 spc_client_bind(PConnection *pconn,
@@ -135,7 +132,7 @@ spc_dlp_read(PConnection *pconn,	/* Connection to Palm */
 	header.op = ntohs(*((unsigned short *) spc_header));
 	header.status = ntohl(* ((unsigned long *) (spc_header+2)));
 	header.len = ntohl(* ((unsigned long *) (spc_header+4)));
-	if( header.status != SPCERR_OK)
+	if (header.status != SPCERR_OK)
 	{
 		fprintf(stderr, _("%s: Error reading SPC respnse "
 				 "from coldsync: %d.\n"),
@@ -144,7 +141,7 @@ spc_dlp_read(PConnection *pconn,	/* Connection to Palm */
 		return -1;
 	}
 
-	if( header.len > 0 )
+	if (header.len > 0)
 	{
 		/* Allocate space for the payload */
 		if (pconn->net.inbuf == NULL)
@@ -331,7 +328,7 @@ spc_get_dbinfo(PConnection *pconn, struct dlp_dbinfo *info)
 	header.op = ntohs(*((unsigned short *) spc_header));
 	header.status = ntohl(* ((unsigned long *) (spc_header+2)));
 	header.len = ntohl(* ((unsigned long *) (spc_header+4)));
-	if( header.status != SPCERR_OK)
+	if (header.status != SPCERR_OK)
 	{
 		fprintf(stderr, _("%s: Error reading SPC respnse "
 				  "from coldsync: %d.\n"),
@@ -340,7 +337,7 @@ spc_get_dbinfo(PConnection *pconn, struct dlp_dbinfo *info)
 		return -1;
 	}
 	
-	if( header.len != DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN ) 
+	if (header.len != DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN) 
 	{
 		fprintf(stderr, _("%s: Error reading SPC data "
 				  "from coldsync: %d.\n"),
