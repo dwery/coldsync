@@ -254,3 +254,5 @@
   to sync them as well.
 - Perhaps status codes 6xx can be used for machine-readable
   informational messages, e.g., "NN% complete".
+- The 'prompt_for_hotsync' argument to new_PConnection() is a hack.
+  That whole function needs to be rethought.
