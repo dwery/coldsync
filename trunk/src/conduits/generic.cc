@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: generic.cc,v 1.1 2002-12-10 16:55:31 azummo Exp $
+ * $Id: generic.cc,v 1.2 2002-12-18 00:18:16 azummo Exp $
  */
 
 /* Note on I/O:
@@ -40,7 +40,7 @@
 #include <sys/param.h>		// For MAXPATHLEN
 #include <string.h>
 #include <errno.h>
-#include "GenericConduit.hh"
+#include "generic.hh"
 
 extern "C" {
 #include <unistd.h>
