@@ -1,0 +1,43 @@
+.\" DlpAddSyncLogEntry.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpAddSyncLogEntry.3,v 1.1 2001-09-05 07:28:10 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpAddSyncLogEntry 3
+.Sh NAME
+.Nm DlpAddSyncLogEntry
+.Nd write sync log to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpAddSyncLogEntry "PConnection *pconn" "const char *msg"
+.Sh DESCRIPTION
+.Nm
+writes the sync log to the Palm. Despite its name, it does not append
+to the log, it writes it. Subsequent calls have no effect.
+.Pp
+If the log exceeds
+.Dv DLPC_MAXLOGLEN
+(2048) characters, including the terminating NUL, the log message is
+truncated, and only the last
+.Dv DLPC_MAXLOGLEN
+characters will be sent to the Palm. This is because if the log
+contains error messages, they are more likely to be at the end.
+.Pp
+.Fa msg
+specifies the log message.
+.Sh RETURN VALUE
+.Nm
+return 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 .

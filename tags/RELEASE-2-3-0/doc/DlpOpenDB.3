@@ -1,0 +1,132 @@
+.\" DlpOpenDB.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpOpenDB.3,v 1.1 2001-09-05 07:29:10 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpOpenDB 3
+.Sh NAME
+.Nm DlpOpenDB ,
+.Nm DlpCreateDB ,
+.Nm DlpCloseDB ,
+.Nm DlpDeleteDB
+.Nd elementary operations on Palm databases
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpOpenDB "PConnection *pconn" "int card" "const char *name" "ubyte mode" "ubyte *dbhandle"
+.Ft int
+.Fn DlpCreateDB "PConnection *pconn" "const struct dlp_createdbreq *newdb" "ubyte *dbhandle"
+.Ft int
+.Fn DlpCloseDB "PConnection *pconn" "ubyte dbhandle"
+.Ft int
+.Fn DlpDeleteDB "PConnection *pconn" "const int card" "const char *name"
+.Sh DESCRIPTION
+.Nm DlpOpenDB
+opens an existing database on the Palm, similar to opening a file.
+.Pp
+.Fa card
+specifies the number of the memory card on which the database is
+stored. This is usually 0.
+.Pp
+.Fa name
+specifies the name of the database to open. It is case-sensitive, and
+does not include the
+.Dq .pdb
+or
+.Dq .prc
+extension.
+.Pp
+.Fa mode
+specifies how to open the database. It is the bitwise-or of one or
+more of the following:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPCMD_MODE_SECRET
+Show private records.
+.It Dv DLPCMD_MODE_EXCLUSIVE
+I don't know what this does.
+.It Dv DLPCMD_MODE_WRITE
+Open database for writing.
+.It Dv DLPCMD_MODE_READ
+Open database for reading.
+.El
+.Pp
+.Fa dbhandle
+is filled in with a database handle, similar to a file descriptor,
+which will be used to refer to the database in later operations.
+.Pp
+.Nm DlpCreateDB
+creates and opens a new database on the Palm.
+.Pp
+.Fa newdb
+is the following structure:
+.Bd -literal -offset indent
+struct dlp_createdbreq
+{
+	udword creator;
+	udword type;
+	ubyte card;
+	uword flags;
+	uword version;
+	char name[DLPCMD_DBNAME_LEN];
+};
+.Ed
+where
+.Fa creator
+and
+.Fa type
+are four-character constants, with the first character in the
+most-significant eight bits;
+.Fa card
+specifies the number of the memory card on which to create the
+database, usually 0;
+.Fa flags
+are the same as the
+.Fa flags
+argument to
+.Nm DlpOpenDB ;
+.Fa version
+is a version number; and
+.Fa name
+specifies the name of the new database.
+.Pp
+.Fa dbhandle
+is filled in with a database handle, as with
+.Nm OpenDB .
+.Pp
+.Nm DlpCloseDB
+closes the open database whose handle is
+.Fa dbhandle .
+If
+.Fa dbhandle
+is the special value
+.Dv DLPCMD_CLOSEALLDBS ,
+then all open databases are closed.
+.Pp
+.Nm DlpDeleteDB
+deletes a database, which must already be closed.
+.Pp
+.Fa card
+specifies the number of the memory card on which the database is
+stored, usually 0.
+.Pp
+.Fa name
+specifies the name of the database to delete. It does not include the
+.Dq .pdb
+or
+.Dq .prc
+extension.
+.Sh RETURN VALUE
+These functions all return 0 if they are successful, or a negative
+value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 .

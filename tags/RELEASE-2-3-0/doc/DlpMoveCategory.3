@@ -1,0 +1,44 @@
+.\" DlpMoveCategory.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpMoveCategory.3,v 1.1 2001-09-05 07:29:07 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpMoveCategory 3
+.Sh NAME
+.Nm DlpMoveCategory
+.Nd change the ID of a Palm database category
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpMoveCategory "PConnection *pconn" "const ubyte handle" "const ubyte from" "const ubyte to"
+.Sh DESCRIPTION
+.Nm
+changes the category ID of a category in a Palm database.
+.Pp
+.Fa handle
+specifies the database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+.Fa from
+specifies the ID of the category to change.
+.Pp
+.Fa to
+specifies the new ID to which to change the category.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 .
+.Sh BUGS
+This function has not been tested.

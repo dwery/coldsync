@@ -1,0 +1,32 @@
+.\" DlpResetSystem.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpResetSystem.3,v 1.1 2001-09-05 07:29:34 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpResetSystem 3
+.Sh NAME
+.Nm DlpResetSystem
+.Nd reset a Palm at the end of the sync
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpResetSystem "PConnection *pconn"
+.Sh DESCRIPTION
+.Nm
+indicates to the Palm that it needs to be reset at the end of the
+sync.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 .

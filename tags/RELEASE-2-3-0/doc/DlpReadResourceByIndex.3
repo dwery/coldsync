@@ -1,0 +1,97 @@
+.\" DlpReadResourceByIndex.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadResourceByIndex.3,v 1.1 2001-09-05 07:29:25 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadResourceByIndex 3
+.Sh NAME
+.Nm DlpReadResourceByIndex ,
+.Nm DlpReadResourceByType
+.Nd read a resource from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadResourceByIndex "PConnection *pconn" "const ubyte handle" "const uword index" "const uword offset" "const uword len" "struct dlp_resource *value" "const ubyte **data"
+.Ft int
+.Fn DlpReadResourceByType "PConnection *pconn" "const ubyte handle" "const udword type" "const uword id" "const uword offset" "const uword len" "struct dlp_resource *value" "ubyte *data"
+.Sh DESCRIPTION
+These functions read a resource from an open database on the Palm.
+Palm resources are similar to those in the resource fork of a MacOS
+file: they are identified by a four-character type, and an integer ID,
+which identifies different resources of the same type (that is, there
+may be multiple resource with the ID 1000, but only one CODE resource
+may have the ID 1000).
+.Pp
+.Nm DlpReadResourceByIndex
+reads the
+.Fa index\fRth
+resource in the database.
+.Pp
+.Fa handle
+specifies the database handle, as returned by
+.Xr DlpOpenDB 3 .
+The database must already be open for reading.
+.Pp
+.Fa index
+specifies the index of the resource from the beginning of the
+database. Resource indices start at 0.
+.Pp
+.Fa offset
+specifies the offset at which to start reading the resource: to read
+the resource from the beginning, use 0; to skip the first 10 bytes,
+use 10.
+.Pp
+.Fa len
+specifies the maximum number of bytes to read.
+.Pp
+.Fa value
+will be filled in with the resource header, which is of the following
+form:
+.Bd -literal -offset indent
+struct dlp_resource
+{
+	udword type;
+	uword id;
+	uword index;
+	uword size;
+};
+.Ed
+.Pp
+.Fa data
+will be filled in with a pointer to the resource data. This pointer is
+to an internal buffer, and must not be freed. The length of the data
+will be the smaller of
+.Fa value.size
+and
+.Fa len .
+.Pp
+.Nm DlpReadResourceByType
+is similar to
+.Fn DlpReadResourceByIndex ,
+except that you specify the resource by type and ID, rather than by
+index.
+.Pp
+.Fa type
+specifies the four-character type of the resource, with the first
+letter in the most-significant 8 bits.
+.Pp
+.Fa id
+specifies the resource identifier.
+.Pp
+All other arguments are as for
+.Fn DlpReadResourceByIndex .
+.Sh RETURN VALUE
+These functions return 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 .

@@ -1,0 +1,53 @@
+.\" pdb_LoadHeader.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_LoadHeader.3,v 1.1 2001-11-20 14:35:24 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_LoadHeader 3
+.Sh NAME
+.Nm pdb_LoadHeader
+.Nd read the header of a Palm database file
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft int
+.Fn pdb_LoadHeader "int fd" "struct pdb *db"
+.Sh DESCRIPTION
+.Nm pdb_LoadHeader
+reads the header of a Palm PDB or PRC file from the file descriptor
+.Fa fd ,
+which must already have been opened for reading.
+.Fa fd
+must be seekable.
+.Nm pdb_LoadHeader
+fills in the
+.Ft struct pdb
+pointed to by
+.Fa db ,
+which must already have been allocated.
+.Pp
+It is not possible to append the rest of the file's data to
+.Fa db .
+If you want to read the rest of the file, you need to read it from
+scratch with
+.Fn pdb_Read .
+.Pp
+.Nm pdb_LoadHeader
+is deprecated. The only recommended use for it is to get an overview
+of a set of PDB or PRC files.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr pdb_Read 3 .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
