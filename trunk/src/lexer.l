@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.41 2001-11-12 05:50:38 arensb Exp $
+ * $Id: lexer.l,v 2.42 2001-12-09 19:51:34 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -169,6 +169,7 @@ QSTR		[^\\\$\"\n]
 "directory"	{ KEYWORD(DIRECTORY);	}
 "force_install"	{ KEYWORD(FORCE_INSTALL);	}
 "forward"	{ KEYWORD(FORWARD);	}
+"hostid"	{ KEYWORD(HOSTID);	}
 "install_first"	{ KEYWORD(INSTALL_FIRST);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "options"	{ KEYWORD(OPTIONS);	}
