@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.2 1999-02-21 08:43:22 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.3 1999-02-22 10:59:42 arensb Exp $
  */
 #include <stdio.h>
 #include "dlp.h"
@@ -64,7 +64,7 @@ dlpcmd_puttime(ubyte **wptr, const struct dlp_time *t)
  * 'time_t's and 'dlp_time's? */
 
 int
-DlpReadUserInfo(int fd,		/* File descriptor */
+DlpReadUserInfo(struct PConnection *pconn,		/* File descriptor */
 		struct dlp_userinfo *userinfo)
 				/* Will be filled in with user information. */
 {
@@ -82,14 +82,14 @@ DlpReadUserInfo(int fd,		/* File descriptor */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, NULL);
+	err = dlp_send_req(pconn, &header, NULL);
 	if (err < 0)
 		return err;	/* Error */
 
 	DLPC_TRACE(10, "DlpReadUserInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadUserInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadUserInfo, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;	/* Error */
 
@@ -97,6 +97,8 @@ DlpReadUserInfo(int fd,		/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -168,7 +170,7 @@ DlpReadUserInfo(int fd,		/* File descriptor */
 }
 
 int
-DlpWriteUserInfo(int fd,	/* File descriptor */
+DlpWriteUserInfo(struct PConnection *pconn,	/* File descriptor */
 		 const struct dlp_setuserinfo *userinfo)
 				/* Bits of user information to set */
 {
@@ -212,14 +214,14 @@ DlpWriteUserInfo(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpWriteUserInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_WriteUserInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteUserInfo, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -227,6 +229,8 @@ DlpWriteUserInfo(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -245,7 +249,7 @@ DlpWriteUserInfo(int fd,	/* File descriptor */
 
 /* XXX - Add v1.2 support: tell which version of DLP we're using */
 int
-DlpReadSysInfo(int fd,		/* File descriptor */
+DlpReadSysInfo(struct PConnection *pconn,		/* File descriptor */
 	       struct dlp_sysinfo *sysinfo)
 				/* Will be filled in with system
 				 * information */
@@ -264,12 +268,12 @@ DlpReadSysInfo(int fd,		/* File descriptor */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, NULL);
+	err = dlp_send_req(pconn, &header, NULL);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadSysInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadSysInfo, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -277,6 +281,8 @@ DlpReadSysInfo(int fd,		/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -309,7 +315,7 @@ DlpReadSysInfo(int fd,		/* File descriptor */
 }
 
 int
-DlpGetSysDateTime(int fd,
+DlpGetSysDateTime(struct PConnection *pconn,
 		  struct dlp_time *ptime)
 {
 	int i;
@@ -326,11 +332,11 @@ DlpGetSysDateTime(int fd,
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, NULL);
+	err = dlp_send_req(pconn, &header, NULL);
 	if (err < 0)
 		return err;
 
-	err = dlp_recv_resp(fd, DLPCMD_GetSysDateTime,
+	err = dlp_recv_resp(pconn, DLPCMD_GetSysDateTime,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -339,6 +345,8 @@ DlpGetSysDateTime(int fd,
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -367,7 +375,7 @@ DlpGetSysDateTime(int fd,
 }
 
 int
-DlpSetSysDateTime(int fd,	/* File descriptor */
+DlpSetSysDateTime(struct PConnection *pconn,	/* File descriptor */
 		  const struct dlp_time *ptime)
 				/* Time to set */
 {
@@ -403,14 +411,14 @@ DlpSetSysDateTime(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpSetSysDateTime: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_SetSysDateTime,
+	err = dlp_recv_resp(pconn, DLPCMD_SetSysDateTime,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -419,6 +427,8 @@ DlpSetSysDateTime(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -435,7 +445,7 @@ DlpSetSysDateTime(int fd,	/* File descriptor */
 }
 
 int
-DlpReadStorageInfo(int fd,
+DlpReadStorageInfo(struct PConnection *pconn,
 		   const ubyte card,
 		   ubyte *last_card,
 		   ubyte *more,
@@ -470,14 +480,14 @@ DlpReadStorageInfo(int fd,
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadStorageInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadStorageInfo,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadStorageInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -487,10 +497,17 @@ DlpReadStorageInfo(int fd,
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
+
+	/* Set the extended fields to zero, in case this Palm doesn't
+	 * return them.
+	 */
+	cinfo->rom_dbs = 0;
+	cinfo->ram_dbs = 0;
+	cinfo->reserved1 = 0L;
+	cinfo->reserved2 = 0L;
+	cinfo->reserved3 = 0L;
+	cinfo->reserved4 = 0L;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -593,7 +610,7 @@ DlpReadStorageInfo(int fd,
 }
 
 int
-DlpReadDBList(int fd,			/* File descriptor */
+DlpReadDBList(struct PConnection *pconn,			/* File descriptor */
 	      const ubyte iflags,	/* Search flags */
 	      const int card,		/* Card number */
 	      const uword start,	/* Database index to start at */
@@ -632,14 +649,14 @@ DlpReadDBList(int fd,			/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadDBList: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadDBList, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadDBList, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -648,10 +665,7 @@ DlpReadDBList(int fd,			/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -686,6 +700,10 @@ DlpReadDBList(int fd,			/* File descriptor */
 			dlpcmd_gettime(&rptr, &dbs->baktime);
 			dbs->index = get_uword(&rptr);
 
+			/* XXX - Actually, should probably only read
+			 * DLPCMD_DBNAME_LEN-1 (31) characters, and ensure
+			 * a trailing NUL.
+			 */
 			memcpy(dbs->name, rptr,
 			       dbs->size - DLPCMD_DBNAME_LEN);
 			rptr += dbs->size - DLPCMD_DBNAME_LEN;
@@ -757,7 +775,7 @@ DlpReadDBList(int fd,			/* File descriptor */
  * Open a database.
  */
 int
-DlpOpenDB(int fd,		/* File descriptor */
+DlpOpenDB(struct PConnection *pconn,		/* File descriptor */
 	  int card,		/* Memory card */
 	  const char *name,	/* Database name */
 	  ubyte mode,		/* Open mode */
@@ -795,14 +813,14 @@ DlpOpenDB(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpOpenDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_OpenDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_OpenDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -811,10 +829,7 @@ DlpOpenDB(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -843,7 +858,7 @@ DlpOpenDB(int fd,		/* File descriptor */
  * Puts a handle for the newly-created database in 'dbhandle'.
  */
 int
-DlpCreateDB(int fd,		/* File descriptor */
+DlpCreateDB(struct PConnection *pconn,		/* File descriptor */
 	    const struct dlp_createdbreq *newdb,
 				/* Describes the database to create */
 	    ubyte *dbhandle)	/* Database handle */
@@ -890,14 +905,14 @@ DlpCreateDB(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpCreateDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_CreateDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_CreateDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -906,10 +921,7 @@ DlpCreateDB(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -937,7 +949,7 @@ DlpCreateDB(int fd,		/* File descriptor */
  * DLPCMD_CLOSEALLDBS, then all open databases will be closed.
  */
 int
-DlpCloseDB(int fd,		/* File descriptor */
+DlpCloseDB(struct PConnection *pconn,		/* File descriptor */
 	   ubyte handle)	/* Handle of database to delete */
 {
 	int i;
@@ -971,14 +983,14 @@ DlpCloseDB(int fd,		/* File descriptor */
 	}
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpCloseDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_CloseDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_CloseDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -987,10 +999,7 @@ DlpCloseDB(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1011,7 +1020,7 @@ DlpCloseDB(int fd,		/* File descriptor */
  * Deletes a database. The database must be closed.
  */
 int
-DlpDeleteDB(int fd,		/* File descriptor */
+DlpDeleteDB(struct PConnection *pconn,		/* File descriptor */
 	    const int card,	/* Memory card */
 	    const char *name)	/* Name of the database */
 {
@@ -1047,14 +1056,14 @@ DlpDeleteDB(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpDeleteDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_DeleteDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_DeleteDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1063,10 +1072,7 @@ DlpDeleteDB(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1087,11 +1093,13 @@ DlpDeleteDB(int fd,		/* File descriptor */
  * Read the AppInfo block for a database.
  */
 int
-DlpReadAppBlock(int fd,		/* File descriptor */
-		struct dlp_appblock *appblock,
-				/* Application block descriptor */
-		uword *len,	/* # bytes read returned here */
-		ubyte *data)	/* Set to the data read */
+DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
+		const ubyte handle,	/* Database handle */
+		const uword offset,	/* Where to start reading */
+		const uword len,	/* Max # bytes to read */
+		uword *size,	/* # bytes read returned here */
+		const ubyte **data)
+				/* Set to the data read */
 {
 	int i;
 	int err;
@@ -1099,8 +1107,8 @@ DlpReadAppBlock(int fd,		/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad */
+	static ubyte outbuf[DLPARGLEN_ReadAppBlock_Req];
+					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
@@ -1112,10 +1120,10 @@ DlpReadAppBlock(int fd,		/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, appblock->dbid);
-	put_ubyte(&wptr, 0);		/* Unused */
-	put_uword(&wptr, appblock->offset);
-	put_uword(&wptr, appblock->len);
+	put_ubyte(&wptr, handle);
+	put_ubyte(&wptr, 0);		/* Padding */
+	put_uword(&wptr, offset);
+	put_uword(&wptr, len);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadAppBlock_Req;
@@ -1123,14 +1131,15 @@ DlpReadAppBlock(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadAppBlock: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadAppBlock, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadAppBlock,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1138,6 +1147,8 @@ DlpReadAppBlock(int fd,		/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1146,13 +1157,15 @@ DlpReadAppBlock(int fd,		/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadAppBlock_Blk:
-			/* XXX - Sanity check: Make sure argv[i].size <= len */
-			*len = get_uword(&rptr);
-			memcpy(data, rptr, *len);
-			rptr += *len;
+			/* XXX - Sanity check: Make sure argv[i].size <= size */
+			*size = get_uword(&rptr);
+			/* Return a pointer to the data. */
+			*data = rptr;
+			rptr += *size;
 
-			DLPC_TRACE(3, "block size: %d (0x%04x)\n", *len, *len);
-			debug_dump(stderr, "APP: ", data, *len);
+			DLPC_TRACE(3, "block size: %d (0x%04x)\n", *size,
+				   *size);
+			debug_dump(stderr, "APP: ", *data, *size);
 
 			break;
 		    default:	/* Unknown argument type */
@@ -1169,7 +1182,7 @@ DlpReadAppBlock(int fd,		/* File descriptor */
  * XXX - The API probably needs to be reworked.
  */
 int
-DlpWriteAppBlock(int fd,	/* File descriptor */
+DlpWriteAppBlock(struct PConnection *pconn,	/* File descriptor */
 		 const struct dlp_appblock *appblock,
 				/* Application block descriptor */
 		 const ubyte *data)
@@ -1203,13 +1216,13 @@ DlpWriteAppBlock(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
 	DLPC_TRACE(10, "DlpWriteAppBlock: waiting for response\n");
-	err = dlp_recv_resp(fd, DLPCMD_WriteAppBlock, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteAppBlock, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1217,10 +1230,8 @@ DlpWriteAppBlock(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
-
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Probably ought to do something smart */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1243,11 +1254,15 @@ DlpWriteAppBlock(int fd,	/* File descriptor */
  * XXX - Not terribly well-tested.
  */
 int
-DlpReadSortBlock(int fd,	/* File descriptor */
-		struct dlp_sortblock *sortblock,
+DlpReadSortBlock(struct PConnection *pconn,	/* File descriptor */
+/*  		 struct dlp_sortblock *sortblock, */
 				/* Sort block descriptor */
-		uword *len,	/* # bytes read returned here */
-		ubyte *data)	/* Set to the data read */
+		 const ubyte handle,	/* Database handle */
+		 const uword offset,	/* Where to start reading */
+		 const uword len,	/* Max # bytes to read */
+		 uword *size,		/* # bytes read returned here */
+		 const ubyte **data)
+					/* Set to the data read */
 {
 	int i;
 	int err;
@@ -1255,8 +1270,9 @@ DlpReadSortBlock(int fd,	/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad */
+	static ubyte outbuf[DLPARGLEN_ReadSortBlock_Req];
+					/* Output buffer */
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1, ">>> ReadSortBlock\n");
@@ -1267,10 +1283,10 @@ DlpReadSortBlock(int fd,	/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, sortblock->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Unused */
-	put_uword(&wptr, sortblock->offset);
-	put_uword(&wptr, sortblock->len);
+	put_uword(&wptr, offset);
+	put_uword(&wptr, len);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadSortBlock_Req;
@@ -1278,13 +1294,14 @@ DlpReadSortBlock(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
 	DLPC_TRACE(10, "DlpReadSortBlock: waiting for response\n");
-	err = dlp_recv_resp(fd, DLPCMD_ReadSortBlock, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadSortBlock,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1292,6 +1309,8 @@ DlpReadSortBlock(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1299,10 +1318,12 @@ DlpReadSortBlock(int fd,	/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadSortBlock_Blk:
-			/* XXX - Sanity check: Make sure argv[i].size <= len */
+			/* XXX - Sanity check: Make sure argv[i].size <= size */
 			/* Return the data and its length to the caller */
-			*len = ret_argv[i].size;
-			memcpy(data, ret_argv[i].data, ret_argv[i].size);
+			*size = ret_argv[i].size;
+			/* Return a pointer to the data */
+			*data = rptr;
+			rptr += *size;
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1320,7 +1341,7 @@ DlpReadSortBlock(int fd,	/* File descriptor */
  * XXX - Not terribly well-tested.
  */
 int
-DlpWriteSortBlock(int fd,	/* File descriptor */
+DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
 		  const struct dlp_sortblock *sortblock,
 				/* Sort block descriptor */
 		  const ubyte *data)
@@ -1354,13 +1375,13 @@ DlpWriteSortBlock(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
 	DLPC_TRACE(10, "DlpWriteSortBlock: waiting for response\n");
-	err = dlp_recv_resp(fd, DLPCMD_WriteSortBlock,
+	err = dlp_recv_resp(pconn, DLPCMD_WriteSortBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1369,10 +1390,8 @@ DlpWriteSortBlock(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
-
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Probably ought to do something smart */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1397,7 +1416,7 @@ DlpWriteSortBlock(int fd,	/* File descriptor */
  * XXX - The caller needs access to this.
  */
 int
-DlpReadNextModifiedRec(int fd,	/* File descriptor */
+DlpReadNextModifiedRec(struct PConnection *pconn,	/* File descriptor */
 		       const ubyte handle,
 				/* Database ID (handle) */
 		       struct dlp_readrecret *record)
@@ -1424,14 +1443,14 @@ DlpReadNextModifiedRec(int fd,	/* File descriptor */
 	argv[0].data = (void *) &handle/*outbuf*/;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadNextModifiedRec: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadNextModifiedRec,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRec,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1441,10 +1460,7 @@ DlpReadNextModifiedRec(int fd,	/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1480,11 +1496,15 @@ DlpReadNextModifiedRec(int fd,	/* File descriptor */
 }
 
 int
-DlpReadRecordByID(int fd,	/* File descriptor */
-		  const struct dlp_readrecreq_byid *req,
-				/* Read request arguments */
-		  struct dlp_readrecret *record)
-				/* Record will be put here */
+DlpReadRecordByID(struct PConnection *pconn,	/* File descriptor */
+		  const ubyte handle,	/* Database handle */
+		  const udword id,	/* ID of record to read */
+		  const uword offset,	/* Where to start reading */
+		  const uword len,	/* Max # bytes to read */
+		  struct dlp_recinfo *recinfo,
+				/* Record info returned here */
+		  const ubyte **data)
+				/* Pointer to record data returned here */
 {
 	int i;
 	int err;
@@ -1492,17 +1512,14 @@ DlpReadRecordByID(int fd,	/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte outbuf[DLPARGLEN_ReadRecord_ByID];
+					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1, ">>> ReadRecord ByID: dbid %d, recid %ld, offset %d, "
 		   "len %d\n",
-		   req->dbid,
-		   req->recid,
-		   req->offset,
-		   req->len);
+		   handle, id, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecord;
@@ -1510,11 +1527,11 @@ DlpReadRecordByID(int fd,	/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, req->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Padding */
-	put_udword(&wptr, req->recid);
-	put_uword(&wptr, req->offset);
-	put_uword(&wptr, req->len);
+	put_udword(&wptr, id);
+	put_uword(&wptr, offset);
+	put_uword(&wptr, len);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadRecord_ByID;
@@ -1522,14 +1539,14 @@ DlpReadRecordByID(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadRecordByID: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1538,10 +1555,7 @@ DlpReadRecordByID(int fd,	/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1550,21 +1564,21 @@ DlpReadRecordByID(int fd,	/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadRecord_Rec:
-			record->recid = get_udword(&rptr);
-			record->index = get_uword(&rptr);
-			record->size = get_uword(&rptr);
-			record->attributes = get_ubyte(&rptr);
-			record->category = get_ubyte(&rptr);
-			record->data = rptr;
+			recinfo->id = get_udword(&rptr);
+			recinfo->index = get_uword(&rptr);
+			recinfo->size = get_uword(&rptr);
+			recinfo->attributes = get_ubyte(&rptr);
+			recinfo->category = get_ubyte(&rptr);
+			*data = rptr;
 
 			DLPC_TRACE(6, "Read a record (by ID):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", record->recid);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", record->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", record->size);
+			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
+			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
+			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
 			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   record->attributes);
+				   recinfo->attributes);
 			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   record->category);
+				   recinfo->category);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1584,9 +1598,11 @@ DlpReadRecordByID(int fd,	/* File descriptor */
  * it.
  */
 int
-DlpReadRecordByIndex(int fd,
+DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
 		     const struct dlp_readrecreq_byindex *req,
+				/* Read request arguments */
 		     struct dlp_readrecret *record)
+				/* Record will be put here */
 {
 	int i;
 	int err;
@@ -1623,14 +1639,14 @@ DlpReadRecordByIndex(int fd,
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadRecordByIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1639,10 +1655,7 @@ DlpReadRecordByIndex(int fd,
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1685,7 +1698,7 @@ DlpReadRecordByIndex(int fd,
  * from another database, but not create a new one myself.
  */
 int
-DlpWriteRecord(int fd,		/* File descriptor */
+DlpWriteRecord(struct PConnection *pconn,		/* File descriptor */
 	       const udword len,	/* Length of record data */
 	       const struct dlp_writerec *rec,
 				/* Record descriptor */
@@ -1731,14 +1744,14 @@ DlpWriteRecord(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_WriteRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1747,10 +1760,7 @@ DlpWriteRecord(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1779,7 +1789,7 @@ DlpWriteRecord(int fd,		/* File descriptor */
  * DeleteAllRecords, and DeleteRecordsByCategory.
  */
 int
-DlpDeleteRecord(int fd,			/* File descriptor */
+DlpDeleteRecord(struct PConnection *pconn,			/* File descriptor */
 		const ubyte dbid,	/* Database ID (handle) */
 		const ubyte flags,	/* Flags */
 		const udword recid)	/* Unique record ID */
@@ -1814,14 +1824,14 @@ DlpDeleteRecord(int fd,			/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpDeleteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_DeleteRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_DeleteRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1830,10 +1840,7 @@ DlpDeleteRecord(int fd,			/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1851,7 +1858,7 @@ DlpDeleteRecord(int fd,			/* File descriptor */
 }
 
 int
-DlpReadResourceByIndex(int fd,		/* File descriptor */
+DlpReadResourceByIndex(struct PConnection *pconn,		/* File descriptor */
 		       const ubyte dbid,	/* Database ID (handle) */
 		       const uword index,	/* Resource index */
 		       const uword offset,	/* Offset into resource */
@@ -1896,14 +1903,14 @@ DlpReadResourceByIndex(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadResourceByIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1912,10 +1919,7 @@ DlpReadResourceByIndex(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1954,7 +1958,7 @@ DlpReadResourceByIndex(int fd,		/* File descriptor */
 }
 
 int
-DlpReadResourceByType(int fd,			/* File descriptor */
+DlpReadResourceByType(struct PConnection *pconn,			/* File descriptor */
 		      const ubyte dbid,		/* Database ID (handle) */
 		      const udword type,	/* Resource type */
 		      const uword id,		/* Resource ID */
@@ -2000,14 +2004,14 @@ DlpReadResourceByType(int fd,			/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadResourceByType: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2016,10 +2020,7 @@ DlpReadResourceByType(int fd,			/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2058,7 +2059,7 @@ DlpReadResourceByType(int fd,			/* File descriptor */
 }
 
 int
-DlpWriteResource(int fd,		/* File descriptor */
+DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 		 const ubyte dbid,	/* Database ID (handle) */
 		 const udword type,	/* Resource type */
 		 const uword id,	/* Resource ID */
@@ -2105,14 +2106,14 @@ DlpWriteResource(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpWriteResource: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_WriteResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteResource, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2121,10 +2122,7 @@ DlpWriteResource(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2142,7 +2140,7 @@ DlpWriteResource(int fd,		/* File descriptor */
 }
 
 int
-DlpDeleteResource(int fd,		/* File descriptor */
+DlpDeleteResource(struct PConnection *pconn,		/* File descriptor */
 		  const ubyte dbid,	/* Database ID (handle) */
 		  const ubyte flags,	/* Request flags */
 		  const udword type,	/* Resource type */
@@ -2185,14 +2183,14 @@ DlpDeleteResource(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpDeleteResource: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_DeleteResource,
+	err = dlp_recv_resp(pconn, DLPCMD_DeleteResource,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2202,10 +2200,7 @@ DlpDeleteResource(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2226,7 +2221,7 @@ DlpDeleteResource(int fd,		/* File descriptor */
  * Delete any records that were marked as archived or deleted in the record
  * database.
  */
-int DlpCleanUpDatabase(int fd,		/* File descriptor */
+int DlpCleanUpDatabase(struct PConnection *pconn,		/* File descriptor */
 		       const ubyte dbid)
 					/* Database ID (handle) */
 {
@@ -2249,14 +2244,14 @@ int DlpCleanUpDatabase(int fd,		/* File descriptor */
 	argv[0].data = (void *) &dbid;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpCleanUpDatabase: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_CleanUpDatabase, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_CleanUpDatabase, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2265,10 +2260,7 @@ int DlpCleanUpDatabase(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2288,7 +2280,7 @@ int DlpCleanUpDatabase(int fd,		/* File descriptor */
 /* DlpResetSyncFlags
  * Reset any dirty flags on the database.
  */
-int DlpResetSyncFlags(int fd,		/* File descriptor */
+int DlpResetSyncFlags(struct PConnection *pconn,		/* File descriptor */
 		      const ubyte dbid)
 					/* Database ID (handle) */
 {
@@ -2311,14 +2303,14 @@ int DlpResetSyncFlags(int fd,		/* File descriptor */
 	argv[0].data = (void *) &dbid;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpResetSyncFlags: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ResetSyncFlags,
+	err = dlp_recv_resp(pconn, DLPCMD_ResetSyncFlags,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2328,10 +2320,7 @@ int DlpResetSyncFlags(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2350,7 +2339,7 @@ int DlpResetSyncFlags(int fd,		/* File descriptor */
 
 /* XXX - The API probably could use some work */
 int
-DlpCallApplication(int fd,		/* File descriptor */
+DlpCallApplication(struct PConnection *pconn,		/* File descriptor */
 		   const udword version,
 					/* OS version, used for determining
 					 * how to phrase the DLP call. */
@@ -2428,14 +2417,14 @@ DlpCallApplication(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpCallApplication: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_CallApplication,
+	err = dlp_recv_resp(pconn, DLPCMD_CallApplication,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2445,10 +2434,7 @@ DlpCallApplication(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2492,7 +2478,7 @@ DlpCallApplication(int fd,		/* File descriptor */
  * Indicate that the Palm needs to be reset at the end of the sync.
  */
 int
-DlpResetSystem(int fd)		/* File descriptor */
+DlpResetSystem(struct PConnection *pconn)		/* File descriptor */
 {
 	int i;
 	int err;
@@ -2507,14 +2493,14 @@ DlpResetSystem(int fd)		/* File descriptor */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, NULL);
+	err = dlp_send_req(pconn, &header, NULL);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpResetSystem: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ResetSystem, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ResetSystem, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2523,10 +2509,7 @@ DlpResetSystem(int fd)		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2552,7 +2535,7 @@ DlpResetSystem(int fd)		/* File descriptor */
  * a bit too easy :-(
  */
 int
-DlpAddSyncLogEntry(int fd,	/* File descriptor */
+DlpAddSyncLogEntry(struct PConnection *pconn,	/* File descriptor */
 		   const char *msg)	/* Log message */
 {
 	int i;
@@ -2574,13 +2557,13 @@ DlpAddSyncLogEntry(int fd,	/* File descriptor */
 	argv[0].data = (ubyte *) msg;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpAddSyncLogEntry: waiting for response\n");
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_AddSyncLogEntry,
+	err = dlp_recv_resp(pconn, DLPCMD_AddSyncLogEntry,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2589,6 +2572,8 @@ DlpAddSyncLogEntry(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
+	if (resp_header.errno != DLPSTAT_NOERR)
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2609,7 +2594,7 @@ DlpAddSyncLogEntry(int fd,	/* File descriptor */
  * Read information about an open database.
  */
 int
-DlpReadOpenDBInfo(int fd,	/* File descriptor */
+DlpReadOpenDBInfo(struct PConnection *pconn,	/* File descriptor */
 		  ubyte handle,	/* Database handle */
 		  struct dlp_opendbinfo *dbinfo)
 				/* Info about database */
@@ -2634,13 +2619,13 @@ DlpReadOpenDBInfo(int fd,	/* File descriptor */
 	argv[0].data = &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
 	DLPC_TRACE(10, "DlpReadOpenDBInfo: waiting for response\n");
-	err = dlp_recv_resp(fd, DLPCMD_ReadOpenDBInfo,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadOpenDBInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2649,13 +2634,8 @@ DlpReadOpenDBInfo(int fd,	/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
-
-	/* XXX - Make sure the number of arguments is sane, and that
-	 * they're of known types.
-	 */
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Probably ought to do something smart */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2677,7 +2657,7 @@ DlpReadOpenDBInfo(int fd,	/* File descriptor */
 }
 
 int
-DlpMoveCategory(int fd,			/* File descriptor */
+DlpMoveCategory(struct PConnection *pconn,			/* File descriptor */
 		const ubyte handle,	/* Database ID (handle) */
 		const ubyte from,	/* ID of source category */
 		const ubyte to)		/* ID of destination category */
@@ -2712,14 +2692,14 @@ DlpMoveCategory(int fd,			/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpMoveCategory: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_MoveCategory, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_MoveCategory, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2728,10 +2708,7 @@ DlpMoveCategory(int fd,			/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2749,10 +2726,9 @@ DlpMoveCategory(int fd,			/* File descriptor */
 }
 
 /* DlpOpenConduit
-
  * Sent before each conduit is opened by the desktop.
  */
-int DlpOpenConduit(int fd)		/* File descriptor */
+int DlpOpenConduit(struct PConnection *pconn)		/* File descriptor */
 {
 	int i;
 	int err;
@@ -2767,14 +2743,14 @@ int DlpOpenConduit(int fd)		/* File descriptor */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, NULL);
+	err = dlp_send_req(pconn, &header, NULL);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpOpenConduit: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_OpenConduit, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_OpenConduit, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2783,10 +2759,7 @@ int DlpOpenConduit(int fd)		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2804,7 +2777,7 @@ int DlpOpenConduit(int fd)		/* File descriptor */
 }
 
 int
-DlpEndOfSync(int fd,		/* File descriptor */
+DlpEndOfSync(struct PConnection *pconn,		/* File descriptor */
 	     const ubyte status)
 				/* Exit status, reason for termination */
 {
@@ -2833,13 +2806,13 @@ DlpEndOfSync(int fd,		/* File descriptor */
 	argv[0].data = status_buf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	/* Get a response */
 	DLPC_TRACE(10, "DlpEndOfSync: waiting for response\n");
-	err = dlp_recv_resp(fd, DLPCMD_EndOfSync, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_EndOfSync, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2847,12 +2820,8 @@ DlpEndOfSync(int fd,		/* File descriptor */
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
-
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2872,7 +2841,7 @@ DlpEndOfSync(int fd,		/* File descriptor */
 /* DlpResetRecordIndex
  * Reset the "next modified record" index to the beginning.
  */
-int DlpResetRecordIndex(int fd,		/* File descriptor */
+int DlpResetRecordIndex(struct PConnection *pconn,		/* File descriptor */
 			const ubyte dbid)
 					/* Database ID (handle) */
 {
@@ -2895,14 +2864,14 @@ int DlpResetRecordIndex(int fd,		/* File descriptor */
 	argv[0].data = (void *) &dbid;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpResetRecordIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ResetRecordIndex,
+	err = dlp_recv_resp(pconn, DLPCMD_ResetRecordIndex,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2912,10 +2881,7 @@ int DlpResetRecordIndex(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2937,8 +2903,11 @@ int DlpResetRecordIndex(int fd,		/* File descriptor */
  * 'handle'.
  */
 int
-DlpReadRecordIDList(int fd,		/* File descriptor */
-		    const struct dlp_idlistreq *idreq,
+DlpReadRecordIDList(struct PConnection *pconn,		/* File descriptor */
+		    const ubyte handle,	/* Database handle */
+		    const ubyte flags,
+		    const uword start,
+		    const uword max,	/* Max # entries to read */
 		    uword *numread,	/* How many entries were read */
 		    udword recids[])	/* IDs are returned here */
 {
@@ -2955,10 +2924,10 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
 
 	DLPC_TRACE(1, ">>> ReadRecordIDList: handle %d, flags 0x%02x, "
 		   "start %d, max %d\n",
-		   idreq->dbid,
-		   idreq->flags,
-		   idreq->start,
-		   idreq->max);
+		   handle,
+		   flags,
+		   start,
+		   max);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecordIDList;
@@ -2966,10 +2935,10 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, idreq->dbid);
-	put_ubyte(&wptr, idreq->flags);
-	put_uword(&wptr, idreq->start);
-	put_uword(&wptr, idreq->max);
+	put_ubyte(&wptr, handle);
+	put_ubyte(&wptr, flags);
+	put_uword(&wptr, start);
+	put_uword(&wptr, max);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadRecordIDList_Req;
@@ -2977,14 +2946,14 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadRecordIDList: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadRecordIDList,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadRecordIDList,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2994,10 +2963,7 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3007,7 +2973,7 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
 		{
 		    case DLPRET_ReadRecordIDList_List:
 			*numread = get_uword(&rptr);
-			/* XXX - Make sure idreq->max >= *numread */
+			/* XXX - Make sure max >= *numread */
 			for (i = 0; i < *numread; i++)
 				recids[i] = get_udword(&rptr);
 			break;
@@ -3028,7 +2994,7 @@ DlpReadRecordIDList(int fd,		/* File descriptor */
  */
 int
 DlpReadNextRecInCategory(
-	int fd,				/* File descriptor */
+	struct PConnection *pconn,				/* File descriptor */
 	const ubyte handle,		/* Database ID (handle) */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
@@ -3062,14 +3028,14 @@ DlpReadNextRecInCategory(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadNextRecInCategory: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadNextRecInCategory,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadNextRecInCategory,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3079,10 +3045,7 @@ DlpReadNextRecInCategory(
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3125,7 +3088,7 @@ DlpReadNextRecInCategory(
  */
 int
 DlpReadNextModifiedRecInCategory(
-	int fd,				/* File descriptor */
+	struct PConnection *pconn,				/* File descriptor */
 	const ubyte handle,		/* Database ID (handle) */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
@@ -3160,7 +3123,7 @@ DlpReadNextModifiedRecInCategory(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
@@ -3168,7 +3131,7 @@ DlpReadNextModifiedRecInCategory(
 		   "response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadNextModifiedRecInCategory,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRecInCategory,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3178,10 +3141,7 @@ DlpReadNextModifiedRecInCategory(
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3219,7 +3179,7 @@ DlpReadNextModifiedRecInCategory(
 
 /* XXX - This is untested: I don't know what values to feed it */
 int
-DlpReadAppPreference(int fd,		/* File descriptor */
+DlpReadAppPreference(struct PConnection *pconn,		/* File descriptor */
 		     const udword creator,
 					/* Application creator */
 		     const uword id,	/* Preference ID */
@@ -3266,14 +3226,14 @@ DlpReadAppPreference(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadAppPreference: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadAppPreference,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadAppPreference,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3283,10 +3243,7 @@ DlpReadAppPreference(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3320,7 +3277,7 @@ DlpReadAppPreference(int fd,		/* File descriptor */
  * XXX - Test this.
  */
 int
-DlpWriteAppPreference(int fd,		/* File descriptor */
+DlpWriteAppPreference(struct PConnection *pconn,		/* File descriptor */
 		      const udword creator,
 					/* Application creator */
 		      const uword id,	/* Preference ID */
@@ -3363,14 +3320,14 @@ DlpWriteAppPreference(int fd,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_WriteAppPreference,
+	err = dlp_recv_resp(pconn, DLPCMD_WriteAppPreference,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3380,10 +3337,7 @@ DlpWriteAppPreference(int fd,		/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3406,7 +3360,7 @@ DlpWriteAppPreference(int fd,		/* File descriptor */
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpReadNetSyncInfo(int fd,
+DlpReadNetSyncInfo(struct PConnection *pconn,
 		   struct dlp_netsyncinfo *netsyncinfo)
 {
 	int i;
@@ -3424,14 +3378,14 @@ DlpReadNetSyncInfo(int fd,
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadNetSyncInfo,
+	err = dlp_recv_resp(pconn, DLPCMD_ReadNetSyncInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3441,10 +3395,7 @@ DlpReadNetSyncInfo(int fd,
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3506,7 +3457,7 @@ DlpReadNetSyncInfo(int fd,
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpWriteNetSyncInfo(int fd,	/* File descriptor */
+DlpWriteNetSyncInfo(struct PConnection *pconn,	/* File descriptor */
 		    const struct dlp_writenetsyncinfo *netsyncinfo)
 {
 	int i;
@@ -3563,14 +3514,14 @@ DlpWriteNetSyncInfo(int fd,	/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpWriteNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_WriteNetSyncInfo,
+	err = dlp_recv_resp(pconn, DLPCMD_WriteNetSyncInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3580,10 +3531,7 @@ DlpWriteNetSyncInfo(int fd,	/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3605,7 +3553,7 @@ DlpWriteNetSyncInfo(int fd,	/* File descriptor */
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpReadFeature(int fd,			/* File descriptor */
+DlpReadFeature(struct PConnection *pconn,			/* File descriptor */
 	       const udword creator,	/* Feature creator */
 	       const word featurenum,	/* Number of feature to read */
 	       udword *value)		/* Value of feature returned here */
@@ -3644,14 +3592,14 @@ DlpReadFeature(int fd,			/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(fd, &header, argv);
+	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
 		return err;
 
 	DLPC_TRACE(10, "DlpReadFeature: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(fd, DLPCMD_ReadFeature, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadFeature, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -3660,10 +3608,7 @@ DlpReadFeature(int fd,			/* File descriptor */
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
-		/* XXX - Should do something smart, like set dlpcmd_errno
-		 * to 'resp_header.errno', and return -1 or something.
-		 */
-		return -resp_header.errno;
+		return resp_header.errno;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
