@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::VFS qw(:DEFAULT :vfs_opentags);
+use ColdSync::SPC::ExpSlot;
+
+use Data::Dumper;
+
+use IO::File;
+
+$| = 1;
+
+sub fdump
+{
+	my ($file, $data) = @_;
+
+	my $fh = new IO::File;
+
+	if ($fh->open(">$file"))
+	{
+		print $fh $data;
+
+		$fh->close;
+	}
+}
+
+StartConduit('sync');
+
+	my $res;
+	my ($err, $en) = dlp_VFSVolumeEnumerate();
+
+	my $vol = $en->{'volumes'}[0];
+
+	{
+		my $fileRef = dlp_VFSFileOpen($vol, vfsModeRead, '/AUDIO/test.mp3');
+
+		if(defined $fileRef)
+		{
+			print "File opened\n";
+
+			my ($err, $res, $fileSize) = dlp_VFSFileSize($fileRef);
+
+			print "Size: $fileSize\n";
+
+			my $data = "";
+
+			# Tested with different values, no real
+			# advantage in using a bigger block size.
+			my $blockSize = 65536;
+
+			while ($fileSize > 0)
+			{
+				if ($fileSize < $blockSize)
+				{
+					$blockSize = $fileSize;
+				}
+
+				($err, $res) = dlp_VFSFileRead($fileRef, $blockSize);
+
+				print "Read: $res->{'numBytes'}, $fileSize to go.\n";
+	
+				$data .= $res->{'data'};
+
+				$fileSize -= $blockSize;
+			}
+		
+			dlp_VFSFileClose($fileRef);
+	
+			fdump("/tmp/a.mp3", $data);
+		}
+	}
+
+
+EndConduit();

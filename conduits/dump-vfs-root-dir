@@ -1,0 +1,40 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::VFS qw(:DEFAULT :vfs_opentags);
+use ColdSync::SPC::ExpSlot;
+
+use Data::Dumper;
+
+my $err;
+
+StartConduit('sync');
+
+	my $en = dlp_VFSVolumeEnumerate();
+#	print Data::Dumper->Dump([ $en ]);
+	
+	foreach my $vol (@{$en->{'volumes'}})
+	{
+		print "Opening root dir volume $vol\n";
+
+		my $dirRef = dlp_VFSFileOpen($vol, vfsModeRead, "/PALM");
+
+		if (defined $dirRef)
+		{
+			my $dir = dlp_VFSDirEntryEnumerate($dirRef,
+							0,
+							10000);
+
+			print Data::Dumper->Dump([ $dir ]);
+
+			dlp_VFSFileClose($dirRef);
+		}
+	}
+
+	print "\n\n";
+
+
+EndConduit();
