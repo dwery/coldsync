@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.3 2000-02-03 03:25:02 arensb Exp $
+# $Id: Makefile,v 2.4 2000-02-05 06:08:33 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -14,8 +14,10 @@ C_SRCS =	coldsync.c \
 		handledb.c \
 		log.c \
 		conduit.c
+C_OBJS =	${C_SRCS:.c=.o}
 
 CXX_SRCS =	GenericConduit.cc
+CXX_OBJS =	${CXX_SRCS:.cc:=.o}
 
 SRCS =		${C_SRCS} ${CXX_SRCS}
 
@@ -25,18 +27,9 @@ HEADERS =	archive.h \
 		parser.h \
 		GenericConduit.hh
 
-OBJS =		coldsync.o \
-		archive.o \
-		backup.o \
-		restore.o \
-		install.o \
-		config.o \
-		handledb.o \
-		log.o \
-		conduit.o \
-		GenericConduit.o \
-		lex.yy.o \
-		y.tab.o
+OBJS =		${C_OBJS} ${CXX_OBJS} \
+		lex.yy.o y.tab.o
+
 LIBPCONN = 	-L${TOP}/libpconn -lpconn
 LIBPDB = 	-L${TOP}/libpdb -lpdb
 EXTRA_LIBS =	${LIBPDB} ${LIBPCONN} ${LIBYACC} ${LIBLEX}

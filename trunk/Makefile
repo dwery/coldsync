@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.8 2000-02-03 02:47:47 arensb Exp $
+# $Id: Makefile,v 1.9 2000-02-05 06:08:29 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -56,6 +56,7 @@ distfiles-core::
 		mkdir "${TOPDISTDIR}"; \
 	fi
 
+# Emacs TAGS file
 tags:	TAGS
 TAGS::
 	rm -f TAGS
@@ -69,8 +70,6 @@ id:	ID
 # The double-colon here is to force the file to be rebuilt every time.
 ID::
 	${MKID}
-
-# XXX - Ought to build Emacs TAGS file as well.
 
 dist:	distfiles
 	GZIP="--best" ${TAR} chozf ${TARBALL} ${TOPDISTDIR}
