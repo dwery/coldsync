@@ -6,12 +6,17 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.7 1999-09-05 03:30:45 arensb Exp $
+ * $Id: log.c,v 1.8 1999-11-20 05:20:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "coldsync.h"
 
 extern char *synclog;
@@ -59,8 +64,8 @@ add_to_log(char *msg)
 
 		if (newlog == NULL)
 		{
-			fprintf(stderr, "add_to_log: realloc failed\n");
-			perror("realloc");
+			fprintf(stderr, _("add_to_log: realloc failed\n"));
+			perror(_("realloc"));
 			return -1;
 		}
 		if (log_size == 0)

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.5 1999-11-11 07:48:05 arensb Exp $
+ * $Id: install.c,v 2.6 1999-11-20 05:20:01 arensb Exp $
  */
 
 #include "config.h"
@@ -37,6 +37,10 @@
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For strcasecmp() under AIX */
 #endif	/* HAVE_STRINGS_H */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
 
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */
@@ -70,7 +74,7 @@ InstallNewFiles(struct PConnection *pconn,
 			newdir);
 	if ((dir = opendir(newdir)) == NULL)
 	{
-		fprintf(stderr, "InstallNewFiles: Can't open install directory\n");
+		fprintf(stderr, _("InstallNewFiles: Can't open install directory\n"));
 		perror("opendir");
 	}
 
@@ -121,7 +125,7 @@ InstallNewFiles(struct PConnection *pconn,
 		/* Open the file, and load it as a Palm database */
 		if ((fd = open(fname, O_RDONLY)) < 0)
 		{
-			fprintf(stderr, "InstallNewFiles: Can't open \"%s\"\n",
+			fprintf(stderr, _("InstallNewFiles: Can't open \"%s\"\n"),
 				fname);
 			continue;
 		}
@@ -131,7 +135,7 @@ InstallNewFiles(struct PConnection *pconn,
 		if (pdb == NULL)
 		{
 			fprintf(stderr,
-				"InstallNewFiles: Can't load database \"%s\"\n",
+				_("InstallNewFiles: Can't load database \"%s\"\n"),
 				fname);
 			close(fd);
 			continue;
@@ -178,7 +182,7 @@ InstallNewFiles(struct PConnection *pconn,
 			fprintf(stderr, "InstallNewFiles: Uploading \"%s\"\n",
 				pdb->name);
 
-		add_to_log("Install ");
+		add_to_log(_("Install "));
 		add_to_log(pdb->name);
 		add_to_log(" - ");
 		if (dbinfo != NULL)
@@ -188,9 +192,9 @@ InstallNewFiles(struct PConnection *pconn,
 			if (err < 0)
 			{
 				fprintf(stderr,
-					"InstallNewFiles: Error deleting \"%s\"\n",
+					_("InstallNewFiles: Error deleting \"%s\"\n"),
 					pdb->name);
-				add_to_log("Error\n");
+				add_to_log(_("Error\n"));
 				free_pdb(pdb);
 				continue;
 			}
@@ -200,9 +204,9 @@ InstallNewFiles(struct PConnection *pconn,
 		if (err < 0)
 		{
 			fprintf(stderr,
-				"InstallNewFiles: Error uploading \"%s\"\n",
+				_("InstallNewFiles: Error uploading \"%s\"\n"),
 				pdb->name);
-			add_to_log("Error\n");
+			add_to_log(_("Error\n"));
 			free_pdb(pdb);
 			continue;
 		}
@@ -219,7 +223,8 @@ InstallNewFiles(struct PConnection *pconn,
 			SYNC_TRACE(4)
 				fprintf(stderr, "InstallNewFiles: "
 					"appending db to palm->dbinfo\n");
-			append_dbentry(palm, pdb);
+			append_dbentry(palm, pdb);	/* XXX - Error-
+							 * checking */
 		}
 
 		/* XXX - After installing:
@@ -263,10 +268,10 @@ InstallNewFiles(struct PConnection *pconn,
 		{
 			if (errno != EEXIST)
 			{
-				fprintf(stderr, "Error opening \"%s\"\n",
+				fprintf(stderr, _("Error opening \"%s\"\n"),
 					bakfname);
 				perror("open");
-				add_to_log("Problem\n");
+				add_to_log(_("Problem\n"));
 				err = -1;	/* XXX */
 			}
 			SYNC_TRACE(5)
@@ -282,9 +287,9 @@ InstallNewFiles(struct PConnection *pconn,
 					bakfname);
 			err = pdb_Write(pdb, outfd);
 			if (err < 0)
-				add_to_log("Error\n");
+				add_to_log(_("Error\n"));
 			else
-				add_to_log("OK\n");
+				add_to_log(_("OK\n"));
 		}
 
 		/* Delete the newly-uploaded file, if appropriate */
@@ -296,7 +301,7 @@ InstallNewFiles(struct PConnection *pconn,
 			err = unlink(fname);
 			if (err < 0)
 			{
-				fprintf(stderr, "Error deleting \"%s\"\n",
+				fprintf(stderr, _("Error deleting \"%s\"\n"),
 					fname);
 				perror("unlink");
 			}

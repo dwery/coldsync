@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.4 1999-11-04 10:59:42 arensb Exp $
+ * $Id: restore.c,v 2.5 1999-11-20 05:20:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -37,6 +37,10 @@
 # endif
 #endif
 
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #if !HAVE_STRCASECMP
 /* For OSes that don't have case-insensitive string matching functions.
  *	"Here's a nickel, kid, get yourself a better OS"
@@ -52,7 +56,7 @@
 /* XXX - Logging */
 int
 Restore(struct PConnection *pconn,
-	struct Palm *palm)
+	struct Palm *palm)		/* XXX - Unused argument */
 {
 	int err;
 	DIR *dir;
@@ -68,7 +72,7 @@ Restore(struct PConnection *pconn,
 	dir = opendir(global_opts.restoredir);
 	if (dir == NULL)
 	{
-		fprintf(stderr, "Can't read contents of directory %s\n",
+		fprintf(stderr, _("Can't read contents of directory %s\n"),
 			global_opts.restoredir);
 		perror("opendir");
 		return -1;
@@ -151,7 +155,7 @@ Restore(struct PConnection *pconn,
 		/* Read the PDB file */
 		if ((bakfd = open(fname, O_RDONLY)) < 0)
 		{
-			fprintf(stderr, "Error: Can't open %s\n",
+			fprintf(stderr, _("Error: Can't open %s\n"),
 				fname);
 			perror("open");
 			return -1;
@@ -160,7 +164,7 @@ Restore(struct PConnection *pconn,
 		pdb = pdb_Read(bakfd);
 		if (pdb == NULL)
 		{
-			fprintf(stderr, "Error reading %s\n",
+			fprintf(stderr, _("Error reading %s\n"),
 				fname);
 			close(bakfd);
 			return -1;
@@ -191,8 +195,8 @@ Restore(struct PConnection *pconn,
 		if (pdb->attributes & PDB_ATTR_RO)
 		{
 			fprintf(stderr,
-				"\"%s\" is a read-only database. "
-				"Not uploading\n",
+				_("\"%s\" is a read-only database. "
+				"Not uploading\n"),
 				file->d_name);
 			continue;
 		}
@@ -221,8 +225,8 @@ continue;
 			/* Otherwise, fall through */
 		    default:
 			fprintf(stderr,
-				"Restore: Can't delete database \"%s\"."
-				" err == %d\n",
+				_("Restore: Can't delete database \"%s\"."
+				" err == %d\n"),
 				pdb->name, err);
 /*			return -1;*/
 continue;

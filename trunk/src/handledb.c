@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.7 1999-11-10 09:07:30 arensb Exp $
+ * $Id: handledb.c,v 1.8 1999-11-20 05:19:41 arensb Exp $
  */
 
 #include "config.h"
@@ -17,6 +17,11 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "coldsync.h"
 #include "pconn/pconn.h"
 #include "pdb.h"
@@ -67,7 +72,7 @@ HandleDB(struct PConnection *pconn,
 		return err;
 	}
 
-	fprintf(stderr, "***** Whoa nelly! Couldn't find a conduit for \"%s\"!\n",
+	fprintf(stderr, _("***** Whoa nelly! Couldn't find a conduit for \"%s\"!\n"),
 		dbinfo->name);
 	return -1;
 }

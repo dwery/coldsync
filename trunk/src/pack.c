@@ -3,7 +3,7 @@
  * Defines the ppack() and punpack() functions, which facilitate
  * reading and writing data structures.
  *
- * $Id: pack.c,v 2.3 1999-08-25 08:20:07 arensb Exp $
+ * $Id: pack.c,v 2.4 1999-11-20 05:20:26 arensb Exp $
  */
 
 #include "config.h"
@@ -13,6 +13,7 @@
 #include "util.h"
 #include "pack.h"
 
+/* XXX - Not used anywhere. Should this just be made obsolete? */
 /* ppack
  * Write a number of values to 'buf', in Palm (big-endian) byte order.
  * This facilitates writing a data structure to a buffer to send it to
@@ -137,7 +138,7 @@ ppack(ubyte *buf,
 				break;
 			    default:
 				fprintf(stderr,
-					"ppack: Unknown argument type %d\n",
+					_("ppack: Unknown argument type %d\n"),
 					argtype | 0x80);
 				return -1;
 			}
@@ -178,7 +179,7 @@ ppack(ubyte *buf,
 				break;
 			    default:		/* Unknown type */
 				fprintf(stderr,
-					"ppack: Unknown argument type %d\n",
+					_("ppack: Unknown argument type %d\n"),
 					argtype);
 				return -1;
 			}
@@ -189,6 +190,7 @@ ppack(ubyte *buf,
 	return retval;
 }
 
+/* XXX - Not used anywhere. Should this just be made obsolete? */
 /* punpack
  * punpack() is the inverse of ppack(): it simplifies unpacking a
  * stream of bytes (e.g, a buffer that was just read from the Palm).
@@ -307,7 +309,7 @@ punpack(const ubyte *buf,
 				break;
 			    default:
 				fprintf(stderr,
-					"punpack: Unknown argument type %d\n",
+					_("punpack: Unknown argument type %d\n"),
 					argtype | 0x80);
 				return -1;
 			}
@@ -352,7 +354,7 @@ punpack(const ubyte *buf,
 				break;
 			    default:		/* Unknown type */
 				fprintf(stderr,
-					"punpack: Unknown argument type %d\n",
+					_("punpack: Unknown argument type %d\n"),
 					argtype);
 				return -1;
 			}
