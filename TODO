@@ -1,11 +1,10 @@
+- Rethink the Dlp*() functions.
+	They return a DLPSTAT_* error code, but this makes
+  error-checking rather hairy. Would it be better if they just set
+  palm_errno and returned -1?
 - Consider adding a "transient" keyword to listen{} blocks, to
   indicate that failed open()s mean that the Visor hasn't been plugged
   in yet, so just sleep and retry until it's okay.
-- Robustness: if "get serial number" fails, make sure it's not because
-  of an underlying problem (e.g., lost connection with Palm).
-	Probably need to go through each function and make sure it
-  sets a sane error code. Then go through those functions' callers,
-  etc. Bleah.
 - Document how to use ColdSync in daemon mode (getty, inetd, usbd.conf)
 - Under Solaris, defining _XPG4_2 might induce standards-compliance,
   and make things happier. There's a comment in PConnection_net.c that
@@ -56,13 +55,6 @@
 	I have a new, deleted record that is neither archived nor expunged
 	What am I supposed to do?
   Investigate.
-- Getty mode ("-mg"). First mode-specific argument is either "net" to
-  listen on the network (this could be how inetd mode could work), or
-  a serial device name in /dev.
-	Should there be a separate /etc/coldsync.getty file?
-	How does getty mode work with USB connections (Visor under
-  FreeBSD)? Best thing to do is probably to ignore it completely: tell
-  people to use 'usbd', and add an appropriate entry to /etc/usbd.conf
 - NetSync forwarding: there's a comment in usb_select() hinting that
   select() on /dev/ugen0 is broken and always returns ready.
 - NetSync should time out after a while: if no TCP connection received
@@ -80,9 +72,6 @@
   broken, stuck in infinite loop or something).
 	- Probably other cases as well.
 - Does NetSync support tickle packets? Or is this all handled by TCP?
-- Update FreeBSD port to include .mo files
-- Bug: run coldsync -mr ... . Kill xcopilot before running HotSync.
-  ColdSync dumps core.
 - It'd be nice to have a tool to make sure that all files that CVS
   knows about are in the distribution somewhere.
 - Add a SIGTERM handler, to catch Ctrl-C.
@@ -142,9 +131,6 @@
   standalone mode: if it doesn't match, don't sync.
 - Bug: should be smarter about installing files: it'd be nice to make
   sure that there's enough memory.
-- Bug: if you start a restore, then cancel on the Palm, ColdSync
-  doesn't appear to notice that you cancelled. It keeps going, but
-  every database upload fails.
 - Update doc/conduits.texi to talk about Install conduits.
 - Possible feature: degraded-mode NetSync: if ColdSync is supposed to
   forward a connection to another host for NetSync, but can't, it
@@ -299,12 +285,8 @@
 	Is it necessary or desirable to force a slow sync for this
   database?
 - Improve fault-tolerance and error handling:
-	Cancel the sync (on the Palm) in the middle. Have ColdSync
-  notice.
 	Kill ColdSync with Ctrl-C. Have it send a valid cancel to the
   Palm.
-	Remove the Palm from the cradle. Have ColdSync time out and
-  cancel any remaining operations.
 	Fill the Palm up. See what happens.
 - Rewrite the INSTALL file. In particular, cover permissions problems:
   must be able to read/write the appropriate serial or USB device. See
