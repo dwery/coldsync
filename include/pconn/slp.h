@@ -52,7 +52,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.7 2001-09-07 10:57:37 arensb Exp $
+ * $Id: slp.h,v 1.8 2001-09-07 23:35:56 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -66,23 +66,26 @@ typedef enum {
 	SLP_PORT_REMOTEUI	= 2,	/* Remote UI port */
 	SLP_PORT_DLP		= 3,	/* Desktop Link port */
 	SLP_PORT_FIRSTDYNAMIC	= 4	/* First dynamic port */
-/* Ports 0x04-0xcf are reserved for dynamic assignment (a la RPC port
- * mapper).
- */
-/* Ports 0xd0-0xdf are reserved for testing (?) */
+
+	/* Ports 0x04-0xcf are reserved for dynamic assignment (a la RPC
+	 * port mapper).
+	 */
+	/* Ports 0xd0-0xdf are reserved for testing (?) */
 } slp_port;
 
 /* Define the various packet types that SLP packets can encapsulate.
  * That is, the various protocols
  */
-#define SLP_PKTTYPE_SYSTEM	0	/* System packets */
+typedef enum {
+	SLP_PKTTYPE_SYSTEM	= 0,	/* System packets */
 			/* This includes Remote Debugger, Remote Console,
 			 * and System Remote Procedure Call packets.
 			 */
-#define SLP_PKTTYPE_UNUSED1	1	/* Used to be Connection
+	SLP_PKTTYPE_UNUSED1	= 1,	/* Used to be Connection
 					 * Manager packets */
-#define SLP_PKTTYPE_PAD		2	/* PADP packets */
-#define SLP_PKTTYPE_LOOPBACK	3	/* Loopback test packets */
+	SLP_PKTTYPE_PAD		= 2,	/* PADP packets */
+	SLP_PKTTYPE_LOOPBACK	= 3	/* Loopback test packets */
+} slp_pkttype;
 
 /* slp_addr
  * A structure defining an address that a socket can be bound to.
