@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.63 2000-12-08 07:07:13 arensb Exp $
+ * $Id: coldsync.c,v 1.64 2000-12-08 07:24:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1603,9 +1603,10 @@ Connect(struct PConnection *pconn)
 			(long) bps, (long) tcspeed);
 
 	/* Compose a reply */
+	/* XXX - This ought to be in a separate function in cmp.c */
 	cmpp.type = CMP_TYPE_INIT;
-	cmpp.ver_major = 1;	/* XXX - Should be constants in header file */
-	cmpp.ver_minor = 1;
+	cmpp.ver_major = CMP_VER_MAJOR;
+	cmpp.ver_minor = CMP_VER_MINOR;
 	if (cmpp.rate != bps)
 	{
 		cmpp.rate = bps;
