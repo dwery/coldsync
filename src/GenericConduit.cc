@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.54 2001-06-26 05:49:50 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.54.2.1 2001-10-11 00:54:10 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1992,7 +1992,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  dirty\n");
 
 			/* See if the records are identical */
-			if (this->compare_rec(localrec, remoterec) != 0)
+			if (this->compare_rec(localrec, remoterec) == 0)
 			{
 				/* The records are identical.
 				 * Reset localrec's flags to clean, but
@@ -2015,7 +2015,7 @@ GenericConduit::SyncRecord(
 						"record 0x%08lx to Palm\n",
 						localrec->id);
 				err = DlpWriteRecord(_pconn, dbh, 0x80,
-						     localrec->id,
+						     0,
 						     localrec->flags,
 						     localrec->category,
 						     localrec->data_len,
@@ -2306,9 +2306,18 @@ GenericConduit::compare_rec(const struct pdb_record *rec1,
 
 	/* Compare the category, since that's quick and easy */
 	if (rec1->category < rec2->category)
+	{
+		SYNC_TRACE(6)
+			fprintf(stderr, "compare_rec: %ld < %ld (category)\n",
+				rec1->id, rec2->id);
 		return -1;
-	else if (rec1->category > rec2->category)
+	} else if (rec1->category > rec2->category)
+	{
+		SYNC_TRACE(6)
+			fprintf(stderr, "compare_rec: %ld > %ld (category)\n",
+				rec1->id, rec2->id);
 		return 1;
+	}
 
 	/* The category is the same. Compare the record data. */
 	for (i = 0; i < rec1->data_len; ++i)
@@ -2318,22 +2327,42 @@ GenericConduit::compare_rec(const struct pdb_record *rec1,
 			/* Got to end of rec2 before the end of rec1, but
 			 * they've been equal so far, so rec2 is "smaller".
 			 */
+			SYNC_TRACE(6)
+				fprintf(stderr, "compare_rec: %ld > %ld\n",
+					rec1->id, rec2->id);
 			return 1;
 		}
 
 		/* Compare the next byte */
 		if (rec1->data[i] < rec2->data[i])
+		{
 			/* rec1 is "less than" rec2 */
+			SYNC_TRACE(6)
+				fprintf(stderr, "compare_rec: %ld < %ld\n",
+					rec1->id, rec2->id);
 			return -1;
-		else if (rec1->data[i] > rec2->data[i])
+		} else if (rec1->data[i] > rec2->data[i])
+		{
 			/* rec1 is "greater than" rec2 */
+			SYNC_TRACE(6)
+				fprintf(stderr, "compare_rec: %ld > %ld\n",
+					rec1->id, rec2->id);
 			return 1;
+		}
 	}
 
 	/* The two records are equal over the entire length of rec1 */
 	if (rec1->data_len < rec2->data_len)
-		return 1;
+	{
+		SYNC_TRACE(6)
+			fprintf(stderr, "compare_rec: %ld < %ld\n",
+				rec1->id, rec2->id);
+		return -1;
+	}
 
+	SYNC_TRACE(6)
+		fprintf(stderr, "compare_rec: %ld == %ld\n",
+			rec1->id, rec2->id);
 	return 0;	/* Length is the same and data is the same */
 }
 
