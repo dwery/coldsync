@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.37 2001-01-25 16:36:00 arensb Exp $
+.\" $Id: coldsync.8,v 1.38 2001-01-30 17:09:30 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -148,6 +148,23 @@ option. Legal values are
 .Dv usb ,
 and
 .Dv net .
+.It Fl s
+Log errors and warnings through
+.Xr syslog 3 .
+Messages are logged to the LOCAL0 facility.
+.It Fl l Ar logfile
+Log debugging messages to the file
+.Pa logfile .
+.Pa logfile
+is created if it doesn't exist, or appended to if it does. This option
+is more or less equivalent to the Bourne shell's
+.Bd -literal -offset indent
+	coldsync 2>logfile
+.Ed
+but is intended for cases in which
+.Nm ColdSync
+is run without a shell, e.g., from
+.Nm inetd .
 .It Fl d Ar debug
 Set debugging level. The argument
 .Ar debug
