@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.14 2000-12-15 07:25:58 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.15 2000-12-16 19:48:58 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -317,9 +317,13 @@ serial_accept(struct PConnection *pconn)
 static int
 serial_drain(struct PConnection *p)
 {
-	int err;
+	int err = 0;
 
-	err = tcdrain(p->fd);
+	if (p->fd >= 0)
+		/* Need to check the file descriptor because this function
+		 * is called both for normal and abnormal termination.
+		 */
+		err = tcdrain(p->fd);
 	if (err < 0)
 		perror("tcdrain");
 
