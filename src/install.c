@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.27 2001-01-28 22:38:56 arensb Exp $
+ * $Id: install.c,v 2.28 2001-02-20 12:39:57 arensb Exp $
  */
 
 #include "config.h"
@@ -206,6 +206,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 			continue;	/* No. Ignore it */
 
 		/* Construct the file's full pathname */
+		/* XXX - Replace with snprintf() */
                 strncpy(fname, installdir, MAXPATHLEN);
 		strncat(fname, "/", MAXPATHLEN - strlen(fname));
                 strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
@@ -299,6 +300,7 @@ InstallNewFiles(PConnection *pconn,
 		 */
 
 		/* Construct the file's full pathname */
+		/* XXX - Replace with snprintf() */
 		strncpy(fname, newdir, MAXPATHLEN);
 		strncat(fname, "/", MAXPATHLEN - strlen(fname));
 		strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
