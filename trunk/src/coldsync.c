@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.67 2000-12-11 09:09:39 arensb Exp $
+ * $Id: coldsync.c,v 1.68 2000-12-13 16:31:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,21 +44,6 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 				 * rant in "log.c".
 				 */
 
-#if 0
-/* XXX - This should be defined elsewhere (e.g., in a config file)
- * (Actually, it should be determined dynamically: try to figure out how
- * fast the serial port can go). The reason there are two macros here is
- * that under Solaris, B19200 != 19200 for whatever reason.
- */
-/* These two macros specify the default sync rate. The reason it's so low
- * is that the serial port on a Sun Ultra 1 doesn't want to go any faster.
- * Of course, these are the same people who didn't define B38400 = 38400,
- * so what did you expect?
- */
-#define SYNC_RATE		38400L
-#define BSYNC_RATE		B38400
-#endif	/* 0 */
-
 static int Connect(struct PConnection *pconn);
 static int Disconnect(struct PConnection *pconn, const ubyte status);
 static int run_mode_Standalone(int argc, char *argv[]);
@@ -71,70 +56,8 @@ int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
 int reserve_fd(int fd, int flags);
 
-/*  int net_listen(int argc, char *argv[]); */
-
-#if 0
-/* speeds
- * This table provides a list of speeds at which the serial port might be
- * able to communicate.
- * Its structure seems a bit silly, and it is, but only because there are
- * OSes out there that define the B<speed> constants to have values other
- * than their corresponding numeric values.
- */
-static struct {
-	udword bps;		/* Speed in bits per second, as used by the
-				 * CMP layer.
-				 */
-	speed_t tcspeed;	/* Value to pass to cfset[io]speed() to set
-				 * the speed to 'bps'.
-				 */
-} speeds[] = {
-#ifdef B230400
-	{ 230400,	B230400 },
-#endif	/* B230400 */
-#ifdef B115200
-	{ 115200,	B115200 },
-#endif	/* B115200 */
-#ifdef B76800
-	{ 76800,	B76800 },
-#endif	/* B76800 */
-#ifdef B57600
-	{ 57600,	B57600 },
-#endif	/* B57600 */
-#ifdef B38400
-	{ 38400,	B38400 },
-#endif	/* B38400 */
-#ifdef B28800
-	{ 28800,	B28800 },
-#endif	/* B28800 */
-#ifdef B19200
-	{ 19200,	B19200 },
-#endif	/* B19200 */
-#ifdef B14400
-	{ 14400,	B14400 },
-#endif	/* B14400 */
-#ifdef B9600
-	{  9600,	 B9600 },
-#endif	/* B9600 */
-#ifdef B7200
-	{  7200,	 B7200 },
-#endif	/* B7200 */
-#ifdef B4800
-	{  4800,	 B4800 },
-#endif	/* B4800 */
-#ifdef B2400
-	{  2400,	 B2400 },
-#endif	/* B2400 */
-#ifdef B1200
-	{  1200,	 B1200 },
-#endif	/* B1200 */
-	/* I doubt anyone wants to go any slower than 1200 bps */
-};
-#define num_speeds	sizeof(speeds) / sizeof(speeds[0])
-#endif	/* 0 */
-
 int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
-			 * another field in 'struct Palm' or something.
+			 * another field in 'struct Palm' or 'sync_config'.
 			 */
 
 int cs_errno;			/* ColdSync error code. */
@@ -346,8 +269,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
-if (1)
-{
 	/* Perform mode-specific actions */
 	switch (global_opts.mode) {
 	    case mode_None:		/* No mode specified */
@@ -372,9 +293,6 @@ if (1)
 			global_opts.mode);
 		err = -1;
 	}
-} else {
-/*  net_listen(argc, argv); */
-}
 
 	if (sync_config != NULL)
 	{
@@ -1520,16 +1438,7 @@ run_mode_Getty()
 static int
 Connect(struct PConnection *pconn)
 {
-/*  	int err; */
-/*  	int i; */
 	struct slp_addr pcaddr;
-/*  	struct cmp_packet cmpp; */
-/*  	udword bps = SYNC_RATE; */		/* Connection speed, in bps */
-/*  	speed_t tcspeed = BSYNC_RATE; */	/* B* value corresponding to 'bps'
-					 * (a necessary distinction because
-					 * some OSes (hint to Sun!) have
-					 * B19200 != 19200.
-					 */
 
 	pcaddr.protocol = SLP_PKTTYPE_PAD;	/* XXX - This ought to be
 						 * part of the initial
@@ -1544,113 +1453,6 @@ Connect(struct PConnection *pconn)
 	if ((*pconn->io_accept)(pconn) < 0)
 		return -1;
 
-#if 0
-
-	do {
-		SYNC_TRACE(5)
-			fprintf(stderr, "===== Waiting for wakeup packet\n");
-
-		err = cmp_read(pconn, &cmpp);
-		if (err < 0)
-		{
-			if (palm_errno == PALMERR_TIMEOUT)
-				continue;
-			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
-				palm_errno,
-				_(palm_errlist[palm_errno]));
-			exit(1); /* XXX */
-		}
-	} while (cmpp.type != CMP_TYPE_WAKEUP);
-
-	SYNC_TRACE(5)
-		fprintf(stderr, "===== Got a wakeup packet\n");
-
-	/* Find the speed at which to connect.
-	 * If the listen block in .coldsyncrc specifies a speed, use that.
-	 * If it doesn't (or the speed is set to 0), then go with what the
-	 * Palm suggests.
-	 */
-	if (pconn->speed == 0)
-		pconn->speed = cmpp.rate;
-
-	SYNC_TRACE(3)
-		fprintf(stderr, "pconn->speed == %ld\n",
-			pconn->speed);
-
-	/* Go through the speed table. Make sure the requested speed
-	 * appears in the table: this is to make sure that there is a valid
-	 * B* speed to pass to cfsetspeed().
-	 */
-	for (i = 0; i < num_speeds; i++)
-	{
-		SYNC_TRACE(7)
-			fprintf(stderr, "Comparing %ld ==? %ld\n",
-				speeds[i].bps, pconn->speed);
-
-		if (speeds[i].bps == pconn->speed)
-		{
-				/* Found it */
-			SYNC_TRACE(7)
-				fprintf(stderr, "Found it\n");
-			bps = speeds[i].bps;
-			tcspeed = speeds[i].tcspeed;
-			break;
-		}
-	}
-
-	if (i >= num_speeds)
-	{
-		/* The requested speed wasn't found */
-		fprintf(stderr, _("Warning: can't set the speed you "
-				  "requested (%ld bps).\nUsing "
-				  "default (%ld bps)\n"),
-			pconn->speed,
-			SYNC_RATE);
-		pconn->speed = 0L;
-	}
-
-	if (pconn->speed == 0)
-	{
-		/* Either the .coldsyncrc didn't specify a speed, or else
-		 * the one that was specified was bogus.
-		 */
-		SYNC_TRACE(2)
-			fprintf(stderr, "Using default speed (%ld bps)\n",
-				SYNC_RATE);
-		bps = SYNC_RATE;
-		tcspeed = BSYNC_RATE;
-	}
-	SYNC_TRACE(2)
-		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
-			(long) bps, (long) tcspeed);
-
-	/* Compose a reply */
-	/* XXX - This ought to be in a separate function in cmp.c */
-	cmpp.type = CMP_TYPE_INIT;
-	cmpp.ver_major = CMP_VER_MAJOR;
-	cmpp.ver_minor = CMP_VER_MINOR;
-	if (cmpp.rate != bps)
-	{
-		cmpp.rate = bps;
-		cmpp.flags = CMP_IFLAG_CHANGERATE;
-	}
-
-	SYNC_TRACE(5)
-		fprintf(stderr, "===== Sending INIT packet\n");
-	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
-
-	SYNC_TRACE(5)
-		fprintf(stderr, "===== Finished sending INIT packet\n");
-
-	/* Change the speed */
-	/* XXX - This probably goes in Pconn_accept() or something */
-
-	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
-	{
-		fprintf(stderr, _("Error trying to set speed"));
-		return -1;
-	}
-#endif	/* 0 */
 	return 0;
 }
 
@@ -2200,42 +2002,6 @@ reserve_fd(int fd,		/* File descriptor to check */
 
 	return 0;		/* Success */
 }
-
-#if 0
-/* XXX - This will probably grow up into forwarding mode or something */
-int
-net_listen(int argc, char *argv[])
-{
-	extern int net_udp_listen(struct netsync_wakeup *wakeup_pkt);
-	extern int net_acknowledge_wakeup(struct netsync_wakeup *wakeup_pkt);
-	extern int net_tcp_listen(void);
-
-	struct PConnection *pconn;
-	struct netsync_wakeup wakeup_pkt;
-
-	/* Get listen block */
-	if (sync_config->listen == NULL)
-	{
-		fprintf(stderr, _("Error: no port specified.\n"));
-		return -1;
-	}
-
-	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 0))
-	    == NULL)
-	{
-		fprintf(stderr, _("Error: can't open connection.\n"));
-		return -1;
-	}
-
-	net_udp_listen(&wakeup_pkt);
-	net_acknowledge_wakeup(&wakeup_pkt);
-	net_tcp_listen();
-
-	return 0;
-}
-#endif	/* 0 */
 
 /* This is for Emacs's benefit:
  * Local Variables:	***
