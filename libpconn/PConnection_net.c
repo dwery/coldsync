@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.19 2001-09-07 09:44:26 arensb Exp $
+ * $Id: PConnection_net.c,v 1.20 2001-10-18 01:34:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -10,6 +10,7 @@
 #include <arpa/inet.h>		/* For inet_pton() */
 #include <netdb.h>		/* For getservbyname() */
 #include <string.h>		/* For memset() */
+/* XXX - Solaris 2.6 and 7 choke on these next two when !INET_NTOP */
 #include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #include <resolv.h>		/* For inet_ntop() under Solaris */
 
@@ -63,6 +64,11 @@
  * pointer. In one case, the macro uses &(addr), in the other it doesn't.
  */
 #if HAVE_INET_NTOP
+/* XXX - Solaris 2.6 or 7 appears to have this, but doesn't have a prototype.
+ * Add one if necessary:
+ *     const char *
+ *     inet_ntop(int af, const void *src, char *dst, size_t size)
+ */
 #  define INET_NTOP(af, addr, buf, buflen) \
 	inet_ntop((af), &(addr), (buf), (buflen))
 #else
