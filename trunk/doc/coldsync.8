@@ -1,5 +1,5 @@
 .\" coldsync.8
-.\" $Id: coldsync.8,v 1.8 2000-01-22 04:59:38 arensb Exp $
+.\" $Id: coldsync.8,v 1.9 2000-01-25 11:25:42 arensb Exp $
 .\" 
 .\" Copyright 1999, 2000, Andrew Arensburger.
 .\" You may distribute this file under the terms of the Artistic
@@ -74,9 +74,12 @@ Force a fast sync. Don't use this unless you know what you're doing.
 Consider read-only (ROM) databases when syncing or doing a backup or
 restore. Normally, these are ignored.
 .It Fl p Ar device
-Specifies the serial device, e.g.
-.Pa /dev/cuaa0 ,
-that the Palm is connected to. If not specified, this defaults to
+Specifies the device, e.g.
+.Pa /dev/cuaa0
+for serial connections, or
+.Pa /dev/ugen0
+for USB connections, that the Palm is connected to. If not specified,
+this defaults to
 .Pa /dev/palm .
 .It Fl b Ar directory
 Perform a full backup of the Palm, and put the files in
@@ -133,13 +136,19 @@ directives are of the form
 .\" XXX - It'd be nice to have font changes inside the display, to
 .\" indicate pathnames and whatnot.
 .Bd -literal -offset indent
-	listen serial {
-		device "/dev/palm";
-	}
+listen <type> {
+	device "/dev/palm";
+}
 .Ed
 where
+.Li <type>
+is either
+.Li serial
+for a serial connection (PalmPilot, Palm V, etc.), or
+.Li usb
+for a USB connection (Visor);
 .Pa /dev/palm
-is the pathname to your serial device. Currently, only one serial
+is the pathname to your serial or USB device. Currently, only one
 device may be specified.
 .Pp
 (If you don't understand the next bit, don't worry.)
@@ -317,8 +326,6 @@ will be lost the next time you sync.
 .Pp
 For information on writing your own conduits, see
 .%T ColdSync Conduits
-.\" XXX
-(forthcoming).
 .\" .Sh EXAMPLES
 .Sh FILES
 .Bl -tag -width ~/.palm/archive -compact
@@ -340,16 +347,22 @@ contains files to be installed at the next sync.
 .%T Palm Database Files
 .Re
 .Rs
-.\" XXX - Not yet written
 .%T ColdSync Conduits
 .Re
 .Sh AUTHORS
 .An Andrew Arensburger Aq arensb@ooblick.com
+.An Louis A. Mamakos Aq louie@TranSys.COM :
+USB support.
 .Sh DIAGNOSTICS
 Many and hopefully self-explanatory.
 .Sh BUGS
 It is not possible to have more than one Palm device and keep their
 contents separate.
+.Pp
+.Nm ColdSync
+does not sync
+.Pa .prc
+files. You need to do a backup to get them.
 .Pp
 If you've been syncing with one Palm, then get a replacement and
 immediately sync with it, all of your old data will be archived. This

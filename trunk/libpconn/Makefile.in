@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.9 2000-01-22 05:09:54 arensb Exp $
+# $Id: Makefile.in,v 1.10 2000-01-25 11:25:45 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -25,14 +25,8 @@ MKDEP =		@MKDEP@
 
 LIBNAME =	pconn
 
-# Compatibility functions, included for systems that don't have them.
-# XXX - Bleah. This probably needs to be broken up into individual
-# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
-# the like.
-COMPAT =	@COMPAT@
-COMPATOBJS =	@COMPATOBJS@
-
-SRCS =		dlp_cmd.c \
+SRCS =		cfmakeraw.c \
+		dlp_cmd.c \
 		util.c \
 		dlp.c \
 		palm_errno.c \
@@ -40,9 +34,11 @@ SRCS =		dlp_cmd.c \
 		slp.c \
 		cmp.c \
 		PConnection.c \
-		${COMPAT}
+		PConnection_serial.c \
+		PConnection_usb.c
 
-OBJS =		dlp_cmd.o \
+OBJS =		cfmakeraw.o \
+		dlp_cmd.o \
 		util.o \
 		dlp.o \
 		palm_errno.o \
@@ -50,22 +46,22 @@ OBJS =		dlp_cmd.o \
 		slp.o \
 		cmp.o \
 		PConnection.o \
-		${COMPATOBJS}
+		PConnection_serial.o \
+		PConnection_usb.o
 
-LINTOBJS =	dlp_cmd.ln \
+LINTOBJS =	cfmakeraw.ln \
+		dlp_cmd.ln \
 		util.ln \
 		dlp.ln \
 		palm_errno.ln \
 		padp.ln \
 		slp.ln \
 		cmp.ln \
-		PConnection.ln \
-		${COMPATLINTOBJS}
+		PConnection.ln
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
-		Makefile.in \
-		cfmakeraw.c
+		Makefile.in
 # Additional files to include in the official distribution, not included
 # in snapshots
 EXTRA_DISTFILES =
@@ -80,7 +76,8 @@ SPOTLESS =
 CC =		@CC@
 CXX =		@CXX@
 DEFINES =	@DEFS@
-INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+USB_INCLUDES =	-I/sys/dev/usb
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include ${USB_INCLUDES}
 CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
 CFLAGS =	@CFLAGS@ ${CPPFLAGS}
 CXXFLAGS =	${CFLAGS}
@@ -104,7 +101,7 @@ LINTARGS =	@LINTARGS@ ${CPPFLAGS}
 all:	lib${LIBNAME}.a
 
 lib${LIBNAME}.a:	${OBJS}
-	ar cq $@ ${OBJS}
+	ar cr $@ ${OBJS}
 	${RANLIB} $@
 
 install:	lib${LIBNAME}.a

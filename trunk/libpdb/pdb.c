@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.13 2000-01-25 10:26:58 arensb Exp $
+ * $Id: pdb.c,v 1.14 2000-01-25 11:26:02 arensb Exp $
  */
 
 #include "config.h"
@@ -1551,16 +1551,17 @@ pdb_LoadRsrcIndex(int fd,
 
 		PDB_TRACE(6)
 		{
-			fprintf(stderr, "\tResource %d: type '%c%c%c%c' (0x%08lx), "
-			       "id %u, offset 0x%04lx\n",
-			       i,
-			       (char) (rsrc->type >> 24) & 0xff,
-			       (char) (rsrc->type >> 16) & 0xff,
-			       (char) (rsrc->type >> 8) & 0xff,
-			       (char) rsrc->type & 0xff,
-			       rsrc->type,
-			       rsrc->id,
-			       rsrc->offset);
+			fprintf(stderr,
+				"\tResource %d: type '%c%c%c%c' (0x%08lx), "
+				"id %u, offset 0x%04lx\n",
+				i,
+				(char) (rsrc->type >> 24) & 0xff,
+				(char) (rsrc->type >> 16) & 0xff,
+				(char) (rsrc->type >> 8) & 0xff,
+				(char) rsrc->type & 0xff,
+				rsrc->type,
+				rsrc->id,
+				rsrc->offset);
 		}
 
 		/* Append the new resource to the list */
@@ -1646,12 +1647,13 @@ pdb_LoadRecIndex(int fd,
 			((udword) get_ubyte(&rptr));
 
 		PDB_TRACE(6)
-			fprintf(stderr, "\tRecord %d: offset 0x%04lx, attr 0x%02x, "
-			       "ID 0x%08lx\n",
-			       i,
-			       rec->offset,
-			       rec->attributes,
-			       rec->id);
+			fprintf(stderr,
+				"\tRecord %d: offset 0x%04lx, attr 0x%02x, "
+				"ID 0x%08lx\n",
+				i,
+				rec->offset,
+				rec->attributes,
+				rec->id);
 
 		/* Append the new record to the database */
 		pdb_AppendRecord(db, rec); 	/* XXX - Error-checking */

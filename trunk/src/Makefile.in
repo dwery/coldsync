@@ -1,10 +1,10 @@
 # Makefile.in
 #
-#	Copyright (C) 1999, Andrew Arensburger.
+#	Copyright (C) 1999, 2000, Andrew Arensburger.
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.20 2000-01-25 10:28:00 arensb Exp $
+# $Id: Makefile.in,v 1.21 2000-01-25 11:26:03 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -127,6 +127,10 @@ all:	coldsync
 
 coldsync:	${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+# Additional dependencies
+coldsync:	${top_srcdir}/libpconn/libpconn.a
+coldsync:	${top_srcdir}/libpdb/libpdb.a
 
 install:	coldsync
 	if test ! -d ${BINDIR}; then \

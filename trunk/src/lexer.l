@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.7 2000-01-22 05:00:57 arensb Exp $
+ * $Id: lexer.l,v 2.8 2000-01-25 11:26:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -82,6 +82,7 @@ WS		[ \t\f\r]
 "name"		{ return NAME; }
 "path"		{ return PATH; }
 "serial"	{ return SERIAL; }
+"usb"		{ return USB; }
 "speed"		{ return SPEED; }
 "type"		{ return TYPE; }
 
