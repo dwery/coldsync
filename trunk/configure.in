@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.141 2002-03-18 10:09:17 arensb Exp $
+dnl # $Id: configure.in,v 1.142 2002-03-18 11:18:24 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -355,7 +355,7 @@ AC_STRUCT_TIMEZONE
 
 # socklen_t is defined (if it's defined) in <sys/socket.h>, so can't
 # use AC_CHECK_TYPE.
-CS_CHECK_TYPE(socklen_t,int,[#include <sys/socket.h>])
+CS_CHECK_TYPE(socklen_t,size_t,[#include <sys/socket.h>])
 
 # Check for existence of struct sockaddr.sa_len (4.4BSD).
 AC_CACHE_CHECK([for sa_len in struct sockaddr], ac_cv_struct_sockaddr_sa_len,
