@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.25 2000-06-11 18:49:28 arensb Exp $
+ * $Id: coldsync.h,v 1.26 2000-06-15 07:28:15 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -148,9 +148,6 @@ typedef struct listen_block
 	long speed;
 } listen_block;
 
-/* conduit_flavor
- */
-
 /* cond_header
  * A (name, value) pair that will be passed to a conduit.
  */
@@ -159,6 +156,26 @@ struct cond_header {
 	char *name;
 	char *value;
 };
+
+/* pref_desc
+ * Describes a preference (i.e., a resource in "Saved Preferences.prc" or
+ * "Unsaved Preferences.prc"): its creator, numeric identifier, and whether
+ * it is a saved or unsaved preference.
+ */
+struct pref_desc {
+	udword creator;			/* 4-char creator */
+	uword id;			/* Numeric identifier */
+	char flags;			/* Flags. See PREFDFL_*, below */
+};
+
+/* pref_desc flags:
+ * If neither flag is set, then the location of the preference is
+ * unspecified; look in both "Saved Preferences" and "Unsaved Preferences".
+ */
+#define PREFDFL_SAVED	(1<<0)		/* Look for this preference in the
+					 * saved preferences.
+					 */
+#define PREFDFL_UNSAVED	(1<<1)		/* Look in the unsaved preferences */
 
 /* conduit_block
  * The information specified in a 'conduit' block: its type, pathname,
@@ -201,6 +218,12 @@ typedef struct conduit_block
 	unsigned char flags;	/* CONDFL_* flags */
 	char *path;		/* Path to conduit */
 	struct cond_header *headers;	/* User-supplied headers */
+	struct pref_desc *prefs;	/* Array of preferences that this
+					 * conduit cares about. */
+	int prefs_slots;	/* Size of the 'prefs' array (how many
+				 * 'struct pref_desc's will fit in it?
+				 */
+	int num_prefs;		/* # of entries in the 'prefs' array */
 } conduit_block;
 
 #define CONDFL_DEFAULT	0x01	/* This is a default conduit: if no other
@@ -280,6 +303,10 @@ extern conduit_block *new_conduit_block();
 extern void free_conduit_block(conduit_block *c);
 extern pda_block *new_pda_block();
 extern void free_pda_block(pda_block *p);
+extern int append_pref_desc(conduit_block *cond,
+			    const udword creator,
+			    const uword id,
+			    const char flags);
 extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
