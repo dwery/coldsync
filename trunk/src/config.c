@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.36 2000-09-23 17:05:49 arensb Exp $
+ * $Id: config.c,v 1.37 2000-10-22 03:15:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -20,10 +20,6 @@
 #include <sys/socket.h>		/* For AF_INET */
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
-/* XXX - Carl Parisi says that he needs to include <getopt.h>. But I think
- * this is a GNU-ism. FreeBSD's man page isn't clear, but seems to imply
- * that getopt() is part of POSIX.2.
- */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -138,6 +134,7 @@ get_config(int argc, char *argv[])
 	struct hostent *myaddr;
 
 	/* Initialize the global options to sane values */
+	global_opts.mode		= mode_None;
 	global_opts.do_backup		= False;
 	global_opts.backupdir		= NULL;
 	global_opts.do_restore		= False;
@@ -214,7 +211,10 @@ get_config(int argc, char *argv[])
 
 	/* Start by reading command-line options. */
 	config_fname_given = False;
-	while ((arg = getopt(argc, argv, ":hVSFRIf:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRIf:m:b:r:p:t:d:")) != -1)
+		/* XXX - The "-b" and "-r" options are obsolete, and should
+		 * be removed some time after v1.4.6.
+		 */
 	{
 		switch (arg)
 		{
@@ -252,12 +252,37 @@ get_config(int argc, char *argv[])
 			config_fname_given = True;
 			break;
 
+		    case 'm':	/* -m <mode>: Run in the given mode */
+			err = set_mode(optarg);
+			if (err < 0)
+			{
+				usage(argc, argv);
+				return -1;
+			}
+			break;
+
 		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
+			/* XXX - This option is obsolete. Remove it some
+			 * time after v1.4.6.
+			 */
+			fprintf(stderr,
+				_("Warning: The \"-b <dir>\" option is "
+				  "obsolete. Please use \"-mb <dir>\"\n"
+				  "instead.\n"));
+			global_opts.mode = mode_Backup;
 			global_opts.do_backup = True;
 			global_opts.backupdir = optarg;
 			break;
 
 		    case 'r':	/* -r <dir>: Do a restore from <dir> */
+			/* XXX - This option is obsolete. Remove it some
+			 * time after v1.4.6.
+			 */
+			fprintf(stderr,
+				_("Warning: The \"-r <dir>\" option is "
+				  "obsolete. Please use \"-mr <dir>\"\n"
+				  "instead.\n"));
+			global_opts.mode = mode_Restore;
 			global_opts.do_restore = True;
 			global_opts.restoredir = optarg;
 			break;
@@ -315,6 +340,10 @@ get_config(int argc, char *argv[])
 
 		oldoptind = optind;	/* Update for next iteration */
 	}
+
+	/* Default to standalone mode if no mode specified */
+	if (global_opts.mode == mode_None)
+		global_opts.mode = mode_Standalone;
 
 	MISC_TRACE(6)
 		/* This really belongs earlier in this function, but the
@@ -482,7 +511,6 @@ get_config(int argc, char *argv[])
 	}
 
 	/* Fill in the fields for the main configuration */
-	config.mode = Standalone;
 
 	/* If the user specified a device on the command line, build a
 	 * listen block for it. Otherwise, use the list given in the config
@@ -691,6 +719,199 @@ get_config(int argc, char *argv[])
 		free_config(user_config);
 
 	return 0;
+}
+
+/* set_debug_level
+ * Set a debugging/trace value. These are settable on a per-facility basis
+ * (see struct debug_flags in "coldsync.h"). Thus, specifying
+ * "-d SLP:1 -d PADP:10" will give the barest minimum of information as to
+ * what is happening in the SLP layer, but will spew gobs of information
+ * about the PADP layer, including dumps of every packet going back and
+ * forth.
+ * Note to hackers: as a general rule, a debugging level of 0 means no
+ * debugging messages (this is the default). 1 means give the user some
+ * idea of what is going on. 5 means print a message for every packet; 6
+ * means print the contents of every packet. 10 means... well, let's just
+ * not think about that, shall we?
+ * These numbers are just guidelines, though. Your circumstances will vary.
+ *
+ * 'str' can take on one of the following
+ * forms:
+ *	FAC	Set facility FAC to level 1
+ *	FAC:N	Set facility FAC to level N
+ */
+void
+set_debug_level(const char *str)
+{
+	const char *lvlstr;	/* Pointer to trace level in 'str' */
+	int lvl;		/* Trace level */
+
+	/* See if 'str' contains a colon */
+	if ((lvlstr = strchr(str, ':')) != NULL)
+	{
+		/* 'str' contains a colon. Parse the string */
+		lvlstr++;		/* Make 'lvlstr' point to the level
+					 * number */
+		lvl = atoi(lvlstr);
+	} else {
+		/* 'str' does not contain a colon. Set the trace level to 1 */
+		lvl = 1;
+	}
+
+	/* Set the appropriate debugging facility. */
+	if (strncasecmp(str, "slp", 3) == 0)
+		slp_trace = lvl;
+	else if (strncasecmp(str, "cmp", 3) == 0)
+		cmp_trace = lvl;
+	else if (strncasecmp(str, "padp", 4) == 0)
+		padp_trace = lvl;
+	else if (strncasecmp(str, "dlpc", 4) == 0)
+		dlpc_trace = lvl;
+	else if (strncasecmp(str, "dlp", 3) == 0)
+		dlp_trace = lvl;
+	else if (strncasecmp(str, "sync", 4) == 0)
+		sync_trace = lvl;
+	else if (strncasecmp(str, "pdb", 3) == 0)
+		pdb_trace = lvl;
+	else if (strncasecmp(str, "parse", 5) == 0)
+		parse_trace = lvl;
+	else if (strncasecmp(str, "misc", 4) == 0)
+		misc_trace = lvl;
+	else if (strncasecmp(str, "io", 2) == 0)
+		io_trace = lvl;
+	else {
+		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
+	}
+}
+
+/* set_mode
+ * Given a mode string, set the mode indicated by the string. Returns 0 if
+ * successful, or a negative value in case of error. Currently, the only
+ * error is "unknown mode".
+ */
+int
+set_mode(const char *str)
+{
+	if (str == NULL)	/* Sanity check */
+	{
+		/* This should never happen */
+		fprintf(stderr, _("%s: Missing mode string. "
+				  "This should never happen.\n"),
+			"set_mode");
+		return -1;
+	}
+
+	/* Sanity check: if the user specifies the mode twice, complain. */
+	if (global_opts.mode != mode_None)
+		fprintf(stderr,
+			_("Warning: You shouldn't specify two -m<mode> "
+			  "options.\n"
+			  "\tUsing -m%s\n"),
+			str);
+
+	switch (str[0])
+	{
+	    case 's':		/* Standalone mode. Default */
+		global_opts.mode = mode_Standalone;
+		return 0;
+
+	    case 'b':		/* Backup mode */
+		global_opts.mode = mode_Backup;
+		return 0;
+
+	    case 'r':		/* Restore mode */
+		global_opts.mode = mode_Restore;
+		return 0;
+
+#if 0	/* Not implemented yet */
+	    case 'i':		/* Install mode */
+		global_opts.mode = mode_Install;
+		return 0;
+
+	    case 'd':		/* Daemon mode */
+		global_opts.mode = mode_Daemon;
+		return 0;
+
+	    case 'g':		/* Getty mode */
+		global_opts.mode = mode_Getty;
+		return 0;
+
+	    case 'I':		/* Init mode */
+		global_opts.mode = mode_Init;
+		return 0;
+#endif	/* 0 */
+
+	    default:
+		fprintf(stderr, _("Error: unknown mode: \"%s\"\n"), str);
+		return -1;
+	}
+
+	return -1;
+}
+
+/* usage
+ * Print out a usage string.
+ */
+/* ARGSUSED */
+void
+usage(int argc, char *argv[])
+{
+	/* XXX - Obsolete. Rewrite this. */
+	printf(_("Usage: %s [options] -p port\n"
+		 "Options:\n"
+		 "\t-h:\t\tPrint this help message and exit.\n"
+		 "\t-V:\t\tPrint version and exit.\n"
+		 "\t-f <file>:\tRead configuration from <file>.\n"
+		 "\t-b <dir>:\tPerform a backup to <dir>.\n"
+		 "\t-r <dir>:\tRestore from <dir>.\n"
+		 "\t-I:\t\tForce installation of new databases.\n"
+		 "\t-S:\t\tForce slow sync.\n"
+		 "\t-F:\t\tForce fast sync.\n"
+		 "\t-R:\t\tCheck ROM databases.\n"
+		 "\t-p <port>:\tListen on device <port>\n"
+		 "\t-t <devtype>:\tPort type [serial|usb]\n"
+		 "\t-d <fac[:level]>:\tSet debugging level.\n")
+	       ,
+	       argv[0]);
+}
+
+/* print_version
+ * Print out the version of ColdSync.
+ */
+void
+print_version(void)
+{
+	printf(_("%s version %s\n"),
+	       /* These two strings are defined in "config.h" */
+	       PACKAGE,
+	       VERSION);
+	printf(_("ColdSync homepage at http://www.ooblick.com/software/"
+		 "coldsync/\n"));
+	/* XXX - Ought to print out other information, e.g., copyright,
+	 * compile-time flags, optional packages, maybe OS name and
+	 * version, who compiled it and when, etc.
+	 */
+	printf(_("Compile-type options:\n"));
+
+#if WITH_USB
+	printf(
+_("    WITH_USB: USB support.\n"));
+#endif	/* WITH_USB */
+#if WITH_EFENCE
+	printf(
+_("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
+#endif	/* WITH_EFENCE */
+
+#if HAVE_STRCASECMP && HAVE_STRNCASECMP
+	printf(
+_("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
+"        to case, whenever possible.\n"));
+#endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
+/* XXX */
+	printf(
+_("\n"
+"    Default global configuration file: %s\n"),
+		DEFAULT_GLOBAL_CONFIG);
 }
 
 /* name2listen_type
@@ -1021,7 +1242,6 @@ new_config()
 		return NULL;		/* Out of memory */
 
 	/* Initialize fields */
-	retval->mode = Standalone;
 	retval->listen		= NULL;
 	retval->pda		= NULL;
 	retval->conduits		= NULL;
