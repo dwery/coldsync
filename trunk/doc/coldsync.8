@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.28 2000-11-27 11:27:09 arensb Exp $
+.\" $Id: coldsync.8,v 1.29 2000-12-08 07:11:23 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -346,9 +346,11 @@ block may also contain a line of the form
         speed: <speed>;
 .Ed
 This specifies the speed at which the sync will take place. If this
-line is omitted,
+line is omitted (or if
+.Li <speed>
+is 0),
 .Nm ColdSync
-will use the default speed, 38400 bps. You will generally want to set
+will use whatever the Palm suggests. You will generally want to set
 this to the highest speed supported by both your Palm and your
 machine's serial port.
 .Pp
