@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: copy-appinfo,v 3.3 2001-06-04 10:19:18 arensb Exp $
+# $Id: copy-appinfo,v 3.4 2001-07-30 07:04:33 arensb Exp $
 
 # This conduit simply copies the AppInfo block from the database on the
 # Palm to the desktop.
@@ -36,7 +36,7 @@ die "401 Error reading database info" if !defined($dbinfo);
 # Get the category list from the Palm
 $Pappinfo = dlp_ReadAppBlock($dbh);
 				# Download the AppInfo block from the Palm
-print STDERR "$0: read AppInfo block [$Pappinfo]\n";
+#print STDERR "$0: read AppInfo block [$Pappinfo]\n";
 
 # Copy the Palm's AppInfo block to the desktop PDB
 $PDB->{appinfo} = $Pappinfo;
