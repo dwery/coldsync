@@ -50,8 +50,7 @@ StartConduit('sync');
 
 			while (my $cmd = $client->getline)
 			{
-				chomp($cmd);
-
+				$cmd =~ s|[\n\r]||g;
 				$cmd =~ m|(\w+)(.*)|;
 
 				$cmd = $1;
