@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.58 2000-02-09 08:21:12 arensb Exp $
+dnl # $Id: configure.in,v 1.59 2000-03-14 04:58:33 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -154,6 +154,16 @@ with_i18n=yes
 # set a default. Now we look for -lintl and the various catalog-making
 # utilities if necessary
 
+# XXX - Bleah. Solaris's "xgettext" only looks for strings of the form
+#	gettext("some string")
+# There doesn't seem to be any way to tell it to look for
+#	_("some string")
+# (short of running 'cpp' on each file in turn and piping it to
+# xgettext's stdin)
+# I guess the easiest way to deal with this is to run
+#	xgettext -V 1>&2 | grep GNU >/dev/null
+# and check the exit status.
+
 if test x"$with_i18n" = x"no"; then
 	# Do-nothing defaults, in case the user doesn't want i18n.
 	XGETTEXT=true
@@ -171,10 +181,10 @@ else
 		AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
 	fi
 	# I18n-related utilities
-	AC_CHECK_PROGS(XGETTEXT, xgettext)
-	AC_CHECK_PROGS(GETTEXT, gettext)
-	AC_CHECK_PROGS(MSGMERGE, msgmerge)
-	AC_CHECK_PROGS(MSGFMT, msgfmt)
+	AC_CHECK_PROGS(XGETTEXT, xgettext, true)
+	AC_CHECK_PROGS(GETTEXT, gettext, true)
+	AC_CHECK_PROGS(MSGMERGE, msgmerge, true)
+	AC_CHECK_PROGS(MSGFMT, msgfmt, true)
 fi
 AC_SUBST(XGETTEXT)
 AC_SUBST(GETTEXT)
