@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.17 2001-08-06 00:29:48 arensb Exp $
+ * $Id: misc.c,v 2.17.2.1 2001-10-11 02:58:43 arensb Exp $
  */
 
 #include "config.h"
@@ -33,6 +33,7 @@
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
 
+/* XXX - Should this go in the "else" clause, above? */
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For bzero() */
 #endif	/* HAVE_STRINGS_H */
