@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.34 2000-05-20 16:32:32 arensb Exp $
+ * $Id: coldsync.c,v 1.35 2000-05-21 08:07:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -25,10 +25,10 @@
 #include <errno.h>		/* For errno. Duh. */
 
 /* Include I18N-related stuff, if necessary */
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <locale.h>		/* For setlocale() and friends */
 #  include <libintl.h>
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/pconn.h"
 #include "cs_error.h"
@@ -134,14 +134,14 @@ main(int argc, char *argv[])
 	int err;
 	int i;
 
-#if HAVE_LIBINTL
+#if HAVE_GETTEXT
 	/* Set things up so that i18n works. The constants PACKAGE and
 	 * LOCALEDIR are strings set up in ../config.h by 'configure'.
 	 */
 	setlocale(LC_ALL, "");
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_GETTEXT */
 
 	/* Parse arguments and read config file(s) */
 	if ((err = get_config(argc, argv)) < 0)
