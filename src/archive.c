@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.11 2000-01-27 02:33:07 arensb Exp $
+ * $Id: archive.c,v 1.12 2000-01-27 04:19:50 arensb Exp $
  */
 
 #include "config.h"
@@ -45,41 +45,27 @@
  * descriptor for it, or -1 in case of error.
  */
 int
-arch_create(char *fname,
-	    const struct dlp_dbinfo *dbinfo)
+arch_create(const struct dlp_dbinfo *dbinfo)
 {
 	int err;
 	int fd;				/* File descriptor; will be returned */
-	char fnamebuf[MAXPATHLEN+1];	/* Name of the archive file */
+	const char *archfname;		/* Name of the archive file */
 	ubyte headerbuf[ARCH_HEADERLEN];	/* Archive header to write */
 	ubyte *wptr;			/* Pointer into buffers, for writing */
 
-	/* Construct the name of the archive file */
-	if (fname[0] == '/')
-	{
-		/* 'fname' is an absolute pathname, so just use that */
-		strncpy(fnamebuf, fname, MAXPATHLEN-1);
-		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
-	} else {
-		/* 'fname' is a relative pathname; take it to be
-		 * relative to ~/.palm/archive; construct that.
-		 */
-		strncpy(fnamebuf, archivedir, MAXPATHLEN);
-		strncat(fnamebuf, "/", MAXPATHLEN-strlen(fnamebuf));
-		strncat(fnamebuf, fname, MAXPATHLEN-strlen(fnamebuf));
-		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
-	}
+	archfname = mkarchfname(dbinfo);
+			/* Construct the name of the archive file */
 
 	/* Open the file for writing; create it if it exists, truncate
 	 * it otherwise.
 	 * Create it with fascist permissions, since presumably
 	 * this'll contain private information.
 	 */
-	if ((fd = open(fnamebuf, O_RDWR | O_CREAT | O_TRUNC, 0600)) < 0)
+	if ((fd = open(archfname, O_RDWR | O_CREAT | O_TRUNC, 0600)) < 0)
 	{
 		fprintf(stderr, _("%s: Can't open file \"%s\"\n"),
 			"arch_create",
-			fnamebuf);
+			archfname);
 		perror("open");
 		return -1;
 	}
