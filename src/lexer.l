@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.9 2000-02-03 01:51:50 arensb Exp $
+ * $Id: lexer.l,v 2.10 2000-02-07 04:43:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -18,6 +18,8 @@
 
 #include "parser.h"
 #include "y.tab.h"
+
+#define PARSE_TRACE(n)	if (parse_trace >= (n))
 
 #define YY_NO_UNPUT	/* We never yyunput() anything, so this keeps
 			 * the compiler from complaining.
@@ -59,6 +61,8 @@ ODIGIT		[0-7]
 XDIGIT		[0-9a-fA-F]
  /* Whitespace */
 WS		[ \t\f\r]
+ /* Alphanumeric character */
+ALNUM		[a-zA-Z0-9]
 
 %%
 
@@ -106,6 +110,67 @@ WS		[ \t\f\r]
   */
 "final"		{ return FINAL; }
 "default"	{ return DEFAULT; }
+
+ /* Conduit creator-type pairs. There are four rules for this, for
+  * simplicity: "cccc/tttt", "cccc / *", "* / tttt", and "* / *" (without
+  * the spaces, though).
+  * These allow the user to specify a creator/type pair without having
+  * double quotes all over the place. However, this will come back to bite
+  * us on the ass if ``xxxx/yyyy'' is ever allowable in a different
+  * context, e.g., if relative conduit pathnames without quotes become
+  * acceptable, and the user decides to specify ``path quux/cond;''.
+  */
+{ALNUM}{4}"/"{ALNUM}{4} {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+
+	yylval.crea_type.creator =
+		(yytext[0] << 24) |
+		(yytext[1] << 16) |
+		(yytext[2] <<  8) |
+		yytext[3];
+	yylval.crea_type.type =
+		(yytext[5] << 24) |
+		(yytext[6] << 16) |
+		(yytext[7] <<  8) |
+		yytext[8];
+	return CREA_TYPE;
+	}
+
+{ALNUM}{4}"/*" {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+
+	yylval.crea_type.creator =
+		(yytext[0] << 24) |
+		(yytext[1] << 16) |
+		(yytext[2] <<  8) |
+		yytext[3];
+	yylval.crea_type.type = 0L;
+	return CREA_TYPE;
+	}
+
+"*/"{ALNUM}{4} {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+
+	yylval.crea_type.creator = 0L;
+	yylval.crea_type.type =
+		(yytext[5] << 24) |
+		(yytext[6] << 16) |
+		(yytext[7] <<  8) |
+		yytext[8];
+	return CREA_TYPE;
+	}
+
+"*/*" {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+
+	yylval.crea_type.creator = 0L;
+	yylval.crea_type.type = 0L;
+	return CREA_TYPE;
+	}
 
  /* XXX - This should be capable of handling strings longer than
   * YYLMAX. The obvious way to do this is to implement a "string"
@@ -157,7 +222,13 @@ WS		[ \t\f\r]
 	}
 
  /* Anything else, just return it. */
-.	{ return yytext[0]; }
+.	{
+		PARSE_TRACE(7)
+			fprintf(stderr,
+				"(lex) Found none of the above: [%s]\n",
+				yytext);
+		return yytext[0];
+	}
 
 %%
 
