@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.5 2002-04-17 23:18:34 azummo Exp $
+ * $Id: palment.h,v 2.6 2002-05-03 00:00:43 arensb Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
@@ -57,7 +57,7 @@ extern const struct palment *getpalment(void);
 /* XXX - extern const struct palment *getpalmbyname(const char *name); */
 extern void setpalment(int stayopen);
 extern void endpalment(void);
-extern struct palment * find_palment(const char *p_snum,
+extern const struct palment * find_palment(const char *p_snum,
 	const char *p_username, const udword p_userid, const ubyte match_type);
 
 #endif	/* _palment_h_ */
