@@ -1,0 +1,312 @@
+- Ideally, you should be able to use Pilot VT100 and HotSync on the
+  same cradle, without having to change anything.
+  More realistically, though, it'll be necessary to write a ColdSync
+  daemon controller: some tool that'll allow you to turn off the
+  "listen for a HotSync connection" feature, and replace it with, say,
+  getty.
+  OTOH, it might be possible for the daemon to listen for certain
+  sequences. E.g., if it sees 0xbe, 0xef, 0xed in quick succession,
+  then it's a good bet that the Palm is trying to use SLP, from which
+  one can try to figure out what to do next (usually sync). Otherwise,
+  wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
+  daemon, or whatever.
+- KDE korganizer just uses vCalendar format for both events and todo
+  list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
+  for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
+  sure what for.
+	Find an appropriate Perl module to parse iCalendar format.
+- NetSync: figure out just how it works and stuff.
+  Blargh. From the output of 'tcpdump', it looks as if the host with
+  the databases wants to talk NetBIOS to the host with the cradle.
+  Oh, well. Can always come up with a reimplementation for Unix hosts.
+  That would probably be a win anyway, since it would allows us to do
+  the usual Unix-y stuff, like SSL, TCP wrappers, identd etc.
+- Add a type for those four-letter creator types and such.
+- Something to parse version numbers, as per <System/NetMgr.h> and
+  <System/SystemMgr.h>
+- add_to_log() should probably also use printf() syntax, for
+  convenience.
+- Add identd support?
+- PAM for security throughout?
+- Add robustness. Ideally, ColdSync should recover from everything
+  that's recoverable.
+- Allow syslog for logging.
+- Allow copious debugging to a file, including a trace of everything
+  going back and forth. See tcpdump().
+- Lock files while syncing.
+- The daemon ought to have some way to communicate with actual users,
+  so that they can be notified when a sync starts, be asked questions,
+  and other fun stuff. OTOH, since this is Unix, it ought to be able
+  to run unattended.
+	Possibly the best way to do this is to have the daemon listen
+  on a "control" port. Clients can connect to this port and be
+  notified, or control the daemon.
+	Maybe a Unix domain socket is the obvious way to do it, since
+  then there's no question about which machine the connection comes
+  from. If it's a TCP or UDP socket, however, you can monitor syncs
+  going on on another machine (useful for nosy administrators?). Here
+  again, TCP is probably more secure, but UDP is less likely to cause
+  a problem if something dies.
+- When a new database is installed, it might contain dirty records. At
+  the very least, it needs to make its way to the backup directory. Of
+  course, it's silly to upload the database, then download it again
+  just for the sake of syncing it. Fix the conduit API (not just
+  GenericConduit) to make sense in this situation.
+	Presumably this is the equivalent of a slow sync, but don't
+  bother downloading the database from the Palm.
+- Combine the documentation: there's no 'libpalm' anymore, and I'm
+  probably not going to have time to maintain the documentation for
+  all of the various functions defined in
+  {slp,padp,cmp,dlp,dlp_cmd}.c, so just strip out the function
+  descriptions, and combine "libpalm.texi" with "pdb.texi" into a
+  single, more general document that describes all sorts of things
+  programmers ought to know about Palm formats.
+	Possibly turn 'libpalm.texi' into a couple of appendixes in
+  the combined document.
+- Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
+  "System"
+	Fix: when opening a database with DlpOpenDB, if the database
+  is read-only (ROM), don't open it for writing. In fact, Backup()
+  probably shouldn't open databases read-write at all.
+- Maybe add (optional) support for long arguments with libgnugetopt?
+- FreeBSD's /bin/sh is still broken (as of 4.0):
+	echo "before"
+	for dir in a b c; do
+		test "$dir" = "." && echo "found dot"
+	done
+	echo "after"
+  still exits right after the "done". Presumably, what needs to happen
+  is for information about whether to exit with the "-e" flag to be
+  carried upwards through the parse tree.
+	Until this gets fixed, I don't want to use 'automake'.
+- Write a 'bool has_db_extension(char *fname)' function, for convenience.
+- Should all of the library .h files be lumped under #include
+  <palm/foo.h> ?
+- Test parser with old lex and yacc. See if it's worth supporting
+  them, or whether it's easier to just require flex.
+- Add Makefile stuff for rerunning 'autoconf' when necessary. See node
+  "Automatic Remaking" in "autoconf.info".
+- Add a "group" field to the listen and conduit blocks, of the form
+	group "admin";
+  If a conduit belongs to a certain group, it will only be invoked if
+  the current listening device is also in the same group. This way,
+  the site administrator can define certain conduits that will only be
+  run on a privileged cradle. This should be useful for things like
+  setting up a new user's Palm.
+- In daemon mode, when setting the UID, use setuid() to set both the
+  real and effective UID: once it is determined that this is
+  "arensb"'s Palm, we want to relinquish all of our root-ly powers and
+  become as much like "arensb" as possible.
+	What about setgid()?
+	What's initgroups()? Is it useful?
+- How does GenericConduit fit into the new conduit API? Perhaps the
+  best thing to do is to have two APIs: one for built-in conduits
+  (functions compiled into coldsync) and one for external programs.
+  That way, the simplest conduits (generic, ignore, desktop overwrites
+  Palm, Palm overwrites desktop) can be built in, and the naive user
+  doesn't need to install all sorts of stuff just to try this out
+  (read: can run coldsync out of the ports directory).
+	When doing the main sync, if can't find any other conduit for
+  a database, fall back on the built-in generic conduit.
+- "Timeout. Attempting to resend" when installing AmsterdamMaps.pdb
+  (166368 bytes) (from Heineken's BarTrek package, or the PHP manual).
+	
+- There appears to be a timing(?) problem with 'xcopilot',
+  specifically when terminating. ColdSync thinks everything is fine,
+  but 'xcopilot' hangs. I think it thinks that ColdSync hasn't
+  received the final ACK. If you give the data time to drain, it
+  appears to work fine, though. Maybe it's just a problem with the tty
+  devices.
+- Additional arguments on command line: if an argument is of the form
+  "FOO=bar", it should set the variable FOO to the value "bar".
+- With BSD make, always reruns 'ar' in the library directories. Why?
+  According to 'make -dm', it seems to recognize the target as a
+  library.
+- Rewrite GenericConduit in C, for simplicity. That way, don't have to
+  check for C++ in 'configure', and can simplify the 'make depend'
+  targets.
+	Then again, that might make it harder to subclass.
+- Open a Unix domain socket that a client can listen on. Send
+  conduits' messages to that socket. Define error codes like 22z =
+  progress, so that clients can monitor how things are going.
+- Should variables set in .coldsyncrc be propagated to the
+  environment? Should this be done as soon as they're set, or when the
+  conduit is run?
+- Should send mail to the user with a report of the sync.
+- "Thought of the Day" conduit: add a fortune-style message as an
+  event for today, and for the next week.
+- Conduit for MH alias file: look for lines of the form
+	alias:	<address> Firstname Lastname
+  (where the "<" and ">" are literal). If $record->{firstName} . " " .
+  $record->{name} eq "Firstname Lastname", then update the e-mail
+  address.
+- Sync the AppInfo block. See comments in "GenericConduit.cc".
+	No, it's probably best to just define a conduit type for
+  syncing the AppInfo block, and pass the buck to that conduit.
+  There's really no good way to sync the AppInfo block in a generic
+  fashion.
+- If I ever find a database that uses sort blocks, for testing, it
+  might be a good idea to sync them as well.
+- Perhaps status codes 6xx can be used for machine-readable
+  informational messages, e.g., "NN% complete".
+- Write 'mung-script' (or something) utility that takes a script
+  pathname and an interpreter path, and mungs the #! path work
+  properly. Make sure to use "#!/bin/sh" and not "#! /bin/sh", as per
+  portability comments in 'automake' documentation.
+- Bug: For now should complain if extraneous arguments are given on
+  command line.
+- No-brainer configuration: make "conduit -config" part of the spec.
+  Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
+  Then, when ColdSync runs, it runs "/conduit/dir/foo -config" for
+  every conduit in /conduit/dir and saves the results in
+  /conduit/dir/cache. /conduit/dir/cache is then read in, so that the
+  configuration is the concatenation of ~/.coldsyncrc and
+  /conduit/dir/cache.
+	This way, if a new conduit is released, the naive user can
+  just put it in /conduit/dir, and it'll work with its default
+  configuration. A more sophisticated user can add a .coldsyncrc entry
+  manually.
+	Obviously, need the "final" flag in conduit blocks, to prevent
+  unwanted conduits from running.
+- The 'prompt_for_hotsync' argument to new_PConnection() is a hack.
+  That whole function needs to be rethought. Would it be better to
+  separate it into new_serial_PConnection(), new_usb_PConnection(),
+  new_tcp_PConnection()? Or pass it a union that gives the
+  connection-specific arguments?
+- See what other 'make' features are portable. It might be keen to use
+	VAR += VALUE
+	VAR ?= DEFAULT_VALUE
+	VAR != `cmd`	(or whatever)
+- Replace the "-b", "-r" options: add a "-m" (mode) option. Modes
+  should include:
+	-mb <dir>	Do a backup to <dir>
+	-mr <dir>	Restore from <dir>
+	-ms		Normal sync (default)
+	-md		Daemon mode: listen for connection, fork, wait
+			for child to terminate.
+	-mf		Just run the fetch conduits. Set some header
+			to indicate this to the conduits.
+- In config.c, when creating directories: ought to do ~-expansion on
+  directory names: as in csh, only expand leading "~" or "~user".
+- In .coldsyncrc, should be able to associate a name (or alias) with a
+  pda block. In addition, should be able to specify that a given
+  conduit block only applies to a given PDA.
+- During CMP connection, if the Palm suggests a speed and the
+  .coldsyncrc doesn't, should just go with what the Palm suggests.
+- Installing new databases is suboptimal. Currently, it sends the
+  database over, then later downloads it all over again. There's got
+  to be a better way to do this.
+	Try:
+	Install the new database on the Palm.
+	Write it (possibly under a new name) to ~/.palm/backup[1].
+	Run fetch conduits.
+	Run sync conduits.
+	Run dump conduits.
+  [1] What if the database already exists?
+
+	Is it necessary or desirable to force a slow sync for this
+  database?
+- Improve fault-tolerance and error handling:
+	Cancel the sync (on the Palm) in the middle. Have ColdSync
+  notice.
+	Kill ColdSync with Ctrl-C. Have it send a valid cancel to the
+  Palm.
+	Remove the Palm from the cradle. Have ColdSync time out and
+  cancel any remaining operations.
+	Fill the Palm up. See what happens.
+- Rewrite the INSTALL file. In particular, cover permissions problems:
+  must be able to read/write the appropriate serial or USB device. See
+	http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
+  for Linux information.
+- Dump conduit: read all of the completed "to do" items and append
+  them to a text file, thus generating a status report. Optionally
+  delete and/or expunge them.
+- Fetch conduits: purge all completed "to do" items, and all
+  appointments older than N days (where N is configurable).
+	Delete and archive events by default. Allow an option to
+  expunge them.
+- If a conduit dies (e.g., "memo-kjots" with flavor "fetch"), should
+  print an error message giving some indication of which conduit said
+  that.
+- Add "-A" flag: if present, then the AppInfo block is synced as
+  follows: if the APPINFO_DIRTY flag is set on the local PDB, its
+  AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
+  AppInfo block gets downloaded to the desktop.
+	Better: fix the generic conduit to look at its headers, and
+  allow the user to specify how the AppInfo block should be synced.
+	AppInfo: ignore;	# Default
+	AppInfo: fromPalm;	# Palm overwrites desktop
+	AppInfo: fromDesktop;	# Desktop overwrites Palm
+	AppInfo: ifDirty;	# Desktop overwrites Palm if AppInfo
+				# block is dirty, otherwise Palm overwrites
+				# desktop
+- "ElectricFence Exiting: mmap() failed: Cannot allocate memory"
+	while doing a backup of PalmV (and doing some other stuff).
+  Did it really run out of memory? Is there a memory leak?
+- Work on archive2pdb
+	Figure out why it insists on writing the .pdb as "MemoDB" and
+  not "MemoDB.pdb".
+	Add lots of command-line options to set output file, select
+  which records will be restored, etc.
+	Ought to be able to delete records.
+	A GUI front end would be nice.
+- When (after?) reading config file, check the specified conduits to
+  make sure they exist and are executable. Warn if they aren't.
+- Would be nice to allow conduit headers consisting entirely of
+  whitespace.
+- Install .mo files in
+	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
+- Fix ColdSync.pm so that "-config" will also print which preferences
+  the conduit knows about.
+- Allow something like "ForceInstall: yes;" line in .coldsyncrc, to
+  have the same effect as -I command-line option.
+- Consider an optimization: if the local database hasn't been
+  modified, don't write it back to disk. This reduces the size of
+  daily backups by a trivial amount, but will also make a couple of
+  users happy.
+	The obvious way to do this is to add a 'Bool dirty' flag to
+  struct pdb. It is false initially. Fix the PDB manipulation
+  functions such that they set the dirty flag if they modify the
+  database.
+	At the end of the local sync, if the dirty flag is still
+  false, don't bother writing the database to disk.
+- Consider replacing the {put,get}_uword() etc. functions with htons()
+  and friends, since the order's the same, and the [hn]to[nh][sl]()
+  functions have most likely been optimized for the local machine.
+- libpdb and libpconn are useful in their own right. Turn them into
+  standalone packages. At least libpdb.
+- Fix the libpdb error messages to say which database (preferably,
+  which file) they apply to.
+- Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
+  'rpcgen' looked like just the thing, but DLP packets are not a
+  subset of XDR, so there are too many niggling problems.
+- To guard against the Bargle bug, perhaps can abort if the user ID is
+  0? But then need some way to initialize the Palm. Of course,
+  presumably a sysadmin needs this anyway.
+- There appears to be a preference that indicates that the Palm has
+  never been synchronized. This could be useful in avoiding the Bargle
+  bug. Look into this.
+- Add a "-mi" (mode: initialize) option. This should initialize stuff
+  like the user's full name, user ID, etc. At the same time, if a Palm
+  has a user ID of 0, refuse to sync it in the normal manner: either
+  this is the first time the Palm has been synced, or else it was
+  recently reset.
+- Perhaps the job of communicating with the Palm can be done in a
+  separate (Posix) thread? That way, that thread can deal more
+  naturally and more single-mindedly with things (e.g., timeouts,
+  unexpected data packets, etc.). In particular, it would be able to
+  send tickle packets at appropriate intervals.
+- ColdSync.pm should open SPC file handle as appropriate.
+- Add some "pref" lines to sample.coldsync.rc
+- Under DU 4.0, 'configure' finds cfmakeraw(), but compilation
+  complains about "implicit declaration". It's not declared in any
+  header file, AFAICT.
+- Rewrite 'send-mail' as a Sync conduit.
+- Rename handledb.c, since it no longer contains a HandleDB()
+  function. See whether it makes sense to rename this file and put
+  some of the more generally useful functions in there. Or something.
+- Do something with Daniel Klein's <bilderzeitung@hotmail.com> Doc
+  stuff.
+- The $VERSION stuff in the Perl modules doesn't handle branch
+  versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
+  "1.002_003_004", which might be desirable. Is it worth fixing this?
