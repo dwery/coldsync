@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.58 2002-03-11 23:12:14 azummo Exp $
+ * $Id: parser.y,v 2.59 2002-03-18 08:26:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -842,7 +842,12 @@ option:	FORCE_INSTALL colon boolean ';'
 			fprintf(stderr, "Found symbol: %s ==> %s\n",
 				$1, $4);
 		lex_expect(LEX_NONE);
-		put_symbol($1, $4);
+		if (put_symbol($1, $4) < 0)
+		{
+			Error(_("%s: Can't set option.\n"),
+			      "yyparse");
+			return -1;
+		}
 		$1 = NULL;
 		$4 = NULL;
 		lex_expect(LEX_VAR);		/* Prepare for the next line */
