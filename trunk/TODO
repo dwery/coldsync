@@ -1,3 +1,4 @@
+- Find someone to try a Japanese translation.
 - Rethink the Dlp*() functions.
 	They return a DLPSTAT_* error code, but this makes
   error-checking rather hairy. Would it be better if they just set
