@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.9 2000-02-03 03:26:47 arensb Exp $
+ * $Id: install.c,v 2.10 2000-02-07 01:46:32 arensb Exp $
  */
 
 #include "config.h"
@@ -44,13 +44,6 @@
 
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */
-
-#if !HAVE_STRCASECMP
-#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
-#endif	/* HAVE_STRCASECMP */
-#if !HAVE_STRNCASECMP
-#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
-#endif	/* HAVE_STRNCASECMP */
 
 /* InstallNewFiles
  * Go through the install directory. If there are any databases there
