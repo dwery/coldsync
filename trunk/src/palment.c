@@ -6,18 +6,18 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.7 2002-08-31 19:26:03 azummo Exp $
+ * $Id: palment.c,v 2.8 2002-11-03 23:28:40 azummo Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For strtoul() */
-#include <stdbool.h>		/* bool, true, false */
 #include <limits.h>		/* For strtoul() */
 #include <string.h>		/* For strchr() */
 #include <sys/types.h>		/* For getpwent() */
 #include <pwd.h>		/* For getpwent() */
 #include "coldsync.h"
+#include "palm.h"
 #include "palment.h"
 #include "cs_error.h"
 
@@ -192,22 +192,22 @@ endpalment(void)
 }
 
 
-const bool
+static const Bool
 is_wildcard(const char *s)
 {
 	if (s == NULL)
-		return true;
+		return True;
 		
 	if (s[0] == '\0')
-		return true;
+		return True;
 		
 	if (s[0] == '*' && s[1] == '\0')
-		return true; 
+		return True; 
 
-	return false;
+	return False;
 } 
  
-const bool
+static const Bool
 match_serial(const struct palment *palment, const char *p_snum)
 {
 	char entserial[SNUM_MAX];	/* Serial number from
@@ -239,10 +239,10 @@ match_serial(const struct palment *palment, const char *p_snum)
 		/* Now let's compare them */
 
 		if (strncasecmp(entserial, p_snum, SNUM_MAX) == 0)
-			return true;
+			return True;
 	}
 
-	return false;
+	return False;
 } 
  
 /* find_palment
