@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.25 2004-03-27 15:25:03 azummo Exp $
+ * $Id: padp.c,v 1.26 2004-03-27 15:26:54 azummo Exp $
  */
 
 /*
@@ -621,7 +621,12 @@ padp_write(PConnection *pconn,
 
 	pconn->palm_errno = PALMERR_NOERR;
 
-	bump_xid(pconn);	/* Pick a new transmission ID */
+	if (pconn->flags & PCONNFL_EMULATEPALM){
+		pconn->padp.xid = pconn->slp.last_xid;
+	}
+	else{
+		bump_xid(pconn);	/* Pick a new transmission ID */
+	}
 
 	PADP_TRACE(4)
 		fprintf(stderr, "padp_write: len = %d\n", buf_len);
@@ -754,11 +759,14 @@ padp_write(PConnection *pconn,
 						"padp_write");
 					return -1;
 				}
-				bump_xid(pconn);
+
+				if ((pconn->flags & PCONNFL_EMULATEPALM) == 0){
+					bump_xid(pconn);
 					/* Increment SLP XID, so we don't
 					 * reuse the one from this
 					 * ACK.
 					 */
+				}
 
 				/* Try sending this fragment again */
 				goto mpretry;
