@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.11 1999-06-01 04:18:49 arensb Exp $
+dnl # $Id: configure.in,v 1.12 1999-06-06 18:20:28 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -24,9 +24,12 @@ AC_PATH_PROG(SHELL,[sh bash])
 dnl # Find the C compiler
 AC_PROG_CC
 
+dnl # Find the C++ compiler
+AC_PROG_CXX
+
 # I know how to be pedantic with gcc. Other compilers, I'm not sure.
 if test x"$GCC" = x"yes" ; then
-	CFLAGS="-g -Wall -ansi -pedantic"
+	CPPFLAGS="-g -Wall -ansi -pedantic"
 else
 	AC_MSG_RESULT(dnl
 [	You don't seem to be using gcc, so various anal-retentive
@@ -34,6 +37,7 @@ else
 	are for your compiler, you may wish to turn them on, e.g.
 		CFLAGS=\"-Wall -ansi -pedantic\" ./configure])
 fi
+AC_SUBST(CPPFLAGS)
 
 AC_PROG_RANLIB
 
