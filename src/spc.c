@@ -2,11 +2,11 @@
  *
  * Functions for handling SPC (Serialized Procedure Call) protocol.
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.5 2000-12-24 21:25:00 arensb Exp $
+ * $Id: spc.c,v 2.6 2001-01-09 16:18:25 arensb Exp $
  */
 
 #include "config.h"
