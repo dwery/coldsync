@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.14 2000-12-16 19:48:27 arensb Exp $
+ * $Id: PConnection.c,v 1.15 2000-12-17 09:51:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -78,11 +78,8 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 		}
 		return pconn;
 
-/* XXX - If WITH_USB isn't defined, print an informative error message to
- * that effect.
- */
-#ifdef WITH_USB
 	    case LISTEN_USB:
+#if WITH_USB
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
@@ -92,8 +89,18 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 			return NULL;
 		}
 		return pconn;
-
+#else	/* WITH_USB */
+		/* This version of ColdSync was built without USB support.
+		 * Print a message to this effect. This is done this way
+		 * because even without USB support, the parser recognizes
+		 *	listen usb {}
+		 * the man page talks about it, etc.
+		 */
+		fprintf(stderr, _("Error: USB support not enabled.\n"));
+		free(pconn);
+		return NULL;
 #endif
+
 	    default:
 		fprintf(stderr, _("%s: unknown listen type %d\n"),
 			"new_PConnection", listenType);
