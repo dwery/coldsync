@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.25 2003-10-05 17:51:56 azummo Exp $
+# $Id: SPC.pm,v 1.26 2004-02-21 21:47:40 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.25 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.26 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -1275,12 +1275,15 @@ sub _dlp_ReadRecord
 	$offset		= 0 unless defined $offset;
 	$numbytes	= -1 unless defined $numbytes;
 
+	# See PalmOS 5 SDK include/Core/System/DlCommon.h under dlpReadRecord
+	# XXX Really, these should be done in separate functions...
+	my $fmt = $readbyid ? "C x N n n" : "C x n n n";
+	my $argid = $readbyid ? dlpFirstArgID : (dlpFirstArgID+1);
+
 	my ($err, @argv) = dlp_req(DLPCMD_ReadRecord,
 			{
-				id	=> $readbyid ? 0x20 : 0x21,
-				data	=> pack("C x n n n",
-						$dbh, $idindex, $offset,
-						$numbytes),
+				id	=> $argid,
+				data	=> pack($fmt, $dbh, $idindex, $offset, $numbytes),
 			});
 
 	return undef unless defined $err;
