@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.15 2001-01-25 07:47:55 arensb Exp $
+ * $Id: palm.c,v 2.16 2001-02-20 14:03:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -32,6 +32,28 @@ static int fetch_sysinfo(struct Palm *palm);
 static int fetch_netsyncinfo(struct Palm *palm);
 static int fetch_userinfo(struct Palm *palm);
 static int fetch_serial(struct Palm *palm);
+
+/* special_snums
+ * This exists mainly to accomodate the Handspring Visor: although it has a
+ * 'snum' ROM token, and it's possible to read that memory location, that
+ * location in memory contains a string of 0xff characters.
+ * It might be tempting to pretend that the Visor doesn't have a serial
+ * number. However, this string appears to uniquely differentiate Visors
+ * from other PalmOS devices (e.g., the PalmPilot Pro, which doesn't even
+ * have a 'snum' ROM token).
+ *
+ * The 'special_snums' array maps the binary string found for the serial
+ * number, to a printable alias.
+ */
+static struct {
+	char *real;		/* Real serial number value */
+	int real_len;		/* Length of 'real' */
+	char *alias;		/* String to return instead of real serial
+				 * number. */
+} special_snums[] = {
+	{ "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 12, "*Visor*" },
+};
+const int num_special_snums = sizeof(special_snums) / sizeof(special_snums[0]);
 
 /* new_Palm
  * Constructor. Allocates a 'struct Palm' and fills it in with special
@@ -336,6 +358,7 @@ static int
 fetch_serial(struct Palm *palm)
 {
 	int err;
+	int i;
 	udword snum_ptr;	/* Palm pointer to serial number */
 	uword snum_len;		/* Length of serial number string */
 
@@ -396,8 +419,38 @@ fetch_serial(struct Palm *palm)
 	SYNC_TRACE(7)
 		fprintf(stderr, "Serial number is \"%*s\"\n",
 			snum_len, palm->serial_);
+
 	palm->serial_[snum_len] = '\0';
 	palm->serial_len_ = snum_len;
+
+	/* See if this is one of the special serial numbers defined in
+	 * 'special_snums', above.
+	 */
+	for (i = 0; i < num_special_snums; i++)
+	{
+		if (snum_len != special_snums[i].real_len)
+			continue;		/* Wrong length */
+
+		if (memcmp(palm->serial_, special_snums[i].real, snum_len)
+		    != 0)
+			continue;		/* Doesn't match */
+
+		/* We have a match. Copy it to 'palm' */
+		SYNC_TRACE(5)
+			fprintf(stderr, "Found special serial number [%s]\n",
+				special_snums[i].alias);
+		strncpy(palm->serial_, special_snums[i].alias, SNUM_MAX);
+		palm->serial_len_ = strlen(special_snums[i].alias);
+
+		if (palm->serial_len_ > SNUM_MAX-1)
+		{
+			/* Paranoia. Avoid buffer overflows */
+			palm->serial_[SNUM_MAX-1] = '\0';
+			palm->serial_len_ = SNUM_MAX-1;
+		}
+
+		break;
+	}
 
 	return 0;
 }
