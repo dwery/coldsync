@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.104 2001-09-08 01:13:43 arensb Exp $
+ * $Id: coldsync.c,v 1.105 2001-10-06 22:10:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -51,10 +51,6 @@
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
-
-extern char *synclog;		/* Log that'll be uploaded to the Palm. See
-				 * rant in "log.c".
-				 */
 
 static int Connect(PConnection *pconn);
 static int Disconnect(PConnection *pconn, const ubyte status);
@@ -422,9 +418,6 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Freeing pref_cache\n");
 		FreePrefList(pref_cache);
 	}
-
-	if (synclog != NULL)
-		free(synclog);
 
 	if (hostaddrs != NULL)
 		free_hostaddrs();
@@ -1027,8 +1020,7 @@ run_mode_Standalone(int argc, char *argv[])
 			{
 			    case CSE_CANCEL:
 				Warn(_("Sync cancelled."));
-				add_to_log(_("*Cancelled*\n"));
-				DlpAddSyncLogEntry(pconn, synclog);
+				DlpAddSyncLogEntry(pconn, _("*Cancelled*\n"));
 					/* Doesn't really matter if it
 					 * fails, since we're terminating
 					 * anyway.
@@ -1104,34 +1096,6 @@ run_mode_Standalone(int argc, char *argv[])
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
 		return -1;
-	}
-
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			Error(_("Couldn't write sync log."));
-
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				free_Palm(palm);
-				return -1;
-
-			    default:
-				break;
-			}
-
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-
-			return -1;
-		}
 	}
 
 	/* There might still be pref items that are not yet cached.
@@ -1386,10 +1350,10 @@ run_mode_Backup(int argc, char *argv[])
 			{
 				Warn(_("No such database: \"%s\"."),
 				     argv[i]);
-				add_to_log(_("Backup "));
-				add_to_log(argv[i]);
-				add_to_log(" - ");
-				add_to_log(_("No such database\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Backup"),
+					      argv[i],
+					      _("No such database"));
 				continue;
 			}
 
@@ -1417,34 +1381,6 @@ run_mode_Backup(int argc, char *argv[])
 	}
 
   done:
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			Error(_("Couldn't write sync log."));
-
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				free_Palm(palm);
-				pconn = NULL;
-				return -1;
-			    default:
-				break;
-			}
-
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
-			return -1;
-		}
-	}
-
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
@@ -1593,34 +1529,6 @@ run_mode_Restore(int argc, char *argv[])
 	}
 
   done:
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			Error(_("Couldn't write sync log."));
-
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				free_Palm(palm);
-				pconn = NULL;
-				return -1;
-			    default:
-				break;
-			}
-
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
-			return -1;
-		}
-	}
-
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
@@ -1888,8 +1796,6 @@ run_mode_Init(int argc, char *argv[])
 		 * Is this a bad idea? Is UpdateUserInfo() broken?
 		 */
 		struct dlp_setuserinfo uinfo;
-		char uidbuf[16];	/* Buffer for printed representation
-					 * of userid */
 
 		SYNC_TRACE(1)
 			fprintf(stderr, "Updating user info.\n");
@@ -1905,9 +1811,8 @@ run_mode_Init(int argc, char *argv[])
 		uinfo.userid = new_userid;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
 
-		add_to_log(_("Set user ID: "));
-		sprintf(uidbuf, "%lu\n", uinfo.userid);
-		add_to_log(uidbuf);
+		va_add_to_log(pconn, "%s: %lu\n",
+			      _("Set user ID"), uinfo.userid);
 
 		/* XXX - Set viewer ID? */
 
@@ -1941,9 +1846,9 @@ run_mode_Init(int argc, char *argv[])
 		uinfo.username = new_username;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
 
-		add_to_log(_("Set username: "));
-		add_to_log(uinfo.username);
-		add_to_log("\n");
+		va_add_to_log(pconn, "%s: %s\n",
+			      _("Set username"),
+			      uinfo.username);
 
 		/* XXX - Update last sync PC */
 		/* XXX - Update last sync time */
@@ -2003,35 +1908,6 @@ run_mode_Init(int argc, char *argv[])
 			 * dlp_netsyncinfo structure and upload it to the
 			 * Palm.
 			 */
-		}
-	}
-
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			Error(_("Couldn't write sync log."));
-
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				free_Palm(palm);
-				pconn = NULL;
-				return -1;
-			    default:
-				break;
-			}
-
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
-
-			return -1;
 		}
 	}
 
@@ -2757,8 +2633,7 @@ run_mode_Daemon(int argc, char *argv[])
 			{
 			    case CSE_CANCEL:
 				Warn(_("Sync cancelled."));
-				add_to_log(_("*Cancelled*\n"));
-				DlpAddSyncLogEntry(pconn, synclog);
+				va_add_to_log(pconn, _("*Cancelled*\n"));
 					/* Doesn't really matter if it
 					 * fails, since we're terminating
 					 * anyway.
@@ -2825,33 +2700,6 @@ run_mode_Daemon(int argc, char *argv[])
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
 		return -1;
-	}
-
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			Error(_("Couldn't write sync log."));
-
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				free_Palm(palm);
-				return -1;
-			    default:
-				break;
-			}
-
-			free_Palm(palm);
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-
-			return -1;
-		}
 	}
 
 	/* There might still be pref items that are not yet cached.
