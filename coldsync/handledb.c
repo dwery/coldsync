@@ -2,28 +2,27 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.2 1999-02-24 13:19:31 arensb Exp $
+ * $Id: handledb.c,v 1.3 1999-03-11 03:38:02 arensb Exp $
  */
 
 #include <stdio.h>
+#include <unistd.h>		/* For chdir() */
+#include <stdlib.h>		/* For getenv() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
 #include "config.h"
 #include "coldsync.h"
 #include "pconn/dlp_cmd.h"
-
-#define IS_RSRC_DB(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RESDB)
-#define IS_ROM_DB(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RO)
+#include "pdb.h"
 
 /* Cold_HandleDB
-
  * Sync database number 'dbnum' with the desktop. If the database doesn't
  * exist on the desktop, 
  */
 int
 Cold_HandleDB(struct PConnection *pconn,
-	      struct ColdPalm *palm,
+	      struct Palm *palm,
 	      const int dbnum)
 {
 	int err;
@@ -33,80 +32,119 @@ Cold_HandleDB(struct PConnection *pconn,
 					/* Filename to sync with */
 	struct stat statbuf;		/* For finding out whether the
 					 * file exists */
+	struct pdb *localdb;		/* Local copy of the database */
 
 	dbinfo = &(palm->dblist[dbnum]);	/* Convenience pointer */
 
-	/* Ignore ROM databases, since there's no point in backing
-	 * them up.
+	/* XXX - See if there's a conduit for this database. If so, invoke
+	 * it and let it do all the work.
 	 */
-	/* XXX - This behavior should be the default, but optional */
-	if (IS_ROM_DB(dbinfo))
+
+	/* If we get this far, then we need to do a generic backup or sync.
+	 * XXX - Actually, the remainder of this function should *be* the
+	 * generic sync.
+	 */
+
+	/* XXX - 'cd' to the backup directory. Create it if it doesn't
+	 * exist. By default, the backup directory should be of the form
+	 * ~<user>/.palm/<palm ID>/backup or something.
+	 * <palm ID> should be the serial number for a Palm III, not sure
+	 * what for others. Perhaps 'ColdSync' could create a resource
+	 * database with this information?
+	 * XXX - For now, let it be ~/.palm/backup
+	 */
+	/* XXX - I'm not sure whether doing this in multiple stages like
+	 * this is a Good Thing or a Bad Thing. It's good in that it allows
+	 * us to create each directory as we go along. It's bad in that it
+	 * seems like too many steps. Plus, each
+	 */
+	if ((err = chdir(getenv("HOME"))) < 0)
 	{
-printf("\"%s\" is a ROM database. I'm not backing it up.\n",
-       dbinfo->name);
-		return 0;
+		fprintf(stderr, "Can't cd to home directory. Check $HOME.\n");
+		perror("chdir($HOME)");
+		return -1;
+	}
+	if ((err = chdir(".palm")) < 0)
+	{
+		fprintf(stderr, "Can't cd to ~/.palm\n");
+		perror("chdir(~/.palm)");
+		return -1;
+	}
+	if ((err = chdir("backup")) < 0)
+	{
+		fprintf(stderr, "Can't cd to ~/.palm/backup\n");
+		perror("chdir(~/.palm/backup)");
+		return -1;
 	}
 
-	/* Construct the name of the file that this database needs to
-	 * be synced with.
+	/* XXX - See if the database file exists. If not, do a backup and
+	 * return.
 	 */
-	/* XXX - This needs to be a lot more bullet-proof: get the
-	 * real backup directory name, make sure the filename doesn't
-	 * have any weird characters in it (like "/").
-	 */
-#if HAVE_SNPRINTF
-	snprintf(bakfname, MAXPATHLEN, "%s/%s.%s",
-		 BACKUP_DIR,
-		 dbinfo->name,
-		 IS_RSRC_DB(dbinfo) ? "prc" : "pdb");
-#else
-	sprintf(bakfname, "%s/%s.%s",
-		 BACKUP_DIR,
-		 dbinfo->name,
-		 IS_RSRC_DB(dbinfo) ? "prc" : "pdb");
-#endif
+	/* Construct the backup filename */
+	sprintf(bakfname, "%s.%s", dbinfo->name,
+		DBINFO_ISRSRC(dbinfo) ? "prc" : "pdb");
 
-printf("I want to sync \"%s\" with \"%s\"\n", dbinfo->name, bakfname);
-
-	/* See if the file that we want to sync with exists */
+	/* Stat the backup filename */
 	err = stat(bakfname, &statbuf);
 	if (err < 0)
 	{
-		/* XXX - Ought to check errno and create any missing
-		 * directories.
-		 */
-printf("The file \"%s\" doesn't exist: need to do a backup.\n", bakfname);
-		if (IS_RSRC_DB(dbinfo))
+		/* XXX - Should check errno */
+
+		if (DBINFO_ISROM(dbinfo))
 		{
-			printf("\tNeed to do a resource backup\n");
-			return Cold_ResourceBackup(pconn, palm,
-						   dbinfo, bakfname);
-		} else {
-			printf("\tNeed to do a record backup\n");
-			return Cold_RecordBackup(pconn, palm,
-						   dbinfo, bakfname);
+			printf("\"%s\" is a ROM database. Not backing it up.\n",
+			       dbinfo->name);
+			return 0;
 		}
-	} else {
-printf("The file \"%s\" exists: need to do a sync.\n", bakfname);
-		if (IS_RSRC_DB(dbinfo))
-		{
-			printf("\tNeed to do a resource sync\n");
-/* XXX - This ought to be a resource sync, but it's not implemented yet,
- * and I don't want to have to 'rm' leftover files all the time while
- * I'm testing.
- */
-return Cold_ResourceBackup(pconn, palm,
-			   dbinfo, bakfname);
-		} else {
-			printf("\tNeed to do a record sync\n");
-/* XXX - This ought to be a record sync, but it's not implemented yet,
- * and I don't want to have to 'rm' leftover files all the time while
- * I'm testing.
- */
-return Cold_RecordBackup(pconn, palm,
-			 dbinfo, bakfname);
-		}
+
+		/* The file doesn't exist. Back it up */
+		printf("\tNeed to do a backup\n");
+		return Cold_Backup(pconn, palm,
+					 dbinfo, bakfname);
+
+		/*NOTREACHED*/
+	}
+
+	/* If we get this far, then the backup filename does exist */
+
+	/* XXX - How do we want to deal with resource files, which aren't
+	 * really addressed by the Pigeon Book's stuff on syncing? On one
+	 * hand, you're really not expected to sync resource files the same
+	 * way as record files, and there's really no support for it; on
+	 * the other hand, it could be nifty, and ought to be done for
+	 * completeness.
+	 */
+	/* XXX - For now, just ignore resource databases */
+	if (DBINFO_ISRSRC(dbinfo))
+	{
+		fprintf(stderr, "\"%s\" I don't sync resource files (yet)\n",
+			dbinfo->name);
+		return 0;
+	}
+
+	/* Load the local copy of the database file. */
+	if ((localdb = pdb_Read(bakfname)) == NULL)
+	{
+		fprintf(stderr, "Can't load \"%s\"\n", bakfname);
+		return -1;
+	}
+
+	/* XXX - See if the LastSyncPC matches our ID. If yes, do a fast
+	 * sync; if no, do a slow sync.
+	 */
+	/* XXX - For now, just try a slow sync */
+	err = SlowSync(pconn, dbinfo, localdb, bakfname);
+	if (err < 0)
+	{
+		fprintf(stderr, "### SlowSync returned %d\n", err);
+		return -1;
 	}
 
 	return 0;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
