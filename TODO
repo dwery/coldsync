@@ -281,34 +281,22 @@
   and friends, since the order's the same, and the [hn]to[nh][sl]()
   functions have most likely been optimized for the local machine.
 - libpdb and libpconn are useful in their own right. Turn them into
-  standalone packages. At least libpd.
+  standalone packages. At least libpdb.
 - Fix the libpdb error messages to say which database (preferably,
   which file) they apply to.
-- Two-way pipes: either pipe() opens a bidirectional pipe, or else
-  might need to use socketpair().
-			Bidrectional	socketpair()
-			pipe():
-	FreeBSD:	Yes		Yes
-	Solaris 2.6:	Yes		Yes
-	DU 4.0:		No[1]		Yes
-	Redhat 5.1:	No		Yes
-	AIX 4.3:	Maybe		Maybe
-	IRIX 6.5:	Yes[2]		Yes
-
-  [1]: Need to link with -lsys5 to get bidirectional pipes.
-  [2]: Need to link with -lnsl to get bidirectional pipes, and/or tune
-  the kernel and/or set an environment variable.
 - Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
   'rpcgen' looked like just the thing, but DLP packets are not a
   subset of XDR, so there are too many niggling problems.
 - To guard against the Bargle bug, perhaps can abort if the user ID is
   0? But then need some way to initialize the Palm. Of course,
   presumably a sysadmin needs this anyway.
+- Add a "-mi" (mode: initialize) option. This should initialize stuff
+  like the user's full name, user ID, etc. At the same time, if a Palm
+  has a user ID of 0, refuse to sync it in the normal manner: either
+  this is the first time the Palm has been synced, or else it was
+  recently reset.
 - Perhaps the job of communicating with the Palm can be done in a
   separate (Posix) thread? That way, that thread can deal more
   naturally and more single-mindedly with things (e.g., timeouts,
   unexpected data packets, etc.). In particular, it would be able to
   send tickle packets at appropriate intervals.
-- ColdSync.pm should open SPC file handle as appropriate.
-- GenericConduit->_palm doesn't seem to be used. Get rid of it if
-  possible.
