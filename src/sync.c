@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.5 2002-10-26 12:05:12 azummo Exp $
+ * $Id: sync.c,v 2.6 2002-11-03 23:24:45 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -810,7 +810,10 @@ do_sync(pda_block *pda, struct Palm *palm)
 	}
 
 	/* Install any file in the system wide "install" directory */
-	InstallNewFiles(palm, GLOBAL_INSTALL_DIR, False, False);
+	/* InstallNewFiles(palm, GLOBAL_INSTALL_DIR, False, False); */
+	/* Removed... it wasn't the right implementation. Maybe
+	 * it should be an user option...
+	 */
 
 	/* Install any file in the "rescue" directory */
 	if (sync_config->options.autorescue == True)
