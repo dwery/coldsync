@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.20 1999-08-23 08:41:45 arensb Exp $
+dnl # $Id: configure.in,v 1.21 1999-08-25 04:11:51 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -15,6 +15,9 @@ dnl # So also check for 'gzip'; if it doesn't exist, fall back on
 dnl # 'compress'
 
 dnl # XXX - Check for gettext library
+
+dnl # XXX - Under Solaris 2.6, gethostbyname() requires -lnsl. Check
+dnl # for this.
 
 AC_INIT(src/PConnection.c)
 
