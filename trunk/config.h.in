@@ -101,22 +101,9 @@
 #undef VERSION
 
 #if __GNUC__
-/* XXX - See if these are even necessary */
-#undef WANT_EXTENSIONS
-#undef WANT_BSD_SOURCE
-#undef WANT_XOPEN_SOURCE
-
-/*#  define __EXTENSIONS__*/	/* Necessary for various headers to
-				 * find prototypes for certain
-				 * functions and such that aren't
-				 * explicitly mentioned in the ANSI
-				 * standard.
-				 */
-#if WANT_BSD_SOURCE
-#  define _BSD_SOURCE	1	/* For cfmakeraw() under Redhat 6.0 */
-#endif	/* WANT_BSD_SOURCE */
-
-#if WANT_XOPEN_SOURCE
-#  define _XOPEN_SOURCE	1	/* For getopt() under Redhat 6.0 */
-#endif	/* WANT_XOPEN_SOURCE */
+/* For any given version of 'gcc', one of these two should make 'gcc'
+ * shut up about "implicit declaration of XXX".
+ */
+#  define _GNU_SOURCE		1
+#  define __EXTENSIONS__	1
 #endif	/* __GNUC__ */
