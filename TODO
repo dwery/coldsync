@@ -193,11 +193,6 @@
   conduit block only applies to a given PDA.
 - During CMP connection, if the Palm suggests a speed and the
   .coldsyncrc doesn't, should just go with what the Palm suggests.
-- Consider moving the anal retentive CFLAGS from the top of
-  'configure' to the bottom. This might eliminate some false-negatives
-  that arise from bogus cc installations, header files and whatnot.
-	Then again it'd be stupid to pass the 'configure' stage and
-  not compile.
 - Installing new databases is suboptimal. Currently, it sends the
   database over, then later downloads it all over again. There's got
   to be a better way to do this.
@@ -237,6 +232,14 @@
   follows: if the APPINFO_DIRTY flag is set on the local PDB, its
   AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
   AppInfo block gets downloaded to the desktop.
+	Better: fix the generic conduit to look at its headers, and
+  allow the user to specify how the AppInfo block should be synced.
+	AppInfo: ignore;	# Default
+	AppInfo: fromPalm;	# Palm overwrites desktop
+	AppInfo: fromDesktop;	# Desktop overwrites Palm
+	AppInfo: ifDirty;	# Desktop overwrites Palm if AppInfo
+				# block is dirty, otherwise Palm overwrites
+				# desktop
 - "ElectricFence Exiting: mmap() failed: Cannot allocate memory"
 	while doing a backup of PalmV (and doing some other stuff).
   Did it really run out of memory? Is there a memory leak?
@@ -253,18 +256,10 @@
   whitespace.
 - Install .mo files in
 	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
-- Bug report:
-	When a non-default PDA is listed first, allegedly it gets the
-  PDAFL_DEFAULT flag set (as do any subsequent default PDAs).
-	Haven't been able to reproduce with
-	ColdSync 1.2.3, FreeBSD 4.0
-	ColdSync 1.2.0, FreeBSD 4.0
-	ColdSync 1.2.0, Redhat 6.2
-- Describe new preference API in the conduit writer's guide.
 - Fix ColdSync.pm so that "-config" will also print which preferences
   the conduit knows about.
-- Allow something like "ForceInstall;" line in .coldsyncrc, to have
-  the same effect as -I command-line option.
+- Allow something like "ForceInstall: yes;" line in .coldsyncrc, to
+  have the same effect as -I command-line option.
 - Consider an optimization: if the local database hasn't been
   modified, don't write it back to disk. This reduces the size of
   daily backups by a trivial amount, but will also make a couple of
@@ -288,6 +283,9 @@
 - To guard against the Bargle bug, perhaps can abort if the user ID is
   0? But then need some way to initialize the Palm. Of course,
   presumably a sysadmin needs this anyway.
+- There appears to be a preference that indicates that the Palm has
+  never been synchronized. This could be useful in avoiding the Bargle
+  bug. Look into this.
 - Add a "-mi" (mode: initialize) option. This should initialize stuff
   like the user's full name, user ID, etc. At the same time, if a Palm
   has a user ID of 0, refuse to sync it in the normal manner: either
@@ -300,9 +298,10 @@
   send tickle packets at appropriate intervals.
 - ColdSync.pm should open SPC file handle as appropriate.
 - Add some "pref" lines to sample.coldsync.rc
-- There appears to be a preference that indicates that the Palm has
-  never been synchronized. This could be useful in avoiding the Bargle
-  bug. Look into this.
 - Under DU 4.0, 'configure' finds cfmakeraw(), but compilation
   complains about "implicit declaration". It's not declared in any
   header file, AFAICT.
+- Rewrite 'send-mail' as a Sync conduit.
+- Rename handledb.c, since it no longer contains a HandleDB()
+  function. See whether it makes sense to rename this file and put
+  some of the more generally useful functions in there. Or something.
