@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.40 2001-02-20 14:02:33 arensb Exp $
+.\" $Id: coldsync.8,v 1.41 2001-03-28 03:06:23 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -30,6 +30,10 @@
 .Op Ar options
 .Fl mr
 .Ar file|dir...
+.Nm coldsync
+.Op Ar options
+.Fl md
+.Ar port
 .Nm coldsync
 .Fl V
 .Nm coldsync
@@ -98,6 +102,30 @@ exists on the Palm, that database is deleted.
 .Pp
 Note that in this mode, files are uploaded as-is. No Install conduits
 are run.
+.It Fl md
+Daemon mode. Use this mode when running
+.Nm coldsync
+as a
+.Nm getty
+replacement, or from
+.Pa /etc/inetd.conf .
+This mode takes one argument, a port on which to listen. This can be
+either a full pathname to a device file (e.g.,
+.Pa /dev/ugen0 ) ,
+a relative pathname (e.g.,
+.Pa ugen0 ) ,
+in which case the given pathname is assumed to be relative to
+.Pa /dev ,
+or the string
+.Dq -
+(a single dash), meaning stdin.
+.Pp
+.Nm ColdSync
+waits for a connection on the given port, reads the username and user
+ID from the Palm, and looks them up in
+.Pa /usr/local/etc/palms .
+If it finds a matching entry, it sets its UID to the appropriate user
+(relinquishing root privileges in the process) and runs a normal sync.
 .El
 .Ss Common Options
 .Bl -tag -width -indent
@@ -770,6 +798,36 @@ but not
 .Bd -literal -offset indent
 	type: "addr/DATA";
 .Ed
+.Sh THE PALMS FILE
+.Pa /usr/local/etc/palms
+lists known Palms and their associated users. Each entry is on a
+single line, with fields separated by vertical bar (pipe) characters:
+.Bd -literal -offset indent
+	serial|username|userid|luser|name|conf_fname
+.Ed
+.Bl -tag -width password -offset indent
+.It serial
+The serial number of the Palm, or the empty string if none or missing.
+.It username
+The username on the Palm.
+.It userid
+The user ID on the Palm.
+.It luser
+The local (Unix) username or UID to setuid() to.
+.It name
+The Palm's name in
+.Pa .coldsyncrc .
+.It conf_fname
+Full pathname of a configuration file to use.
+.El
+.Pp
+.Nm name
+and
+.Nm conf_fname
+are optional, and may be omitted.
+.Pp
+Note, however, that the format of this is still in development, and
+may change in the future.
 .Sh WARNINGS
 .Ss The Bargle Bug
 While you can choose any user ID you like for the Palm, you should
@@ -807,6 +865,8 @@ instructions.
 user's configuration file.
 .It Pa /usr/local/etc/coldsync.conf
 site-wide configuration file.
+.It Pa /usr/local/etc/palms
+list of known Palms
 .It Pa ~/.palm
 The default root of the backup tree (\,
 .Em palmdir ,
@@ -835,8 +895,8 @@ contains files to be installed at the next sync.
 .Re
 .Rs
 .%T http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
-explains how to sync a Handspring Visor under Linux.
 .Re
+Explains how to sync a Handspring Visor under Linux.
 .Sh AUTHORS
 .An Andrew Arensburger Aq arensb@ooblick.com
 .An Louis A. Mamakos Aq louie@TranSys.COM :
