@@ -132,6 +132,10 @@ A: Yes.
 Q: Does ColdSync work with the Sony Clie?
 A: Yes. See http://kreucher.user.msu.edu/clie/
 
+Q: Does ColdSync work with the Palm M50x series?
+A: Yes, though USB support is still very incomplete. Under Linux, you can
+   sync over USB; under other OSes, you'll need to use a serial cradle.
+
 Q: Does ColdSync support syncing via the infrared port?
 A: Not directly, but yes.
 	You need to install an IrCOMM handler, which will make your IR port
