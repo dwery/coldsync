@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+#
+# ColdSync completed record purger for Todo
+#
+# $Id: purge-todo,v 1.1 2004-11-07 22:47:02 christophe Exp $
+#
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use Palm::ToDo;
+
+# Default values for headers
+%HEADERS = (
+	'Archive' => 1,
+);
+
+my $VERSION = (qw($Revision: 1.1 $))[1];	# Conduit version
+
+StartConduit("sync");
+	
+	# open the database
+	my $dbh = dlp_OpenDB( 'ToDoDB', 0x40|0x80 );
+	die "504 Unable to open ToDoDB" unless defined $dbh;
+
+	# get a list of records to test for completion
+	my @records;
+	if ($HEADERS{SyncType} eq "Fast")
+	{
+		while (my $raw = dlp_ReadNextModifiedRec( $dbh ))
+		{
+			my $rec = Palm::ToDo->ParseRecord(%{$raw});
+			push @records, $rec if defined $rec;
+		}
+	} else
+	{
+		my $info = dlp_ReadOpenDBInfo( $dbh );
+		for (my $i = 0; $i < $info->{'numrecords'}; $i ++)
+		{
+			my $raw = dlp_ReadRecordByIndex( $dbh, $i, 0, -1 );
+			next unless defined $raw;
+			my $rec = Palm::ToDo->ParseRecord(%{$raw});
+			push @records, $rec if defined $rec;
+		}
+	}
+
+	# purge anything that's been completed
+	for (@records)
+	{
+		# ignore records already deleted
+		next if $_->{'attributes'}{'deleted'}
+			or $_->{'attributes'}{'archived'}
+			or $_->{attributes}{expunged};
+
+		# ignore anything not completed
+		next unless $_->{completed};
+
+		# write record back to Palm. Rather than removing it from the
+		# database entirely, we mark it as either 'archived' (attribute mask
+		# 0x8) or 'deleted' (0x80) as well a dirty (0x40). Then we leave the
+		# actual archiving/deletion to the generic sync conduit.
+		dlp_WriteRecord( $dbh, $_->{id}, Palm::ToDo->PackRecord($_),
+			$_->{category}, 0x40 | ($HEADERS{Archive} ? 0x8 : 0x80) );
+	}
+
+	dlp_CloseDB( $dbh );
+
+EndConduit();
+
+__END__
+
+=head1 NAME
+
+purge-todo - ColdSync conduit to purge completed Todo records
+
+=head1 SYNOPSIS
+
+    conduit sync {
+        type: todo/DATA;
+        path: "<...>/purge-todo";
+      arguments:
+		  Archive: 1;
+    }
+
+=head1 DESCRIPTION
+
+This conduit saves the need to use the Purge item in the ToDo application
+by automatically purging completed ToDo items during sync.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<Archive>
+
+If non-zero (default), purged records will have the archive flag set
+and will end up in long term storage. Otherwise, purged records will
+be deleted.
+
+=head1 AUTHOR
+
+E<lt>christophe.beauregard@sympatico.caE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+F<ColdSync Conduits>, in the ColdSync documentation.
