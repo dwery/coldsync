@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.8 1999-06-01 04:14:16 arensb Exp $
+ * $Id: sync.c,v 1.9 1999-06-04 00:53:32 arensb Exp $
  */
 
 #include <stdio.h>
@@ -554,6 +554,9 @@ SYNC_TRACE(5, "localrec == NULL\n");
 			 */
 
 			/* Clear the flags in localrec: it's fresh and new. */
+			/* XXX - The comment says local, the code says
+			 * remote. Which one is wrong?
+			 */
 			remoterec->attributes &= 0x0f;
 				/* XXX - Presumably, this should just
 				 * become a zero assignment, when/if
