@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.31 2000-11-14 16:38:13 arensb Exp $
+ * $Id: parser.y,v 2.32 2000-11-17 07:39:47 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -874,6 +874,14 @@ pda_directive:
 					cur_pda->snum, *csum_ptr,
 					cur_pda->snum, checksum);
 			}
+			/* XXX - If the checksum is invalid, then
+			 * presumably the serial number should be
+			 * considered invalid (by fiat) as well. Since the
+			 * serial number is invalid, this entire PDA block
+			 * is suspect. In fact, it might be a good idea to
+			 * abort at this point (after processing the file,
+			 * that is).
+			 */
 		}
 	}
 	| DIRECTORY opt_colon

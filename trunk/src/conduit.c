@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.18 2000-11-14 16:26:07 arensb Exp $
+ * $Id: conduit.c,v 2.19 2000-11-17 07:39:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -249,6 +249,12 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
  * appropriate that it be encapsulated in a function.
  * Is it possible to abstract out just the common parts, and let other
  * functions take care of the flavor types' idiosyncracies?
+ */
+/* XXX - The 'flavor_mask' argument is rather ugly. Perhaps the best way to
+ * get rid of it is to have the various run_*_conduit() functions generate
+ * their own list of headers, and pass it to run_conduit().
+ * Since the individual flavors have a pretty good idea how many headers
+ * they generate, MAX_SYS_HEADERS could go away, too.
  */
 #define MAX_SYS_HEADERS	10		/* Size of the array holding system
 					 * headers */
