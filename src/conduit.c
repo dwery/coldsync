@@ -7,15 +7,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.4 2000-07-13 03:05:22 arensb Exp $
+ * $Id: conduit.c,v 2.5 2000-07-13 04:16:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>			/* For pid_t, for select() */
+#include <sys/types.h>			/* For pid_t, for select(); write() */
+#include <sys/uio.h>			/* For write() */
 #include <sys/time.h>			/* For select() */
 #include <sys/wait.h>			/* For waitpid() */
-#include <unistd.h>			/* For select() */
+#include <unistd.h>			/* For select(), write() */
 #include <signal.h>			/* For signal() */
 #include <setjmp.h>			/* For sigsetjmp()/siglongjmp() */
 #include <errno.h>			/* For errno. Duh */
@@ -103,7 +104,7 @@ block_sigchld(sigset_t *sigmask)
 		fprintf(stderr, "Blocking SIGCHLD.\n");
 	sigemptyset(&new_sigmask);
 	sigaddset(&new_sigmask, SIGCHLD);
-	sigprocmask(SIG_BLOCK, sigmask, &new_sigmask);
+	sigprocmask(SIG_BLOCK, &new_sigmask, sigmask);
 }
 
 /* unblock_sigchld
@@ -118,6 +119,39 @@ unblock_sigchld(const sigset_t *old_sigmask)
 	SYNC_TRACE(7)
 		fprintf(stderr, "Unblocking SIGCHLD.\n");
 	sigprocmask(SIG_SETMASK, old_sigmask, NULL);
+}
+
+/* poll_fd
+ * Poll the file descriptor 'fd' to see if it's readable. If 'for_writing'
+ * is True, check to see if 'fd' is writable.
+ * Returns 1 if 'fd' is readable (or writable, if 'for_writing' is set), or
+ * 0 if it isn't. Returns a negative value in case of error.
+ */
+static INLINE int
+poll_fd(const int fd, const Bool for_writing)
+{
+	fd_set fds;
+	struct timeval timeout;
+	int err;
+
+	/* This works simply by calling select() with a timeout of 0. That
+	 * is, select() should simply see if the appropriate file
+	 * descriptor is readable (or writable).
+	 */
+	FD_ZERO(&fds);
+	FD_SET(fd, &fds);
+
+	timeout.tv_sec  = 0;
+	timeout.tv_usec = 0;
+
+	if (for_writing)
+		err = select(fd+1, NULL, &fds, NULL, &timeout);
+	else
+		err = select(fd+1, &fds, NULL, NULL, &timeout);
+
+	if (err < 0)	return -1;	/* An error occurred */
+	if (err == 0)	return  0;	/* File descriptor not readable */
+	return 1;			/* File descriptor is readable */
 }
 
 /* The following two variables are for setvbuf's benefit, for when we make
@@ -158,13 +192,8 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	struct {		/* Array of standard headers */
 		char *name;
 		const char *value;
-	} headers[] = {
-		{ "Daemon",	PACKAGE },
-		{ "Version",	VERSION },
-		{ "InputDB",	NULL },
-		{ "OutputDB",	NULL },
-	};
-	int num_headers = sizeof(headers) / sizeof(headers[0]);
+	} headers[10];		/* XXX - Numeric constants are bogus */
+	int last_header = 0;
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -226,23 +255,92 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 
 	/* Feed the various parameters to the child via 'tochild'. */
 
-	/* Initialize the values that weren't initialized above */
+	/* Initialize the standard header values */
 	bakfname = mkbakfname(dbinfo);
-	headers[2].value = bakfname;
-	headers[3].value = bakfname;
 
-	for (i = 0; i < num_headers; i++)
+	last_header = 0;
+	headers[last_header].name = "Daemon";
+	headers[last_header].value = PACKAGE;
+
+	++last_header;
+	headers[last_header].name = "Version";
+	headers[last_header].value = VERSION;
+
+	++last_header;
+	headers[last_header].name = "InputDB";
+	headers[last_header].value = bakfname;
+
+	++last_header;
+	headers[last_header].name = "OutputDB";
+	headers[last_header].value = bakfname;
+
+	/* XXX - SPC file descriptor number goes here */
+
+	/* NB: if you make any changes here, make sure to make them in the
+	 * "user header" section, below.
+	 */
+	for (i = 0; i <= last_header; i++)
 	{
+		static char buf[COND_MAXLINELEN+2];
+				/* Buffer to hold the line we're about to
+				 * send. The +2 is to hold a \n and a NUL
+				 * at the end.
+				 */
+
+		/* Create the header line */
+		/* XXX - Write format_header() to do this */
+		strncpy(buf, headers[i].name, COND_MAXHFIELDLEN);
+		strncat(buf, ": ", COND_MAXLINELEN - strlen(buf));
+		strncat(buf, headers[i].value, COND_MAXLINELEN - strlen(buf));
+		buf[sizeof(buf)-2] = '\n';
+		buf[sizeof(buf)-1] = '\0';
+
+		/* Before proceeding, see if the child has written a status
+		 * message.
+		 */
+	  check_status:
+		err = poll_fd(fileno(fromchild), False);
+		if (err < 0)
+		{
+			/* An error occurred. I don't think we care at this
+			 * point.
+			 */
+			SYNC_TRACE(5)
+				perror("poll_fd");
+		} else if (err > 0)
+		{
+			/* The child has printed something. Read it, then
+			 * check again.
+			 */
+			err = cond_readstatus(fromchild);
+			if (err > 0)
+				laststatus = err;
+			goto check_status;
+		}
+
+		/* Okay, now that the child has shut up for a moment, we
+		 * can send it the current header.
+		 */
 		SYNC_TRACE(4)
 			fprintf(stderr, ">>> %s: %s\n",
 				headers[i].name,
 				headers[i].value);
-		fprintf(tochild, "%s: %s\n",
-			headers[i].name,
-			headers[i].value);
+
+		err = write(fileno(tochild), buf, strlen(buf));
+		/* XXX - Error-checking */
+		/* XXX - What if 'err' < strlen(buf)? (e.g., if the write()
+		 * was interrupted.) Ought to 'goto check_status' or
+		 * something and try again.
+		 */
 	}
 
 	/* User-supplied header lines */
+	/* XXX - Do here the same thing that was done with the standard
+	 * headers, above.
+	 */
+	/* NB: if you make any changes here, make sure to make them in the
+	 * "standard header" section, above.
+	 */
 	for (hdr = conduit->headers; hdr != NULL; hdr = hdr->next)
 	{
 		SYNC_TRACE(4)
@@ -283,6 +381,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	/* See if there is anything pending on 'fromchild' */
 	while (1)
 	{
+		/* XXX - Use poll_fd() */
 		fd_set infds;
 		struct timeval timeout;
 		int fromchild_fd;	/* 'fromchild' as a file descriptor */
