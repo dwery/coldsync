@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.7 2000-01-27 01:47:52 arensb Exp $
+# $Id: Makefile,v 1.8 2000-02-03 02:47:47 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -55,6 +55,10 @@ distfiles-core::
 	if test ! -d "${TOPDISTDIR}"; then \
 		mkdir "${TOPDISTDIR}"; \
 	fi
+
+tags:	TAGS
+TAGS::
+	rm -f TAGS
 
 include Make.rules
 
