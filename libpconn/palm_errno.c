@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.1 1999-09-09 05:18:13 arensb Exp $
+ * $Id: palm_errno.c,v 1.2 1999-11-27 05:46:27 arensb Exp $
  */
 #include "config.h"
 #include <pconn/palm_errno.h>
@@ -14,18 +14,20 @@
 int palm_errno;				/* Current error code */
 
 /* XXX - Need something to keep this array and the error codes in sync */
-/* XXX - I18N */
+/* Error messages corresponding to the PALMERR_* constants in
+ * "palm_errno.h". Make sure these stay in sync.
+ */
 const char *palm_errlist[] = {		/* Error messages */
-	"No error",
-	"Error in system call or library function",
-	"Out of memory",
-	"Timeout",
-	"Bad file descriptor",
-	"End of file",
-	"Transfer aborted",
-	"Invalid request ID",
-	"Invalid result ID",
-	"Invalid argument ID",
+/* PALMERR_NOERR */	"No error",
+/* PALMERR_SYSTEM */	"Error in system call or library function",
+/* PALMERR_NOMEM */	"Out of memory",
+/* PALMERR_TIMEOUT */	"Timeout",
+/* PALMERR_BADF */	"Bad file descriptor",
+/* PALMERR_EOF */	"End of file",
+/* PALMERR_ABORT */	"Transfer aborted",
+/* PALMERR_BADID */	"Invalid request ID",
+/* PALMERR_BADRESID */	"Invalid result ID",
+/* PALMERR_BADARGID*/	"Invalid argument ID",
 };
 /* XXX - Need something to check the size of this array, so if someone adds
  * an error code and forgets to update this array, you can keep from
