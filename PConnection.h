@@ -3,15 +3,15 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.2 1999-01-31 21:54:35 arensb Exp $
+ * $Id: PConnection.h,v 1.3 1999-02-14 04:10:56 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
 
-#include <termios.h>
-/*  #include <sys/protosw.h> */
+#include <termios.h>		/* For speed_t */
 #include "palm_types.h"
 #include "slp.h"
+#include "padp.h"
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
@@ -39,6 +39,11 @@ struct PConnection
 				 * can't think of a better way to do
 				 * it.
 				 */
+		int read_timeout;
+				/* How long to wait (in 1/10ths of a
+				 * second) for a PADP packet to come
+				 * in.
+				 */
 	} padp;
 
 	/* Serial Link Protocol (SLP) */
@@ -46,10 +51,25 @@ struct PConnection
 		struct slp_addr local_addr;
 		struct slp_addr remote_addr;
 
-		/* Convenience stuff for reading and writing. */
-		struct slp_header header;	
-		ubyte buf[SLP_MAX_PACKET_LEN];
-		uword crc;
+		/* The PConnection contains buffers for reading and
+		 * writing SLP data. This is partly because there
+		 * could conceivably be multiple connections (so
+		 * static variables wouldn't do), and partly because
+		 * there may be a need to un-read packets.
+		 */
+		ubyte header_inbuf[SLP_HEADER_LEN];
+				/* Buffer to hold incoming headers */
+		ubyte *inbuf;	/* Input buffer. Dynamically allocated */
+		long inbuf_len;	/* Current length of input buffer */
+		ubyte crc_inbuf[SLP_CRC_LEN];
+				/* Buffer to hold incoming CRCs */
+
+		ubyte header_outbuf[SLP_HEADER_LEN];
+				/* Buffer to hold outgoing headers */
+		ubyte *outbuf;	/* Output buffer. Dynamically allocated */
+		long outbuf_len;	/* Current length of output buffer */
+		ubyte crc_outbuf[SLP_CRC_LEN];
+				/* Buffer to hold outgoing CRCs */
 
 		ubyte last_xid;	/* The transaction ID of the last SLP
 				 * packet that was received. PADP uses
