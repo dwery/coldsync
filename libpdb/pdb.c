@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.3 1999-11-02 03:50:45 arensb Exp $
+ * $Id: pdb.c,v 1.4 1999-11-04 03:47:14 arensb Exp $
  */
 
 #include "config.h"
@@ -18,11 +18,21 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include <string.h>		/* For strncat() et al. */
-/*  #include "coldsync.h" */
-/*#include "palm_types.h"
-#include "util.h"*/
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+
+#if STDC_HEADERS
+# include <string.h>		/* For strncat(), memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
+
+#include "pconn/pconn.h"
 #include "pdb.h"
 
 #define PDB_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
