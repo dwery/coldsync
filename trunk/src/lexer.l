@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.43 2002-03-11 23:12:14 azummo Exp $
+ * $Id: lexer.l,v 2.44 2002-03-18 08:26:20 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -479,7 +479,26 @@ QSTR		[^\\\$\"\n]
 	}
 
 	/* Look up the variable */
-	value = get_symbol_n(yytext+2, yyleng-3);
+	{
+		char *varname;
+
+		/* Extract the variable name */
+		/* XXX - If there were a maximum length for variable names,
+		 * this could be done with a static buffer.
+		 */
+		if ((varname = (char *) malloc(yyleng-2)) == NULL)
+		{
+			Error(_("%s: Out of memory."),
+			      "yylex");
+			Perror("malloc");
+			return -1;
+		}
+		strncpy(varname, yytext+2, yyleng-3);
+		varname[yyleng-3] = '\0';
+
+		value = get_symbol(varname);
+		free(varname);
+	}
 
 	PARSE_TRACE(5)
 		fprintf(stderr, "$(%.*s) == \"%s\"\n",
