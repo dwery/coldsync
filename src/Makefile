@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.17 2000-12-23 11:36:00 arensb Exp $
+# $Id: Makefile,v 2.18 2001-01-30 08:09:38 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -12,6 +12,7 @@ C_SRCS =	coldsync.c \
 		install.c \
 		config.c \
 		misc.c \
+		lexhack.c \
 		log.c \
 		conduit.c \
 		palm.c \
@@ -38,7 +39,7 @@ HEADERS =	archive.h \
 		GenericConduit.hh
 
 OBJS =		${C_OBJS} ${CXX_OBJS} \
-		lex.yy.o y.tab.o
+		y.tab.o
 
 LIBPCONN = 	-L${TOP}/libpconn -lpconn
 LIBPDB = 	-L${TOP}/libpdb -lpdb
@@ -54,6 +55,7 @@ DISTFILES =	Makefile \
 
 all::		${CXXPROG}
 
+depend::	lex.yy.c
 depend::
 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
@@ -73,6 +75,7 @@ install::	${CXXPROG}
 coldsync:	${TOP}/libpconn/libpconn.a
 coldsync:	${TOP}/libpdb/libpdb.a
 
+lexhack.o:	lex.yy.c
 lex.yy.c:	parser.h
 y.tab.c:	parser.h
 
