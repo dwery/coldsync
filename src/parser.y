@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.62 2002-04-02 15:29:49 azummo Exp $
+ * $Id: parser.y,v 2.63 2002-04-02 16:51:00 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -135,34 +135,34 @@ file:	statements
 	;
 
 statements:	statements statement
-	{ PARSE_TRACE(3)
+	{ PARSE_TRACE(6)
 		  fprintf(stderr, "Found a statement\n");
 	}
 	|	/* Empty */
-	{ PARSE_TRACE(4)
+	{ PARSE_TRACE(7)
 		  fprintf(stderr, "Found an empty statement\n");
 	}
 	;
 
 statement:
 	listen_stmt
-	{ PARSE_TRACE(3)
+	{ PARSE_TRACE(6)
 		  fprintf(stderr, "Found a listen_stmt (statement)\n");
 	}
 	| conduit_stmt
-	{ PARSE_TRACE(3)
+	{ PARSE_TRACE(6)
 		  fprintf(stderr, "Found a conduit_stmt\n");
 	}
 	| options_stmt
-	{ PARSE_TRACE(3)
+	{ PARSE_TRACE(6)
 		  fprintf(stderr, "Found an options_stmt\n");
 	}
 	| pda_stmt
-	{ PARSE_TRACE(3)
+	{ PARSE_TRACE(6)
 		  fprintf(stderr, "Found a pda_stmt\n");
 	}
 	| ';'	/* Effectively empty */
-	{ PARSE_TRACE(4)
+	{ PARSE_TRACE(7)
 		  fprintf(stderr, "Found an empty statement\n");
 	}
 	;
@@ -231,19 +231,19 @@ comm_type:
 	SERIAL
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found commtype: Serial\n");
+			fprintf(stderr, "Listen: commtype serial\n");
 		$$ = LISTEN_SERIAL;
 	}
 	| USB
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found commtype: USB\n");
+			fprintf(stderr, "Listen: commtype  USB\n");
 		$$ = LISTEN_USB;
 	}
 	| NET
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found commtype: Net\n");
+			fprintf(stderr, "Listen: commtype net\n");
 		$$ = LISTEN_NET;
 	}
 	| error
@@ -277,8 +277,8 @@ listen_block:	listen_directives
 
 listen_directives:
 	listen_directives listen_directive
-	{ PARSE_TRACE(3)
-		  fprintf(stderr, "Found a listen_directives\n");
+	{ PARSE_TRACE(6)
+		  fprintf(stderr, "Found a listen_directive\n");
 	}
 	|	/* Empty */
 	;
@@ -291,7 +291,7 @@ listen_directive:
 	STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: device [%s]\n", $4);
+			fprintf(stderr, "\tListen: device [%s]\n", $4);
 
 		lex_expect(LEX_NONE);
 
@@ -307,7 +307,7 @@ listen_directive:
 	| SPEED colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: speed %ld\n", $3);
+			fprintf(stderr, "\tListen: speed %ld\n", $3);
 
 		if (cur_listen->speed != 0)
 		{
@@ -320,7 +320,7 @@ listen_directive:
 	| PROTOCOL colon protocol_stack semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: protocol %d\n", (int) $3);
+			fprintf(stderr, "\tListen: protocol %d\n", (int) $3);
 
 		cur_listen->protocol = $3;
 			/* XXX - Would be nice to be able to tell whether
@@ -354,10 +354,42 @@ conduit_stmt:	CONDUIT
 			      "yyparse");
 			return -1;
 		}
+
+		PARSE_TRACE(2)
+		{
+			fprintf(stderr, "Found conduit_block\n");
+		}
+
 	} flavor_list '{'
 	conduit_block opt_header_list '}'
 	{
 		lex_expect(LEX_NONE);		/* No special lexer context */
+
+		PARSE_TRACE(3)
+		{
+			fprintf(stderr, "Found conduit+conduit_block:\n");
+			fprintf(stderr, "\tPath: [%s]\n",
+				(cur_conduit->path == NULL ?
+				 "(null)" :
+				 cur_conduit->path));
+			fprintf(stderr, "\tCwd: [%s]\n",
+				(cur_conduit->cwd == NULL ?
+				 "(undefined)" :
+				 cur_conduit->cwd));
+			fprintf(stderr, "\tFlags:");
+
+			if (cur_conduit->flags & CONDFL_FINAL)
+				fprintf(stderr, " final");
+
+			if (cur_conduit->flags & CONDFL_DEFAULT)
+				fprintf(stderr, " default");
+
+			if (cur_conduit->flags == 0L)
+				fprintf(stderr, " none");
+
+			fprintf(stderr, "\n");
+		}
+
 
 		/* Sanity check */
 		if (cur_conduit->num_ctypes == 0)
@@ -401,25 +433,25 @@ flavor:
 	SYNC
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Sync\n");
+			fprintf(stderr, "Conduit: flavor Sync\n");
 		cur_conduit->flavors |= FLAVORFL_SYNC;
 	}
 	| FETCH
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Fetch\n");
+			fprintf(stderr, "Conduit: flavor Fetch\n");
 		cur_conduit->flavors |= FLAVORFL_FETCH;
 	}
 	| DUMP
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Dump\n");
+			fprintf(stderr, "Conduit: flavor Dump\n");
 		cur_conduit->flavors |= FLAVORFL_DUMP;
 	}
 	| INSTALL
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Install\n");
+			fprintf(stderr, "Conduit: flavor Install\n");
 		cur_conduit->flavors |= FLAVORFL_INSTALL;
 	}
 	| error
@@ -435,25 +467,25 @@ protocol_stack:
 	DEFAULT
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a protocol stack: default\n");
+			fprintf(stderr, "Listen: protocol stack: default\n");
 		$$ = PCONN_STACK_DEFAULT;
 	}
 	| FULL
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a protocol stack: full\n");
+			fprintf(stderr, "Listen: protocol stack: full\n");
 		$$ = PCONN_STACK_FULL;
 	}
 	| SIMPLE
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a protocol stack: simple\n");
+			fprintf(stderr, "Listen: protocol stack: simple\n");
 		$$ = PCONN_STACK_SIMPLE;
 	}
 	| NET
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Found a protocol stack: net\n");
+			fprintf(stderr, "Listen: protocol stack: net\n");
 		$$ = PCONN_STACK_NET;
 	}
 	| error
@@ -489,20 +521,21 @@ conduit_directive:
 		PARSE_TRACE(4)
 		{
 			fprintf(stderr,
-				"Conduit creator: 0x%08ld (%c%c%c%c)\n",
+				"\tConduit: creator 0x%08ld (%c%c%c%c)\n",
 				$4.creator,
 				(char) (($4.creator >> 24) & 0xff),
 				(char) (($4.creator >> 16) & 0xff),
 				(char) (($4.creator >>  8) & 0xff),
 				(char) ($4.creator & 0xff));
-			fprintf(stderr, "Conduit type: 0x%08ld (%c%c%c%c)\n",
+			fprintf(stderr,
+				"\tConduit: type 0x%08ld (%c%c%c%c)\n",
 				$4.type,
 				(char) (($4.type >> 24) & 0xff),
 				(char) (($4.type >> 16) & 0xff),
 				(char) (($4.type >>  8) & 0xff),
 				(char) ($4.type & 0xff));
 
-			fprintf(stderr, "Conduit flags: 0x%02x\n",
+			fprintf(stderr, "\tConduit: flags 0x%02x\n",
 				$4.flags);
 		}
 
@@ -540,7 +573,7 @@ conduit_directive:
 		$4 = NULL;
 
 		PARSE_TRACE(4)
-			fprintf(stderr, "Conduit path: [%s]\n",
+			fprintf(stderr, "\tConduit: path [%s]\n",
 				cur_conduit->path);
 	}
 	| CWD colon
@@ -562,7 +595,7 @@ conduit_directive:
 		$4 = NULL;
 
 		PARSE_TRACE(4)
-			fprintf(stderr, "Conduit cwd: [%s]\n",
+			fprintf(stderr, "\tConduit: cwd [%s]\n",
 				cur_conduit->cwd);
 	}
 	| PREFERENCE colon
@@ -813,32 +846,32 @@ options_list: options_list option
 option:	FORCE_INSTALL colon boolean ';'
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found force_install.\n");
+			fprintf(stderr, "Option: force_install.\n");
 
 		file_config->options.force_install = $3;
 	}
 	| FORCE_INSTALL ';'
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found force_install.\n");
+			fprintf(stderr, "Option: force_install.\n");
 		file_config->options.force_install = True3;
 	}
 	| INSTALL_FIRST colon boolean ';'
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found install_first.\n");
+			fprintf(stderr, "Option: install_first.\n");
 		file_config->options.install_first = $3;
 	}
 	| INSTALL_FIRST ';'
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found install_first.\n");
+			fprintf(stderr, "Option: install_first.\n");
 		file_config->options.install_first = True3;
 	}
 	| HOSTID colon NUMBER semicolon
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found hostid: [%lu]\n",
+			fprintf(stderr, "Option: hostid: [%lu]\n",
 				$3);
 		hostid = $3;
 	}
@@ -915,6 +948,10 @@ pda_stmt:	PDA
 		PARSE_TRACE(3)
 		{
 			fprintf(stderr, "Found pda+pda_block:\n");
+			fprintf(stderr, "\tUsername: [%s]\n",
+				(cur_pda->username == NULL ?
+				 "(null)" :
+				 cur_pda->username));
 			fprintf(stderr, "\tS/N: [%s]\n",
 				(cur_pda->snum == NULL ?
 				 "(null)" :
@@ -930,7 +967,7 @@ pda_stmt:	PDA
 		if (file_config->pda == NULL)
 		{
 			/* This is the first pda block */
-			PARSE_TRACE(3)
+			PARSE_TRACE(5)
 				fprintf(stderr,
 					"Adding the first PDA block\n");
 
@@ -943,7 +980,7 @@ pda_stmt:	PDA
 			 */
 			struct pda_block *last;
 
-			PARSE_TRACE(3)
+			PARSE_TRACE(5)
 				fprintf(stderr,
 					"Appending a PDA block to the list\n");
 
@@ -990,7 +1027,7 @@ pda_directive:
 		unsigned char checksum;	/* Calculated checksum */
 
 		PARSE_TRACE(4)
-			fprintf(stderr, "Serial number \"%s\"\n", $4);
+			fprintf(stderr, "\tPDA: serial number \"%s\"\n", $4);
 
 		lex_expect(LEX_NONE);
 
@@ -1072,7 +1109,7 @@ pda_directive:
 	STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Directory \"%s\"\n", $4);
+			fprintf(stderr, "\tPDA: directory \"%s\"\n", $4);
 
 		lex_expect(LEX_NONE);
 
@@ -1093,7 +1130,7 @@ pda_directive:
 	STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Username \"%s\"\n", $4);
+			fprintf(stderr, "\tPDA: username \"%s\"\n", $4);
 
 		lex_expect(LEX_NONE);
 
@@ -1110,7 +1147,7 @@ pda_directive:
 	| USERID colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "UserID \"%ld\"\n", $3);
+			fprintf(stderr, "\tPDA: userid \"%ld\"\n", $3);
 
 		if (cur_pda->userid_given)
 		{
@@ -1141,7 +1178,7 @@ pda_directive:
 		 *	NetSync wakeup packet.
 		 */
 		PARSE_TRACE(4)
-			fprintf(stderr, "Forward \"%s\" \"%s\"\n",
+			fprintf(stderr, "\tPDA: forward \"%s\" \"%s\"\n",
 				$4, ($6 == NULL ? "(null)" : $6));
 		lex_expect(LEX_NONE);
 

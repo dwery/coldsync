@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.46 2002-04-02 15:29:49 azummo Exp $
+ * $Id: lexer.l,v 2.47 2002-04-02 16:51:00 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +22,7 @@
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
 
 #define KEYWORD(k) \
-	PARSE_TRACE(3) \
+	PARSE_TRACE(5) \
 		fprintf(stderr, "Found keyword " #k "\n"); \
 	return k;
 
@@ -141,7 +141,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <BSTRING>{BWORD}+	{
-	PARSE_TRACE(3)
+	PARSE_TRACE(5)
 		fprintf(stderr, "Found bareword string [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
@@ -222,7 +222,7 @@ QSTR		[^\\\$\"\n]
 "default"	{ KEYWORD(DEFAULT);	}
 
 <VARNAME>{VAR1}{VAR}*	{
-	PARSE_TRACE(3)
+	PARSE_TRACE(5)
 		fprintf(stderr, "Found variable name [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
@@ -244,7 +244,7 @@ QSTR		[^\\\$\"\n]
   * acceptable, and the user decides to specify ``path quux/cond;''.
   */
 <CTPAIR>{ALNUM}{4}"/"{ALNUM}{4} {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
 	yylval.crea_type.creator =
@@ -262,7 +262,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <CTPAIR>{ALNUM}{4}"/*" {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
 	yylval.crea_type.creator =
@@ -276,7 +276,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <CTPAIR>"*/"{ALNUM}{4} {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
 	yylval.crea_type.creator = 0L;
@@ -290,7 +290,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <CTPAIR>"*/*" {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
 	yylval.crea_type.creator = 0L;
@@ -300,7 +300,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <CTPAIR>"none" {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
 	yylval.crea_type.creator = 0L;
@@ -310,7 +310,7 @@ QSTR		[^\\\$\"\n]
 	}
 
 <ID4>{ALNUM}{4} {
-	PARSE_TRACE(5)
+	PARSE_TRACE(6)
 		fprintf(stderr, "(lex) Found ID4 [%s]\n", yytext);
 
 	if ((yylval.string = strdup(yytext)) == NULL)
@@ -553,7 +553,7 @@ QSTR		[^\\\$\"\n]
 		      "yylex");
 		return -1;
 	}
-	PARSE_TRACE(2)
+	PARSE_TRACE(7)
 		fprintf(stderr, "finished string [%s]\n", yylval.string);
 	return STRING;
         }
@@ -561,7 +561,7 @@ QSTR		[^\\\$\"\n]
 [-+]?{DIGIT}{1,10}	{
 		long value;
 
-		PARSE_TRACE(3)
+		PARSE_TRACE(5)
 			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
@@ -571,7 +571,7 @@ QSTR		[^\\\$\"\n]
 [-+]?0{ODIGIT}{1,11}	{
 		long value;
 
-		PARSE_TRACE(3)
+		PARSE_TRACE(5)
 			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
@@ -581,7 +581,7 @@ QSTR		[^\\\$\"\n]
 [-+]?0x{XDIGIT}{1,8}	{
 		long value;
 
-		PARSE_TRACE(3)
+		PARSE_TRACE(5)
 			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
@@ -594,7 +594,7 @@ QSTR		[^\\\$\"\n]
   * rather than just the first character that caused the error.
   */
 {ID1}{ID}*	{
-	PARSE_TRACE(3)
+	PARSE_TRACE(5)
 		fprintf(stderr, "Found word [%s]\n", yytext);
 
 	if ((yylval.string = strdup(yytext)) == NULL)
@@ -639,7 +639,7 @@ QSTR		[^\\\$\"\n]
 void
 lex_expect(const lex_state_t state)
 {
-	PARSE_TRACE(5)
+	PARSE_TRACE(8)
 		fprintf(stderr, "Lex: expecting state %d\n", state);
 
 	switch (state)
