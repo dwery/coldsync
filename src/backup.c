@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.23 2000-11-28 01:42:28 arensb Exp $
+ * $Id: backup.c,v 2.24 2000-12-09 10:38:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -109,6 +109,7 @@ backup(struct PConnection *pconn,
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */
 		close(bakfd);
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 	SYNC_TRACE(7)
