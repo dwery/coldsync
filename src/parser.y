@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.41 2001-01-28 22:39:23 arensb Exp $
+ * $Id: parser.y,v 2.42 2001-02-20 14:04:15 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -827,7 +827,13 @@ pda_directive:
 			 * fine. It specifies a PDA with no serial number
 			 * (e.g., a PalmPilot).
 			 */
-
+		} else if (cur_pda->snum[0] == '*')
+		{
+			/* If the serial number begins with '*', assume
+			 * that it's a special serial number (e.g.,
+			 * "*Visor*") and that therefore it doesn't need a
+			 * serial number.
+			 */
 		} else if (csum_ptr == NULL)
 		{
 			/* No checksum. Calculate it, and tell the user
