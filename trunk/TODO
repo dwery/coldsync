@@ -1,3 +1,4 @@
+- Add documentation for 'autoinit': option.
 - Update the coduits development documentation to reflect changes
   in mandatory headers.
 - Add documentation for 'cwd:' option in conduit{} block.
