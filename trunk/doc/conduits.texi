@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.5 2000-01-30 16:18:23 arensb Exp $
+@c $Id: conduits.texi,v 1.6 2000-02-03 02:52:22 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -86,9 +86,17 @@ Overview
 
 Tutorial
 
+* Conduit Workings::            
 * todo-dump::                   A simple conduit.
 * pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
+
+@code{pine-aliases}
+
+* &DoFetch::                    The Fetch part of the conduit
+* &DoDump::                     The Dump part of the conduit
+* Helper Functions::            
+* pine-aliases Limitations::    Real-world considerations
 
 Specification
 
@@ -342,224 +350,120 @@ yet.}
 @chapter Tutorial
 
 @cindex Programming languages
-	This chapter shows, by example, how to write ColdSync conduits.
-Since a conduit is simply an executable program that communicates with
-ColdSync according to a certain protocol, you can write conduits in
-whichever language you choose.
-
 @cindex Perl
-	I happen to like Perl, though, so that's what this example uses.
-To run it, you will need the @code{p5-Palm} Perl module from@*
+	This chapter shows, by example, how to write ColdSync conduits.
+The examples are written in Perl, simply because I happen to like it.
+However, you can use any language you like to write conduits.
+
+	The example conduits in this chapter use the @code{ColdSync.pm}
+module that's part of the ColdSync distribution, and also the
+@code{p5-Palm} module from@*
 @uref{http://www.ooblick.com/software/coldsync/}.
 
 @menu
+* Conduit Workings::            
 * todo-dump::                   A simple conduit.
 * pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
 @end menu
 
-@node todo-dump, pine-aliases, Tutorial, Tutorial
+@node Conduit Workings, todo-dump, Tutorial, Tutorial
+@comment  node-name,  next,  previous,  up
+@section Conduit Workings: A Quick Overview
+
+	A conduit is simply a program, one that follows the ColdSync
+conduit protocol (@pxref{Specification}).
+
+	In a nutshell, ColdSync runs a conduit with two command-line
+arguments: the string @code{conduit}, and another that indicates the
+conduit flavor, either @code{fetch} or @code{dump}.
+
+	ColdSync then writes a set of header lines to the conduit's
+standard input, e.g.,
+
+@example
+@cartouche
+Daemon: coldsync
+Version: @value{VERSION}
+InputDB: /homes/arensb/.palm/backup/ToDoDB.pdb
+@cindex Moon, phase of
+Phase-of-the-Moon: lunar eclipse
+@end cartouche
+@end example
+
+@noindent
+followed by a blank line.
+
+	The conduit reports its status back to ColdSync by writing to
+standard output, e.g.:
+
+@example
+@cartouche
+202 Success.
+@end cartouche
+@end example
+
+	The three-digit code indicates whether this is an error message,
+a warning, or an informational message. @xref{Status Codes}. The rest of
+the line is a text message to go with the status code. It is not parsed
+by ColdSync; it is intended for human readers.
+
+	A conduit should print such a message before exiting, to
+indicate whether it was successful or not.
+
+@node todo-dump, pine-aliases, Conduit Workings, Tutorial
 @comment  node-name,  next,  previous,  up
 @section @code{todo-dump}
-@c XXX - Rewrite this with the new ColdSync.pm
 
 	Let's write a Dump conduit that writes the current To Do list to
-a file:
+a file. This is a single-flavor conduit, so we'll use the following
+template:
+
+@cindex Template, single-flavor conduit
+@example
+#!/usr/bin/perl
+use Palm::ToDo;
+use ColdSync;
+
+# Declarations and such go here.
+
+StartConduit("dump");
+
+# Actual conduit code goes here
+
+EndConduit;
+@end example
+
+	The @code{Palm::ToDo} module is a parser for ToDo databases; it
+adds hooks so that when the conduit reads the ToDo database, its records
+will be parsed into structures that can easily be manipulated by a Perl
+program (see Palm::ToDo(1)).
+
+	The @code{ColdSync} module provides a framework for writing
+conduits, and defines the @code{StartConduit} and @code{EndConduit}
+functions.
+
+	@code{StartConduit} takes one option indicating the conduit
+flavor (Dump, in this case). It checks the command-line options and
+makes sure the conduit was invoked with the proper flavor. It reads the
+headers from standard input and puts them in @code{%HEADERS}. If the
+conduit was given a @code{InputDB} header, @code{StartConduit} loads the
+database into @code{$PDB}.
+
+	@code{EndConduit} takes care of cleaning up when the conduit
+finishes. For Fetch conduits, it writes @code{$PDB} to the file given by
+@code{$HEADERS@{OutputDB@}}.
+
+	Starting with this template, all we need to do now is to insert
+the actual code:
 
 @example
 #!/usr/bin/perl
 use Palm::ToDo;
+use ColdSync;
 
 $OUTFILE = "$ENV@{HOME@}/TODO";           # Where to write the output
-$SIG@{"__DIE__"@} = \&Die;
-$SIG@{"__WARN__"@} = \&Warn;
 
-# Die
-# Hook for die(). Intercepts the message and prepends an error code if
-# there wasn't already one.
-sub Die
-@{
-        my $msg = shift;
-
-        print STDOUT "501 " unless $msg =~ /^\d@{3@}[- ]/;
-        print STDOUT $msg;
-
-        return;
-@}
-
-# Warn
-# Hook for warn(): when a conduit prints a warning, it should go to
-# STDOUT, and be preceded by an error code.
-sub Warn
-@{
-        my $msg = shift;
-
-        print STDOUT "301 " unless $msg =~ /^\d@{3@}[- ]/;
-        print STDOUT $msg;
-
-        return;
-@}
-@end example
-
-	The @code{Palm::ToDo} module is a parser for ToDo databases.
-When we read the To Do database, later, it will automatically be split
-into individual records, and the records will be parsed into structures
-that can easily be manipulated by a Perl program (see Palm::ToDo(1)).
-
-@cindex @code{die}, Perl function
-@cindex @code{warn}, Perl function
-@cindex Error messages
-	The @code{Die} and @code{Warn} functions are simply wrappers
-around Perl's @code{die} and @code{warn} built-ins. The conduit protocol
-states that before a conduit exits, it should write a numeric status
-code to standard output; the @code{Die} function prepends a default
-status code of 501 if the message does not provide one of its own, then
-continues dying. This way, if the script @code{die}s in, say, a
-@code{require}d module, it will still print the status code.
-
-@cindex Warning messages
-	A conduit may also print warnings to standard output. These
-warnings must also begin with a status code. The @code{Warn} function
-ensures that all warnings printed using the @code{warn} built-in have a
-status code.
-
-@example
-# Parse command-line arguments
-if ($ARGV[0] ne "conduit")
-@{
-        die "402 Missing or bad conduit argument\n";
-@}
-
-# Make sure there's a flavor argument
-if (!defined($ARGV[1]))
-@{
-        die "403 Missing flavor argument\n";
-@}
-
-# Make sure the flavor is supported
-if ($ARGV[1] ne "dump")
-@{
-        die "404 Unsupported flavor\n";
-@}
-@end example
-
-	Each conduit is run with two command-line arguments. The first
-is the string ``@code{conduit}''. The second is the conduit flavor.
-
-	In principle, a program might behave differently depending on
-whether it is run manually by the user, or from within ColdSync. It
-could then check whether the first argument is @code{conduit} or not,
-and behave accordingly.
-
-	In this case, the script cannot be run standalone, so if the
-@code{conduit} argument is missing, it simply complains and exits.
-
-	The second argument gives the flavor argument. You can set up
-your @file{.coldsyncrc} to run the same program several times: first as
-a Fetch conduit, then later as a Dump conduit. The second command-line
-argument gives the conduit flavor and tells the program how to behave.
-Currently, the only supported flavors are @code{fetch} and @code{dump}.
-
-	In this case, the program can only function as a Dump conduit.
-If that's not how it was invoked, it complains and exits.
-
-	Next, we read the conduit header from standard input:
-
-@cindex Headers, parsing
-@example
-# Read the conduit fields from stdin
-%HEADERS = ();
-
-while (<STDIN>)
-@{
-        my $header;             # Header field
-        my $value;              # Header field's value
-
-        chomp;
-        last if /^$/;           # Blank line is end of headers
-
-        if (!/^([-\w]+):\s(.*)/)
-        @{
-                die "405 Invalid input\n";
-        @}
-        $header = $1;
-        $value = $2;
-
-        $HEADERS@{$header@} = $value;
-@}
-@end example
-
-	ColdSync sends input to the conduit in a set of
-``@var{Field}: @var{value}'' pairs very similar to mail headers, e.g.:
-
-@example
-Daemon: coldsync
-Version: 1.0.0
-InputDB: /homes/arensb/.palm/backup/ToDoDB.pdb
-OutputDB: /homes/arensb/.palm/backup/ToDoDB.pdb
-@cindex Moon, phase of
-Phase-of-the-Moon: lunar eclipse
-@end example
-
-@cindex @file{.coldsyncrc}
-	Some headers have standard meanings (@pxref{Predefined
-Headers}). Others are specified in @file{.coldsyncrc} and are passed to
-the conduit as-is. @footnote{This is not yet implemented.}
-
-@cindex @code{Daemon} header
-@cindex @code{Version} header
-@cindex ColdSync, alternate versions of
-	The @code{Daemon} and @code{Version} headers specify the name
-and version of the program that ran the conduit. If someone decides to
-release a modified version of ColdSync under the name ``FooSync'', then
-the @code{Daemon} header should be set to @code{FooSync}. That way, a
-FooSync-aware conduit will be able to act differently for FooSync and
-``classic'' ColdSync.
-
-@cindex @code{InputDB} header
-	The @code{InputDB} header specifies the pathname of the Palm
-database to use as input. It is always passed to Dump conduits.
-
-@cindex @code{OutputDB} header
-	The @code{OutputDB} header specifies the pathname of a file to
-write. It is always passed to Fetch conduits.
-
-@cindex Filtering conduits
-	Note that it can make sense for a conduit to modify its input
-file. For instance, a Dump conduit for the Mail application might read
-the ``Outbox'' records from the database, mail them, then delete them
-from the database. Such a conduit acts like a Unix filter, which reads
-its standard input and writes to standard output. By analogy, it is
-considered good form to write the modified database to the file
-specified by @code{OutputDB}. In most cases, this will be the same file
-as the one specified by @code{InputDB}, but it might not be.
-
-	A blank line indicates the end of the headers.
-
-	Next, we perform a sanity check on the headers:
-
-@example
-if (!defined($HEADERS@{"InputDB"@}))
-@{
-        die "406 Missing header field: InputDB\n";
-@}
-@end example
-
-	It is allowable to @code{die} in the middle of reading the
-headers, but this seems silly. It makes more sense to just read all of
-the headers at once, and put all of the sanity checks in one place.
-
-	Now we can read the To Do database:
-
-@example
-# Read the PDB file specified by the "InputDB" header.
-$pdb = new Palm::PDB;
-$pdb->Load($HEADERS@{"InputDB"@});
-@end example
-
-	Finally, we get to where the real work gets done:
-
-@example
 format TODO =
 @@ @@ @@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 $marker, $priority, $description
@@ -567,11 +471,13 @@ $marker, $priority, $description
         $note
 .
 
+StartConduit("dump");
+
 open OUTFILE, "> $OUTFILE" or die("401 Can't open $OUTFILE: $!\n");
 select OUTFILE;
 $~ = TODO;                      # Set the output format
 
-foreach $record (@@@{$pdb->@{"records"@}@})
+foreach $record (@@@{$PDB->@{"records"@}@})
 @{
         $marker         = ($record->@{"completed"@} ? "x" : "-");
         $priority       = $record->@{"priority"@};
@@ -582,28 +488,14 @@ foreach $record (@@@{$pdb->@{"records"@}@})
 @}
 
 close OUTFILE;
+
+EndConduit;
 @end example
 
-	@code{@@@{$pdb->@{"records"@}@}} is a list of references to
-anonymous hashes. Each hash contains one To Do record. We simply iterate
-over this list and write every record to the output file. Completed
-items will have an ``x'' in front of them. Items yet to be completed
-will have a ``-''.
-
-	Now we're done:
-
-@example
-print STDOUT "202 Success!\n";
-exit 0;
-@end example
-
-@cindex Status code
-@cindex Success
-@cindex Error code
-	The conduit protocol requires the conduit to print a status code
-before exiting. A status code in the range 200-299 indicates success.
-400-599 indicates failure.
-@xref{Status Codes}.
+	The @code{ColdSync.pm} module provides wrappers for Perl's
+@code{die} and @code{warn} functions, so that their messages will be
+passed back to ColdSync. The rest of the code should be
+self-explanatory.
 
 @node pine-aliases, Style and Warnings, todo-dump, Tutorial
 @comment  node-name,  next,  previous,  up
@@ -622,6 +514,7 @@ use in the real world.
 
 	Having said this, let's take a look at the conduit:
 
+@cindex Template, multi-flavor conduit
 @example
 #!/usr/bin/perl
 use Palm::Address;
@@ -669,14 +562,24 @@ these sorts of tricks and make sure that the two conduits work properly.
 	@code{ConduitMain} takes as its arguments a table that tells
 which function to call for each flavor. When the conduit is run,
 @code{ConduitMain} parses and checks the command-line arguments, reads
-the headers from standard input and puts them in @code{%HEADERS}, and
-calls the appropriate function. If an @code{InputDB} header was
-specified, that file will be read into @code{$PDB}. Then it calls the
-flavor-specific function (in this case, either @code{&DoFetch} or
-@code{&DoDump}) to do the actual work of the conduit, and finally cleans
-up: for Fetch conduits, it writes the contents of @code{$PDB} to the
-file specified by the @code{OutputDB} header.
+the headers from standard input and stores them in the hash
+@code{%HEADERS}, and calls the appropriate function. If an
+@code{InputDB} header was specified, that file will be read into the
+variable @code{$PDB}. Then it calls the flavor-specific function (in
+this case, either @code{&DoFetch} or @code{&DoDump}) to do the actual
+work of the conduit, and finally cleans up: for Fetch conduits, it
+writes the contents of @code{$PDB} to the file specified by the
+@code{OutputDB} header.
 
+@menu
+* &DoFetch::                    The Fetch part of the conduit
+* &DoDump::                     The Dump part of the conduit
+* Helper Functions::            
+* pine-aliases Limitations::    Real-world considerations
+@end menu
+
+@node &DoFetch, &DoDump, pine-aliases, pine-aliases
+@comment  node-name,  next,  previous,  up
 @subsection @code{&DoFetch}
 
 	The @code{&DoFetch} function reads Pine's alias file. For each
@@ -688,9 +591,12 @@ sub DoFetch
 @{
         my %aliases = ();
 
-        $PDB = new Palm::PDB;
-        $PDB->Load($HEADERS@{"InputDB"@} ||
-                   $HEADERS@{"OutputDB"@});
+        if (!defined($PDB))
+        @{
+                $PDB = new Palm::PDB;
+                $PDB->Load($HEADERS@{"OutputDB"@}) or
+                        die "502 No input database\n";
+        @}
 
         open ALIASES, "< $PINE_ALIASES" or
                 die "Can't open $PINE_ALIASES: $!\n";
@@ -730,6 +636,356 @@ sub DoFetch
 @}
 @end example
 
+	The @code{InputDB} header is optional for Fetch conduits, so
+@code{$PDB} may not have been initialized. But @code{pine-aliases} does
+not create a new database from scratch; it only modifies an existing
+one. If no @code{InputDB} database was specified, we load the database
+specified by @code{OutputDB}.
+
+	The body of @code{&DoFetch} is divided into two phases: in the
+first phase, it reads the Pine alias file and builds a hash,
+@code{%aliases}, that maps each full name to its e-mail address. The
+second phase goes through this map and updates each record in
+@code{$PDB}. This two-phase approach may seem overly complex; the
+reasons for it are discussd in @ref{pine-aliases Limitations}.
+
+	Each line in the Pine address book contains a set of
+tab-separated fields: the person's alias, full name, e-mail address, and
+a few others that we don't use.
+
+	We'll need some way of figuring out which Pine alias goes with
+which Palm Address Book record. Since the Pine alias file does not list
+Palm record IDs and Palm records don't list mail aliases, we'll settle
+on the full name as the next best way of uniquely identifying a person.
+
+	The second phase of @code{&DoFetch} uses a number of helper
+functions: @var{&find_person} takes a person's full name and returns a
+reference to the corresponding record in @code{$PDB};
+@code{&get_address} extracts the e-mail address from that record; and
+@code{&set_address} sets the e-mail address in the record.
+
+	One important thing to note is that @code{&set_address} marks
+the record as dirty. During a normal sync, ColdSync only considers those
+records that have changed in some way. When we update the address, we
+need to make sure that the record is marked as dirty; otherwise it will
+not be uploaded to the Palm.
+
+	When @code{&DoFetch} returns, @code{ConduitMain} writes
+@code{$PDB} to the file given by @code{$HEADERS@-@{"OutputDB"@}} and
+exits. Then, during the main sync, ColdSync will upload to the Palm any
+records @code{pine-aliases} has modified.
+
+@node &DoDump, Helper Functions, &DoFetch, pine-aliases
+@comment  node-name,  next,  previous,  up
+@subsection @code{&DoDump}
+
+	The @code{&DoDump} function implements the Dump conduit:
+
+@example
+sub DoDump
+@{
+        open ALIASES, "< $PINE_ALIASES" or
+                die "502 Can't read $PINE_ALIASES: $!\n";
+        open ALIASES_NEW, "> $PINE_ALIASES.new" or
+                die "502 Can't write $PINE_ALIASES.new: $!\n";
+
+        while (<ALIASES>)
+        @{
+                chomp;
+
+                my $alias = $1;
+                my $addr = $2;
+                my $fullname = $3;
+                my @@rest;
+                my $record;
+
+                ($alias, $fullname, $addr, @@rest) = split /\t/;
+
+                $record = &find_person($PDB, $fullname);
+                if (!defined($record))
+                @{
+                        # This name doesn't appear in $PDB.
+                        print ALIASES_NEW $_, "\n";
+                        next;
+                @}
+
+                # This person appears in both the alias file and in
+                # the PDB.
+                my $pdb_addr = &get_address($record);
+
+                if (defined($pdb_addr))
+                @{
+                        # Found an address
+                        print STDOUT "101 $fullname -> $pdb_addr\n"
+                                if $pdb_addr ne $addr;
+                        print ALIASES_NEW
+                                join("\t", $alias, $fullname,
+                                        $pdb_addr, @@rest),
+                                "\n";
+                        next;
+                @}
+
+                # The PDB record doesn't have an e-mail address. Mark it
+                # as deleted.
+                my $year;
+                my $month;
+                my $day;
+
+                ($year, $month, $day) = (localtime)[5,4,3];
+                $year %= 100;
+                $month++;
+
+                $alias = sprintf "#DELETED-%02d/%02d/%02d#%s",
+                                $year, $month, $day, $alias;
+
+                print ALIASES_NEW
+                        join("\t", $alias, $fullname, $addr, @@rest),
+                        "\n";
+        @}
+
+        close ALIASES_NEW;
+        close ALIASES;
+        rename "$PINE_ALIASES.new", $PINE_ALIASES or
+                die "Can't rename $PINE_ALIASES.new: $!\n";
+
+        return 1;               # Success
+@}
+@end example
+
+	In @code{&DoDump}, we read each line of @file{~/.addressbook} in
+turn and write a possibly-update version to @file{~/.addressbook.new}.
+The reasons for using two files is twofold: first of all, the length of
+a line might change, so we can't just update the file in place.
+Secondly, if anything goes wrong during the sync, we can simply abort
+before moving the new file into place, and leave the old alias file
+untouched, rather than risk corrupting it.
+
+	Again, we use @code{&find_person} to look up the Palm record
+corresponding to a person's full name, and @code{&get_address} to
+extract the e-mail address from the record. There are three cases we
+need to consider:
+
+@itemize @bullet
+@item There is no record corresponding to this alias.
+@ifhtml
+<P>
+@end ifhtml
+
+	There are two approaches we can take here: we can either delete
+	the Pine alias (simply by not writing it to @code{ALIASES_NEW}),
+	or we can ignore it. Since we're not trying to make sure that
+	every Palm record has a corresponding Pine alias, we'll take the
+	latter approach.
+
+@item There is a record, and it has an e-mail address.
+@ifhtml
+<P>
+@end ifhtml
+
+	We write the alias to @code{ALIASES_NEW}, with the e-mail
+	address listed in the Palm record. This may or may not be
+	different from what was there before, but it doesn't matter:
+	this is the most up-to-date address.
+
+@item There is a record, but it doesn't have an e-mail address.
+@ifhtml
+<P>
+@end ifhtml
+
+	In this case, we'll assume that the e-mail address was deleted
+	on the Palm, otherwise the Fetch conduit would have uploaded the
+	e-mail address. Hence, this e-mail address is obsolete and
+	should be commented out. In general, it is preferable to comment
+	things out rather than delete them: that way, if there's a bug
+	somewhere, the information isn't permanently lost.
+
+@end itemize
+
+@node Helper Functions, pine-aliases Limitations, &DoDump, pine-aliases
+@comment  node-name,  next,  previous,  up
+@subsection Helper functions
+
+	These are the helper functions used in @code{pine-aliases}.
+
+@cindex @code{find_person}
+	@code{&find_person} takes a reference to a @code{Palm::Address}
+and a full name, and returns a reference to the record corresponding to
+that name:
+
+@example
+sub find_person
+@{
+        my $PDB = shift;
+        my $fullname = shift;
+        my $record;
+
+        foreach $record (@@@{$PDB->@{"records"@}@})
+        @{
+                next unless ($record->@{"fields"@}@{"firstName"@} . " " .
+                        $record->@{"fields"@}@{"name"@}) eq $fullname;
+                return $record;
+        @}
+        return undef;           # Failure
+@}
+@end example
+
+	Since Palm Address Book records don't contain a full name field,
+we construct one from the first and last names, and see if it matches.
+
+	Note that a better version of this function would also consider
+other fields: an entry such as ``Ooblick Technical Support'' might be
+listed on the Palm with no first or last name, but with the company
+field set to ``Ooblick'' and the title field set to ``Technical
+Support''.
+
+@cindex @code{get_address}
+	@code{&get_address} takes a reference to a Palm record, and
+extracts the e-mail address, if any:
+
+@example
+sub get_address
+@{
+        my $record = shift;
+        my $field;
+
+        # Look through all of the "phone*" fields
+        foreach $field ( qw( phone1 phone2 phone3 phone4 phone5 ) )
+        @{
+                next unless $record->@{"phoneLabel"@}@{$field@} == 4;
+
+                # Found the (or an) e-mail field
+                my $addr = $record->@{"fields"@}@{$field@};
+
+                $addr =~ s/\n.*//;      # Keep only first line
+
+                # Remove parenthesized expressions
+                $addr =~ s/\([^\)]*\)//;
+                $addr =~ s/^\s+//;      # Remove leading whitespace
+                $addr =~ s/\s+$//;      # and trailing whitespace
+
+                return $addr;
+        @}
+
+        return undef;           # Couldn't find anything
+@}
+@end example
+
+	This was made into a separate function for clarity: the Palm
+Address Book record format does not contain a separate field for the
+e-mail address. Rather, it has five fields named @code{phone1} through
+@code{phone5}, each of which can be a home phone, work phone, fax
+number, e-mail address, etc. See Palm::Address(1) for details.
+
+	@code{&get_address} looks at each phone field in turn until it
+finds one whose @code{phoneLabel} is 4, meaning ``E-mail''. It extracts
+the useful part of the address and returns it.
+
+	Note that this function is very simplistic: all it does is
+remove the parentheses from addresses of the form
+
+@example
+JDoe@@ooblick.com (John Doe)
+@end example
+
+@noindent
+The general case is much more complex.
+
+	@code{&set_address} is the converse of @code{&get_address}: it
+stores an e-mail address in a record:
+
+@example
+sub set_address
+@{
+        my $record = shift;
+        my $addr = shift;
+        my $field;
+
+        # Find the E-mail phone field
+        foreach $field ( qw( phone1 phone2 phone3 phone4 phone5 ) )
+        @{
+                next unless $record->@{"phoneLabel"@}@{$field@} == 4;
+
+                # Found it.
+                $record->@{"fields"@}@{$field@} = $addr;
+                $record->@{"attributes"@}@{"dirty"@} = 1;
+                return;
+        @}
+
+        # No E-mail field found.
+        foreach $field ( qw( phone1 phone2 phone3 phone4 phone5 ) )
+        @{
+                next if $record->@{"phoneLabel"@}@{$field@} =~ /\S/;
+
+                # Found an empty field
+                $record->@{"phoneLabel"@}@{$field@} = 4;
+                $record->@{"labels"@}@{$field@} = $addr;
+                $record->@{"attributes"@}@{"dirty"@} = 1;
+                return;
+        @}
+
+        # No E-mail fields, and no empty fields. Fail silently.
+        return;
+@}
+@end example
+
+	Again, due to the format of Palm Address Book records, this
+function is more complicated than it seems that it ought to be.
+
+	In the simplest case, we look at all of the phone fields, find
+one marked ``E-mail'', and update it.
+
+	If there is no e-mail field, @code{&set_address} tries to find
+an empty field and turn it into an e-mail field, then writes the address
+to that field.
+
+	If there are no empty fields, we'll give up, since this is just
+a tutorial. A real conduit ought to keep trying: it might consider
+adding the e-mail address to the ``Other'' phone field, if there is one.
+As a last resort, it might add the e-mail address to the note. Of
+course, @code{&get_address} also needs to know about all of the places
+where an e-mail address might lurk.
+
+	In any case, @code{&set_address} marks the record as being
+dirty, so that it will be uploaded to the Palm at the next sync.
+
+@node pine-aliases Limitations,  , Helper Functions, pine-aliases
+@comment  node-name,  next,  previous,  up
+@subsection Limitations of @code{pine-aliases}
+
+	The conduit we've just seen is just a tutorial. For the sake of
+simplicity, we've ignored several real-world considerations that would
+have made the code even harder to read.
+
+	The first simplifying assumption we've made is that there is
+only one e-mail address per person. In the real world, people often have
+a home address and a work address. To deal with this, @code{&DoFetch}
+should collect an array of addresses for each person, then make sure
+that each address in the array exists in the Palm record (this is why
+@code{&DoFetch} is split up into two phases).
+
+	One issue that complicates matters is that a Palm Address Book
+record might contain multiple phone fields marked ``E-mail''.
+@code{&get_address} ought to handle this case. The other side of the
+issue is that @code{&set_address} shouldn't just dump all of the e-mail
+addresses into the first ``E-mail'' phone record that it finds,
+otherwise the second and subsequent addresses will be duplicated.
+
+	Secondly, we've assumed that each full name uniquely identifies
+a single person. This obviously fails if the user knows two people named
+John Smith. In the case of @code{pine-aliases}, we can get away with
+documenting this limitation and requiring the user to list one of them
+as ``John Allan Smith'' and the other as ``John Paul Smith''. We might
+also consider setting up a separate file that maps Pine mail aliases to
+Palm record IDs, since those are unique identifiers in their respective
+domains.
+
+	Finally, @code{&set_address} shouldn't fail so easily: if it
+fails to add an e-mail address to the record, then at the next sync, the
+corresponding Pine alias will be commented out. If a record is so full
+that there are no empty phone records, then obviously it's very
+important, and the user would be rather upset at losing this e-mail
+address.
+
 @node Style and Warnings,  , pine-aliases, Tutorial
 @comment  node-name,  next,  previous,  up
 @section Style and Warnings: things to watch out for
@@ -764,8 +1020,8 @@ that hasn't been run yet.
 @cindex Bad idea
 Deleting records: the obvious way to delete a record is to simply fail
 to write it to the output database. This is a bad idea, because of the
-way that fast syncs work. Use @code{$pdb->deleteRecord($record)} or
-@code{$pdb->deleteRecord($record, 1)}instead
+way that fast syncs work. Use @code{$pdb->delete_Record($record)} or
+@code{$pdb->delete_Record($record, 1)}instead
 @ifhtml
 <P>
 @end ifhtml
@@ -1291,6 +1547,17 @@ meantime, the recommended code for a plain, ordinary success is 202.
 Warning. The 3@i{yz} status codes indicate that something is wrong, but
 that the conduit has managed to recover.
 
+	@table @asis
+
+	@item 301
+	Unspecified warning.
+
+	Indicates that something odd has occurred, but does not specify
+	what. This is the default warning printed by the
+	@code{ColdSync.pm} module if no status code was provided.
+
+	@end table
+
 @c XXX - What if this is the last status code printed to stdout?
 
 @item 4@i{yz}
@@ -1311,6 +1578,17 @@ Conduit error. A 5@i{yz} code indicates that the conduit should have
 been able to perform its function, but couldn't. Reasons include running
 out of memory, segmentation violation, inability to parse an
 apparently-correct @code{InputDB} file, etc.
+
+	@table @asis
+	@item 501
+	Unspecified error.
+
+	Indicates that the conduit was not able to terminate for some
+	reason other than improper input, but does not specify the
+	cause. This is the default error code used by the
+	@code{ColdSync.pm} Perl module.
+
+	@end table
 
 @item 6@i{yz}-9@i{yz}
 These error codes are currently undefined, but may be used in future
