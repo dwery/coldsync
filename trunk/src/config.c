@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.25 2000-05-21 07:59:56 arensb Exp $
+ * $Id: config.c,v 1.26 2000-05-25 12:09:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -336,12 +336,23 @@ get_config(int argc, char *argv[])
 	 * "FOO=bar", set the variable $FOO to value "bar". Otherwise,
 	 * complain and exit.
 	 */
+	/* XXX - Or, possibly, trailing arguments can mean different thing
+	 * in different modes, e.g.: "-mb foo.pdb bar.pdb" to just back up
+	 * "foo.pdb" and "bar.pdb", etc.
+	 */
 
 	/* Sanity checks */
 
 	/* Can't back up and restore at the same time */
 	/* XXX - This should be replaced with "-mb" (backup), "-mr"
 	 * (restore), "-ms" (sync/standalone) and "-md" (daemon).
+	 *
+	 * -mb <dir> [files]	Backup to <dir>. If <files> specified,
+	 *			only back those up.
+	 * -mr <dir> [files]	Ditto, restore from <dir>
+	 * -ms			Sync, standalone (default)
+	 * -md			Sync, daemon mode
+	 * -mD files...		Delete named databases
 	 */
 	if (global_opts.do_backup &&
 	    global_opts.do_restore)
