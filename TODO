@@ -1,3 +1,8 @@
+- Robustness: if "get serial number" fails, make sure it's not because
+  of an underlying problem (e.g., lost connection with Palm).
+	Probably need to go through each function and make sure it
+  sets a sane error code. Then go through those functions' callers,
+  etc. Bleah.
 - Document how to use ColdSync in daemon mode (getty, inetd, usbd.conf)
 - Under Solaris, defining _XPG4_2 might induce standards-compliance,
   and make things happier. There's a comment in PConnection_net.c that
