@@ -3,11 +3,11 @@
  * Functions for restoring Palm databases (both .pdb and .prc) from
  * the desktop to the Palm.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.17 2000-12-24 21:24:59 arensb Exp $
+ * $Id: restore.c,v 2.18 2001-01-09 16:19:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -63,8 +63,8 @@ restore_file(PConnection *pconn,
 	/* Read the PDB file */
 	if ((bakfd = open(fname, O_RDONLY | O_BINARY)) < 0)
 	{
-		fprintf(stderr, _("Error: Can't open %s\n"),
-			fname);
+		Error(_("Error: Can't open %s\n"),
+		      fname);
 		perror("open");
 		return -1;
 	}
@@ -72,8 +72,7 @@ restore_file(PConnection *pconn,
 	pdb = pdb_Read(bakfd);
 	if (pdb == NULL)
 	{
-		fprintf(stderr, _("Error reading %s\n"),
-			fname);
+		Error(_("Error reading %s\n"), fname);
 		close(bakfd);
 		return -1;
 	}
@@ -99,10 +98,8 @@ restore_file(PConnection *pconn,
 		fprintf(stderr, "Checking read-only attribute\n");
 	if (pdb->attributes & PDB_ATTR_RO)
 	{
-		fprintf(stderr,
-			_("\"%s\" is a read-only database. "
-			  "Not uploading\n"),
-			fname);
+		Error(_("\"%s\" is a read-only database. Not uploading\n"),
+		      fname);
 		return -1;
 	}
 
@@ -129,11 +126,10 @@ restore_file(PConnection *pconn,
 		    if (remotedb == NULL)
 		    {
 			    /* This should never happen */
-			    fprintf(stderr,
-				    _("%s: Database %s doesn't exist, "
-				      "yet it is open. Huh?\n"),
-				    "Restore",
-				    pdb->name);
+			    Warn(_("%s: Database %s doesn't exist, "
+				   "yet it is open. Huh?\n"),
+				 "Restore",
+				 pdb->name);
 			    /* But it shouldn't bother us any */
 			    break;
 		    }
@@ -141,12 +137,11 @@ restore_file(PConnection *pconn,
 		    if ((remotedb->db_flags & DLPCMD_DBFLAG_OKNEWER)
 			== 0)
 		    {
-			    fprintf(stderr,
-				    _("%s: Can't restore %s: it is "
-				      "opened by another application"
-				      "\n"),
-				    "Restore",
-				    pdb->name);
+			    Warn(_("%s: Can't restore %s: it is "
+				   "opened by another application"
+				   "\n"),
+				 "Restore",
+				 pdb->name);
 			    return -1;
 		    }
 
@@ -163,10 +158,8 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
-		fprintf(stderr,
-			_("Restore: Can't delete database \"%s\"."
-			  " err == %d\n"),
-			pdb->name, err);
+		Warn(_("Restore: Can't delete database \"%s\". err == %d\n"),
+		     pdb->name, err);
 		return -1;
 	}
 
@@ -220,8 +213,8 @@ restore_dir(PConnection *pconn,
 	dir = opendir(dirname);
 	if (dir == NULL)
 	{
-		fprintf(stderr, _("Can't read contents of directory %s\n"),
-			dirname);
+		Error(_("Can't read contents of directory %s\n"),
+		      dirname);
 		perror("opendir");
 		return -1;
 	}

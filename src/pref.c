@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 2.2 2000-12-24 21:24:56 arensb Exp $
+ * $Id: pref.c,v 2.3 2001-01-09 16:19:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -212,7 +212,8 @@ DownloadPrefItem(PConnection *pconn,
 	else
 	if ((contents_info = malloc(sizeof *contents_info)) == NULL)
 	{
-		fprintf(stderr,_("%s: Out of memory.\n"),"DownloadPrefItem");
+		Error(_("%s: Out of memory.\n"),
+		      "DownloadPrefItem");
 		return -1;
 	}
 
@@ -267,7 +268,8 @@ DownloadPrefItem(PConnection *pconn,
 	/* Now we allocate the right amount of space */
 	if ((contents = calloc(contents_info->size, sizeof *contents)) == NULL)
 	{
-	    fprintf(stderr, _("%s: Out of memory.\n"),"DownloadPrefItem");
+	    Error(_("%s: Out of memory.\n"),
+		  "DownloadPrefItem");
 	    free(contents_info);
 	    return -1;
 	}

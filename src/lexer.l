@@ -2,11 +2,11 @@
 /* lexer.l
  * Lexer for config file parser.
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.27 2000-12-16 23:23:17 arensb Exp $
+ * $Id: lexer.l,v 2.28 2001-01-09 16:19:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -137,8 +137,8 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found header name [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't make copy of string.\n"),
-			"yylex");
+		Error(_("%s: Can't make copy of string.\n"),
+		      "yylex");
 		return -1;
 	}
 	BEGIN 0;
@@ -150,8 +150,8 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found bareword string [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't make copy of string.\n"),
-			"yylex");
+		Error(_("%s: Can't make copy of string.\n"),
+		      "yylex");
 		return -1;
 	}
 	BEGIN 0;
@@ -272,8 +272,8 @@ ID		[-a-zA-Z_0-9]
 
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't make copy of string.\n"),
-			"yylex");
+		Error(_("%s: Can't make copy of string.\n"),
+		      "yylex");
 		return -1;
 	}
 	return STRING;
@@ -300,8 +300,8 @@ ID		[-a-zA-Z_0-9]
 		fprintf(stderr, "Found string [%s]\n", yytext);
 	if ((yylval.string = (char *) malloc(yyleng-1)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't malloc copy of string\n"),
-			"yylex");
+		Error(_("%s: Can't malloc copy of string\n"),
+		      "yylex");
 		return -1;
 	}
 	strncpy(yylval.string, yytext+1, yyleng-2);
@@ -350,8 +350,8 @@ ID		[-a-zA-Z_0-9]
 
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
-		fprintf(stderr, _("%s: Can't make copy of string.\n"),
-			"yylex");
+		Error(_("%s: Can't make copy of string.\n"),
+		      "yylex");
 		return -1;
 	}
 
@@ -404,9 +404,10 @@ lex_expect(const int state)
 		nextstate = ID4;
 		break;
 	    default:
-		fprintf(stderr, _("%s: unknown start state %d\n"
+		Error(_("%s: unknown start state %d\n"
 			"Please tell the maintainer to fix `lexer.l'.\n"),
-			"lex_expect", state);
+		      "lex_expect",
+		      state);
 	}
 	have_nextstate = True;
 }

@@ -2,11 +2,11 @@
  *
  * Functions pertaining to 'struct Palm's. See description in "palm.h"
  *
- *	Copyright (C) 2000, Andrew Arensburger.
+ *	Copyright (C) 2000-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.11 2000-12-24 21:24:54 arensb Exp $
+ * $Id: palm.c,v 2.12 2001-01-09 16:19:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -174,7 +174,7 @@ fetch_sysinfo(struct Palm *palm)
 	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
 	{
 		/* XXX - This message doesn't really belong here */
-		fprintf(stderr, _("Can't get system info\n"));
+		Error(_("Can't get system info\n"));
 		return -1;
 	}
 	MISC_TRACE(3)
@@ -241,7 +241,7 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		fprintf(stderr, _("Error reading NetSync info\n"));
+		Error(_("Error reading NetSync info\n"));
 		return -1;
 	}
 
@@ -265,7 +265,7 @@ fetch_userinfo(struct Palm *palm)
 	/* Get user information from the Palm */
 	if ((err = DlpReadUserInfo(palm->pconn_, &(palm->userinfo_))) < 0)
 	{
-		fprintf(stderr, _("Can't get user info\n"));
+		Error(_("Can't get user info\n"));
 		return -1;
 	}
 
@@ -275,7 +275,8 @@ fetch_userinfo(struct Palm *palm)
 	MISC_TRACE(3)
 	{
 		fprintf(stderr, "User info:\n");
-		fprintf(stderr, "\tUserID: 0x%08lx\n", palm->userinfo_.userid);
+		fprintf(stderr, "\tUserID: 0x%08lx\n",
+			palm->userinfo_.userid);
 		fprintf(stderr, "\tViewerID: 0x%08lx\n",
 			palm->userinfo_.viewerid);
 		fprintf(stderr, "\tLast sync PC: 0x%08lx (%d.%d.%d.%d)\n",
@@ -358,14 +359,14 @@ fetch_serial(struct Palm *palm)
 
 	/* Get the location of the ROM serial number */
 	SYNC_TRACE(7)
-		fprintf(stderr, "Getting location of serial number in ROM.\n");
+		fprintf(stderr,
+			"Getting location of serial number in ROM.\n");
 	/* XXX - Move this into its own function? */
 	err = RDLP_ROMToken(palm->pconn_, CARD0, ROMToken_Snum,
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
-		fprintf(stderr, _("Error: Can't get location of "
-				  "serial number\n"));
+		Error(_("Error: Can't get location of serial number\n"));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -375,10 +376,10 @@ fetch_serial(struct Palm *palm)
 	/* Sanity check: make sure we have space for the serial number. */
 	if (snum_len > SNUM_MAX-1)
 	{
-		fprintf(stderr, _("Warning: ROM serial number is "
-				  "%d characters long. Please notify "
-				  "the\nmaintainer\n"),
-			snum_len);
+		Error(_("Warning: ROM serial number is %d characters long. "
+			"Please notify the\n"
+			"maintainer\n"),
+		      snum_len);
 		snum_len = SNUM_MAX;
 	}
 
@@ -389,7 +390,7 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
-		fprintf(stderr, _("Error: Can't read serial number\n"));
+		Error(_("Error: Can't read serial number\n"));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -435,11 +436,10 @@ ListDBs(struct Palm *palm)
 		if (palm->num_dbs_ <= 0)
 		{
 			/* XXX - Fix this */
-			fprintf(stderr,
-				_("### Error: you have an old Palm, one that "
-				  "doesn't say how many\n"
-				  "databases it has. I can't cope with "
-				  "this.\n"));
+			Error(_("### Error: you have an old Palm, one that "
+				"doesn't say how many\n"
+				"databases it has. I can't cope with "
+				"this.\n"));
 			return -1;
 		}
 
@@ -874,7 +874,7 @@ palm_append_dbentry(struct Palm *palm,
 			    sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
-		fprintf(stderr, _("Error resizing palm->dblist\n"));
+		Error(_("Error resizing palm->dblist\n"));
 		return -1;
 	}
 	palm->dblist_ = newdblist;

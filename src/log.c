@@ -2,11 +2,11 @@
  *
  * Convenience functions for logging.
  *
- *	Copyright (C) 1999, 2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.18 2000-12-10 00:28:38 arensb Exp $
+ * $Id: log.c,v 1.19 2001-01-09 16:19:29 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -69,7 +69,7 @@ add_to_log(const char *msg)
 
 			if ((newlog = malloc(newsize)) == NULL)
 			{
-				fprintf(stderr, _("%s: Out of memory.\n"),
+				Error(_("%s: Out of memory.\n"),
 					"add_to_log");
 				perror("malloc");
 				return -1;
@@ -98,8 +98,8 @@ add_to_log(const char *msg)
 
 			if ((newlog = realloc(synclog, newsize)) == NULL)
 			{
-				fprintf(stderr, _("%s: realloc failed\n"),
-					"add_to_log");
+				Error(_("%s: realloc failed\n"),
+				      "add_to_log");
 				perror("realloc");
 				return -1;
 			}
