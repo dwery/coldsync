@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.20 2000-01-23 21:17:42 arensb Exp $
+ * $Id: coldsync.c,v 1.21 2000-01-25 10:28:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -136,8 +136,7 @@ main(int argc, char *argv[])
 		/* So I'll know what people are running when they send me
 		 * stderr.
 		 */
-		/* XXX - Perhaps dump the contents of "config.h" as well? */
-		fprintf(stderr, "%s version %s\n", PACKAGE, VERSION);
+		print_version();
 
 #if HAVE_LIBINTL
 	/* Set things up so that i18n works. The constants PACKAGE and
