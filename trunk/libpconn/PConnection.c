@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.32 2002-11-23 16:32:40 azummo Exp $
+ * $Id: PConnection.c,v 1.33 2002-11-23 17:08:25 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -326,7 +326,7 @@ PConn_set_palmerrno(PConnection *p, palmerrno_t palm_errno)
 	if (p->palm_errno_set_callback)
 		(*p->palm_errno_set_callback)(p, palm_errno);
 
-	p->palm_errno = errno;
+	p->palm_errno = palm_errno;
 }
 
 void
