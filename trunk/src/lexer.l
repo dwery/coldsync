@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.25 2000-12-15 07:18:02 arensb Exp $
+ * $Id: lexer.l,v 2.26 2000-12-16 19:51:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -172,6 +172,7 @@ ID		[-a-zA-Z_0-9]
 "conduit"	{ KEYWORD(CONDUIT);	}
 "device"	{ KEYWORD(DEVICE);	}
 "directory"	{ KEYWORD(DIRECTORY);	}
+"forward"	{ KEYWORD(FORWARD);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "net"		{ KEYWORD(NET);	}
 "network"	{ KEYWORD(NET);		/* Synonym */	}
