@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.52 2001-01-25 07:44:33 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.53 2001-03-27 14:07:28 arensb Exp $
  */
 
 /* Note on I/O:
@@ -254,6 +254,15 @@ GenericConduit::FirstSync()
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		SYNC_TRACE(4)
 		{
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
@@ -298,6 +307,15 @@ GenericConduit::FirstSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FirstSync",
 		      _dbinfo->name,
@@ -310,6 +328,15 @@ GenericConduit::FirstSync()
 	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("pdb_Download() failed."));
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
 		add_to_log(_("Error\n"));
@@ -407,6 +434,15 @@ GenericConduit::FirstSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
@@ -428,8 +464,17 @@ GenericConduit::FirstSync()
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
-			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				err = DlpCloseDB(_pconn, dbh);
+				add_to_log(_("Error\n"));
+				break;
+			}
 			return -1;
 		}
 	}
@@ -473,6 +518,15 @@ GenericConduit::SlowSync()
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
@@ -514,8 +568,16 @@ GenericConduit::SlowSync()
 	    default:
 		/* Some other error, which probably means the sync
 		 * can't continue.
-		 * XXX - Need to indicate this to the caller.
 		 */
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
@@ -527,6 +589,15 @@ GenericConduit::SlowSync()
 	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Can't download \"%s\"."),
 		      "GenericConduit", _dbinfo->name);
 		DlpCloseDB(_pconn, dbh);
@@ -794,6 +865,15 @@ GenericConduit::SlowSync()
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
@@ -844,6 +924,15 @@ GenericConduit::SlowSync()
 	err = DlpCleanUpDatabase(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Can't clean up database: %d."),
 		      "GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
@@ -864,8 +953,17 @@ GenericConduit::SlowSync()
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
-			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				err = DlpCloseDB(_pconn, dbh);
+				add_to_log(_("Error\n"));
+				break;
+			}
 			return -1;
 		}
 	}
@@ -909,6 +1007,15 @@ GenericConduit::FastSync()
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
@@ -949,6 +1056,15 @@ GenericConduit::FastSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
@@ -956,20 +1072,11 @@ GenericConduit::FastSync()
 		return -1;
 	}
 
-	/* XXX - Check the AppInfo block. Since this is a fast sync, we can
-	 * trust the PDB_ATTR_APPINFODIRTY flag. The four cases are as
-	 * follows:
-	 *
-	 *	Palm	local	Action
-	 *	----	-----	------
-	 *	clean	clean	Do nothing
-	 *	clean	dirty	Upload local AppInfo block to Palm
-	 *	dirty	clean	Download Palm's AppInfo block to local copy
-	 *	dirty	dirty	Conflict. Palm overwrites desktop (tie-breaker)
-	 *			Save AppInfo block to archive file?
-	 */
-	/* XXX - Except that the Palm apparently never sets its
-	 * APPINFODIRTY flag :-(
+	/* At this point, it would be nice to sync the AppInfo block except
+	 * that a) it's terribly application-specific, and b) the Palm
+	 * doesn't make it easy: it never sets the PDB_ATTR_APPINFODIRTY
+	 * flag. And besides, you can't even create a second AppInfo block
+	 * as backup, the way you can with records. Yuck.
 	 */
 
 	/* Read each modified record in turn. */
@@ -1150,6 +1257,15 @@ GenericConduit::FastSync()
 				"GenericConduit: no more modified records.\n");
 		break;
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		SYNC_TRACE(6)
 			fprintf(stderr, "GenericConduit: "
 				"DlpReadNextModifiedRec returned %d\n",
@@ -1197,9 +1313,6 @@ GenericConduit::FastSync()
 			switch (err)
 			{
 			    case DLPSTAT_NOERR:
-				// No error
-				// * Fall through *
-
 			    case DLPSTAT_NOTFOUND:
 				/* No record with this record ID on the
 				 * Palm. But that's okay, since we're
@@ -1210,6 +1323,18 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "FastSync");
+					return -1;
+				    default:
+					break;
+				}
+
 				Error(_("%s: Error deleting record "
 					"0x%08lx: %d."),
 				      "FastSync",
@@ -1227,9 +1352,6 @@ GenericConduit::FastSync()
 			switch (err)
 			{
 			    case DLPSTAT_NOERR:
-				// No error
-				// * Fall through *
-
 			    case DLPSTAT_NOTFOUND:
 				/* No record with this record ID on the
 				 * Palm. But that's okay, since we're
@@ -1240,6 +1362,18 @@ GenericConduit::FastSync()
 				break;
 
 			    default:
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "FastSync");
+					return -1;
+				    default:
+					break;
+				}
+
 				Error(_("%s: Error deleting record "
 					"0x%08lx: %d."),
 				      "FastSync",
@@ -1268,6 +1402,15 @@ GenericConduit::FastSync()
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
@@ -1317,6 +1460,15 @@ GenericConduit::FastSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				break;
+			}
+
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
@@ -1338,8 +1490,17 @@ GenericConduit::FastSync()
 		{
 			Error(_("%s: Can't reset sync flags: %d."),
 			      "GenericConduit", err);
-			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+
+			switch (palm_errno)
+			{
+			    case PALMERR_TIMEOUT:
+				cs_errno = CSE_NOCONN;
+				break;
+			    default:
+				err = DlpCloseDB(_pconn, dbh);
+				add_to_log(_("Error\n"));
+				break;
+			}
 			return -1;
 		}
 	}
@@ -1442,14 +1603,24 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d."),
-				     "SlowSync",
-				     remoterec->id, err);
-				/* XXX - For now, just ignore this,
-				 * since it's probably not a show
-				 * stopper.
-				 */
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "SlowSync");
+					return -1;
+				    default:
+					/* Hopefully this isn't a
+					 * show-stopper
+					 */
+					Warn(_("%s: Warning: Can't delete "
+					       "record 0x%08lx: %d."),
+					     "SlowSync",
+					     remoterec->id, err);
+					break;
+				}
 			}
 
 			/* Delete localrec */
@@ -1482,14 +1653,24 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d."),
-				     "SlowSync",
-				     remoterec->id, err);
-				/* XXX - For now, just ignore this,
-				 * since it's probably not a show
-				 * stopper.
-				 */
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "SlowSync");
+					return -1;
+				    default:
+					/* Hopefully this isn't a
+					 * show-stopper
+					 */
+					Warn(_("%s: Warning: Can't delete "
+					       "record 0x%08lx: %d."),
+					     "SlowSync",
+					     remoterec->id, err);
+					break;
+				}
 			}
 
 			/* Delete localrec */
@@ -1531,6 +1712,15 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
@@ -1629,14 +1819,24 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Warning: Can't delete "
-				       "record 0x%08lx: %d."),
-				     "SlowSync",
-				     remoterec->id, err);
-				/* XXX - For now, just ignore this,
-				 * since it's probably not a show
-				 * stopper.
-				 */
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "SlowSync");
+					return -1;
+				    default:
+					/* Hopefully this isn't a
+					 * show-stopper
+					 */
+					Warn(_("%s: Warning: Can't delete "
+					       "record 0x%08lx: %d."),
+					     "SlowSync",
+					     remoterec->id, err);
+					break;
+				}
 			}
 
 			/* Fix flags */
@@ -1657,6 +1857,15 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);
@@ -1814,6 +2023,15 @@ GenericConduit::SyncRecord(
 						     &newID);
 				if (err != DLPSTAT_NOERR)
 				{
+					switch (palm_errno)
+					{
+					    case PALMERR_TIMEOUT:
+						cs_errno = CSE_NOCONN;
+						break;
+					    default:
+						break;
+					}
+
 					Error(_("Error uploading record "
 						"0x%08lx: %d."),
 					      localrec->id, err);
@@ -1953,14 +2171,24 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d."),
-				     "SlowSync",
-				     localrec->id, err);
-				/* XXX - For now, just ignore this,
-				 * since it's probably not a show
-				 * stopper.
-				 */
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "SlowSync");
+					return -1;
+				    default:
+					/* Hopefully this isn't a
+					 * show-stopper
+					 */
+					Warn(_("%s: Warning: Can't delete "
+					       "record 0x%08lx: %d."),
+					     "SlowSync",
+					     remoterec->id, err);
+					break;
+				}
 			}
 
 		} else if (EXPUNGED(localrec))
@@ -1985,14 +2213,24 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Can't delete record 0x%08lx: "
-				       "%d."),
-				     "SlowSync",
-				     remoterec->id, err);
-				/* XXX - For now, just ignore this,
-				 * since it's probably not a show
-				 * stopper.
-				 */
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					Error(_("%s: Lost connection to "
+						"Palm."),
+					      "SlowSync");
+					return -1;
+				    default:
+					/* Hopefully this isn't a
+					 * show-stopper
+					 */
+					Warn(_("%s: Warning: Can't delete "
+					       "record 0x%08lx: %d."),
+					     "SlowSync",
+					     remoterec->id, err);
+					break;
+				}
 			}
 
 		} else if (DIRTY(localrec))
@@ -2019,6 +2257,15 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					break;
+				    default:
+					break;
+				}
+
 				Error(_("Error uploading record "
 					"0x%08lx: %d."),
 				      localrec->id, err);

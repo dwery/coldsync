@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.6 2001-01-09 16:18:25 arensb Exp $
+ * $Id: spc.c,v 2.7 2001-03-27 14:11:28 arensb Exp $
  */
 
 #include "config.h"
@@ -37,6 +37,7 @@
 #include "pconn/pconn.h"	/* For DLP and debug_dump() */
 #include "coldsync.h"
 #include "spc.h"
+#include "cs_error.h"
 
 static void pack_dlp_time(const struct dlp_time *t,
 			  unsigned char **ptr);
@@ -112,10 +113,17 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 				    "spc_send: padp_write returned %d\n",
 				    err);
 		    if (err < 0)	/* Problem with padp_write */
-			    /* XXX - Ought to give more information
-			     * than just "it failed".
-			     */
+		    {
+			    switch (palm_errno)
+			    {
+				case PALMERR_TIMEOUT:
+				    cs_errno = CSE_NOCONN;
+				    break;
+				default:
+				    break;
+			    }
 			    return -1;
+		    }
 
 		    err = padp_read(pconn, &padp_respbuf, &padp_resplen);
 		    SYNC_TRACE(7)

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.24 2001-03-16 14:16:10 arensb Exp $
+ * $Id: restore.c,v 2.25 2001-03-27 14:11:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,6 +44,7 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "coldsync.h"
+#include "cs_error.h"
 
 /* restore_file
  * Restore an individual file.
@@ -156,6 +157,15 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		Warn(_("Restore: Can't delete database \"%s\": %d."),
 		     pdb->name, err);
 		return -1;
@@ -176,12 +186,19 @@ restore_file(PConnection *pconn,
 	SYNC_TRACE(4)
 		fprintf(stderr, "pdb_Upload returned %d\n", err);  
 	if (err < 0)
+	{
+		switch (palm_errno)
+		{
+		    case PALMERR_TIMEOUT:
+			cs_errno = CSE_NOCONN;
+			break;
+		    default:
+			break;
+		}
+
 		add_to_log(_("Error\n"));
-	else
+	} else
 		add_to_log(_("OK\n"));
-	/* XXX - If pdb_Upload returned -1 because of a fatal timeout,
-	 * don't keep trying to upload the others.
-	 */
 
 	/* Free the PDB */
 	free_pdb(pdb);
@@ -253,7 +270,18 @@ restore_dir(PConnection *pconn,
 		strncat(fname, file->d_name, MAXPATHLEN-strlen(fname));
 
 		err = restore_file(pconn, palm, fname);
-		/* XXX - Error-checking */
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_NOCONN:
+				Error(_("Lost connection to Palm."));
+				closedir(dir);
+				return -1;
+			    default:
+				break;
+			}
+		}
 	}
 
 	closedir(dir);
