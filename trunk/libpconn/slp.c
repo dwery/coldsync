@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.19 2001-07-06 05:42:40 arensb Exp $
+ * $Id: slp.c,v 1.20 2001-08-06 00:29:33 arensb Exp $
  */
 
 #include "config.h"
@@ -15,7 +15,11 @@
 #include <sys/uio.h>	/* For read() */
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
-#include <string.h>	/* For bzero() */
+#include <string.h>	/* For memset() */
+
+#if HAVE_STRINGS_H
+#  include <strings.h>	/* For bzero() */
+#endif	/* HAVE_STRINGS_H */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
