@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.6 2001-02-23 13:52:26 arensb Exp $
+# $Id: SPC.pm,v 1.7 2001-02-23 14:00:45 arensb Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.6 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.7 $ ' =~ m{(\d+)\.(\d+)};
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
 	dlp_req
@@ -662,38 +662,41 @@ sub dlp_WriteAppBlock
 
 	$datetime = &dlp_GetSysDateTime();
 
-Reads the date and time from the Palm.  Returns a reference to a hash
+Reads the date and time from the Palm. Returns a reference to a hash
 containing the date, with fields
-"year","month","day","hour","minute","second".
+"year", "month", "day", "hour", "minute", "second".
 
 =cut
 
 sub dlp_GetSysDateTime
 {
-  my $errno;
-  my @argv;
-  my $retval;
+	my $errno;
+	my @argv;
+	my $retval;
 
-  ($errno, @argv) = &dlp_req(DLPCMD_GetSysDateTime);
+	($errno, @argv) = &dlp_req(DLPCMD_GetSysDateTime);
 
-  $retval = {};
-  foreach my $arg (@argv) {
-    if ($arg->{id} == 0x20) {
-      @$retval{"year","month","day","hour","minute","second"}=
-	unpack("nC5",$arg->{data});
-    }
-  }
+	$retval = {};
+	foreach my $arg (@argv) {
+		if ($arg->{id} == 0x20) {
+			@$retval{"year", "month", "day",
+				"hour", "minute", "second"} =
+			unpack("nC5",$arg->{data});
+		}
+	}
 
-  return $retval;
+	return $retval;
 }
 
 =head2 dlp_SetSysDateTime
 
-	$err = &dlp_SetSysDateTime($year,$mon,$day,$hour,$min,$sec);
+	$err = &dlp_SetSysDateTime($year, $mon, $day, $hour, $min, $sec);
 
-Sets the time on the Palm as indicated.  Make sure C<$year> is a 4
-digit number, and is not 1900 subtracted, as returned from
-localtime().  Also ensure C<$mon> is 1 offset (January=1).
+Sets the time on the Palm as indicated.
+
+C<$year> must be a 4 digit number, and is not 1900 subtracted, as
+returned from localtime(). C<$mon> must be a 1-offset number
+(January = 1).
 
 Returns the DLP error code.
 
@@ -702,21 +705,28 @@ Returns the DLP error code.
 sub dlp_SetSysDateTime
 {
 
-  my($year,$mon,$day,$hour,$min,$sec)=@_;
-  my $err;
-  my @argv;
+	my $year = shift;
+	my $mon = shift;
+	my $day = shift;
+	my $hour = shift;
+	my $min = shift;
+	my $sec = shift;
+	my $err;
+	my @argv;
 
-  print STDERR "Setting Date To: $mon/$day/$year $hour:$min:$sec\n";
+#	print STDERR "Setting Date To: $mon/$day/$year $hour:$min:$sec\n";
 
-  ($err, @argv)=&dlp_req(DLPCMD_SetSysDateTime,
-			 {
-			  id   => 0x20,
-			  data => pack("nC5x",$year,$mon,$day,$hour,$min,$sec)
-			 }
-			);
-  # No return arguments to parse
-  print STDERR "ERROR: $err\n";
-  return $err;
+	($err, @argv) = &dlp_req(DLPCMD_SetSysDateTime,
+				 {
+					 id   => 0x20,
+					 data => pack("nC5x",
+						      $year, $mon, $day,
+						      $hour, $min, $sec)
+				 }
+				 );
+	# No return arguments to parse
+#	print STDERR "ERROR: $err\n";
+	return $err;
 }
 
 1;
