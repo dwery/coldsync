@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.9 1999-12-02 09:15:36 arensb Exp $
+ * $Id: pdb.c,v 1.10 2000-01-22 05:11:24 arensb Exp $
  */
 
 #include "config.h"
@@ -1173,15 +1173,30 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
  * it. Returns NULL in case of error.
  * The record data is copied, so the caller needs to take care of freeing
  * 'data'.
+ *
+ * The 'attributes' and 'category' arguments are combined into one field:
+ * if the new record is deleted, then the category is silently dropped.
+ * Otherwise, the category occupies the bottom 4 bits of the
+ * attributes/category field.
  */
 struct pdb_record *
 new_Record(const ubyte attributes,
+	   const ubyte category,
 	   const udword id,
 	   const uword len,
 	   const ubyte *data)
 {
 	struct pdb_record *retval;
 
+	PDB_TRACE(6)
+	{
+		fprintf(stderr, "New_Record: Creating new record:\n");
+		fprintf(stderr, "\tattributes == 0x%02x\n", attributes);
+		fprintf(stderr, "\tcategory == 0x%02x\n", category);
+		fprintf(stderr, "\tid == 0x%08lx\n", id);
+		fprintf(stderr, "\tlen == %d\n", len);
+		debug_dump(stderr, "NEW", data, len);
+	}
 	/* Allocate the record to be returned */
 	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
 	    == NULL)
@@ -1195,7 +1210,20 @@ new_Record(const ubyte attributes,
 	retval->next = NULL;
 	retval->offset = 0L;
 	retval->attributes = attributes;
+	if ((attributes & PDB_REC_DELETED) == 0)	/* XXX - Is this
+							 * the correct
+							 * test? */
+	{
+		/* The record is not being deleted; it still has a category
+		 * (in the lower 4 bits).
+		 */
+		retval->attributes |= (category & 0x0f);
+	}
 	retval->id = id;
+
+	PDB_TRACE(6)
+		fprintf(stderr, "   attributes + category -> 0x%02x\n",
+			retval->attributes);
 
 	/* Allocate space to put the record data */
 	if (len == 0)
