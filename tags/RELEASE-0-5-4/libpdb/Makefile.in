@@ -1,0 +1,107 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.3 1999-11-12 09:48:51 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	libpdb
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+LIBNAME =	pdb
+
+# Compatibility functions, included for systems that don't have them.
+# XXX - Bleah. This probably needs to be broken up into individual
+# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
+# the like.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		pdb.c
+
+OBJS =		pdb.o
+
+LINTOBJS =	pdb.ln
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in
+
+CLEAN =		lib${LIBNAME}.a *.o *.ln *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+RANLIB =	@RANLIB@
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
+
+.SUFFIXES:	.c .o .cc .ln
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
+
+all:	lib${LIBNAME}.a
+
+lib${LIBNAME}.a:	${OBJS}
+	ar cq $@ ${OBJS}
+	${RANLIB} $@
+
+install:	lib${LIBNAME}.a
+	if test ! -d ${LIBDIR}; then \
+		mkdir ${LIBDIR}; \
+		chmod 755 ${LIBDIR}; \
+	fi
+	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
+
+depend:
+	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
+
+distdir:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+lint:	${LINTOBJS}
+lint:	${LINTOBJS}
+	${LINT} ${LINTARGS} -u -C${LIBNAME} ${LINTOBJS}

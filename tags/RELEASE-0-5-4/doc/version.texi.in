@@ -1,0 +1,3 @@
+@set UPDATED ?
+@set EDITION @EDITION@
+@set VERSION @VERSION@
