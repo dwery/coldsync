@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.42 2000-11-19 00:11:22 arensb Exp $
+ * $Id: config.c,v 1.43 2000-11-20 05:25:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -900,6 +900,7 @@ load_palm_config(struct Palm *palm)
 		userinfo.uid = pda->userid;
 	} else {
 		/* Use the current user's UID */
+		/* XXX - Hasn't this already been done by get_userinfo? () */
 		userinfo.uid = pwent->pw_uid;	/* Get the user's UID */
 	}
  
