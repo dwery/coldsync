@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules,v 1.3 2000-01-27 01:37:46 arensb Exp $
+# $Id: Make.rules.in,v 1.1 2000-01-27 01:47:50 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
