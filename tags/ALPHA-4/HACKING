@@ -1,0 +1,17 @@
+   * * Guidelines for contributors, most important ones first: * *
+
+- Try to leave this code as clean as you wish you had found it.
+
+- If you're in a rush to get something done, but something isn't quite
+  right, put an XXX comment (with explanation) next to it. Otherwise,
+  odds are you won't be able to easily find it and fix it next week;
+  certainly no one else will.
+
+- As much as possible, if you add something, try to make it optional.
+  E.g., KDE and Gnome support would be cool, but not everyone is
+  running KDE or Gnome, so don't assume that they are available.
+
+- Always compile with "-Wall -ansi -pedantic" (or the local equivalent
+  of a language lawyer looking over your shoulder). If you stick to
+  the rules, you're less likely to introduce some non-portability or a
+  memory leak.
