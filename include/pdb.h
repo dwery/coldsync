@@ -6,14 +6,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.1 1999-09-09 05:13:36 arensb Exp $
+ * $Id: pdb.h,v 1.2 1999-11-04 10:43:19 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
 
-/*#include "palm_types.h"
-#include "dlp_cmd.h"*/
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+#include "pconn/pconn.h"
 
 /* XXX - Add a type (and support functions) for those ubitquitous
  * 4-character IDs.
@@ -213,6 +211,8 @@ struct pdb
 					 * not, it must be a record
 					 * database.
 					 */
+
+extern int pdb_trace;			/* Debugging level for PDB stuff */
 
 extern struct pdb *new_pdb();
 extern void free_pdb(struct pdb *db);
