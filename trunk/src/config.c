@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.59 2001-01-25 07:52:00 arensb Exp $
+ * $Id: config.c,v 1.60 2001-01-28 22:40:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -123,7 +123,7 @@ parse_args(int argc, char *argv[])
 	 */
 
 	/* Read command-line options. */
-	while ((arg = getopt(argc, argv, ":hVSFRIszf:m:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRIszf:l:m:b:r:p:t:d:")) != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
 		 */
@@ -169,13 +169,11 @@ parse_args(int argc, char *argv[])
 			global_opts.use_syslog = True;
 			break;
 
-#if 0
 		    case 'l':	/* -l <file>: Write debugging log to
 				 * <file>.
 				 */
 			global_opts.log_fname = optarg;
 			break;
-#endif	/* 0 */
 
 		    case 'm':	/* -m <mode>: Run in the given mode */
 			err = set_mode(optarg);
@@ -311,7 +309,7 @@ load_config()
 		{
 			/* strdup() failed */
 			Error(_("Couldn't initialize configuration."));
-			perror("strdup");
+			Perror("strdup");
 
 			free_conduit_block(fallback);
 			free_sync_config(sync_config);
@@ -790,7 +788,7 @@ get_hostinfo()
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
 		Error(_("Can't get host name."));
-		perror("gethostname");
+		Perror("gethostname");
 		return -1;
 	}
 	MISC_TRACE(2)
@@ -799,7 +797,7 @@ get_hostinfo()
 	if ((myaddr = gethostbyname2(hostname, AF_INET)) == NULL)
 	{
 		Error(_("Can't look up my address."));
-		perror("gethostbyname");
+		Perror("gethostbyname");
 		return -1;
 	}
 
@@ -918,7 +916,7 @@ get_hostaddrs()
 		Error(_("%s: socket() returned %d."),
 		      "get_hostaddrs",
 		      sock);
-		perror("socket");
+		Perror("socket");
 		return -1;
 	}
 
@@ -963,7 +961,7 @@ get_hostaddrs()
 			if ((errno != EINVAL) || (lastlen != 0))
 			{
 				/* Something unexpected went wrong */
-				perror("ioctl(SIOCGIFCONF)");
+				Perror("ioctl(SIOCGIFCONF)");
 				free(buf);
 				return -1;
 			}
@@ -1391,7 +1389,7 @@ make_sync_dirs(const char *basedir)
 		if ((err = mkdir(basedir, DIR_MODE)) < 0)
 		{
 			Error(_("Can't create base sync directory."));
-			perror("mkdir");
+			Perror("mkdir");
 			return -1;
 		}
 	}
@@ -1408,7 +1406,7 @@ make_sync_dirs(const char *basedir)
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
 			Error(_("Can't create backup directory."));
-			perror("mkdir");
+			Perror("mkdir");
 			return -1;
 		}
 	}
@@ -1425,7 +1423,7 @@ make_sync_dirs(const char *basedir)
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
 			Error(_("Can't create attic directory."));
-			perror("mkdir");
+			Perror("mkdir");
 			return -1;
 		}
 	}
@@ -1442,7 +1440,7 @@ make_sync_dirs(const char *basedir)
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
 			Error(_("Can't create archive directory."));
-			perror("mkdir");
+			Perror("mkdir");
 			return -1;
 		}
 	}
@@ -1459,7 +1457,7 @@ make_sync_dirs(const char *basedir)
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
 			Error(_("Can't create install directory."));
-			perror("mkdir");
+			Perror("mkdir");
 			return -1;
 		}
 	}
@@ -1615,7 +1613,7 @@ get_userinfo(struct userinfo *userinfo)
 	/* Get the user's password file info */
 	if ((pwent = getpwuid(uid)) == NULL)
 	{
-		perror("get_userinfo: getpwuid");
+		Perror("get_userinfo: getpwuid");
 		return -1;
 	}
 
