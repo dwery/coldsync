@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.7 1999-11-27 05:44:35 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.8 1999-11-29 02:51:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -3380,6 +3380,26 @@ DlpResetRecordIndex(
 /* DlpReadRecordIDList
  * Read the list of record IDs in the database whose handle is
  * 'handle'.
+ * NOTE: As of PalmOS 3.3, ReadRecordIDList apparently only returns up to
+ * 500 record IDs at a time. Hence, when you call this function, you should
+ * set it up in a loop to make sure that you've read all of the records:
+ *
+ *	uword numrecs;		// # of records in database
+ *	uword ihave;		// # of record IDs read so far
+ *	udword recids[FOO];	// Array of record IDs
+ *
+ *	ihave = 0;
+ *	while (ihave < numrecs)
+ *	{
+ *		uword num_read;		// # record IDs read this time around
+ *
+ *		DlpReadRecordIDList(pconn, dbh, 0,
+ *		                    ihave,
+ *		                    numrecs - ihave,
+ *		                    &num_read,
+ *		                    recids + ihave);
+ *		ihave += num_read;
+ *	}
  */
 int
 DlpReadRecordIDList(
@@ -3458,6 +3478,10 @@ DlpReadRecordIDList(
 		{
 		    case DLPRET_ReadRecordIDList_List:
 			*numread = get_uword(&rptr);
+
+			DLPC_TRACE(3)
+				fprintf(stderr, "numread == %d\n", *numread);
+
 			for (i = 0; i < *numread; i++)
 			{
 				if (i >= max)	/* Paranoia */
