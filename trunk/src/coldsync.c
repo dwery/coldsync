@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.52 2000-09-30 16:26:25 arensb Exp $
+ * $Id: coldsync.c,v 1.53 2000-10-22 03:11:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -207,6 +207,9 @@ main(int argc, char *argv[])
 		fprintf(stderr, "Options:\n");
 		fprintf(stderr, "\tMode: ");
 		switch (global_opts.mode) {
+		    case mode_None:
+			fprintf(stderr, "* NONE *\n");
+			break;
 		    case mode_Standalone:
 			fprintf(stderr, "Standalone\n");
 			break;
@@ -218,6 +221,9 @@ main(int argc, char *argv[])
 			break;
 		    case mode_Daemon:
 			fprintf(stderr, "Daemon\n");
+			break;
+		    case mode_Getty:
+			fprintf(stderr, "Getty\n");
 			break;
 		    case mode_Init:
 			fprintf(stderr, "Init\n");
@@ -313,6 +319,10 @@ main(int argc, char *argv[])
 	}
 
 	/* Read the Palm's serial number, if possible. */
+	/* XXX - The Visor does not appear to have a software-readable
+	 * serial number. It would be nice to have some way of detecting
+	 * this.
+	 */
 	if (palm.sysinfo.rom_version < 0x03000000)
 	{
 		/* Can't just try to read the serial number and let the RPC
