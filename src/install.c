@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.16 2000-11-14 16:36:21 arensb Exp $
+ * $Id: install.c,v 2.17 2000-11-18 22:46:31 arensb Exp $
  */
 
 #include "config.h"
@@ -84,10 +84,10 @@ install_file(struct PConnection *pconn,
 	}
 	close(fd);
 
-		/* See if we want to install this database */
+	/* See if we want to install this database */
 
-		/* See if the database already exists on the Palm */
-	dbinfo = find_dbentry(palm, pdb->name);
+	/* See if the database already exists on the Palm */
+	dbinfo = palm_find_dbentry(palm, pdb->name);
 	if ((dbinfo != NULL) && (!global_opts.force_install))
 	{
 		/* The database exists. Check its modification
@@ -115,11 +115,10 @@ install_file(struct PConnection *pconn,
 			return -1;
 		}
 	}
-	/* XXX - Before installing, make sure to check the
-		 * PDB_ATTR_OKNEWER flag: don't overwrite open databases
-		 * (typically "Graffiti Shortcuts") unless it's okay to do
-		 * so.
-		 */
+	/* XXX - Before installing, make sure to check the PDB_ATTR_OKNEWER
+	 * flag: don't overwrite open databases (typically "Graffiti
+	 * Shortcuts") unless it's okay to do so.
+	 */
 	SYNC_TRACE(5)
 		fprintf(stderr, "install_file: Uploading \"%s\"\n",
 			pdb->name);
@@ -161,7 +160,7 @@ install_file(struct PConnection *pconn,
 	SYNC_TRACE(4)
 		fprintf(stderr,
 			"install_file: see if this db exists\n");
-	if (find_dbentry(palm, pdb->name) == NULL)
+	if (palm_find_dbentry(palm, pdb->name) == NULL)
 	{
 		/* It doesn't exist yet. Good */
 		SYNC_TRACE(4)
@@ -294,7 +293,7 @@ InstallNewFiles(struct PConnection *pconn,
 					 * database to the backup
 					 * directory.
 					 */
-		struct dlp_dbinfo *dbinfo;
+		const struct dlp_dbinfo *dbinfo;
 					/* Local information about the
 					 * database
 					 */
@@ -346,7 +345,7 @@ InstallNewFiles(struct PConnection *pconn,
 		/* See if we want to install this database */
 
 		/* See if the database already exists on the Palm */
-		dbinfo = find_dbentry(palm, pdb->name);
+		dbinfo = palm_find_dbentry(palm, pdb->name);
 		if ((dbinfo != NULL) && (!global_opts.force_install))
 		{
 			/* The database exists. Check its modification
@@ -420,13 +419,13 @@ InstallNewFiles(struct PConnection *pconn,
 		SYNC_TRACE(4)
 			fprintf(stderr,
 				"InstallNewFiles: see if this db exists\n");
-		if (find_dbentry(palm, pdb->name) == NULL)
+		if (palm_find_dbentry(palm, pdb->name) == NULL)
 		{
 			/* It doesn't exist yet. Good */
 			SYNC_TRACE(4)
 				fprintf(stderr, "InstallNewFiles: "
 					"appending db to palm->dbinfo\n");
-			append_dbentry(palm, pdb);	/* XXX - Error-
+			palm_append_dbentry(palm, pdb);	/* XXX - Error-
 							 * checking */
 		}
 
