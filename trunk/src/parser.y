@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.15 2000-05-06 11:50:22 arensb Exp $
+ * $Id: parser.y,v 2.16 2000-05-07 23:01:30 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -482,7 +482,7 @@ creator_type:	STRING '/' STRING
 				free($3); $3 = NULL;
 				YYERROR;
 			}
-			$$.creator =
+			$$.type =
 				(($3[0]) << 24) |
 				(($3[1]) << 16) |
 				(($3[2]) << 8) |
