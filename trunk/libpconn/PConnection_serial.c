@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.39 2002-07-04 21:23:11 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.40 2002-10-26 13:24:47 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -352,6 +352,13 @@ serial_accept(PConnection *pconn)
 			fprintf(stderr, "Speed from CMP == %ld\n",
 				newspeed);
 
+		/* Warn the user if the speed is > 115200 */
+		if (newspeed > 115200 && pconn->speed == 0)
+			fprintf(stderr,
+				_("Warning: ColdSync selected a speed higher than 115200 (%ld).\n"
+				"Force a lower one with the \"speed\" keyword in case of troubles.\n"),
+				newspeed);
+
 		/* Find 'tcspeed' from 'newspeed' */
 		pconn->speed = newspeed;
 		speed_ix = bps_entry(newspeed);
@@ -598,7 +605,8 @@ pconn_serial_open(PConnection *pconn,
 		 * hacks.
 		 */
 
-		if (pconn->flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT))
+		if ((pconn->flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT)) ==
+			(PCONNFL_PROMPT | PCONNFL_TRANSIENT))
 			printf(_("Please press the HotSync button.\n"));
 
 		while (1)
