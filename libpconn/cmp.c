@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.8 2001-03-27 14:04:03 arensb Exp $
+ * $Id: cmp.c,v 1.9 2001-03-28 04:53:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,12 +36,17 @@ cmp_read(PConnection *pconn,
 
 	/* Read a PADP packet */
 	err = padp_read(pconn, &inbuf, &inlen);
-	/* XXX - padp_read() might return 0 == end of file, e.g. if the
-	 * device exists but doesn't return any useful data (e.g.,
-	 * /dev/null).
-	 */
-	if (err < 0)
+	if (err == 0)
+	{
+		/* EOF. Lost connection before initial packet. How sad. */
+		return 0;
+	} else if (err < 0)
+	{
+		CMP_TRACE(3)
+			fprintf(stderr, "cmp_read: padp_read() returned %d\n",
+				err);
 		return err;	/* Error */
+	}
 
 	CMP_TRACE(7)
 	{
@@ -133,14 +138,20 @@ cmp_accept(PConnection *pconn, udword bps)
 			fprintf(stderr, "===== Waiting for wakeup packet\n");
 
 		err = cmp_read(pconn, &cmpp);
-		if (err < 0)
+		if (err == 0)
+		{
+			/* EOF. Lost connection to Palm.
+			 * 'palm_errno' has already been set.
+			 */
+			return 0;
+		} else if (err < 0)
 		{
 			if (palm_errno == PALMERR_TIMEOUT)
 				continue;
 			fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
 				palm_errno,
 				_(palm_errlist[palm_errno]));
-			return -1;
+			return 0;
 		}
 	} while (cmpp.type != CMP_TYPE_WAKEUP);
 
