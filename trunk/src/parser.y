@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.46 2001-09-07 10:39:13 arensb Exp $
+ * $Id: parser.y,v 2.47 2001-10-12 02:22:59 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -20,6 +20,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "parser.h"
+#include "symboltable.h"
 
 #define YYDEBUG 1
 
@@ -83,6 +84,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token FINAL
 %token FORWARD
 %token LISTEN
+%token OPTIONS
 %token PATH
 %token PDA
 %token PREFERENCE
@@ -147,6 +149,10 @@ statement:
 	| conduit_stmt
 	{ PARSE_TRACE(3)
 		  fprintf(stderr, "Found a conduit_stmt\n");
+	}
+	| options_stmt
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a options_stmt\n");
 	}
 	| pda_stmt
 	{ PARSE_TRACE(3)
@@ -740,6 +746,47 @@ header_list:	header_list
 		lex_expect(LEX_HEADER);
 	}
 	| header_list ':' error
+	{
+		Error(_("\tMissing argument name near \": %s\"."),
+		      yytext);
+		ANOTHER_ERROR;
+		yyclearin;
+		lex_expect(LEX_HEADER);
+	}
+	';'
+	;
+
+options_stmt: OPTIONS open_brace
+	{
+		lex_expect(LEX_HEADER);
+	}
+        options_list
+	{
+		lex_expect(0);
+	}
+	'}'
+	;
+
+options_list: options_list
+        STRING colon
+    	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found symbol: %s ==> %s\n",
+				$2, $5);
+		put_symbol($2, $5);
+		lex_expect(LEX_HEADER);		/* Prepare for the next line */
+	}
+	|	/* Empty */
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found empty header list\n");
+		lex_expect(LEX_HEADER);
+	}
+	| options_list ':' error
 	{
 		Error(_("\tMissing argument name near \": %s\"."),
 		      yytext);

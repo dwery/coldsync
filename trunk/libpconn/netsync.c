@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.13 2001-10-12 01:24:20 arensb Exp $
+ * $Id: netsync.c,v 1.14 2001-10-12 02:18:17 arensb Exp $
  */
 
 #include "config.h"
@@ -362,7 +362,7 @@ ritual_exch_client(PConnection *pconn)
 	IO_TRACE(6)
 		fprintf(stderr, "ritual_exch_client: sending "
 			"ritual response 3\n");
-	err = netsync_write(pconn, ritual_resp2, ritual_resp3_size);
+	err = netsync_write(pconn, ritual_resp3, ritual_resp3_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 3) returned %d\n",

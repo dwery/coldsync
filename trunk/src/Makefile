@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.21 2001-09-07 10:07:08 arensb Exp $
+# $Id: Makefile,v 2.22 2001-10-12 02:19:26 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -23,7 +23,8 @@ C_SRCS =	coldsync.c \
 		ap_snprintf.c
 C_OBJS =	${C_SRCS:.c=.o}
 
-CXX_SRCS =	GenericConduit.cc
+CXX_SRCS =	GenericConduit.cc symboltable.cc
+
 CXX_OBJS =	${CXX_SRCS:.cc=.o}
 
 SRCS =		${C_SRCS} ${CXX_SRCS}
@@ -35,6 +36,7 @@ HEADERS =	archive.h \
 		spalm.h \
 		palment.h \
 		parser.h \
+		symboltable.h \
 		spc.h \
 		pref.h \
 		net_compat.h \
