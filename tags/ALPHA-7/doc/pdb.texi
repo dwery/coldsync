@@ -1,0 +1,451 @@
+\input texinfo          @c -*- texinfo -*-
+@c %**start of header
+@setfilename pdb.info
+@settitle Palm Database Files
+@setchapternewpage odd
+@c %**end of header
+
+@include version.texi
+
+@ifinfo
+This file documents the structure of @file{.pdb} and @file{.prc} files
+used by the Palm Computing Platform.
+
+Copyright @copyright{} 1999 Andrew Arensburger.
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+@end ifinfo
+
+@titlepage
+@title Palm Database Files
+@subtitle Structure of @file{.pdb} and @file{.prc} files
+@subtitle Version @value{VERSION}
+@subtitle Edition @value{EDITION}
+@subtitle Updated @value{UPDATED}
+@author Andrew Arensburger
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright 1999 Andrew Arensburger.
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+@end titlepage
+
+@node Top, Introduction, (dir), (dir)
+@comment  node-name,  next,  previous,  up
+
+@menu
+* Introduction::                
+* Overview::                    
+* Concept Index::               
+@end menu
+
+@node Introduction, Overview, Top, Top
+@comment  node-name,  next,  previous,  up
+@chapter Introduction
+
+        Information for Palm devices is usually stored in database
+files. These come in two varieties: record databases and resource
+databases.
+
+@cindex Record database
+        @dfn{Record databases} usually have a @file{.pdb} extension.
+They contain information that a Palm application might need, in
+particularly the data records associated with that application. For
+instance, each address in the Address Book application is stored as a
+record in @file{AddressDB.pdb}. Records can be of any size. Their format
+is determined by the application.
+
+@cindex Resource database
+        @dfn{Resource databases} usually have a @file{.prc} extension.
+They contain @dfn{resources}; resources are chunks of information, much
+like records. Unlike records, however, PalmOS knows about certain kinds
+of resources. For instance, a menu resource defines a pulldown menu;
+menu item resources define the items in that menu, and so forth. PalmOS
+uses these resources to build and display the application.
+
+        Most resource databases are PalmOS applications (the CODE
+resource contains the machine-executable code of the application).
+
+@menu
+* Types::                       
+@end menu
+
+@node Types,  , Introduction, Introduction
+@comment  node-name,  next,  previous,  up
+@section Types Used in this Manual
+
+@cindex Types
+@table @samp
+@item char
+        A character. This is represented as a byte, but is intended to
+represent text.
+@item ubyte
+@cindex ubyte
+        Unsigned byte: unsigned 8-bit integer.
+@item uword
+@cindex uword
+        Unsigned word: unsigned 16-bit integer.
+@item udword
+@cindex udword
+        Unsigned double-word: unsigned 32-bit integer.
+@item LocalID
+        Palm calls this a "local (card relative) chunk ID", whatever
+that means. In a database file, this represents an offset from the
+beginning of the file, and is implemented as an @code{udword}.
+@end table
+
+@node Overview, Concept Index, Introduction, Top
+@comment  node-name,  next,  previous,  up
+@chapter File Structure Overview
+
+        Each database file consists of the following parts:
+
+@itemize @bullet
+@item
+Database header
+@item
+Record/resource index
+@item
+Optional AppInfo block
+@item
+Optional sort block
+@item
+Record/resource list
+@end itemize
+
+@menu
+* Database Header::             
+* Record Index::                
+* AppInfo block::               
+* Sort block::                  
+* Record list::                 
+@end menu
+
+@node Database Header, Record Index, Overview, Overview
+@comment  node-name,  next,  previous,  up
+@section Database Header
+
+@cindex Database header
+        The database header comes at the beginning of the file. It has
+the following structure:
+
+@example
+char    name[32];
+uword   attributes;
+uword   version;
+udword  ctime;
+udword  mtime;
+udword  baktime;
+udword  modnum;
+LocalID appinfo_offset;
+LocalID sortinfo_offset;
+udword  type;
+udword  creator;
+udword  uniqueIDseed;
+@end example
+
+@cindex Database name
+        @var{name} holds the name of the database, as a C-style string,
+and includes the terminating NUL. The name can therefore be up to 31
+characters long.
+
+        @var{attributes} is a set of flags that list certain
+characteristics of the database. The defined flags are:
+
+@table @asis
+@item @code{dmHdrAttrResDB} (@code{0x0001})
+@cindex Flag, resource database
+        If this flag is set, the database is a resource database.
+Otherwise, it is a record database.
+
+@item @code{dmHdrAttrReadOnly} (@code{0x0002})
+@cindex Flag, read-only
+        If this flag is set, the database is read-only. Usually, this
+means that the database is in ROM.
+
+@item @code{dmHdrAttrAppInfoDirty} (@code{0x0004})
+@cindex Flag, dirty AppInfo block
+        If this flag is set, the database's AppInfo block has been
+modified since the last sync. The application's conduit may choose to
+support this.
+
+@item @code{dmHdrAttrBackup} (@code{0x0008})
+@cindex Flag, backup
+        If this flag is set, and no application-specific conduit exists,
+this database should simply be backed up to the desktop machine.
+
+@item @code{dmHdrAttrOKToInstallNewer} (@code{0x0010})
+@cindex Flag, OK to install newer
+        If this flag is set, it tells the backup conduit that it's okay
+to overwrite the database with a newer version, even if the database is
+currently open. The @file{Graffiti Shortcuts} database uses this.
+
+@item @code{dmHdrAttrResetAfterInstall} (@code{0x0020})
+@cindex Flag, reset
+        If this flag is set, then the Palm should be reset after the
+database is installed.
+
+@item @code{dmHdrAttrCopyPrevention} (@code{0x0040})
+@c XXX
+@cindex Flag, copy-prevention
+        The Palm headers say that this flag means that the database
+``should not be copied to'' but don't say to what. Or does this mean
+that the database should not be overwritten?
+
+@item @code{dmHdrAttrStream} (@code{0x0080})
+@cindex Flag, stream
+        The Palm headers say that this flag means that the database is
+``used for file stream implementation'', whatever that means.
+
+@item @code{dmHdrAttrOpen} (@code{0x8000})
+@cindex Flag, open
+        If this flag is set, the database is currently open. Usually,
+this is because something failed to close the database properly, though
+some databases, such as @file{Graffiti Shortcuts} are normally open.
+
+@end table
+
+@cindex Database version
+        @var{version} is the version number of the database. I think
+this is just an integer.
+
+@cindex Time, creation
+        @var{ctime} (creation time) is the time when the database was
+created, in seconds since Jan. 1, 1904.
+
+@cindex Time, modification
+        @var{mtime} (modification time) is the time when the database
+was last modified, in seconds since Jan. 1, 1904.
+
+@cindex Time, last backup
+        @var{baktime} (backup time) is the time when the database was
+last backed up, in seconds since Jan. 1, 1904.
+
+@cindex Modification number
+        @var{modnum} is the modification number of the database. I'm not
+sure, but I think that any change to the database will increment this
+number.
+
+@cindex Offset, AppInfo block
+        @var{appinfo_offset} is the offset of the AppInfo block from the
+beginning of the file. If the database doesn't have an AppInfo block,
+this is set to zero.
+
+@cindex Offset, sort block
+        @var{sortinfo_offset} is the offset of the sort block from the
+beginning of the file. If the database doesn't have a sort block, this
+is set to zero.
+
+@cindex Database type
+        @var{type} identifies the type of the database. Although this is
+implemented as an @code{udword}, this is really four characters.
+Application databases are of type @code{appl}; other databases have
+types specific to the application in question.
+
+@cindex Database creator
+        @var{creator} identifies the database's creator. Although this
+is implemented as an @code{udword}, this is really four characters. Each
+application has a unique creator ID. A database's creator field thus
+uniquely identifies the application with which it is associated.
+
+@cindex Unique ID seed
+        @var{uniqueIDseed} is a number used to generate unique
+identifiers for records (presumably this is the seed to a random number
+generator?). Only the least-significant 3 bytes are used; this fact will
+actually be important later on.
+
+@node Record Index, AppInfo block, Database Header, Overview
+@comment  node-name,  next,  previous,  up
+@section Record Index
+
+        After the database header comes the record index, which lists
+the number of records or resources in the file, and their positions
+within the file.
+
+@subsection Record Index Header
+
+        The record index consists of a record index header, followed by
+zero or more record index entries, followed by two zero bytes. The
+record index header has the following structure:
+
+@example
+LocalID next;
+uword   numrecs;
+@end example
+
+        @var{next} supposedly gives the chunkID (offset?) of the next
+index; presumably this is to allow a database to contain multiple
+disjoint record indices. In practice, however, there is only ever one
+index, so this field is always zero.
+
+        @var{numrecs} is the number of entries in the record index (and
+hence, in the file).
+
+@subsection Record Index Entries
+
+        After the record index header come @var{numrecs} index entries.
+If the file is a record database, these will be plain record index
+entries; if it is a resource database, they will be resource index
+entries.
+
+        Record index entries have the following format:
+
+@example
+LocalID offset;
+ubyte   attributes;
+ubyte   id[3];
+@end example
+
+        @var{offset} gives the offset where the record begins, from the
+beginning of the file. Note that the database file format does not
+include the size of a record: for this, you need to get the offset of
+the next record in the file, or the end of the file, if this is the last
+record.
+
+        @var{attributes} consists of two parts: the least-significant
+nybble is a 4-bit integer that identifies the record's category
+(Unfiled, Private, Business, etc.). By convention, if the category is
+zero, the record is unfiled.
+
+        The most-significant nybble is a set of flags that describe
+various attributes of the record. These are:
+
+@table @asis
+@item @code{dmRecAttrDelete} (@code{0x80})
+@cindex Record flag, delete
+@cindex Record flag, expunge
+        The Palm headers say this flag means ``Delete this record next
+sync'', but this seems misleading. When a record has been read from the
+handheld and has this flag set, it means that the record was deleted on
+the handheld, and its data erased. This happens when the user deletes a
+record and does not check the ``Save archive copy on PC'' box.
+Presumably, this is done in order to conserve memory on the handheld.
+
+@item @code{dmRecAttrDirty} (@code{0x40})
+@cindex Record flag, dirty
+        If this flag is set, it means that the record has been modified
+since the last sync.
+
+@item @code{dmRecAttrBusy} (@code{0x20})
+@cindex Record flag, busy
+@cindex Record flag, deleted
+
+        The Palm headers say this flag means ``Record currently in
+use'', but this seems misleading. When a record has been read from the
+handheld and has this flag set, it means that the record has been
+deleted on the handheld. One must then examine other flags to see
+whether the data is still around for archiving, or whether it has been
+expunged.
+
+@item @code{dmRecAttrSecret} (@code{0x10})
+@cindex Record flag, secret
+@cindex Record flag, private
+
+        If this flag is set, the record has been marked private; this is
+a request not to show the record to anyone who cannot give the proper
+password. However, this is just a request: the record data isn't
+encrypted or anything.
+
+@item @code{dlpRecAttrArchived} (@code{0x08})
+@cindex Record flag, archived
+
+        This flag is not seen in database files, since it is part of the
+low nybble of the @var{attributes} field, which normally gives the
+record's category. It is, however, sometimes set on deleted records
+(which are no longer part of any category).
+
+        If this flag is set, it means that the user deleted the record
+and checked the ``Save archive on PC'' box. This record should be
+deleted, but only after being added to an archive file of old records.
+Its data is still in the handheld's memory, but will be expunged at the
+end of a sync.
+@end table
+
+        Resource index entries have the following format:
+
+@example
+udword  type;
+uword   id;
+LocalID offset;
+@end example
+
+        @var{type} gives the type of the resource. Although this is
+implemented as an @var{udword}, this is actually four characters. Many
+resource types are used by PalmOS to build the display.
+
+        @var{id} is the unique ID of the resource. For each application,
+each resource must have a unique ID within its type.
+
+        @var{offset} is the offset of the resource from the beginning of
+the file.
+
+@subsection Two NUL bytes
+
+        After the record index come two NUL bytes. I don't know what
+purpose they serve. They may just be there for padding, or they may help
+to detect corrupt files.
+
+@node AppInfo block, Sort block, Record Index, Overview
+@comment  node-name,  next,  previous,  up
+@section AppInfo Block
+
+@cindex AppInfo block
+        The AppInfo block contains information specific to a given
+application, but not to any record within that application. Typically,
+the AppInfo block lists the categories that have been defined for an
+application, preference flags, etc.
+
+        The AppInfo block is optional. If a database does not contain
+one, the @var{appinfo_offset} field in the database header will be zero.
+Otherwise, the @var{appinfo_offset} field gives the offset of the
+AppInfo block from the beginning of the file.
+
+        Note that the database file does not explicitly give the size of
+the AppInfo block; this must be deduced from the offset of the next item
+in the file: the sort block (if any), the first data record (if any), or
+the end of the file (if neither of the above exist).
+
+        The contents of the AppInfo block are application-specific.
+
+@node Sort block, Record list, AppInfo block, Overview
+@comment  node-name,  next,  previous,  up
+@section Sort block
+
+        I'm not sure what the sort block contains, but I think it's a
+precomputed list of record offsets that allows the application to
+display records in an order other than that in which they appear in the
+database.
+
+        The sort block is optional. If a database does not contain one,
+the @var{sortinfo_offset} field in the database header will be zero.
+Otherwise, the @var{sortinfo_offset} field gives the offset of the sort
+block from the beginning of the file.
+
+        Note that the database file does not explicitly give the size of
+the sort block; this must be deduced from the offset of the next item in
+the file: the first data record (if any), or the end of the file (if the
+database does not contain any records).
+
+@node Record list,  , Sort block, Overview
+@comment  node-name,  next,  previous,  up
+@section Record List
+
+        Finally, the file contains the actual record/resource data. The
+records appear in the order in which they were listed in the record
+index. The length of each record is deduced from its offset in the
+record index and that of its successor (the last record extends to the
+end of the file).
+
+@node Concept Index,  , Overview, Top
+@comment  node-name,  next,  previous,  up
+@unnumbered Index
+
+@printindex cp
+
+@contents
+@bye
