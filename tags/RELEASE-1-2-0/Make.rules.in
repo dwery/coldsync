@@ -1,0 +1,226 @@
+# Make.rules			-*- Makefile -*-
+#
+# Common rules for building stuff. All of the Makefiles include this
+# file.
+#
+# $Id: Make.rules.in,v 1.11 2000-05-30 17:27:12 arensb Exp $
+
+# The basics
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+# Various directories gleaned from `configure'
+PREFIX =	@prefix@
+# Grrr... Freakin' capitalization!
+prefix =	${PREFIX}
+# GNU 'configure'-ism
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+SBINDIR =	@sbindir@
+LIBEXECDIR =	@libexecdir@
+# XXX - This ought to be directly configurable
+CONDUITDIR =	${LIBEXECDIR}/coldsync
+DATADIR =	@datadir@
+LOCALEDIR =	${DATADIR}/locale
+SYSCONFDIR =	@sysconfdir@
+LIBDIR =	@libdir@
+INCLUDEDIR =	@includedir@
+INFODIR =	@infodir@
+MANDIR =	@mandir@
+MAN1DIR =	${MANDIR}/man1
+MAN8DIR =	${MANDIR}/man8
+
+# Compilation-related programs and flags
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${TOP} -I${TOP}/include
+CXX_INCLUDEDIRS = \
+		-I/usr/include/c++ -I/usr/include/g++ \
+		-I${INCLUDEDIR}
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LEX =		@LEX@
+LEXARGS =	@LEXARGS@
+LIBLEX =	@LEXLIB@
+YACC =		@YACC@
+YACCARGS =	@YACCARGS@ -d
+LIBYACC =	@LIBYACC@
+LIBS =		@LIBS@ ${EXTRA_LIBS}
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
+RANLIB =	@RANLIB@
+
+# Other programs and utilities
+PERL =		@PERL@
+# The name "POD2MAN_EXE" is because Perl uses "POD2MAN" for the actual
+# rule that creates man pages from pods.
+POD2MAN_EXE =	@POD2MAN@
+SED =		@SED@
+TAR =		@TAR@
+GZIP =		@GZIP@
+DATE =		@DATE@
+MKDEP =		@MKDEP@
+MAKEINFO =	@MAKEINFO@
+TEXI2DVI =	@TEXI2DVI@
+TEXI2HTML =	@TEXI2HTML@
+DVIPS =		@DVIPS@
+MKID =		@MKID@
+MKDIR =		${TOP}/mkinstalldirs
+
+# I18n-related utilities
+XGETTEXT =	@XGETTEXT@
+GETTEXT =	@GETTEXT@
+MSGMERGE =	@MSGMERGE@
+MSGFMT =	@MSGFMT@
+
+TOPDISTDIR =	${TOP}/${PACKAGE}-${VERSION}
+DISTDIR =	${TOPDISTDIR}/${SUBDIR}
+TARBALL =	${TOPDISTDIR}.tar.gz
+
+INSTALL =	@INSTALL@
+INSTALL_PROGRAM =	@INSTALL_PROGRAM@ -m 555
+INSTALL_SCRIPT =	@INSTALL_SCRIPT@
+INSTALL_DATA =		@INSTALL_DATA@
+INSTALL_MAN =		${INSTALL_DATA}
+
+# End of 'configure'-generated stuff.
+
+.SUFFIXES:	.c .o .cc .ln
+.SUFFIXES:	.a
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
+
+# Documentation-related rules
+.SUFFIXES:	.dvi .info .ps .texi .html
+
+.texi.info:
+	${MAKEINFO} $<
+
+.texi.dvi:
+	${TEXI2DVI} $<
+
+.dvi.ps:
+	${DVIPS} -o $@ $<
+
+# I18n-related rules
+.SUFFIXES:	.po .mo
+
+.po.mo:
+	${MSGFMT} -v --statistics --strict -o $@ $<
+
+LIBRARY =	lib${LIBNAME}.a
+
+# List of recursive targets, i.e., those where you build the target in
+# each subdirectory.
+RECURSIVE_TARGETS = \
+		all depend clean distclean spotless distfiles-core distfiles \
+		install lint TAGS
+
+# This empty rule is so that `make' (build the first target) and `make
+# all' will do the same thing. `all' is actually built according to
+# the ${RECURSIVE_TARGETS} rule.
+all::
+
+${PROG}:	${OBJS}
+	${CC} ${CFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+${CXXPROG}:	${OBJS}
+	${CXX} ${CXXFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+${LIBRARY}:	${LIBOBJS}
+	ar cr $@ ${LIBOBJS}
+	${RANLIB} $@
+
+# lex.yy.o:	lex.yy.c
+# 	${CC} ${CFLAGS} -c $<
+
+lex.yy.c:	lexer.l y.tab.h
+	${LEX} ${LEXARGS} lexer.l
+
+# y.tab.o:	y.tab.c
+# 	${CC} ${CFLAGS} -c $<
+
+y.tab.c y.tab.h:	parser.y
+	${YACC} ${YACCARGS} parser.y
+
+# XXX - Ought to come up with a rule that'll do the Right Thing in all
+# cases, whether you have C source, C++ source, or a mixture of both.
+# depend::
+# 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
+
+# Targets for building the distribution.
+# See the comment by ${RECURSIVE_TARGETS}::.
+distfiles-core::	${DISTFILES}
+	@subdirs="${SUBDIRS}"; \
+	for dir in "${subdirs}"; do \
+		if test ! -d "${TOPDISTDIR}/${SUBDIR}/$$dir"; then \
+			echo "mkdir ${TOPDISTDIR}/${SUBDIR}/$$dir"; \
+			${MKDIR} "${TOPDISTDIR}/${SUBDIR}/$$dir"; \
+		fi; \
+	done
+	@if test -n "${DISTFILES}"; then \
+		echo "cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}"; \
+		cp -p ${DISTFILES} ${TOPDISTDIR}/${SUBDIR}; \
+	fi
+
+distfiles::	distfiles-core ${EXTRA_DISTFILES}
+	@if test -n "${EXTRA_DISTFILES}"; then \
+		echo "cp -p ${EXTRA_DISTFILES} ${TOPDISTDIR}/${SUBDIR}"; \
+		cp -p ${EXTRA_DISTFILES} ${TOPDISTDIR}/${SUBDIR}; \
+	fi
+
+TAGS::
+	files="${SRCS} ${HEADERS} ${OTHERTAGFILES}"; \
+	for f in $$files; do \
+		etags -a -o ${TOP}/TAGS $$f; \
+	done
+
+# Common rule for building recursive targets
+# The completely redundant subdirs="${SUBDIRS}" assignment is there
+# because Sun's 'sh' can't parse
+#	for i in ; do echo $i; done
+# It complains about a syntax error.
+${RECURSIVE_TARGETS}::
+	@subdirs="${SUBDIRS}"; \
+	for dir in $$subdirs; do \
+		echo "$@: Entering directory \`${SUBDIR}/$$dir'"; \
+		(cd $$dir && \
+		 ${MAKE} SUBDIR="${SUBDIR}/$$dir" TOP=${TOP}/.. \
+		 	PREFIX="${PREFIX}" prefix="${prefix}" $@); \
+		echo "$@: Leaving directory \`${SUBDIR}/$$dir'"; \
+	done
+
+# Targets for various progressive levels of cleanliness. Each one is
+# cleaner than the previous. These need to go after the
+# ${RECURSIVE_TARGETS} rule, because we want to clean up the lower
+# directories before cleaning up the higher ones.
+#
+# clean:	Delete all the files added by the compilation process
+#		(*.o, core, etc.)
+# distclean:	Delete anything that wasn't part of the distribution
+#		(clean + anything created by `configure')
+# spotless:	Delete anything that can't be recreated (distclean +
+#		`configure' itself, .ps files generated for the distribution
+#		as a courtesy, etc.)
+
+clean-here:
+	-rm -f ${CLEAN}
+clean::		clean-here
+
+distclean-here:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+distclean::	distclean-here
+
+spotless-here:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+spotless::	spotless-here 
