@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.19 2000-11-20 03:51:38 arensb Exp $
+ * $Id: install.c,v 2.20 2000-11-20 05:25:41 arensb Exp $
  */
 
 #include "config.h"
@@ -273,7 +273,8 @@ InstallNewFiles(struct PConnection *pconn,
 		struct pdb *pdb;	/* The database */
 		static char fname[MAXPATHLEN+1];
 					/* The database's full pathname */
-		const char *bakfname;	/* The database's full pathname in
+		const volatile char *bakfname;
+					/* The database's full pathname in
 					 * the backup directory.
 					 */
 		int outfd;		/* File descriptor for writing the
@@ -458,7 +459,8 @@ InstallNewFiles(struct PConnection *pconn,
 
 		/* If the file exists already, don't overwrite it */
 		err = 0;
-		outfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
+		outfd = open((const char *) bakfname,
+			     O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
 			     0600);
 		if (outfd < 0)
 		{
