@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.90 2000-09-29 03:15:51 arensb Exp $
+dnl # $Id: configure.in,v 1.91 2000-10-22 03:22:49 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -326,8 +326,7 @@ AC_CHECK_FUNCS(getopt \
 	cfmakeraw \
 	socketpair \
 	strcasecmp \
-	strncasecmp \
-	sysconf
+	strncasecmp
 )
 
 # Check whether O_BINARY is defined. It's known to exist under Windows
