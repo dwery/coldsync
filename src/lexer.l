@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.40 2001-11-12 01:08:52 arensb Exp $
+ * $Id: lexer.l,v 2.41 2001-11-12 05:50:38 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -181,6 +181,7 @@ QSTR		[^\\\$\"\n]
 "saved"		{ KEYWORD(SAVED);	}
 "snum"		{ KEYWORD(SNUM);	}
 "speed"		{ KEYWORD(SPEED);	}
+"transient"	{ KEYWORD(TRANSIENT);	}
 "type"		{ KEYWORD(TYPE);	}
 "unsaved"	{ KEYWORD(UNSAVED);	}
 "userid"	{ KEYWORD(USERID);	}
