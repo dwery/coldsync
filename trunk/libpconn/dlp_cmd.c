@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.33 2002-07-04 21:04:09 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.34 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -35,6 +35,8 @@
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
+
+#include <netinet/in.h>
 
 #include "pconn/dlp.h"
 #include "pconn/dlp_cmd.h"
@@ -147,7 +149,7 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 			memcpy(userinfo->passwd, rptr, max);
 			rptr += userinfo->passwdlen;
 
-			DLPC_TRACE(1)
+			DLPC_TRACE(2)
 			{
 				fprintf(stderr, "Got user info: user 0x%08lx, "
 					"viewer 0x%08lx, last PC 0x%08lx\n",
@@ -355,7 +357,7 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 			sysinfo->prodIDsize = get_ubyte(&rptr);
 			sysinfo->prodID = get_udword(&rptr);
 
-			DLPC_TRACE(1)
+			DLPC_TRACE(2)
 				fprintf(stderr,
 					"Got sysinfo: ROM version 0x%08lx, "
 					"loc. 0x%08lx, pIDsize %d, "
@@ -374,7 +376,7 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 			    sysinfo->comp_ver_min = get_uword(&rptr);
 			    sysinfo->max_rec_size = get_udword(&rptr);
 
-			    DLPC_TRACE(1)
+			    DLPC_TRACE(2)
 				    fprintf(stderr,
 					    "Got version sysinfo: "
 					    "DLP v%d.%d, "
@@ -435,7 +437,7 @@ DlpGetSysDateTime(PConnection *pconn,
 		{
 		    case DLPRET_GetSysDateTime_Time:
 			dlpcmd_gettime(&rptr, ptime);
-			DLPC_TRACE(1)
+			DLPC_TRACE(2)
 				fprintf(stderr,
 					"System time: %02d:%02d:%02d, "
 					"%d/%d/%d\n",
@@ -683,6 +685,109 @@ DlpReadStorageInfo(PConnection *pconn,
 	return 0;
 }
 
+static const ubyte *
+_parse_dbinfo(const ubyte *buffer, struct dlp_dbinfo *db)
+{
+	const ubyte *rptr = buffer;
+
+	db->size	= get_ubyte(&rptr);
+	db->misc_flags	= get_ubyte(&rptr);
+	db->db_flags	= get_uword(&rptr);
+	db->type	= get_udword(&rptr);
+	db->creator	= get_udword(&rptr);
+	db->version	= get_uword(&rptr);
+	db->modnum	= get_udword(&rptr);
+
+	dlpcmd_gettime(&rptr, &db->ctime);
+	dlpcmd_gettime(&rptr, &db->mtime);
+	dlpcmd_gettime(&rptr, &db->baktime);
+
+	db->index	= get_uword(&rptr);
+
+	/* Copy 'till the first NUL or DLPCMD_DBNAME_LEN-1 (31)
+	 * characters, whichever is shorter.
+	 */			 
+	strncpy(db->name, rptr, DLPCMD_DBNAME_LEN-1);
+
+	/* Ensure a trailing NUL */
+	db->name[DLPCMD_DBNAME_LEN-1] = '\0';
+
+	/* Make rptr point to the next structure */
+	rptr += db->size - DLPCMD_DBINFO_LEN;
+
+				DLPC_TRACE(5)
+				{
+					fprintf(stderr, "Database info:\n");
+					fprintf(stderr, "\tsize %d, misc flags 0x%02x,"
+						" DB flags 0x%04x\n",
+						db->size,
+						db->misc_flags,
+						db->db_flags);
+					fprintf(stderr, "\tDB flags:");
+					if (db->db_flags & DLPCMD_DBFLAG_RESDB)
+						fprintf(stderr, " RESDB");
+					if (db->db_flags & DLPCMD_DBFLAG_RO)
+						fprintf(stderr, " RO");
+					if (db->db_flags & DLPCMD_DBFLAG_APPDIRTY)
+						fprintf(stderr, " APPDIRTY");
+					if (db->db_flags & DLPCMD_DBFLAG_BACKUP)
+						fprintf(stderr, " BACKUP");
+					if (db->db_flags & DLPCMD_DBFLAG_OKNEWER)
+						fprintf(stderr, " OKNEWER");
+					if (db->db_flags & DLPCMD_DBFLAG_RESET)
+						fprintf(stderr, " RESET");
+					if (db->db_flags & DLPCMD_DBFLAG_OPEN)
+						fprintf(stderr, " OPEN");
+					fprintf(stderr, "\n");
+					fprintf(stderr, "\ttype '%c%c%c%c' (0x%08lx), "
+						"creator '%c%c%c%c' (0x%08lx), "
+						"version %d, modnum %ld\n",
+						(char) (db->type >> 24) & 0xff,
+						(char) (db->type >> 16) & 0xff,
+						(char) (db->type >> 8) & 0xff,
+						(char) db->type & 0xff,
+						db->type,
+						(char) (db->creator >> 24) & 0xff,
+						(char) (db->creator >> 16) & 0xff,
+						(char) (db->creator >> 8) & 0xff,
+						(char) db->creator & 0xff,
+						db->creator,
+						db->version,
+						db->modnum);
+					fprintf(stderr, "\tCreated %02d:%02d:%02d, "
+						"%d/%d/%d\n",
+						db->ctime.hour,
+						db->ctime.minute,
+						db->ctime.second,
+						db->ctime.day,
+						db->ctime.month,
+						db->ctime.year);
+					fprintf(stderr, "\tModified %02d:%02d:%02d, "
+						"%d/%d/%d\n",
+						db->mtime.hour,
+						db->mtime.minute,
+						db->mtime.second,
+						db->mtime.day,
+						db->mtime.month,
+						db->mtime.year);
+					fprintf(stderr, "\tBacked up %02d:%02d:%02d, "
+						"%d/%d/%d\n",
+						db->baktime.hour,
+						db->baktime.minute,
+						db->baktime.second,
+						db->baktime.day,
+						db->baktime.month,
+						db->baktime.year);
+					fprintf(stderr, "\tindex %d\n",
+						db->index);
+					fprintf(stderr, "\tName: \"%s\"\n",
+						db->name);
+				}
+
+
+	return rptr;
+}			 
+
 int
 DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 	      const ubyte iflags,	/* Search flags */
@@ -703,7 +808,6 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */ 
 	ubyte *wptr;		/* Pointer into buffers (for writing) */ 
-	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -740,6 +844,8 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 		rptr = ret_argv[i].data;
 		switch (ret_argv[i].id)
 		{
+			int k;
+		
 		    case DLPRET_ReadDBList_Info:
 			*last_index = get_uword(&rptr);
 			*oflags = get_ubyte(&rptr);
@@ -753,104 +859,16 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 					*num);
 
 			/* Parse the info for this database */
-			/* XXX - There might be multiple 'dlp_dbinfo'
-			 * instances (unless the 'multiple' flag is set
-			 * (DLPRET_READDBLFLAG_MORE)?). Cope with it.
-			 */
-			dbs->size = get_ubyte(&rptr);
-			dbs->misc_flags = get_ubyte(&rptr);
-			dbs->db_flags = get_uword(&rptr);
-			dbs->type = get_udword(&rptr);
-			dbs->creator = get_udword(&rptr);
-			dbs->version = get_uword(&rptr);
-			dbs->modnum = get_udword(&rptr);
-			dlpcmd_gettime(&rptr, &dbs->ctime);
-			dlpcmd_gettime(&rptr, &dbs->mtime);
-			dlpcmd_gettime(&rptr, &dbs->baktime);
-			dbs->index = get_uword(&rptr);
 
-			/* XXX - Actually, should probably only read
-			 * DLPCMD_DBNAME_LEN-1 (31) characters, and ensure
-			 * a trailing NUL.
-			 */
-			/* Get the database name. Everything up to the end
-			 * of the returned argument, or DLPCMD_DBNAME_LEN
-			 * characters, whichever is shorter.
-			 */
-			max = ret_argv[i].data + ret_argv[i].size - rptr;
-			if (max > DLPCMD_DBNAME_LEN)
-				max = DLPCMD_DBNAME_LEN;
-			memcpy(dbs->name, rptr, max);
-			rptr += max;
+			/* Iterate through the dbinfo structures */
 
-
-			DLPC_TRACE(5)
+			for(k = 0; k < *num; k++)			 
 			{
-				fprintf(stderr, "Database info:\n");
-				fprintf(stderr, "\tsize %d, misc flags 0x%02x,"
-					" DB flags 0x%04x\n",
-					dbs->size,
-					dbs->misc_flags,
-					dbs->db_flags);
-				fprintf(stderr, "\tDB flags:");
-				if (dbs->db_flags & DLPCMD_DBFLAG_RESDB)
-					fprintf(stderr, " RESDB");
-				if (dbs->db_flags & DLPCMD_DBFLAG_RO)
-					fprintf(stderr, " RO");
-				if (dbs->db_flags & DLPCMD_DBFLAG_APPDIRTY)
-					fprintf(stderr, " APPDIRTY");
-				if (dbs->db_flags & DLPCMD_DBFLAG_BACKUP)
-					fprintf(stderr, " BACKUP");
-				if (dbs->db_flags & DLPCMD_DBFLAG_OKNEWER)
-					fprintf(stderr, " OKNEWER");
-				if (dbs->db_flags & DLPCMD_DBFLAG_RESET)
-					fprintf(stderr, " RESET");
-				if (dbs->db_flags & DLPCMD_DBFLAG_OPEN)
-					fprintf(stderr, " OPEN");
-				fprintf(stderr, "\n");
-				fprintf(stderr, "\ttype '%c%c%c%c' (0x%08lx), "
-					"creator '%c%c%c%c' (0x%08lx), "
-					"version %d, modnum %ld\n",
-					(char) (dbs->type >> 24) & 0xff,
-					(char) (dbs->type >> 16) & 0xff,
-					(char) (dbs->type >> 8) & 0xff,
-					(char) dbs->type & 0xff,
-					dbs->type,
-					(char) (dbs->creator >> 24) & 0xff,
-					(char) (dbs->creator >> 16) & 0xff,
-					(char) (dbs->creator >> 8) & 0xff,
-					(char) dbs->creator & 0xff,
-					dbs->creator,
-					dbs->version,
-					dbs->modnum);
-				fprintf(stderr, "\tCreated %02d:%02d:%02d, "
-					"%d/%d/%d\n",
-					dbs->ctime.hour,
-					dbs->ctime.minute,
-					dbs->ctime.second,
-					dbs->ctime.day,
-					dbs->ctime.month,
-					dbs->ctime.year);
-				fprintf(stderr, "\tModified %02d:%02d:%02d, "
-					"%d/%d/%d\n",
-					dbs->mtime.hour,
-					dbs->mtime.minute,
-					dbs->mtime.second,
-					dbs->mtime.day,
-					dbs->mtime.month,
-					dbs->mtime.year);
-				fprintf(stderr, "\tBacked up %02d:%02d:%02d, "
-					"%d/%d/%d\n",
-					dbs->baktime.hour,
-					dbs->baktime.minute,
-					dbs->baktime.second,
-					dbs->baktime.day,
-					dbs->baktime.month,
-					dbs->baktime.year);
-				fprintf(stderr, "\tindex %d\n",
-					dbs->index);
-				fprintf(stderr, "\tName: \"%s\"\n",
-					dbs->name);
+				/* Parse */
+				rptr = _parse_dbinfo(rptr, dbs);
+
+				/* Skip to the next dbinfo structure */
+				dbs++;
 			}
 			break;
 		    default:	/* Unknown argument type */
@@ -3696,6 +3714,90 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 				"DlpReadFeature",
 				ret_argv[i].id);
 			continue;
+		}
+	}
+
+	return 0;		/* Success */
+}
+
+int
+DlpFindDB_ByTypeCreator(PConnection *pconn,		/* Connection to Palm */
+			struct dlp_finddb *finddbinfo,	/* Will be filled in with database
+				 			 * information */
+			const udword creator,
+			const udword type,
+			const ubyte newsearch)
+{
+	int i;
+	int err;
+	struct dlp_req_header header;		/* Request header */
+	struct dlp_resp_header resp_header;	/* Response header */
+	struct dlp_arg argv[1];			/* Request argument list */
+	const struct dlp_arg *ret_argv;		/* Response argument list */
+
+	static ubyte outbuf[DLPARGLEN_FindDB_ByTypeCreator];
+						/* Output buffer */
+
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> FindDB (ByTypeCreator)\n");
+
+	/* Fill in the header values */
+	header.id	= (ubyte) DLPCMD_FindDB;
+	header.argc	= 1;
+
+	/* Fill in the argument */
+
+	wptr = outbuf;
+
+	put_ubyte(&wptr, DLPCMD_FindDB_OptFlag_GetAttributes);
+	put_ubyte(&wptr, newsearch ? DLPCMD_FindDB_SrchFlag_NewSearch: 0);
+	put_udword(&wptr, type);
+	put_udword(&wptr, creator);
+
+	argv[0].id	= DLPARG_FindDB_ByTypeCreator;
+	argv[0].size	= DLPARGLEN_FindDB_ByTypeCreator;
+	argv[0].data	= outbuf;
+
+
+	/* Send the DLP request */
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
+	if (err < 0)
+		return err;
+		
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
+		return resp_header.error;
+
+	/* Parse the argument(s) */
+	for (i = 0; i < resp_header.argc; i++)
+	{
+		rptr = ret_argv[i].data;
+		switch (ret_argv[i].id)
+		{
+			case DLPRET_FindDB_Basic:
+			{
+			    	finddbinfo->cardno	= get_ubyte(&rptr);
+				get_ubyte(&rptr);	/* Skip reserved */
+			    	finddbinfo->localid	= get_udword(&rptr);
+		    		finddbinfo->openref	= get_udword(&rptr);
+
+				rptr = _parse_dbinfo(rptr, &finddbinfo->dbinfo);
+			}
+			break;
+
+			default:	/* Unknown argument type */
+			{
+				fprintf(stderr,
+					_("##### %s: Unknown argument type: "
+					  "0x%02x.\n"),
+					"DlpFindDB",
+					ret_argv[i].id);
+				continue;
+			}
 		}
 	}
 

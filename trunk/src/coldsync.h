@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.67 2002-07-18 16:43:16 azummo Exp $
+ * $Id: coldsync.h,v 1.68 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -23,8 +23,11 @@
 #define COND_NAMELEN		128	/* Max. length of conduit name */
 #define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
 
+#define GLOBAL_INSTALL_DIR	"/usr/share/coldsync/install"
+
 extern int sync_trace;		/* Debugging level for sync-related stuff */
 extern int misc_trace;		/* Debugging level for miscellaneous stuff */
+extern int conduit_trace;	/* Debugging level for conduits-related stuff */
 
 
 /* Bool3
@@ -306,6 +309,9 @@ struct sync_config {
 		Bool3 autoinit;		/* If true, tries to initialize the palm 
 					 * when in daemon mode
 					 */
+		Bool3 filter_dbs;	/* If true, coldsync will retrieve from the pda
+					 * only the dbs specified in the conduit blocks.
+					 */
 		/* XXX - Perhaps allow "final" here, so that the sysadmin
 		 * can lock options in place.
 		 */
@@ -333,6 +339,7 @@ extern char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 extern char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 extern char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 extern char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
+extern char rescuedir[MAXPATHLEN+1];	/* ~/.palm/rescue pathname */
 
 extern struct sync_config *sync_config;
 
@@ -400,10 +407,10 @@ extern int restore_dir(PConnection *pconn,
 /* install.c */
 extern int upload_database(PConnection *pconn, struct pdb *db);
 extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
-extern int InstallNewFiles(PConnection *pconn,
-			   struct Palm *palm,
+extern int InstallNewFiles(struct Palm *palm,
 			   char *newdir,
-			   Bool deletep);
+			   Bool deletep,
+			   Bool force_install);
 
 /* log.c */
 extern int va_add_to_log(PConnection *pconn, const char *fmt, ...);

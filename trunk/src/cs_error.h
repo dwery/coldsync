@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.h,v 2.5 2002-04-27 18:00:07 azummo Exp $
+ * $Id: cs_error.h,v 2.6 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _cs_error_h_
 #define _cs_error_h_
@@ -24,11 +24,13 @@ typedef enum CSErrno {
 
 extern CSErrno cs_errno;		/* ColdSync error status */
 
-void update_cs_errno_p(PConnection *pconn);
+extern void update_cs_errno_dlp(PConnection *pconn);
+extern void update_cs_errno_pconn(PConnection *pconn, palmerrno_t palm_errno);
 
-#define update_cs_errno(p) ( update_cs_errno_p(palm_pconn(p)) )
+extern void print_cs_errno(CSErrno cs_errno);
+extern void print_latest_dlp_error(PConnection *pconn);
 
-
+#define cs_errno_fatal(x) ( x != CSE_NOERR )
 
 #endif	/* _cs_error_h_ */
 

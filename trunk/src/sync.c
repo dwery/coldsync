@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: sync.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -280,8 +280,7 @@ UpdateUserInfo2(struct Palm *palm, struct dlp_setuserinfo *newinfo)
 	 */
 
 	if ((newinfo->username != NULL) &&
-		/* XXX - Might be better to have something like palm_has_username(palm) */
-		( (palm_username_len(palm) < 1) || (strcmp(palm_username(palm), newinfo->username) != 0)))
+		( !palm_has_username(palm) || (strcmp(palm_username(palm), newinfo->username) != 0)))
 	{
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting user name to \"%s\"\n",
@@ -426,9 +425,8 @@ UpdateUserInfo(const struct Palm *palm,
 			       &uinfo);
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		update_cs_errno(palm);
-
-		Error(_("DlpWriteUserInfo failed: %d."), err);
+		Error(_("DlpWriteUserInfo failed."));
+		print_latest_dlp_error(palm_pconn(palm));
 		return -1;
 	}
 
@@ -437,7 +435,7 @@ UpdateUserInfo(const struct Palm *palm,
 
 
 static int
-conduits_install( struct Palm *palm, pda_block *pda)
+conduits_install(struct Palm *palm, pda_block *pda)
 {
 	struct dlp_dbinfo dbinfo;
 	int err;
@@ -449,7 +447,7 @@ conduits_install( struct Palm *palm, pda_block *pda)
 	Verbose(1, _("Running Install conduits"));
 
 	/* Run "none" conduits */
- 	err = run_Install_conduits(NULL, pda);
+ 	err = run_Install_conduits(palm, NULL, pda);
  	if (err < 0)
  	{
  	 	Error(_("Error %d running install conduits."),
@@ -459,7 +457,7 @@ conduits_install( struct Palm *palm, pda_block *pda)
 
 
 	while (NextInstallFile(&dbinfo)>=0) {
-		err = run_Install_conduits(&dbinfo, pda);
+		err = run_Install_conduits(palm, &dbinfo, pda);
 		if (err < 0) {
 			Error(_("Error %d running install "
 				"conduits."),
@@ -468,7 +466,7 @@ conduits_install( struct Palm *palm, pda_block *pda)
 		}
 	}
 
-	err = InstallNewFiles(palm_pconn(palm), palm, installdir, True);
+	err = InstallNewFiles(palm, installdir, True, global_opts.force_install);
 	if (err < 0)
 	{
 		Error(_("Can't install new files."));
@@ -479,7 +477,7 @@ conduits_install( struct Palm *palm, pda_block *pda)
 }
 
 static int
-conduits_dump( struct Palm *palm, pda_block *pda)
+conduits_dump(struct Palm *palm, pda_block *pda)
 {
 	int err;
 	const struct dlp_dbinfo *cur_db;
@@ -489,7 +487,7 @@ conduits_dump( struct Palm *palm, pda_block *pda)
 	Verbose(1, _("Running Dump conduits"));
 
 	/* Run "none" conduits */
- 	err = run_Dump_conduits(NULL, pda);
+ 	err = run_Dump_conduits(palm, NULL, pda);
  	if (err < 0)
  	{
  	 	Error(_("Error %d running post-dump conduits."),
@@ -501,7 +499,7 @@ conduits_dump( struct Palm *palm, pda_block *pda)
 
 	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
-		err = run_Dump_conduits(cur_db, pda);
+		err = run_Dump_conduits(palm, cur_db, pda);
 		if (err < 0)
 		{
 			Error(_("Error %d running post-dump conduits."),
@@ -514,7 +512,7 @@ conduits_dump( struct Palm *palm, pda_block *pda)
 }
 
 static int
-conduits_fetch( struct Palm *palm, pda_block *pda)
+conduits_fetch(struct Palm *palm, pda_block *pda)
 {
 	int err;
 	const struct dlp_dbinfo *cur_db;
@@ -524,7 +522,7 @@ conduits_fetch( struct Palm *palm, pda_block *pda)
 	Verbose(1, _("Running Fetch conduits"));
 
 	/* Run "none" conduits */
- 	err = run_Fetch_conduits(NULL, pda);
+ 	err = run_Fetch_conduits(palm, NULL, pda);
  	if (err < 0)
  	{
  	 	Error(_("Error %d running pre-fetch conduits."),
@@ -537,7 +535,7 @@ conduits_fetch( struct Palm *palm, pda_block *pda)
 
 	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
-		err = run_Fetch_conduits(cur_db, pda);
+		err = run_Fetch_conduits(palm, cur_db, pda);
 		if (err < 0)
 		{
 			Error(_("Error %d running pre-fetch conduits."),
@@ -559,7 +557,7 @@ conduits_sync(struct Palm *palm, pda_block *pda)
 	Verbose(1, _("Running Sync conduits"));
 
 	/* Run "none" conduits */
- 	err = run_Sync_conduits(NULL, palm_pconn(palm), pda);
+ 	err = run_Sync_conduits(palm, NULL, pda);
  	if (err < 0)
  	{
  	 	Error(_("Error %d running sync conduits."),
@@ -576,7 +574,7 @@ conduits_sync(struct Palm *palm, pda_block *pda)
 		 */
 		Verbose(2, _("Syncing %s"), cur_db->name);
 
-		err = run_Sync_conduits(cur_db, palm_pconn(palm), pda);
+		err = run_Sync_conduits(palm, cur_db, pda);
 		if (err < 0)
 		{
 			switch (cs_errno)
@@ -596,7 +594,6 @@ conduits_sync(struct Palm *palm, pda_block *pda)
 
 	return 0;
 }
-
 
 int
 do_sync(pda_block *pda, struct Palm *palm)
@@ -682,7 +679,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 
 	/* Initialize preference cache */
 	MISC_TRACE(1)
-		fprintf(stderr,"Initializing preference cache\n");
+		fprintf(stderr, "Initializing preference cache\n");
 
 	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
 	{
@@ -694,7 +691,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	/* Find out whether we need to do a slow sync or not */
 	/* XXX - Actually, it's not as simple as this (see comment below) */
 	p_lastsyncPC = palm_lastsyncPC(palm);
-	if ((p_lastsyncPC == 0) && (cs_errno != CSE_NOERR))
+	if ((p_lastsyncPC == 0) && !palm_ok(palm))
 	{
 		Error(_("Can't get last sync PC from Palm"));
 		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
@@ -735,10 +732,62 @@ do_sync(pda_block *pda, struct Palm *palm)
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
-					 * of the databases on the Palm, so
-					 * make sure we get them all.
-					 */
+	MISC_TRACE(1)
+		fprintf(stderr, "Doing a sync.\n");
+
+	if (sync_config->options.filter_dbs == True)	 
+	{ 
+		conduit_block *conduit;
+	
+		/* Walk the queue */
+		for (conduit = sync_config->conduits;
+		     conduit != NULL;
+		     conduit = conduit->next)
+		{
+			int i;
+
+			/* See if the flavor matches */
+			if (!(conduit->flavors & FLAVORFL_SYNC))
+			 	continue;
+
+			/* Avoid default conduits */
+			if (conduit->flags & CONDFL_DEFAULT)
+				continue;
+
+			for (i = 0; i < conduit->num_ctypes; i++)
+			{
+				/* Avoid having wildcards in both creator and type fields */
+				if( conduit->ctypes[i].creator == 0 && conduit->ctypes[i].type == 0)
+					continue;
+
+				SYNC_TRACE(2)
+				{
+					fprintf(stderr,
+						"Searching DBs:\n"
+						"\ttype   : '%c%c%c%c' (0x%08lx)\n"
+                                 	        "\tcreator: '%c%c%c%c' (0x%08lx)\n",
+                                 	        (char) (conduit->ctypes[i].type >> 24) & 0xff,
+                                 	        (char) (conduit->ctypes[i].type >> 16) & 0xff,
+                                 	        (char) (conduit->ctypes[i].type >> 8) & 0xff, 
+                                 	        (char) conduit->ctypes[i].type & 0xff,
+                                 	        conduit->ctypes[i].type,
+                                 	        (char) (conduit->ctypes[i].creator >> 24) & 0xff,
+                                 	        (char) (conduit->ctypes[i].creator >> 16) & 0xff,
+                                 	        (char) (conduit->ctypes[i].creator >> 8) & 0xff, 
+                                 	        (char) conduit->ctypes[i].creator & 0xff,
+						conduit->ctypes[i].creator);
+				}
+
+				palm_fetch_some_DBs(palm, conduit->ctypes[i].creator, conduit->ctypes[i].type);
+			}
+		}
+	}
+	else
+	{	 
+		err = palm_fetch_all_DBs(palm);	/* We're going to be looking at all
+						 * of the databases on the Palm, so
+						 * make sure we get them all.
+						 */
 			/* XXX - Off hand, it looks as if fetching the list
 			 * of databases takes a long time (several
 			 * seconds). One way to "fix" this would be to get
@@ -751,25 +800,23 @@ do_sync(pda_block *pda, struct Palm *palm)
 			 * Palm to not just say "Identifying", it might
 			 * make things _appear_ significantly faster.
 			 */
-	if (err < 0)
-	{
-		switch (cs_errno)
+		if (err < 0)
 		{
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
-
-		    default:
 			Error(_("Can't fetch list of databases."));
-			break;
+			/* print_cs_errno(cs_errno); */
+			palm_CSDisconnect(palm);
+
+			return -1;
 		}
-		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
-		return -1;
 	}
 
-	MISC_TRACE(1)
-		fprintf(stderr, "Doing a sync.\n");
+	/* Install any file in the system wide "install" directory */
+	InstallNewFiles(palm, GLOBAL_INSTALL_DIR, False, False);
+
+	/* Install any file in the "rescue" directory */
+	InstallNewFiles(palm, rescuedir, False, False);
+
+	/* XXX - Do we need install conduits for the above directories? */
 
 	/* Install new databases before sync, if the config says so */
 	if (global_opts.install_first)
@@ -788,7 +835,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	 * there, but not deleted.
 	 * E.g.:
 	 *
-	 * err = InstallNewFiles(palm_pconn(palm), &palm, "/tmp/palm-install", False);
+	 * err = InstallNewFiles(palm, "/tmp/palm-install", False, False);
 	 */
 
 	/* For each database, walk config.fetch, looking for applicable
@@ -821,27 +868,19 @@ do_sync(pda_block *pda, struct Palm *palm)
 
 	if ((err = conduits_sync(palm, pda)) < 0)
 	{
-		switch (cs_errno)
+		/* print_cs_errno(cs_errno); */
+
+		if (cs_errno == CSE_CANCEL)
 		{
-		    case CSE_CANCEL:
-			Warn(_("Sync cancelled by Palm."));
 			va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
 				/* Doesn't really matter if it
 				 * fails, since we're terminating
 				 * anyway.
 				 */
-			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-
-		    case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
-
-		    default:
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
 		}
+
+		palm_CSDisconnect(palm);
+		return -1;
 	}
 
 
@@ -861,6 +900,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 		switch (cs_errno)
 		{
 		    case CSE_NOCONN:
+		    	/* print_cs_errno(cs_errno); */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		    default:
@@ -901,7 +941,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 				switch (cs_errno)
 				{
 				    case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
+					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -935,7 +975,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 	/* XXX - Is this check still needed ? */
 	if (cs_errno == CSE_NOCONN)
 	{
-		Error(_("Lost connection to Palm."));
+		/* print_cs_errno(cs_errno); */
 		return -1;
 	}
 

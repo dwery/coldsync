@@ -1,22 +1,26 @@
+- Document the filter_dbs .coldsyncrc option.
+- Investigate the exact meaning of modnum.
 - Built-in conduits receive information about the PDA block (Keni's
   patch), but external conduits don't. It'd be nice if they did. The
   obvious way to do this is by sending them additional headers, e.g.:
 	PDA-Name: Palm m105;
-	PDA-Snum: 189X7M27GA63-N;
-	PDA-Directory: /folks/arensb/.palm-m105;
-	PDA-Default: 1;
-	PDA-Username: Gorko the Invincible;
+	PDA-Snum: 189X7M27GA63-N;		(done)
+	PDA-Directory: /folks/arensb/.palm-m105;(done)
+	PDA-Default: 1;				(done)
+	PDA-Username: Gorko the Invincible;	(done)
 	PDA-UID: 31337;
-- Fix io_drain lock
+	PDA-DLPmaj: 1;
+	PDA-DLPmin: 3;
+- Add the PDA-xxx headers to the conduits development documentation.
 - Add a warning about listen usb under linux.
 - Fix --with-getlong 
 - Review USB support in configure.in
 - UDP wakeup packet support has been partially removed in one of the 
-  latest patches because my Palm Desktop doesn't support it (?).
+  latest patches because my Palm Desktop doesn't support/use it (?).
   It should eventually be re-implemented in an external program.
 - Add documentation for long command line options.
-- Add documentation for 'autoinit': option.
-- Update the coduits development documentation to reflect changes
+- Add documentation for 'autoinit' option.
+- Update the conduits development documentation to reflect changes
   in mandatory headers.
 - Add documentation for 'cwd:' option in conduit{} block.
 - Man page for coldnamed(8).

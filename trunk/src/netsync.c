@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: netsync.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: netsync.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -118,7 +118,7 @@ mkforw_addr(struct Palm *palm,
 	if (hostname == NULL)
 	{
 		hostname = palm_netsync_hostaddr(palm);
-		if ((hostname == NULL) && (cs_errno != CSE_NOERR))
+		if ((hostname == NULL) && !palm_ok(palm))
 			/* Something went wrong */
 			return -1;
 	}
@@ -126,7 +126,7 @@ mkforw_addr(struct Palm *palm,
 	if (hostname == NULL)
 	{
 		hostname = palm_netsync_hostname(palm);
-		if ((hostname == NULL) && (cs_errno != CSE_NOERR))
+		if ((hostname == NULL) && !palm_ok(palm))
 			/* Something went wrong */
 			return -1;
 	}
@@ -371,7 +371,6 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
-				update_cs_errno_p(remote);
 				break;
 			}
 			SYNC_TRACE(5)
@@ -399,7 +398,6 @@ forward_netsync(PConnection *local, PConnection *remote)
 			if (err < 0)
 			{
 				Perror("read local");
-				update_cs_errno_p(local);
 				break;
 			}
 			SYNC_TRACE(5)

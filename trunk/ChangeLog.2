@@ -1,3 +1,72 @@
+2002-08-31  Alessandro Zummo <azummo@towertech.it>
+
+	* src/install.c: Removed pconn parameter to InstallNewFiles.
+
+	* src/conduit.c: Replaced SYNC_TRACE with CONDUIT_TRACE.
+
+	* src/config.c: Added support for CONDUIT_TRACE ( -d conduit:x) 
+
+	* src/GenericConduit.cc: Update modnum using the value from dbinfo.
+
+	* TODO: Added an item about modnum and filter_dbs.
+
+	* libpconn/dlp_cmd.c, include/pconn/dlp_cmd.h: Implemented
+	DlpFindDB (ByTypeCreator), moved parsing of dlp_dbinfo structure
+	out of ReadDBList to allow code sharing.
+
+	* src/cs_error.c: Added functions to print the meaning
+	of the given CSerror/latest DLP error.
+
+	* src/sync.c : Added palm_CSDisconnect(palm) as a frontend
+	to call palm_Disconnect with proper arguments based on cs_errno.
+
+	* libpconn/dlp.c: Added a function to associate DLP error codes to
+	meaningful (?) error messages.
+
+	* src/spalm.c: Renamed palm_append_dbentry() to palm_append_pdbentry(),
+	added a new palm_append_dbentry().
+
+	* src/cs_error.h: Added macro cs_errno_fatal(x).
+
+	* src/config.c, src/sync.c et al.: Implemented filter_dbs option.
+	If active, coldsync will use DlpFindDB instead DlpReadDBList, in order
+	to build a partial database list based on the creator(s)/type(s) found
+	in the conduit blocks.
+
+	* most files: Errors are now propagated from libpconn to the calling
+	layer using callbacks. Maybe it's time to rewrite everything in C++. 
+
+	* some files: Removed trailing '\n' from Error() calls.
+
+	* some files: Added print_latest_dlp_error() call after any
+	DlpXXX() call that resulted in an error.
+
+	* libpconn/PConnection.c: Hopefully fixed io_drain lock by setting
+	pconn->fd to -1 if an io error occurs while reading or writing.
+
+	* TODO: Removed the entry about io_drain lock.
+
+	* src/conduit.c: added propagation of struct Palm *. Added some of
+	the PDA-xx headers mentioned in the TODO. The header's value comes
+	from struct Palm * instead of the pda block wherever possible.
+	
+	* TODO: Updated item about PDA-xxx headers.
+
+	* src/spalm.c, src/spalm.h: Added palm->accessor_status_ to know
+	whether the last accessor called worked or not. Added palm_ok()
+	#define to access accessor_status_ .
+
+	* src/sync.c: Added support for .palm/rescue. Works just
+	like .palm/install but the files aren't deleted after
+	the upload.
+
+
+2002-08-03  Alessandro Zummo <azummo@towertech.it>
+
+	* libpconn/dlp_cmd.c, src/spalm.c: Added support for DLP >= 1.2
+	in ReadDBList. This leads to a speedup in the first phase
+	of the sync.
+
 2002-06-21  Bron Gondwana  <brong@h-r-s.com>
 
 	* include/pconn/PConnection.h: Add flag PCONNFL_MODEM.

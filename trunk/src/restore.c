@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.31 2002-04-27 18:00:07 azummo Exp $
+ * $Id: restore.c,v 2.32 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -146,10 +146,9 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
-	    	update_cs_errno_p(pconn);
-
-		Warn(_("Restore: Can't delete database \"%s\": %d."),
-		     pdb->name, err);
+		Warn(_("Restore: Can't delete database \"%s\"."),
+		     pdb->name);
+		print_latest_dlp_error(pconn);
 		return -1;
 	}
 
@@ -166,8 +165,6 @@ restore_file(PConnection *pconn,
 		fprintf(stderr, "pdb_Upload returned %d\n", err);  
 	if (err < 0)
 	{
-	    	update_cs_errno_p(pconn);
-
 		/* XXX - Ugh. Hack-ptui! */
 		switch (cs_errno)
 		{
@@ -261,21 +258,12 @@ restore_dir(PConnection *pconn,
 		strncat(fname, file->d_name, MAXPATHLEN-strlen(fname));
 
 		err = restore_file(pconn, palm, fname);
-		if (err < 0)
+
+		if (err < 0 && cs_errno_fatal(cs_errno))
 		{
-			switch (cs_errno)
-			{
-			    case CSE_CANCEL:
-				Error(_("Cancelled by Palm."));
-				closedir(dir);
-				return -1;
-			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
-				closedir(dir);
-				return -1;
-			    default:
-				break;
-			}
+			/* print_cs_errno(cs_errno); */
+			closedir(dir);
+			return -1;
 		}
 	}
 

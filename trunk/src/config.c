@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.104 2002-07-18 16:43:16 azummo Exp $
+ * $Id: config.c,v 1.105 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -104,6 +104,7 @@ char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
+char rescuedir[MAXPATHLEN+1];	/* ~/.palm/rescue pathname */
 
 char conf_fname[MAXPATHLEN+1];	/* ~/.coldsyncrc */
 
@@ -177,7 +178,7 @@ parse_args(int argc, char *argv[])
 		 *
 		 * And what about Japanese? Will we need iconv()? Ugh.
 		 *
-		 * azummo: I don't think options nees to be translated
+		 * azummo: I don't think options needs to be translated
 		 *  ... and would be a nightmare to maintain.
 		 */
 	};	 
@@ -374,6 +375,9 @@ load_config(const Bool read_user_config)
 	sync_config->options.force_install = Undefined;
 	sync_config->options.install_first = Undefined;
 	sync_config->options.autoinit      = Undefined;
+	sync_config->options.filter_dbs	   = False;	 /* We don't have an equivalent cmd line option
+							  * for this, so it defaults to False here.
+							  */
 
 	/* Add a default conduit to the head of the queue, equivalent
 	 * to:
@@ -745,6 +749,8 @@ set_debug_level(const char *str)
 		io_trace = lvl;
 	else if (strncasecmp(str, "net", 3) == 0)
 		net_trace = lvl;
+	else if (strncasecmp(str, "conduit", 7) == 0)
+		conduit_trace = lvl;
 	else {
 		Error(_("Unknown facility \"%s\"."), str);
 	}
@@ -1394,10 +1400,11 @@ name2protocol(const char *str)
  *	<basedir>/archive
  *	<basedir>/backup
  *	<basedir>/install
+ *	<basedir>/rescue
  * ('basedir' will be ~/.palm by default)
  *
  * XXX - This also initializes the global variables 'backupdir',
- * 'atticdir', 'archivedir', and 'installdir'. This seems nonintuitive.
+ * 'atticdir', 'archivedir', 'installdir' and 'rescuedir'. This seems nonintuitive.
  *
  * Returns 0 if successful, or a negative value in case of error.
  */
@@ -1492,6 +1499,24 @@ make_sync_dirs(const char *basedir)
 		{
 			Error(_("Can't create install directory %s."),
 			      installdir);
+			Perror("mkdir");
+			return -1;
+		}
+	}
+
+	/* ~/.palm/rescue */
+	strncpy(rescuedir, mkfname(basedir, "/rescue", NULL), MAXPATHLEN);
+	rescuedir[MAXPATHLEN] = '\0';
+	if (!is_directory(rescuedir))
+	{
+		/* ~/.palm/rescue doesn't exist. Create it. */
+		MISC_TRACE(4)
+			fprintf(stderr, "mkdir(%s)\n", rescuedir);
+
+		if ((err = mkdir(rescuedir, DIR_MODE)) < 0)
+		{
+			Error(_("Can't create rescue directory %s."),
+			      rescuedir);
 			Perror("mkdir");
 			return -1;
 		}

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.140 2002-07-18 16:43:16 azummo Exp $
+ * $Id: coldsync.c,v 1.141 2002-08-31 19:26:03 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -61,6 +61,7 @@
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
+int conduit_trace = 0;		/* Debugging level for conduits-related stuff */
 
 static int open_log_file(void);
 
@@ -308,16 +309,17 @@ main(int argc, char *argv[])
 	MISC_TRACE(3)
 	{
 		fprintf(stderr, "\nDebugging levels:\n");
-		fprintf(stderr, "\tSLP:\t%d\n", slp_trace);
-		fprintf(stderr, "\tCMP:\t%d\n", cmp_trace);
-		fprintf(stderr, "\tPADP:\t%d\n", padp_trace);
-		fprintf(stderr, "\tDLP:\t%d\n", dlp_trace);
-		fprintf(stderr, "\tDLPC:\t%d\n", dlpc_trace);
-		fprintf(stderr, "\tPDB:\t%d\n", pdb_trace);
-		fprintf(stderr, "\tSYNC:\t%d\n", sync_trace);
-		fprintf(stderr, "\tPARSE:\t%d\n", parse_trace);
-		fprintf(stderr, "\tIO:\t%d\n", io_trace);
-		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
+		fprintf(stderr, "\tSLP:     %d\n", slp_trace);
+		fprintf(stderr, "\tCMP:     %d\n", cmp_trace);
+		fprintf(stderr, "\tPADP:    %d\n", padp_trace);
+		fprintf(stderr, "\tDLP:     %d\n", dlp_trace);
+		fprintf(stderr, "\tDLPC:    %d\n", dlpc_trace);
+		fprintf(stderr, "\tPDB:     %d\n", pdb_trace);
+		fprintf(stderr, "\tSYNC:    %d\n", sync_trace);
+		fprintf(stderr, "\tPARSE:   %d\n", parse_trace);
+		fprintf(stderr, "\tIO:      %d\n", io_trace);
+		fprintf(stderr, "\tMISC:    %d\n", misc_trace);
+		fprintf(stderr, "\tCONDUIT: %d\n", conduit_trace);
 	}
 
 	/* Perform mode-specific actions */
@@ -351,6 +353,11 @@ main(int argc, char *argv[])
 	 * after everything, and exit. If 'err' is negative, exit with an
 	 * error status; otherwise, exit with a 0 status.
 	 */
+
+	/* Print cs_errno if we got any error */	 
+	if (cs_errno_fatal(cs_errno))	 
+		print_cs_errno(cs_errno);			
+	 
 	if (sync_config != NULL)
 	{
 		free_sync_config(sync_config);

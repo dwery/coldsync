@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.16 2002-04-27 17:25:48 azummo Exp $
+ * $Id: conduit.h,v 1.17 2002-08-31 19:26:03 azummo Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -61,11 +61,11 @@
 #  error COND_MAXLINELEN is too small!
 #endif
 
-extern int run_Fetch_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda);
-extern int run_Dump_conduits(const struct dlp_dbinfo *dbinfo, pda_block *pda);
-extern int run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
-			     PConnection *pconn, pda_block *pda);
-extern int run_Install_conduits(struct dlp_dbinfo *dbinfo, pda_block *pda);
+extern int run_Fetch_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo, pda_block *pda);
+extern int run_Dump_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo, pda_block *pda);
+extern int run_Sync_conduits(struct Palm *palm, const struct dlp_dbinfo *dbinfo,
+			     pda_block *pda);
+extern int run_Install_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo, pda_block *pda);
 
 #endif	/* _conduit_h_ */
 

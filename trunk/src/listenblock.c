@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: listenblock.c,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: listenblock.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
  */
 
 #include "config.h"
@@ -37,13 +37,16 @@ prepend_listen_block(char *devname, pconn_listen_t listen_type, pconn_proto_t pr
 		return -1;
 	}
 
-	if ((l->device = strdup(devname)) == NULL)
+	if (devname)
 	{
-		Error(_("Can't copy string."));
-		free_listen_block(l);
-		return -1;
+		if ((l->device = strdup(devname)) == NULL)
+		{
+			Error(_("Can't copy string."));
+			free_listen_block(l);
+			return -1;
+		}
 	}
-
+	
 	if (listen_type != LISTEN_NONE)
 		l->listen_type = listen_type;
 
