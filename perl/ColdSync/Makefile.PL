@@ -22,23 +22,16 @@ WriteMakefile(
 
 # Additional rules to make things work properly with the rest of the
 # ColdSync distribution.
-# XXX - Get the proper version and everything
 sub MY::postamble {
 	'
 TOP =		../..
 SUBDIR =	perl/ColdSync
 
-include ../../Make.rules
+include ${TOP}/Make.rules
 
 DISTVNAME =	${DISTDIR}
 
 distfiles-core::	distdir
-
-# XXX - Ghod, what an awful hack!
-clean::
-	mv Makefile.old Makefile
-
-spotless::	distclean
-	${RM_F} errs.* *.bak
+spotless::		realclean
 ';
 }
