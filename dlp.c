@@ -1,3 +1,14 @@
+/* dlp.c
+ *
+ * Implementation of the Desktop Link Protocol (DLP).
+ *
+ * Note that the functions in this file just implement the protocol
+ * itself. They are not really expected to be called by conduits or
+ * other user programs: for them, see the DLP convenience functions in
+ * dlp_cmd.c.
+ *
+ * $Id: dlp.c,v 1.2 1999-01-23 23:08:11 arensb Exp $
+ */
 #include <stdio.h>
 #include <stdlib.h>	/* For malloc() */
 #include "padp.h"
@@ -6,6 +17,54 @@
 #ifdef DLP_TRACE
 int dlp_debug = 0;
 #endif	/* DLP_TRACE */
+
+/* dlp_errlist
+ * List of DLP error messages. The DLP error code can be used as an
+ * index into this array.
+ */
+char *dlp_errlist[] = {
+	"No error",
+	"General Palm system error",
+	"Illegal request ID",
+	"Insufficient memory",
+	"Invalid parameter",
+	"Database, record or resource not found",
+	"No open databases",
+	"Database is open by someone else",
+	"Too many open databases",
+	"Database already exists",
+	"Can't open database",
+	"Record is deleted",
+	"Record is in use by someone else",
+	"Operation not supported on this database type",
+	"*UNUSED*",
+	"You do not have write access",
+	"Not enough space for record",
+	"Size limit exceeded",
+	"Cancel the sync",
+	"Bad argument wrapper",		/* For debugging */
+	"Required argument not found",	/* For debugging */
+	"Invalid argument size",
+};
+
+/* XXX - Is this a good idea? */
+void
+dlp_free_arglist(int argc, struct dlp_arg *argv)
+{
+	int i;
+
+	if (argv == NULL)	/* Trivial case */
+		return;
+
+	for (i = 0; i < argc; i++)
+	{
+		if (argv[i].data == NULL)
+			continue;
+
+		free(argv[i].data);
+	}
+	free(argv);
+}
 
 /* dlp_send_req
  * Send a DLP request to the Palm.
@@ -132,30 +191,120 @@ dlp_send_req(int fd,		/* File descriptor on which to send */
 		free(outbuf);
 		return err;
 	}
-fprintf(stderr, "Finished sending request\n");
+	DLP_TRACE(2, "Finished sending request\n");
 
 	/* Free 'outbuf' */
 	free(outbuf);
 
-	/* Wait for a response */
-	dlp_read_resp(fd);
-
 	return op;
 }
 
+/* dlp_read_resp
+ *
+ * Read a response to a DLP request.
+ */
 int
-dlp_read_resp(int fd
-	      /* XXX */
-	      )
+dlp_read_resp(int fd,		/* File descriptor to read from */
+	      struct dlp_resp_header *header,
+				/* Response header */
+	      struct dlp_arg **argv_ret)
+				/* Response arguments will go here */
 {
 	int i;
 	int err;
-	struct dlp_resp_header header;
-	static ubyte inbuf[1024];
+	static ubyte inbuf[1024];	/* XXX - How big should this
+					 * be? Perhaps allocate based
+					 * on buf? */
+	ubyte *iptr;		/* Pointer into 'inbuf', for parsing */
 
-DLP_TRACE(2, "Awaiting DLP response\n");
-	err = padp_recv(fd, (ubyte *) &header, 4);
-DLP_TRACE(2, "DLP response: id 0x%02x (0x%02x), argc %d, errno %d\n",
-	  header.id, (header.id & ~0x80), header.argc, header.errno);
+	DLP_TRACE(2, "Awaiting DLP response\n");
+
+	/* Read a PADP packet */
+	if ((err = padp_recv(fd, inbuf, sizeof(inbuf))) < 0)
+	{
+		fprintf(stderr, "dlp_read_resp: padp_recv failed: %d\n",
+			err);
+		return err;
+	}
+
+	/* Copy the header information to 'header' */
+	header->id = inbuf[0];	/* XXX - Check to make sure the high bit is set: it's a response */
+	header->argc = inbuf[1];
+	header->errno = ((dword) inbuf[2] << 8) |
+		inbuf[3];
+	DLP_TRACE(2, "DLP response: id 0x%02x (0x%02x), argc %d, errno %d\n",
+		  header->id, (header->id & ~0x80), header->argc,
+		  header->errno);
+
+	/* Allocate memory for the argument array */
+	if ((*argv_ret = (struct dlp_arg *) calloc(header->argc,
+						    sizeof(struct dlp_arg)))
+	    == NULL)
+	{
+		fprintf(stderr, "Can't allocate %d dlp_arg's\n", header->argc);
+		return -1;
+	}
+
+	/* Parse the rest of the message into arguments */
+	DLP_TRACE(3, "Parsing response arguments\n");
+	iptr = inbuf + 4;		/* Point to first argument */
+	for (i = 0; i < header->argc; i++)
+	{
+		/* Figure out the size of the argument by looking at
+		 * the ID. */
+		switch (*iptr & 0xc0)
+		{
+		    case 0x00:
+		    case 0x40:
+			/* It's a tiny argument */
+			DLP_TRACE(3, "arg %d is tiny\n", i);
+			(*argv_ret)[i].id = *iptr;
+			iptr++;
+			(*argv_ret)[i].size = (udword) *iptr++;
+			break;
+		    case 0x80:
+			/* It's a small argument */
+			DLP_TRACE(3, "arg %d is small\n", i);
+			(*argv_ret)[i].id = *iptr;
+			iptr++;
+			iptr++;		/* Skip unused byte */
+			(*argv_ret)[i].size = ((udword) iptr[0] << 8) |
+				iptr[1];
+			iptr += 2;
+			break;
+		    case 0xc0:
+			/* It's a long argument */
+			DLP_TRACE(3, "arg %d is long\n", i);
+			(*argv_ret)[i].id = ((udword) iptr[0] << 8) |
+				iptr[1];
+			iptr += 2;
+			(*argv_ret)[i].size =
+				((udword) iptr[0] << 24) |
+				((udword) iptr[1] << 16) |
+				((udword) iptr[2] << 8) |
+				iptr[3];
+			iptr += 4;
+			break;
+		    default:
+			/* This should never happen */
+			fprintf(stderr, "Arithmetic has failed me. The world is coming to an end!\n");
+			break;
+		}
+		DLP_TRACE(2, "DLP response arg %d: id 0x%x, size %d\n",
+			  i, (*argv_ret)[i].id, (*argv_ret)[i].size);
+
+		/* Got the argument structure. Now allocate and copy
+		 * the data.
+		 */
+		if (((*argv_ret)[i].data = malloc((*argv_ret)[i].size))
+		    == NULL)
+		{
+			fprintf(stderr, "Can't allocate memory for arg %d\n", i);
+			/* XXX - Free argv_ret itself */
+			return -1;
+		}
+		memcpy((*argv_ret)[i].data, iptr, (*argv_ret)[i].size);
+		iptr += (*argv_ret)[i].size;
+	}
 return 0;
 }
