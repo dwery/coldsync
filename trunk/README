@@ -103,7 +103,26 @@ so fix it.
 
 	       ----------------------------------------
 
-COMPATIBILITY NOTES (as of version 0.4.6):
+COMPATIBILITY NOTES
+
+* ColdSync 0.5.4:
+
+FreeBSD:
+	This package was developed under FreeBSD 3.x, and compiles
+	cleanly with no modification under 3.3-RELEASE.
+
+Redhat Linux 6.1:
+
+	egcs 2.91.66 appears to be of two minds as to whether chars
+	should be signed or unsigned. With no options, you'll get
+	errors about "/usr/include/bits/string2.h:611: warning:
+	pointer targets in return differ in signedness". To fix this,
+	run 'configure' with CFLAGS set to "-funsigned-char":
+
+		CFLAGS=-funsigned-char ./configure	(sh, bash)
+		env CFLAGS=-funsigned-char ./configure	(csh, tcsh)
+
+* ColdSync 0.4.6:
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x, and compiles
