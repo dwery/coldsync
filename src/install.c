@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.30 2001-03-27 14:10:04 arensb Exp $
+ * $Id: install.c,v 2.31 2001-03-29 05:38:02 arensb Exp $
  */
 
 #include "config.h"
@@ -422,8 +422,24 @@ InstallNewFiles(PConnection *pconn,
 			      "InstallNewFiles",
 			      pdb->name);
 			add_to_log(_("Error\n"));
-			free_pdb(pdb);
-			continue;
+
+			/* XXX - This is rather ugly, due in part to the
+			 * fact that pdb_Upload isn't in the main ColdSync
+			 * code (yet).
+			 */
+			switch (cs_errno)
+			{
+				/* Fatal errors that we know of */
+			    case CSE_CANCEL:
+			    case CSE_NOCONN:
+				free_pdb(pdb);
+				return -1;
+
+				/* All other errors */
+			    default:
+				free_pdb(pdb);
+				continue;
+			}
 		}
 
 		/* Add the newly-uploaded database to the list of databases
@@ -445,18 +461,6 @@ InstallNewFiles(PConnection *pconn,
 				return -1;
 			}
 		}
-
-		/* XXX - This next comment is OBE */
-		/* XXX - After installing:
-		 * Ideally, instead of installing at all, we should find a
-		 * conduit for this database and tell it, "here's a new
-		 * database. Do something intelligent with it."
-		 * In the meantime, move (rename()) the database to the
-		 * backup directory, but only if it doesn't exist there
-		 * already. That way, we save the time and effort of
-		 * downloading the database immediately after uploading it.
-		 * This saves user time.
-		 */
 
 		/* Check to see whether this file exists in the backup
 		 * directory. If it does, then let the conduit deal with
@@ -542,11 +546,6 @@ InstallNewFiles(PConnection *pconn,
 		}
 
 		free_pdb(pdb);
-
-		/* XXX - Walk though config.install_q, looking for
-		 * appropriate conduits to invoke. (Or should this be done
-		 * earlier, before installing at all?)
-		 */
 	}
 
 	closedir(dir);
