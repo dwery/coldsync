@@ -12,10 +12,11 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.37 2003-06-26 21:04:50 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.38 2003-08-05 13:29:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
+#include <sys/types.h>
 
 #if STDC_HEADERS
 # include <string.h>		/* For memcpy() et al. */
@@ -3883,8 +3884,13 @@ DlpExpCardInfo(PConnection *pconn,		/* Connection to Palm */
 				 
 				if (info->nstrings == 1024)
 				{
-					info->nstrings = __bswap_16(info->nstrings);
-					info->capabilities = __bswap_32(info->capabilities);
+					/* XXX - What are __bswap_16 and
+					 * __bswap_32?
+					 */
+					info->nstrings =
+						reverse_uword(info->nstrings);
+					info->capabilities =
+						reverse_udword(info->capabilities);
 					
 					/* Throw away two bytes */
 					 
