@@ -233,8 +233,6 @@
 - If a conduit dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
-- Possible API for "Sync" conduits: run generic conduit. Run an
-  external program. Then rerun the generic conduit.
 - Add "-A" flag: if present, then the AppInfo block is synced as
   follows: if the APPINFO_DIRTY flag is set on the local PDB, its
   AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
@@ -262,9 +260,9 @@
 	ColdSync 1.2.3, FreeBSD 4.0
 	ColdSync 1.2.0, FreeBSD 4.0
 	ColdSync 1.2.0, Redhat 6.2
-- Describe 'pref:' statements in the manual.
 - Describe new preference API in the conduit writer's guide.
-- Fix ColdSync.pm to deal with preferences on stdin.
+- Fix ColdSync.pm so that "-config" will also print which preferences
+  the conduit knows about.
 - Allow something like "ForceInstall;" line in .coldsyncrc, to have
   the same effect as -I command-line option.
 - Consider an optimization: if the local database hasn't been
@@ -301,5 +299,10 @@
   unexpected data packets, etc.). In particular, it would be able to
   send tickle packets at appropriate intervals.
 - ColdSync.pm should open SPC file handle as appropriate.
-- GenericConduit->_palm doesn't seem to be used. Get rid of it if
-  possible.
+- Add some "pref" lines to sample.coldsync.rc
+- There appears to be a preference that indicates that the Palm has
+  never been synchronized. This could be useful in avoiding the Bargle
+  bug. Look into this.
+- Under DU 4.0, 'configure' finds cfmakeraw(), but compilation
+  complains about "implicit declaration". It's not declared in any
+  header file, AFAICT.
