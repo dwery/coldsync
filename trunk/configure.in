@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.54 2000-02-06 22:31:23 arensb Exp $
+dnl # $Id: configure.in,v 1.55 2000-02-07 00:50:11 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -154,17 +154,13 @@ with_i18n=yes
 # set a default. Now we look for -lintl and the various catalog-making
 # utilities if necessary
 
-# Do-nothing defaults, in case the user doesn't want i18n.
-XGETTEXT=true
-GETTEXT=true
-MSGMERGE=true
-MSGFMT=true
-AC_SUBST(XGETTEXT)
-AC_SUBST(GETTEXT)
-AC_SUBST(MSGMERGE)
-AC_SUBST(MSGFMT)
-
-if test x"$with_i18n" != x"no"; then
+if test x"$with_i18n" = x"no"; then
+	# Do-nothing defaults, in case the user doesn't want i18n.
+	XGETTEXT=true
+	GETTEXT=true
+	MSGMERGE=true
+	MSGFMT=true
+else
 	AC_CHECK_LIB(intl, gettext)
 	if test "$ac_cv_lib_intl_gettext" = yes; then
 		# See if the user specified a $LOCALEDIR. If not, use
@@ -180,6 +176,10 @@ if test x"$with_i18n" != x"no"; then
 	AC_CHECK_PROGS(MSGMERGE, msgmerge)
 	AC_CHECK_PROGS(MSGFMT, msgfmt)
 fi
+AC_SUBST(XGETTEXT)
+AC_SUBST(GETTEXT)
+AC_SUBST(MSGMERGE)
+AC_SUBST(MSGFMT)
 
 # I'm not using AC_PROG_YACC here because that doesn't actually make
 # sure that there is a working yacc.
