@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.19 2000-11-17 07:39:41 arensb Exp $
+ * $Id: conduit.c,v 2.20 2000-11-18 22:44:15 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -65,7 +65,7 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
 					 */
 
-static int run_conduits(struct dlp_dbinfo *dbinfo,
+static int run_conduits(const struct dlp_dbinfo *dbinfo,
 			char *flavor,
 			unsigned short flavor_mask,
 			const Bool with_spc,
@@ -260,7 +260,8 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 					 * headers */
 
 static int
-run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
+run_conduit(const struct dlp_dbinfo *dbinfo,
+					/* The database to sync */
 	    char *flavor,		/* Name of the flavor */
 	    unsigned short flavor_mask,	/* Mask of the flavor */
 	    conduit_block *conduit,	/* Conduit to be run */
@@ -1060,7 +1061,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
  * Returns 0 if successful, or a negative value in case of error.
  */
 static int
-run_conduits(struct dlp_dbinfo *dbinfo,
+run_conduits(const struct dlp_dbinfo *dbinfo,
 	     char *flavor,		/* Dump flavor: will be sent to
 					 * conduit.
 					 */
@@ -1210,7 +1211,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
  * applicable for the database 'dbinfo'.
  */
 int
-run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
+run_Fetch_conduits(const struct dlp_dbinfo *dbinfo)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
@@ -1237,7 +1238,7 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
  * it.
  */
 int
-run_Dump_conduits(struct dlp_dbinfo *dbinfo)
+run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
@@ -1258,7 +1259,7 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
  * applicable for the database 'dbinfo'.
  */
 int
-run_Sync_conduits(struct dlp_dbinfo *dbinfo,
+run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
 		  struct PConnection *pconn)
 {
 	SYNC_TRACE(1)
