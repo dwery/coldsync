@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.3 1999-02-22 11:03:40 arensb Exp $
+ * $Id: slp.c,v 1.4 1999-03-11 03:14:17 arensb Exp $
  */
 
 #include <stdio.h>
@@ -191,7 +191,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	}
 
 #if SLP_DEBUG
-	if (slp_debug >= 6)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(h) <<<", pconn->slp.header_inbuf, got);
 #endif	/* SLP_DEBUG */
 
@@ -295,7 +295,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	}
 #if SLP_DEBUG
 	/* Dump the body, for debugging */
-	if (slp_debug >= 5)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(b) <<<", pconn->slp.inbuf, got);
 #endif	/* SLP_DEBUG */
 
@@ -320,7 +320,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 		got += err;
 	}
 #if SLP_DEBUG
-	if (slp_debug >= 6)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(c) <<<", pconn->slp.crc_inbuf, SLP_CRC_LEN);
 #endif	/* SLP_DEBUG */
 	SLP_TRACE(10, "Got CRC\n");
@@ -385,6 +385,7 @@ slp_write(struct PConnection *pconn,
 	uword crc;		/* Computed CRC of the packet */
 
 	palm_errno = PALMERR_NOERR;
+SLP_TRACE(5, "slp_write(x, x, %d)\n", len);
 
 	/* Build a packet header in 'header_buf' */
 	wptr = header_buf;
@@ -430,7 +431,7 @@ slp_write(struct PConnection *pconn,
 		sent += err;
 	}
 #if SLP_DEBUG
-	if (slp_debug >= 6)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(h) >>>", header_buf, SLP_HEADER_LEN);
 #endif	/* SLP_DEBUG */
 
@@ -449,7 +450,7 @@ slp_write(struct PConnection *pconn,
 		sent += err;
 	}
 #if SLP_DEBUG
-	if (slp_debug >= 5)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(b) >>>", buf, len);
 #endif	/* SLP_DEBUG */
 
@@ -468,7 +469,7 @@ slp_write(struct PConnection *pconn,
 		sent += err;
 	}
 #if SLP_DEBUG
-	if (slp_debug >= 5)
+	if (slp_debug >= 10)
 		debug_dump(stderr, "SLP(c) >>>", crc_buf, SLP_CRC_LEN);
 #endif	/* SLP_DEBUG */
 
