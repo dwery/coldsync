@@ -5,9 +5,12 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.10 2000-09-03 05:04:41 arensb Exp $
+# $Id: ColdSync.pm,v 1.11 2000-09-17 21:22:40 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.10 $ ' =~ /\$Revision:\s+([^\s]+)/;
+
+use vars qw( $VERSION );
+
+$VERSION = sprintf "%d.%03d", '$Revision: 1.11 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -302,7 +305,7 @@ sub ReadHeaders
 		my $data;
 
 		read STDIN, $data, $pref_len;
-		$PREFERENCES{$creator}{$id} = $data;
+		$PREFERENCES{$creator}{$pref_id} = $data;
 	}
 
 	# Make sure all of the mandatory headers are there.
