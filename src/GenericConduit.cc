@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.28 2000-05-17 12:46:29 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.29 2000-05-19 12:11:03 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1963,6 +1963,7 @@ GenericConduit::SyncRecord(
  * XXX - This is a naive and sub-optimal implementation. It remains to be
  * seen whether it's worth optimizing, though.
  */
+/* XXX - Perhaps this should also compare the category each record is in? */
 int
 GenericConduit::compare_rec(const struct pdb_record *rec1,
 			    const struct pdb_record *rec2)
