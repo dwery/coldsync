@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2000-12-23 11:34:47 arensb Exp $
+# $Id: Makefile,v 1.11 2001-01-30 08:07:27 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -97,6 +97,9 @@ install-i18n-yes:	${MOFILES}
 
 # Do nothing.
 install-i18n-no:
+
+${TOP}/src/lex.yy.c:
+	cd ${TOP}/src && ${MAKE} lex.yy.c
 
 # This is for Emacs's benefit:
 # Local Variables:	***
