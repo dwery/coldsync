@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.16 2001-04-01 07:55:26 arensb Exp $
+ * $Id: slp.c,v 1.17 2001-04-15 03:38:22 arensb Exp $
  */
 
 #include "config.h"
@@ -407,6 +407,9 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
  * Write a SLP packet on the given file descriptor, with contents
  * 'buf' and length 'len'.
  * Returns the number of bytes written (excluding SLP overhead)
+
+ * XXX - Linux's serial USB driver appears not to like two-byte(?) packets,
+ * so need to use pconn->slp.outbuf to write the packet all at once.
  */
 int
 slp_write(PConnection *pconn,
@@ -463,7 +466,7 @@ slp_write(PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = write(pconn->fd, header_buf+sent, want-sent);
+		err = (*pconn->io_write)(pconn, header_buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("slp_write: write header");
@@ -485,7 +488,7 @@ slp_write(PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = write(pconn->fd, buf+sent, want-sent);
+		err = (*pconn->io_write)(pconn, buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("slp_write: write body");
@@ -502,7 +505,7 @@ slp_write(PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = write(pconn->fd, crc_buf+sent, want-sent);
+		err = (*pconn->io_write)(pconn, crc_buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("slp_write: write CRC");
