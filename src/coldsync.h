@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.8 1999-11-04 11:40:09 arensb Exp $
+ * $Id: coldsync.h,v 1.9 1999-11-09 06:24:12 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -318,6 +318,8 @@ extern char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 extern char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
 extern struct config config;		/* Main configuration */
+extern struct userinfo userinfo;	/* Information about the user
+					 * whose Palm this is */
 
 /* Function prototypes */
 extern struct config *new_config();
@@ -325,6 +327,8 @@ extern void free_config(struct config *config);
 extern int parse_config(const char *fname, struct config *config);
 extern listen_block *new_listen_block();
 extern void free_listen_block(listen_block *l);
+extern conduit_block *new_conduit_block();
+extern void free_conduit_block(conduit_block *c);
 extern int Connect(struct PConnection *pconn, const char *name);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
