@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.23 2000-11-24 22:56:34 arensb Exp $
+ * $Id: conduit.c,v 2.24 2000-12-16 19:51:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1048,13 +1048,6 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	}
 
 	/* Let's not hog memory */
-	/* XXX - This is an array of pointers, but the individual elements
-	 * are not freed. This might leak memory: most of the elements are
-	 * really pointers into pref_cache (which gets freed later on), but
-	 * some of these elements might get initialized from
-	 * DownloadPrefItem(), and I'm not convinced that they get freed
-	 * correctly.
-	 */
 	if (pref_list != NULL)
 		free(pref_list);
 
