@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.14 1999-11-27 05:53:01 arensb Exp $
+ * $Id: coldsync.c,v 1.15 1999-12-01 06:11:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -24,8 +24,12 @@
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
 
+/* Include I18N-related stuff, if necessary */
 #if HAVE_LIBINTL
-#  include <libintl.h>		/* For i18n */
+#  if HAVE_LOCALE_H
+#    include <locale.h>
+#  endif	/* HAVE_LOCALE_H */
+#  include <libintl.h>
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/pconn.h"
