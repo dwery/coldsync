@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.19 2000-04-09 14:24:08 arensb Exp $
+ * $Id: coldsync.h,v 1.20 2000-04-10 09:26:50 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -66,7 +66,7 @@ struct Palm
 	struct dlp_netsyncinfo netsyncinfo;
 					/* NetSync information */
 
-	unsigned char serial[SNUM_MAX];	/* Serial number */
+	char serial[SNUM_MAX];		/* Serial number */
 	char serial_len;		/* Length of serial number */
 
 	/* Memory information */
@@ -220,10 +220,31 @@ typedef struct conduit_block
 				 * other conduits for this database.
 				 */
 
+/* pda_block
+ * The information specified in a 'pda' block in the config file: the
+ * serial number, base directory, and so forth.
+ */
+typedef struct pda_block
+{
+	struct pda_block *next;
+	char *snum;			/* Serial number */
+	char *directory;		/* Base directory, where the
+					 * "backup", "archive" etc.
+					 * directories will be created.
+					 */
+	unsigned char flags;		/* PDAFL_* flags */
+} pda_block;
+
+#define PDAFL_DEFAULT	0x01		/* This is the default PDA
+					 * configuration. It is used if no
+					 * other pda_block matches.
+					 */
+
 struct config
 {
 	run_mode mode;
 	listen_block *listen;		/* List of listen blocks */
+	pda_block *pda;			/* List of known PDAs */
 	conduit_block *sync_q;		/* List of sync conduits */
 	conduit_block *fetch_q;		/* List of fetch conduits */
 	conduit_block *dump_q;		/* List of dump conduits */
@@ -261,6 +282,8 @@ extern listen_block *new_listen_block();
 extern void free_listen_block(listen_block *l);
 extern conduit_block *new_conduit_block();
 extern void free_conduit_block(conduit_block *c);
+extern pda_block *new_pda_block();
+extern void free_pda_block(pda_block *p);
 extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
@@ -291,6 +314,7 @@ extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
 extern int append_dbentry(struct Palm *palm,
 			  struct pdb *pdb);
+extern char snum_checksum(const char *snum, int len);
 extern int get_config(int argc, char *argv[]);
 extern int add_to_log(char *msg);
 
