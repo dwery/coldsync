@@ -8,8 +8,6 @@ use ExtUtils::MakeMaker;
 # out for is if a plain user wants to install this in his home
 # directory. Set PREFIX, maybe? See "CONFIGURE => ...".
 
-# XXX - 'make clean' shouldn't delete Makefile
-
 WriteMakefile(
     'NAME'		=> 'ColdSync',
 # XXX - Get version from somewhere else, e.g., 'configure'?
@@ -35,6 +33,10 @@ include ../../Make.rules
 DISTVNAME =	${DISTDIR}
 
 distfiles-core::	distdir
+
+# XXX - Ghod, what an awful hack!
+clean::
+	mv Makefile.old Makefile
 
 spotless::	distclean
 	${RM_F} errs.* *.bak
