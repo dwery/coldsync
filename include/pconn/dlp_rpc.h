@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_rpc.h,v 1.4 2001-06-26 05:46:08 arensb Exp $
+ * $Id: dlp_rpc.h,v 1.5 2001-09-08 02:10:16 arensb Exp $
  *
  * Structure of an RPC-over-DLP request:
  *      +------+------+------+------+
@@ -84,34 +84,39 @@
 /* Selected trap numbers. There are more traps than you can shake a stick
  * at. These are only the ones that I've implemented.
  */
-#define RPCTRAP_MemHandleNew		0xa01e
-#define RPCTRAP_MemMove			0xa026
-#define RPCTRAP_BatteryDialog		0xa0bb
-#define RPCTRAP_BatteryLevel		0xa248
-#define RPCTRAP_PluggedIn		0xa258
-#define RPCTRAP_Backlight		0xa2ea
-#define RPCTRAP_GetOSVersionString	0xa323
-#define RPCTRAP_GetROMToken		0xa340
-#define RPCTRAP_MemReadable		0xa23e
+typedef enum {
+	RPCTRAP_MemHandleNew		= 0xa01e,
+	RPCTRAP_MemMove			= 0xa026,
+	RPCTRAP_BatteryDialog		= 0xa0bb,
+	RPCTRAP_BatteryLevel		= 0xa248,
+	RPCTRAP_PluggedIn		= 0xa258,
+	RPCTRAP_Backlight		= 0xa2ea,
+	RPCTRAP_GetOSVersionString	= 0xa323,
+	RPCTRAP_GetROMToken		= 0xa340,
+	RPCTRAP_MemReadable		= 0xa23e
+} dlprpc_trap;
 
 /* ROM tokens, for RDLP_ROMToken. Actually, only ROMToken_Snum is used. */
 #define ROMToken_Snum	0x736e756d	/* 'snum' */
 #define ROMToken_Irda	0x69726461	/* 'irda' */
 #define ROMToken_Flex	0x666c6578	/* 'flex' */
 #define ROMToken_cd01	0x63643031	/* 'cd01' */
-#define ROMToken_cd02	0x63643032	/* 'cd01' */
-#define ROMToken_cd03	0x63643033	/* 'cd01' */
+#define ROMToken_cd02	0x63643032	/* 'cd02' */
+#define ROMToken_cd03	0x63643033	/* 'cd02' */
 
-#define RPCP_Raw	0		/* Raw data */
-#define RPCP_Bool	1		/* Boolean value */
-#define RPCP_Byte	2		/* Single-byte value (char) */
-#define RPCP_Word	3		/* Word value */
-#define RPCP_DWord	4		/* Double-word value */
+/* Parameter types */
+typedef enum {
+	RPCP_Raw	= 0,		/* Raw data */
+	RPCP_Bool	= 1,		/* Boolean value */
+	RPCP_Byte	= 2,		/* Single-byte value (char) */
+	RPCP_Word	= 3,		/* Word value */
+	RPCP_DWord	= 4		/* Double-word value */
+} dlprpc_argtype_t;
 
 struct DLPRPC_param {
 	Bool byref;			/* Parameter passed by reference? */
 	ubyte size;			/* Parameter data size */
-	char type;			/* Parameter type: RPCP_* */
+	dlprpc_argtype_t type;		/* Parameter type: RPCP_* */
 	union {
 		ubyte bool_v;
 		ubyte byte_v;
