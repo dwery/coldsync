@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.8 2000-12-13 16:58:58 arensb Exp $
+ * $Id: dlp.c,v 1.9 2000-12-16 19:49:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -77,7 +77,10 @@ dlp_tini(struct PConnection *pconn)
 
 	/* Free the argv */
 	if (pconn->dlp.argv != NULL)
+	{
 		free(pconn->dlp.argv);
+		pconn->dlp.argv = NULL;
+	}
 
 	return 0;
 }
