@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.17 2000-09-27 15:15:46 arensb Exp $
+# $Id: AUTHORS,v 1.18 2000-09-27 19:42:39 arensb Exp $
 
 Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
 	benevolent dictator.
@@ -29,4 +29,5 @@ Patches and such:
 	Sumant S.R. Oemrawsingh <sikander@stad.dsl.nl>: Preferences.
 	Andreas J. Koenig <andreas.koenig@anima.de>: $VERSION in Perl.
 	John-David Smith <jdsmith@astro.cornell.edu>.
-	Philipp Matthias Hahn <pmhahn@titan.lahn.de>.
+	Philipp Matthias Hahn <pmhahn@titan.lahn.de>: Updated German
+	translation, various patches.
