@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.9 2000-05-06 11:25:22 arensb Exp $
+@c $Id: conduits.texi,v 1.10 2000-09-03 09:38:13 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -11,6 +11,8 @@
 @end direntry
 @setchapternewpage odd
 @c %**end of header
+
+@c XXX - Add a section about SPC
 
 @include version.texi
 
@@ -1228,7 +1230,7 @@ been installed), ColdSync runs its Fetch conduits. Fetch conduits are
 expected to create or modify the databases in the backup directory.
 See @ref{Fetch Conduits}.
 
-@item Main sync
+@item Main sync and Sync conduits
 @ifhtml
 <BR>
 @end ifhtml
@@ -1237,6 +1239,13 @@ See @ref{Fetch Conduits}.
 the backup directory. As each database is synchronized, the message
 ``Synchronizing @var{Database}'' appears on the Palm. If no backup file
 exists, ColdSync creates one by downloading the database.
+@ifhtml
+<P>
+@end ifhtml
+
+	During this time, ColdSync runs Sync conduits for the databases
+it is synchronizing.
+
 @ifhtml
 <P>
 @end ifhtml
@@ -1311,8 +1320,10 @@ Flavors}).
 @cindex Standard input
 @cindex Stdin
 @cindex Headers
-	ColdSync writes a series of @emph{headers} to the conduit's
-standard input. Each header is a line of the form
+@cindex Preferences
+	ColdSync writes a series of @emph{headers} and @emph{preference
+values} to the conduit's standard input. Each header is a line of the
+form
 @example
 @var{Field}: @var{Value}
 @end example
@@ -1341,6 +1352,16 @@ for encoding methods such as ``Quoted-printable.''
 	The end of the header is indicated by a blank line, i.e., two
 newlines in a row.
 
+@cindex Preferences
+	Since preference data is binary, preferences are passed to the
+conduit in two parts: first, a set of @code{Preference} headers specify
+the preference's creator, ID, and length.
+
+	Then, after the two newlines indicating the end of the headers,
+comes the preference data. This is simply the concatenation of the
+binary data for all of the preferences referred to by the
+@code{Preference} headers, in the order in which those headers appeared.
+
 @menu
 * Predefined Headers::          Headers with standard meanings
 @end menu
@@ -1349,7 +1370,7 @@ newlines in a row.
 @comment  node-name,  next,  previous,  up
 @subsection Predefined Headers
 
-	Certain header fields have predefined meanings:
+	Certain header fields have predefined meanings and formats:
 
 @table @code
 
@@ -1398,6 +1419,20 @@ mandatory for Fetch conduits, and is optional for Dump conduits.
 case the conduit may create it.
 @c XXX - Exit status
 
+@item Preference
+
+@cindex Preferences
+	A @code{Preference} header identifies a preference being passed
+to the conduit. Each @code{Peference} header is of the form
+
+@example
+Preference: @var{creator}/@var{ID}/@var{length}
+@end example
+
+where @var{creator} is the preference's four-character creator, @var{ID}
+is its numerical identifier (decimal), and @var{length} is the length of
+the preference data following the header (decimal).
+
 @end table
 
 	Other headers may be passed to the conduit, so the conduit
@@ -1420,6 +1455,8 @@ be of the form
 @example
 @var{NNN} @var{Message}
 @end example
+
+@noindent
 where @var{NNN} is a three-digit status code (@pxref{Status Codes}), and
 @var{Message} is a human-readable string. A single space separates the
 status code from the message.
