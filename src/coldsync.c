@@ -1,7 +1,8 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.4 1999-07-14 12:28:12 arensb Exp $
+ * $Id: coldsync.c,v 1.4.2.1 1999-07-14 13:39:24 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), atoi() */
 #include <sys/param.h>		/* For MAXPATHLEN */
@@ -12,7 +13,6 @@
 #include <string.h>		/* For strrchr() */
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
-#include "config.h"
 #include "palm_errno.h"
 #include "PConnection.h"
 #include "cmp.h"
@@ -27,8 +27,10 @@
  * fast the serial port can go). The reason there are two macros here is
  * that under Solaris, B19200 != 19200 for whatever reason.
  */
-#define SYNC_RATE		57600
-#define BSYNC_RATE		B57600
+/*  #define SYNC_RATE		57600 */
+/*  #define BSYNC_RATE		B57600 */
+#define SYNC_RATE		38400
+#define BSYNC_RATE		B38400
 
 extern int load_config();
 extern int load_palm_config(struct Palm *palm);
@@ -97,7 +99,7 @@ static struct {
 
 struct Palm palm;
 int need_slow_sync;
-char *log = NULL;
+char *synclog = NULL;
 int log_size = 0;
 int log_len = 0;
 
@@ -121,21 +123,25 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tdo_backup: %s\n",
 			global_opts.do_backup ? "True" : "False");
 		fprintf(stderr, "\tbackupdir: \"%s\"\n",
-			global_opts.backupdir);
+			global_opts.backupdir == NULL ?
+			"(null)" : global_opts.backupdir);
 		fprintf(stderr, "\tdo_restore: %s\n",
 			global_opts.do_restore ? "True" : "False");
 		fprintf(stderr, "\trestoredir: \"%s\"\n",
-			global_opts.restoredir);
+			global_opts.restoredir == NULL ?
+				"(null)" : global_opts.restoredir);
 		fprintf(stderr, "\tforce_slow: %s\n",
 			global_opts.force_slow ? "True" : "False");
 		fprintf(stderr, "\tforce_fast: %s\n",
 			global_opts.force_fast ? "True" : "False");
 		fprintf(stderr, "\tport: \"%s\"\n",
-			global_opts.port);
+			global_opts.port == NULL ?
+				"(null)" : global_opts.port);
 		fprintf(stderr, "\tusername: \"%s\"\n",
-			global_opts.username);
+			global_opts.username == NULL ?
+				"(null)" : global_opts.username);
 		fprintf(stderr, "\tusername: %d\n",
-			global_opts.uid);
+			(int) global_opts.uid);
 		fprintf(stderr, "\tcheck_ROM: %s\n",
 			global_opts.check_ROM ? "True" : "False");
 	}
@@ -255,47 +261,49 @@ main(int argc, char *argv[])
 	/* Print out the list of databases, for posterity */
 	SYNC_TRACE(2)
 	{
-		printf("\nDatabase list:\n");
-		printf("Name                            flags type crea ver mod. num\n"
-		       "        ctime                mtime                baktime\n");
+		fprintf(stderr, "\nDatabase list:\n");
+		fprintf(stderr,
+			"Name                            flags type crea ver mod. num\n"
+			"        ctime                mtime                baktime\n");
 		for (i = 0; i < palm.num_dbs; i++)
 		{
-			printf("%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
-			       PDB_DBNAMELEN,
-			       palm.dblist[i].name,
-			       palm.dblist[i].db_flags,
-			       (char) (palm.dblist[i].type >> 24),
-			       (char) (palm.dblist[i].type >> 16),
-			       (char) (palm.dblist[i].type >> 8),
-			       (char) palm.dblist[i].type,
-			       (char) (palm.dblist[i].creator >> 24),
-			       (char) (palm.dblist[i].creator >> 16),
-			       (char) (palm.dblist[i].creator >> 8),
-			       (char) palm.dblist[i].creator,
-			       palm.dblist[i].version,
-			       palm.dblist[i].modnum);
-			printf("        "
-			       "%02d:%02d:%02d %02d/%02d/%02d  "
-			       "%02d:%02d:%02d %02d/%02d/%02d  "
-			       "%02d:%02d:%02d %02d/%02d/%02d\n",
-			       palm.dblist[i].ctime.hour,
-			       palm.dblist[i].ctime.minute,
-			       palm.dblist[i].ctime.second,
-			       palm.dblist[i].ctime.day,
-			       palm.dblist[i].ctime.month,
-			       palm.dblist[i].ctime.year,
-			       palm.dblist[i].mtime.hour,
-			       palm.dblist[i].mtime.minute,
-			       palm.dblist[i].mtime.second,
-			       palm.dblist[i].mtime.day,
-			       palm.dblist[i].mtime.month,
-			       palm.dblist[i].mtime.year,
-			       palm.dblist[i].baktime.hour,
-			       palm.dblist[i].baktime.minute,
-			       palm.dblist[i].baktime.second,
-			       palm.dblist[i].baktime.day,
-			       palm.dblist[i].baktime.month,
-			       palm.dblist[i].baktime.year);
+			fprintf(stderr,
+				"%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
+				PDB_DBNAMELEN,
+				palm.dblist[i].name,
+				palm.dblist[i].db_flags,
+				(char) (palm.dblist[i].type >> 24),
+				(char) (palm.dblist[i].type >> 16),
+				(char) (palm.dblist[i].type >> 8),
+				(char) palm.dblist[i].type,
+				(char) (palm.dblist[i].creator >> 24),
+				(char) (palm.dblist[i].creator >> 16),
+				(char) (palm.dblist[i].creator >> 8),
+				(char) palm.dblist[i].creator,
+				palm.dblist[i].version,
+				palm.dblist[i].modnum);
+			fprintf(stderr, "        "
+				"%02d:%02d:%02d %02d/%02d/%02d  "
+				"%02d:%02d:%02d %02d/%02d/%02d  "
+				"%02d:%02d:%02d %02d/%02d/%02d\n",
+				palm.dblist[i].ctime.hour,
+				palm.dblist[i].ctime.minute,
+				palm.dblist[i].ctime.second,
+				palm.dblist[i].ctime.day,
+				palm.dblist[i].ctime.month,
+				palm.dblist[i].ctime.year,
+				palm.dblist[i].mtime.hour,
+				palm.dblist[i].mtime.minute,
+				palm.dblist[i].mtime.second,
+				palm.dblist[i].mtime.day,
+				palm.dblist[i].mtime.month,
+				palm.dblist[i].mtime.year,
+				palm.dblist[i].baktime.hour,
+				palm.dblist[i].baktime.minute,
+				palm.dblist[i].baktime.second,
+				palm.dblist[i].baktime.day,
+				palm.dblist[i].baktime.month,
+				palm.dblist[i].baktime.year);
 		}
 	}
 
@@ -363,9 +371,9 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (log != NULL)
+		if (synclog != NULL)
 		{
-			if ((err = DlpAddSyncLogEntry(pconn, log)) < 0)
+			if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 			{
 				fprintf(stderr, "Error writing sync log.\n");
 				/* XXX - Clean up */
@@ -785,46 +793,52 @@ GetPalmInfo(struct PConnection *pconn,
 	}
 	MISC_TRACE(3)
 	{
-		printf("User info:\n");
-		printf("\tUserID: 0x%08lx\n", palm->userinfo.userid);
-		printf("\tViewerID: 0x%08lx\n", palm->userinfo.viewerid);
-		printf("\tLast sync PC: 0x%08lx (%d.%d.%d.%d)\n",
-		       palm->userinfo.lastsyncPC,
-		       (int) ((palm->userinfo.lastsyncPC >> 24) & 0xff),
-		       (int) ((palm->userinfo.lastsyncPC >> 16) & 0xff),
-		       (int) ((palm->userinfo.lastsyncPC >>  8) & 0xff),
-		       (int) (palm->userinfo.lastsyncPC & 0xff));
+		fprintf(stderr, "User info:\n");
+		fprintf(stderr, "\tUserID: 0x%08lx\n", palm->userinfo.userid);
+		fprintf(stderr, "\tViewerID: 0x%08lx\n",
+			palm->userinfo.viewerid);
+		fprintf(stderr, "\tLast sync PC: 0x%08lx (%d.%d.%d.%d)\n",
+			palm->userinfo.lastsyncPC,
+			(int) ((palm->userinfo.lastsyncPC >> 24) & 0xff),
+			(int) ((palm->userinfo.lastsyncPC >> 16) & 0xff),
+			(int) ((palm->userinfo.lastsyncPC >>  8) & 0xff),
+			(int) (palm->userinfo.lastsyncPC & 0xff));
 		if (palm->userinfo.lastgoodsync.year == 0)
 		{
-			printf("\tLast good sync: never\n");
+			fprintf(stderr, "\tLast good sync: never\n");
 		} else {
-			printf("\tLast good sync: %02d:%02d:%02d "
-			       "%02d/%02d/%02d\n",
-			       palm->userinfo.lastgoodsync.hour,
-			       palm->userinfo.lastgoodsync.minute,
-			       palm->userinfo.lastgoodsync.second,
-			       palm->userinfo.lastgoodsync.day,
-			       palm->userinfo.lastgoodsync.month,
-			       palm->userinfo.lastgoodsync.year);
+			fprintf(stderr, "\tLast good sync: %02d:%02d:%02d "
+				"%02d/%02d/%02d\n",
+				palm->userinfo.lastgoodsync.hour,
+				palm->userinfo.lastgoodsync.minute,
+				palm->userinfo.lastgoodsync.second,
+				palm->userinfo.lastgoodsync.day,
+				palm->userinfo.lastgoodsync.month,
+				palm->userinfo.lastgoodsync.year);
 		}
 		if (palm->userinfo.lastsync.year == 0)
 		{
-			printf("\tLast sync attempt: never\n");
+			fprintf(stderr, "\tLast sync attempt: never\n");
 		} else {
-			printf("\tLast sync attempt: %02d:%02d:%02d "
-			       "%02d/%02d/%02d\n",
-			       palm->userinfo.lastsync.hour,
-			       palm->userinfo.lastsync.minute,
-			       palm->userinfo.lastsync.second,
-			       palm->userinfo.lastsync.day,
-			       palm->userinfo.lastsync.month,
-			       palm->userinfo.lastsync.year);
+			fprintf(stderr,
+				"\tLast sync attempt: %02d:%02d:%02d "
+				"%02d/%02d/%02d\n",
+				palm->userinfo.lastsync.hour,
+				palm->userinfo.lastsync.minute,
+				palm->userinfo.lastsync.second,
+				palm->userinfo.lastsync.day,
+				palm->userinfo.lastsync.month,
+				palm->userinfo.lastsync.year);
 		}
-		printf("\tUser name length: %d\n", palm->userinfo.usernamelen);
-		printf("\tUser name: \"%s\"\n", palm->userinfo.username);
-		printf("\tPassword: <%d bytes>\n", palm->userinfo.passwdlen);
+		fprintf(stderr, "\tUser name length: %d\n",
+			palm->userinfo.usernamelen);
+		fprintf(stderr, "\tUser name: \"%s\"\n",
+			palm->userinfo.username == NULL ?
+			"(null)" : palm->userinfo.username);
+		fprintf(stderr, "\tPassword: <%d bytes>\n",
+			palm->userinfo.passwdlen);
 		MISC_TRACE(6)
-			debug_dump(stdout, "PASS", palm->userinfo.passwd,
+			debug_dump(stderr, "PASS", palm->userinfo.passwd,
 				   palm->userinfo.passwdlen);
 	}
 
@@ -859,7 +873,8 @@ UpdateUserInfo(struct PConnection *pconn,
 	{
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting UID to %d (0x%04x)\n",
-				user_uid, user_uid);
+				(int) user_uid,
+				(unsigned int) user_uid);
 		/* XXX - Fill this in */
 		userinfo.userid = (udword) user_uid;
 		userinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
@@ -969,8 +984,10 @@ find_max_speed(struct PConnection *pconn)
 int
 parse_args(int argc, char *argv[])
 {
+#if 0
 	extern char *optarg;	/* getopt() option argument */
 	extern int optind;	/* getopt() option index into argv[] */
+#endif	/* 0 */
 	int oldoptind;		/* Previous value of 'optind', to allow us
 				 * to figure out exactly which argument was
 				 * bogus, and thereby print descriptive
