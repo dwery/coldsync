@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.17 2002-03-08 17:22:28 azummo Exp $
+# $Id: AUTHORS,v 2.18 2002-03-08 18:03:40 azummo Exp $
 
 Authors and Contributors:
 
@@ -40,7 +40,7 @@ Bob Geer <bgeer@xmission.com>
 Samuel Tardieu <sam@rfc1149.net>: continuation lines in send-mail.
 Petr Kubanek <petr@kubanek.net>: Czech translation.
 Brian Johnson <bjohnson@jecinc.on.ca>: SPC.pm documentation.
-Alessandro Zummo <azummo-coldsync3@towertech.it>: new functions in SPC.pm
+Alessandro Zummo <azummo-coldsync3@towertech.it>: new functions in SPC.pm.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
