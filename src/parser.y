@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.69 2002-10-26 12:15:37 azummo Exp $
+ * $Id: parser.y,v 2.70 2002-10-31 15:29:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -121,6 +121,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token FETCH
 %token DUMP
 %token INSTALL
+%token INIT
 
 %union {
 	long integer;
@@ -465,6 +466,12 @@ flavor:
 		PARSE_TRACE(5)
 			fprintf(stderr, "Conduit: flavor Install\n");
 		cur_conduit->flavors |= FLAVORFL_INSTALL;
+	}
+	| INIT
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Conduit: flavor Init\n");
+		cur_conduit->flavors |= FLAVORFL_INIT;
 	}
 	| error
 	{
