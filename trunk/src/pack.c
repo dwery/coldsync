@@ -3,7 +3,7 @@
  * Defines the ppack() and punpack() functions, which facilitate
  * reading and writing data structures.
  *
- * $Id: pack.c,v 2.1 1999-08-23 08:44:36 arensb Exp $
+ * $Id: pack.c,v 2.2 1999-08-25 04:06:21 arensb Exp $
  */
 
 #include <stdio.h>
@@ -82,6 +82,7 @@ ppack(ubyte *buf,
 			ubyte *ubyte_arg;
 			uword *uword_arg;
 			udword *udword_arg;
+			struct dlp_time *time_arg;
 			int arraylen;
 			int i;
 
@@ -90,7 +91,7 @@ ppack(ubyte *buf,
 
 			switch (argtype)
 			{
-			    case PACK_UBYTE:
+			    case PACK_UBYTE:	/* Unpack array of bytes */
 				ubyte_arg = va_arg(ap, ubyte *);
 				for (i = 0; i < arraylen; i++)
 				{
@@ -99,7 +100,7 @@ ppack(ubyte *buf,
 					retval++;
 				}
 				break;
-			    case PACK_UWORD:
+			    case PACK_UWORD:	/* Unpack array of words */
 				uword_arg = va_arg(ap, uword *);
 				for (i = 0; i < arraylen; i++)
 				{
@@ -108,13 +109,29 @@ ppack(ubyte *buf,
 					retval++;
 				}
 				break;
-			    case PACK_UDWORD:
+			    case PACK_UDWORD:	/* Unpack array of
+						 * doublewords */
 				udword_arg = va_arg(ap, udword *);
 				for (i = 0; i < arraylen; i++)
 				{
 					put_udword(&buf, *udword_arg);
 					udword_arg++;
 					retval++;
+				}
+				break;
+			    case PACK_TIME:	/* Unpack Palm time 
+						 * struct */
+				time_arg = va_arg(ap, struct dlp_time *);
+				for (i = 0; i < arraylen; i++)
+				{
+					put_uword(&buf, time_arg[i].year);
+					put_ubyte(&buf, time_arg[i].month);
+					put_ubyte(&buf, time_arg[i].day);
+					put_ubyte(&buf, time_arg[i].hour);
+					put_ubyte(&buf, time_arg[i].minute);
+					put_ubyte(&buf, time_arg[i].second);
+					put_ubyte(&buf, 0);	/* Padding */
+					retval += 8;
 				}
 				break;
 			    default:
@@ -128,6 +145,7 @@ ppack(ubyte *buf,
 			ubyte ubyte_arg;
 			uword uword_arg;
 			udword udword_arg;
+			struct dlp_time *time_arg;
 
 			switch (argtype)
 			{
@@ -145,6 +163,17 @@ ppack(ubyte *buf,
 				udword_arg = va_arg(ap, udword);
 				put_udword(&buf, udword_arg);
 				retval++;
+				break;
+			    case PACK_TIME:	/* Pack Palm time type */
+				time_arg = va_arg(ap, struct dlp_time *);
+				put_uword(&buf, time_arg->year);
+				put_ubyte(&buf, time_arg->month);
+				put_ubyte(&buf, time_arg->day);
+				put_ubyte(&buf, time_arg->hour);
+				put_ubyte(&buf, time_arg->minute);
+				put_ubyte(&buf, time_arg->second);
+				put_ubyte(&buf, 0);	/* Padding */
+				retval += 8;
 				break;
 			    default:		/* Unknown type */
 				fprintf(stderr,
@@ -221,6 +250,7 @@ punpack(const ubyte *buf,
 			ubyte *ubyte_arg;
 			uword *uword_arg;
 			udword *udword_arg;
+			struct dlp_time *time_arg;
 			int arraylen;
 			int i;
 
@@ -231,7 +261,7 @@ punpack(const ubyte *buf,
 
 			switch (argtype)
 			{
-			    case PACK_UBYTE:
+			    case PACK_UBYTE:	/* Pack array of bytes */
 				ubyte_arg = va_arg(ap, ubyte *);
 				for (i = 0; i < arraylen; i++)
 				{
@@ -240,7 +270,7 @@ punpack(const ubyte *buf,
 					retval++;
 				}
 				break;
-			    case PACK_UWORD:
+			    case PACK_UWORD:	/* Pack array of words */
 				uword_arg = va_arg(ap, uword *);
 				for (i = 0; i < arraylen; i++)
 				{
@@ -249,13 +279,29 @@ punpack(const ubyte *buf,
 					retval++;
 				}
 				break;
-			    case PACK_UDWORD:
+			    case PACK_UDWORD:	/* Pack array of doublewords */
 				udword_arg = va_arg(ap, udword *);
 				for (i = 0; i < arraylen; i++)
 				{
 					*udword_arg = get_udword(&buf);
 					udword_arg++;
 					retval++;
+				}
+				break;
+			    case PACK_TIME:	/* Pack array of Palm time
+						 * structs */
+				time_arg = va_arg(ap, struct dlp_time *);
+				for (i = 0; i < arraylen; i++)
+				{
+					time_arg->year = get_uword(&buf);
+					time_arg->month = get_ubyte(&buf);
+					time_arg->day = get_ubyte(&buf);
+					time_arg->hour = get_ubyte(&buf);
+					time_arg->minute = get_ubyte(&buf);
+					time_arg->second = get_ubyte(&buf);
+					get_ubyte(&buf);	/* Padding */
+					time_arg++;
+					retval += 8;
 				}
 				break;
 			    default:
@@ -269,26 +315,39 @@ punpack(const ubyte *buf,
 			ubyte *ubyte_arg;
 			uword *uword_arg;
 			udword *udword_arg;
+			struct dlp_time *time_arg;
 
 			switch (argtype)
 			{
 			    case PACK_UBYTE:	/* Pack unsigned byte */
 				ubyte_arg = va_arg(ap, ubyte *);
+
 				*ubyte_arg = get_ubyte(&buf);
 				retval++;
-				ubyte_arg++;
 				break;
 			    case PACK_UWORD:	/* Pack unsigned word */
 				uword_arg = va_arg(ap, uword *);
+
 				*uword_arg = get_uword(&buf);
-				retval++;
-				uword_arg++;
+				retval += 2;
 				break;
 			    case PACK_UDWORD:	/* Pack unsigned doubleword */
 				udword_arg = va_arg(ap, udword *);
+
 				*udword_arg = get_udword(&buf);
-				retval++;
-				udword_arg++;
+				retval += 4;
+				break;
+			    case PACK_TIME:	/* Pack Palm time struct */
+				time_arg = va_arg(ap, struct dlp_time *);
+
+				time_arg->year = get_uword(&buf);
+				time_arg->month = get_ubyte(&buf);
+				time_arg->day = get_ubyte(&buf);
+				time_arg->hour = get_ubyte(&buf);
+				time_arg->minute = get_ubyte(&buf);
+				time_arg->second = get_ubyte(&buf);
+				get_ubyte(&buf);	/* Padding */
+				retval += 8;
 				break;
 			    default:		/* Unknown type */
 				fprintf(stderr,
