@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: copy-appinfo,v 3.5 2004-02-25 11:35:19 azummo Exp $
+# $Id: copy-appinfo,v 3.6 2004-02-25 12:38:56 azummo Exp $
 
 # This conduit simply copies the AppInfo block from the database on the
 # Palm to the desktop.
@@ -40,7 +40,7 @@ $Pappinfo = dlp_ReadAppBlock($dbh);
 
 # Copy the Palm's AppInfo block to the desktop PDB
 $PDB->{appinfo} = $Pappinfo;
-$PDB->{'attributes'}{'AppInfoDirty'} = 1;
+$PDB->{'dirty'} = 1;	# 'force' a database write on exit
 
 $err = &dlp_CloseDB($dbh);
 # XXX - Error-checking
