@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.60 2001-01-28 22:40:19 arensb Exp $
+ * $Id: config.c,v 1.61 2001-01-30 08:11:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,15 +14,27 @@
 #include <stdlib.h>		/* For atoi(), getenv() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
 #include <sys/stat.h>		/* For mkdir() */
-/*#include <sys/ioctl.h>*/		/* For ioctl() and ioctl values */
+#include <sys/ioctl.h>		/* For ioctl() and ioctl values */
 #include <pwd.h>		/* For getpwuid() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <netdb.h>		/* For gethostbyname2() */
 #include <sys/socket.h>		/* For socket() */
 
+#if HAVE_STROPTS_H
+#  include <stropts.h>		/* For ioctl() under DU */
+#endif	/* HAVE_STROPTS_H */
+
 #if HAVE_SYS_SOCKIO_H
 #  include <sys/sockio.h>	/* For SIOCGIFCONF under Solaris */
 #endif	/* HAVE_SYS_SOCKIO_H */
+
+/* DU's headers appear to be broken: <net/if.h> refers to these structures
+ * before they're defined.
+ */
+struct mbuf;
+struct ifaddr;
+struct ifmulti;
+struct rtentry;
 
 #include <net/if.h>		/* For struct ifreq */
 #include <netinet/in.h>		/* For struct sockaddr_in */
@@ -1492,17 +1504,6 @@ get_fullname(char *buf,
 			goto done;
 		    case '&':
 			/* Expand '&' */
-/* XXX - Is there a more specific test for egcs? */
-#ifdef _GNUC_
-#warning "You can ignore the warning about"
-#warning "\"ANSI C forbids braced-groups within expressions\""
-#endif	/* _GNUC_ */
-			/* egcs whines about "ANSI C forbids braced-groups
-			 * within expressions", but there doesn't seem to
-			 * be anything I can do about it, since it's the
-			 * __tobody macro inside <ctype.h> that's broken in
-			 * this way.
-			 */
 			buf[bufi] = toupper((int) pwent->pw_name[0]);
 			bufi++;
 			for (namei = 1; pwent->pw_name[namei] != '\0';
