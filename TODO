@@ -14,11 +14,12 @@
   the response, possibly filling in the returned arguments
   appropriately. This function could then watch for a timeout and
   resend the request.
+	Note that the netsync functions, when they time out, should
+  return a unique error code meaning "timeout on a reliable protocol",
+  since this means something different from a timeout over PADP.
 - Windows appears to use an ioctl() on the USB device to get the
   serial number. Is this possible here as well? If so, how to
   communicate this to the appropriate levels?
-- "listen serial{ protocol simple; }" works for syncing m500 over USB
-  under Linux, so get rid of usb_m500 hack.
 - Would it be possible to implement a web clipping server?
 - Bug? The first real sync with the m500, it said it was doing a fast
   sync. Did the userinfo get set during file backup or restore?
@@ -46,7 +47,6 @@
   and between arrays of arbitrary data and strings of characters. This
   is for i18n and for the benefit of Japanese users and such.
 - Document the -P <protocol> option. Add it to the usage string.
-- Get rid of the usb_m50x listen type.
 - Use iconv(3) to convert command-line arguments to the appropriate
   encoding. Most Unix boxen use EUC for Japanese, but the Visor uses
   SJIS.
