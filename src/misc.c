@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.18 2001-10-12 02:22:20 arensb Exp $
+ * $Id: misc.c,v 2.19 2001-11-12 01:09:27 arensb Exp $
  */
 
 #include "config.h"
@@ -577,6 +577,24 @@ is_database_name(const char *fname)
 		return True;
 
 	return False;		/* None of the above */
+}
+
+/* Bool3str
+ * Return the printed representation of a Bool3.
+ */
+const char *
+Bool3str(const Bool3 var)
+{
+	switch (var)
+	{
+	    case False3:
+		return "False";
+	    case True3:
+		return "True";
+	    case Undefined:
+		return "Undefined";
+	}
+	return "*** UNEXPECTED VALUE ***";
 }
 
 /* Stone-knives-and-bearskins memory leak detection:
