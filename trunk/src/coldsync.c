@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.28 2000-02-03 04:25:39 arensb Exp $
+ * $Id: coldsync.c,v 1.29 2000-02-06 22:18:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -187,6 +187,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tPDB:\t%d\n", pdb_trace);
 		fprintf(stderr, "\tSYNC:\t%d\n", sync_trace);
 		fprintf(stderr, "\tPARSE:\t%d\n", parse_trace);
+		fprintf(stderr, "\tIO:\t%d\n", io_trace);
 		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
@@ -1342,7 +1343,7 @@ set_debug_level(const char *str)
 		parse_trace = lvl;
 	else if (strncasecmp(str, "misc", 4) == 0)
 		misc_trace = lvl;
-	else if (strncasecmp(str, "io:", 3) == 0)
+	else if (strncasecmp(str, "io", 2) == 0)
 		io_trace = lvl;
 	else {
 		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
