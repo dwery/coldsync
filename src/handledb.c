@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.18 2000-05-21 08:00:01 arensb Exp $
+ * $Id: handledb.c,v 1.19 2000-08-07 00:33:38 arensb Exp $
  */
 
 #include "config.h"
@@ -40,7 +40,6 @@
 #include "conduit.h"
 
 extern int run_GenericConduit(struct PConnection *pconn,
-			      struct Palm *palm,
 			      struct dlp_dbinfo *db);
 
 /* HandleDB
@@ -95,7 +94,7 @@ HandleDB(struct PConnection *pconn,
 	 * conduits. If the path matches /^<.*>$/, then that refers to a
 	 * built-in conduit. If none was found, use run_GenericConduit().
 	 */
-	err = run_GenericConduit(pconn, palm, dbinfo);
+	err = run_GenericConduit(pconn, dbinfo);
 	SYNC_TRACE(3)
 		fprintf(stderr, "GenericConduit returned %d\n", err);
 	return err;
