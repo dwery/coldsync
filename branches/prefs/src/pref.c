@@ -3,6 +3,11 @@
  * Functions for creating the preference cache, retrieving the preferences
  * from the palm and writing the headers to the conduits.
  *
+ *	Copyright (C) 2000, Sumant S.R. Oemrawsingh.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: pref.c,v 1.1.2.2 2000-09-01 06:14:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -17,13 +22,12 @@
 
 extern struct pref_item *pref_cache;
 
-struct pref_item *
-FindPrefItem(struct pref_desc description,
-	struct pref_item *list);
-
-struct pref_item *
-GetPrefItem(struct pref_desc description);
-
+/* XXX - 'description' in the next few functions, is a struct that's passed
+ * by value. Yuck! See if 'const struct pref_desc *description' will work.
+ */
+struct pref_item *FindPrefItem(struct pref_desc description,
+			       struct pref_item *list);
+struct pref_item *GetPrefItem(struct pref_desc description);
 void FreePrefItem(struct pref_item *prefitem);
 
 /* Creates the pref_cache from a given conduit block */
@@ -36,9 +40,9 @@ CacheFromConduits(conduit_block *conduits, struct PConnection *pconn)
 	int i;
 
 	/* Create a placeholder for first item */
-	if((pref_cache = (pref_item *)malloc(sizeof *pref_cache))
+	if ((pref_cache = (pref_item *) malloc(sizeof *pref_cache))
 		== NULL)
-	    return -1; /* Failiure */
+	    return -1; /* Failure */
 
 	pref_cursor = pref_cache;
 	pref_cursor->next = NULL;
@@ -46,21 +50,21 @@ CacheFromConduits(conduit_block *conduits, struct PConnection *pconn)
 	pref_cursor->contents_info = NULL;
 	pref_cursor->pconn = pconn;	/* Needed for run_conduit */
 
-	for(conduit_cursor = conduits;
-	    conduit_cursor != NULL;
-	    conduit_cursor = conduit_cursor->next)
+	for (conduit_cursor = conduits;
+	     conduit_cursor != NULL;
+	     conduit_cursor = conduit_cursor->next)
 	{
-		if(conduit_cursor->path == NULL)
-		    continue;
+		if (conduit_cursor->path == NULL)
+			continue;
 
-		for(i = 0;
-		    i < conduit_cursor->num_prefs;
-		    i++)
+		for (i = 0;
+		     i < conduit_cursor->num_prefs;
+		     i++)
 		{
-			if((item = FindPrefItem(conduit_cursor->prefs[i],
-						pref_cache)) == NULL)
+			if ((item = FindPrefItem(conduit_cursor->prefs[i],
+						 pref_cache)) == NULL)
 			{
-/*				MISC_TRACE(2)*/
+				MISC_TRACE(4)
 					fprintf(stderr,
 						"Request for preference added "
 						"in cache: '%c%c%c%c' %u\n",
@@ -69,7 +73,7 @@ CacheFromConduits(conduit_block *conduits, struct PConnection *pconn)
 						(char) (conduit_cursor->prefs[i].creator >> 8) & 0xff,
 						(char) conduit_cursor->prefs[i].creator & 0xff,
 						conduit_cursor->prefs[i].id);
-				item = (pref_item *)malloc(sizeof *item);
+				item = (pref_item *) malloc(sizeof *item);
 				pref_cursor->next = item;
 				item->next = NULL;
 				item->contents = NULL;
@@ -105,7 +109,7 @@ FetchPrefItem(struct PConnection *pconn,
 	if (prefitem == NULL)
 	    return -1;	/* Failiure, item doesn't exist */
 
-	if(prefitem->contents_info != NULL)
+	if (prefitem->contents_info != NULL)
 		return 0;	/* Trivial success */
 
 	/* We save the set flags, because we are going to change the flags
@@ -120,10 +124,10 @@ FetchPrefItem(struct PConnection *pconn,
 	 * matter what the saved bit says, since we must look inside the saved
 	 * database anyway.
 	 */
-	if((flags & PREFDFL_SAVED) != 0 ||
+	if ((flags & PREFDFL_SAVED) != 0 ||
 	   (flags & PREFDFL_UNSAVED) == 0)
 	{
-/*		MISC_TRACE(2)*/
+		MISC_TRACE(4)
 			fprintf(stderr,"Downloading preference from Saved "
 				"Preferences: '%c%c%c%c' %u\n",
 				(char) (prefitem->description.creator >> 24) & 0xff,
@@ -132,7 +136,7 @@ FetchPrefItem(struct PConnection *pconn,
 				(char) prefitem->description.creator & 0xff,
 				prefitem->description.id);
 		prefitem->description.flags = PREFDFL_SAVED;
-		if((err = DownloadPrefItem(pconn,prefitem)) < 0)
+		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
 			prefitem->description.flags = flags;
 			return err;
@@ -140,14 +144,14 @@ FetchPrefItem(struct PConnection *pconn,
 	}
 
 	/* Did we find it? */
-	if(prefitem->contents_info->version != 0)
+	if (prefitem->contents_info->version != 0)
 	    return 0;
 
 	/* Same reasoning as above */
-	if((flags & PREFDFL_UNSAVED) != 0 ||
+	if ((flags & PREFDFL_UNSAVED) != 0 ||
 	   (flags & PREFDFL_SAVED) == 0)
 	{
-/*		MISC_TRACE(2)*/
+		MISC_TRACE(4)
 			fprintf(stderr,"Downloading preference from Unsaved "
 				"Preferences: '%c%c%c%c' %u\n",
 				(char) (prefitem->description.creator >> 24) & 0xff,
@@ -157,7 +161,7 @@ FetchPrefItem(struct PConnection *pconn,
 				prefitem->description.id);
 		prefitem->description.flags = PREFDFL_SAVED;
 		prefitem->description.flags = PREFDFL_UNSAVED;
-		if((err = DownloadPrefItem(pconn,prefitem)) < 0)
+		if ((err = DownloadPrefItem(pconn,prefitem)) < 0)
 		{
 			prefitem->description.flags = flags;
 			return err;
@@ -165,7 +169,7 @@ FetchPrefItem(struct PConnection *pconn,
 	}
 
 	/* If we didn't find it, restore the flags */
-	if(prefitem->contents == NULL)
+	if (prefitem->contents == NULL)
 		prefitem->description.flags = flags;
 
 	return 0;	/* Success */
@@ -181,6 +185,15 @@ FetchPrefItem(struct PConnection *pconn,
  * with the exact size and an array that makes sense. Slower? Maybe, but it's
  * the only way to be sure you download all and not segfault.
  */
+/* XXX - It might be better to allocate, say, a 1Kb buffer to hold the
+ * preference value, and tell DlpReadAppPreference() to download no more
+ * than 1Kb. Then check the real size of the preference. If the preference
+ * is longer than our buffer, reallocate the buffer and call
+ * DlpReadAppPreference().
+ * With a larger buffer size, you don't need to call DlpReadAppPreference()
+ * a second time as often. OTOH, the penalty for not getting it all the
+ * first time is worse with larger buffers.
+ */
 int
 DownloadPrefItem(struct PConnection *pconn,
 	struct pref_item *prefitem)
@@ -190,15 +203,15 @@ DownloadPrefItem(struct PConnection *pconn,
 	ubyte flags;
 	int err;
 
-	if((prefitem->description.flags & PREFDFL_SAVED) != 0)
+	if ((prefitem->description.flags & PREFDFL_SAVED) != 0)
 		flags = PREF_SAVED;
 	else
 		flags = PREF_UNSAVED;
 
-	if(prefitem->contents_info != NULL)
+	if (prefitem->contents_info != NULL)
 	    contents_info = prefitem->contents_info;
 	else
-	if((contents_info = malloc(sizeof *contents_info)) == NULL)
+	if ((contents_info = malloc(sizeof *contents_info)) == NULL)
 	{
 		fprintf(stderr,_("%s: Out of memory.\n"),"DownloadPrefItem");
 		return -1;
@@ -220,7 +233,7 @@ DownloadPrefItem(struct PConnection *pconn,
 				   NULL);
 
 	/* Check for any errors */
-	if(err < 0)
+	if (err < 0)
 	{
 		/* If there was no error, contents_info doesn't exist,
 		 * because the preference was simply not found.
@@ -228,7 +241,7 @@ DownloadPrefItem(struct PConnection *pconn,
 		free(contents_info);
 		return err;
 	}
-/*	MISC_TRACE(4)*/
+	MISC_TRACE(4)
 		fprintf(stderr,"Preference item '%c%c%c%c' %u has a size of "
 			"%u bytes\n",
 			(char) (prefitem->description.creator >> 24) & 0xff,
@@ -243,17 +256,17 @@ DownloadPrefItem(struct PConnection *pconn,
 	 * found but just had size 0. Either way, don't waste any more time and
 	 * just return.
 	 */
-	if(contents_info->size == 0)
+	if (contents_info->size == 0)
 	{
 	    prefitem->contents_info = contents_info;
-	    if(prefitem->contents != NULL)
+	    if (prefitem->contents != NULL)
 		free(prefitem->contents);
 	    prefitem->contents = NULL;
 	    return 0;
 	}
 
 	/* Now we allocate the right amount of space */
-	if((contents = calloc(sizeof *contents,contents_info->size)) == NULL)
+	if ((contents = calloc(sizeof *contents,contents_info->size)) == NULL)
 	{
 	    fprintf(stderr, _("%s: Out of memory.\n"),"DownloadPrefItem");
 	    free(contents_info);
@@ -269,14 +282,14 @@ DownloadPrefItem(struct PConnection *pconn,
 				   contents_info,
 				   contents);
 
-	if(err < 0)
+	if (err < 0)
 	{
 	    free(contents_info);
 	    free(contents);
 	    return err;
 	}
 
-/*	MISC_TRACE(3)*/
+	MISC_TRACE(3)
 		fprintf(stderr,"Successfully downloaded %u of %u bytes of "
 			"preference item '%c%c%c%c' %u\n",
 			contents_info->len,
@@ -288,7 +301,7 @@ DownloadPrefItem(struct PConnection *pconn,
 			prefitem->description.id);
 
 	/* Be nice and give the man any memory back */
-	if(prefitem->contents != NULL)
+	if (prefitem->contents != NULL)
 	{
 	    free(prefitem->contents);
 	    prefitem->contents = NULL;
@@ -309,9 +322,10 @@ FindPrefItem(struct pref_desc description,
 {
     struct pref_item *match = list, *previous = NULL;
 
-    while(match != NULL)
+    /* XXX - Rewrite this as a simple for loop. 'previous' is redundant */
+    while (match != NULL)
     {
-	if(prefdesccmp(match->description,description) == 0)
+	if (prefdesccmp(match->description,description) == 0)
 	    break;
 	previous = match;
 	match = match->next;
@@ -327,10 +341,10 @@ GetPrefItem(struct pref_desc description)
 {
     struct pref_item  *retval;
 
-    if((retval = FindPrefItem(description,pref_cache)) == NULL)
+    if ((retval = FindPrefItem(description,pref_cache)) == NULL)
 	return NULL;
 
-    if(FetchPrefItem(retval->pconn,retval) < 0)
+    if (FetchPrefItem(retval->pconn,retval) < 0)
 	return NULL;
 
     return retval;
@@ -339,13 +353,13 @@ GetPrefItem(struct pref_desc description)
 void
 FreePrefItem(struct pref_item *prefitem)
 {
-    if(prefitem == NULL)
+    if (prefitem == NULL)
 	return;
 
-    if(prefitem->contents_info != NULL)
+    if (prefitem->contents_info != NULL)
 	free(prefitem->contents_info);
 
-    if(prefitem->contents != NULL)
+    if (prefitem->contents != NULL)
 	free(prefitem->contents);
 
     free(prefitem);
@@ -361,9 +375,9 @@ FreePrefList(struct pref_item *list)
 {
     struct pref_item *cursor;
 
-    for(cursor = list;
-	cursor != NULL;
-	cursor = list)
+    for (cursor = list;
+	 cursor != NULL;
+	 cursor = list)
     {
 	list = cursor->next;
 	FreePrefItem(cursor);
@@ -372,6 +386,8 @@ FreePrefList(struct pref_item *list)
     return;
 }
 
-/* Sorry, I use vim, so don't know about the Emacs stuff at the end of your
- * files
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
  */
