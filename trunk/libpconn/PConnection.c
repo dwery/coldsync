@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.10 2000-12-10 21:30:33 arensb Exp $
+ * $Id: PConnection.c,v 1.11 2000-12-11 08:56:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,14 +23,11 @@ int	io_trace = 0;
 
 extern int pconn_serial_open(struct PConnection *pconn, char *fname,
 			     int prompt_for_hotsync);
-extern int serial_close(struct PConnection *p);
 extern int pconn_net_open(struct PConnection *pconn, char *fname,
 			  int prompt_for_hotsync);
-extern int net_close(struct PConnection *p);
 #ifdef WITH_USB
 extern int pconn_usb_open(struct PConnection *pconn, char *fname,
 			  int prompt_for_hotsync);
-extern int usb_close(struct PConnection *p);
 #endif
 
 /* new_PConnection
@@ -56,7 +53,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 		 * listen on stdin/stdout.
 		 */
 		if (pconn_serial_open(pconn, fname, promptHotSync) < 0) {
-			serial_close(pconn);
+			PConnClose(pconn);
 			return NULL;
 		}
 		return pconn;
@@ -64,7 +61,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 	    case LISTEN_NET:
 		if (pconn_net_open(pconn, fname, promptHotSync) < 0)
 		{
-			net_close(pconn);
+			PConnClose(pconn);
 			return NULL;
 		}
 		return pconn;
@@ -78,7 +75,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 		 * listen on stdin/stdout.
 		 */
 		if (pconn_usb_open(pconn, fname, promptHotSync) < 0) {
-			usb_close(pconn);
+			PConnClose(pconn);
 			return NULL;
 		}
 		return pconn;
@@ -96,7 +93,7 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 int
 PConnClose(struct PConnection *pconn)
 {
-	int err;
+	int err = 0;
 
 	if (pconn == NULL)
 		return 0;
@@ -113,10 +110,14 @@ PConnClose(struct PConnection *pconn)
 	IO_TRACE(4)
 		fprintf(stderr, "Calling io_drain()\n");
 
-	(*pconn->io_drain)(pconn);
+	if (pconn->io_drain != NULL)
+		(*pconn->io_drain)(pconn);
 
-	/* Close the file descriptor and clean up */
-	err = (*pconn->io_close)(pconn);
+	/* Close the file descriptor and clean up
+	 * The test is for paranoia, in case it never got assigned.
+	 */
+	if (pconn->io_close != NULL)
+		err = (*pconn->io_close)(pconn);
 
 	/* Free the PConnection */
 	free(pconn);
