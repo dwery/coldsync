@@ -8,7 +8,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.5 1999-03-11 03:17:20 arensb Exp $
+ * $Id: padp.c,v 1.6 1999-03-11 03:59:54 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
@@ -555,15 +555,16 @@ padp_write(struct PConnection *pconn,
 
 		for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
 		{
-FD_ZERO(&writefds);
-FD_SET(pconn->fd, &writefds);
-err = select(pconn->fd+1, NULL, &writefds, NULL, &timeout);
-if (err == 0)
-{
-	/* select() timed out */
-	fprintf(stderr, "Write timeout. Attempting to resend\n");
-	continue;
-}
+			FD_ZERO(&writefds);
+			FD_SET(pconn->fd, &writefds);
+			err = select(pconn->fd+1, NULL, &writefds, NULL,
+				     &timeout);
+			if (err == 0)
+			{
+				/* select() timed out */
+				fprintf(stderr, "Write timeout. Attempting to resend.\n");
+				continue;
+			}
 			PADP_TRACE(6, "about to slp_write()\n");
 
 			/* Send 'outbuf' as a SLP packet */
