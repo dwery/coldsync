@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.13 2000-03-14 06:53:45 arensb Exp $
+ * $Id: log.c,v 1.14 2000-04-09 15:31:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,7 +44,9 @@ add_to_log(char *msg)
 	SYNC_TRACE(6)
 		fprintf(stderr, "add_to_log(\"%s\")\n", msg);
 
-	msglen = (synclog == NULL ? 0 : strlen(synclog));
+	if (msg == NULL)
+		return 0;	/* Don't bother with empty messages */
+	msglen = strlen(msg);
 
 	/* Increase the size of the log buffer, if necessary */
 	if (log_len + msglen >= log_size)
@@ -59,8 +61,11 @@ add_to_log(char *msg)
 			 * current string, rounded up to the nearest
 			 * Kb.
 			 */
-			newsize = (msglen + 1023) & 0x03ff;
-				/* (msglen + 1023) % 1024 */
+			newsize = (msglen + 1023) & (~0x03ff);
+			SYNC_TRACE(7)
+				fprintf(stderr, "Creating initial synclog, "
+					"newsize == %d\n",
+					newsize);
 
 			if ((newlog = malloc(newsize)) == NULL)
 			{
@@ -71,8 +76,14 @@ add_to_log(char *msg)
 			}
 
 			synclog = newlog;
-			log_len = msglen;
+			log_len = 0;
 			log_size = newsize;
+			SYNC_TRACE(7)
+				fprintf(stderr,
+					"Now synclog == [%s]\n"
+					"    log_len == %d\n"
+					"    log_size == %d\n",
+					synclog, log_len, log_size);
 
 		} else {
 			/* Second through nth time around. The buffer
@@ -97,8 +108,9 @@ add_to_log(char *msg)
 		}
 	}
 
-	strcat(synclog, msg);
-	log_len += msglen;
+	/* Append the new message to the log */
+	strncpy(synclog+log_len, msg, log_size-log_len);
+	log_len += msglen;	/* Increase log length correspondingly */
 
 	SYNC_TRACE(7)
 		fprintf(stderr, "Now log is \"%s\"\n", synclog);
