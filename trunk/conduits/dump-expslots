@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::SPC::ExpSlot;
+
+use Data::Dumper;
+
+
+StartConduit('sync');
+
+
+	print "Enumerating ExpSlot(s)...\n";
+	my $ek = dlp_ExpSlotEnumerate();
+	print "\n";
+
+	print Data::Dumper->Dump( [ $ek ] );
+
+	print "\nDumping slot(s) info..\n";
+
+	foreach my $slot ( @{$ek->{'slots'}} )
+	{
+		my $exp = dlp_ExpSlotMediaType($slot);
+
+		print "\nSlot $slot: " . Data::Dumper->Dump( [ $exp ] );
+
+		$exp = dlp_ExpCardInfo($slot);
+		print "\n\tCard: " .Data::Dumper->Dump( [ $exp ] );
+	}
+
+	print "\n";
+
+
+EndConduit();
