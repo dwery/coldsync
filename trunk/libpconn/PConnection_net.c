@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.23 2002-01-23 15:51:36 arensb Exp $
+ * $Id: PConnection_net.c,v 1.24 2002-03-10 23:33:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -34,7 +34,7 @@
 /*
  * Moved from netsync.h to here, since it only applies to real netsyncing,
  * not to the Palm m50x USB cradle protocol.
-
+ *
  * The machine with the cradle is the client. It talks to the server host,
  * which will do the actual work of syncing.
  *
@@ -239,6 +239,9 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	}
 
 	/* Receive UDP wakeup ACK */
+	/* XXX - This hangs forever if the remote host doesn't send a
+	 * wakeup ACK. Add a timeout somehow.
+	 */
   retry:
 	len = recvfrom(pconn->fd, (char *) inbuf, sizeof(inbuf), 0,
 		       (struct sockaddr *) &servaddr,
