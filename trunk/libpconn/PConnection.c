@@ -6,13 +6,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.35 2003-05-24 18:06:03 azummo Exp $
+ * $Id: PConnection.c,v 1.36 2004-03-27 15:23:58 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <time.h>
 
 #ifndef HAVE_ENODEV
 #  define ENODEV	999	/* Some hopefully-impossible value */
@@ -90,6 +91,8 @@ new_PConnection(char *device,
 	pconn->io_private	= NULL;
 	pconn->whosonfirst	= 0;
 	pconn->speed		= -1;
+	pconn->bytes_read	= 0;
+	pconn->bytes_write	= 0;
 
 
 	/* Initialize callbacks */
@@ -169,6 +172,7 @@ new_PConnection(char *device,
 		return NULL;
 	}
 
+	time(&pconn->start_time);
 	PConn_set_status(pconn, PCONNSTAT_NONE);
 	
 	return pconn;
@@ -191,6 +195,8 @@ PConnClose(PConnection *pconn)
 	/* XXX - Why does this hang until the Palm times out, under
 	 * FreeBSD? (But only with 'xcopilot', it appears.)
 	 */
+	time(&pconn->stop_time);
+
 	IO_TRACE(4)
 		fprintf(stderr, "Calling io_drain()\n");
 
@@ -207,6 +213,9 @@ PConnClose(PConnection *pconn)
 	 * the pconn structure is going to be freed soon.
 	 */
 	PConn_set_status(pconn, PCONNSTAT_CLOSED);
+
+	IO_TRACE(1)
+		fprintf(stderr, "bytes read %d, read %d, time %f\n",pconn->bytes_read,pconn->bytes_write,difftime(pconn->stop_time,pconn->start_time));
 
 	/* Free the PConnection */
 	free(pconn);
@@ -330,6 +339,28 @@ PConn_select(struct PConnection *p,
 
 	return err;
 }
+
+int
+PConn_timedselect(struct PConnection *p,
+		pconn_direction direction,
+                int secs)
+{
+	int err;
+	struct timeval timeout;
+
+	timeout.tv_sec = secs;
+	timeout.tv_usec = 0L; 
+
+	err = PConn_select(p, direction, &timeout);
+	if (err == 0)
+	{
+		/* select() timed out */
+		PConn_set_palmerrno(p, PALMERR_TIMEOUT2);
+	}
+
+	return err;
+}
+
 
 palmerrno_t
 PConn_get_palmerrno(PConnection *p)
