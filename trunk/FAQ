@@ -82,9 +82,14 @@ A: From several accounts, yes, at least under FreeBSD and Linux.
 	(Thanks to alert reader Shawn Sorichetti <ssoriche@home.com> for
    this information.)
 
-Q: Does ColdSync support syncing via the IR port?
+Q: Does ColdSync support syncing via the infrared port?
 A: Not directly, but yes.
-	If your OS supports IrCOMM, ColdSync should work just fine.
+	You need to install an IrCOMM handler, which will make your IR port
+   behave like an RS-232 serial port. As far as I know, the only OS with a
+   working IrCOMM implementation is Linux.
+	Several people have reported being able to sync over IR, though I
+   have so far been unable to duplicate their success. You should probably
+   start with the IR-HOWTO that comes with the Redhat distribution.
 
 # This is for Emacs's benefit:
 # Local Variables:	***
