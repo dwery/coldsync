@@ -6,11 +6,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.3 1999-11-10 06:47:39 arensb Exp $
+ * $Id: lexer.l,v 2.4 1999-11-27 05:54:15 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "parser.h"
 #include "y.tab.h"
 
@@ -95,10 +100,12 @@ WS		[ \t\f\r]
  /* XXX - Allow other special characters: \t, \n, \r, \0123, \xf3 and
   * so forth.
   */
+ /* XXX - Strip out escapes in strings */
 \"([^\"]|\\\")*\"	{
 	if ((yylval.string = malloc(yyleng-1)) == NULL)
 	{
-		fprintf(stderr, "Can't malloc copy of string\n");
+		fprintf(stderr, _("%s: Can't malloc copy of string\n"),
+			"yylex");
 		return -1;
 	}
 	strncpy(yylval.string, yytext+1, yyleng-2);
