@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001-11-12 04:31:24 arensb Exp $
+# $Id: Makefile,v 1.12 2001-11-19 17:07:15 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -58,6 +58,16 @@ all::	${LIBRARY}
 #	ln -sf libfoo.so.1 libfoo.so
 #	${CC} -shared -Wl,-x -o libfoo.so.1 -Wl,-soname,libfoo.so.1 \
 #		`lorder *.So | tsort -q`
+
+# Solaris: has 'lorder' and 'tsort', but linker doesn't support "-x"
+# (delete local symbols).
+#	'ln' is picky: you need to say 'ln -f -s foo bar', not 'ln -fs'
+# or 'ln -sf' :-(
+#	'tsort' doesn't take "-q" option.
+
+# DU: has 'lorder' and 'tsort'
+#	'ld' recognizes "-x" option.
+#	'tsort' doesn't take "-q" option.
 
 # This is for Emacs's benefit:
 # Local Variables:	***
