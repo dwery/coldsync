@@ -29,6 +29,11 @@
 - Fix PADP so it can dump when writing, as well as when reading.
 - Modem sync
 - NetSync: figure out just how it works and stuff.
+  Blargh. From the output of 'tcpdump', it looks as if the host with
+  the databases wants to talk NetBIOS to the host with the cradle.
+  Oh, well. Can always come up with a reimplementation for Unix hosts.
+  That would probably be a win anyway, since it would allows us to do
+  the usual Unix-y stuff, like SSL, TCP wrappers, identd etc.
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
@@ -43,16 +48,8 @@
 - PAM for security throughout?
 - Figure out a sane source directory organization and stick to it. I'm
   not going to worry about it too much in this alpha stage, though.
-- Figure out why 'coldsync/coldsync' and HotSync on the Palm don't
-  always finish at the same time.
 - Get dependencies working right in Makefiles, so stuff gets rebuilt
   properly.
-- The sync itself should probably just consist of opening the database
-  on the Palm, finding the appropriate conduit, and invoking it.
-  "Appropriate conduit" defaults to either a generic sync, or backup,
-  depending on whether the database exists on the desktop or not. The
-  generic conduit (and possibly the backup) should probably be written
-  in C++ for easy subclassing.
 - Add code to check ~/.palm/backup to look for databases that aren't
   on the Palm. Not sure what to do about those, though: if the user
   deliberately deleted them, don't want them restored, but if the Palm
@@ -125,6 +122,8 @@
   "dlp_cmd.c", to replace the blocks of
   get_ubyte()/get_uword()/get_udword() and
   put_ubyte()/put_uword()/put_udword() calls.
+  Generally speaking, use these functions to replace all of the
+  get_*()/put_* calls.
 - For starters, define a conduit map that does an ordinary sync for
   everything. Make SlowSync() and FastSync() part of the generic
   conduit. Then add PalmOverwritesDesktop(), DesktopOverwritesPalm()
@@ -139,8 +138,6 @@
   to a list of records; and a hook that'll take a list of records and
   write them to ~/TODO. This is easy, and allows you to use the
   generic conduit instead of having to write your own.
-- The generic conduit needs a method (hook) to determine whether two
-  records are identical.
 - Dynamically-loaded objects: if the 'coldsync' binary has a variable
   'foo' or a function func(), how does it make these available to a
   dynamically-loaded library?
@@ -157,3 +154,6 @@
 - Optimization: when requesting the list of databases on the Palm,
   don't bother requesting the ones in ROM, since those don't get
   synced anyway (this should be optional, though).
+- Lock files while syncing.
+- Separate the distribution into 'coldsync' and 'coldsync-doc', since
+  the documentation is almost three times as large as everything else.
