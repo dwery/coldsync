@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.13 2000-02-07 04:44:30 arensb Exp $
+ * $Id: parser.y,v 2.14 2000-04-10 09:35:53 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
 #include <string.h>		/* For strncpy() et al. */
+#include <ctype.h>		/* For toupper() et al. */
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
@@ -35,6 +36,10 @@ static listen_block *cur_listen;	/* Currently-open listen block. The
 					 * various listen_directive rules
 					 * will fill in the fields.
 					 */
+static pda_block *cur_pda;		/* Currently-open PDA block. The
+					 * various pda_directive rules will
+					 * fill in the fields.
+					 */
 static conduit_block *cur_conduit;	/* Currently-open conduit block.
 					 * The various conduit_directive
 					 * rules will fill in the fields.
@@ -50,11 +55,14 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token CONDUIT
 %token DEFAULT
 %token DEVICE
+%token DIRECTORY
 %token FINAL
 %token LISTEN
 %token NAME
 %token PATH
+%token PDA
 %token SPEED
+%token SNUM
 %token TYPE
 
 %token SERIAL
@@ -105,6 +113,10 @@ statement:
 	| conduit_stmt
 	{ PARSE_TRACE(3)
 		  fprintf(stderr, "Found a conduit_stmt\n");
+	}
+	| pda_stmt
+	{ PARSE_TRACE(3)
+		  fprintf(stderr, "Found a pda_stmt\n");
 	}
 	| ';'	/* Effectively empty */
 	{ PARSE_TRACE(4)
@@ -476,6 +488,159 @@ creator_type:	STRING '/' STRING
 	}
 	;
 
+pda_stmt:	PDA '{'
+	{
+		/* Create a new PDA block. Subsequent rules that parse
+		 * substatements inside a 'pda' block will fill in fields
+		 * in this struct.
+		 */
+		if ((cur_pda = new_pda_block()) == NULL)
+		{
+			fprintf(stderr,
+				_("%s: Can't allocate PDA block\n"),
+				"yyparse");
+			return -1;
+		}
+	}
+	pda_block
+	'}'
+	{
+		PARSE_TRACE(3)
+		{
+			fprintf(stderr, "Found pda+pda_block:\n");
+			fprintf(stderr, "\tS/N: [%s]\n",
+				(cur_pda->snum == NULL ?
+				 "(null)" :
+				 cur_pda->snum));
+			fprintf(stderr, "\tDirectory: [%s]\n",
+				(cur_pda->directory == NULL ?
+				 "(null)" :
+				 cur_pda->directory));
+			if ((cur_pda->flags & PDAFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+		}
+
+		if (file_config->pda == NULL)
+		{
+			/* This is the first pda block */
+			PARSE_TRACE(3)
+				fprintf(stderr,
+					"Adding the first PDA block\n");
+
+			file_config->pda = cur_pda;
+			cur_pda = NULL;		/* So it doesn't get freed
+						 * twice */
+		} else {
+			/* This is not the first pda block. Append it
+			 * to the list.
+			 */
+			struct pda_block *last;
+
+			PARSE_TRACE(3)
+				fprintf(stderr,
+					"Appending a PDA block to the list\n");
+
+			/* Move forward to the last pda block on the
+			 * list
+			 */
+			for (last = file_config->pda;
+			     last->next != NULL;
+			     last = last->next)
+				;
+			last->next = cur_pda;
+			cur_pda = NULL;		/* So it doesn't get freed
+						 * twice.
+						 */
+		}
+	}
+	;
+
+pda_block:
+	pda_directives
+	;
+
+pda_directives:
+	pda_directives pda_directive
+	|	/* Empty */
+	;
+
+pda_directive:
+	SNUM STRING ';'
+	{
+		/* Serial number from ROM */
+		char *csum_ptr;		/* Pointer to checksum character */
+		unsigned char checksum;	/* Calculated checksum */
+
+		PARSE_TRACE(4)
+			fprintf(stderr, "Serial number \"%s\"\n", $2);
+
+		cur_pda->snum = $2;
+		$2 = NULL;
+
+		/* Verify the checksum */
+		csum_ptr = strrchr(cur_pda->snum, '-');
+
+		if (strcmp(cur_pda->snum, "") == 0)
+		{
+			/* Serial number given as the empty string. This is
+			 * fine. It specifies a PDA with no serial number
+			 * (e.g., a PalmPilot).
+			 */
+
+		} else if (csum_ptr == NULL)
+		{
+			/* No checksum. Calculate it, and tell the user
+			 * what it should be.
+			 */
+			checksum = snum_checksum(cur_pda->snum,
+						 strlen(cur_pda->snum));
+			fprintf(stderr, _("Warning: serial number \"%s\" "
+					  "has no checksum. You may want\n"
+					  "to rewrite it as \"%s-%c\"\n"),
+				cur_pda->snum, cur_pda->snum, checksum);
+		} else {
+			/* Checksum specified in the config file. Make sure
+			 * that it's correct. Warn the user if it isn't.
+			 */
+
+			*csum_ptr = '\0';	/* Truncate the string at
+						 * the checksum. */
+			csum_ptr++;		/* Point to the character
+						 * after the dash, or the
+						 * terminating NUL if the
+						 * string is malformed.
+						 */
+			checksum = snum_checksum(cur_pda->snum,
+						 strlen(cur_pda->snum));
+			if (toupper(checksum) != toupper(*csum_ptr))
+			{
+				fprintf(stderr,
+					_("Warning: incorrect checksum for "
+					  "serial number \"%s-%c\".\n"
+					  "Should be \"%s-%c\"\n"),
+					cur_pda->snum, *csum_ptr,
+					cur_pda->snum, checksum);
+			}
+		}
+	}
+	| DIRECTORY STRING ';'
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "Directory \"%s\"\n", $2);
+
+		cur_pda->directory = $2;
+		$2 = NULL;
+	}
+	| DEFAULT ';'
+	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "This is a default PDA\n");
+
+		/* Mark this PDA as being the fallback default */
+		cur_pda->flags |= PDAFL_DEFAULT;	/* XXX - Test this */
+	}
+	;
+
 %%
 
 /* yyerror
@@ -513,6 +678,8 @@ int parse_config(const char *fname,
 
 	if (cur_listen != NULL)
 		free_listen_block(cur_listen);
+	if (cur_pda != NULL)
+		free_pda_block(cur_pda);
 	if (cur_conduit != NULL)
 		free_conduit_block(cur_conduit);
 
