@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.29 2001-12-10 07:27:11 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.30 2002-01-23 15:52:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1324,7 +1324,7 @@ DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpWriteAppBlock",
 				ret_argv[i].id);
 			continue;
@@ -1400,7 +1400,7 @@ DlpReadSortBlock(PConnection *pconn,	/* Connection */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadSortBlock",
 				ret_argv[i].id);
 			continue;
@@ -1475,7 +1475,7 @@ DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpWriteSortBlock",
 				ret_argv[i].id);
 			continue;
@@ -1562,7 +1562,7 @@ DlpReadNextModifiedRec(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadNextModifiedRec",
 				ret_argv[i].id);
 			continue;
@@ -2035,7 +2035,7 @@ DlpReadResourceByIndex(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadResourceByIndex",
 				ret_argv[i].id);
 			continue;
@@ -2395,7 +2395,7 @@ DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpResetSyncFlags",
 				ret_argv[i].id);
 			continue;
@@ -2531,7 +2531,7 @@ DlpCallApplication(
 /* XXX - Do this everywhere: */
 /*  		palm_errno = PALMERR_BADRESID; */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpCallApplication",
 				ret_argv[i].id);
 			continue;
@@ -2576,7 +2576,7 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpResetSystem",
 				ret_argv[i].id);
 			continue;
@@ -2650,7 +2650,7 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpAddSyncLogEntry",
 				ret_argv[i].id);
 			continue;
@@ -2709,7 +2709,7 @@ DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadOpenDBInfo",
 				ret_argv[i].id);
 			continue;
@@ -2772,7 +2772,7 @@ DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpMoveCategory",
 				ret_argv[i].id);
 			continue;
@@ -2817,7 +2817,7 @@ DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpOpenConduit",
 				ret_argv[i].id);
 			continue;
@@ -2873,7 +2873,7 @@ DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpEndOfSync",
 				ret_argv[i].id);
 			continue;
@@ -2926,7 +2926,7 @@ DlpResetRecordIndex(
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpResetRecordIndex",
 				ret_argv[i].id);
 			continue;
@@ -3036,7 +3036,7 @@ DlpReadRecordIDList(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadRecordIDList",
 				ret_argv[i].id);
 			continue;
@@ -3131,7 +3131,7 @@ DlpReadNextRecInCategory(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadNextRecInCategory",
 				ret_argv[i].id);
 			continue;
@@ -3227,7 +3227,7 @@ DlpReadNextModifiedRecInCategory(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadNextModifiedRecInCategory",
 				ret_argv[i].id);
 			continue;
@@ -3319,7 +3319,7 @@ DlpReadAppPreference(
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadAppPreference",
 				ret_argv[i].id);
 			continue;
@@ -3399,7 +3399,7 @@ DlpWriteAppPreference(
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpWriteAppPreference",
 				ret_argv[i].id);
 			continue;
@@ -3497,7 +3497,7 @@ DlpReadNetSyncInfo(PConnection *pconn,
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpReadNetSyncInfo",
 				ret_argv[i].id);
 			continue;
@@ -3598,7 +3598,7 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 		{
 		    default:	/* Unknown argument type */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
-					  "0x%02x\n"),
+					  "0x%02x.\n"),
 				"DlpWriteNetSyncInfo",
 				ret_argv[i].id);
 			continue;
