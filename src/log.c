@@ -6,114 +6,51 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.22 2001-01-28 22:39:02 arensb Exp $
+ * $Id: log.c,v 1.23 2001-10-06 22:13:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
+#include <stdarg.h>		/* Variable-length argument lists */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
+#include "pconn/pconn.h"
 #include "coldsync.h"
 
-char *synclog = NULL;		/* Log that'll be uploaded to the Palm */
-static int log_size = 0;	/* Size of 'synclog' */
-static int log_len = 0;		/* Length of log == strlen(synclog) */
-
-/* add_to_log
- * Unfortunately, the DlpAddSyncLogEntry() function's name is
- * misleading: it doesn't allow you to add to the sync log; rather, it
- * allows you to write a single log message.
- * The add_to_log() function gets around this: it allows you to build
- * up a log entry one string at a time. At the end of the sync, the
- * entire log will be written to the Palm.
+/* va_add_to_log
+ * Takes a printf()-style-formatted log message, and sends it to the
+ * Palm on 'pconn'.
+ * Returns 0 if successful, or a negative value in case of error.
  */
-/* XXX - This isn't the prettiest setup imaginable, what with the
- * global variables and all. Since a log is associated with a
- * particular sync, it might be better to add a 'log' field to 'struct
- * Palm'.
+/* XXX - DLPC_MAXLOGLEN is the maximum length for the entire log on
+ * the Palm. If the current message would make the total log longer
+ * than that, then the entire current message is dropped. It might be
+ * nice to keep track of the log length so far, and truncate the
+ * current message to that portion which will fit.
  */
 int
-add_to_log(const char *msg)
+va_add_to_log(PConnection *pconn, const char *fmt, ...)
 {
-	int msglen;		/* Length of 'msg' */
+	int err;
+	va_list ap;
+	static char buf[DLPC_MAXLOGLEN];
 
-	SYNC_TRACE(6)
-		fprintf(stderr, "add_to_log(\"%s\")\n", msg);
+	/* Format and print the message to 'buf' */
+	va_start(ap, fmt);
+	err = vsnprintf(buf, DLPC_MAXLOGLEN, fmt, ap);
 
-	if (msg == NULL)
-		return 0;	/* Don't bother with empty messages */
-	msglen = strlen(msg);
+	SYNC_TRACE(4)
+		fprintf(stderr,
+			"va_add_to_log: vsnprintf() returned %d, "
+			"buf == [%.*s]\n",
+			err, DLPC_MAXLOGLEN, buf);
+	if (err < 0)
+		return err;
 
-	/* Increase the size of the log buffer, if necessary */
-	if (log_len + msglen >= log_size)
-	{
-		char *newlog;
-		int newsize;
-
-		if (log_size == 0)
-		{
-			/* First time around. Need to allocate a new
-			 * log buffer. Make it big enough for the
-			 * current string, rounded up to the nearest
-			 * Kb.
-			 */
-			newsize = (msglen + 1023) & (~0x03ff);
-			SYNC_TRACE(7)
-				fprintf(stderr, "Creating initial synclog, "
-					"newsize == %d\n",
-					newsize);
-
-			if ((newlog = malloc(newsize)) == NULL)
-			{
-				Error(_("%s: Out of memory."),
-					"add_to_log");
-				Perror("malloc");
-				return -1;
-			}
-
-			synclog = newlog;
-			synclog[0] = '\0';
-			log_len = 0;
-			log_size = newsize;
-			SYNC_TRACE(7)
-				fprintf(stderr,
-					"Now synclog == [%s]\n"
-					"    log_len == %d\n"
-					"    log_size == %d\n",
-					synclog, log_len, log_size);
-
-		} else {
-			/* Second through nth time around. The buffer
-			 * already exists, but it's too small. Double
-			 * its size. If that's still not enough,
-			 * double it again, and so forth.
-			 */
-			newsize = log_size;
-			while (log_len + msglen >= newsize)
-				newsize *= 2;
-
-			if ((newlog = realloc(synclog, newsize)) == NULL)
-			{
-				Error(_("%s: realloc(%d) failed."),
-				      "add_to_log", newsize);
-				Perror("realloc");
-				return -1;
-			}
-
-			synclog = newlog;
-			log_size = newsize;
-		}
-	}
-
-	/* Append the new message to the log */
-	strncpy(synclog+log_len, msg, log_size-log_len);
-	log_len += msglen;	/* Increase log length correspondingly */
-
-	SYNC_TRACE(7)
-		fprintf(stderr, "Now log is \"%s\"\n", synclog);
-	return 0;
+	/* Send the message to the Palm */
+	return DlpAddSyncLogEntry(pconn, buf);
 }
