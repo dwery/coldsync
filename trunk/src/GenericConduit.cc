@@ -2,7 +2,7 @@
  *
  * Methods and such for the generic conduit.
  *
- * $Id: GenericConduit.cc,v 1.3 1999-08-01 07:59:41 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.4 1999-08-25 08:00:09 arensb Exp $
  */
 #include "config.h"
 #include <iostream.h>
@@ -244,11 +244,18 @@ GenericConduit::FirstSync()
 
 	/* Go through each record and clean it up */
 	struct pdb_record *remoterec;	// Record in remote database
+	struct pdb_record *nextrec;	// Next record on the list
 
+	nextrec = 0;			// No next record (yet)
 	for (remoterec = _remotedb->rec_index.rec;
 	     remoterec != 0;
-	     remoterec = remoterec->next)
+	     remoterec = nextrec)
 	{
+		nextrec = remoterec->next;
+					// Remember this, since 'remoterec'
+					// might be modified or deleted
+					// inside the loop body
+
 		SYNC_TRACE(5)
 		{
 			cerr << "Remote Record:" << endl;
