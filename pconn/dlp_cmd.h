@@ -2,10 +2,14 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.2 1999-02-21 08:46:51 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.3 1999-02-22 10:50:13 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
+
+#include <palm/palm_types.h>
+#include <pconn/PConnection.h>
+
 /* XXX - Reorganize this file into sections, one per command.
  */
 
@@ -17,7 +21,7 @@
 #define DLPCMD_GetSysDateTime		0x13	/* Get the time on the Palm */
 #define DLPCMD_SetSysDateTime		0x14	/* Set time on the Palm */
 #define DLPCMD_ReadStorageInfo		0x15	/* Get memory info */
-#define DLPCMD_ReadDBList		0x16	/* XXX - Read database list */
+#define DLPCMD_ReadDBList		0x16	/* Read database list */
 #define DLPCMD_OpenDB			0x17	/* Open a database */
 #define DLPCMD_CreateDB			0x18	/* Create a new database */
 #define DLPCMD_CloseDB			0x19	/* Close database(s) */
@@ -445,7 +449,6 @@ struct dlp_sysinfo
 					 * NUL.
 					 */
 
-/* XXX - Should this include the 1.1 extensions? */
 struct dlp_cardinfo
 {
 	ubyte totalsize;	/* Total size of this card info */
@@ -575,6 +578,15 @@ struct dlp_createdbreq
 #define DLPCMD_CLOSEALLDBS	0xff	/* Close all databases */
 
 /*** ReadRecord ***/
+struct dlp_recinfo
+{
+	udword id;		/* Record ID */
+	uword index;		/* Record index */
+	uword size;		/* Record size */
+	ubyte attributes;	/* Record attributes */
+	ubyte category;		/* Record category */
+};
+
 /* XXX - These identifiers need work */
 struct dlp_readrecreq_byid
 {
@@ -763,28 +775,28 @@ extern "C" {
 
 /* DLP command functions */
 extern int DlpReadUserInfo(
-	int fd,
+	struct PConnection *pconn,
 	struct dlp_userinfo *userinfo);
 extern int DlpWriteUserInfo(
-	int fd,
+	struct PConnection *pconn,
 	const struct dlp_setuserinfo *userinfo);
 extern int DlpReadSysInfo(
-	int fd,
+	struct PConnection *pconn,
 	struct dlp_sysinfo *sysinfo);
 extern int DlpGetSysDateTime(
-	int fd,
+	struct PConnection *pconn,
 	struct dlp_time *ptime);
 extern int DlpSetSysDateTime(
-	int fd,
+	struct PConnection *pconn,
 	const struct dlp_time *ptime);
 extern int DlpReadStorageInfo(		/* XXX - API */
-	int fd,
+	struct PConnection *pconn,
 	const ubyte card,
 	ubyte *last_card,
 	ubyte *more,
 	struct dlp_cardinfo *cinfo);
 extern int DlpReadDBList(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte iflags,
 	const int card,
 	const uword start,
@@ -793,68 +805,76 @@ extern int DlpReadDBList(
 	ubyte *num,
 	struct dlp_dbinfo *dbs);
 extern int DlpOpenDB(
-	int fd,
+	struct PConnection *pconn,
 	int card,
 	const char *name,
 	ubyte mode,
 	ubyte *dbhandle);
 extern int DlpCreateDB(
-	int fd,
+	struct PConnection *pconn,
 	const struct dlp_createdbreq *newdb,
 	ubyte *dbhandle);
 extern int DlpCloseDB(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbhandle);
 	/* XXX - This should probably be separated into two functions:
 	 * DlpCloseDB(handle) and DlpCloseAllDBs()
 	 */
 extern int DlpDeleteDB(
-	int fd,
+	struct PConnection *pconn,
 	const int card,
 	const char *name);
 extern int DlpReadAppBlock(
-	int fd,
-	struct dlp_appblock *appblock,
-	uword *len,
-	ubyte *data);
-extern int DlpWriteAppBlock(
-	int fd,
+	struct PConnection *pconn,
+	const ubyte handle,
+	const uword offset,
+	const uword len,
+	uword *size,
+	const ubyte **data);
+extern int DlpWriteAppBlock(		/* XXX - bogus API */
+	struct PConnection *pconn,
 	const struct dlp_appblock *appblock,
 	const ubyte *data);
 extern int DlpReadSortBlock(
-	int fd,
-	struct dlp_sortblock *sortblock,
-	uword *len,
-	ubyte *data);
-extern int DlpWriteSortBlock(
-	int fd,
+	struct PConnection *pconn,
+	const ubyte handle,
+	const uword offset,
+	const uword len,
+	uword *size,
+	const ubyte **data);
+extern int DlpWriteSortBlock(		/* XXX - bogus API */
+	struct PConnection *pconn,
 	const struct dlp_sortblock *sortblock,
 	const ubyte *data);
 extern int DlpReadNextModifiedRec(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte handle,
 	struct dlp_readrecret *record);
 /* These next two functions both use ReadRecord */
 extern int DlpReadRecordByID(
-	int fd,
-	const struct dlp_readrecreq_byid *req,
-	struct dlp_readrecret *record);
-extern int DlpReadRecordByIndex(
-	int fd,
+	struct PConnection *pconn,
+	const ubyte handle,
+	const udword id,
+	const uword offset,
+	const uword len,
+	struct dlp_recinfo *recinfo,
+	const ubyte **data);
+extern int DlpReadRecordByIndex(	/* XXX - bogus API */
+	struct PConnection *pconn,
 	const struct dlp_readrecreq_byindex *req,
 	struct dlp_readrecret *record);
-extern int DlpWriteRecord(
-	int fd,
+extern int DlpWriteRecord(		/* XXX - bogus API */
+	struct PConnection *pconn,
 	const udword len,
 	const struct dlp_writerec *rec,
 	udword *recid);
 extern int DlpDeleteRecord(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid,
 	const ubyte flags,
 	const udword recid);
 extern int DlpReadResourceByIndex(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid,
 	const uword index,
 	const uword offset,
@@ -862,7 +882,7 @@ extern int DlpReadResourceByIndex(
 	struct dlp_resource *value,
 	ubyte *data);
 extern int DlpReadResourceByType(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid,
 	const udword type,
 	const uword id,
@@ -871,74 +891,77 @@ extern int DlpReadResourceByType(
 	struct dlp_resource *value,
 	ubyte *data);
 extern int DlpWriteResource(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid,
 	const udword type,
 	const uword id,
 	const uword size,
 	const ubyte *data);
 extern int DlpDeleteResource(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid,
 	const ubyte flags,
 	const udword type,
 	const uword id);
 extern int DlpCleanUpDatabase(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid);
 extern int DlpResetSyncFlags(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid);
 /* XXX - DlpCallApplication: untested */
 extern int DlpCallApplication(
-	int fd,
+	struct PConnection *pconn,
 	const udword version,
 	const struct dlp_appcall *appcall,
 	const udword paramsize,
 	const ubyte *param,
 	struct dlp_appresult *appresult);
 extern int DlpResetSystem(
-	int fd);
+	struct PConnection *pconn);
 extern int DlpAddSyncLogEntry(
-	int fd,
+	struct PConnection *pconn,
 	const char *msg);
 extern int DlpReadOpenDBInfo(
-	int fd,
+	struct PConnection *pconn,
 	ubyte handle,
 	struct dlp_opendbinfo *dbinfo);
 extern int DlpMoveCategory(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte handle,
 	const ubyte from,
 	const ubyte to);
 /* XXX - DlpProcessRPC */
 extern int DlpOpenConduit(
-	int fd);
+	struct PConnection *pconn);
 extern int DlpEndOfSync(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte status);
 extern int DlpResetRecordIndex(
-	int fd,
+	struct PConnection *pconn,
 	const ubyte dbid);
 extern int DlpReadRecordIDList(
-	int fd,
-	const struct dlp_idlistreq *idreq,
+	struct PConnection *pconn,
+	const ubyte handle,
+	const ubyte flags,
+	const uword start,
+	const uword max,
 	uword *numread,
 	udword recids[]);
 /* v1.1 functions */
-extern int DlpReadNextRecInCategory(
-	int fd,
+extern int DlpReadNextRecInCategory(		/* XXX - bogus API */
+	struct PConnection *pconn,
 	const ubyte handle,
 	const ubyte category,
 	struct dlp_readrecret *record);
-extern int DlpReadNextModifiedRecInCategory(
-	int fd,
+extern int DlpReadNextModifiedRecInCategory(	/* XXX - bogus API */
+	struct PConnection *pconn,
 	const ubyte handle,
 	const ubyte category,
 	struct dlp_readrecret *record);
 /* XXX - DlpReadAppPreference: untested */
 extern int DlpReadAppPreference(
-	int fd,
+	struct PConnection *pconn,
 	const udword creator,
 	const uword id,
 	const uword len,
@@ -947,20 +970,20 @@ extern int DlpReadAppPreference(
 	ubyte *data);
 /* XXX - DlpWriteAppPreference: untested */
 extern int DlpWriteAppPreference(
-	int fd,
+	struct PConnection *pconn,
 	const udword creator,
 	const uword id,
 	const ubyte flags,
 	const struct dlp_apppref *pref,
 	const ubyte *data);
 extern int DlpReadNetSyncInfo(
-	int fd,
+	struct PConnection *pconn,
 	struct dlp_netsyncinfo *netsyncinfo);
 extern int DlpWriteNetSyncInfo(
-	int fd,
+	struct PConnection *pconn,
 	const struct dlp_writenetsyncinfo *netsyncinfo);
 extern int DlpReadFeature(
-	int fd,
+	struct PConnection *pconn,
 	const udword creator,
 	const word featurenum,
 	udword *value);
