@@ -8,7 +8,7 @@ use Palm::PDB;
 use Palm::StdAppInfo;
 use ColdSync::SPC;
 
-$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.1 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::PDB::VERSION = do { my @r = (q$Revision: 1.2 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -246,6 +246,54 @@ sub catno($$)
 	return undef;
 }
 
+=head2 num_records
+
+	my $num_records = $db->num_records();
+
+Returns the number of records currently in the database. Note that this
+number changes whenever a database write of any kind of done. Since this
+can occur at any time over the life of a conduit, care should be taken
+before trusting cached C<num_records> results.
+
+=cut
+sub num_records($)
+{
+	my $self = shift;
+	die "num_records() is an instance method" unless ref $self;
+
+	die "num_records() called on unreadable database" unless $self->isReadable();
+
+	my $info = dlp_ReadOpenDBInfo($self->{'dbhandle'});
+	return undef unless defined $info;
+
+	return $info->{'numrecords'};
+}
+
+=head2 record
+
+	for (my $i = 0; $i < $num_records; $i ++)
+	{
+		process_record( $db->record( $i ) );
+	}
+
+Returns the record at the specified C<$index>.  If the record doesn't
+exist, undef is returned.
+
+=cut
+sub record($$)
+{
+	my $self = shift;
+	my $index = shift;
+	die "record() is an instance method" unless ref $self;
+
+	die "record() called on unreadable database" unless $self->isReadable();
+
+	my $rawrec = dlp_ReadRecordByIndex($self->{'dbhandle'}, $index, 0, -1);
+	return undef unless defined $rawrec;
+
+	return $self->{'helper'}->ParseRecord(%{$rawrec});
+}
+
 =head2 records
 
 	my @records = $db->records();
@@ -270,9 +318,6 @@ sub records($)
 
 	die "records() called on unreadable database" unless $self->isReadable();
 
-	my $info = dlp_ReadOpenDBInfo($self->{'dbhandle'});
-	return () unless defined $info and $info->{numrecords} > 0;
-
 	# XXX if records were treated as the right kind of objects
 	# (tied hashes, probably), we could just load the record Id list
 	# and Dlp request the record bits when the record fields were accessed,
@@ -280,8 +325,10 @@ sub records($)
 	# cache in order to handle things like deletions and writes and
 	# some extra smarts to know when the database went away.
 
+	my $num_records = $self->num_records();
+
 	my @records;
-	for (my $i = 0; $i < $info->{numrecords}; $i ++)
+	for (my $i = 0; $i < $num_records; $i ++)
 	{
 		my $rawrec = dlp_ReadRecordByIndex($self->{'dbhandle'}, $i, 0, -1);
 		next unless defined $rawrec;
