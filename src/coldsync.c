@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.109 2001-11-12 01:05:32 arensb Exp $
+ * $Id: coldsync.c,v 1.110 2001-11-12 05:49:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -539,7 +539,11 @@ run_mode_Standalone(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     PCONNFL_PROMPT))
+				     PCONNFL_PROMPT |
+				     (sync_config->listen->flags &
+				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				      0)
+		     ))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1331,7 +1335,10 @@ run_mode_Backup(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     PCONNFL_PROMPT))
+				     PCONNFL_PROMPT |
+				     (sync_config->listen->flags &
+				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				      0)))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1475,7 +1482,10 @@ run_mode_Restore(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     PCONNFL_PROMPT))
+				     PCONNFL_PROMPT |
+				     (sync_config->listen->flags &
+				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				      0)))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1615,7 +1625,10 @@ run_mode_Init(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     PCONNFL_PROMPT))
+				     PCONNFL_PROMPT |
+				     (sync_config->listen->flags &
+				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				      0)))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -2063,7 +2076,10 @@ run_mode_Daemon(int argc, char *argv[])
 	}
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(devname, devtype, protocol, 0))
+	if ((pconn = new_PConnection(devname, devtype, protocol,
+				     sync_config->listen->flags &
+				     LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				     0))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
