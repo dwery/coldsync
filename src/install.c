@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.3 1999-11-04 10:53:13 arensb Exp $
+ * $Id: install.c,v 2.4 1999-11-09 06:37:02 arensb Exp $
  */
 
 #include "config.h"
@@ -52,7 +52,6 @@
  * Go through the install directory. If there are any databases there
  * that don't exist on the Palm, install them.
  */
-/* XXX - Trace statements */
 /* XXX - Add an argument to say whether or not to delete each file after
  * consideration. Actually, it'd probably be best not to use rename() for
  * this: we need to pdb_Read() the file in any case; so we should be able
