@@ -2,7 +2,7 @@
  *
  * Convenience functions for logging.
  *
- * $Id: log.c,v 1.4 1999-08-01 08:06:14 arensb Exp $
+ * $Id: log.c,v 1.5 1999-08-25 09:51:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -59,6 +59,10 @@ add_to_log(char *msg)
 			perror("realloc");
 			return -1;
 		}
+		if (log_size == 0)
+			newlog[0] = '\0';	/* Terminate the
+						 * newly-allocated string
+						 */
 		synclog = newlog;
 		log_size = newsize;
 	}
