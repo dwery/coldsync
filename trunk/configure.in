@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.114 2001-01-14 12:19:43 arensb Exp $
+dnl # $Id: configure.in,v 1.115 2001-01-30 08:07:12 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -198,6 +198,9 @@ else
 	fi
 	CS_CHECK_GNU_PROGS(GETTEXT, gettext, true)
 	CS_CHECK_GNU_PROGS(MSGMERGE, msgmerge, true)
+
+	dnl # XXX - /usr/imports/bin/X11/msgfmt on nomad (DU) does something
+	dnl # unexpected. This is the wrong msgfmt
 	CS_CHECK_GNU_PROGS(MSGFMT, msgfmt, true)
 	if test "$MSGFMT" = "true"; then
 		INSTALL_I18N=no
@@ -288,13 +291,6 @@ fi
 
 ## Checks for libraries.
 
-# XXX - RedHat 6.0 has gethostbyname() in libnsl, but also has it in
-# libc. This test adds "-lnsl" to $LIBS, even though it isn't
-# required.
-AC_CHECK_LIB(nsl,gethostbyname,
-	LIBS="$LIBS -lnsl",
-	# Under UnixWare 7.1.0, gethostbyname() is in libsocket.
-	AC_CHECK_LIB(socket,gethostbyname))
 AC_CHECK_LIB(y, yyerror, LIBYACC="-ly")
 AC_SUBST(LIBYACC)
 
@@ -307,10 +303,14 @@ AC_CHECK_HEADERS([\
 	fcntl.h \
 	libintl.h \
 	locale.h \
+	resolv.h \
 	strings.h \
+	stropts.h \
 	termios.h \
 	unistd.h \
+	arpa/nameser.h \
 	sys/select.h \
+	sys/sockio.h \
 	sys/time.h \
 	sys/types.h \
 	sys/param.h \
@@ -382,11 +382,6 @@ fi
 ## Checks for library functions.
 AC_CHECK_FUNCS(fpurge \
 	getopt \
-	inet_aton \
-	inet_ntoa \
-	inet_ntop \
-	inet_pton \
-	gethostbyname2 \
 	memcpy \
 	memset \
 	bzero \
@@ -400,21 +395,60 @@ AC_CHECK_FUNCS(fpurge \
 	strcasecmp \
 	strncasecmp \
 	snprintf \
-	vfprintf
+	vfprintf \
+	vsnprintf
 )
 
-if test x"$ac_cv_func_inet_pton" != xyes; then
-	if test x"$ac_cv_func_inet_aton" != xyes; then
+# Look for inet_pton(). If it's not found, we'll use inet_aton() instead
+AC_SEARCH_LIBS(inet_pton, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_PTON))
+AC_SEARCH_LIBS(inet_aton, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_ATON))
+
+if test x"$ac_cv_search_inet_pton" = xno; then
+	if test x"$ac_cv_search_inet_aton" = xno; then
 		AC_MSG_WARN([
 	Gah! You have neither inet_pton() nor inet_aton()! You need to
-	install a newer OS. I bet this one won't even run BLAZEMONGER,
+	install a better OS. I bet this one won't even run BLAZEMONGER,
 	and that runs on Amigas, toasters, and even dead rodents!])
 		EXIT_STATUS=1
 	fi
 fi
 #'
-# Assume that if inet_pton() or inet_aton() exists, then so does
-# inet_ntop() or inet_ntoa()
+
+# Look for inet_ntop(). If it's not found, we'll use inet_ntoa() instead
+AC_SEARCH_LIBS(inet_ntop, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_NTOP))
+AC_SEARCH_LIBS(inet_ntoa, nsl, AC_DEFINE_UNQUOTED(HAVE_INET_NTOA))
+
+if test x"$ac_cv_search_inet_ntop" = xno; then
+	if test x"$ac_cv_search_inet_ntoa" = xno; then
+		AC_MSG_WARN([
+	Gah! You have neither inet_ntop() nor inet_ntoa()! You need to
+	install a better OS. I bet this one won't even run BLAZEMONGER,
+	and that runs on Amigas, toasters, and even dead rodents!])
+		EXIT_STATUS=1
+	fi
+fi
+#'
+
+# Look for gethostbyname2(). If it doesn't exist, we'll use
+# gethostbyname() instead.
+#
+# RedHat 6.0 has gethostbyname() in libnsl, but also has it in
+# libc.
+# Under UnixWare 7.1.0, gethostbyname() is in libsocket.
+AC_SEARCH_LIBS(gethostbyname2, resolv nsl socket,dnl
+	AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME2))
+AC_SEARCH_LIBS(gethostbyname, resolv nsl socket,dnl
+	AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME))
+
+if test x"$ac_cv_search_gethostbyname2" = xno; then
+	if test x"$ac_cv_search_gethostbyname" = xno; then
+		AC_MSG_WARN([
+	Furrfu! You have neither gethostbyname2() nor gethostbyname().
+	Here's a nickel, kid. Get yourself a better OS.])
+		EXIT_STATUS=1
+	fi
+fi
+#'
 
 # Check whether O_BINARY is defined. It's known to exist under Windows
 # (NT); not sure whether it's universal or if it's specific to Cygwin,
@@ -427,9 +461,6 @@ AC_TRY_COMPILE(
 	AC_DEFINE_UNQUOTED(HAVE_O_BINARY),
 
 	AC_MSG_RESULT(no))
-
-AC_MSG_CHECKING([for socks behind the sofa])
-AC_MSG_RESULT([no])
 
 # Optional USB support
 # (Only works under FreeBSD 4.x, for now)
@@ -458,6 +489,9 @@ if test x"$WITH_USB" != xno; then
 		AC_MSG_RESULT(yes)],dnl
 		[AC_MSG_RESULT(no)])
 fi
+
+AC_MSG_CHECKING([for socks behind the sofa])
+AC_MSG_RESULT([no])
 
 ## Developer-only options
 AC_DIVERT_PUSH(AC_DIVERSION_NOTICE)dnl
