@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.28 2004-02-25 11:36:55 azummo Exp $
+# $Id: SPC.pm,v 1.29 2004-03-27 15:34:19 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.28 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.29 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -1192,7 +1192,7 @@ sub dlp_DeleteAllRecords
 {
 	my $dbh = shift;	# Database handle
 
-	return _dlp_DeleteRecord($dbh, 0, 0x80);
+	return dlp_DeleteRecord($dbh, 0, 0x80);
 				# XXX - YAHC, Yet Another Hard coded Constant
 }
 
