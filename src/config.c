@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.14 2000-01-13 18:20:24 arensb Exp $
+ * $Id: config.c,v 1.15 2000-01-19 06:14:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -74,7 +74,6 @@ static int get_userinfo(struct userinfo *userinfo);
 static int get_maxfds(void);
 
 /* get_maxfds
-
  * Return the size of the file descriptor table, using whichever method is
  * available.
  */
@@ -90,103 +89,7 @@ get_maxfds(void)
 #  error "Don't know how to get size of file descriptor table."
 #endif	/* HAVE_SYSCONF */
 
-#if 0
-/* load_config
- * Read the configuration for this instance of 'coldsync'.
- */
-int
-load_config()
-{
-	int err;
-	int i;
-	static char hostname[MAXHOSTNAMELEN+1];	/* Buffer to hold this
-						 * host's name. */
-	struct hostent *myaddr;
-
-	/* Load the site-wide config file */
-fprintf(stderr, "Reading site-wide config file [%s]\n",
-	global_opts.config_file);
-
-	err = parse_config(global_opts.config_file, &config);
-	if (err < 0)
-		return -1;
-
-	/* By default, the host ID is its IP address. */
-	/* Get the hostname */
-	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
-	{
-		fprintf(stderr, _("Can't get host name\n"));
-		perror("gethostname");
-		return -1;
-	}
-	MISC_TRACE(2)
-		fprintf(stderr, "My name is \"%s\"\n", hostname);
-
-	/* Look up the hostname */
-	if ((myaddr = gethostbyname(hostname)) == NULL)
-	{
-		fprintf(stderr, _("Can't look up my address\n"));
-		perror("gethostbyname");
-		return -1;
-	}
-	MISC_TRACE(2)
-	{
-		fprintf(stderr, _("My canonical name is \"%s\"\n"),
-			myaddr->h_name);
-		fprintf(stderr, "My aliases are:\n");
-		for (i = 0; myaddr->h_aliases[i] != NULL; i++)
-		{
-			fprintf(stderr, "    %d: \"%s\"\n", i,
-				myaddr->h_aliases[i]);
-		}
-		fprintf(stderr, "My address type is %d\n", myaddr->h_addrtype);
-	}
-
-	/* XXX - There should probably be functions to deal with other
-	 * address types (e.g., IPv6). Maybe just hash them down to 4
-	 * bytes. Hm... actually, that might work for all address types, so
-	 * no need to test for AF_INET specifically.
-	 */
-	if (myaddr->h_addrtype != AF_INET)
-	{
-		fprintf(stderr, _("Hey! This isn't an AF_INET address!\n"));
-		return -1;
-	} 
-
-	MISC_TRACE(2)
-	{
-		fprintf(stderr, "My address length is %d\n", myaddr->h_length);
-		fprintf(stderr, "My addresses are:\n");
-		for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
-		{
-			fprintf(stderr, "    Address %d:\n", i);
-			debug_dump(stderr, "ADDR",
-				   (const ubyte *) myaddr->h_addr_list[i],
-				   myaddr->h_length);
-		}
-	}
-
-	/* Make sure there's at least one address */
-	if (myaddr->h_addr_list[0] == NULL)
-	{
-		fprintf(stderr, _("This host doesn't appear to have an IP address.\n"));
-		return -1;
-	}
-
-	/* Use the first address as the host ID */
-	hostid = (((udword) myaddr->h_addr_list[0][0] & 0xff) << 24) |
-		(((udword) myaddr->h_addr_list[0][1] & 0xff) << 16) |
-		(((udword) myaddr->h_addr_list[0][2] & 0xff) << 8) |
-		((udword) myaddr->h_addr_list[0][3] & 0xff);
-	MISC_TRACE(2)
-		fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
-
-	return 0;
-}
-#endif	/* 0 */
-
 /* get_config
- * XXX - Once this is working, get rid of load_config().
  * Get the initial configuration: parse command-line arguments and load the
  * configuration file, if any.
  * For now, this assumes standalone mode, not daemon mode.
@@ -199,6 +102,7 @@ fprintf(stderr, "Reading site-wide config file [%s]\n",
 int
 get_config(int argc, char *argv[])
 {
+	int err;
 	int oldoptind;			/* Previous value of 'optind', to
 					 * allow us to figure out exactly
 					 * which argument was bogus, and
@@ -215,12 +119,14 @@ get_config(int argc, char *argv[])
 					 */
 	struct stat statbuf;		/* For stat() */
 	char *devname = NULL;		/* Name of device to listen on */
-			/* XXX - Name collision with global variable */
 	struct config *user_config = NULL;
 					/* Configuration read from config
 					 * file (as opposed to what was
 					 * specified on the command line).
 					 */
+	static char hostname[MAXHOSTNAMELEN+1];	/* Buffer to hold this
+						 * host's name. */
+	struct hostent *myaddr;
 
 	/* Initialize the global options to sane values */
 	global_opts.do_backup	= False;
@@ -245,6 +151,52 @@ get_config(int argc, char *argv[])
 	sys_maxfds = get_maxfds();	/* Get the size of the file
 					 * descriptor table.
 					 */
+
+	/* By default, the host ID is its IP address. */
+	/* Get the hostname */
+	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
+	{
+		fprintf(stderr, _("Can't get host name\n"));
+		perror("gethostname");
+		return -1;
+	}
+
+	/* Look up the hostname */
+	if ((myaddr = gethostbyname(hostname)) == NULL)
+	{
+		fprintf(stderr, _("Can't look up my address\n"));
+		perror("gethostbyname");
+		return -1;
+	}
+
+	/* XXX - There should probably be functions to deal with other
+	 * address types (e.g., IPv6). Maybe just hash them down to 4
+	 * bytes. Hm... actually, that might work for all address types, so
+	 * no need to test for AF_INET specifically.
+	 */
+	if (myaddr->h_addrtype != AF_INET)
+	{
+		fprintf(stderr, _("Hey! This isn't an AF_INET address!\n"));
+		return -1;
+	} 
+
+	/* Make sure there's at least one address */
+	if (myaddr->h_addr_list[0] == NULL)
+	{
+		fprintf(stderr,
+			_("This host doesn't appear to have an "
+			  "IP address.\n"));
+		return -1;
+	}
+
+	/* Use the first address as the host ID */
+	hostid = (((udword) myaddr->h_addr_list[0][0] & 0xff) << 24) |
+		(((udword) myaddr->h_addr_list[0][1] & 0xff) << 16) |
+		(((udword) myaddr->h_addr_list[0][2] & 0xff) << 8) |
+		((udword) myaddr->h_addr_list[0][3] & 0xff);
+	MISC_TRACE(2)
+		fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
+
 	/* XXX - Any other system-dependent values that should be
 	 * determined at runtime?
 	 */
@@ -335,6 +287,31 @@ get_config(int argc, char *argv[])
 		 * -dmisc flag hasn't been parsed then.
 		 */
 		fprintf(stderr, "sys_maxfds == %d\n", sys_maxfds);
+	MISC_TRACE(2)
+	{
+		int i;
+
+		fprintf(stderr, "My name is \"%s\"\n", hostname);
+		fprintf(stderr, _("My canonical name is \"%s\"\n"),
+			myaddr->h_name);
+		fprintf(stderr, "My aliases are:\n");
+		for (i = 0; myaddr->h_aliases[i] != NULL; i++)
+		{
+			fprintf(stderr, "    %d: \"%s\"\n", i,
+				myaddr->h_aliases[i]);
+		}
+		fprintf(stderr, "My address type is %d\n", myaddr->h_addrtype);
+
+		fprintf(stderr, "My address length is %d\n", myaddr->h_length);
+		fprintf(stderr, "My addresses are:\n");
+		for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
+		{
+			fprintf(stderr, "    Address %d:\n", i);
+			debug_dump(stderr, "ADDR",
+				   (const ubyte *) myaddr->h_addr_list[i],
+				   myaddr->h_length);
+		}
+	}
 
 	/* XXX - Check for trailing arguments. If they're of the form
 	 * "FOO=bar", set the variable $FOO to value "bar". Otherwise,
