@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.100 2001-09-07 10:05:46 arensb Exp $
+ * $Id: coldsync.c,v 1.101 2001-09-07 10:57:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2974,7 +2974,7 @@ Connect(PConnection *pconn)
 						 * part of the initial
 						 * socket setup.
 						 */
-	pcaddr.port = SLP_PORT_DLP;
+	pcaddr.port = (ubyte) SLP_PORT_DLP;
 	PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
 	if ((*pconn->io_accept)(pconn) < 0)
 	{
