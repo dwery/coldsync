@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.5 2000-02-06 22:33:45 arensb Exp $
+# $Id: Make.rules.in,v 1.6 2000-04-09 13:45:26 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -51,6 +51,7 @@ LINTARGS =	@LINTARGS@ ${CPPFLAGS}
 RANLIB =	@RANLIB@
 
 # Other programs and utilities
+PERL =		@PERL@
 TAR =		@TAR@
 GZIP =		@GZIP@
 DATE =		@DATE@
