@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.18 2000-04-09 14:33:45 arensb Exp $
+ * $Id: conduit.c,v 1.19 2000-05-06 11:39:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -141,20 +141,19 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	int laststatus;		/* The last status code printed by the
 				 * child. This is used as its exit status.
 				 */
+	struct cond_header *hdr;	/* User-supplied header */
 
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
 	 * built-in conduit.
 	 */
-	/* XXX - Ideally, it should be possible to define a conduit with no
-	 * path: just say
-	 *	conduit dump {
-	 *		type * / *;
-	 *		final;
-	 *	}
-	 * as a dummy conduit, just to say that it's the last conduit.
-	 */
+
+	if (conduit->path == NULL)
+		/* This conduit has no path. It does nothing. This can be
+		 * useful for defining a do-nothing default.
+		 */
+		return 201;		/* Success (trivially) */
 
 	argv[0] = conduit->path;	/* Path to conduit */
 	argv[1] = "conduit";		/* Mandatory argument */
@@ -224,7 +223,15 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	 * conduit only)
 	 */
 	/* XXX - Other header lines */
-	/* XXX - User-supplied header lines */
+
+	/* User-supplied header lines */
+	for (hdr = conduit->headers; hdr != NULL; hdr = hdr->next)
+	{
+		cond_sendheader(hdr->name,
+				hdr->value, strlen(hdr->value),
+				tochild, fromchild);
+		/* XXX - Error-checking */
+	}
 
 	/* Send an empty line to the child (end of input) */
 	cond_sendline("\n", 1, tochild, fromchild);
@@ -250,16 +257,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	fclose(tochild);
 	fclose(fromchild);
 
-	/* If this is a final conduit, don't look any further. */
-	if (conduit->flags & CONDFL_FINAL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "This is a final conduit. "
-				"Not looking any further.\n");
-
-		return laststatus;
-	}
-
 	return laststatus;
 }
 
@@ -269,10 +266,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
  * descriptors, and runs all of the ones that match.
  *
  * Returns 0 if successful, or a negative value in case of error.
- */
-/* XXX - Default conduits:
- * Figure out how to run the last conduit marked 'default', but only if no
- * others have run.
  */
 static int
 run_conduits(struct dlp_dbinfo *dbinfo,
@@ -320,7 +313,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 			SYNC_TRACE(5)
 				fprintf(stderr,
 					"  Creator: database is 0x%08lx "
-					"(%c%c%c%c), conduit is 0x%08lx. "
+					"(%c%c%c%c), conduit is 0x%08lx "
 					"(%c%c%c%c).\n\t=>Not applicable.\n",
 					dbinfo->creator,
 					(char) ((dbinfo->creator >>24) & 0xff),
@@ -367,7 +360,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		if (conduit->flags & CONDFL_DEFAULT)
 		{
 			SYNC_TRACE(2)
-				fprintf(stderr, "This is a default conduit. "
+				fprintf(stderr, "  This is a default conduit. "
 					"Remembering for later.\n");
 
 			/* Remember this conduit as the default if no other
@@ -382,6 +375,16 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 
 		/* XXX - Error-checking. Report the conduit's exit status
 		 */
+
+		/* If this is a final conduit, don't look any further. */
+		if (conduit->flags & CONDFL_FINAL)
+		{
+			SYNC_TRACE(2)
+				fprintf(stderr, "  This is a final conduit. "
+					"Not looking any further.\n");
+
+			return 0;
+		}
 	}
 
 	if ((!found_conduit) && (def_conduit != NULL))
@@ -834,6 +837,10 @@ cond_sendheader(const char *field,	/* Header field to send */
 {
 	static char outbuf[COND_MAXLINELEN+1];	/* Output buffer */
 	int fieldnamelen;			/* Length of 'field' */
+
+	SYNC_TRACE(6)
+		fprintf(stderr, "Sending conduit header:\n  [%s]->[%s]\n",
+			field, data);
 
 	/* The field label is assumed to be a plain string */
 	fieldnamelen = strlen(field);
