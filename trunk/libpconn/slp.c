@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.1 1999-09-09 05:18:25 arensb Exp $
+ * $Id: slp.c,v 1.2 1999-11-04 10:45:52 arensb Exp $
  */
 
 #include "config.h"
@@ -16,14 +16,14 @@
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
 #include <string.h>	/* For memset() */
-/*  #include "coldsync.h" */
 #include <pconn/palm_errno.h>
 #include <pconn/slp.h>
 #include <pconn/util.h>
 #include <pconn/PConnection.h>
 
-#define SLP_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
-				 * back in */
+int slp_trace = 0;		/* Debugging level for SLP stuff */
+
+#define SLP_TRACE(n)	if (slp_trace >= (n))
 
 /* slp_preamble
  * This is the preamble of every SLP packet.
