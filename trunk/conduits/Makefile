@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2004-11-02 04:22:19 christophe Exp $
+# $Id: Makefile,v 1.19 2004-11-07 22:47:02 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -10,7 +10,8 @@ PERL_CONDUITS =	copy-appinfo \
 		send-mail-2 \
 		mbox-inbox \
 		todo-text \
-		archive-sync
+		archive-sync \
+		purge-todo
 
 # XXX - memo-text and std-categories aren't ready for prime time, so
 # they're listed under DISTFILES so they won't be installed.
