@@ -1,3 +1,6 @@
+- Under Solaris, defining _XPG4_2 might induce standards-compliance,
+  and make things happier. There's a comment in PConnection_net.c that
+  says that this causes all sorts of other problems, though.
 - Document "-s" option.
 - Document "-l logfile" option.
 - With a Visor, if there's no pda{} block that matches exactly,
