@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.2 1999-07-12 09:47:18 arensb Exp $
+ * $Id: coldsync.c,v 1.3 1999-07-12 11:35:30 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), atoi() */
@@ -1007,7 +1007,7 @@ parse_args(int argc, char *argv[])
 					 */
 
 	/* Get each option in turn */
-	while ((arg = getopt(argc, argv, ":hVcSFRu:b:r:p:f:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRu:b:r:p:f:d:")) != -1)
 	{
 		switch (arg)
 		{
@@ -1015,7 +1015,7 @@ parse_args(int argc, char *argv[])
 			usage(argc,argv);
 			return -1;
 
-		    case 'V':	/* -v: Print version number and exit */
+		    case 'V':	/* -V: Print version number and exit */
 			print_version();
 			return -1;
 
