@@ -1,0 +1,27 @@
+
+ColdSync 3.0
+============
+
+
+	There are a lot of new features in the 3.0 release of ColdSync.
+
+	- Working Network Hotsync, both in inetd and standalone mode.
+	- Improved USB support.
+	- Named listen blocks. You can use the --listen <blockname> option to select the
+	  one you like.
+	- Autoinitialization of flash-based devices in daemon mode.
+	- Optional autoinitialization with init conduits.
+	- Faster download of the databases list with recent PalmOS devices
+	  (DLP >= 1.2).
+	- "type: none;" conduits, to allow conduits to run without an
+	  associated database.
+	- Improved error detection and reporting.
+	- Improved syntax:
+		'coldsync -m install' to quickly install new files.
+		'coldsync -m fetch' to download one from your PDA.
+		'coldsync -m list' to list your files.
+	- N-palms -> single-unix-user mapping in daemon mode.
+	- Linux capabilities support (libcap).
+	- Support for libusb.
+	- COnfiguration files moved to /etc/coldsync .
+
