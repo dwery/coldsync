@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.8 2001-07-28 19:41:01 arensb Exp $
+ * $Id: netsync.c,v 1.9 2001-07-30 07:19:48 arensb Exp $
  */
 
 #include "config.h"
@@ -118,6 +118,177 @@ ubyte ritual_resp3[] = {
 	0x00, 0x00,
 };
 
+/* ritual_exch_server
+ * Exchange ritual packets with the Palm. We are acting as the server
+ * (i.e., the other end originated the connection).
+ * It is not known what the ritual packets are. This function doesn't try
+ * to analyze them or anything.
+ * Returns 0 if successful, -1 in case of error.
+ */
+int
+ritual_exch_server(PConnection *pconn)
+{
+	int err;
+	const ubyte *inbuf;
+	uword inlen;
+
+	/* Receive ritual response 1 */
+	/* Agh! This is hideous! Apparently NetSync and m50x modes are
+	 * identical except for just this one packet!
+	 */
+	switch (pconn->protocol)
+	{
+	    case PCONN_STACK_NET:
+		err = netsync_read_method(pconn, &inbuf, &inlen, False);
+		break;
+
+	    case PCONN_STACK_SIMPLE:
+		inlen = ritual_resp1_size;
+		err = netsync_read_method(pconn, &inbuf, &inlen, True);
+		break;
+
+	    default:
+		/* XXX - No other protocols should be using this. Notify of
+		 * error: unsupported protocol.
+		 */
+		return -1;
+	}
+
+	IO_TRACE(5)
+	{
+		fprintf(stderr,
+			"netsync_read(ritual resp 1) returned %d\n",
+			err);
+		if (err > 0)
+			debug_dump(stderr, "<<<", inbuf, inlen);
+	}
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Send ritual statement 2 */
+	err = netsync_write(pconn, ritual_stmt2, ritual_stmt2_size);
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
+			err);
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Receive ritual response 2 */
+	err = netsync_read(pconn, &inbuf, &inlen);
+	IO_TRACE(5)
+	{
+		fprintf(stderr, "netsync_read returned %d\n", err);
+		if (err > 0)
+			debug_dump(stderr, "<<<", inbuf, inlen);
+	}
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Send ritual statement 3 */
+	err = netsync_write(pconn, ritual_stmt3, ritual_stmt3_size);
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
+			err);
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Receive ritual response 3 */
+	err = netsync_read(pconn, &inbuf, &inlen);
+	IO_TRACE(5)
+	{
+		fprintf(stderr, "netsync_read returned %d\n", err);
+		if (err > 0)
+			debug_dump(stderr, "<<<", inbuf, inlen);
+	}
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	return 0;
+}
+
+/* ritual_exch_client
+ * Exchange ritual packets with the Palm. We are acting as the client
+ * (i.e., we originated the connection).
+ * The ritual packets are quite mysterious. This function doesn't try to
+ * analyze them or anything.
+ * Returns 0 if successful, -1 in case of error.
+ */
+int
+ritual_exch_client(PConnection *pconn)
+{
+	int err;
+	ubyte inbuf[1024];		/* XXX - Fixed size: bad */
+	const ubyte *netbuf;		/* Buffer from netsync layer */
+	uword inlen;
+
+	/* Send ritual response 1 */
+	err = netsync_write(pconn, ritual_resp1, ritual_resp1_size);
+	/* XXX - Error-checking */
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual resp 1) returned %d\n",
+			err);
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Receive ritual statement 2 */
+	err = netsync_read(pconn, &netbuf, &inlen);
+	/* XXX - Error-checking */
+	IO_TRACE(5)
+	{
+		fprintf(stderr,
+			"netsync_read(ritual stmt 2) returned %d\n",
+			err);
+		if (err > 0)
+			debug_dump(stderr, "<<<", inbuf, inlen);
+	}
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Send ritual response 2 */
+	err = netsync_write(pconn, ritual_resp1, ritual_resp2_size);
+	/* XXX - Error-checking */
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual resp 2) returned %d\n",
+			err);
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Receive ritual statement 3 */
+	err = netsync_read(pconn, &netbuf, &inlen);
+	/* XXX - Error-checking */
+	IO_TRACE(5)
+	{
+		fprintf(stderr,
+			"netsync_read(ritual stmt 3) returned %d\n",
+			err);
+		if (err > 0)
+			debug_dump(stderr, "<<<", inbuf, inlen);
+	}
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	/* Send ritual response 3 */
+	err = netsync_write(pconn, ritual_resp1, ritual_resp3_size);
+	/* XXX - Error-checking */
+	IO_TRACE(5)
+		fprintf(stderr, "netsync_write(ritual resp 3) returned %d\n",
+			err);
+	if (err < 0)
+		/* XXX - Indicate error */
+		return -1;
+
+	return 0;
+}
+
 /* bump_xid
  * Pick a new NetSync transaction ID by incrementing the existing one.
  * XXX - If, in fact, NetSync uses PADP, then there might be reserved XIDs,
@@ -165,7 +336,7 @@ netsync_read(PConnection *pconn,	/* Connection to Palm */
 					/* XXX - Is a uword enough? */
 
 {
-  return netsync_read_method(pconn, buf, len, 0);
+	return netsync_read_method(pconn, buf, len, False);
 }
 
 /* netsync_read
@@ -173,6 +344,9 @@ netsync_read(PConnection *pconn,	/* Connection to Palm */
  * packet data (without the NetSync header) is put in '*buf'. The
  * length of the data (not counting the NetSync header) is put in
  * '*len'.
+ * If 'no_header' is true, then netsync_read() does not attempt to read the
+ * packet header. Instead, it reads the expected length of the packet from
+ * *len.
  *
  * If successful, returns a non-negative value. In case of error, returns a
  * negative value and sets 'palm_errno' to indicate the error.
@@ -195,7 +369,8 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	NET_TRACE(3)
 		fprintf(stderr, "Inside netsync_read()\n");
 
-	if (!no_header) {
+	if (!no_header)
+	{
 		/* Read packet header */
 	  	err = (*pconn->io_read)(pconn, hdr_buf, NETSYNC_HDR_LEN);
 		if (err < 0)
@@ -225,9 +400,8 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 			  hdr.cmd, hdr.xid, hdr.len);
 
 		/* XXX - What to do if cmd != 1? */
-	} else {
+	} else
 		hdr.len = *len;
-	}
 
 	/* Allocate space for the payload */
 	if (pconn->net.inbuf == NULL)
@@ -269,7 +443,8 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	NET_TRACE(6)
 		debug_dump(stderr, "NET <<<", pconn->net.inbuf, got);
 
-	*buf = pconn->net.inbuf;	/* Tell caller where to find the data */
+	*buf = pconn->net.inbuf;	/* Tell caller where to find the
+					 * data */
 	*len = hdr.len;			/* And how much of it there was */
 
 	return 1;			/* Success */
