@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.37 2001-10-12 03:59:33 arensb Exp $
+ * $Id: lexer.l,v 2.38 2001-10-18 01:59:00 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -200,7 +200,6 @@ QSTR		[^\\\$\"\n]
 "Heathen"	{ KEYWORD(UNSAVED);	}
 
  /* Hardware protocols */
-"usb_m50x"	{ KEYWORD(USB_M50X);	}
 "net"		{ KEYWORD(NET);	}
 "network"	{ KEYWORD(NET);		/* Synonym */	}
 "serial"	{ KEYWORD(SERIAL);	}
@@ -210,7 +209,6 @@ QSTR		[^\\\$\"\n]
  /* "default" already in conduit options */
 "full"		{ KEYWORD(FULL);	}
 "simple"	{ KEYWORD(SIMPLE);	}
-"m50x"		{ KEYWORD(SIMPLE)	/* Synonym */	}
  /* "net" already in keywords */
 
  /* Conduit flavors */
