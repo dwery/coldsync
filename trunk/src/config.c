@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.51 2000-12-16 20:30:03 arensb Exp $
+ * $Id: config.c,v 1.52 2000-12-16 23:22:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -674,8 +674,6 @@ set_mode(const char *str)
 		fprintf(stderr, _("Error: unknown mode: \"%s\"\n"), str);
 		return -1;
 	}
-
-	return -1;
 }
 
 /* usage
