@@ -1,3 +1,8 @@
+/* palm_types.h
+ * Definitions of various types that PalmOS likes to use.
+ *
+ * $Id: palm_types.h,v 1.3 1999-07-04 02:51:34 arensb Exp $
+ */
 #ifndef _palm_types_h_
 #define _palm_types_h_
 
