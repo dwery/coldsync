@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.15 2000-11-14 16:23:49 arensb Exp $
+# $Id: ColdSync.pm,v 1.16 2001-03-13 05:59:54 arensb Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.15 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.16 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -184,7 +184,7 @@ sub DumpConfig
 	# requires a rewrite of the corresponding lex/yacc code to accept
 	# quotes, though.
 
-	if (%HEADERS ne ())
+	if (defined(%HEADERS) && (%HEADERS ne ()))
 	{
 		my $key;
 		my $value;
