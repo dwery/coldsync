@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.14 2000-05-19 12:03:01 arensb Exp $
+# $Id: Makefile,v 1.15 2000-12-10 01:04:23 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -33,6 +33,7 @@ DISTFILES =	README \
 		FAQ \
 		install-sh \
 		mkinstalldirs \
+		find-leaks \
 		configure
 
 # Files to include in distributions, but not in snapshots
