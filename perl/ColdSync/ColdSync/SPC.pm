@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.20 2003-06-14 17:43:56 azummo Exp $
+# $Id: SPC.pm,v 1.21 2003-06-14 21:43:20 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.20 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.21 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -225,6 +225,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_DeleteAllRecords
 	dlp_WriteRecord
 	dlp_SetDBInfo
+	dlp_ResetRecordIndex
 	dlp_ReadNextRecInCategory
 	dlp_ReadNextModifiedRec
 	dlp_ReadNextModifiedRecInCategory
@@ -1275,6 +1276,22 @@ sub _dlp_ReadRecord
 	return _unpackRecord(@argv);
 }
 
+=head2 dlp_ResetRecordIndex
+
+	dlp_ResetRecordIndex($dbh);
+
+Resets the modified index.
+=cut
+#'
+sub dlp_ResetRecordIndex($) {
+	my $dbh = shift;
+	my ($err, @argv) = dlp_req( DLPCMD_ResetRecordIndex,
+		{
+			'id' => dlpFirstArgID,
+			'data' => pack("C", $dbh),
+		});
+}
+
 =head2 dlp_ReadNextModifiedRec
 
 	$record = dlp_ReadNextModifiedRec($dbh);
@@ -1352,7 +1369,6 @@ sub dlp_ReadNextModifiedRecInCategory($$) {
 
 	return _unpackRecord(@argv);
 }
-
 
 sub dlp_WriteRecord
 {
@@ -1723,7 +1739,7 @@ sub dlp_ReadDBList($$$)
 			 $retval->{baktime}{second},
 			 $retval->{db_index},
 			 $retval->{name},
-			) = unpack("n C C C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n a*",
+			) = unpack("n C C C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n A*",
 				$_->{'data'});
 
 			warn "multiple entries from ReadDBList" if $num > 1;
