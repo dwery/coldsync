@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.20 2001-07-09 11:46:58 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.21 2001-07-11 04:33:30 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -730,17 +730,6 @@ struct dlp_netsyncinfo
 #define DLPARG_WriteNetSyncInfo_Info	DLPARG_BASE
 #define DLPARGLEN_WriteNetSyncInfo_Info	24
 
-/* XXX - This is bogus. Just have WriteNetSyncInfo() pass a separate
- * 'modflags' argument.
- */
-struct dlp_writenetsyncinfo
-{
-	ubyte modflags;		/* Indicates which fields were modified */
-
-	struct dlp_netsyncinfo netsyncinfo;
-				/* The NetSync information to write */
-};
-
 /* Flags to indicate which values are being changed by this
  * WriteNetSyncInfo request.
  */
@@ -991,7 +980,8 @@ extern int DlpReadNetSyncInfo(
 	struct dlp_netsyncinfo *netsyncinfo);
 extern int DlpWriteNetSyncInfo(
 	PConnection *pconn,
-	const struct dlp_writenetsyncinfo *netsyncinfo);
+	const ubyte modflags,
+	const struct dlp_netsyncinfo *newinfo);
 extern int DlpReadFeature(
 	PConnection *pconn,
 	const udword creator,

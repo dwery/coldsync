@@ -3,7 +3,7 @@
  * Functions for manipulating a remote Palm device via the Desktop Link
  * Protocol (DLP).
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.20 2001-07-09 11:47:05 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.21 2001-07-11 04:33:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -3610,11 +3610,11 @@ DlpReadNextRecInCategory(
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadNextRecInCategory_Rec:
-			record->id = get_udword(&rptr);
-			record->index = get_uword(&rptr);
-			record->size = get_uword(&rptr);
-			record->attributes = get_ubyte(&rptr);
-			record->category = get_ubyte(&rptr);
+			recinfo->id = get_udword(&rptr);
+			recinfo->index = get_uword(&rptr);
+			recinfo->size = get_uword(&rptr);
+			recinfo->attributes = get_ubyte(&rptr);
+			recinfo->category = get_ubyte(&rptr);
 			*data = rptr;
 
 			DLPC_TRACE(6)
@@ -3623,15 +3623,15 @@ DlpReadNextRecInCategory(
 					"Read record in category %d:\n",
 					category);
 				fprintf(stderr, "\tID == 0x%08lx\n",
-					record->id);
+					recinfo->id);
 				fprintf(stderr, "\tindex == 0x%04x\n",
-					record->index);
+					recinfo->index);
 				fprintf(stderr, "\tsize == 0x%04x\n",
-					record->size);
+					recinfo->size);
 				fprintf(stderr, "\tattributes == 0x%02x\n",
-					record->attributes);
+					recinfo->attributes);
 				fprintf(stderr, "\tcategory == 0x%02x\n",
-					record->category);
+					recinfo->category);
 			}
 			break;
 		    default:	/* Unknown argument type */
@@ -3722,11 +3722,11 @@ DlpReadNextModifiedRecInCategory(
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadNextModifiedRecInCategory_Rec:
-			record->id = get_udword(&rptr);
-			record->index = get_uword(&rptr);
-			record->size = get_uword(&rptr);
-			record->attributes = get_ubyte(&rptr);
-			record->category = get_ubyte(&rptr);
+			recinfo->id = get_udword(&rptr);
+			recinfo->index = get_uword(&rptr);
+			recinfo->size = get_uword(&rptr);
+			recinfo->attributes = get_ubyte(&rptr);
+			recinfo->category = get_ubyte(&rptr);
 			*data = rptr;
 
 			DLPC_TRACE(6)
@@ -3735,15 +3735,15 @@ DlpReadNextModifiedRecInCategory(
 					"Read record in category %d:\n",
 					category);
 				fprintf(stderr, "\tID == 0x%08lx\n",
-					record->id);
+					recinfo->id);
 				fprintf(stderr, "\tindex == 0x%04x\n",
-					record->index);
+					recinfo->index);
 				fprintf(stderr, "\tsize == 0x%04x\n",
-					record->size);
+					recinfo->size);
 				fprintf(stderr, "\tattributes == 0x%02x\n",
-					record->attributes);
+					recinfo->attributes);
 				fprintf(stderr, "\tcategory == 0x%02x\n",
-					record->category);
+					recinfo->category);
 			}
 			break;
 		    default:	/* Unknown argument type */
@@ -4081,11 +4081,13 @@ DlpReadNetSyncInfo(PConnection *pconn,
  * compute the sizes.
  * XXX - This works for the hostname, but not for binary strings.
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
- * XXX - This API sucks. Needs to be redone.
  */
 int
 DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
-		    const struct dlp_writenetsyncinfo *netsyncinfo)
+		    const ubyte modflags,	/* Which fields have
+						 * changed? */
+		    const struct dlp_netsyncinfo *newinfo)
+						/* New values */
 {
 	int i;
 	int err;
@@ -4106,14 +4108,14 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr,
 			">>> WriteNetSyncInfo: mod 0x%02x, LAN %d, name (%d) "
 			"\"%s\", addr (%d) \"%s\", mask (%d) \"%s\"\n",
-			netsyncinfo->modflags,
-			netsyncinfo->netsyncinfo.lansync_on,
-			netsyncinfo->netsyncinfo.hostnamesize,
-			netsyncinfo->netsyncinfo.hostname,
-			netsyncinfo->netsyncinfo.hostaddrsize,
-			netsyncinfo->netsyncinfo.hostaddr,
-			netsyncinfo->netsyncinfo.hostnetmasksize,
-			netsyncinfo->netsyncinfo.hostnetmask);
+			modflags,
+			newinfo->lansync_on,
+			newinfo->hostnamesize,
+			newinfo->hostname,
+			newinfo->hostaddrsize,
+			newinfo->hostaddr,
+			newinfo->hostnetmasksize,
+			newinfo->hostnetmask);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteNetSyncInfo;
@@ -4121,26 +4123,26 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, netsyncinfo->modflags);
-	put_ubyte(&wptr, netsyncinfo->netsyncinfo.lansync_on);
+	put_ubyte(&wptr, modflags);
+	put_ubyte(&wptr, newinfo->lansync_on);
 	put_udword(&wptr, 0);		/* reserved1b */
 	put_udword(&wptr, 0);		/* reserved2 */
 	put_udword(&wptr, 0);		/* reserved3 */
 	put_udword(&wptr, 0);		/* reserved4 */
 	/* XXX - Should these use strlen()? */
 	/* XXX - Potential buffer overruns */
-	put_uword(&wptr, netsyncinfo->netsyncinfo.hostnamesize);
-	put_uword(&wptr, netsyncinfo->netsyncinfo.hostaddrsize);
-	put_uword(&wptr, netsyncinfo->netsyncinfo.hostnetmasksize);
-	memcpy(wptr, netsyncinfo->netsyncinfo.hostname,
-	       netsyncinfo->netsyncinfo.hostnamesize);
-	wptr += netsyncinfo->netsyncinfo.hostnamesize;
-	memcpy(wptr, netsyncinfo->netsyncinfo.hostaddr,
-	       netsyncinfo->netsyncinfo.hostaddrsize);
-	wptr += netsyncinfo->netsyncinfo.hostaddrsize;
-	memcpy(wptr, netsyncinfo->netsyncinfo.hostnetmask,
-	       netsyncinfo->netsyncinfo.hostnetmasksize);
-	wptr += netsyncinfo->netsyncinfo.hostnetmasksize;
+	put_uword(&wptr, newinfo->hostnamesize);
+	put_uword(&wptr, newinfo->hostaddrsize);
+	put_uword(&wptr, newinfo->hostnetmasksize);
+	memcpy(wptr, newinfo->hostname,
+	       newinfo->hostnamesize);
+	wptr += newinfo->hostnamesize;
+	memcpy(wptr, newinfo->hostaddr,
+	       newinfo->hostaddrsize);
+	wptr += newinfo->hostaddrsize;
+	memcpy(wptr, newinfo->hostnetmask,
+	       newinfo->hostnetmasksize);
+	wptr += newinfo->hostnetmasksize;
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteNetSyncInfo_Info;
