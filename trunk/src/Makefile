@@ -1,9 +1,10 @@
-# $Id: Makefile,v 2.25 2002-03-18 08:16:58 arensb Exp $
+# $Id: Makefile,v 2.26 2002-03-18 10:12:10 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
 
-CPROG =		coldnamed
+#CPROG =		coldnamed
+CPROG =		
 CXXPROG =	coldsync
 
 C_SRCS =	coldsync.c \
