@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 2.1.3\n"
-"POT-Creation-Date: 2001-12-07 08:53-0500\n"
+"POT-Creation-Date: 2001-12-07 10:25-0500\n"
 "PO-Revision-Date: 2001-12-07 00:01+0100\n"
 "Last-Translator: Petr Kubánek <petr@kubanek.net>\n"
 "Language-Team: cs <cs@li.org>\n"
@@ -61,14 +61,16 @@ msgstr "\t-mI:\tInicializuj Palma.\n"
 msgid ""
 "\t-mb <dir> [database...]\n"
 "\t\tPerform a backup to <dir>.\n"
-msgstr "\t-mb <dir> [databáze...]\n"
+msgstr ""
+"\t-mb <dir> [databáze...]\n"
 "\t\tZazálohuj databáze do <dir>.\n"
 
 #: ../src/config.c:810
 msgid ""
 "\t-mr <file|dir>...\n"
 "\t\tRestore or install new databases.\n"
-msgstr "\t-mr <file|dir>...\n"
+msgstr ""
+"\t-mr <file|dir>...\n"
 "\t\tObnov data nebo nainstaluj nové databáze.\n"
 
 #: ../src/config.c:806
@@ -93,7 +95,8 @@ msgstr "\t-v:\t\tZvìt¹í mno¾ství informací od programu.\n"
 
 #: ../src/config.c:816
 msgid "\t-z:\t\tInstall databases after sync.\n"
-msgstr "\t-z:\t\tPo dokonèení synchronizace nainstaluje na Palm\n"
+msgstr ""
+"\t-z:\t\tPo dokonèení synchronizace nainstaluje na Palm\n"
 "\t\t\t\tnové databáze.\n"
 
 #: ../src/parser.y:326 ../src/parser.y:584 ../src/parser.y:1128
