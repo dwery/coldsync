@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.66 2003-06-14 17:44:41 azummo Exp $
+ * $Id: conduit.c,v 2.67 2003-10-01 12:29:39 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1246,6 +1246,13 @@ run_conduits(struct Palm *palm,
 			fprintf(stderr, "Trying conduit %s...\n",
 				(conduit->path == NULL ? "(null)" :
 				 conduit->path));
+
+		if (!conduit->enabled)
+		{
+			CONDUIT_TRACE(3)
+				fprintf(stderr, "  Not enabled.\n");
+			continue;
+		}
 
 		/* See if the flavor matches */
 		if ((conduit->flavors & flavor_mask) == 0)

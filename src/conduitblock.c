@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduitblock.c,v 2.3 2002-10-16 18:59:32 azummo Exp $
+ * $Id: conduitblock.c,v 2.4 2003-10-01 12:29:39 azummo Exp $
  */
 
 #include "config.h"
@@ -47,6 +47,7 @@ new_conduit_block()
 	retval->prefs		= NULL;
 	retval->prefs_slots	= 0;
 	retval->num_prefs	= 0;
+	retval->enabled		= True;
 
 	return retval;
 }
