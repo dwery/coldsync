@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.9 1999-06-27 06:00:31 arensb Exp $
+ * $Id: pdb.h,v 1.10 1999-07-04 02:47:31 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -213,8 +213,9 @@ extern struct pdb *new_pdb();
 extern void free_pdb(struct pdb *db);
 extern void pdb_FreeRecord(struct pdb_record *rec);
 extern void pdb_FreeResource(struct pdb_resource *rsrc);
-extern struct pdb *pdb_Read(char *fname);
-extern int pdb_Write(const struct pdb *db, const char *fname);
+extern struct pdb *pdb_Read(int fd);	/* Load a pdb from a file. */
+extern int pdb_Write(const struct pdb *db, int fd);
+					/* Write a pdb to a file */
 extern struct pdb *pdb_Download(
 	struct PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
