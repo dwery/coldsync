@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.143 2002-10-26 12:09:50 azummo Exp $
+ * $Id: coldsync.c,v 1.144 2002-11-02 13:20:43 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -452,11 +452,15 @@ open_log_file(void)
 	 * getty and inetd don't give us a Bourne shell with which to do
 	 * this.
 	 */
+/*
+	XXX With debugging enabled, this message actually goes
+	 out on the socket!
+	 
 	MISC_TRACE(1)
 		fprintf(stderr,
 			"Redirecting stderr to \"%s\"\n",
 			filename);
-
+*/
 	/* Make a copy of the old stderr, in case we need it later. But
 	 * only if we haven't done so yet.
 	 */
