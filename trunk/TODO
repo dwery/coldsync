@@ -221,5 +221,6 @@
 - In .coldsyncrc, should be able to associate a name (or alias) with a
   pda block. In addition, should be able to specify that a given
   conduit block only applies to a given PDA.
-- Document pda{ } blocks.
 - Why is syncing with the PalmPilot Pro so flaky?
+- During CMP connection, if the Palm suggests a speed and the
+  .coldsyncrc doesn't, should just go with what the Palm suggests.
