@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.17 2001-06-26 05:42:32 arensb Exp $
+@c $Id: conduits.texi,v 1.18 2003-01-28 12:45:27 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -409,7 +409,7 @@ However, you can use any language you like to write conduits.
 	The example conduits in this chapter use the @code{ColdSync.pm}
 module that's part of the ColdSync distribution, and also the
 @code{p5-Palm} module from@*
-@uref{http://www.ooblick.com/software/coldsync/}.
+@uref{http://www.coldsync.org/}.
 
 @menu
 * Conduit Workings::            An overview of how conduits work.
