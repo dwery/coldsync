@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.46 2002-03-12 18:43:44 azummo Exp $
+ * $Id: conduit.c,v 2.47 2002-03-12 20:03:01 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1680,8 +1680,11 @@ spawn_conduit(
 	
 	if (cwd != NULL)
 	{
+		SYNC_TRACE(1)
+			fprintf( stderr, "cwd: %s\n", cwd );	
+	
 		/* cwd to the directory in which the conduit resides */
-		if (strcmp(cwd, "conduit"))
+		if (strcmp(cwd, "conduit") == 0)
 		{
 			char *dpath;
 			
@@ -1696,7 +1699,7 @@ spawn_conduit(
 			}			
 		}
 		/* cwd to the user's home directory */
-		else if (strcmp(cwd, "home"))
+		else if (strcmp(cwd, "home") == 0)
 		{
 			struct passwd *pw;
 
