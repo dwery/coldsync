@@ -30,7 +30,7 @@ file				fichier
   file descriptor		  ?
   file handle			  ?
   staging file			  fichier intermédiaire
-flag				?
+flag				flag
 flavor				?
 header				entête
 host				hôte
