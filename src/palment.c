@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.8 2002-11-03 23:28:40 azummo Exp $
+ * $Id: palment.c,v 2.9 2002-11-09 22:42:19 azummo Exp $
  */
 
 #include "config.h"
@@ -251,7 +251,11 @@ match_serial(const struct palment *palment, const char *p_snum)
  */
 
 const struct palment *
-find_palment(const char *p_snum, const char *p_username, const udword p_userid, const ubyte match_type)
+find_palment(const struct Palm *palm,
+		const char *p_snum,
+		const char *p_username,
+		const udword p_userid,
+		const ubyte match_type)
 {
 	const struct palment *palment;
 
@@ -267,6 +271,38 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 				"userid %lu\n",
 				palment->serial, palment->username,
 				palment->userid);
+
+		if (match_type & PMATCH_UNIQUESNUM)
+		{
+			/* If this palm hasn't an unique snum, iterate */
+	
+			if (palm->flags_ & PALMFL_SNUM_NOT_UNIQUE)
+			{
+				SYNC_TRACE(5)
+					fprintf(stderr, " ! serial number [%s] is not unique.\n",
+						p_snum);
+
+				continue;
+			}
+			
+			/* If doesn't match, iterate. */
+			
+			if ( ! match_serial(palment, p_snum) )
+			{
+				SYNC_TRACE(5)
+					fprintf(stderr, " ! serial number [%s] doesn't match with [%s].\n",
+						palment->serial, p_snum);
+
+				continue;
+			}
+			
+			SYNC_TRACE(5)
+				fprintf(stderr, " + unique serial number [%s] matches with [%s].\n",
+					palment->serial, p_snum);
+		}
+		else
+			SYNC_TRACE(5)
+				fprintf(stderr, " * unique serial match not required.\n");
 
 
 		if (match_type & PMATCH_SERIAL)
@@ -418,7 +454,7 @@ lookup_palment(struct Palm *palm, ubyte match_type)
 			p_userid);
 	}
 
-	return find_palment(p_snum, p_username, p_userid, match_type);
+	return find_palment(palm, p_snum, p_username, p_userid, match_type);
 }
 
 /* getpasswd_from_palment

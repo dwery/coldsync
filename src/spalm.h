@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.5 2002-10-16 19:10:36 azummo Exp $
+ * $Id: spalm.h,v 2.6 2002-11-09 22:42:19 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -89,7 +89,15 @@ struct Palm
 	palm_accessor_stat_t accessor_status_;
 					/* Whether the latest accessor called */
 					/* worked or not. */
+
+	int flags_;			/* Flags */
 };
+
+#define PALMFL_SNUM_NOT_UNIQUE	(1L << 0)	/* This Palm has a serial number 
+						 * which is not unique among two
+						 * units of the same type.
+						 * (i.e. Visor)
+						 */
 
 /* XXX - Maybe this should be a function */
 #define palm_ok(palm) (palm->accessor_status_ == PALMACC_NOERR)

@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.7 2002-07-18 16:43:16 azummo Exp $
+ * $Id: palment.h,v 2.8 2002-11-09 22:42:19 azummo Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
@@ -35,9 +35,10 @@
 
 /* Match types */
 
-#define PMATCH_SERIAL	(1 << 0)
-#define PMATCH_USERNAME	(1 << 1)
-#define PMATCH_USERID	(1 << 2)
+#define PMATCH_SERIAL		(1 << 0)	/* Serial number */
+#define PMATCH_USERNAME		(1 << 1)	/* Username */
+#define PMATCH_USERID		(1 << 2)	/* User id */
+#define PMATCH_UNIQUESNUM	(1 << 3)	/* Unique serial number, i.e. not a Visor */
 #define PMATCH_EXACT	( PMATCH_SERIAL | PMATCH_USERNAME | PMATCH_USERID )
 
 struct palment
@@ -57,11 +58,9 @@ extern const struct palment *getpalment(void);
 /* XXX - extern const struct palment *getpalmbyname(const char *name); */
 extern void setpalment(int stayopen);
 extern void endpalment(void);
-extern const struct palment * find_palment(const char *p_snum, 
-	const char *p_username, const udword p_userid, const ubyte match_type);
-
 extern struct passwd * getpasswd_from_palment(const struct palment *palment);
 extern const struct palment * lookup_palment(struct Palm *palm, ubyte match_type);
+
 #endif	/* _palment_h_ */
 
 /* This is for Emacs's benefit:

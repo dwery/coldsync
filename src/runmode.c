@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.7 2002-11-09 15:06:28 azummo Exp $
+ * $Id: runmode.c,v 2.8 2002-11-09 22:42:19 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -791,7 +791,7 @@ run_mode_Daemon(int argc, char *argv[])
 			fprintf(stderr, "autoinit: trying snum match.\n");	
 
 		/* Search for a matching serial number */
-		palment = lookup_palment(palm, PMATCH_SERIAL);
+		palment = lookup_palment(palm, PMATCH_UNIQUESNUM);
 
 		if (palment != NULL)
 		{

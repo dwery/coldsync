@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.12 2002-10-16 19:10:36 azummo Exp $
+ * $Id: spalm.c,v 2.13 2002-11-09 22:42:19 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -82,17 +82,20 @@ new_Palm(PConnection *pconn)
 	 */
 	retval->pconn_ = pconn;
 
-	retval->have_sysinfo_ = False;
-	retval->have_userinfo_ = False;
-	retval->have_netsyncinfo_ = False;
+	retval->have_sysinfo_		= False;
+	retval->have_userinfo_		= False;
+	retval->have_netsyncinfo_	= False;
+
 	bzero((void *) (retval->serial_), SNUM_MAX);
-	retval->serial_len_ = -1;
-	retval->num_cards_ = -1;
-	retval->cardinfo_ = NULL;
-	retval->have_all_DBs_ = False;
-	retval->num_dbs_ = -1;
-	retval->dblist_ = NULL;
-	retval->dbit_ = 0;
+
+	retval->serial_len_	= -1;
+	retval->num_cards_	= -1;
+	retval->cardinfo_	= NULL;
+	retval->have_all_DBs_	= False;
+	retval->num_dbs_	= -1;
+	retval->dblist_		= NULL;
+	retval->dbit_		= 0;
+	retval->flags_		= 0;
 
 	return retval;
 }
@@ -479,6 +482,9 @@ fetch_serial(struct Palm *palm)
 				special_snums[i].alias);
 		strncpy(palm->serial_, special_snums[i].alias, SNUM_MAX);
 		palm->serial_len_ = strlen(special_snums[i].alias);
+
+		/* Remember that this snum is not unique */
+		palm->flags_ |= PALMFL_SNUM_NOT_UNIQUE;
 
 		if (palm->serial_len_ > SNUM_MAX-1)
 		{
