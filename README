@@ -14,6 +14,9 @@ modified.
 distribution, so some of the text is specific to Perl and does not
 apply to ColdSync. I hope to address this in a future release.
 
+	This product includes software developed by the University of
+California, Berkeley and its contributors.
+
 	       ----------------------------------------
 
 * WHAT IS COLDSYNC?
@@ -97,3 +100,34 @@ beyond will be due to other causes.
 	And even if there is a problem, ColdSync comes without any
 guarantees of any kind, so don't bug me about it. You have the source,
 so fix it.
+
+	       ----------------------------------------
+
+COMPATIBILITY NOTES:
+
+FreeBSD:
+	This package was developed under FreeBSD 3.x, and compiles
+	cleanly with no modification under 3.1-RELEASE and
+	3.2-RELEASE.
+
+Linux:
+	Tested under Redhat 6.0.
+
+	Egcs's implementation of 'toupper()' is broken: when you
+	compile with "-pedantic" (or is it "-ansi"?), it complains
+	about
+
+		"ANSI C forbids braced-groups within expressions"
+
+	This can be ignored.
+
+Solaris:
+	Tested under Solaris 2.5 and 2.6.
+
+	Compiles cleanly using gcc 2.8.1. Doesn't compile with gcc
+	2.95.1, though that may just be a problem with the
+	installation on the machine where I tested it.
+
+AIX:
+	Appears to compile cleanly under AIX 4.2 with gcc 2.7.2.3.
+	This hasn't been extensively tested, though.
