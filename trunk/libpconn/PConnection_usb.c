@@ -6,24 +6,39 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.2 2000-01-25 11:25:49 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.3 2000-02-03 04:25:38 arensb Exp $
  */
 
 #include "config.h"
+#if WITH_USB		/* This encompasses the entire file */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <errno.h>
 
-#if WITH_USB		/* This encompasses the entire file */
+#if STDC_HEADERS
+# include <string.h>		/* For memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
 
-#include <usb.h>
+#include <dev/usb/usb.h>
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/PConnection.h"
+#include "pconn/palm_types.h"
 
 struct usb_data {
 	unsigned char iobuf[1024];	/* XXX - Is there anything
@@ -31,13 +46,62 @@ struct usb_data {
 					 * this a cpp symbol */
 	unsigned char *iobufp;
 	int iobuflen;
-	int usb_ep0;
 };
 
-int usbdebug = 0;		/* XXX - Rename this usb_trace, and
-				 * integrate it into the *_trace
-				 * scheme.
-				 */
+
+/*
+ *  Description of the Handspring Visor vendor specific USB
+ *  commands.
+ *
+ ************************************************************************
+ * USB Vendor Defined Request Codes  (bRequest)
+ ************************************************************************
+ * Queries for the number for bytes available to transmit to the host 
+ * for the specified endpoint.  Currently not used -- returns 0x0001. 
+ */
+#define usbRequestVendorGetBytesAvailable		0x01
+
+/* This request is sent by the host to notify the device that the host 
+ * is closing a pipe.  An empty packet is sent in response.  
+ */
+#define usbRequestVendorCloseNotification		0x02 
+
+/* Sent by the host during enumeration to get the endpoints used 
+ * by the connection.
+ */
+#define usbRequestVendorGetConnectionInfo		0x03
+
+/* note: uWord and uByte are defined in <dev/usb/usb.h> */
+typedef struct {
+	uWord		numPorts;
+	struct {
+		uByte	portFunctionID;
+		uByte	port;
+	} connections[20];
+} UsbConnectionInfoType, * UsbConnectionInfoPtr;
+
+#define	hs_usbfun_Generic	0
+#define	hs_usbfun_Debugger	1
+#define	hs_usbfun_Hotsync	2
+#define	hs_usbfun_Console	3
+#define	hs_usbfun_RemoteFileSys	4
+#define	hs_usbfun_MAX		4
+
+#define	HANDSPRING_VENDOR_ID	0x082d
+
+static char *hs_usb_functions[] = {
+	"Generic",
+	"Debugger",
+	"Hotsync",
+	"Console",
+	"RemoteFileSys",
+	NULL
+};
+
+
+/*************************************************************************/
+
+
 
 static int
 usb_read(struct PConnection *p, unsigned char *buf, int len)
@@ -111,10 +175,7 @@ usb_close(struct PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
 
-	if (u->usb_ep0 >= 0) {
-		(void) close(u->usb_ep0);
-		u->usb_ep0 = -1;
-	}
+	free((void *)u);
 	return close(p->fd);
 }
 
@@ -159,14 +220,16 @@ usb_drain(struct PConnection *p)
 }
 
 int
-pconn_usb_open(struct PConnection *p, char *device)
+pconn_usb_open(struct PConnection *p, char *device, int prompt)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;
 	struct usb_ctl_request ur;
-	char *usbep2;
+	char *hotsync_ep_name;
+	int usb_ep0 = -1, hotsync_endpoint = -1;
 	int i;
 	unsigned char usbresponse[50];
+	UsbConnectionInfoType ci;
 
 	p->io_read = &usb_read;
 	p->io_write = &usb_write;
@@ -178,88 +241,182 @@ pconn_usb_open(struct PConnection *p, char *device)
 	u = p->io_private = malloc(sizeof(struct usb_data));
 
 	bzero(p->io_private, sizeof(struct usb_data));
-	u->usb_ep0 = -1;
+
+	/*
+	 *  Prompt for the Hot Sync button now, as the USB bus
+	 *  enumerator won't create the underlying device we want to
+	 *  open until that happens.  The act of starting the hot sync
+	 *  operation on the Visor logically plugs it into the USB
+	 *  hub port, where it's noticed and enumerated.
+	 */
+	if (prompt)
+		printf(_("Please press the HotSync button.\n"));
+
+	/*
+	 *  We've got to loop trying to open the USB device since
+	 *  you'll get an ENXIO until the device has bee inserted
+	 *  on the USB bus.
+	 */
 
 	for (i = 0; i < 30; i++) {
-		if ((u->usb_ep0 = open(device, O_RDWR)) >= 0) 
+		if ((usb_ep0 = open(device, O_RDWR)) >= 0) 
 			break;
+
+		IO_TRACE(1)
+			perror(device);
+
+		if (errno != ENXIO) {
+			perror("open");
+			/*  If some other error, don't bother waiting
+			 *  for the timeout to expire.
+			 */
+			break;
+		}
 		sleep(1);
 	}
 
-	(void) ioctl(u->usb_ep0, USB_SETDEBUG, &usbdebug);
+	/*
+	 *  If we've enabled trace for I/O, then poke the USB kernel
+	 *  driver to turn on the minimal amount of tracing.  This can
+	 *  fail if the kernel wasn't built with UGEN_DEBUG defined, so
+	 *  we just ignore any error which might occur.
+	 */
+	IO_TRACE(1)
+		i = 1;
+	else
+		i = 0;
+	(void) ioctl(usb_ep0, USB_SETDEBUG, &i);
 
-	if (u->usb_ep0 < 0) {
+
+	/*
+	 *  Open the control endpoint of the USB device.  We'll use this
+	 *  to figure out if the device in question is the one we are
+	 *  interested in and understand, and then to configure it in
+	 *  preparation of doing I/O for the actual hot sync operation.
+	 */
+	if (usb_ep0 < 0) {
 		fprintf(stderr, _("%s: Can't open USB device"),
 			"pconn_usb_open");
 		perror("open");
 		return -1;
 	}
 
-	if (ioctl(u->usb_ep0, USB_GET_DEVICEINFO, &udi)) {
+	if (ioctl(usb_ep0, USB_GET_DEVICEINFO, &udi)) {
 		fprintf(stderr,
 			_("%s: Can't get information about USB device"),
 			"pconn_usb_open");
 		perror("ioctl(USB_GET_DEVICEINFO)");
-		exit(1);
+		(void) close(usb_ep0);
+		free((void *)u);
+		return -1;
 	}
 
 #define SURE(x) \
 	(((x!=NULL) && (*x !='\0')) ? x : "<not defined>")
 
-	/* XXX - Don't print this during normal operations. Put this in a
-	 * USB_TRACE block.
+	/*
+	 *  Happily, all of the multibyte values in the struct usb_device_info
+	 *  are in host byte order, and don't need to be converted.
 	 */
-	fprintf(stderr,
-		"Device information: %s vendor %04x (%s) product %04x (%s) rev %s addr %x\n",
-		device,  udi.vendorNo, SURE(udi.vendor), 
-		udi.productNo, SURE(udi.product),
-		SURE(udi.release), udi.addr);
+	IO_TRACE(1) {
+		fprintf(stderr,
+  "Device information: %s vendor %04x (%s) product %04x (%s) rev %s addr %x\n",
+			device,  udi.vendorNo, SURE(udi.vendor), 
+			udi.productNo, SURE(udi.product),
+			SURE(udi.release), udi.addr);
 
-	{
-		int cfg = 1;
-
-		if (ioctl(u->usb_ep0, USB_SET_CONFIG, &cfg) < 0) {
-			perror("ioctl(USB_SET_CONFIG)");
-			exit(1);
-		}
-		if (usbdebug)
-			fprintf(stderr, "usb: set configuration %d\n", cfg);
 	}
 
+	if (udi.vendorNo != HANDSPRING_VENDOR_ID) {
+		fprintf(stderr,
+			_("%s: Warning: Unexpected USB vendor ID 0x%x\n"),
+			"pconn_usb_open", udi.vendorNo);
+	}
 
-	/*-------------------------------------------------------------------
-	 * Enter the twilight zone.
-	 *
-	 * Based on observing USB protocol analyzer traces, it appear that the
-	 * windows hotsync process performs two vendor specific setup commands.
-	 * I have no idea what they do, but this code reproduces those commands
-	 * as well.
-	 *
-	 * Hopefully these are not specific to a particular model or software
-	 * version or Visor serial number..
-	 *-------------------------------------------------------------------*/
+	/*
+	 *  Eventually, it might be necessary to split out the following
+	 *  code should another Palm device with a USB peripheral interface
+	 *  need to be supported in a different way.  Hopefully, they will
+	 *  simply choose to inherit this existing interface rather then
+	 *  inventing Yet Another exquisitely round wheel of their own.
+	 */
 
+
+	/*
+	 *  Ensure that the device is set to the default configuration.
+	 *  For Visors seen so far, the default is the only one they
+	 *  support.
+	 */
+	i = 1;
+	if (ioctl(usb_ep0, USB_SET_CONFIG, &i) < 0) {
+		perror("warning: ioctl(USB_SET_CONFIG) failed");
+	}
+
+	/*
+	 *  Now, ask the device (which we believe to be a Handspring Visor)
+	 *  about the various USB endpoints which we can make a connection 
+	 *  to.  Obviously, here we're looking for the endpoint associated 
+	 *  with the Hotsync running on the other end.  This has been observed
+	 *  to be endpoint "2", but this is not statically defined, and might
+	 *  change based on what other applications are running and perhaps
+	 *  on future hardware platforms.
+	 */
 	bzero(&ur, sizeof(ur));
 	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
-	ur.request.bRequest = 3;
+	ur.request.bRequest = usbRequestVendorGetConnectionInfo;
 	USETW(ur.request.wValue, 0);
 	USETW(ur.request.wIndex, 0);
 	USETW(ur.request.wLength, 18);
-	ur.data = &usbresponse[0];
+	ur.data = (void *) &ci;
 	ur.flags = USBD_SHORT_XFER_OK;
 	ur.actlen = 0;
-
-	if (ioctl(u->usb_ep0, USB_DO_REQUEST, &ur) < 0) {
-	  perror(_("ioctl(USB_DO_REQUEST) 3 failed"));
-	  exit(1);		/* XXX - This is rather extreme, isn't it? */
+	bzero((char *)&ci, sizeof(ci));
+	if (ioctl(usb_ep0, USB_DO_REQUEST, &ur) < 0) {
+		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"));
+		(void) close(usb_ep0);
+		free((void *)u);
+		return -1;	  
 	}
 
-	if (usbdebug > 1)
-	  fprintf(stderr, "first setup 0x3 returns %d bytes\n", ur.actlen);
+
+	/*
+	 *  Now search the list of functions supported over the USB interface
+	 *  for the endpoint associated with the HotSync function.  So far,
+	 *  this has seen to "always" be on endpoint 2, but this might 
+	 *  change and we use this binding mechanism to discover where it
+	 *  lives now.  Sort of like the portmap(8) daemon..
+	 *
+	 *  Also, beware:  as this is "raw" USB function, the result
+	 *  we get is in USB-specific byte order.  This happens to be
+	 *  little endian, but we should use the accessor macros to ensure
+	 *  the code continues to run on big endian CPUs too.
+	 */
+	for (i = 0; i < UGETW(ci.numPorts); i++) {
+	  IO_TRACE(2)
+	  	fprintf(stderr,
+			_("ConnectionInfo: entry %d function %s on port %d\n"),
+			i, 
+			(ci.connections[i].portFunctionID <= hs_usbfun_MAX)
+			  ? hs_usb_functions[ci.connections[i].portFunctionID]
+			  : _("unknown"),
+			ci.connections[i].port);
+
+	  if (ci.connections[i].portFunctionID == hs_usbfun_Hotsync)
+	  	hotsync_endpoint = ci.connections[i].port;
+	}
+
+	if (hotsync_endpoint < 0) {
+		fprintf(stderr,
+			_("%s: could not find Hotsync endpoint on Visor.\n"),
+			_("PConnection_usb"));
+		(void) close(usb_ep0);
+		free((void *)u);
+		return -1;	  
+	}
 
 	bzero(&ur, sizeof(ur));
 	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
-	ur.request.bRequest = 1;
+	ur.request.bRequest = usbRequestVendorGetBytesAvailable;
 	USETW(ur.request.wValue, 0);
 	USETW(ur.request.wIndex, 5);
 	USETW(ur.request.wLength, 2);
@@ -267,40 +424,63 @@ pconn_usb_open(struct PConnection *p, char *device)
 	ur.flags = USBD_SHORT_XFER_OK;
 	ur.actlen = 0;
 
-	if (ioctl(u->usb_ep0, USB_DO_REQUEST, &ur) < 0) {
-		perror(_("ioctl(USB_DO_REQUEST) 1 failed"));
-		exit(1);	/* XXX - This is rather extreme, isn't it? */
+	if (ioctl(usb_ep0, USB_DO_REQUEST, &ur) < 0) {
+		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"));
 	}
 
-	if (usbdebug > 1)
-		fprintf(stderr, "first setup 0x1 returns %d bytes\n",
+	IO_TRACE(2) {
+		fprintf(stderr, "first setup 0x1 returns %d bytes: ",
 			ur.actlen);
+		for (i = 0; i < ur.actlen; i++) {
+		  fprintf(stderr, " 0x%02x", usbresponse[i]);
+		}
+		fprintf(stderr, "\n");
+	}
+
+	if (UGETW(usbresponse) != 1) {
+		fprintf(stderr,
+			_("%s: unexpected response %d to GetBytesAvailable\n"),
+			_("PConnection_usb"), UGETW(usbresponse));
+	}
+
+
+	(void) close(usb_ep0);
 
 	/* ------------------------------------------------------------------ 
 	 * 
 	 *  Ok, all of the device specific control messages have been
 	 *  completed.  It is critically important that these be performed
-	 *  before opening a full duplex conneciton to endpoint 2 on the
-	 *  Visor, on which all of the data transfer occur.  If this is open
-	 *  while the set configuration operation above is done, at best it
-	 *  won't work, and at worst it will call a panic in your kernel..
+	 *  before opening a full duplex conneciton to the hot sync
+	 *  endpoint on the Visor, on which all of the data transfer occur.
+	 *  If this is open while the set configuration operation above is
+	 *  done, at best it won't work (in FreeBSD 4.0 and later), and at
+	 *  worst it will cause a panic in your kernel.. (pre FreeBSD 4.0)
 	 *
 	 * ---------------------------------------------------------------- */
 
-	usbep2 = malloc(strlen(device)+20);
-				/* XXX - Error-checking */
-	sprintf(usbep2, "%s.2", device);
 
-	p->fd = open(usbep2, O_RDWR, 0);
+	/*
+	 *  Construct the name of the device corresponding to the
+	 *  USB endpoint associated with the hot sync service.
+	 */
+	if ((hotsync_ep_name = malloc(strlen(device)+20)) == NULL) {
+		free((void *)u);
+		return -1;
+	}
+
+	sprintf(hotsync_ep_name, "%s.%d", device, hotsync_endpoint);
+
+	p->fd = open(hotsync_ep_name, O_RDWR, 0);
 
 	if (p->fd < 0) {
 		fprintf(stderr, _("%s: Can't open %s\n"),
-			"pconn_usb_open", usbep2);
+			"pconn_usb_open", hotsync_ep_name);
 		perror("open");
-		exit(1);	/* XXX - This is rather extreme, isn't it? */
+		(void) close(usb_ep0);
+		free(hotsync_ep_name);
+		free((void *)u);
+		return -1;	  
 	}
-	if (usbdebug)
-		fprintf(stderr, "usb: endpoint %s open for reading\n", usbep2);
 
 	if ((i = fcntl(p->fd, F_GETFL, 0))!=-1) {
 		i &= ~O_NONBLOCK;
@@ -311,7 +491,7 @@ pconn_usb_open(struct PConnection *p, char *device)
 	if (ioctl(p->fd, USB_SET_SHORT_XFER, &i) < 0)
 		perror("ioctl(USB_SET_SHORT_XFER)");
   
-	free(usbep2);
+	free(hotsync_ep_name);
 
 	/* Make it so */
 	return p->fd;

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.27 2000-02-03 01:53:10 arensb Exp $
+ * $Id: coldsync.c,v 1.28 2000-02-03 04:25:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -208,15 +208,16 @@ main(int argc, char *argv[])
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
 			config.listen[0].device);
+
+	/* XXX - set last parameter to zero to inhibit "Press HotSync
+	 *  button prompt" when in daemon mode
+	 */
 	if ((pconn = new_PConnection(config.listen[0].device,
-				     config.listen[0].listen_type)) == NULL)
+				     config.listen[0].listen_type, 1)) == NULL)
 	{
 		fprintf(stderr, _("Error: can't open connection.\n"));
 		exit(1);
 	}
-
-	printf(_("Please press the HotSync button.\n"));
-				/* XXX - Don't print this in daemon mode */
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -1341,6 +1342,8 @@ set_debug_level(const char *str)
 		parse_trace = lvl;
 	else if (strncasecmp(str, "misc", 4) == 0)
 		misc_trace = lvl;
+	else if (strncasecmp(str, "io:", 3) == 0)
+		io_trace = lvl;
 	else {
 		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
 	}

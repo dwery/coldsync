@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.16 2000-01-22 05:00:48 arensb Exp $
+ * $Id: config.c,v 1.17 2000-02-03 04:25:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -119,6 +119,8 @@ get_config(int argc, char *argv[])
 					 */
 	struct stat statbuf;		/* For stat() */
 	char *devname = NULL;		/* Name of device to listen on */
+	int devtype = -1;		/* type of device to listen on */
+
 	struct config *user_config = NULL;
 					/* Configuration read from config
 					 * file (as opposed to what was
@@ -143,6 +145,7 @@ get_config(int argc, char *argv[])
 	sync_trace	= 0;
 	pdb_trace	= 0;
 	misc_trace	= 0;
+	io_trace	= 0;
 
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
@@ -203,7 +206,7 @@ get_config(int argc, char *argv[])
 
 	/* Start by reading command-line options. */
 	config_fname_given = False;
-	while ((arg = getopt(argc, argv, ":hVSFRf:b:r:p:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRf:b:r:p:t:d:")) != -1)
 	{
 		switch (arg)
 		{
@@ -248,6 +251,16 @@ get_config(int argc, char *argv[])
 				 * <device>
 				 */
 			devname = optarg;
+			break;
+
+		    case 't':	/* -t <device type>: Listen on port device
+				 * of type <device type>
+				 */
+			/* XXX this is ugly - ought to be able to
+			 * specify a symbolic name here, like in the
+			 * config file.
+			 */
+			devtype = atoi(optarg);	/* XXX */
 			break;
 
 		    case 'd':	/* -d <fac>:<n>: Debugging level */
@@ -440,6 +453,9 @@ get_config(int argc, char *argv[])
 			free_config(user_config);
 			return -1;
 		}
+
+		if (devtype >= 0)
+			l->listen_type = devtype;
 
 		/* Make the new listen block be the one for the main
 		 * configuration.
