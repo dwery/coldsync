@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.h,v 2.2 2000-11-18 22:47:54 arensb Exp $
+ * $Id: palm.h,v 2.3 2000-11-19 00:12:31 arensb Exp $
  */
 #ifndef _palm_h_
 #define _palm_h_
@@ -83,16 +83,12 @@ struct Palm
 extern struct Palm *new_Palm(struct PConnection *pconn);
 extern void free_Palm(struct Palm *palm);
 
-/* XXX - Accessors. One for each datum one might want to get */
+/* Accessors. One for each datum one might want to get */
 extern const udword palm_rom_version(struct Palm *palm);
 extern const udword palm_lastsyncPC(struct Palm *palm);
 extern const int palm_serial_len(struct Palm *palm);
 extern const char *palm_serial(struct Palm *palm);
 extern const int palm_num_cards(struct Palm *palm);
-/* XXX - A function to fetch the entire list of databases from the Palm */
-/* XXX - Update functions: add_dbinfo() etc. from "coldsync.h". These
- * modify the 'struct Palm'.
- */
 
 /* XXX - This needs to be redone as a whole set of accessors */
 /*  extern int ListDBs(struct PConnection *pconn, struct Palm *palm); */
