@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.15 2000-01-23 21:20:31 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.16 2000-01-27 02:33:31 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -865,8 +865,15 @@ GenericConduit::FastSync()
 					     &recinfo, &rptr))
 	       == DLPSTAT_NOERR)
 	{
+		SYNC_TRACE(7)
+			cerr << "Got next modified record:" << endl
+			     << "\tsize == " << recinfo.size << endl
+			     << "\tcategory == " << recinfo.category << endl
+			     << "\tID == 0x" << hex << setw(8) << setfill('0')
+			     << recinfo.id << endl
+			     << "\tattributes == 0x" << hex << setw(4)
+			     << static_cast<int>(recinfo.attributes) << endl;
 		/* Got the next modified record. Deal with it */
-		/* XXX - Apparently dumps core for Justin Hawkins */
 		remoterec = new_Record(recinfo.attributes,
 				       recinfo.category,
 				       recinfo.id,
@@ -1972,8 +1979,12 @@ GenericConduit::compare_rec(const struct pdb_record *rec1,
 int
 GenericConduit::open_archive()
 {
-	_archfd = -1;		// XXX - Should probably sanity-check
-				// to see if it was already open
+	/* If the archive file was opened, close it.
+	 */
+	if (_archfd != -1)
+		close(_archfd);
+
+	_archfd = -1;
 
 	return 0;
 }
@@ -1992,7 +2003,7 @@ GenericConduit::archive_record(const struct pdb_record *rec)
 	 */
 	if (_archfd < 0)
 	{
-		if ((_archfd = arch_open(_dbinfo->name, O_WRONLY)) < 0)
+		if ((_archfd = arch_open(_dbinfo, O_WRONLY)) < 0)
 		{
 			SYNC_TRACE(2)
 				cerr << "Can't open \"" << _dbinfo->name
