@@ -46,7 +46,6 @@
 - It'd be nice to add types to distinguish between bytes and letters,
   and between arrays of arbitrary data and strings of characters. This
   is for i18n and for the benefit of Japanese users and such.
-- Document the -P <protocol> option. Add it to the usage string.
 - Use iconv(3) to convert command-line arguments to the appropriate
   encoding. Most Unix boxen use EUC for Japanese, but the Visor uses
   SJIS.
