@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.100 2002-04-27 18:00:07 azummo Exp $
+ * $Id: config.c,v 1.101 2002-05-03 15:11:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -158,6 +158,26 @@ parse_args(int argc, char *argv[])
 		{"logfile",		required_argument,	NULL, 'l'},
 		{"debug",		required_argument,	NULL, 'd'},
 		{"auto-init",		no_argument,		NULL, 'a'},
+		/* XXX - "-n" option */
+		/* XXX - Would it be possible to have translated versions
+		 * of the long options here as well? In some cases, the
+		 * translated version remains the same ("--mode" stays
+		 * "--mode" in French). It's also possible that when you
+		 * translate one option, you'll get the same string as a
+		 * different English option (I can't come up with any
+		 * examples right now).
+		 *
+		 * How does getopt_long() handle duplicate options? If it
+		 * takes the first one it finds, everything's fine.
+		 *
+		 * Note that if there's any ambiguity, we should prefer the
+		 * English option string: that way, scripts that run
+		 * coldsync will be portable. Of course, portable scripts
+		 * shouldn't be using translated option strings in the
+		 * first place; they can use comments for the translation.
+		 *
+		 * And what about Japanese? Will we need iconv()? Ugh.
+		 */
 	};	 
 #endif	/* HAVE_GETOPT_LONG */
 	 
@@ -900,6 +920,26 @@ usage(int argc, char *argv[])
 	 *	vprintf(usage_msg[i][0], (void *) &usage_msg[i][1]);
 	 * }
 	 */
+	/* XXX - This should also print long options if they're enabled.
+	 * I'm not sure how to handle this, though. In particular, for
+	 * those options that take an argument, the argument should be
+	 * translated. And in an ideal world, some or all of the long
+	 * options would be translated as well, and coldsync would accept
+	 * either the English or translated version. Thus, in French
+	 * locales, it should check for
+	 *	-f <file>
+	 *	--file <file>
+	 *	--fichier <file>
+	 * (in that order: that way, people can write portable scripts by
+	 * using the English options) and the usage message should list
+	 *	-f <fichier>
+	 *	--file <fichier>
+	 *	--fichier <fichier>
+	 * if long options are enabled, or
+	 *	-f <fichier>
+	 * if long options aren't enabled. (Or is there an "=" in there
+	 * somewhere?)
+	 */
 	const char *usage_msg[] = {
 		N_("Modes:\n"),
 		N_("\t-ms:\tSynchronize (default).\n"),
@@ -926,6 +966,7 @@ usage(int argc, char *argv[])
 		   "<file>.\n"),
 		N_("\t-v:\t\tIncrease verbosity.\n"),
 		N_("\t-d <fac[:level]>:\tSet debugging level.\n"),
+		/* XXX - "-n" option */
 		NULL
 	};
 	int i;
