@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.24 2002-10-26 13:23:28 azummo Exp $
+ * $Id: netsync.c,v 1.25 2002-11-02 12:52:53 azummo Exp $
  */
 
 #include "config.h"
@@ -414,7 +414,7 @@ bump_xid(PConnection *pconn)
 {
 	pconn->net.xid++;		/* Increment the current xid */
 
-	if( pconn->net.xid == 0x00 )
+	if (pconn->net.xid == 0x00)
 		pconn->net.xid = 0x01;
 }
 
