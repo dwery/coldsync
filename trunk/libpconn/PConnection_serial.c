@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.5 2000-05-21 07:58:45 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.6 2000-06-23 11:33:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -125,6 +125,9 @@ pconn_serial_open(struct PConnection *p, char *device, int prompt)
 	 */
 	if ((p->fd = open(device, O_RDWR)) < 0) 
 		return p->fd;
+
+	IO_TRACE(5)
+		fprintf(stderr, "PConnection fd == %d\n", p->fd);
 
 	p->io_read = &serial_read;
 	p->io_write = &serial_write;
