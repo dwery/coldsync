@@ -2,6 +2,8 @@ bin_PROGRAMS = coldsync
 
 coldsync_SOURCES = \
 	coldsync.c \
+	backup.c \
+	handledb.c \
 	pdb.c
 
 INCLUDES = \
