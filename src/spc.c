@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.3 2000-09-03 07:29:33 arensb Exp $
+ * $Id: spc.c,v 2.4 2000-11-28 01:41:50 arensb Exp $
  */
 
 #include "config.h"
@@ -94,6 +94,12 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 
 	    case SPCOP_DLPC:		/* Send DLP command to Palm */
 	    {
+		    /* XXX - Really need to parse the command: a
+		     * conduit can DlpOpenDB() a database, so if it
+		     * dies unexpectedly without a corresponding
+		     * DlpCloseDB(), this can cause a database handle
+		     * leak.
+		     */
 		    const ubyte *padp_respbuf;
 		    uword padp_resplen;
 
