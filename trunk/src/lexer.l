@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.13 2000-05-06 11:48:36 arensb Exp $
+ * $Id: lexer.l,v 2.14 2000-05-19 12:12:44 arensb Exp $
  */
 /* XXX - 'flex' by itself can (apparently) deal with infinitely-long
  * tokens. 'flex -l' (and presumably 'lex') can't. Figure out some way of
@@ -52,10 +52,10 @@ extern int fileno(FILE *);
 
 int lineno;
 
-Bool start_header = False;
-			/* Tells yylex() to go to the HEADER state. Set by
-			 * yacc.
-			 */
+static Bool have_nextstate = False;
+static int nextstate = 0;	/* State in which to start the next yylex()
+				 * call (see lex_expect(), below).
+				 */
 %}
 
  /* We don't use yywrap(), and this option makes
@@ -65,6 +65,9 @@ Bool start_header = False;
 %option noyywrap
 
  /* Start states */
+ /* An error has occurred. Just return the rest of the line */
+%s ERROR
+
  /* Looking for a conduit header */
 %s HEADER
 
@@ -97,17 +100,24 @@ HID		[-a-zA-Z_0-9]
 	if (0) goto find_rule;
 #endif	/* YY_FLEX_LEX_COMPAT */
 
-	/* XXX - Add a more general "lex_expect(state)" function. It should
-	 * set a new start state.
+	/* See if the parser has given a hint about what to look for. See
+	 * lex_expect(), below.
 	 */
-	if (start_header)
+	if (have_nextstate)
 	{
 		PARSE_TRACE(7)
-			fprintf(stderr, "Going into <HEADER> mode\n");
-		BEGIN HEADER;
-		start_header = False;
+			fprintf(stderr, "lexer: Starting state %d\n",
+				nextstate);
+		BEGIN nextstate;
+		have_nextstate = False;
 	}
 %}
+
+ /* XXX - Perhaps this should be rewritten to stop at a semicolon */
+<ERROR>.*	{
+	yylval.string = strdup(yytext);
+	return STRING;
+	}
 
 <HEADER>^{WS}*{ID1}{HID}*:{WS}*.*	{
 		/* It's actually easier to just recognize the entire line
@@ -346,6 +356,27 @@ fprintf(stderr, "Returning WORD [%s]\n", yylval.string);
 	}
 
 %%
+
+void
+lex_expect(const int state)
+{
+	switch (state)
+	{
+	    case 0:
+		nextstate = 0;
+		break;
+	    case LEX_ERROR:
+		nextstate = ERROR;
+		break;
+	    case LEX_HEADER:
+		nextstate = HEADER;
+		break;
+	    default:
+		fprintf(stderr, _("%s: unknown start state %d\n"),
+			"lex_expect", state);
+	}
+	have_nextstate = True;
+}
 
 /* This is for Emacs's benefit:
  * Local Variables:	***
