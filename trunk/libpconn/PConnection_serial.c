@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.15 2000-12-16 19:48:58 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.16 2000-12-17 06:18:08 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -398,6 +398,8 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 	/* Open the device. */
 	if ((pconn->fd = open(device, O_RDWR | O_BINARY)) < 0) 
 	{
+		fprintf(stderr, _("Error: Can't open \"%s\"\n"), device);
+		perror("open");
 		dlp_tini(pconn);
 		padp_tini(pconn);
 		slp_tini(pconn);
