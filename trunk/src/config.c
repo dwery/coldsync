@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.97 2002-04-18 21:31:45 azummo Exp $
+ * $Id: config.c,v 1.98 2002-04-18 21:54:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -147,7 +147,7 @@ parse_args(int argc, char *argv[])
 		{"protocol",		required_argument,	NULL, 'P'},
 		{"use-syslog",		no_argument,		NULL, 's'},
 		{"logfile",		required_argument,	NULL, 'l'},
-		{"debug",		no_argument,		NULL, 'd'},
+		{"debug",		required_argument,	NULL, 'd'},
 		{"auto-init",		no_argument,		NULL, 'a'},
 	};	 
 
@@ -777,31 +777,67 @@ set_mode(const char *str)
 		       "\tUsing -m%s."),
 		     str);
 
-	switch (str[0])
+	if (strlen(str) == 1) /* Short mode name */
 	{
-	    case 's':		/* Standalone mode. Default */
-		global_opts.mode = mode_Standalone;
-		return 0;
+		switch (str[0])
+		{
+		    case 's':		/* Standalone mode. Default */
+			global_opts.mode = mode_Standalone;
+			return 0;
 
-	    case 'b':		/* Backup mode */
-		global_opts.mode = mode_Backup;
-		return 0;
+		    case 'b':		/* Backup mode */
+			global_opts.mode = mode_Backup;
+			return 0;
 
-	    case 'r':		/* Restore mode */
-		global_opts.mode = mode_Restore;
-		return 0;
+		    case 'r':		/* Restore mode */
+			global_opts.mode = mode_Restore;
+			return 0;
 
-	    case 'I':		/* Init mode */
-		global_opts.mode = mode_Init;
-		return 0;
+		    case 'I':		/* Init mode */
+			global_opts.mode = mode_Init;
+			return 0;
 
-	    case 'd':		/* Daemon mode */
-		global_opts.mode = mode_Daemon;
-		return 0;
+		    case 'd':		/* Daemon mode */
+			global_opts.mode = mode_Daemon;
+			return 0;
 
-	    default:
-		Error(_("Unknown mode: \"%s\"."), str);
-		return -1;
+		    default:
+			Error(_("Unknown mode: \"%s\"."), str);
+			return -1;
+		}
+	}
+	else /* Long mode name */
+	{
+		if (strcmp(str,"standalone") == 0)
+		{
+			global_opts.mode = mode_Standalone;
+			return 0;
+		}
+		else if (strcmp(str,"backup") == 0)
+		{
+			global_opts.mode = mode_Backup;
+			return 0;
+		}
+		else if (strcmp(str,"restore") == 0)
+		{
+			global_opts.mode = mode_Restore;
+			return 0;
+		}
+		else if (strcmp(str,"init") == 0)
+		{
+			global_opts.mode = mode_Init;
+			return 0;
+		}
+		else if (strcmp(str,"daemon") == 0)
+		{
+			global_opts.mode = mode_Daemon;
+			return 0;
+		}
+		else
+		{
+			Error(_("Unknown mode: \"%s\"."), str);
+			return -1;
+		}		
 	}
 }
 
@@ -1406,7 +1442,8 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 static pconn_listen_t
 name2listen_type(const char *str)
 {
-	/* XXX - It'd be really nice if these strings were translatable */
+	/* XXX - It'd be really nice if these strings were translatable   */
+	/* mmm.. Microxoft translates macro names in their spreadsheet... */
 	if (strcasecmp(str, "serial") == 0)
 		return LISTEN_SERIAL;
 	if (strcasecmp(str, "net") == 0)
@@ -1415,6 +1452,7 @@ name2listen_type(const char *str)
 		return LISTEN_USB;
 	return LISTEN_NONE;		/* None of the above */
 }
+
 
 /* name2protocol
  * Given the name of a software protocol stack keyword, convert it to its
