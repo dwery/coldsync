@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.8 1999-11-09 04:26:23 arensb Exp $
+ * $Id: config.c,v 1.9 1999-11-09 05:54:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,6 +36,8 @@
 #endif	/* MAXHOSTNAMELEN */
 
 #define PALMDEV		"/dev/palm"	/* Default device */
+#define DIR_MODE	0700		/* Default permissions for new
+					 * directories. */
 
 extern struct config config;
 
@@ -1080,8 +1082,7 @@ load_palm_config(struct Palm *palm)
 	if (stat(palmdir, &statbuf) < 0)
 	{
 		/* ~/.palm doesn't exist. Create it */
-		/* XXX - The directory mode ought to be configurable */
-		if ((err = mkdir(palmdir, 0700)) < 0)
+		if ((err = mkdir(palmdir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
 			perror("load_palm_config: mkdir(~/.palm)\n");
@@ -1102,8 +1103,7 @@ load_palm_config(struct Palm *palm)
 	if (stat(backupdir, &statbuf) < 0)
 	{
 		/* ~/.palm/backup doesn't exist. Create it */
-		/* XXX - The directory mode ought to be configurable */
-		if ((err = mkdir(backupdir, 0700)) < 0)
+		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
 			perror("load_palm_config: mkdir(~/.palm/backup)\n");
@@ -1118,8 +1118,7 @@ load_palm_config(struct Palm *palm)
 	if (stat(atticdir, &statbuf) < 0)
 	{
 		/* ~/.palm/backup/Attic doesn't exist. Create it */
-		/* XXX - The directory mode ought to be configurable */
-		if ((err = mkdir(atticdir, 0700)) < 0)
+		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
 			perror("load_palm_config: mkdir(~/.palm/backup/Attic)\n");
@@ -1134,8 +1133,7 @@ load_palm_config(struct Palm *palm)
 	if (stat(archivedir, &statbuf) < 0)
 	{
 		/* ~/.palm/archive doesn't exist. Create it */
-		/* XXX - The directory mode ought to be configurable */
-		if ((err = mkdir(archivedir, 0700)) < 0)
+		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
 			perror("load_palm_config: mkdir(~/.palm/archive)\n");
@@ -1150,8 +1148,7 @@ load_palm_config(struct Palm *palm)
 	if (stat(installdir, &statbuf) < 0)
 	{
 		/* ~/.palm/install doesn't exist. Create it */
-		/* XXX - The directory mode ought to be configurable */
-		if ((err = mkdir(installdir, 0700)) < 0)
+		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
 			perror("load_palm_config: mkdir(~/.palm/install)\n");
@@ -1407,6 +1404,42 @@ free_listen_block(listen_block *l)
 	if (l->device != NULL)
 		free(l->device);
 	free(l);
+}
+
+/* new_conduit_block
+ * Allocate and initialize a new conduit_block.
+ */
+conduit_block *
+new_conduit_block()
+{
+	conduit_block *retval;
+
+	/* Allocate the new conduit_block */
+	if ((retval = (conduit_block *) malloc(sizeof(conduit_block))) == NULL)
+		return NULL;
+
+	/* Initialize the new conduit_block */
+	retval->next = NULL;
+	retval->flavor = Sync;
+	retval->dbtype = 0L;
+	retval->dbcreator = 0L;
+	retval->path = NULL;
+
+	return retval;
+}
+
+/* free_conduit_block
+ * Free a conduit block. Note that this function does not pay attention to
+ * any other conduit_blocks on the list. If you have a list of
+ * conduit_blocks, you can use this function to free each individual element
+ * in the list, but not the whole list.
+ */
+void
+free_conduit_block(conduit_block *c)
+{
+	if (c->path != NULL)
+		free(c->path);
+	free(c);
 }
 
 /* This is for Emacs's benefit:
