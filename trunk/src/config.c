@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.11 1999-11-10 06:46:58 arensb Exp $
+ * $Id: config.c,v 1.12 1999-11-20 05:19:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -27,6 +27,11 @@
 #include <sys/socket.h>		/* For AF_INET */
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "coldsync.h"
 #include "pconn/pconn.h"
 #include "parser.h"		/* For config file parser stuff */
@@ -66,173 +71,6 @@ static int get_fullname(char *buf, const int buflen,
 static int get_userinfo(struct userinfo *userinfo);
 
 #if 0
-/* parse_args
- * Parse command-line arguments, and fill in the appropriate slots in
- * 'global_opts'.
- */
-int
-parse_args(int argc, char *argv[])
-{
-	int oldoptind;		/* Previous value of 'optind', to allow us
-				 * to figure out exactly which argument was
-				 * bogus, and thereby print descriptive
-				 * error messages.
-				 */
-	int arg;		/* Current option */
-
-	opterr = 0;		/* Don't print getopt() error messages. */
-
-	/* Initialize the options to sane values */
-	global_opts.mode = Standalone;
-	global_opts.config_file = DEFAULT_GLOBAL_CONFIG;
-	global_opts.do_backup = False;
-	global_opts.backupdir = NULL;
-	global_opts.do_restore = False;
-	global_opts.restoredir = NULL;
-	global_opts.force_slow = False;
-	global_opts.force_fast = False;
-	global_opts.port = NULL;
-	global_opts.username = NULL;
-	global_opts.uid = (uid_t) -1;	/* Run as root by default */
-	global_opts.check_ROM = False;
-
-	/* Initialize the debugging levels to 0 */
-	slp_trace	= 0;
-	cmp_trace	= 0;
-	padp_trace	= 0;
-	dlp_trace	= 0;
-	dlpc_trace	= 0;
-	sync_trace	= 0;
-	pdb_trace	= 0;
-	misc_trace	= 0;
-
-	oldoptind = optind;		/* Initialize "last argument"
-					 * index.
-					 */
-
-	/* Get each option in turn */
-	while ((arg = getopt(argc, argv, ":hVSFRu:b:r:p:f:d:")) != -1)
-	{
-		switch (arg)
-		{
-		    case 'h':	/* -h: Print usage message and exit */
-			usage(argc,argv);
-			return -1;
-
-		    case 'V':	/* -V: Print version number and exit */
-			print_version();
-			return -1;
-
-		    case 'u':	/* -u <user|uid>: Run as user <user>, or
-				 * uid <uid>.
-				 */
-			printf("User \"%s\"\n", optarg);
-			if (isalpha((int) optarg[0]))
-				/* User specified as username */
-				global_opts.username = optarg;
-			else
-				/* User specified as UID */
-				global_opts.uid = (uid_t) atoi(optarg);
-			break;
-
-		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
-			global_opts.do_backup = True;
-			global_opts.backupdir = optarg;
-			break;
-
-		    case 'r':	/* -r <dir>: Do a restore from <dir> */
-			global_opts.do_restore = True;
-			global_opts.restoredir = optarg;
-			break;
-
-		    case 'p':	/* -p <device>: Listen on serial port
-				 * <device>
-				 */
-			global_opts.port = optarg;
-			break;
-
-		    case 'f':	/* -f <file>: Read configuration from
-				 * <file>.
-				 */
-			global_opts.config_file = optarg;
-			break;
-
-		    case 'S':	/* -S: Force slow sync */
-			global_opts.force_slow = True;
-			break;
-
-		    case 'F':	/* -F: Force fast sync */
-			global_opts.force_fast = True;
-			break;
-
-		    case 'R':	/* -R: Consider ROM databases */
-			global_opts.check_ROM = True;
-			break;
-
-		    case 'd':	/* -d <level>: Debugging level */
-			set_debug_level(optarg);
-			break;
-
-		    case '?':	/* Unknown option */
-			fprintf(stderr, "Unrecognized option: \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    case ':':	/* An argument required an option, but none
-				 * was given (e.g., "-u" instead of "-u
-				 * daemon").
-				 */
-			fprintf(stderr, "Missing option argument after \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    default:
-			fprintf(stderr,
-				"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
-				"to do with it. This is a bug. Please notify the maintainer.\n", arg);
-			return -1;
-			break;
-		}
-		oldoptind = optind;	/* Remember the current "next
-					 * argument", in case it causes an
-					 * error.
-					 */
-	}
-
-	/* Sanity checks */
-
-	/* Can't back up and restore at the same time */
-	if (global_opts.do_backup &&
-	    global_opts.do_restore)
-	{
-		fprintf(stderr, "Error: Can't specify backup and restore at the same time.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	/* Can't force both a slow and a fast sync */
-	if (global_opts.force_slow &&
-	    global_opts.force_fast)
-	{
-		fprintf(stderr, "Error: Can't force slow and fast sync at the same time.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	/* Can't specify both a username and a UID. */
-	if ((global_opts.username != NULL) &&
-	    (global_opts.uid != -1))
-	{
-		fprintf(stderr, "Error: Can't specify both a user name and a UID.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	return 0;
-}
-
 /* load_config
  * Read the configuration for this instance of 'coldsync'.
  */
@@ -253,229 +91,11 @@ fprintf(stderr, "Reading site-wide config file [%s]\n",
 	if (err < 0)
 		return -1;
 
-{
-listen_block *l;
-conduit_block *c;
-
-for (l = config.listen; l != NULL; l = l->next)
- {
-	 fprintf(stderr, "Listen:\n");
-	 fprintf(stderr, "\tType: %d\n", l->listen_type);
-	 fprintf(stderr, "\tDevice: [%s]\n", l->device);
-	 fprintf(stderr, "\tSpeed: %d\n", l->speed);
- }
-
-fprintf(stderr, "Sync conduits:\n");
-for (c = config.sync_q; c != NULL; c = c->next)
- {
-	 fprintf(stderr, "  Conduit:\n");
-	 fprintf(stderr, "\tFlavor: ");
-	 switch (c->flavor)
-	 {
-	     case Sync:
-		 fprintf(stderr, "Sync\n");
-		 break;
-	     case Fetch:
-		 fprintf(stderr, "Fetch\n");
-		 break;
-	     case Dump:
-		 fprintf(stderr, "Dump\n");
-		 break;
-	     case Install:
-		 fprintf(stderr, "Install\n");
-		 break;
-	     case Uninstall:
-		 fprintf(stderr, "Uninstall\n");
-		 break;
-	     default:
-		 fprintf(stderr, "* Unknown\n");
-		 break;
-	 }
-	 fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbcreator >> 24) & 0xff),
-		 (char) ((c->dbcreator >> 16) & 0xff),
-		 (char) ((c->dbcreator >> 8) & 0xff),
-		 (char) (c->dbcreator & 0xff),
-		 c->dbcreator);
-	 fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbtype >> 24) & 0xff),
-		 (char) ((c->dbtype >> 16) & 0xff),
-		 (char) ((c->dbtype >> 8) & 0xff),
-		 (char) (c->dbtype & 0xff),
-		 c->dbtype);
-	 fprintf(stderr, "\tPath: [%s]\n", c->path);
- }
-
-fprintf(stderr, "Fetch conduits:\n");
-for (c = config.fetch_q; c != NULL; c = c->next)
- {
-	 fprintf(stderr, "  Conduit:\n");
-	 fprintf(stderr, "\tFlavor: ");
-	 switch (c->flavor)
-	 {
-	     case Sync:
-		 fprintf(stderr, "Sync\n");
-		 break;
-	     case Fetch:
-		 fprintf(stderr, "Fetch\n");
-		 break;
-	     case Dump:
-		 fprintf(stderr, "Dump\n");
-		 break;
-	     case Install:
-		 fprintf(stderr, "Install\n");
-		 break;
-	     case Uninstall:
-		 fprintf(stderr, "Uninstall\n");
-		 break;
-	     default:
-		 fprintf(stderr, "* Unknown\n");
-		 break;
-	 }
-	 fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbcreator >> 24) & 0xff),
-		 (char) ((c->dbcreator >> 16) & 0xff),
-		 (char) ((c->dbcreator >> 8) & 0xff),
-		 (char) (c->dbcreator & 0xff),
-		 c->dbcreator);
-	 fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbtype >> 24) & 0xff),
-		 (char) ((c->dbtype >> 16) & 0xff),
-		 (char) ((c->dbtype >> 8) & 0xff),
-		 (char) (c->dbtype & 0xff),
-		 c->dbtype);
-	 fprintf(stderr, "\tPath: [%s]\n", c->path);
- }
-
-fprintf(stderr, "Dump conduits:\n");
-for (c = config.dump_q; c != NULL; c = c->next)
- {
-	 fprintf(stderr, "  Conduit:\n");
-	 fprintf(stderr, "\tFlavor: ");
-	 switch (c->flavor)
-	 {
-	     case Sync:
-		 fprintf(stderr, "Sync\n");
-		 break;
-	     case Fetch:
-		 fprintf(stderr, "Fetch\n");
-		 break;
-	     case Dump:
-		 fprintf(stderr, "Dump\n");
-		 break;
-	     case Install:
-		 fprintf(stderr, "Install\n");
-		 break;
-	     case Uninstall:
-		 fprintf(stderr, "Uninstall\n");
-		 break;
-	     default:
-		 fprintf(stderr, "* Unknown\n");
-		 break;
-	 }
-	 fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbcreator >> 24) & 0xff),
-		 (char) ((c->dbcreator >> 16) & 0xff),
-		 (char) ((c->dbcreator >> 8) & 0xff),
-		 (char) (c->dbcreator & 0xff),
-		 c->dbcreator);
-	 fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbtype >> 24) & 0xff),
-		 (char) ((c->dbtype >> 16) & 0xff),
-		 (char) ((c->dbtype >> 8) & 0xff),
-		 (char) (c->dbtype & 0xff),
-		 c->dbtype);
-	 fprintf(stderr, "\tPath: [%s]\n", c->path);
- }
-
-fprintf(stderr, "Install conduits:\n");
-for (c = config.install_q; c != NULL; c = c->next)
- {
-	 fprintf(stderr, "  Conduit:\n");
-	 fprintf(stderr, "\tFlavor: ");
-	 switch (c->flavor)
-	 {
-	     case Sync:
-		 fprintf(stderr, "Sync\n");
-		 break;
-	     case Fetch:
-		 fprintf(stderr, "Fetch\n");
-		 break;
-	     case Dump:
-		 fprintf(stderr, "Dump\n");
-		 break;
-	     case Install:
-		 fprintf(stderr, "Install\n");
-		 break;
-	     case Uninstall:
-		 fprintf(stderr, "Uninstall\n");
-		 break;
-	     default:
-		 fprintf(stderr, "* Unknown\n");
-		 break;
-	 }
-	 fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbcreator >> 24) & 0xff),
-		 (char) ((c->dbcreator >> 16) & 0xff),
-		 (char) ((c->dbcreator >> 8) & 0xff),
-		 (char) (c->dbcreator & 0xff),
-		 c->dbcreator);
-	 fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbtype >> 24) & 0xff),
-		 (char) ((c->dbtype >> 16) & 0xff),
-		 (char) ((c->dbtype >> 8) & 0xff),
-		 (char) (c->dbtype & 0xff),
-		 c->dbtype);
-	 fprintf(stderr, "\tPath: [%s]\n", c->path);
- }
-
-fprintf(stderr, "Uninstall conduits:\n");
-for (c = config.uninstall_q; c != NULL; c = c->next)
- {
-	 fprintf(stderr, "  Conduit:\n");
-	 fprintf(stderr, "\tFlavor: ");
-	 switch (c->flavor)
-	 {
-	     case Sync:
-		 fprintf(stderr, "Sync\n");
-		 break;
-	     case Fetch:
-		 fprintf(stderr, "Fetch\n");
-		 break;
-	     case Dump:
-		 fprintf(stderr, "Dump\n");
-		 break;
-	     case Install:
-		 fprintf(stderr, "Install\n");
-		 break;
-	     case Uninstall:
-		 fprintf(stderr, "Uninstall\n");
-		 break;
-	     default:
-		 fprintf(stderr, "* Unknown\n");
-		 break;
-	 }
-	 fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbcreator >> 24) & 0xff),
-		 (char) ((c->dbcreator >> 16) & 0xff),
-		 (char) ((c->dbcreator >> 8) & 0xff),
-		 (char) (c->dbcreator & 0xff),
-		 c->dbcreator);
-	 fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-		 (char) ((c->dbtype >> 24) & 0xff),
-		 (char) ((c->dbtype >> 16) & 0xff),
-		 (char) ((c->dbtype >> 8) & 0xff),
-		 (char) (c->dbtype & 0xff),
-		 c->dbtype);
-	 fprintf(stderr, "\tPath: [%s]\n", c->path);
- }
-}
-
 	/* By default, the host ID is its IP address. */
 	/* Get the hostname */
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
-		fprintf(stderr, "Can't get host name\n");
+		fprintf(stderr, _("Can't get host name\n"));
 		perror("gethostname");
 		return -1;
 	}
@@ -485,13 +105,13 @@ for (c = config.uninstall_q; c != NULL; c = c->next)
 	/* Look up the hostname */
 	if ((myaddr = gethostbyname(hostname)) == NULL)
 	{
-		fprintf(stderr, "Can't look up my address\n");
+		fprintf(stderr, _("Can't look up my address\n"));
 		perror("gethostbyname");
 		return -1;
 	}
 	MISC_TRACE(2)
 	{
-		fprintf(stderr, "My canonical name is \"%s\"\n",
+		fprintf(stderr, _("My canonical name is \"%s\"\n"),
 			myaddr->h_name);
 		fprintf(stderr, "My aliases are:\n");
 		for (i = 0; myaddr->h_aliases[i] != NULL; i++)
@@ -509,7 +129,7 @@ for (c = config.uninstall_q; c != NULL; c = c->next)
 	 */
 	if (myaddr->h_addrtype != AF_INET)
 	{
-		fprintf(stderr, "Hey! This isn't an AF_INET address!\n");
+		fprintf(stderr, _("Hey! This isn't an AF_INET address!\n"));
 		return -1;
 	} 
 
@@ -529,7 +149,7 @@ for (c = config.uninstall_q; c != NULL; c = c->next)
 	/* Make sure there's at least one address */
 	if (myaddr->h_addr_list[0] == NULL)
 	{
-		fprintf(stderr, "This host doesn't appear to have an IP address.\n");
+		fprintf(stderr, _("This host doesn't appear to have an IP address.\n"));
 		return -1;
 	}
 
@@ -579,6 +199,7 @@ get_config(int argc, char *argv[])
 					 */
 	struct stat statbuf;		/* For stat() */
 	char *devname = NULL;		/* Name of device to listen on */
+			/* XXX - Name collision with global variable */
 	struct config *user_config = NULL;
 					/* Configuration read from config
 					 * file (as opposed to what was
@@ -659,7 +280,7 @@ get_config(int argc, char *argv[])
 			break;
 
 		    case '?':	/* Unknown option */
-			fprintf(stderr, "Unrecognized option: \"%s\"\n",
+			fprintf(stderr, _("Unrecognized option: \"%s\"\n"),
 				argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
@@ -668,15 +289,15 @@ get_config(int argc, char *argv[])
 				 * was given (e.g., "-u" instead of "-u
 				 * daemon").
 				 */
-			fprintf(stderr, "Missing option argument after \"%s\"\n",
+			fprintf(stderr, _("Missing option argument after \"%s\"\n"),
 				argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
 
 		    default:
 			fprintf(stderr,
-				"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
-				"to do with it. This is a bug. Please notify the maintainer.\n", arg);
+				_("You specified an apparently legal option (\"-%c\"), but I don't know what\n"
+				"to do with it. This is a bug. Please notify the maintainer.\n"), arg);
 			return -1;
 			break;
 		}
@@ -687,9 +308,29 @@ get_config(int argc, char *argv[])
 	 * complain and exit.
 	 */
 
+	/* Sanity checks */
+
+	/* Can't back up and restore at the same time */
+	if (global_opts.do_backup &&
+	    global_opts.do_restore)
+	{
+		fprintf(stderr, _("Error: Can't specify backup and restore at the same time.\n"));
+		usage(argc, argv);
+		return -1;
+	}
+
+	/* Can't force both a slow and a fast sync */
+	if (global_opts.force_slow &&
+	    global_opts.force_fast)
+	{
+		fprintf(stderr, _("Error: Can't force slow and fast sync at the same time.\n"));
+		usage(argc, argv);
+		return -1;
+	}
+
 	if (get_userinfo(&userinfo) < 0)
 	{
-		fprintf(stderr, "Can't get user info\n");
+		fprintf(stderr, _("Can't get user info\n"));
 		return -1;
 	}
 
@@ -718,7 +359,7 @@ get_config(int argc, char *argv[])
 	/* Allocate a place to put the user's configuration */
 	if ((user_config = new_config()) == NULL)
 	{
-		fprintf(stderr, "Can't allocate new configuration.\n");
+		fprintf(stderr, _("Can't allocate new configuration.\n"));
 		return -1;
 	}
 
@@ -733,8 +374,8 @@ get_config(int argc, char *argv[])
 			/* The user explicitly said to use this file, but
 			 * it doesn't exist. Give a warning.
 			 */
-			fprintf(stderr, "Warning: config file \"%s\" "
-				"doesn't exist. Using defaults.\n",
+			fprintf(stderr, _("Warning: config file \"%s\" "
+				"doesn't exist. Using defaults.\n"),
 				config_fname);
 		}
 		config_fname = NULL;
@@ -745,8 +386,8 @@ get_config(int argc, char *argv[])
 		/* Config file exists. Read it */
 		if (parse_config(config_fname, user_config) < 0)
 		{
-			fprintf(stderr, "Error reading configuration file "
-				"\"%s\"\n",
+			fprintf(stderr, _("Error reading configuration file "
+				"\"%s\"\n"),
 				config_fname);
 			free_config(user_config);
 			return -1;
@@ -772,14 +413,14 @@ get_config(int argc, char *argv[])
 
 		if ((l = new_listen_block()) == NULL)
 		{
-			fprintf(stderr, "Can't allocate listen block.\n");
+			fprintf(stderr, _("Can't allocate listen block.\n"));
 			free_config(user_config);
 			return -1;
 		}
 
 		if ((l->device = strdup(devname)) == NULL)
 		{
-			fprintf(stderr, "Can't copy string.\n");
+			fprintf(stderr, _("Can't copy string.\n"));
 			free_listen_block(l);
 			free_config(user_config);
 			return -1;
@@ -817,14 +458,14 @@ get_config(int argc, char *argv[])
 			if ((l = new_listen_block()) == NULL)
 			{
 				fprintf(stderr,
-					"Can't allocate listen block.\n");
+					_("Can't allocate listen block.\n"));
 				free_config(user_config);
 				return -1;
 			}
 
 			if ((l->device = strdup(PALMDEV)) == NULL)
 			{
-				fprintf(stderr, "Can't copy string.\n");
+				fprintf(stderr, _("Can't copy string.\n"));
 				free_listen_block(l);
 				free_config(user_config);
 				return -1;
@@ -992,6 +633,10 @@ get_config(int argc, char *argv[])
 		}
 	}
 
+	/* XXX - Get host name and address, for UserInfo and NetSyncInfo
+	 * stuff.
+	 */
+
 	if (user_config != NULL)
 		free_config(user_config);
 
@@ -999,7 +644,8 @@ get_config(int argc, char *argv[])
 }
 
 int
-load_palm_config(struct Palm *palm)
+load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
+	/* XXX - In fact, a lot of this is totally bogus */
 {
 	/* XXX - For now, this assumes that 'coldsync' runs as a user app,
 	 * i.e., it's started by the user at login time (or 'startx' time).
@@ -1022,11 +668,8 @@ load_palm_config(struct Palm *palm)
 	struct stat statbuf;	/* For checking for files and directories */
 
 	/* Get the current user's UID */
-	if ((uid = getuid()) < 0)
-	{
-		perror("load_palm_config: getuid");
-		return -1;
-	}
+	uid = getuid();		/* Can't fail, according to TFM */
+
 	MISC_TRACE(2)
 		fprintf(stderr, "UID: %lu\n", (unsigned long) uid);
 
@@ -1340,7 +983,7 @@ get_userinfo(struct userinfo *userinfo)
 	if (get_fullname(userinfo->fullname, sizeof(userinfo->fullname),
 			 pwent) < 0)
 	{
-		fprintf(stderr, "Can't get user's full name.\n");
+		fprintf(stderr, _("Can't get user's full name.\n"));
 		return -1;
 	}
 
