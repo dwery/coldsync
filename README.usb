@@ -1,0 +1,38 @@
+	Some notes on running ColdSync with USB support
+
+$Id: README.usb,v 1.1 2002-08-31 19:27:48 azummo Exp $
+
+Linux
+=====
+
+	Linux natively supports USB connection at the kernel
+	level. The kernel module is called visor.o and will expose
+	the USB connection as a serial one (namely /dev/ttyUSBx
+	or /dev/tts/usb/x if you use devfs).
+
+	The correct way to use it with coldsync is with a
+	proper listen serial block, just like this one:
+
+	listen serial "m505" {
+		protocol: simple;
+		device: /dev/ttyUSB1;
+	}
+
+	or this one, if you use devfs:
+
+	listen serial "m505" {
+		protocol: simple;
+		device: /dev/usb/tts/1;
+		transient;
+	}
+
+*BSD
+====
+
+	ColdSync has native support for USB under *BSD. 
+
+	You can use it with a listen usb block, like this
+	one:
+
+	listen usb "m505" {
+	}
