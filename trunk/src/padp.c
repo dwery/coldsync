@@ -8,13 +8,21 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.2 1999-07-12 09:25:15 arensb Exp $
+ * $Id: padp.c,v 1.3 1999-07-14 13:53:19 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
+#if  HAVE_SYS_SELECT_H
+#  include <sys/select.h>		/* To make select() work rationally
+					 * under AIX */
+#endif	/* HAVE_SYS_SELECT_H */
 #include <sys/time.h>			/* For select() */
 #include <unistd.h>			/* For select() */
 #include <string.h>			/* For bzero() for select() */
+#if HAVE_STRINGS_H
+#  include <strings.h>			/* For bzero() under AIX */
+#endif	/* HAVE_STRINGS_H */
 #include <stdlib.h>			/* For free() */
 #include "coldsync.h"
 #include "palm_types.h"
@@ -92,7 +100,6 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	uword inlen;		/* Length of incoming data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-/* XXX - AIX uses some weird shit for select() */
 	fd_set readfds;		/* Set of readable file descriptors
 				 * (for select()) */
 	struct timeval timeout;	/* Read timeout, for select() */

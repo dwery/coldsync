@@ -9,7 +9,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.2 1999-07-12 09:32:23 arensb Exp $
+ * $Id: config.c,v 1.3 1999-07-14 13:53:14 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
@@ -23,6 +23,10 @@
 #include <ctype.h>		/* For toupper() */
 #include "coldsync.h"
 #include "dlp_cmd.h"
+
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN	256
+#endif	/* MAXHOSTNAMELEN */
 
 /* XXX - For debugging only */
 extern void debug_dump(FILE *outfile, const char *prefix,

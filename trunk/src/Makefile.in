@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.2 1999-07-12 09:12:16 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-07-14 13:53:11 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -23,7 +23,7 @@ INCLUDES =	-I. -I${top_srcdir}
 CXXINCLUDES =	${INCLUDES}
 CFLAGS =	${DEFS} ${INCLUDES} @CFLAGS@
 CPPFLAGS =	@CPPFLAGS@ ${INCLUDES}
-LDFLAGS =	@LDFLAGS@
+LDFLAGS =	@LDFLAGS@ @LIBS@
 
 MKDEP =		@MKDEP@
 

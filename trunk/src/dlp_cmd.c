@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.2 1999-07-12 09:24:36 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.3 1999-07-14 13:53:17 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -143,6 +143,7 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 					userinfo->lastsync.day,
 					userinfo->lastsync.month,
 					userinfo->lastsync.year);
+				/* XXX - Check for NULL string pointer */
 				fprintf(stderr,
 					"User name: (%d bytes) \"%*s\"\n",
 					userinfo->usernamelen,
@@ -196,7 +197,8 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "userinfo->usernamelen == %d\n",
 			userinfo->usernamelen);
 		fprintf(stderr, "userinfo->username == \"%s\"\n",
-			userinfo->username);
+			userinfo->username == NULL ?
+			"(null)" : userinfo->username);
 	}
 
 	/* Fill in the header values */
