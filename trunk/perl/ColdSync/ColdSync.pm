@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.7 2000-08-08 14:01:39 arensb Exp $
+# $Id: ColdSync.pm,v 1.8 2000-08-09 15:37:09 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.7 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.8 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -318,6 +318,14 @@ sub StartConduit
 	}
 
 	# Open the SPC pipe, if requested
+	# XXX - This is ugly. A better solution would be to add arrays of
+	# hooks: @before_conduit_hooks, @before_sync_hooks,
+	# @after_conduit_hooks, @after_sync_hooks, etc. Each array holds
+	# code refrences. These are executed in order at the appropriate
+	# times (@after_*_hooks are executed in reverse order: that way you
+	# use 'push' to add either type of hook. And since @after_*_hooks
+	# would tend to undo what was done by @before_*_hooks, things get
+	# undone in the proper order.
 	if (exists $ColdSync::SPC::{"VERSION"} and
 	    defined $HEADERS{"SPCPipe"})
 	{
