@@ -1,0 +1,98 @@
+.\" new_PConnection.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: new_PConnection.3,v 1.2 2001-09-07 09:42:18 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 15, 2001
+.Dt new_PConnection 3
+.Sh NAME
+.Nm new_PConnection
+.Nd create a new connection to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft PConnection *
+.Fn new_PConnection "char *device" "const pconn_listen_t listenType" "const pconn_proto_t protocol" "int promptHotSync"
+.Sh DESCRIPTION
+.Nm
+creates and initializes a new
+.Ft PConnection .
+This represents a connection to a Palm device, similar to a socket or
+a telephone.
+.Nm
+does not connect to the Palm, it merely creates an object that can
+connect later (in the telephone analogy, it builds the phone but
+doesn't dial it). The
+.Ft PConnection
+should be closed and destroyed with
+.Fn PConnClose .
+.Pp
+.Fa device
+specifies the pathname of the Palm device, \fIe.g.\fR
+.Pa /dev/cuaa0
+for a serial port. If
+.Fa device
+is NULL,
+.Nm
+uses standard input.
+.Pp
+.Fa listenType
+specifies the underlying connection to the Palm cradle. It is one of:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv LISTEN_SERIAL
+Serial connection, including USB connections through
+.Pa /dev/ttyUSB1
+under Linux.
+.It Dv LISTEN_NET
+TCP connection. The
+.Fa device
+argument is ignored.
+.It Dv LISTEN_USB
+USB connection under *BSD.
+.Fa device
+should be
+.Dq Dv /dev/ugen0 .
+.El
+.Pp
+.Fa protocol
+specifies the software protocol to use to communicate with the Palm
+cradle. This should be one of:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv PCONN_STACK_DEFAULT
+Guess at the correct protocol. This will usually be correct, but not
+always.
+.It Dv PCONN_STACK_FULL
+Use the DLP, PADP, and SLP protocols. This is the default for
+.Dv LISTEN_SERIAL
+and
+.Dv LISTEN_USB .
+.It Dv PCONN_STACK_SIMPLE
+Use the DLP protocol and a variant of the NetSync protocol. This is
+currently only used by Palm m500s and m505s.
+.It Dv PCONN_STACK_NET
+Use the DLP and NetSync protocols. This is the default for
+.Dv LISTEN_NET .
+.El
+.Pp
+If
+.Fa promptHotSync
+is true, the user will be prompted to press the HotSync button on the
+cradle. This argument is a hack and may go away in future versions.
+.Sh RETURN VALUE
+.Nm
+returns a pointer to a new
+.Ft PConnection ,
+or NULL in case of error.
+.\" XXX - Code example
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr PConnClose 3,
+.Xr PConn_bind .

@@ -1,0 +1,51 @@
+.\" DlpWriteResource.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpWriteResource.3,v 1.1 2001-09-05 07:29:37 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpWriteResource 3
+.Sh NAME
+.Nm DlpWriteResource
+.Nd write a resource to a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpWriteResource "PConnection *pconn" "const ubyte handle" "const udword type" "const uword id" "const uword size" "const ubyte *data"
+.Sh DESCRIPTION
+.Nm
+writes a resource to a database on a Palm. The database must already
+be open for writing.
+.Pp
+.Fa handle
+is a database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+.Fa type
+specifies the resource's four-character type, with the first character
+in the most-significant eight bits.
+.Pp
+.Fa id
+specifies the resource ID.
+.Pp
+.Fa size
+specifies the length of the resource, in bytes.
+.Pp
+.Fa data
+points to the resource data.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpWriteRecord 3 .

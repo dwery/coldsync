@@ -1,0 +1,41 @@
+.\" DlpEndOfSync.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpEndOfSync.3,v 1.1 2001-09-05 07:29:04 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpEndOfSync 3
+.Sh NAME
+.Nm DlpEndOfSync
+.Nd terminate the sync
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpEndOfSync "PConnection *pconn" "const ubyte status"
+.Sh DESCRIPTION
+.Nm
+tells the Palm that the current sync is terminated. This should be the
+last DLP call before closing the connection.
+.Pp
+.Fa status
+specifies the exit status. 0 indicates a normal termination. For other
+exit statuses, see the
+.Dv DLPCMD_SYNCEND_*
+values in
+.Pa <pconn/dlp_cmd.h> .
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpResetSyncFlags 3 ,
+.Xr PConnClose 3 .

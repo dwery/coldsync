@@ -1,0 +1,43 @@
+.\" RDLP_BatteryDialog.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: RDLP_BatteryDialog.3,v 1.1 2001-09-05 07:29:44 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt RDLP_BatteryDialog 3
+.Sh NAME
+.Nm RDLP_BatteryDialog ,
+.Nm RDLP_BatteryLevel
+.Nd query battery on a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn RDLP_BatteryDialog "PConnection *pconn"
+.Ft int
+.Fn RDLP_BatteryLevel "PConnection *pconn"
+.Sh DESCRIPTION
+.Nm RDLP_BatteryDialog
+presumably starts the battery type dialog on the Palm.
+.Pp
+.Nm RDLP_BatteryLevel
+queries the battery level on the Palm.
+.Sh RETURN VALUE
+.Nm RDLP_BatteryDialog
+returns an integer between 0 (empty) and 255 (full) indicating the
+battery charge, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpRPC 3 .
+.Sh BUGS
+It is not known what
+.Nm RDLP_BatteryDialog
+does.
