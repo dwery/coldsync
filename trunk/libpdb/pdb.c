@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.21 2000-05-03 06:29:14 arensb Exp $
+ * $Id: pdb.c,v 1.22 2000-05-06 11:26:41 arensb Exp $
  */
 
 #include "config.h"
@@ -921,10 +921,18 @@ pdb_Upload(struct PConnection *pconn,
 		     rec = rec->next)
 		{
 			udword newid;		/* New record ID */
+
 			PDB_TRACE(5)
 				fprintf(stderr,
 					"Uploading record 0x%08lx\n",
 					rec->id);
+
+			/* XXX - Gross hack to avoid uploading zero-length
+			 * records (which shouldn't exist in the first
+			 * place).
+			 */
+			if (rec->data_len == 0)
+				continue;
 
 			err = DlpWriteRecord(pconn,
 					     dbh,
