@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2001-09-05 07:36:09 arensb Exp $
+# $Id: Makefile,v 1.13 2001-11-20 14:40:58 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -26,6 +26,7 @@ MAN3FILES =	libpconn.3 \
 		DlpMoveCategory.3 \
 		DlpOpenConduit.3 \
 		DlpOpenDB.3 \
+		DlpRPC.3 \
 		DlpReadAppBlock.3 \
 		DlpReadAppPreference.3 \
 		DlpReadDBList.3 \
@@ -41,7 +42,6 @@ MAN3FILES =	libpconn.3 \
 		DlpResetRecordIndex.3 \
 		DlpResetSyncFlags.3 \
 		DlpResetSystem.3 \
-		DlpRPC.3 \
 		DlpWriteRecord.3 \
 		DlpWriteResource.3 \
 		PConnClose.3 \
@@ -53,8 +53,16 @@ MAN3FILES =	libpconn.3 \
 		RDLP_PluggedIn.3 \
 		RDLP_ROMToken.3 \
 		new_PConnection.3 \
-		time_dlp2palmtime.3 \
-		libpdb.3
+		time_dlp2palmtime.3
+		libpdb.3 \
+		new_Record.3 \
+		new_pdb.3 \
+		pdb_AppendRecord.3 \
+		pdb_CopyRecord.3 \
+		pdb_DeleteRecordByID.3 \
+		pdb_FindRecordByID.3 \
+		pdb_LoadHeader.3 \
+		pdb_Read.3
 MAN8FILES =	coldsync.8
 
 DISTFILES =	Makefile \
