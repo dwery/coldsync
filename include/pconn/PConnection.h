@@ -3,33 +3,26 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a Palm device.
  *
- *	Copyright (C) 1999-2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.17 2001-06-26 05:44:58 arensb Exp $
+ * $Id: PConnection.h,v 1.18 2001-06-30 17:58:01 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
 
-#include "config.h"
 #include <termios.h>		/* For speed_t */
 #include "palm.h"
 #include "slp.h"
 #include "padp.h"
 #include "dlp.h"
 
+/* XXX - which of these #includes actually belong here? */
 #include <sys/types.h>			/* For select() */
-#if  HAVE_SYS_SELECT_H
-#  include <sys/select.h>		/* To make select() work rationally
-					 * under AIX */
-#endif	/* HAVE_SYS_SELECT_H */
 #include <sys/time.h>			/* For select() */
 #include <unistd.h>			/* For select() */
 #include <string.h>			/* For bzero() for select() */
-#if HAVE_STRINGS_H
-#  include <strings.h>			/* For bzero() under AIX */
-#endif	/* HAVE_STRINGS_H */
 
 typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
 
