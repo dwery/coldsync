@@ -1,3 +1,7 @@
+- It'd be nice to have a tool to make sure i18n/FILES contains all of
+  the appropriate files. For that matter, it'd be nice to make sure
+  that all files that CVS knows about are in the distribution
+  somewhere.
 - Add a SIGTERM handler, to catch Ctrl-C.
 - Add support for TCP wrappers. RTFM hosts_access().
 - FreeBSD bug: accept(2) man page doesn't say that you need to
