@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.25 2000-04-15 18:10:29 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.26 2000-05-03 04:47:19 arensb Exp $
  */
 
 /* Note on I/O:
@@ -54,7 +54,7 @@ extern "C" {
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/pconn.h"
-#include "error.h"
+#include "cs_error.h"
 #include "pdb.h"
 #include "coldsync.h"
 #include "archive.h"
@@ -62,19 +62,19 @@ extern "C" {
 
 /* Convenience functions */
 static inline bool EXPUNGED(const struct pdb_record *r)
-{ return (r->attributes & PDB_REC_EXPUNGED) != 0; }
+{ return (r->flags & PDB_REC_EXPUNGED) != 0; }
 
 static inline bool DIRTY(const struct pdb_record *r)
-{ return (r->attributes & PDB_REC_DIRTY) != 0; }
+{ return (r->flags & PDB_REC_DIRTY) != 0; }
 
 static inline bool DELETED(const struct pdb_record *r)
-{ return (r->attributes & PDB_REC_DELETED) != 0; }
+{ return (r->flags & PDB_REC_DELETED) != 0; }
 
 static inline bool ARCHIVE(const struct pdb_record *r)
-{ return (r->attributes & PDB_REC_ARCHIVE) != 0; }
+{ return (r->flags & PDB_REC_ARCHIVE) != 0; }
 
 static inline bool PRIVATE(const struct pdb_record *r)
-{ return (r->attributes & PDB_REC_PRIVATE) != 0; }
+{ return (r->flags & PDB_REC_PRIVATE) != 0; }
 
 int
 run_GenericConduit(
@@ -309,8 +309,10 @@ GenericConduit::FirstSync()
 			fprintf(stderr, "Remote Record:\n");
 			fprintf(stderr, "\tID: 0x%08lx\n",
 				remoterec->id);
-			fprintf(stderr, "\tattributes: 0x%02x ",
-				remoterec->attributes);
+			fprintf(stderr, "\tflags: 0x%02x ",
+				remoterec->flags);
+			fprintf(stderr, "\tcategory: 0x%02x ",
+				remoterec->category);
 			if (EXPUNGED(remoterec))
 				fprintf(stderr, "EXPUNGED ");
 			if (DIRTY(remoterec))
@@ -335,11 +337,7 @@ GenericConduit::FirstSync()
 		     (!EXPUNGED(remoterec)))))
 		{
 			// Clear flags
-			remoterec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			remoterec->flags &= PDB_REC_PRIVATE;
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -356,11 +354,7 @@ GenericConduit::FirstSync()
 			SYNC_TRACE(5)
 				fprintf(stderr, "Need to save this record\n");
 			// Clear flags
-			remoterec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			remoterec->flags &= PDB_REC_PRIVATE;
 		}
 	}
 
@@ -516,6 +510,9 @@ GenericConduit::SlowSync()
 	 * So assume that the Palm's AppInfo block is dirty and overwrite
 	 * the local one.
 	 */
+	/* XXX - Except that the Palm apparently doesn't set its
+	 * APPINFODIRTY flag. :-(
+	 */
 
 	/* Check each remote record in turn, and compare it to the
 	 * copy in the local database.
@@ -539,8 +536,10 @@ GenericConduit::SlowSync()
 			fprintf(stderr, "Remote Record:\n");
 			fprintf(stderr, "\tID: 0x%08lx\n",
 				remoterec->id);
-			fprintf(stderr, "\tattributes: 0x%02x ",
-				remoterec->attributes);
+			fprintf(stderr, "\tflags: 0x%02x ",
+				remoterec->flags);
+			fprintf(stderr, "\tcategory: 0x%02x ",
+				remoterec->category);
 			if (EXPUNGED(remoterec))
 				fprintf(stderr, "EXPUNGED ");
 			if (DIRTY(remoterec))
@@ -576,11 +575,7 @@ GenericConduit::SlowSync()
 				 * least not explicitly marked as expunged.
 				 * So archive it.
 				 */
-				remoterec->attributes &=
-					~(PDB_REC_EXPUNGED |
-					  PDB_REC_DIRTY |
-					  PDB_REC_DELETED |
-					  PDB_REC_ARCHIVE);
+				remoterec->flags &= PDB_REC_PRIVATE;
 
 				// Archive this record
 				SYNC_TRACE(5)
@@ -606,11 +601,7 @@ GenericConduit::SlowSync()
 				 * dirty flags it might have, and add it to
 				 * the local database.
 				 */
-				remoterec->attributes &=
-					~(PDB_REC_EXPUNGED |
-					  PDB_REC_DIRTY |
-					  PDB_REC_DELETED |
-					  PDB_REC_ARCHIVE);
+				remoterec->flags &= PDB_REC_PRIVATE;
 
 				// First, make a copy
 				newrec = pdb_CopyRecord(_remotedb, remoterec);
@@ -635,8 +626,10 @@ GenericConduit::SlowSync()
 			fprintf(stderr, "Local Record:\n");
 			fprintf(stderr, "\tID: 0x%08lx\n",
 				localrec->id);
-			fprintf(stderr, "\tattributes: 0x%02x ",
-				localrec->attributes);
+			fprintf(stderr, "\tflags: 0x%02x ",
+				localrec->flags);
+			fprintf(stderr, "\tcategory: 0x%02x ",
+				localrec->category);
 			if (EXPUNGED(localrec))
 				fprintf(stderr, "EXPUNGED ");
 			if (DIRTY(localrec))
@@ -670,7 +663,7 @@ GenericConduit::SlowSync()
 				/* The records are different. Mark the
 				 * remote record as dirty.
 				 */
-				remoterec->attributes |= PDB_REC_DIRTY;
+				remoterec->flags |= PDB_REC_DIRTY;
 		}
 
 		/* Sync the two records */
@@ -679,11 +672,7 @@ GenericConduit::SlowSync()
 			fprintf(stderr, "SyncRecord returned %d\n ", err);
 
 		/* Mark the remote record as clean for the next phase */
-		remoterec->attributes &=
-			~(PDB_REC_EXPUNGED |
-			  PDB_REC_DIRTY |
-			  PDB_REC_DELETED |
-			  PDB_REC_ARCHIVE);
+		remoterec->flags &= PDB_REC_PRIVATE;
 	}
 
 	/* Look up each record in the local database and see if it exists
@@ -724,11 +713,7 @@ GenericConduit::SlowSync()
 			/* The local record was deleted, and needs to be
 			 * archived.
 			 */
-			localrec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -748,11 +733,7 @@ GenericConduit::SlowSync()
 			/* This record is merely new. Clear any dirty flags
 			 * it might have, and upload it to the Palm.
 			 */
-			localrec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Sending local record "
@@ -760,13 +741,8 @@ GenericConduit::SlowSync()
 					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
-					     /* XXX - The category is the
-					      * bottom 4 bits of the
-					      * attributes. Fix this
-					      * throughout.
-					      */
-					     localrec->attributes & 0xf0,
-					     localrec->attributes & 0x0f,
+					     localrec->flags,
+					     localrec->category,
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
@@ -942,6 +918,9 @@ GenericConduit::FastSync()
 	 *	dirty	dirty	Conflict. Palm overwrites desktop (tie-breaker)
 	 *			Save AppInfo block to archive file?
 	 */
+	/* XXX - Except that the Palm apparently never sets its
+	 * APPINFODIRTY flag :-(
+	 */
 
 	/* Read each modified record in turn. */
 	while ((err = DlpReadNextModifiedRec(_pconn, dbh,
@@ -1012,14 +991,7 @@ GenericConduit::FastSync()
 						fprintf(stderr,
 							"This is a new "
 							"archived record\n");
-					remoterec->attributes &= 0x0f;
-						/* XXX - Presumably, this
-						 * should just become a
-						 * zero assignment, when/if
-						 * attributes and
-						 * categories get
-						 * separated.
-						 */
+					remoterec->flags &= PDB_REC_PRIVATE;
 
 					SYNC_TRACE(5)
 						fprintf(stderr,
@@ -1055,12 +1027,7 @@ GenericConduit::FastSync()
 			 * it to the local database: it's fresh and
 			 * new.
 			 */
-			remoterec->attributes &= 0x0f;
-				/* XXX - Presumably, this should just
-				 * become a zero assignment, when/if
-				 * attributes and categories get
-				 * separated.
-				 */
+			remoterec->flags &= PDB_REC_PRIVATE;
 
 			/* Add the new record to localdb */
 			if ((err = pdb_AppendRecord(_localdb, remoterec)) < 0)
@@ -1153,11 +1120,7 @@ GenericConduit::FastSync()
 			/* The local record was deleted, and needs to be
 			 * archived.
 			 */
-			localrec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			// Archive this record
 			SYNC_TRACE(5)
@@ -1225,11 +1188,7 @@ GenericConduit::FastSync()
 			/* This record is merely new. Clear any dirty flags
 			 * it might have, and upload it to the Palm.
 			 */
-			localrec->attributes &=
-				~(PDB_REC_EXPUNGED |
-				  PDB_REC_DIRTY |
-				  PDB_REC_DELETED |
-				  PDB_REC_ARCHIVE);
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Sending local record (ID "
@@ -1237,13 +1196,8 @@ GenericConduit::FastSync()
 					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
-					     /* XXX - The category is the
-					      * bottom 4 bits of the
-					      * attributes. Fix this
-					      * throughout.
-					      */
-					     localrec->attributes & 0xf0,
-					     localrec->attributes & 0x0f,
+					     localrec->flags,
+					     localrec->category,
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
@@ -1478,14 +1432,7 @@ GenericConduit::SyncRecord(
 			this->archive_record(remoterec);
 
 			/* Fix flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be set to 0, once
-				 * pdb_record has separate fields for
-				 * attributes and category.
-				 */
-				/* XXX - Actually, don't clear the PRIVATE
-				 * flag.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
@@ -1494,13 +1441,8 @@ GenericConduit::SyncRecord(
 					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
-					     /* XXX - The category is the
-					      * bottom 4 bits of the
-					      * attributes. Fix this
-					      * throughout.
-					      */
-					     localrec->attributes & 0xf0,
-					     localrec->attributes & 0x0f,
+					     localrec->flags,
+					     localrec->category,
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
@@ -1552,7 +1494,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix flags */
-			localrec->attributes &= 0x0f;
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -1603,11 +1545,7 @@ GenericConduit::SyncRecord(
 			}
 
 			/* Fix flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
@@ -1615,13 +1553,8 @@ GenericConduit::SyncRecord(
 					"> Uploading local record to Palm\n");
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
-					     /* XXX - The bottom nybble of
-					      * the attributes byte is the
-					      * category. Fix this
-					      * throughout.
-					      */
-					     localrec->attributes & 0xf0,
-					     localrec->attributes & 0xf0,
+					     localrec->flags,
+					     localrec->category,
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
@@ -1676,11 +1609,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -1692,9 +1621,8 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Copying remote record to "
 					"local database\n");
-			newrec = new_Record(remoterec->attributes,
-					    remoterec->attributes,
-						/* XXX - Category. Sloppy */
+			newrec = new_Record(remoterec->flags,
+					    remoterec->category,
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
@@ -1706,11 +1634,7 @@ GenericConduit::SyncRecord(
 			}
 
 			/* Fix flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			pdb_AppendRecord(localdb, newrec);
 
@@ -1731,9 +1655,8 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Copying remote record to "
 					"local database\n");
-			newrec = new_Record(remoterec->attributes,
-					    remoterec->attributes,
-						/* XXX - Category. Sloppy */
+			newrec = new_Record(remoterec->flags,
+					    remoterec->category,
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
@@ -1745,11 +1668,7 @@ GenericConduit::SyncRecord(
 			}
 
 			/* Fix remote flags */
-			newrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			newrec->flags &= PDB_REC_PRIVATE;
 
 			pdb_AppendRecord(localdb, newrec);
 
@@ -1771,12 +1690,7 @@ GenericConduit::SyncRecord(
 				 * Reset localrec's flags to clean, but
 				 * otherwise do nothing.
 				 */
-				localrec->attributes &= 0x0f;
-					/* XXX - This will just be 0 once
-					 * pdb_record includes separate
-					 * fields for attributes and
-					 * category.
-					 */
+				localrec->flags &= PDB_REC_PRIVATE;
 			} else {
 				/* The records have both been modified, but
 				 * in different ways.
@@ -1785,12 +1699,7 @@ GenericConduit::SyncRecord(
 				struct pdb_record *newrec;
 
 				/* Fix flags on localrec */
-				localrec->attributes &= 0x0f;
-					/* XXX - This will just be 0 once
-					 * pdb_record includes separate
-					 * fields for attributes and
-					 * category.
-					 */
+				localrec->flags &= PDB_REC_PRIVATE;
 
 				/* Upload localrec to Palm */
 				SYNC_TRACE(6)
@@ -1798,14 +1707,8 @@ GenericConduit::SyncRecord(
 						"record to Palm\n");
 				err = DlpWriteRecord(_pconn, dbh, 0x80,
 						     localrec->id,
-						     /* XXX - The bottom
-						      * nybble of the
-						      * attributes byte is
-						      * the category. Fix
-						      * this throughout.
-						      */
-						     localrec->attributes & 0xf0,
-						     localrec->attributes & 0xf0,
+						     localrec->flags,
+						     localrec->category,
 						     localrec->data_len,
 						     localrec->data,
 						     &newID);
@@ -1830,14 +1733,9 @@ GenericConduit::SyncRecord(
 					fprintf(stderr, "Adding remote record "
 						"to local database.\n");
 				/* First, make a copy (with clean flags) */
-				/* XXX - Get category */
 				newrec = new_Record(
-					remoterec->attributes &
-					~(PDB_REC_EXPUNGED|
-					  PDB_REC_DIRTY|
-					  PDB_REC_DELETED),
-					remoterec->attributes,
-						/* XXX - Category. Sloppy */
+					remoterec->flags & PDB_REC_PRIVATE,
+					remoterec->category,
 					remoterec->id,
 					remoterec->data_len,
 					remoterec->data);
@@ -1882,9 +1780,8 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Copying remote record to "
 					"local database\n");
-			newrec = new_Record(remoterec->attributes,
-					    remoterec->attributes,
-						/* XXX - Category. Sloppy. */
+			newrec = new_Record(remoterec->flags,
+					    remoterec->category,
 					    remoterec->id,
 					    remoterec->data_len,
 					    remoterec->data);
@@ -1896,11 +1793,7 @@ GenericConduit::SyncRecord(
 			}
 
 			/* Fix flags */
-			newrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			newrec->flags &= PDB_REC_PRIVATE;
 
 			err = pdb_InsertRecord(localdb, localrec, newrec);
 			if (err < 0)
@@ -1931,11 +1824,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix local flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
@@ -1999,11 +1888,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  dirty\n");
 
 			/* Fix local flags */
-			localrec->attributes &= 0x0f;
-				/* XXX - This will just be 0 once
-				 * pdb_record includes separate fields for
-				 * attributes and category.
-				 */
+			localrec->flags &= PDB_REC_PRIVATE;
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
@@ -2011,13 +1896,8 @@ GenericConduit::SyncRecord(
 					"Palm\n");
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
-					     /* XXX - The bottom nybble of
-					      * the attributes byte is the
-					      * category. Fix this
-					      * throughout.
-					      */
-					     localrec->attributes & 0xf0,
-					     localrec->attributes & 0xf0,
+					     localrec->flags,
+					     localrec->category,
 					     localrec->data_len,
 					     localrec->data,
 					     &newID);
