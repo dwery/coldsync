@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.25 2003-10-10 10:56:52 azummo Exp $
+# $Id: ColdSync.pm,v 1.26 2003-10-10 11:06:05 azummo Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.25 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.26 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -204,7 +204,13 @@ sub DumpConfig
 		print "    arguments:\n";
 		while (($key, $value) = each %HEADERS)
 		{
-			print "#\t$key:\t$value\n";
+			if ($value =~ /\s+/)
+			{
+				print "#\t$key:\t\"$value\";\n";
+			} else
+			{
+				print "#\t$key:\t$value;\n";
+			}
 		}
 	}
 
