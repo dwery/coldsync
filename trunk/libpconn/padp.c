@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.9 2000-08-07 00:34:22 arensb Exp $
+ * $Id: padp.c,v 1.10 2000-11-25 22:27:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -600,12 +600,13 @@ padp_write(struct PConnection *pconn,
 				frag_len,
 				pconn->padp.xid);
 
-		/* Set the timeout length, for select() */
-		timeout.tv_sec = PADP_ACK_TIMEOUT;
-		timeout.tv_usec = 0L;
-
+		/* Try to send the packet */
 		for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
 		{
+			/* Set the timeout length, for select() */
+			timeout.tv_sec = PADP_ACK_TIMEOUT;
+			timeout.tv_usec = 0L;
+
 			err = (*pconn->io_select)(pconn, forWriting, &timeout);
 			if (err == 0)
 			{
@@ -632,6 +633,9 @@ padp_write(struct PConnection *pconn,
 			 * become readable. If nothing comes in, time out
 			 * and retry.
 			 */
+			timeout.tv_sec = PADP_ACK_TIMEOUT;
+			timeout.tv_usec = 0L;
+
 			err = (*pconn->io_select)(pconn, forReading, &timeout);
 			if (err == 0)
 			{
