@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.97 2001-06-04 03:07:12 arensb Exp $
+ * $Id: coldsync.c,v 1.98 2001-07-30 07:13:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -97,6 +97,7 @@ main(int argc, char *argv[])
 	global_opts.conf_fname_given	= False;
 	global_opts.devname		= NULL;
 	global_opts.devtype		= -1;
+	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
 	global_opts.log_fname		= NULL;
 	global_opts.do_backup		= False;
@@ -327,6 +328,8 @@ main(int argc, char *argv[])
 			"(null)" : global_opts.devname);
 		fprintf(stderr, "\tdevtype: %d\n",
 			global_opts.devtype);
+		fprintf(stderr, "\tprotocol: %d\n",
+			global_opts.protocol);
 		fprintf(stderr, "\tdo_backup: %s\n",
 			global_opts.do_backup ? "True" : "False");
 		fprintf(stderr, "\tbackupdir: \"%s\"\n",
@@ -483,7 +486,9 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* Set up a PConnection to the Palm */
 	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 1))
+				     sync_config->listen->listen_type,
+				     sync_config->listen->protocol,
+				     1))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -750,7 +755,10 @@ run_mode_Standalone(int argc, char *argv[])
 		 * forward_netsync()?
 		 */
 		/* Create a new PConnection for talking to the remote host */
-		if ((pconn_forw = new_PConnection(NULL, LISTEN_NET, 0))
+		if ((pconn_forw = new_PConnection(NULL,
+						  LISTEN_NET,
+						  PCONN_STACK_DEFAULT,
+						  0))
 		    == NULL)
 		{
 			Error(_("Can't create connection to forwarding "
@@ -1303,7 +1311,9 @@ run_mode_Backup(int argc, char *argv[])
 
 	/* Set up a PConnection to the Palm */
 	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 1))
+				     sync_config->listen->listen_type,
+				     sync_config->listen->protocol,
+				     1))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1473,7 +1483,9 @@ run_mode_Restore(int argc, char *argv[])
 
 	/* Set up a PConnection to the Palm */
 	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 1))
+				     sync_config->listen->listen_type,
+				     sync_config->listen->protocol,
+				     1))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1666,7 +1678,9 @@ run_mode_Init(int argc, char *argv[])
 
 	/* Set up a PConnection to the Palm */
 	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 1))
+				     sync_config->listen->listen_type,
+				     sync_config->listen->protocol,
+				     1))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -2053,7 +2067,9 @@ run_mode_Daemon(int argc, char *argv[])
 	char *devname;			/* Name of device to open */
 	char devbuf[MAXPATHLEN];	/* In case we need to construct
 					 * device name */
-	run_mode devtype;		/* Listen block type */
+	int devtype;			/* Listen block type */
+	int protocol;			/* Software protocol for talking
+					 * to cradle. */
 	const struct palment *palment;	/* /etc/palms entry */
 	struct passwd *pwent;		/* /etc/passwd entry */
 	char *conf_fname = NULL;	/* Config file name from /etc/palms */
@@ -2084,10 +2100,16 @@ run_mode_Daemon(int argc, char *argv[])
 				argv[0]);
 
 		/* Use the listen type specified by the '-t' option */
-		devtype = global_opts.devtype; 
+		devtype = global_opts.devtype;
 
 		SYNC_TRACE(3)
 			fprintf(stderr, "Listen type: %d\n", devtype);
+
+		/* Use the protocol stack specified by the '-P' option */
+		protocol = global_opts.protocol;
+
+		SYNC_TRACE(3)
+			fprintf(stderr, "Protocol: %d\n", protocol);
 
 		/* Figure out which device to use */
 		if (strcmp(argv[0], "-") == 0)
@@ -2128,6 +2150,7 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 		devname = sync_config->listen->device;
 		devtype = sync_config->listen->listen_type;
+		protocol = sync_config->listen->protocol;
 
 		SYNC_TRACE(3)
 		{
@@ -2137,7 +2160,8 @@ run_mode_Daemon(int argc, char *argv[])
 	}
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(devname, devtype, False)) == NULL)
+	if ((pconn = new_PConnection(devname, devtype, protocol, False))
+	    == NULL)
 	{
 		Error(_("Can't open connection."));
 		/* XXX - Say why */
@@ -2470,7 +2494,10 @@ run_mode_Daemon(int argc, char *argv[])
 		 * forward_netsync()?
 		 */
 		/* Create a new PConnection for talking to the remote host */
-		if ((pconn_forw = new_PConnection(NULL, LISTEN_NET, 0))
+		if ((pconn_forw = new_PConnection(NULL,
+						  LISTEN_NET,
+						  PCONN_STACK_DEFAULT,
+						  0))
 		    == NULL)
 		{
 			Error(_("Can't create connection to forwarding "
