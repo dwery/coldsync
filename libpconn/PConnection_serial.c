@@ -2,11 +2,11 @@
  *
  * Functions to manipulate serial Palm connections (PConnection).
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.7 2000-09-03 07:30:39 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.8 2000-11-20 10:12:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -106,11 +106,13 @@ serial_setspeed(struct PConnection *pconn, int speed)
 		return -1;
 	}
 
-	sleep(1);		/* XXX - Why is this necessary? (under
-				 * FreeBSD 3.x). Actually, various sensible
-				 * things work without the sleep(), but not
-				 * with xcopilot (pseudo-ttys).
-				 */
+#if defined(__FreeBSD__)
+	/* XXX - For some reason, under FreeBSD, when syncing with xcopilot
+	 * (pseudo-ttys), no communication occurs after this point unless
+	 * this sleep() is present.
+	 */
+	sleep(1);
+#endif	/* __FreeBSD__ */
 
 	return 0;
 }
