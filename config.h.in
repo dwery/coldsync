@@ -22,9 +22,6 @@
 /* Define if you have the cfmakeraw function.  */
 #undef HAVE_CFMAKERAW
 
-/* Define if you have the cfsetspeed function.  */
-#undef HAVE_CFSETSPEED
-
 /* Define if you have the select function.  */
 #undef HAVE_SELECT
 
