@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.48 2001-01-28 22:41:41 arensb Exp $
+ * $Id: coldsync.h,v 1.49 2001-01-30 08:10:20 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -378,6 +378,10 @@ extern const Bool is_database_name(const char *fname);
 
 #if !HAVE_SNPRINTF
 extern int snprintf(char *buf, size_t len, const char *format, ...);
+#endif	/* HAVE_SNPRINTF */
+
+#if !HAVE_VSNPRINTF
+extern int vsnprintf(char *buf, size_t len, const char *format, ...);
 #endif	/* HAVE_SNPRINTF */
 
 #endif	/* _coldsync_h_ */
