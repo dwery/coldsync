@@ -1,0 +1,837 @@
+.\" coldsync.8
+.\" 
+.\" Copyright 1999, 2000, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: coldsync.8,v 1.28 2000-11-27 11:27:09 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.Dd July 12, 1999
+.Dt COLDSYNC 8 SMM
+.Os
+.Sh NAME
+.Nm coldsync
+.Nd synchronize files between a Palm and a workstation.
+.Sh SYNOPSIS
+.Nm coldsync
+.Op Ar options
+.Op Fl ms
+.Nm coldsync
+.Op Ar options
+.Fl mI
+.Nm coldsync
+.Op Ar options
+.Fl mb
+.Ar dir
+.Op database...
+.Nm coldsync
+.Op Ar options
+.Fl mr
+.Ar file|dir...
+.Nm coldsync
+.Fl V
+.Nm coldsync
+.Fl h
+.Sh DESCRIPTION
+.Nm coldsync
+synchronizes databases between a Palm Computing device and a
+workstation (see OVERVIEW, below). By default, it performs a full
+sync, copying records from the Palm to the desktop and vice-versa
+until both contain the same set of records.
+.Pp
+In backup mode,
+.Nm coldsync
+downloads databases from the Palm to a user-specified directory on the
+workstation.
+.Pp
+In restore mode,
+.Nm coldsync
+uploads database files from the workstation to the Palm. This can be
+used either to restore files after a backup, or to install new
+databases on the Palm.
+.Sh OPTIONS
+.Ss Modes
+.Bl -tag -width indent
+.It Fl mI
+Initialization mode. Before you can sync a Palm, you must initialize
+its user information. This may seem annoying, but it can prevent other
+annoyances (e.g., losing all of your information the next time you
+reset your Palm, or failing to work with HotSync). Note that backup
+and restore mode do not require that the Palm be initialized.
+.Pp
+In this mode,
+.Nm coldsync
+sets the user name and ID on the Palm from values specified in your
+.Pa .coldsyncrc .
+If no values are specified there, the user name and ID default to your
+full name and user ID from
+.Pa /etc/passwd .
+If the Palm already has non-default values that you haven't explicitly
+overridden,
+.Nm coldsync
+will suggest what to add to your
+.Pa .coldsyncrc .
+.It Fl ms
+Sync mode (or Standalone mode). This is the default mode, in which
+.Nm coldsync
+performs a full sync (see
+.Sx OVERVIEW ,
+below).
+.It Fl mb
+Backup mode, in which
+.Nm coldsync
+downloads databases from the Palm. The first argument is a directory
+in which to write the files. Any subsequent arguments are the names of
+databases to back up. If no databases are specified,
+.Nm coldsync
+does a full backup of the Palm.
+.It Fl mr
+Restore mode (or Install mode), in which
+.Nm coldsync
+installs the files given as arguments on the Palm. Each argument is
+processed in turn; if it is a file, then that file is uploaded. If the
+argument is a directory, then all files in that directory will be
+uploaded (this is not recursive). If a database of the same name
+exists on the Palm, that database is deleted.
+.El
+.Ss Common Options
+.Bl -tag -width -indent
+.It Fl h
+(Help) Print a usage message and exit.
+.It Fl V
+Print version information and exit.
+.It Fl f Ar config_file
+Tells
+.Nm coldsync
+to read its configuration from
+.Pa config_file
+instead of
+.Pa ~/.coldsyncrc .
+.It Fl S
+Force a slow sync. Don't use this unless you know what you're doing.
+.It Fl F
+Force a fast sync. Don't use this unless you know what you're doing.
+.It Fl I
+Install all databases in
+.Pa ~/.palm/install .
+Normally,
+.Nm coldsync
+does not install databases if doing so would overwrite an existing
+database with a higher modification number. This flag overrides this
+behavior.
+.It Fl R
+Consider read-only (ROM) databases when syncing or doing a backup or
+restore. Normally, these are ignored.
+.It Fl p Ar device
+Specifies the device, e.g.
+.Pa /dev/cuaa0
+for serial connections, or
+.Pa /dev/ugen0
+for USB connections, that the Palm is connected to. If not specified,
+this defaults to
+.Pa /dev/palm .
+.It Fl t Ar type
+Specifies the device type for the
+.Fl f
+option. Legal values are
+.Dv serial
+and
+.Dv usb .
+.It Fl d Ar debug
+Set debugging level. The argument
+.Ar debug
+can be either of the form
+.Ar facility 
+or
+.Ar facility:level .
+This sets the debugging level for the named facility. If the debugging
+level is not specified, it defaults to 1. Thus,
+.Li -dmisc
+is equivalent to
+.Li -dmisc:1 .
+Facilities currently include
+.Dv SLP , CMP , PADP , DLP , DLPC ,
+.Dv SYNC , PARSE , IO ,
+and
+.Dv MISC .
+The
+.Ar level
+argument is an integer that specifies the verbosity of the output.
+Unless you are a developer, you should probably never need to go above
+5.
+.Bd -literal -offset indent
+	-d sync:5 -d misc:5
+.Ed
+is a good general-purpose debugging level. If you are having problems
+with your
+.Pa .coldsyncrc
+file,
+.Bd -literal -offset indent
+	-d sync:4
+.Ed
+will print a summary of what
+.Nm ColdSync
+thinks your configuration file contains.
+.It Fl b Ar directory
+.Em This option is deprecated. Please use
+.Fl mb
+.Em instead.
+.Pp
+Perform a full backup of the Palm, and put the files in
+.Ar directory .
+.Em NB:
+This will not overwrite any existing files: if a backup file for a
+database already exists in the backup directory, that database will
+simply be skipped.
+.It Fl r Ar directory
+.Em This option is deprecated. Please use
+.Fl mr
+.Em instead.
+.Pp
+Restore files from
+.Ar directory .
+.Em Warning:
+If you restore a database that already exists on the Palm, that
+database will be overwritten.
+.El
+.Sh OVERVIEW
+To sync,
+run
+.Li coldsync
+with the appropriate options. Place the Palm in its cradle and press
+the HotSync button. Your Palm will display the messages
+.Dq Connecting with the desktop ,
+.Dq Identifying user ,
+a series of
+.Dq Synchronizing Pa filename
+messages, and finally
+.Dq HotSync complete.
+At this point, you can remove the Palm from its cradle and use it
+normally.
+.Pp
+Here's a summary of what goes on when you sync:
+.Bl -enum -compact
+.It
+.Nm coldsync
+starts, reads the
+.Pa .coldsyncrc
+file, and finds out which port it should listen on.
+.It
+You press the HotSync button.
+.It
+The Palm announces itself to
+.Nm coldsync .
+.It
+.Nm coldsync
+queries the Palm to find out what databases it has, who owns it, etc.
+.It
+.Nm coldsync
+runs Install conduits on any files in the install directory (
+.Pa ~/.palm/install
+by default), then uploads to the Palm any files still in the install
+directory after the Install conduits have run.
+.It
+.Nm coldsync
+runs the Fetch conduits, to create the desktop copies of the
+databases.
+.It
+The main sync:
+.Nm coldsync
+runs the Sync conduits for all databases on the Palm. By default,
+.Nm coldsync
+only runs the 
+.Li [generic]
+conduit, which synchronizes the database on the Palm with a backup
+file on the workstation. This can be overridden, however.
+.It
+The main sync ends. The Palm displays the message
+.Dq HotSync complete.
+You may remove the Palm from its cradle.
+.It
+.Nm coldsync
+runs the Dump conduits. These can export the updated databases to
+other formats.
+.El
+.Pp
+When possible,
+.Nm ColdSync
+(specifically, the
+.Li [generic]
+Sync conduit) tries to be smart about how it syncs databases, and only
+transfers those records that have changed since the last sync. At the
+same time, it tries to be cautious, and never deletes anything that it
+isn't sure should be deleted. For instance, if a record has changed
+both on the Palm and on the desktop, ColdSync will create two records,
+one with each version of the record, rather than risk deleting the
+wrong record.
+.Pp
+By itself,
+.Nm ColdSync
+is simply a fancy backup program. Conduits make it more useful. A
+conduit is simply a program that follows a certain protocol to read or
+write Palm database files.
+.Pp
+For instance, if you have a
+.Pa TODO
+file that you want to keep in sync with the Palm
+.Dq ToDo
+application, you could use a pair of conduits to do so: a Fetch
+conduit to convert your TODO file to a Palm database, and a Dump
+conduit to convert the newly-synchronized database back to a text
+file. If you'll look back at the sequence of events, above, you'll see
+how this works.
+.Pp
+Currently, the only conduit flavors are
+.Dq Install ,
+.Dq Fetch ,
+.Dq Dump ,
+and
+.Dq Sync .
+Others may be added in the future.
+.\" XXX - This section should probably be in a man page of its own.
+.Sh CONFIGURATION FILE
+.Nm ColdSync
+reads its configuration from the file
+.Pa .coldsyncrc
+in the user's home directory, or from the file specified with the
+.Fl f
+command-line argument.
+.Pp
+The
+.Pa .coldsyncrc
+file contains
+.Li listen , pda ,
+and
+.Li conduit
+directives.
+.Ss listen
+.Li listen
+directives are of the form
+.\" XXX - It'd be nice to have font changes inside the display, to
+.\" indicate pathnames and whatnot.
+.Bd -literal -offset indent
+listen <type> {
+	device: /dev/palm;
+}
+.Ed
+where
+.Li <type>
+is either
+.Li serial
+for a serial connection (PalmPilot, Palm V, Visor under Linux, etc.),
+or
+.Li usb
+for a USB connection (Visor under FreeBSD);
+.Pa /dev/palm
+is the pathname to your serial or USB device. Currently, only one
+device may be specified.
+.Pp
+If you are using IrCOMM to sync via the infrared port, you will need
+to specify
+.Li <type>
+as
+.Li serial ,
+since IrCOMM effectively makes an infrared port emulate a serial port.
+.Pp
+The
+.Li usb
+listen type is only used under *BSD.
+.Pp
+For serial devices, the
+.Li listen
+block may also contain a line of the form
+.Bd -literal -offset indent
+        speed: <speed>;
+.Ed
+This specifies the speed at which the sync will take place. If this
+line is omitted,
+.Nm ColdSync
+will use the default speed, 38400 bps. You will generally want to set
+this to the highest speed supported by both your Palm and your
+machine's serial port.
+.Pp
+If a device was specified on the command line with the
+.Fl p
+option,
+.Nm ColdSync
+ignores the one specified in the configuration file. If no device was
+specified either on the command line or in the configuration file,
+.Nm ColdSync
+defaults to
+.Pa /dev/palm .
+.Ss pda
+.Li pda
+directives are of the form
+.Bd -literal -offset indent
+pda "My Palm" {
+	snum: 10BX13C22K98-M;
+	directory: /folks/arensb/.palmIII;
+	username: "Gorko the Invincible";
+	userid: 1234;
+	default;
+}
+.Ed
+All of these lines are optional. You may also use
+.Li palm
+as a synonym for
+.Li pda .
+.Pp
+The PDA's name,
+.Dq My Palm
+in this example, is currently unused and may be omitted.
+.Pp
+The
+.Li snum
+line gives the Palm's serial number. You can get this number by selecting
+.Dq Info
+from the Palm's application launcher. In the above example,
+.Li 10BX13C22K98
+is the serial number, and the
+.Li M
+after the dash is the checksum. If you omit the checksum,
+.Nm ColdSync
+will calculate it for you and suggest that you add it to your
+.Pa .coldsyncrc .
+.Pp
+The
+.Li directory
+line specifies the root of the tree where
+.Nm ColdSync
+will put its files. If this line is omitted, the directory defaults to
+.Pa ~/.palm .
+.Pp
+The
+.Li username
+and
+.Li userid
+entries allow you to specify the full name and user ID associated with
+this Palm. This can be useful if you have licensed applications whose
+license key depends on the user name. If the
+.Li userid
+is omitted, it defaults to the UID under which
+.Nm ColdSync
+is run. If
+.Li username
+is omitted, it defaults to the full name of the user running
+.Nm ColdSync ,
+as returned by
+.Fn getpwuid .
+.Pp
+The
+.Li default
+flag indicates that this a default PDA block. It will be used if no
+better match is found. Thus, if you specify
+.Bd -literal -offset indent
+pda {
+	directory: /folks/arensb/.palm-generic;
+	default;
+}
+
+pda {
+	snum: 10BX13C22K99;
+	directory: /folks/arensb/.palm-III;
+}
+
+pda {
+	snum: 0123456789AB;
+}
+.Ed
+.Nm ColdSync
+will use the directory
+.Pa /folks/arensb/.palm-III
+to sync the Palm with serial number 10BX13C22K99. It will use the directory
+.Pa /folks/arensb/.palm
+to sync the Palm with serial number 0123456789AB (the directory defaults to
+.Pa ~/.palm ).
+For any other Palm devices,
+.Nm ColdSync
+will use the directory
+.Pa /folks/arensb/.palm-generic .
+.Pp
+If you specify the serial number as the empty string,
+.Bd -literal -offset indent
+	snum: "";
+.Ed
+this refers to Palm devices without a serial number, e.g. the
+PalmPilot. Unfortunately, if you have several such devices, it is not
+possible to keep their contents separate through
+.Li pda
+directives.
+.Pp
+You may specify both a serial number and the
+.Li default
+flag. Since the serial number uniquely identifies a Palm, this is not
+terribly useful unless you specify the empty string as the serial
+number; this allows you to have one default for pre-3.0 Palms, and
+another default for all others.
+.Ss conduit
+.\" XXX - Add mention of "arguments:" line.
+.Li conduit
+directives control the behavior of a conduit. The documentation for a
+conduit should specify the values to use here.
+.Pp
+.Li conduit
+directives are of the form
+.Bd -literal -offset indent
+conduit <flavor-list> {
+	path: /path/to/conduit;
+	type: <creator>/<type>;
+	preference: <pref-creator>/<pref-id>;
+	<flags>;
+    arguments:
+	<conduit-specific arguments>
+}
+.Ed
+where
+.Li <flavor-list>
+is a comma-separated list of conduit flavors. Allowable conduit flavors are
+.Li install ,
+.Li fetch ,
+.Li dump ,
+and
+.Li sync
+(
+.Li pre-fetch
+and
+.Li post-dump
+are synonyms for
+.Li fetch
+and
+.Li dump ,
+respectively);
+.Pa /path/to/conduit
+is the pathname of the conduit;
+.Li <creator>
+is the database creator;
+.Li <type>
+is the database type.
+For instance:
+.Bd -literal -offset indent
+conduit fetch {
+	path: /usr/local/libexec/coldsync/addressbook-fetch;
+	type: addr/DATA;
+}
+.Ed
+The database creator and type should be specified in the documentation
+for each conduit. You may also use either the empty string (
+.Li \&"\&"
+) or an asterisk (
+.Li *
+) for the type or creator, to indicate a wildcard:
+.Dl type: addr/*;
+makes the conduit apply to all databases with creator
+.Li addr ,
+.Dl type: */DATA;
+makes the conduit apply to all databases with type
+.Li DATA ,
+and
+.Dl type: */*;
+makes the conduit apply to all databases. Only the last of these is
+generally useful.
+.Pp
+You may specify several
+.Li type
+lines, e.g.,
+.Bd -literal -offset indent
+conduit fetch {
+	path: /usr/local/libexec/coldsync/very-generic;
+	type: addr/DATA;
+	type: memo/DATA;
+	type: graf/macr;
+}
+.Ed
+This conduit will match any of the three creator/type pairs.
+.Pp
+.Li preference
+directives specify which preferences the conduit is interested in.
+.Li pref
+is a synonym for
+.Li preference .
+.Pp
+Preferences are bits of configuration data stored in a pair of shared
+databases on the Palm. They include pretty much everything you can set
+through the
+.Dq Prefs
+application, but also things such as your signature from the
+.Dq Mail
+application.
+.Pp
+Preferences are stored in two databases:
+.Dq Saved Preferences
+and
+.Dq Unsaved Preferences .
+If you know (and care) in which database a given preference is
+defined, you can specify it with the
+.Li saved
+and
+.Li unsaved
+keywords:
+.Bd -literal -offset indent
+	pref: saved mail/3;
+	pref: unsaved exps/1;
+.Ed
+.Pp
+If neither
+.Li saved
+nor
+.Li unsaved
+is specified,
+.Nm ColdSync
+will try them both.
+.Pp
+The following flags are defined for conduit blocks:
+.Li default
+and
+.Li final .
+.Pp
+The
+.Li default
+flag indicates that this is a default conduit, and should be run only
+if no other matching conduit is specified later on. The
+.Li default
+flag works in conjunction with the
+.Li type
+specification:
+.Bd -literal -offset indent
+conduit dump {
+	path: /usr/bin/default-todo;
+	type: todo/*;
+	default;
+}
+.Ed
+only applies to databases with creator
+.Li todo .
+If two or more default conduits apply to a database, only the last one
+specified will be run.
+.Pp
+The
+.Li final
+flag indicates that
+.Nm ColdSync
+should not consider any other conduits after this one. It works in
+conjunction with the
+.Li type
+specification:
+.Bd -literal -offset indent
+conduit fetch {
+	path: /usr/bin/fetch-mail;
+	type: mail/DATA;
+	final;
+}
+
+conduit fetch {
+	path: /usr/bin/generic-fetch;
+	type: */*;
+}
+.Ed
+In this example, only
+.Pa /usr/bin/fetch-mail
+will be run for databases with creator
+.Li mail
+and type
+.Li DATA ,
+even though the second conduit block also applies.
+.Pp
+A conduit block may also contain conduit-specific arguments, e.g.,
+.Bd -literal -offset indent
+conduit dump {
+	path: /usr/bin/send-mail
+	type: mail/DATA;
+    arguments:
+	Sendmail: /usr/sbin/sendmail;
+	Signature: /home/arensb/.palm-signature;
+	DSN: return-receipt;
+}
+.Ed
+All of the lines following the
+.Li arguments:
+line are passed to the conduit, and may be used to modify its
+behavior. These arguments are conduit-dependent, and thus will be
+described in the documentation for each conduit.
+.Ss Built-In Conduit
+Instead of a pathname to a program or script, you may also specify the
+string
+.Li [generic]
+(with the brackets) to specify that you want to use the built-in
+generic conduit:
+.Bd -literal -offset indent
+conduit sync {
+	type: */*;
+	path: [generic];
+	default;
+}
+.Ed
+.Pp
+The generic conduit is a Sync conduit. By default, it handles every
+database unless that database has another Sync conduit specified. If
+you wish to run another Sync conduit on a database, you will need to
+specify explicitly in your
+.Pa .coldsyncrc
+whether you want it to run before or after the generic conduit, or
+whether the generic conduit should be run at all.
+.Pp
+.Ss Quoting
+Values on the right side of a colon may be enclosed in double quotes.
+That is you can write either
+.Bd -literal -offset indent
+	path: /usr/bin/myconduit;
+.Ed
+or
+.Bd -literal -offset indent
+	path: "/usr/bin/myconduit";
+.Ed
+It is always safe to quote a value. The quotes may be omitted if the
+value does not contain whitespace or punctuation that might confuse
+the parser.
+.Pp
+PDA names may also be quoted, subject to the same rules. That is, you
+may say
+.Bd -literal -offset indent
+	pda MyPalm {
+.Ed
+or
+.Bd -literal -offset indent
+	pda "My Palm" {
+.Ed
+but not
+.Bd -literal -offset indent
+	pda My Palm {
+.Ed
+.Pp
+Note: if you choose to quote the right-hand side of a
+.Li type
+statement, you must quote both the creator and the type. That is, you
+may write
+.Bd -literal -offset indent
+	type: addr/DATA;
+.Ed
+or
+.Bd -literal -offset indent
+	type: "addr"/"DATA";
+.Ed
+but not
+.Bd -literal -offset indent
+	type: "addr/DATA";
+.Ed
+.Sh WARNINGS
+.Ss The Bargle Bug
+While you can choose any user ID you like for the Palm, you should
+avoid using 0 (this also means that you should avoid running
+.Nm ColdSync
+as root): if you do, you risk being bitten by the Bargle Bug.
+.Pp
+If you perform a hard reset of your Palm, or upgrade to a new one, you
+can lose all of your backup data:
+.Nm ColdSync
+doesn't notice and assumes that you've chosen to delete everything on
+your Palm.
+.Pp
+To guard against this woeful fate,
+.Nm ColdSync
+requires the Palm to be initialized with a user name and userid.
+.Ss Upgrades
+Every so often, Palm announces a PalmOS upgrade. Some of these
+upgrades are simple and consist of a
+.Pa .prc
+file that you need to upload. It's probably safe to apply this upgrade
+by copying the
+.Pa .prc
+file to
+.Pa ~/.palm/install
+and syncing.
+.Pp
+Other upgrades are more complex, and
+.Nm ColdSync
+can't handle them. For these, you'll need to follow Palm's
+instructions.
+.Sh FILES
+.Bl -tag -width ~/.palm/archive -compact
+.It Pa ~/.coldsyncrc
+configuration file.
+.It Pa ~/.palm
+The default root of the backup tree (\,
+.Em palmdir ,
+below).
+.\" .It Pa ~/.palm/backup
+.It Em palmdir Ns Pa /backup
+contains backup files for the Palm.
+.\" .It Pa ~/.palm/backup/Attic
+.It Em palmdir Ns Pa /backup/Attic
+contains databases that have been deleted from the Palm.
+.\" .It Pa ~/.palm/archive
+.It Em palmdir Ns Pa /archive
+contains records deleted from the Palm, but with the "Save archive on
+PC" box checked.
+.\" .It Pa ~/.palm/install
+.It Em palmdir Ns Pa /install
+contains files to be installed at the next sync.
+.El
+.Sh SEE ALSO
+.Xr pilot-xfer 1
+.Rs
+.%T Palm Database Files
+.Re
+.Rs
+.%T ColdSync Conduits
+.Re
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.An Louis A. Mamakos Aq louie@TranSys.COM :
+USB support.
+.An And a cast of several.
+.Sh DIAGNOSTICS
+Many and hopefully self-explanatory.
+.Sh LIMITATIONS
+.Pp
+.Nm ColdSync
+does not detect the serial number on Handspring Visors. This is
+because the Visor does not appear to have a software-readable serial
+number. The pda block for a Visor should contain
+.Bd -literal -offset indent
+	snum: "";
+.Ed
+to explicitly say,
+.Dq This Palm does not have a serial number.
+If you omit the
+.Li snum
+line, the pda block will match any Palm device.
+.Pp
+Under Linux,
+.Nm ColdSync
+often spits out copious amounts of "Bad CRC" messages. This is due to
+Linux's flaky serial driver.
+.Sh BUGS
+.Nm ColdSync
+does not deal with categories.
+.Pp
+In the
+.Pa .coldsyncrc
+file, file and directory names must be specified as absolute
+pathnames.
+.Pp
+.Nm ColdSync
+does not sync
+.Pa .prc
+files. It makes a backup if there is isn't one already, but that's it.
+If you upgrade from version 1.0 of an application to version 2.0,
+.Nm ColdSync
+will not back up the new version. In addition, most of the preferences
+in the Prefs application are saved in
+.Pa .prc
+files, so
+.Nm ColdSync
+does not maintain backups of them.
+.Pp
+There is as yet no tool for manipulating archive files.
+.Pp
+All network addresses are assumed to be IPv4 addresses.
+.Pp
+It is not possible to reliably specify a conduit argument whose value
+begins with whitespace.
+.Pp
+It appears that syncing with a machine other than that with which you
+normally sync might cause a database to lose its category information.
+.Pp
+Probably many others.
