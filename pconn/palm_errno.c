@@ -2,7 +2,7 @@
  *
  * Error-related stuff for libpalm.
  *
- * $Id: palm_errno.c,v 1.1 1999-02-19 22:51:55 arensb Exp $
+ * $Id: palm_errno.c,v 1.2 1999-02-21 08:14:33 arensb Exp $
  */
 #include "palm_errno.h"
 
@@ -20,6 +20,7 @@ const char *palm_errlist[] = {		/* Error messages */
 	"Transfer aborted",
 	"Invalid request ID",
 	"Invalid result ID",
+	"Invalid argument ID",
 };
 /* XXX - Need something to check the size of this array, so if someone adds
  * an error code and forgets to update this array, you can keep from
