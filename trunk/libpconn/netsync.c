@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.10 2001-08-02 05:56:35 arensb Exp $
+ * $Id: netsync.c,v 1.11 2001-08-22 06:43:01 arensb Exp $
  */
 
 #include "config.h"
@@ -159,6 +159,9 @@ ritual_exch_server(PConnection *pconn)
 	/* Receive ritual response 1 */
 	/* Agh! This is hideous! Apparently NetSync and m50x modes are
 	 * identical except for just this one packet!
+	 */
+	/* XXX - Actually, no: this appears to be due to a bug in Linux's
+	 * USB-to-serial thingy.
 	 */
 	switch (pconn->protocol)
 	{
