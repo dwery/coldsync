@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.17 2002-08-31 19:26:03 azummo Exp $
+ * $Id: dlp.c,v 1.18 2002-11-03 14:12:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -103,7 +103,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	int err;
 	ubyte *outbuf;			/* Outgoing request buffer */
 	long buflen;			/* Length of outgoing request */
-	ubyte *wptr;		/* Pointer into buffers (for writing) */
+	ubyte *wptr;			/* Pointer into buffers (for writing) */
 
 	PConn_set_palmerrno(pconn, PALMERR_NOERR);
 
@@ -389,14 +389,20 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 		/* Send the DLP request */
 		DLP_TRACE(2)
 			fprintf(stderr,
-				"dlp_dlpc_req: sending request 0x%02x\n",
-				header->id);
+				"dlp_dlpc_req: sending request 0x%02x, trycount: %d\n",
+				header->id, trycount);
 		err = dlp_send_req(pconn, header, argv);
 		if (err < 0)
 		{
 			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT2)
+			{
+				DLP_TRACE(2)
+					fprintf(stderr,
+						"dlp_dlpc_req: resending, checkpoint 1\n");
+	
 				/* Try resending the request */
 				continue;
+			}
 			return err;		/* Some other error */
 		}
 
@@ -411,8 +417,15 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 		if (err < 0)
 		{
 			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT2)
+			{
+				DLP_TRACE(2)
+					fprintf(stderr,
+						"dlp_dlpc_req: resending, checkpoint 2\n");
+	
 				/* Try resending the request */
 				continue;
+			}
+
 			DLP_TRACE(2)
 				fprintf(stderr, "dlp_dlpc_req: "
 					"dlp_recv_resp set pconn->palm_errno == %d\n",
@@ -440,6 +453,7 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 
 	DLP_TRACE(2)
 		fprintf(stderr, "dlp_dlpc_req: maximum retries exceeded.\n");
+
 	PConn_set_palmerrno(pconn, PALMERR_TIMEOUT);
 	PConn_set_status(pconn, PCONNSTAT_LOST);
 	return -1;
