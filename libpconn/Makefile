@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2001-07-06 05:43:43 arensb Exp $
+# $Id: Makefile,v 1.8 2001-07-26 06:59:03 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -19,7 +19,8 @@ LIBSRCS =	cfmakeraw.c \
 		PConnection.c \
 		PConnection_serial.c \
 		PConnection_usb.c \
-		PConnection_net.c
+		PConnection_net.c \
+		PConnection_usbm50x.c
 
 LIBOBJS =	${LIBSRCS:.c=.o}
 

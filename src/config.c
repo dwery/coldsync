@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.69 2001-06-10 22:32:25 arensb Exp $
+ * $Id: config.c,v 1.70 2001-07-26 06:59:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1287,6 +1287,8 @@ name2listen_type(const char *str)
 		return LISTEN_NET;
 	if (strcasecmp(str, "usb") == 0)
 		return LISTEN_USB;
+	if (strcasecmp(str, "usb_m50x") == 0)
+		return LISTEN_USB_M50x;
 	return -1;		/* None of the above */
 }
 
