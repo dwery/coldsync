@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.6 1999-11-02 03:25:29 arensb Exp $
+# $Id: Makefile.in,v 1.7 1999-11-12 09:47:51 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -93,3 +93,6 @@ spotless:
 # that'll do it for me.
 libpalm.dvi:	texinfo.tex version.texi
 pdb.dvi:	texinfo.tex version.texi
+
+# Dummy placeholder
+lint:
