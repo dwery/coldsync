@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.40 2000-11-20 10:14:33 arensb Exp $
+ * $Id: coldsync.h,v 1.41 2000-11-24 22:56:26 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -326,15 +326,16 @@ extern void usage(int argc, char *argv[]);
 extern void print_version(void);
 extern pda_block *find_pda_block(struct Palm *palm);
 extern int load_palm_config(struct Palm *palm);
+extern int make_sync_dirs(const char *basedir);
 extern void set_debug_level(const char *str);
 extern int set_mode(const char *str);
-extern const volatile char *mkfname(const char *first, ...);
-extern const volatile char *mkpdbname(const char *dirname,
-				      const struct dlp_dbinfo *dbinfo,
-				      Bool add_suffix);
-extern const volatile char *mkbakfname(const struct dlp_dbinfo *dbinfo);
-extern const volatile char *mkinstfname(const struct dlp_dbinfo *dbinfo);
-extern const volatile char *mkarchfname(const struct dlp_dbinfo *dbinfo);
+extern const char *mkfname(const char *first, ...);
+extern const char *mkpdbname(const char *dirname,
+			     const struct dlp_dbinfo *dbinfo,
+			     Bool add_suffix);
+extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
+extern const char *mkinstfname(const struct dlp_dbinfo *dbinfo);
+extern const char *mkarchfname(const struct dlp_dbinfo *dbinfo);
 extern const char *fname2dbname(const char *fname);
 extern const Bool exists(const char *fname);
 extern const Bool lexists(const char *fname);
