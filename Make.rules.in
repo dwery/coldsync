@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.21 2002-03-10 01:38:50 arensb Exp $
+# $Id: Make.rules.in,v 1.22 2002-12-10 11:52:27 azummo Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -45,7 +45,7 @@ PERLDIR =	@PERLDIR@
 CC =		@CC@
 CXX =		@CXX@
 DEFINES =	@DEFS@
-INCLUDES =	-I. -I${TOP} -I${TOP}/include
+INCLUDES =	${INCLUDE} -I. -I${TOP} -I${TOP}/include
 CXX_INCLUDEDIRS = \
 		-I/usr/include/c++ -I/usr/include/g++ \
 		-I${INCLUDEDIR}
