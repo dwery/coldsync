@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.15 1999-12-01 06:11:17 arensb Exp $
+ * $Id: coldsync.c,v 1.16 2000-01-13 18:16:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -26,9 +26,7 @@
 
 /* Include I18N-related stuff, if necessary */
 #if HAVE_LIBINTL
-#  if HAVE_LOCALE_H
-#    include <locale.h>
-#  endif	/* HAVE_LOCALE_H */
+#  include <locale.h>		/* For setlocale() and friends */
 #  include <libintl.h>
 #endif	/* HAVE_LIBINTL */
 
@@ -210,6 +208,7 @@ main(int argc, char *argv[])
 	}
 
 	printf(_("Please press the HotSync button.\n"));
+				/* XXX - Don't print this in daemon mode */
 
 	/* Connect to the Palm */
 	if ((err = Connect(pconn)) < 0)
@@ -244,6 +243,12 @@ main(int argc, char *argv[])
 		pconn = NULL;
 		exit(1);
 	}
+
+	/* XXX - In daemon mode, presumably load_palm_config() (or
+	 * something) should tell us which user to run as. Therefore fork()
+	 * an instance, have it setuid() to the appropriate user, and load
+	 * that user's configuration.
+	 */
 
 	/* Initialize (per-user) conduits */
 	MISC_TRACE(1)
@@ -400,6 +405,26 @@ main(int argc, char *argv[])
 
 		/* For each database, walk config.fetch, looking for
 		 * applicable conduits for each database.
+		 */
+		/* XXX - This should be redone: run_Fetch_conduits should
+		 * be run _before_ opening the device. That way, they can
+		 * be run even if we don't intend to sync with an actual
+		 * Palm. Presumably, the Right Thing is to run the
+		 * appropriate Fetch conduit for each file in
+		 * ~/.palm/backup.
+		 * OTOH, if you do it this way, then things won't work
+		 * right the first time you sync: say you have a
+		 * .coldsyncrc that has pre-fetch and post-dump conduits to
+		 * sync with the 'kab' addressbook; you're syncing for the
+		 * first time, so there's no ~/.palm/backup/AddressDB.pdb.
+		 * In this case, the pre-fetch conduit doesn't get run, and
+		 * the post-dump conduit overwrites the existing 'kab'
+		 * database.
+		 * Perhaps do things this way: run the pre-fetch conduits
+		 * for the databases in ~/.palm/backup. Then, during the
+		 * main sync, if a new database needs to be created on the
+		 * workstation, run its pre-fetch conduit. (Or maybe this
+		 * would be a good time to run the install conduit.)
 		 */
 		for (i = 0; i < palm.num_dbs; i++)
 		{
@@ -1365,7 +1390,6 @@ set_debug_level(const char *str)
 /* usage
  * Print out a usage string.
  * XXX - Move this to "config.c"
- * XXX - Need to update this to conform to reality.
  */
 /* ARGSUSED */
 void
@@ -1375,6 +1399,7 @@ usage(int argc, char *argv[])
 	       "Options:\n"
 	       "\t-h:\t\tPrint this help message and exit.\n"
 	       "\t-V:\t\tPrint version and exit.\n"
+	       "\t-f <file>:\tRead configuration from <file>.\n"
 	       "\t-b <dir>:\tPerform a backup to <dir>.\n"
 	       "\t-r <dir>:\tRestore from <dir>.\n"
 	       "\t-S:\t\tForce slow sync.\n"
