@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.13 1999-11-10 06:44:00 arensb Exp $
+# $Id: Makefile.in,v 1.14 1999-11-12 09:47:41 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -16,7 +16,7 @@ DATE =		@DATE@
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
 RECURSIVE_TARGETS = \
-		all depend clean distclean spotless distdir install
+		all depend clean distclean spotless distdir install lint
 
 DISTFILES =	README \
 		AUTHORS \
@@ -73,7 +73,7 @@ ${RECURSIVE_TARGETS}::
 
 snapshot:	distdir
 	date=`${DATE} "+%Y%m%d"`; \
-	GZIP="--best" ${TAR} chozf "${PACKAGE}-${VERSION}$${date}.tar.gz" \
+	GZIP="--best" ${TAR} chozf "${PACKAGE}-${VERSION}-$${date}.tar.gz" \
 		${DISTDIR}
 	rm -rf ${DISTDIR}
 
