@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2002, Alessandro Zummo.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: dump-env,v 1.1 2002-11-13 12:20:43 azummo Exp $
+
+# This conduit dumps %ENV.
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+
+StartConduit("sync");
+
+	print STDERR "dump-env conduit\n";
+
+	foreach my $h ( keys %ENV)
+	{
+		print "\t$h: $ENV{$h}\n";
+	}
+
+EndConduit;
+
+__END__;
+
+=head1 name
+
+dump-env - Dump %ENV
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: none;
+		...
+		path: <...>/dump-env;
+	}
+
+=head1 DESCRIPTION
+
+This conduit dumps %ENV.
+
+=head1 BUGS
+
+None known.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
