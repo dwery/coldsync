@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.126 2001-05-24 06:32:01 arensb Exp $
+dnl # $Id: configure.in,v 1.127 2001-06-04 10:18:56 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -497,6 +497,19 @@ if test x"$WITH_USB" != xno; then
 		AC_MSG_RESULT(yes)],dnl
 		[AC_MSG_RESULT(no)])
 fi
+
+# Don't build the Perl stuff
+AC_ARG_WITH(perl,dnl
+[  --without-perl          Don't build the ColdSync Perl modules.],dnl
+	[WITH_PERL="$withval"],[WITH_PERL="yes"])
+#'
+if test x"$WITH_PERL" != xno; then
+	# Name of Perl subdirectory
+	PERLDIR=perl
+else
+	PERLDIR=""
+fi
+AC_SUBST(PERLDIR)
 
 AC_MSG_CHECKING([for socks behind the sofa])
 AC_MSG_RESULT([no])
