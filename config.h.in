@@ -61,6 +61,9 @@
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
 
+/* Define if you have the gettext function.  */
+#undef HAVE_GETTEXT
+
 /* Define if you have the rename function.  */
 #undef HAVE_RENAME
 
@@ -81,6 +84,9 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <libintl.h> header file.  */
+#undef HAVE_LIBINTL_H
 
 /* Define if you have the <strings.h> header file.  */
 #undef HAVE_STRINGS_H
@@ -153,21 +159,21 @@
  * the printf() statement, that we want to call gettext() on the string to
  * translate it.
  */
-#if HAVE_LIBINTL
+#if HAVE_GETTEXT
 #  define _(str)	gettext(str)
 #  ifdef gettext_noop
 #    define N_(str)	gettext_noop(str)
 #  else
 #    define N_(str)	str
 #  endif	/* gettext_noop */
-#else	/* HAVE_LIBINTL */
+#else	/* HAVE_GETTEXT */
 #  define _(str)	str
 #  ifdef gettext_noop
 #    define N_(str)	gettext_noop(str)
 #  else
 #    define N_(str)	str
 #  endif	/* gettext_noop */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_GETTEXT */
 
 #if __GNUC__
 
