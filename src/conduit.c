@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38.2.2 2001-10-11 04:50:42 arensb Exp $
+ * $Id: conduit.c,v 2.38.2.3 2001-10-11 06:34:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,7 +48,7 @@
 
 /* Bleah. AIX doesn't have WCOREDUMP */
 #ifndef WCOREDUMP
-# define WCOREDUMP(status)	0
+#  define WCOREDUMP(status)	0
 #endif	/* WCOREDUMP */
 
 #include "conduit.h"
@@ -778,16 +778,16 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			}
 			if (err != SPC_HEADER_LEN)
 			{
-				Error(_("%s: Error header wrong length %ld."),
-				      "run_conduit",err );
-				Perror("read");
-				goto abort;
 				/* The child printed something, but it's
 				 * not the right length for an SPC request.
 				 */
 				/* XXX - Send a "bad request" header to the
 				 * child.
 				 */
+				Error(_("%s: Error header wrong length %ld."),
+				      "run_conduit",err );
+				Perror("read");
+				goto abort;
 			}
 
 			/* Very crude parsing of the received header */
@@ -1868,7 +1868,8 @@ cond_readstatus(FILE *fromchild)
 	}
 
 	/* XXX - Do something intelligent */
-	fprintf(stderr, "%s\n", errmsg);/* XXX add conduit name here.  */
+	fprintf(stderr, "%s\n", errmsg);
+				/* XXX add conduit name here.  */
 
 	return errcode; 
 }
