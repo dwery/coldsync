@@ -262,3 +262,14 @@
   whitespace.
 - Install .mo files in
 	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
+- Bug report:
+	When a non-default PDA is listed first, allegedly it gets the
+  PDAFL_DEFAULT flag set (as do any subsequent default PDAs).
+	(Unconfirmed as of Thu Jun 15 03:00:04 2000)
+- When a record is moved from one category to another on the Palm, it
+  isn't updated on the desktop.
+- Describe 'pref:' statements in the manual.
+- Describe new preference API in the conduit writer's guide.
+- Fix ColdSync.pm to deal with preferences on stdin.
+- Allow something like "ForceInstall;" line in .coldsyncrc, to have
+  the same effect as -I command-line option.
