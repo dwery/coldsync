@@ -12,7 +12,7 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.2 2000-05-03 03:32:21 arensb Exp $
+ * $Id: util.c,v 1.3 2001-03-10 05:31:50 arensb Exp $
  */
 
 #include "config.h"
@@ -59,7 +59,7 @@ get_ubyte(const ubyte **buf)
 	ubyte retval;
 
 	retval = peek_ubyte(*buf);
-	*buf += sizeof(ubyte);
+	*buf += SIZEOF_UBYTE;
 
 	return retval;
 }
@@ -77,7 +77,7 @@ get_uword(const ubyte **buf)
 	uword retval;
 
 	retval = peek_uword(*buf);
-	*buf += sizeof(uword);
+	*buf += SIZEOF_UWORD;
 
 	return retval;
 }
@@ -97,7 +97,7 @@ get_udword(const ubyte **buf)
 	udword retval;
 
 	retval = peek_udword(*buf);
-	*buf += sizeof(udword);
+	*buf += SIZEOF_UDWORD;
 
 	return retval;
 }
@@ -338,8 +338,8 @@ static uword icrctb[256] = {
  */
 uword
 crc16(const ubyte *buf,
-     uword len,
-     uword start)
+      uword len,
+      const uword start)
 {
 	uword crc = start;
 
