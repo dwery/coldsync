@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.10 1999-11-20 05:14:46 arensb Exp $
+ * $Id: coldsync.h,v 1.11 2000-01-13 18:17:49 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -190,8 +190,16 @@ typedef struct conduit_block
 	conduit_flavor flavor;	/* What flavor of conduit is this? */
 	udword dbtype;		/* What database types does it apply to? */
 	udword dbcreator;
+	unsigned char flags;	/* CONDFL_* flags */
 	char *path;		/* Path to conduit */
 } conduit_block;
+
+#define CONDFL_DEFAULT	0x01	/* This is a default conduit: if no other
+				 * conduit matches, use this one.
+				 */
+#define CONDFL_FINAL	0x02	/* If this conduit matches, don't run any
+				 * other conduits for this database.
+				 */
 
 struct config
 {
@@ -302,12 +310,15 @@ struct conduit_config2
 	/* XXX - Conduit arguments and whatnot */
 };
 
+extern int sys_maxfds;			/* Max # of file descriptors
+					 * allowed for this process.
+					 */
 extern int need_slow_sync;
-extern udword hostid;		/* This host's ID */
-				/* XXX - This shouldn't be global */
-extern uid_t user_uid;		/* Owner's UID */
+extern udword hostid;			/* This host's ID */
+					/* XXX - This shouldn't be global */
+extern uid_t user_uid;			/* Owner's UID */
 extern char user_fullname[DLPCMD_USERNAME_LEN];
-				/* Owner's full name */
+					/* Owner's full name */
 
 /* Configuration variables */
 /* XXX - There's probably a better place to put them */
