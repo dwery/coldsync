@@ -1,5 +1,5 @@
 .\" coldsync.8
-.\" $Id: coldsync.8,v 1.4 1999-11-02 03:31:24 arensb Exp $
+.\" $Id: coldsync.8,v 1.5 1999-11-09 04:05:16 arensb Exp $
 .\" 
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -72,7 +72,8 @@ restore. Normally, these are ignored.
 .It Fl p Ar device
 Specifies the serial device, e.g.
 .Pa /dev/cuaa0 ,
-that the Palm is connected to.
+that the Palm is connected to. If not specified, this defaults to
+.Pa /dev/palm .
 .It Fl b Ar directory
 Perform a full backup of the Palm, and put the files in
 .Ar directory .
