@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.14 2000-01-28 01:07:25 arensb Exp $
+ * $Id: conduit.c,v 1.15 2000-02-06 22:13:09 arensb Exp $
  */
 /* XXX - At some point, the API for built-in conduits should become much
  * simpler. A lot of the crap in this file will disappear, since it's
@@ -750,8 +750,8 @@ cond_sendheader(const char *field,	/* Header field to send */
 	fieldnamelen = strlen(field);
 	if (fieldnamelen > COND_MAXHFIELDLEN)
 	{
-		fprintf(stderr, _("%s: cannot be longer than %d characters "
-				  "long\n"),
+		fprintf(stderr, _("%s: header cannot be longer than %d "
+				  "characters long\n"),
 			"cond_sendheader", COND_MAXHFIELDLEN);
 		return -1;
 	}
