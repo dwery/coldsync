@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.49 2000-12-13 16:32:02 arensb Exp $
+ * $Id: config.c,v 1.50 2000-12-16 19:14:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1384,6 +1384,10 @@ free_conduit_block(conduit_block *c)
 	for (hdr = c->headers, next_hdr = NULL; hdr != NULL; hdr = next_hdr)
 	{
 		next_hdr = hdr->next;
+		if (hdr->name != NULL)
+			free(hdr->name);
+		if (hdr->value != NULL)
+			free(hdr->value);
 		free(hdr);
 	}
 
