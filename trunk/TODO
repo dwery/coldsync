@@ -1,3 +1,14 @@
+- Log for a full backup can exceed maximum size for logs. Find out
+  what this limit is (under 2311 bytes, I think). What to do if the
+  sync log exceeds this size? Send the first N bytes? The last N bytes
+  (those most likely to contain any errors)?
+- Persistent "Bad CRC" problems under Linux:
+	As far as I can tell, the Linux serial driver is buggy, and
+  drops characters. 'pilot-link' also sees bad CRCs; it just doesn't
+  report them unless you compile with -DDEBUG.
+	However, this isn't likely to be fixed any time soon, so need
+  to increase robustness of ColdSync. In particular, make sure all
+  sorts of insanity can be dealt with.
 - Problem: old Palms, and Visors, don't have serial numbers. Hence, if
   a user has two Visors,
 	coldsync -mI
@@ -165,18 +176,8 @@
   become as much like "arensb" as possible.
 	What about setgid()?
 	What's initgroups()? Is it useful?
-- How does GenericConduit fit into the new conduit API? Perhaps the
-  best thing to do is to have two APIs: one for built-in conduits
-  (functions compiled into coldsync) and one for external programs.
-  That way, the simplest conduits (generic, ignore, desktop overwrites
-  Palm, Palm overwrites desktop) can be built in, and the naive user
-  doesn't need to install all sorts of stuff just to try this out
-  (read: can run coldsync out of the ports directory).
-	When doing the main sync, if can't find any other conduit for
-  a database, fall back on the built-in generic conduit.
 - "Timeout. Attempting to resend" when installing AmsterdamMaps.pdb
   (166368 bytes) (from Heineken's BarTrek package, or the PHP manual).
-	
 - There appears to be a timing(?) problem with 'xcopilot',
   specifically when terminating. ColdSync thinks everything is fine,
   but 'xcopilot' hangs. I think it thinks that ColdSync hasn't
@@ -188,10 +189,6 @@
 - With BSD make, always reruns 'ar' in the library directories. Why?
   According to 'make -dm', it seems to recognize the target as a
   library.
-- Rewrite GenericConduit in C, for simplicity. That way, don't have to
-  check for C++ in 'configure', and can simplify the 'make depend'
-  targets.
-	Then again, that might make it harder to subclass.
 - Open a Unix domain socket that a client can listen on. Send
   conduits' messages to that socket. Define error codes like 22z =
   progress, so that clients can monitor how things are going.
@@ -199,18 +196,11 @@
   environment? Should this be done as soon as they're set, or when the
   conduit is run?
 - Should send mail to the user with a report of the sync.
-- "Thought of the Day" conduit: add a fortune-style message as an
-  event for today, and for the next week.
 - Conduit for MH alias file: look for lines of the form
 	alias:	<address> Firstname Lastname
   (where the "<" and ">" are literal). If $record->{firstName} . " " .
   $record->{name} eq "Firstname Lastname", then update the e-mail
   address.
-- Sync the AppInfo block. See comments in "GenericConduit.cc".
-	No, it's probably best to just define a conduit type for
-  syncing the AppInfo block, and pass the buck to that conduit.
-  There's really no good way to sync the AppInfo block in a generic
-  fashion.
 - If I ever find a database that uses sort blocks, for testing, it
   might be a good idea to sync them as well.
 - Perhaps status codes 6xx can be used for machine-readable
@@ -219,8 +209,6 @@
   pathname and an interpreter path, and mungs the #! path work
   properly. Make sure to use "#!/bin/sh" and not "#! /bin/sh", as per
   portability comments in 'automake' documentation.
-- Bug: For now should complain if extraneous arguments are given on
-  command line.
 - No-brainer configuration: make "conduit -config" part of the spec.
   Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
   Then, when ColdSync runs, it runs "/conduit/dir/foo -config" for
@@ -243,15 +231,6 @@
 	VAR += VALUE
 	VAR ?= DEFAULT_VALUE
 	VAR != `cmd`	(or whatever)
-- Replace the "-b", "-r" options: add a "-m" (mode) option. Modes
-  should include:
-	-mb <dir>	Do a backup to <dir>
-	-mr <dir>	Restore from <dir>
-	-ms		Normal sync (default)
-	-md		Daemon mode: listen for connection, fork, wait
-			for child to terminate.
-	-mf		Just run the fetch conduits. Set some header
-			to indicate this to the conduits.
 - In config.c, when creating directories: ought to do ~-expansion on
   directory names: as in csh, only expand leading "~" or "~user".
 - In .coldsyncrc, should be able to associate a name (or alias) with a
@@ -294,18 +273,6 @@
 - If a conduit dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
-- Add "-A" flag: if present, then the AppInfo block is synced as
-  follows: if the APPINFO_DIRTY flag is set on the local PDB, its
-  AppInfo block gets uploaded to the Palm. Otherwise, the Palm's
-  AppInfo block gets downloaded to the desktop.
-	Better: fix the generic conduit to look at its headers, and
-  allow the user to specify how the AppInfo block should be synced.
-	AppInfo: ignore;	# Default
-	AppInfo: fromPalm;	# Palm overwrites desktop
-	AppInfo: fromDesktop;	# Desktop overwrites Palm
-	AppInfo: ifDirty;	# Desktop overwrites Palm if AppInfo
-				# block is dirty, otherwise Palm overwrites
-				# desktop
 - "ElectricFence Exiting: mmap() failed: Cannot allocate memory"
 	while doing a backup of PalmV (and doing some other stuff).
   Did it really run out of memory? Is there a memory leak?
@@ -316,8 +283,6 @@
   which records will be restored, etc.
 	Ought to be able to delete records.
 	A GUI front end would be nice.
-- When (after?) reading config file, check the specified conduits to
-  make sure they exist and are executable. Warn if they aren't.
 - Would be nice to allow conduit headers consisting entirely of
   whitespace.
 - Install .mo files in
@@ -349,14 +314,6 @@
 - To guard against the Bargle bug, perhaps can abort if the user ID is
   0? But then need some way to initialize the Palm. Of course,
   presumably a sysadmin needs this anyway.
-- There appears to be a preference that indicates that the Palm has
-  never been synchronized. This could be useful in avoiding the Bargle
-  bug. Look into this.
-- Add a "-mi" (mode: initialize) option. This should initialize stuff
-  like the user's full name, user ID, etc. At the same time, if a Palm
-  has a user ID of 0, refuse to sync it in the normal manner: either
-  this is the first time the Palm has been synced, or else it was
-  recently reset.
 - Perhaps the job of communicating with the Palm can be done in a
   separate (Posix) thread? That way, that thread can deal more
   naturally and more single-mindedly with things (e.g., timeouts,
@@ -373,29 +330,4 @@
 - The $VERSION stuff in the Perl modules doesn't handle branch
   versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
   "1.002_003_004", which might be desirable. Is it worth fixing this?
-- Look at J. D. Smith's patches for -i(nstall).
-- Try to shorten the time between <press HotSync> and the interesting
-  stuff. In particular, things like NetSync info and whatnot aren't
-  necessarily used, so they need not be retrieved every time.
-	One possibility is to figure out in advance what is needed,
-  and only download the information if it's needed.
-	Another is to use accessor functions that only download data
-  if necessary:
-
-	struct userinfo *userinfo = NULL;
-
-	int UserID()
-	{
-		if (userinfo == NULL)
-			userinfo = DownloadUserInfo();
-
-		return userinfo->id;
-	}
-
-	const char *UserName()
-	{
-		if (userinfo == NULL)
-			userinfo = DownloadUserInfo();
-
-		return userinfo->name;
-	}
+	Will Perl 5.6 make this comment obsolet?
