@@ -3,7 +3,7 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.4 1999-02-22 11:14:16 arensb Exp $
+ * $Id: PConnection.h,v 1.5 1999-06-06 16:13:43 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -87,8 +87,6 @@ struct PConnection
 		ubyte crc_inbuf[SLP_CRC_LEN];
 				/* Buffer to hold incoming CRCs */
 
-		ubyte header_outbuf[SLP_HEADER_LEN];
-				/* Buffer to hold outgoing headers */
 		ubyte *outbuf;	/* Output buffer. Dynamically allocated */
 		long outbuf_len;	/* Current length of output buffer */
 		ubyte crc_outbuf[SLP_CRC_LEN];
