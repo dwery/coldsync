@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.12 2001-10-30 15:45:12 arensb Exp $
+# $Id: AUTHORS,v 2.13 2001-11-10 03:00:31 arensb Exp $
 
 Authors and Contributors:
 
@@ -36,6 +36,7 @@ Mike Durian <durian@boogie.com>.
 Fred Gylys-Colwell <fredgc@ktb.net>.
 Nicholas J Kreucher <kreucher@msu.edu>: Info on Sony Clie.
 Francisco Castro <fcastro@solucionespalm.com>
+Bob Geer <bgeer@xmission.com>
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
