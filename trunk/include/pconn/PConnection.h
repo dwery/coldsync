@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.6 2000-11-18 23:54:19 arensb Exp $
+ * $Id: PConnection.h,v 1.7 2000-12-08 06:28:46 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -36,7 +36,7 @@ typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
 /* Types of listen blocks */
 #define LISTEN_NONE	0	/* Dunno if this will be useful */
 #define LISTEN_SERIAL	1	/* Listen on serial port */
-#define LISTEN_TCP	2	/* Listen on TCP port (not
+#define LISTEN_NET	2	/* Listen on TCP/UDP port (not
 				 * implemented yet). */
 #define LISTEN_USB	3	/* USB for Handspring Visor */
 
