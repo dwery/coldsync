@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.20 2003-10-05 17:49:47 azummo Exp $
+ * $Id: spalm.c,v 2.21 2004-10-24 15:00:51 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -681,15 +681,23 @@ ListDBs(struct Palm *palm)
 
 			/* XXX - What happens if we get any DLPSTAT_xxx here? */
 			if (err < 0)
+			{
+				MISC_TRACE(1)
+					fprintf(stderr, "ListDBs, err: %d\n", err);
 				return -1;
+			}
 
 			/* Sanity check: if there are no more databases to
 			 * be read, stop reading now. This shouldn't
 			 * happen, but you never know.
 			 */
-			if ((oflags & 0x80) == 0)	/* XXX - Need const */
+			if ((oflags & DLPRET_READDBLFLAG_MORE) == 0)
+			{
+				MISC_TRACE(1)
+					fprintf(stderr, "ListDbs, No more databases!!\n");
 				/* There are no more databases */
 				break;
+			}
 
 			/* For the next iteration, set the start index to
 			 * the index of the database just read, plus one.
