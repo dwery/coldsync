@@ -18,7 +18,8 @@ extern int dlpc_debug;
 int
 main(int argc, char *argv[])
 {
-	int fd;
+/*  	int fd; */
+	struct PConnection *pconn;
 	int i;
 	int err;
 	struct slp_addr pcaddr;
@@ -54,6 +55,7 @@ main(int argc, char *argv[])
 	ubyte last_card;
 	ubyte more;
 	struct dlp_cardinfo cardinfo;
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
 	if (argc != 2)
 	{
@@ -61,7 +63,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((fd = new_PConnection(argv[1])) == 0)
+	if ((pconn = new_PConnection(argv[1])) == 0)
 	{
 		fprintf(stderr, "Error: can't open connection.\n");
 		exit(1);
@@ -73,7 +75,7 @@ main(int argc, char *argv[])
 						 * setup.
 						 */
 	pcaddr.port = SLP_PORT_DLP;
-	PConn_bind(fd, &pcaddr);
+	PConn_bind(pconn, &pcaddr);
 	/* XXX - PConn_accept(fd) */
 
 slp_debug = 100;
@@ -83,7 +85,7 @@ dlp_debug = 100;
 dlpc_debug = 100;
 	printf("===== Waiting for wakeup packet\n");
 	do {
-		err = cmp_read(fd, &cmpp);
+		err = cmp_read(pconn, &cmpp);
 		if (err < 0)
 		{
 			if (palm_errno == PALMERR_TIMEOUT)
@@ -101,11 +103,11 @@ dlpc_debug = 100;
 	cmpp.ver_minor = 1;
 	cmpp.rate = 0;
 	printf("===== Sending INIT packet\n");
-	cmp_write(fd, &cmpp);
+	cmp_write(pconn, &cmpp);
 	printf("===== Finished sending INIT packet\n");
 
 	/* Read a feature (the version of the net library, in this case) */
-	err = DlpReadFeature(fd, MAKE_CHUNKID('n','e','t','l'), 0, &featvalue);
+	err = DlpReadFeature(pconn, MAKE_CHUNKID('n','e','t','l'), 0, &featvalue);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadFeature: (%d) %s\n",
@@ -116,7 +118,7 @@ dlpc_debug = 100;
 	printf("===== Read a feature\n");
 
 	/* Get net sync info */
-	err = DlpReadNetSyncInfo(fd, &netsyncinfo);
+	err = DlpReadNetSyncInfo(pconn, &netsyncinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadNetSyncInfo: (%d) %s\n",
@@ -149,7 +151,7 @@ dlpc_debug = 100;
 	memcpy(writenetsyncinfo.netsyncinfo.synchostnetmask,
 	       "255.255.255.0",
 	       strlen("255.255.255.0")+1);
-	err = DlpWriteNetSyncInfo(fd, &writenetsyncinfo);
+	err = DlpWriteNetSyncInfo(pconn, &writenetsyncinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpWriteNetSyncInfo: (%d) %s\n",
@@ -160,7 +162,7 @@ dlpc_debug = 100;
 	printf("===== Wrote net sync info\n");
 
 	/* Get system info */
-	err = DlpReadSysInfo(fd, &sysinfo);
+	err = DlpReadSysInfo(pconn, &sysinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadSysInfo: (%d) %s\n",
@@ -171,7 +173,7 @@ dlpc_debug = 100;
 	printf("===== Got system info\n");
 
 	/* Get user info */
-	err = DlpReadUserInfo(fd, &userinfo);
+	err = DlpReadUserInfo(pconn, &userinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadUserInfo: (%d) %s\n",
@@ -189,12 +191,12 @@ dlpc_debug = 100;
 	moduserinfo.usernamelen = strlen(moduserinfo.username) + 1;
 	moduserinfo.modflags = DLPCMD_MODUIFLAG_USERID |
 		DLPCMD_MODUIFLAG_USERNAME;
-	DlpWriteUserInfo(fd, &moduserinfo);
+	DlpWriteUserInfo(pconn, &moduserinfo);
 	printf("===== Set user info\n");
 #endif	/* 0 */
 
 	/* Get the time */
-	err = DlpGetSysDateTime(fd, &ptime);
+	err = DlpGetSysDateTime(pconn, &ptime);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpGetSysDateTime: (%d) %s\n",
@@ -207,10 +209,10 @@ dlpc_debug = 100;
 	/* Set the time */
 	ptime.minute += 5;
 	ptime.minute %= 60;
-/*  	DlpSetSysDateTime(fd, &ptime); */
+/*  	DlpSetSysDateTime(pconn, &ptime); */
 	printf("===== Set the time\n");
 
-	err = DlpReadStorageInfo(fd, 0, &last_card, &more, &cardinfo);
+	err = DlpReadStorageInfo(pconn, 0, &last_card, &more, &cardinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadStorageInfo: (%d) %s\n",
@@ -230,8 +232,7 @@ dlpc_debug = 100;
 		ubyte oflags;
 		ubyte num;
 
-/*  		err = DlpReadDBList(fd, 0xc0 (ROM + RAM), 0, i); */
-		err = DlpReadDBList(fd,
+		err = DlpReadDBList(pconn,
 				    DLPCMD_READDBLFLAG_RAM |
 				    DLPCMD_READDBLFLAG_ROM,
 				    0, i,
@@ -249,7 +250,7 @@ dlpc_debug = 100;
 #endif	/* 0 */
 
 	/* Open a conduit */
-	err = DlpOpenConduit(fd);
+	err = DlpOpenConduit(pconn);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpOpenConduit: (%d) %s\n",
@@ -260,7 +261,7 @@ dlpc_debug = 100;
 	fprintf(stderr, "===== Opened a conduit\n");
 
 	/* Open a database */
-	err = DlpOpenDB(fd, 0, "AddressDB",
+	err = DlpOpenDB(pconn, 0, "AddressDB",
 			DLPCMD_MODE_READ |
 			DLPCMD_MODE_WRITE |
 			DLPCMD_MODE_SECRET,
@@ -278,7 +279,8 @@ dlpc_debug = 100;
 	appblock.dbid = dbh;
 	appblock.offset = 0;
 	appblock.len = 0xffff;		/* Read to the end */
-	err = DlpReadAppBlock(fd, &appblock, &len, buf);
+	/* XXX - Need a constant for "read to the end" */
+	err = DlpReadAppBlock(pconn, dbh, 0, 0xffff, &len, &rptr);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadAppBlock: (%d) %s\n",
@@ -291,7 +293,7 @@ dlpc_debug = 100;
 #if 0
 	appblock.dbid = dbh;
 	appblock.len = len;
-	err = DlpWriteAppBlock(fd, &appblock, buf);
+	err = DlpWriteAppBlock(pconn, &appblock, buf);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpWriteAppBlock: (%d) %s\n",
@@ -306,7 +308,7 @@ dlpc_debug = 100;
 	sortblock.dbid = dbh;
 	sortblock.offset = 0;
 	sortblock.len = 0xffff;		/* Read to the end */
-	err = DlpReadSortBlock(fd, &sortblock, &len, buf);
+	err = DlpReadSortBlock(pconn, &sortblock, &len, &rptr);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadSortBlock: (%d) %s\n",
@@ -319,7 +321,7 @@ dlpc_debug = 100;
 #if 0
 	sortblock.dbid = dbh;
 	sortblock.len = len;
-	err = DlpWriteSortBlock(fd, &sortblock, buf);
+	err = DlpWriteSortBlock(pconn, &sortblock, buf);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpWriteSortBlock: (%d) %s\n",
@@ -331,7 +333,7 @@ dlpc_debug = 100;
 #endif	/* 0 */
 
 	/* Get the number of records in the database */
-	err = DlpReadOpenDBInfo(fd, dbh, &opendbinfo);
+	err = DlpReadOpenDBInfo(pconn, dbh, &opendbinfo);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadOpenDBInfo: (%d) %s\n",
@@ -343,11 +345,9 @@ dlpc_debug = 100;
 	fprintf(stderr, "There are %d records\n", opendbinfo.numrecs);
 
 	/* Get the record IDs */
-	idreq.dbid = dbh;
-	idreq.flags = 0;	/* XXX - Need const */
-	idreq.start = 0;
-	idreq.max = 0xffff;	/* XXX - Need const */
-	err = DlpReadRecordIDList(fd, &idreq, &numrecs, recids);
+	/* XXX - Need const for "to the end" */
+	err = DlpReadRecordIDList(pconn, dbh, 0x00, 0, 0xffff,
+				  &numrecs, recids);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpReadRecordIDList: (%d) %s\n",
@@ -376,7 +376,7 @@ dlpc_debug = 100;
 		readbyid.recid = recids[i];
 		readbyid.offset = 0;
 		readbyid.len = 0xffff;	/* XXX - Need const */
-		err = DlpReadRecordByID(fd, &readbyid, &readret);
+		err = DlpReadRecordByID(pconn, &readbyid, &readret);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadRecordByID: (%d) %s\n",
@@ -396,7 +396,7 @@ memcpy(buf, readret.data, readret.size);
 		readbyindex.index = i;
 		readbyindex.offset = 0;
 		readbyindex.len = 0xffff;	/* XXX - Need const */
-		err = DlpReadRecordByIndex(fd, &readbyindex, &readret);
+		err = DlpReadRecordByIndex(pconn, &readbyindex, &readret);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadRecordByIndex: (%d) %s\n",
@@ -412,7 +412,7 @@ memcpy(buf, readret.data, readret.size);
 	for (i = 0; i < numrecs+1; i++)
 	{
 		fprintf(stderr, "Reading %d\n", i);
-		err = DlpReadNextModifiedRec(fd, dbh, &readret);
+		err = DlpReadNextModifiedRec(pconn, dbh, &readret);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadNextModifiedRec: (%d) %s\n",
@@ -423,7 +423,7 @@ memcpy(buf, readret.data, readret.size);
 	}
 
 	/* Reset the "next modified record" index and try again */
-	err = DlpResetRecordIndex(fd, dbh);
+	err = DlpResetRecordIndex(pconn, dbh);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpResetRecordIndex: (%d) %s\n",
@@ -436,7 +436,7 @@ memcpy(buf, readret.data, readret.size);
 	for (i = 0; i < numrecs+1; i++)
 	{
 		fprintf(stderr, "Reading %d\n", i);
-		err = DlpReadNextRecInCategory(fd, dbh, 1, &readret);
+		err = DlpReadNextRecInCategory(pconn, dbh, 1, &readret);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadNextRecInCategory: (%d) %s\n",
@@ -450,7 +450,7 @@ memcpy(buf, readret.data, readret.size);
 	for (i = 0; i < numrecs+1; i++)
 	{
 		fprintf(stderr, "Reading %d\n", i);
-		err = DlpReadNextModifiedRecInCategory(fd, dbh, 1, &readret);
+		err = DlpReadNextModifiedRecInCategory(pconn, dbh, 1, &readret);
 		if (err < 0)
 		{
 			fprintf(stderr, "Error during DlpReadNextModifiedRecInCategory: (%d) %s\n",
@@ -463,7 +463,7 @@ memcpy(buf, readret.data, readret.size);
 
 #if 0
 	/* Delete a record */
-	err = DlpDeleteRecord(fd, dbh, /*0*/0x80, recids[0]);
+	err = DlpDeleteRecord(pconn, dbh, /*0*/0x80, recids[0]);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpDeleteRecord: (%d) %s\n",
@@ -475,7 +475,7 @@ memcpy(buf, readret.data, readret.size);
 #endif
 
 	/* Move a category */
-	err = DlpMoveCategory(fd, dbh, 2, 0);
+	err = DlpMoveCategory(pconn, dbh, 2, 0);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpMoveCategory: (%d) %s\n",
@@ -488,7 +488,7 @@ memcpy(buf, readret.data, readret.size);
 	/* Clean up the database: delete everything that was marked
 	 * deleted.
 	 */
-	err = DlpCleanUpDatabase(fd, dbh);
+	err = DlpCleanUpDatabase(pconn, dbh);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpCleanUpDatabase: (%d) %s\n",
@@ -499,7 +499,7 @@ memcpy(buf, readret.data, readret.size);
 	fprintf(stderr, "===== Cleaned up the database\n");
 
 	/* Reset the sync flags */
-	err = DlpResetSyncFlags(fd, dbh);
+	err = DlpResetSyncFlags(pconn, dbh);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpResetSyncFlags: (%d) %s\n",
@@ -510,7 +510,7 @@ memcpy(buf, readret.data, readret.size);
 	fprintf(stderr, "===== Reset sync flags\n");
 
 	/* Close the database */
-	err = DlpCloseDB(fd, /*dbh*/DLPCMD_CLOSEALLDBS);
+	err = DlpCloseDB(pconn, /*dbh*/DLPCMD_CLOSEALLDBS);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpCloseDB: (%d) %s\n",
@@ -521,7 +521,7 @@ memcpy(buf, readret.data, readret.size);
 	fprintf(stderr, "===== Closed the database\n");
 
 	/* Open the "Saved Preferences" database */
-	err = DlpOpenDB(fd, 0, "Saved Preferences",
+	err = DlpOpenDB(pconn, 0, "Saved Preferences",
 			DLPCMD_MODE_READ |
 			DLPCMD_MODE_WRITE |
 			DLPCMD_MODE_SECRET,
@@ -538,7 +538,7 @@ memcpy(buf, readret.data, readret.size);
 	/* Read some resources */
 	for (i = 0; ; i++)
 	{
-		err = DlpReadResourceByIndex(fd, dbh, i, 0,
+		err = DlpReadResourceByIndex(pconn, dbh, i, 0,
 					     0xffff,	/* XXX - Need const */
 					     &resource,
 					     buf);
@@ -565,7 +565,7 @@ memcpy(buf, readret.data, readret.size);
 	}
 
 	/* Read a resource by type */
-	err = DlpReadResourceByType(fd, dbh, MAKE_CHUNKID('o','w','n','r'),
+	err = DlpReadResourceByType(pconn, dbh, MAKE_CHUNKID('o','w','n','r'),
 				    1, 0, 0xffff,
 				    &resource, buf);
 	if (err < 0)
@@ -589,7 +589,7 @@ memcpy(buf, readret.data, readret.size);
 	debug_dump(stderr, "\t| ", buf, resource.size);
 
 #if 1
-	err = DlpDeleteResource(fd, dbh, 0x00,	/* XXX - Need flag consts */
+	err = DlpDeleteResource(pconn, dbh, 0x00,	/* XXX - Need flag consts */
 				MAKE_CHUNKID('o','w','n','r'), 1);
 	if (err < 0)
 	{
@@ -607,7 +607,7 @@ memcpy(buf, readret.data, readret.size);
 	buf[1] = '\1';
 	sprintf((char *) buf+2, "Ce pilote appartient a:\nHello, world! (%ld)\n",
 		time(NULL));
-	err = DlpWriteResource(fd, dbh, MAKE_CHUNKID('o','w','n','r'),
+	err = DlpWriteResource(pconn, dbh, MAKE_CHUNKID('o','w','n','r'),
 			       1, strlen((char *) buf+2)+3, buf);
 	if (err < 0)
 	{
@@ -620,7 +620,7 @@ memcpy(buf, readret.data, readret.size);
 #endif	/* 0 */
 
 	/* Close the database */
-	err = DlpCloseDB(fd, /*dbh*/DLPCMD_CLOSEALLDBS);
+	err = DlpCloseDB(pconn, /*dbh*/DLPCMD_CLOSEALLDBS);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpCloseDB: (%d) %s\n",
@@ -642,7 +642,7 @@ dlp_debug = 100;
 	newdbreq.flags = DLPCMD_DBFLAG_BACKUP;
 	newdbreq.version = 1;
 	strcpy(newdbreq.name, "Foobar!");
-	err = DlpCreateDB(fd, &newdbreq, &dbh);
+	err = DlpCreateDB(pconn, &newdbreq, &dbh);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpCreateDB: (%d) %s\n",
@@ -661,7 +661,7 @@ dlp_debug = 100;
 	writerec.attributes = 0;
 	writerec.category = 0;
 	writerec.data = buf/*"foo"*/;
-	err = DlpWriteRecord(fd, readret.size/*4*/, &writerec, &recid);
+	err = DlpWriteRecord(pconn, readret.size/*4*/, &writerec, &recid);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpWriteRecord: (%d) %s\n",
@@ -673,7 +673,7 @@ dlp_debug = 100;
 #endif	/* 0 */
 
 	/* Close the database */
-	err = DlpCloseDB(fd, /*dbh*/DLPCMD_CLOSEALLDBS);
+	err = DlpCloseDB(pconn, /*dbh*/DLPCMD_CLOSEALLDBS);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpCloseDB: (%d) %s\n",
@@ -684,7 +684,7 @@ dlp_debug = 100;
 	fprintf(stderr, "===== Closed the database\n");
 
 	/* Delete the database */
-	err = DlpDeleteDB(fd, 0, "Foobar!");
+	err = DlpDeleteDB(pconn, 0, "Foobar!");
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpDeleteDB: (%d) %s\n",
@@ -698,7 +698,7 @@ dlp_debug = 100;
 #if 0
 	/* Read a preference */
 	/* XXX - Need to come up with some values to feed it */
-	err = DlpReadAppPreference(fd, 
+	err = DlpReadAppPreference(pconn, 
 				   /* 'psys', 1 works. What else is there? */
 				   'psys', 1,
 				   0xffff, 0, &pref, buf);
@@ -720,7 +720,7 @@ dlp_debug = 100;
 	appcall.creator = 'addr';
 	appcall.type = 'appl';
 	appcall.action = 18;		/* XXX - Need const */	
-	err = DlpCallApplication(fd, sysinfo.rom_version, &appcall,
+	err = DlpCallApplication(pconn, sysinfo.rom_version, &appcall,
 				 0, NULL,
 				 &appresult);
 	if (err < 0)
@@ -734,7 +734,7 @@ dlp_debug = 100;
 #endif	/* 0 */
 
 	/* Write the log */
-	err = DlpAddSyncLogEntry(fd, "Stuff looks hunky-dory!");
+	err = DlpAddSyncLogEntry(pconn, "Stuff looks hunky-dory!");
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpAddSyncLogEntry: (%d) %s\n",
@@ -758,7 +758,7 @@ dlp_debug = 100;
 #endif	/* 0 */
 
 	/* Terminate the sync */
-	err = DlpEndOfSync(fd, DLPCMD_SYNCEND_NORMAL);
+	err = DlpEndOfSync(pconn, DLPCMD_SYNCEND_NORMAL);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpEndOfSync: (%d) %s\n",
@@ -768,7 +768,7 @@ dlp_debug = 100;
 	}
 	fprintf(stderr, "===== Finished syncing\n");
 
-	PConnClose(fd);		/* Close the connection */
+	PConnClose(pconn);		/* Close the connection */
 
 	exit(0);
 }
