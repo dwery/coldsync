@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.44.2.3 2000-09-03 04:06:37 arensb Exp $
+ * $Id: coldsync.c,v 1.44.2.4 2000-09-03 04:26:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -371,18 +371,21 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* Create preference cache */
-	/* XXX - Only do this in "normal sync" mode, i.e., not if we're
-	 * doing a backup or restore.
-	 */
-	MISC_TRACE(1)
-		fprintf(stderr,"Initializing preference cache\n");
-	if ((err = CacheFromConduits(config.conduits,pconn)) < 0)
+	/* Create preference cache, if necessary */
+	/* XXX - This is ugly. There really ought to be a "mode" variable. */
+	if (!global_opts.do_backup &&
+	    !global_opts.do_restore)
 	{
-		fprintf(stderr, _("CacheFromConduits() returned %d\n"), err);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		exit(1);
+		MISC_TRACE(1)
+			fprintf(stderr,"Initializing preference cache\n");
+		if ((err = CacheFromConduits(config.conduits,pconn)) < 0)
+		{
+			fprintf(stderr,
+				_("CacheFromConduits() returned %d\n"), err);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			pconn = NULL;
+			exit(1);
+		}
 	}
 
 	/* Find out whether we need to do a slow sync or not */
