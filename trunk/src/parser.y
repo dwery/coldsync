@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.45 2001-09-07 10:06:45 arensb Exp $
+ * $Id: parser.y,v 2.46 2001-09-07 10:39:13 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -279,7 +279,7 @@ listen_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: device [%s]\n", $4);
 
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if (cur_listen->device != NULL)
 		{
@@ -335,7 +335,7 @@ conduit_stmt:	CONDUIT
 	} flavor_list '{'
 	conduit_block opt_header_list '}'
 	{
-		lex_expect(0);		/* No special lexer context */
+		lex_expect(LEX_NONE);		/* No special lexer context */
 
 		/* Sanity check */
 		if (cur_conduit->num_ctypes == 0)
@@ -481,7 +481,7 @@ conduit_directive:
 				(char) ($4.type & 0xff));
 		}
 
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if ((err = append_crea_type(cur_conduit, $4.creator, $4.type))
 		    < 0)
@@ -498,7 +498,7 @@ conduit_directive:
 	}
 	STRING semicolon
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if (cur_conduit->path != NULL)
 		{
@@ -526,7 +526,7 @@ conduit_directive:
 	}
 	opt_pref_flag STRING
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 	}
 	'/' NUMBER semicolon
 	{
@@ -556,7 +556,7 @@ conduit_directive:
 	}
 	| DEFAULT semicolon
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a default conduit\n");
@@ -663,11 +663,11 @@ opt_header_list:	ARGUMENTS ':'
 		/* This resets the leftover state from the last header
 		 * line.
 		 */
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 	}
 	|	/* Empty */
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 	}
 	;
 
@@ -756,7 +756,7 @@ pda_stmt:	PDA
 	}
 	opt_name '{'
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		/* Create a new PDA block. Subsequent rules that parse
 		 * substatements inside a 'pda' block will fill in fields
@@ -865,7 +865,7 @@ pda_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Serial number \"%s\"\n", $4);
 
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if (cur_pda->snum != NULL)
 		{
@@ -947,7 +947,7 @@ pda_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Directory \"%s\"\n", $4);
 
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if (cur_pda->directory != NULL)
 		{
@@ -968,7 +968,7 @@ pda_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Username \"%s\"\n", $4);
 
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		if (cur_pda->username != NULL)
 		{
@@ -1016,7 +1016,7 @@ pda_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Forward \"%s\" \"%s\"\n",
 				$4, ($6 == NULL ? "(null)" : $6));
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 
 		cur_pda->forward = True;
 
