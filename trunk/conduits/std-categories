@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: std-categories,v 3.4 2000-12-10 01:13:25 arensb Exp $
+# $Id: std-categories,v 3.5 2001-06-04 01:41:10 arensb Exp $
 #
 # This is a ColdSync Sync conduit for synchronizing the categories between
 # a database on the Palm and one on the desktop.
@@ -16,6 +16,19 @@
 # XXX - "std-categories -config" gives a dangerous configuration:
 #	type: */*;
 # this includes databases that don't have a standard AppInfo block.
+
+# What happens:
+# - When you add a new category, the Palm finds an empty slot, picks an
+#   unused category ID, fills in the slot, sets its "renamed" field to
+#   true.
+#   The Palm will grab the first empty slot, so if you delete one category
+#   and create another, the new category can take the slot formerly
+#   occupied by the previous one. I.e., you won't even see an empty name to
+#   tell you that a category has been deleted.
+# - When you delete a category, the Palm clears the "name" field, but
+#   doesn't change the ID. "renamed" is false.
+# - When you rename a category, the Palm picks a new ID, changes the name,
+#   and sets "renamed" to true. The index remains the same, though.
 
 use strict;
 use ColdSync;
