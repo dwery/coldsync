@@ -2,7 +2,7 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: cmp.c,v 1.2 1999-02-22 10:45:44 arensb Exp $
  */
 #include <stdio.h>
 #include "palm/palm_types.h"
@@ -22,7 +22,7 @@ int cmp_debug = 0;
 #endif	/* CMP_DEBUG */
 
 int
-cmp_read(int fd,
+cmp_read(struct PConnection *pconn,
 	 struct cmp_packet *packet)
 {
 	int err;
@@ -33,7 +33,7 @@ cmp_read(int fd,
 	palm_errno = PALMERR_NOERR;
 
 	/* Read a PADP packet */
-	err = padp_read(fd, &inbuf, &inlen);
+	err = padp_read(pconn, &inbuf, &inlen);
 	if (err < 0)
 		return err;	/* Error */
 
@@ -58,7 +58,7 @@ cmp_read(int fd,
 }
 
 int
-cmp_write(int fd,			/* File descriptor */
+cmp_write(struct PConnection *pconn,			/* File descriptor */
 	  const struct cmp_packet *packet)	/* The packet to send */
 {
 	int err;
@@ -84,7 +84,7 @@ cmp_write(int fd,			/* File descriptor */
 	put_udword(&wptr, packet->rate);
 
 	/* Send the packet as a PADP packet */
-	err = padp_write(fd, outbuf, CMP_PACKET_LEN);
+	err = padp_write(pconn, outbuf, CMP_PACKET_LEN);
 	/* XXX - Error-handling */
 
 	return err;

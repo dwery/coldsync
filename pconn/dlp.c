@@ -7,7 +7,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.2 1999-02-21 08:51:54 arensb Exp $
+ * $Id: dlp.c,v 1.3 1999-02-22 10:46:49 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For calloc() */
@@ -68,7 +68,7 @@ dlp_tini(struct PConnection *pconn)
  * value. 'palm_errno' is set to indicate the error.
  */
 int
-dlp_send_req(int fd,			/* File descriptor */
+dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 	     struct dlp_req_header *header,
 	     				/* Request header */
 	     struct dlp_arg argv[])	/* Array of request arguments */
@@ -143,7 +143,7 @@ dlp_send_req(int fd,			/* File descriptor */
 	}
 
 	/* Send the request */
-	err = padp_write(fd, outbuf, wptr-outbuf);
+	err = padp_write(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
 		/* XXX - (After the outgoing buffer is dynamically
@@ -166,7 +166,7 @@ dlp_send_req(int fd,			/* File descriptor */
  * value; 'palm_errno' is set to indicate the error.
  */
 int
-dlp_recv_resp(int fd,		/* File descriptor to read from */
+dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 	      const ubyte id,	/* ID of the original request */
 	      struct dlp_resp_header *header,
 				/* Response header will be put here */
@@ -175,22 +175,12 @@ dlp_recv_resp(int fd,		/* File descriptor to read from */
 {
 	int i;
 	int err;
-	struct PConnection *pconn;	/* The connection */
 	const ubyte *inbuf;	/* Input data (from PADP) */
 	uword inlen;		/* Length of input data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	/* Get the PConnection */
-	if ((pconn = PConnLookup(fd)) == NULL)
-	{
-		fprintf(stderr, "dlp_recv_resp: can't find PConnection for %d\n",
-			fd);
-		/* XXX - Set an error status */
-		return -1;
-	}
-
 	/* Read the response */
-	err = padp_read(fd, &inbuf, &inlen);
+	err = padp_read(pconn, &inbuf, &inlen);
 	if (err < 0)
 		return err;	/* Error */
 
