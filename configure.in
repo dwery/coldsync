@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.131.2.1 2001-09-13 02:06:35 arensb Exp $
+dnl # $Id: configure.in,v 1.131.2.2 2001-10-09 01:41:17 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -53,8 +53,12 @@ AC_SUBST(VERSION)
 AC_SUBST(EDITION)
 
 # This is almost certainly a Good Thing
-: ${LDFLAGS="-L${prefix}/lib"}
-: ${CPPFLAGS="-I${prefix}/include"}
+# But if the user wants to install in /usr, then gcc can get confused
+# as to which include files are system ones and which are local.
+if test x"${prefix}" != x"/usr"; then
+	: ${LDFLAGS="-L${prefix}/lib"}
+	: ${CPPFLAGS="-I${prefix}/include"}
+fi
 
 ## Checks for programs.
 

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.53 2001-07-30 07:08:34 arensb Exp $
+ * $Id: coldsync.h,v 1.53.2.1 2001-10-09 01:41:26 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -70,7 +70,6 @@ struct cmd_opts {
 	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
 	int protocol;		/* Protocol stack for talking to cradle */
 	Bool use_syslog;	/* Use syslog for error messages? */
-	char *log_fname;	/* Where to write the log file */
 	/* XXX - do_backup and do_restore are made obsolete by run modes */
 	/* XXX - backupdir and restoredir are made obsolete by
 	 * mode-specific functions.

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.34 2001-07-30 07:12:09 arensb Exp $
+ * $Id: lexer.l,v 2.34.2.1 2001-10-09 01:41:27 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -16,6 +16,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "parser.h"
+#include "symboltable.h"
 #include "y.tab.h"
 
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
@@ -41,6 +42,10 @@
 #endif	/* ECHO */
 
 int lineno;
+
+/* This is used in QSTRING, to keep track of the buffer size, which is
+   the string length + 1 (for null terminal).  */
+static int string_size = 0;
 
 static Bool have_nextstate = False;
 static int nextstate = 0;	/* State in which to start the next yylex()
@@ -70,6 +75,9 @@ static int nextstate = 0;	/* State in which to start the next yylex()
  /* Four-character identifier */
 %s ID4
 
+/* Quoted strings. */
+%x QSTRING
+
  /* Character classes */
 
  /* Decimal digit */
@@ -90,7 +98,6 @@ ID1		[a-zA-Z_]
 ID		[-a-zA-Z_0-9]
 
 %%
-
 %{
 #ifdef YY_FLEX_LEX_COMPAT
 	/* This is just to trick the compiler into thinking that this
@@ -154,6 +161,7 @@ ID		[-a-zA-Z_0-9]
 "directory"	{ KEYWORD(DIRECTORY);	}
 "forward"	{ KEYWORD(FORWARD);	}
 "listen"	{ KEYWORD(LISTEN);	}
+"options"	{ KEYWORD(OPTIONS);	}
 "path"		{ KEYWORD(PATH);	}
 "pda"		{ KEYWORD(PDA);		}
 "palm"		{ KEYWORD(PDA);		/* Synonym */	}
@@ -270,35 +278,90 @@ ID		[-a-zA-Z_0-9]
 	return STRING;
 	}
 
- /* XXX - This should be capable of handling strings longer than
-  * YYLMAX. The obvious way to do this is to implement a "string"
-  * context: the first double-quote puts us in string mode; the second
-  * one takes us out of it. In the meantime, we read YYLMAX-sized
-  * chunks of the string, and either a) realloc() storage for the
-  * string as necessary, or b) put the chunks on a linked list, then
-  * collapse them into a single string once the closing double-quotes
-  * have been seen.
-  *
-  * Alternately, just require 'flex' rather than 'lex'.
-  */
  /* Note that this accepts escaped double-quotes in strings */
- /* XXX - Allow other special characters: \t, \n, \r, \0123, \xf3 and
-  * so forth.
-  */
- /* XXX - Strip out escapes in strings */
-\"([^\"]|\\\")*\"	{
-	PARSE_TRACE(3)
-		fprintf(stderr, "Found string [%s]\n", yytext);
-	if ((yylval.string = (char *) malloc(yyleng-1)) == NULL)
+\"[^\"$\\]* {
+	PARSE_TRACE(5) fprintf(stderr, "Started string [%s]\n", yytext);
+	string_size = yyleng;	/* the initial length. */
+	if((yylval.string = (char *)malloc(string_size)) == NULL )
 	{
 		Error(_("%s: Can't malloc copy of string."),
 		      "yylex");
 		return -1;
 	}
-	strncpy(yylval.string, yytext+1, yyleng-2);
-	yylval.string[yyleng-2] = '\0';
-	return STRING; 
+	strncpy(yylval.string, yytext+1, yyleng-1);
+	yylval.string[yyleng-1] = 0;
+	BEGIN QSTRING;
+        }
+
+
+ /* escaped characters: $, \", \n, \t, \r.
+  *   XXX - Allow octal/hex numbers: \0123, \xf3 and so forth.
+  */
+<QSTRING>\\[\\$\"nrt] {
+	PARSE_TRACE(5)
+		fprintf(stderr, "escaped string character [%s]\n", yytext);
+	string_size++;
+	if((yylval.string = (char *)realloc(yylval.string, string_size))
+	   == NULL )
+	{
+		Error(_("%s: Can't malloc copy of string."),
+		      "yylex");
+		return -1;
 	}
+	switch( yytext[1] ) {
+	case 'n':
+		yylval.string[string_size - 2] = '\n';
+		break;
+	case 't':
+		yylval.string[string_size - 2] = '\t';
+		break;
+	case 'r':
+		yylval.string[string_size - 2] = '\r';
+		break;
+	default:
+		yylval.string[string_size - 2] = yytext[1];
+		break;
+	}
+        }
+
+ /* Variables that were defined elsewhere:  $(WORD).  */
+<QSTRING>$\([^\)]+\) {
+	char *value = get_symbol_n(yytext + 2 , yyleng - 3);
+	int len = strlen(value);
+
+	PARSE_TRACE(5) fprintf(stderr, "variable [%s] -> [%s]\n", yytext, value);
+	if((yylval.string = (char *)realloc(yylval.string,
+					    string_size + len)) == NULL )
+	{
+		Error(_("%s: Can't malloc copy of string."),
+		      "yylex");
+		return -1;
+	}
+	strncpy(&(yylval.string[string_size-1]), value, len);
+	string_size += len;
+	free(value);
+        }
+
+<QSTRING>[^\"$\\]+ {
+	PARSE_TRACE(5) fprintf(stderr, "more string [%s]\n", yytext);
+	if((yylval.string = (char *)realloc(yylval.string,
+					    string_size + yyleng)) == NULL )
+	{
+		Error(_("%s: Can't malloc copy of string."),
+		      "yylex");
+		return -1;
+	}
+	strncpy(&(yylval.string[string_size-1]), yytext, yyleng);
+	string_size += yyleng;
+        }
+
+ /* End quote of string. */
+<QSTRING>\" {
+	BEGIN INITIAL;
+	yylval.string[string_size-1] = 0;
+	PARSE_TRACE(2) fprintf(stderr, "finished string [%s]\n", yylval.string);
+	return STRING;
+        }
 
 [-+]?{DIGIT}{1,10}	{
 		long value;
@@ -357,6 +420,7 @@ ID		[-a-zA-Z_0-9]
 				yytext);
 		return yytext[0];
 	}
+
 
 %%
 

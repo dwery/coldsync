@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.98 2001-07-30 07:13:02 arensb Exp $
+ * $Id: coldsync.c,v 1.98.2.1 2001-10-09 01:41:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,6 +48,7 @@
 #include "pref.h"
 #include "palment.h"
 #include "net_compat.h"
+#include "symboltable.h"
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
@@ -56,6 +57,7 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 				 * rant in "log.c".
 				 */
 
+static int open_log_file();
 static int Connect(PConnection *pconn);
 static int Disconnect(PConnection *pconn, const ubyte status);
 static int run_mode_Standalone(int argc, char *argv[]);
@@ -99,7 +101,6 @@ main(int argc, char *argv[])
 	global_opts.devtype		= -1;
 	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
-	global_opts.log_fname		= NULL;
 	global_opts.do_backup		= False;
 	global_opts.backupdir		= NULL;
 	global_opts.do_restore		= False;
@@ -174,6 +175,9 @@ main(int argc, char *argv[])
 		goto done;
 	}
 
+	/* Initialize the global symbol table. */
+	symboltable_init();
+
 	/* Parse command-line arguments */
 	err = parse_args(argc, argv);
 	if (err < 0)
@@ -195,80 +199,9 @@ main(int argc, char *argv[])
 	if (global_opts.use_syslog)
 	{
 		openlog(PACKAGE, LOG_PID, LOG_LOCAL0);
-				/* XXX - Perhaps the facility should be
+		                /* XXX - Perhaps the facility should be
 				 * configurable at configure-time.
 				 */
-	}
-
-	/* Open the logfile, if requested.
-	 * This block opens the log file given by the "-l" option, then
-	 * redirects stderr to it. We also keep a copy of the original
-	 * stderr as 'oldstderr', in case we ever need it.
-	 * I think this is almost equivalent to
-	 *	coldsync 3>&2 2>logfile
-	 * in the Bourne shell.
-	 * The main reason for doing this is daemon mode: when a process is
-	 * run from getty or inetd, stderr is connected to the Palm, or the
-	 * network socket. Printing error messages there would screw things
-	 * up. The obvious thing to do would be to use "2>logfile", but
-	 * getty and inetd don't give us a Bourne shell with which to do
-	 * this.
-	 */
-	if (global_opts.log_fname != NULL)
-	{
-		int stderr_copy;	/* File descriptor of copy of stderr */
-		int log_fd;		/* Temporary file descriptor for
-					 * logfile */
-		int log_fd2;		/* Temporary file descriptor for
-					 * logfile */
-		time_t now;		/* For timestamp */
-
-		MISC_TRACE(1)
-			fprintf(stderr,
-				"Redirecting stderr to \"%s\"\n",
-				global_opts.log_fname);
-
-		/* Make a copy of the old stderr, in case we need it later. */
-		stderr_copy = dup(STDERR_FILENO);
-		if (stderr_copy < 0)
-		{
-			Error(_("Can't dup(stderr)."));
-			Perror("dup");
-			goto done;
-		}
-		oldstderr = fdopen(stderr_copy, "a");
-
-		/* Open log file (with permissions that are either fascist
-		 * or privacy-enhancing, depending on your point of view).
-		 */
-		log_fd = open(global_opts.log_fname, O_WRONLY|O_APPEND|O_CREAT,
-			      0600);
-		if (log_fd < 0)
-		{
-			Error(_("Can't open log file \"%s\"."),
-			      global_opts.log_fname);
-			Perror("open");
-			goto done;
-		}
-
-		/* Move the log file from whichever file descriptor it's on
-		 * now, to stderr's.
-		 */
-		log_fd2 = dup2(log_fd, STDERR_FILENO);
-		if (log_fd2 < 0)
-		{
-			Error(_("Can't open log file on stderr."));
-			Perror("dup2");
-			close(log_fd);
-			goto done;
-		}
-
-		/* Get rid of the now-unneeded duplicate log file descriptor */
-		close(log_fd);
-
-		/* Write a timestamp to the log file */
-		now = time(NULL);
-		fprintf(stderr, _("Log started on %s"), ctime(&now));
 	}
 
 	/* Load the configuration: in daemon mode, just load the global
@@ -284,6 +217,11 @@ main(int argc, char *argv[])
 		Error(_("Can't load configuration."));
 		goto done;
 	}
+
+	/* Log file is opened after config file is read, since it can be set
+	   there */
+	if(open_log_file() ) goto done;
+
 
 	MISC_TRACE(1)
 		/* So I'll know what people are running when they send me
@@ -353,8 +291,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
 		fprintf(stderr, "\tlog_fname: \"%s\"\n",
-			global_opts.log_fname == NULL ?
-				"(null)" : global_opts.log_fname);
+			get_symbol("LOGFILE"));
 
 		fprintf(stderr, "\nhostid == 0x%08lx (%02d.%02d.%02d.%02d)\n",
 			hostid,
@@ -433,7 +370,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "ColdSync terminating normally\n");
 
 	/* Write a timestamp to the log file */
-	if (global_opts.log_fname != NULL)
+	if (strcmp("", get_symbol("LOGFILE")) ) 
 	{
 		time_t now;
 
@@ -450,6 +387,80 @@ main(int argc, char *argv[])
 	exit(0);
 
 	/*NOTREACHED*/
+}
+static int
+open_log_file() {
+	const char *filename = get_symbol("LOGFILE");
+	int stderr_copy;	/* File descriptor of copy of stderr */
+	int log_fd;		/* Temporary file descriptor for
+				 * logfile */
+	int log_fd2;		/* Temporary file descriptor for
+				 * logfile */
+	time_t now;		/* For timestamp */
+
+	/* Open the logfile, if requested.
+	 * This block opens the log file given by the "-l" option, then
+	 * redirects stderr to it. We also keep a copy of the original
+	 * stderr as 'oldstderr', in case we ever need it.
+	 * I think this is almost equivalent to
+	 *	coldsync 3>&2 2>logfile
+	 * in the Bourne shell.
+	 * The main reason for doing this is daemon mode: when a process is
+	 * run from getty or inetd, stderr is connected to the Palm, or the
+	 * network socket. Printing error messages there would screw things
+	 * up. The obvious thing to do would be to use "2>logfile", but
+	 * getty and inetd don't give us a Bourne shell with which to do
+	 * this.
+	 */
+
+	if (strcmp("", filename) == 0) return 0;
+	MISC_TRACE(1)
+		fprintf(stderr,
+			"Redirecting stderr to \"%s\"\n",
+			filename);
+	
+	/* Make a copy of the old stderr, in case we need it later. */
+	stderr_copy = dup(STDERR_FILENO);
+	if (stderr_copy < 0)
+	{
+		Error(_("Can't dup(stderr)."));
+		Perror("dup");
+		return 1;
+	}
+	oldstderr = fdopen(stderr_copy, "a");
+	
+	/* Open log file (with permissions that are either fascist
+	 * or privacy-enhancing, depending on your point of view).
+	 */
+	log_fd = open(filename, O_WRONLY|O_APPEND|O_CREAT,
+		      0600);
+	if (log_fd < 0)
+	{
+		Error(_("Can't open log file \"%s\"."),
+		      filename);
+		Perror("open");
+		return 1;
+	}
+	
+	/* Move the log file from whichever file descriptor it's on
+	 * now, to stderr's.
+	 */
+	log_fd2 = dup2(log_fd, STDERR_FILENO);
+	if (log_fd2 < 0)
+	{
+		Error(_("Can't open log file on stderr."));
+		Perror("dup2");
+		close(log_fd);
+		return 1;
+	}
+	
+	/* Get rid of the now-unneeded duplicate log file descriptor */
+	close(log_fd);
+	
+	/* Write a timestamp to the log file */
+	now = time(NULL);
+	fprintf(stderr, _("Log started on %s"), ctime(&now));
+	return 0;
 }
 
 static int
@@ -472,6 +483,7 @@ run_mode_Standalone(int argc, char *argv[])
 					 * the Palm. */
 	udword p_lastsyncPC;		/* Hostid of last host Palm synced
 					 * with */
+	time_t now;
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -562,6 +574,13 @@ run_mode_Standalone(int argc, char *argv[])
 		else
 			want_username = pda->username;
 	}
+
+	if( pda->name == NULL )
+	{
+	    pda->name = "<unnamed>";
+	}
+	time(&now);
+	Verbose(1, _("Sync for %s at %s"), pda->name, ctime(&now));
 
 	/* See if the userid matches. */
 	p_userid = palm_userid(palm);

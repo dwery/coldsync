@@ -1,11 +1,23 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.4 2000-09-22 15:09:21 arensb Exp $
+# $Id: sample.coldsync.rc,v 1.4.10.1 2001-10-09 01:41:24 arensb Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
 # At least glance at it. Then read the manual.
 
+########################################
+### Options block
+########################################
+# You may specify global options and variables here if you wish.
+# Useful options are:
+# CONDUITDIR: a colon separated list of directories, in which conduits may
+#             be found.
+# LOGFILE:  the log file where information is printed. (If none is specified,
+#           logs go to stdandard error.)
+options {
+	CONDUITDIR: "$(CONDUITDIR):$(HOME)/.palm/conduits";
+}
 ########################################
 ### Listen block
 ########################################

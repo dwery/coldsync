@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.55 2001-08-03 15:48:52 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.55.2.1 2001-10-09 01:41:25 arensb Exp $
  */
 
 /* Note on I/O:
@@ -991,9 +991,6 @@ GenericConduit::FastSync()
 	struct pdb_record *remoterec;	// Record in remote database
 	struct pdb_record *localrec;	// Record in local database
 
-	add_to_log(_dbinfo->name);
-	add_to_log(" - ");
-
 	err = DlpOpenConduit(_pconn);
 	switch (err)
 	{
@@ -1003,7 +1000,8 @@ GenericConduit::FastSync()
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
 				"by user\n");
-		add_to_log(_("Cancelled\n"));
+		add_to_log(_dbinfo->name);
+		add_to_log(_(" - Cancelled\n"));
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
@@ -1050,7 +1048,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		add_to_log(_dbinfo->name);
+		add_to_log(_(" - Error\n"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
@@ -1068,7 +1067,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		add_to_log(_dbinfo->name);
+		add_to_log(_(" - Error\n"));
 		return -1;
 	}
 
@@ -1079,6 +1079,7 @@ GenericConduit::FastSync()
 	 * as backup, the way you can with records. Yuck.
 	 */
 
+	bool local_changed = false;
 	/* Read each modified record in turn. */
 	while ((err = DlpReadNextModifiedRec(_pconn, dbh,
 					     &recinfo, &rptr))
@@ -1108,7 +1109,8 @@ GenericConduit::FastSync()
 			this->close_archive();
 
 			DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+			add_to_log(_dbinfo->name);
+			add_to_log(_(" - Error\n"));
 			return -1;
 		}
 		SYNC_TRACE(5)
@@ -1157,6 +1159,7 @@ GenericConduit::FastSync()
 				this->archive_record(remoterec);
 				pdb_FreeRecord(remoterec);
 				remoterec = NULL;
+				local_changed = true;
 				continue;
 			}
 
@@ -1173,6 +1176,7 @@ GenericConduit::FastSync()
 						remoterec->id);
 				pdb_FreeRecord(remoterec);
 				remoterec = NULL;
+				local_changed = true;
 				continue;
 			}
 
@@ -1209,11 +1213,13 @@ GenericConduit::FastSync()
 				pdb_FreeRecord(remoterec);
 				remoterec = NULL;
 				DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				add_to_log(_dbinfo->name);
+				add_to_log(_(" - Error\n"));
 				return -1;
 			}
 
 			remoterec = NULL;
+			local_changed = true;
 
 			/* Success. Go on to the next modified record */
 			continue;
@@ -1226,6 +1232,7 @@ GenericConduit::FastSync()
 		err = this->SyncRecord(dbh,
 				       _localdb, localrec,
 				       remoterec);
+		local_changed = true;
 		SYNC_TRACE(6)
 			fprintf(stderr, "SyncRecord() returned %d\n", err);
 		if (err < 0)
@@ -1284,6 +1291,7 @@ GenericConduit::FastSync()
 
 	struct pdb_record *nextrec;	// Next record in list
 
+	bool remote_changed = false;
 	for (localrec = _localdb->rec_index.rec, nextrec = 0;
 	     localrec != 0;
 	     localrec = nextrec)
@@ -1319,6 +1327,7 @@ GenericConduit::FastSync()
 				 * deleting it anyway.
 				 */
 
+				remote_changed = true;
 				pdb_DeleteRecordByID(_localdb, localrec->id);
 				break;
 
@@ -1348,6 +1357,7 @@ GenericConduit::FastSync()
 				fprintf(stderr, "Deleting record 0x%08lx\n",
 					localrec->id);
 
+			remote_changed = true;
 			err = DlpDeleteRecord(_pconn, dbh, 0, localrec->id);
 			switch (err)
 			{
@@ -1393,6 +1403,7 @@ GenericConduit::FastSync()
 				fprintf(stderr, "> Sending local record (ID "
 					"0x%08lx) to Palm\n",
 					localrec->id);
+			remote_changed = true;
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     localrec->flags,
@@ -1444,7 +1455,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit::FastSync");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log(_("Error\n"));
+		add_to_log(_dbinfo->name);
+		add_to_log(_(" - Error\n"));
 		return -1;
 	}
 
@@ -1472,7 +1484,8 @@ GenericConduit::FastSync()
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+			add_to_log(_dbinfo->name);
+			add_to_log(_(" - Error\n"));
 			return -1;
 		}
 	}
@@ -1498,7 +1511,8 @@ GenericConduit::FastSync()
 				break;
 			    default:
 				err = DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				add_to_log(_dbinfo->name);
+				add_to_log(_(" - Error\n"));
 				break;
 			}
 			return -1;
@@ -1508,7 +1522,13 @@ GenericConduit::FastSync()
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log(_("OK\n"));
+	if( local_changed || remote_changed )
+	{
+		add_to_log(_dbinfo->name);
+		if( local_changed ) add_to_log(_(" - local changed"));
+		if( remote_changed ) add_to_log(_(" - remote changed"));
+		add_to_log(_("\n"));
+	}
 	return 0;		// Success
 }
 
