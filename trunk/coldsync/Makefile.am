@@ -1,3 +1,5 @@
+# $Id: Makefile.am,v 1.8 1999-07-04 02:28:48 arensb Exp $
+
 bin_PROGRAMS = coldsync
 
 coldsync_SOURCES = \
@@ -10,6 +12,7 @@ coldsync_SOURCES = \
 	config.c \
 	archive.c \
 	conduit.c \
+	log.c \
 	GenericConduit.cc
 
 coldsync_DEPENDENCIES = $(top_builddir)/pconn/libpconn.a
