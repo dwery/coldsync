@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.6 1999-03-11 04:14:05 arensb Exp $
+ * $Id: coldsync.c,v 1.7 1999-03-16 11:03:22 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -28,9 +28,11 @@
 #define SYNC_RATE		57600
 #define BSYNC_RATE		B57600
 
+extern int sync_debug;
+
 extern int load_config(int argc, char *argv[]);
 extern int load_palm_config(struct Palm *palm);
-int listlocalfiles(struct PConnection *pconn);
+/*  int listlocalfiles(struct PConnection *pconn); */
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 
 struct Palm palm;
@@ -170,6 +172,7 @@ main(int argc, char *argv[])
 	 */
 
 	/* Synchronize the databases */
+sync_debug = 10;
 	for (i = 0; i < palm.num_dbs; i++)
 	{
 		err = HandleDB(pconn, &palm, i);
@@ -195,13 +198,15 @@ main(int argc, char *argv[])
 
 	/* XXX - Clean up */
 	exit(0);
+
+	/* NOTREACHED */
 }
 
 /* Connect
  * Wait for a Palm to show up on the other end.
  */
 int
-Connect(struct PConnection *pconn/*int fd*/,
+Connect(struct PConnection *pconn,
 	  const char *name)
 {
 	int err;
@@ -255,12 +260,12 @@ Connect(struct PConnection *pconn/*int fd*/,
 }
 
 int
-Disconnect(struct PConnection *pconn/*int fd*/, const ubyte status)
+Disconnect(struct PConnection *pconn, const ubyte status)
 {
 	int err;
 
 	/* Terminate the sync */
-	err = DlpEndOfSync(pconn, status/*DLPCMD_SYNCEND_NORMAL*/);
+	err = DlpEndOfSync(pconn, status);
 	if (err < 0)
 	{
 		fprintf(stderr, "Error during DlpEndOfSync: (%d) %s\n",
