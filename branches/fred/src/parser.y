@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.44.2.1 2001-10-09 01:41:27 arensb Exp $
+ * $Id: parser.y,v 2.44.2.2 2001-10-11 06:08:56 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -755,7 +755,7 @@ header_list:	header_list
 	';'
 	;
 
-options_stmt: OPTIONS  open_brace
+options_stmt: OPTIONS open_brace
 	{
 		lex_expect(LEX_HEADER);
 	}
@@ -795,7 +795,6 @@ options_list: options_list
 	}
 	';'
 	;
-
 
 pda_stmt:	PDA
 	{
