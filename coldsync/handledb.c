@@ -2,13 +2,14 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.1 1999-02-22 10:39:31 arensb Exp $
+ * $Id: handledb.c,v 1.2 1999-02-24 13:19:31 arensb Exp $
  */
 
 #include <stdio.h>
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
+#include "config.h"
 #include "coldsync.h"
 #include "pconn/dlp_cmd.h"
 
@@ -53,10 +54,17 @@ printf("\"%s\" is a ROM database. I'm not backing it up.\n",
 	 * real backup directory name, make sure the filename doesn't
 	 * have any weird characters in it (like "/").
 	 */
+#if HAVE_SNPRINTF
 	snprintf(bakfname, MAXPATHLEN, "%s/%s.%s",
 		 BACKUP_DIR,
 		 dbinfo->name,
 		 IS_RSRC_DB(dbinfo) ? "prc" : "pdb");
+#else
+	sprintf(bakfname, "%s/%s.%s",
+		 BACKUP_DIR,
+		 dbinfo->name,
+		 IS_RSRC_DB(dbinfo) ? "prc" : "pdb");
+#endif
 
 printf("I want to sync \"%s\" with \"%s\"\n", dbinfo->name, bakfname);
 
@@ -71,6 +79,8 @@ printf("The file \"%s\" doesn't exist: need to do a backup.\n", bakfname);
 		if (IS_RSRC_DB(dbinfo))
 		{
 			printf("\tNeed to do a resource backup\n");
+			return Cold_ResourceBackup(pconn, palm,
+						   dbinfo, bakfname);
 		} else {
 			printf("\tNeed to do a record backup\n");
 			return Cold_RecordBackup(pconn, palm,
@@ -81,6 +91,12 @@ printf("The file \"%s\" exists: need to do a sync.\n", bakfname);
 		if (IS_RSRC_DB(dbinfo))
 		{
 			printf("\tNeed to do a resource sync\n");
+/* XXX - This ought to be a resource sync, but it's not implemented yet,
+ * and I don't want to have to 'rm' leftover files all the time while
+ * I'm testing.
+ */
+return Cold_ResourceBackup(pconn, palm,
+			   dbinfo, bakfname);
 		} else {
 			printf("\tNeed to do a record sync\n");
 /* XXX - This ought to be a record sync, but it's not implemented yet,
