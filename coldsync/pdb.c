@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.10 1999-03-11 20:38:02 arensb Exp $
+ * $Id: pdb.c,v 1.11 1999-03-16 11:11:19 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -16,13 +16,6 @@
 #include "palm/palm_types.h"
 #include "pconn/util.h"
 #include "pdb.h"
-
-/* XXX - Need functions:
- * int write_pdb(fd, struct pdb *pdb) - Write a struct pdb to a file. It'd
- *	be better to have the backup stuff read a database into a struct
- *	pdb, then have write_pdb() (or whatever it's called) do the actual
- *	writing.
- */
 
 /* Helper functions */
 static uword get_file_length(int fd);
@@ -61,6 +54,31 @@ new_pdb()
 	return retval;
 }
 
+/* pdb_FreeRecord
+ * Free a previously-allocated 'pdb_record'. This function wouldn't really
+ * be necessary, except that pdb_CopyRecord() returns a 'pdb_record'.
+ */
+void
+pdb_FreeRecord(struct pdb_record *rec)
+{
+	if (rec->data != NULL)
+		free(rec->data);
+	free(rec);
+}
+
+/* pdb_FreeResource
+ * Free a previously-allocated 'pdb_resource'. This function wouldn't
+ * really be necessary, except that pdb_CopyResource() returns a
+ * 'pdb_resource'.
+ */
+void
+pdb_FreeResource(struct pdb_resource *rsrc)
+{
+	if (rsrc->data != NULL)
+		free(rsrc->data);
+	free(rsrc);
+}
+
 /* free_pdb
  * Cleanly free a struct pdb, and all of its subparts (destructor).
  */
@@ -75,27 +93,23 @@ free_pdb(struct pdb *db)
 	if (IS_RSRC_DB(db))
 	{
 		/* It's a resource database */
-		struct pdb_resource *rec;
+		struct pdb_resource *rsrc;
 		struct pdb_resource *next;
 
 		/* Walk the linked list, freeing as we go along */
-		for (rec = db->rec_index.rsrc;
-		     rec != NULL;
-		     rec = next)
+		for (rsrc = db->rec_index.rsrc;
+		     rsrc != NULL;
+		     rsrc = next)
 		{
-			next = rec->next;	/* Remember the next
+			next = rsrc->next;	/* Remember the next
 						 * element on the list. We
 						 * won't have a chance to
 						 * look it up after this
 						 * one has been free()d.
 						 */
 
-			/* Free the resource data, if any */
-			if (rec->data != NULL)
-				free(rec->data);
-
 			/* Free this element */
-			free(rec);
+			pdb_FreeResource(rsrc);
 		}
 	} else {
 		/* It's a record database */
@@ -114,12 +128,8 @@ free_pdb(struct pdb *db)
 						 * one has been free()d.
 						 */
 
-			/* Free the record data, if any */
-			if (rec->data != NULL)
-				free(rec->data);
-
 			/* Free this element */
-			free(rec);
+			pdb_FreeRecord(rec);
 		}
 	}
 
@@ -859,6 +869,8 @@ pdb_AppendRecord(struct pdb *db,
 		db->rec_index.rec = newrec;
 		newrec->next = NULL;
 
+		db->numrecs++;		/* Bump record counter */
+
 		return 0;		/* Success */
 	}
 
@@ -867,6 +879,8 @@ pdb_AppendRecord(struct pdb *db,
 		;
 	rec->next = newrec;
 	newrec->next = NULL;
+
+	db->numrecs++;			/* Bump record counter */
 
 	return 0;			/* Success */
 }
@@ -893,6 +907,8 @@ pdb_AppendResource(struct pdb *db,
 		db->rec_index.rsrc = newrsrc;
 		newrsrc->next = NULL;
 
+		db->numrecs++;		/* Bump resource counter */
+
 		return 0;		/* Success */
 	}
 
@@ -901,6 +917,8 @@ pdb_AppendResource(struct pdb *db,
 		;
 	rsrc->next = newrsrc;
 	newrsrc->next = NULL;
+
+	db->numrecs++;			/* Bump resource counter */
 
 	return 0;			/* Success */
 }
@@ -973,6 +991,136 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
 	db->numrecs++;			/* Increment record count */
 
 	return 0;			/* Success */
+}
+
+/* new_Record
+ * Create a new record from the given arguments, and return a pointer to
+ * it. Returns NULL in case of error.
+ * The record data is copied, so the caller needs to take care of freeing
+ * 'data'.
+ */
+struct pdb_record *
+new_Record(const ubyte attributes,
+	   const udword uniqueID,
+	   const uword len,
+	   const ubyte *data)
+{
+	struct pdb_record *retval;
+
+	/* Allocate the record to be returned */
+	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
+	    == NULL)
+	{
+		fprintf(stderr, "new_Record: out of memory\n");
+		return NULL;
+	}
+
+	/* Initialize the new record */
+	retval->next = NULL;
+	retval->offset = 0L;
+	retval->attributes = attributes;
+	retval->uniqueID = uniqueID;
+
+	/* Allocate space to put the record data */
+	if ((retval->data = (ubyte *) malloc(len)) == NULL)
+	{
+		/* Couldn't allocate data portion of record */
+		fprintf(stderr, "new_Record: can't allocate data\n");
+		free(retval);
+		return NULL;
+	}
+
+	/* Copy the data to the new record */
+	retval->data_len = len;
+	memcpy(retval->data, data, len);
+
+	return retval;		/* Success */
+}
+
+/* XXX - new_Resource */
+
+/* pdb_CopyRecord
+ * Make a copy of record 'rec' in database 'db' (and its data), and return
+ * it. The new record is allocated by pdb_CopyRecord(), so the caller has
+ * to take care of freeing it.
+ * Returns a pointer to the new copy, or NULL in case of error.
+ */
+struct pdb_record *pdb_CopyRecord(
+	const struct pdb *db,
+	const struct pdb_record *rec)
+{
+	struct pdb_record *retval;
+
+	/* Allocate the record to be returned */
+	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
+	    == NULL)
+	{
+		fprintf(stderr, "pdb_CopyRecord: out of memory.\n");
+		return NULL;
+	}
+
+	retval->next = NULL;		/* For cleanliness */
+
+	/* Copy the old record to the new copy */
+	retval->offset = rec->offset;
+	retval->attributes = rec->attributes;
+	retval->uniqueID = rec->uniqueID;
+
+	/* Allocate space for the record data itself */
+	if ((retval->data = (ubyte *) malloc(rec->data_len)) == NULL)
+	{
+		fprintf(stderr, "pdb_CopyRecord: can't allocate record data.\n");
+		free(retval);
+		return NULL;
+	}
+
+	/* Copy the record data */
+	retval->data_len = rec->data_len;
+	memcpy(retval->data, rec->data, retval->data_len);
+
+	return retval;		/* Success */
+}
+
+/* pdb_CopyResource
+ * Make a copy of resource 'rsrc' in database 'db' (and its data), and
+ * return it. The new record is allocated by pdb_CopyResource(), so the
+ * caller has to take care of freeing it.
+ * Returns a pointer to the new copy, or NULL in case of error.
+ */
+struct pdb_resource *pdb_CopyResource(
+	const struct pdb *db,
+	const struct pdb_resource *rsrc)
+{
+	struct pdb_resource *retval;
+
+	/* Allocate the resource to be returned */
+	if ((retval = (struct pdb_resource *)
+	     malloc(sizeof(struct pdb_resource))) == NULL)
+	{
+		fprintf(stderr, "pdb_CopyResource: out of memory.\n");
+		return NULL;
+	}
+
+	retval->next = NULL;		/* For cleanliness */
+
+	/* Copy the old resource to the new copy */
+	retval->type = rsrc->type;
+	retval->id = rsrc->id;
+	retval->offset = rsrc->offset;
+
+	/* Allocate space for the record data itself */
+	if ((retval->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
+	{
+		fprintf(stderr, "pdb_CopyResource: can't allocate resource data.\n");
+		free(retval);
+		return NULL;
+	}
+
+	/* Copy the resource data */
+	retval->data_len = rsrc->data_len;
+	memcpy(retval->data, rsrc->data, retval->data_len);
+
+	return retval;		/* Success */
 }
 
 /*** Helper functions ***/
@@ -1127,8 +1275,19 @@ pdb_LoadRsrcIndex(int fd,
 {
 	int i;
 	int err;
+	uword totalrsrcs;	/* The real number of resources in the
+				 * database.
+				 */
 
-	if (db->numrecs == 0)
+	totalrsrcs = db->numrecs;	/* Get the number of resources in
+					 * the database. It is necessary to
+					 * remember this here because
+					 * dlp_AppendResource() increments
+					 * db->numrecs in the name of
+					 * convenience.
+					 */
+
+	if (totalrsrcs == 0)
 	{
 		/* There are no resources in this file */
 		db->rec_index.rsrc = NULL;
@@ -1136,7 +1295,7 @@ pdb_LoadRsrcIndex(int fd,
 	}
 
 	/* Read the resource index */
-	for (i = 0; i < db->numrecs; i++)
+	for (i = 0; i < totalrsrcs; i++)
 	{
 		static ubyte inbuf[PDB_RESOURCEIX_LEN];
 					/* Input buffer */
@@ -1180,6 +1339,7 @@ printf("\tResource %d: type '%c%c%c%c' (0x%08lx), id %u, offset 0x%04lx\n",
 
 		/* Append the new resource to the list */
 		pdb_AppendResource(db, rsrc);
+		db->numrecs = totalrsrcs;	/* Kludge */
 	}
 
 	return 0;
@@ -1195,8 +1355,19 @@ pdb_LoadRecIndex(int fd,
 {
 	int i;
 	int err;
+	uword totalrecs;	/* The real number of records in the
+				 * database.
+				 */
 
-	if (db->numrecs == 0)
+	totalrecs = db->numrecs;	/* Get the number of records in the
+					 * database. It is necessary to
+					 * remember this here because
+					 * dlp_AppendResource() increments
+					 * db->numrecs in the name of
+					 * convenience.
+					 */
+
+	if (totalrecs == 0)
 	{
 		/* There are no records in this file */
 		db->rec_index.rec = NULL;
@@ -1204,7 +1375,7 @@ pdb_LoadRecIndex(int fd,
 	}
 
 	/* Read the record index */
-	for (i = 0; i < db->numrecs; i++)
+	for (i = 0; i < totalrecs; i++)
 	{
 		static ubyte inbuf[PDB_RECORDIX_LEN];
 					/* Input buffer */
@@ -1216,14 +1387,25 @@ pdb_LoadRecIndex(int fd,
 		if ((rec = (struct pdb_record *)
 		     malloc(sizeof(struct pdb_record)))
 		    == NULL)
+		{
+			fprintf(stderr, "Out of memory\n");
 			return -1;
+		}
+
 		/* Scribble zeros all over it, just in case */
 		memset(rec, 0, sizeof(struct pdb_record));
 
 		/* Read the next record index entry */
 		if ((err = read(fd, inbuf, PDB_RECORDIX_LEN)) !=
 		    PDB_RECORDIX_LEN)
+		{
+			fprintf(stderr, "LoadRecIndex: error reading record index entry (%d bytes): %d\n",
+				PDB_RECORDIX_LEN,
+				err);
+			perror("read");
+			free(rec);
 			return -1;
+		}
 
 		/* Parse it */
 		rptr = inbuf;
@@ -1247,6 +1429,7 @@ printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, uniqueID 0x%08lx\n",
 
 		/* Append the new record to the database */
 		pdb_AppendRecord(db, rec); 
+		db->numrecs = totalrecs;	/* Kludge */
 	}
 
 	return 0;
@@ -1679,9 +1862,19 @@ pdb_DownloadResources(struct PConnection *pconn,
 {
 	int i;
 	int err;
+	uword totalrsrcs;	/* The real number of resources in the
+				 * database.
+				 */
+
+	totalrsrcs = db->numrecs;	/* Get the number of resources now.
+					 * It is necessary to remember this
+					 * now because dlp_AppendResource()
+					 * increments db->numrecs in the
+					 * name of convenience.
+					 */
 
 	/* Read each resource in turn */
-	for (i = 0; i < db->numrecs; i++)
+	for (i = 0; i < totalrsrcs; i++)
 	{
 		struct pdb_resource *rsrc;	/* The new resource */
 		struct dlp_resource resinfo;	/* Resource info will be
@@ -1746,6 +1939,7 @@ fprintf(stderr, "\tsize: %d\n", resinfo.size);
 
 		/* Append the resource to the database */
 		pdb_AppendResource(db, rsrc);
+		db->numrecs = totalrsrcs;	/* Kludge */
 	}
 
 	return 0;	/* Success */
@@ -1760,11 +1954,22 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	int err;
 	udword *recids;		/* Array of record IDs */
 	uword numrecs;		/* # record IDs actually read */
+	uword totalrecs;	/* The real number of records in the
+				 * database.
+				 */
+
+	totalrecs = db->numrecs;	/* Get the number of records in the
+					 * database. It is necessary to
+					 * remember this here because
+					 * dlp_AppendResource() increments
+					 * db->numrecs in the name of
+					 * convenience.
+					 */
 
 	/* Handle the easy case first: if there aren't any records, don't
 	 * bother asking for their IDs.
 	 */
-	if (db->numrecs == 0)
+	if (totalrecs == 0)
 	{
 		/* No records */
 		db->rec_index.rec = NULL;
@@ -1780,8 +1985,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	 * DlpReadRecordIDList() to get a list with each record's ID, then
 	 * use DlpReadRecordByID() to get the record data.
 	 */
-	if ((recids = (udword *) calloc(db->numrecs,
-					sizeof(udword)))
+	if ((recids = (udword *) calloc(totalrecs, sizeof(udword)))
 	    == NULL)
 	{
 		fprintf(stderr, "Can't allocate list of record IDs\n");
@@ -1800,17 +2004,17 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	}
 
 	/* Sanity check */
-	if (numrecs != db->numrecs)
+	if (numrecs != totalrecs)
 	{
 		fprintf(stderr, "### Whoa! numrecs is %d, but ReadRecordIDList says %d!\n",
-			db->numrecs, numrecs);
+			totalrecs, numrecs);
 		/* XXX - What to do in this case? For now, just punt. */
 		free(recids);
 		return -1;
 	}
 
 	/* Read each record in turn */
-	for (i = 0; i < db->numrecs; i++)
+	for (i = 0; i < totalrecs; i++)
 	{
 		struct pdb_record *rec;		/* The new resource */
 		struct dlp_recinfo recinfo;	/* Record info will be read
@@ -1818,7 +2022,6 @@ pdb_DownloadRecords(struct PConnection *pconn,
 						 * parsed into 'rec'.
 						 */
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
-
 
 		/* Allocate the new record */
 		if ((rec = (struct pdb_record *)
@@ -1874,6 +2077,7 @@ fprintf(stderr, "\tcategory: %d\n", recinfo.category);
 
 		/* Append the record to the database */
 		pdb_AppendRecord(db, rec);
+		db->numrecs = totalrecs;	/* Kludge */
 	}
 
 	return 0;	/* Success */
