@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38 2001-08-15 15:27:34 arensb Exp $
+ * $Id: conduit.c,v 2.38.2.1 2001-10-09 01:41:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -55,6 +55,7 @@
 #include "spc.h"
 #include "pref.h"
 #include "cs_error.h"
+#include "symboltable.h"
 
 #define MAX_SANE_FD	32	/* Highest-numbered file descriptor one
 				 * might get in a sane universe. Anything
@@ -315,6 +316,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * useful for defining a do-nothing default.
 		 */
 		return 201;		/* Success (trivially) */
+
 
 	/* If this conduit might understand SPC, set up a pipe for the
 	 * child to communicate to the parent.
@@ -777,6 +779,10 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			}
 			if (err != SPC_HEADER_LEN)
 			{
+				Error(_("%s: Error header wrong length %ld."),
+				      "run_conduit",err );
+				Perror("read");
+				goto abort;
 				/* The child printed something, but it's
 				 * not the right length for an SPC request.
 				 */
@@ -1333,6 +1339,38 @@ run_Install_conduits(struct dlp_dbinfo *dbinfo)
 	
 	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
 }	
+/* exec_from_path
+ * Search each of the paths $(CONDUITDIR) and try to execute the given process.
+ * It starts with the name as stated, in case it is in the default search path. 
+ */
+static int
+exec_from_path(const char *name, char *const argv[])
+{
+	int err = ENOENT;
+	char *path, *search;	/* current path, and search path. */
+	char *dir;
+
+	search = get_symbol("CONDUITDIR");
+	path = (char *)name;
+	while(1) {
+		printf("Trying path '%s'.\n", path);
+		execvp(path, argv);
+		printf("%s: error = %d, <%s>\n", path, errno, strerror(errno));
+		if( err != ENOENT ) err = errno;
+		/* If we make it here, then that path didn't work. */
+		if( search == NULL ) return err;
+		dir = search;
+		search = strchr(search, ':'); /* find next colon. */
+		if( search != NULL ) { /* replace the colon with a \0. */
+			search[0] = 0;
+			search++;
+		}
+		/* We don't need to free anything, because we will throw out
+		 * this memory image with execvp. */
+		path = (char *)malloc(strlen(dir) + 1 + strlen(name) + 1);
+		sprintf(path, "%s/%s", dir, name);
+	}
+}
 
 /* spawn_conduit
  * Spawn a conduit. Runs the program named by 'path', passing it the
@@ -1505,7 +1543,7 @@ spawn_conduit(
 	/* Unblock SIGCHLD in the child as well. */
 	unblock_sigchld(&sigmask);
 
-	err = execvp(path, argv);
+	err = exec_from_path(path, argv);
 
 	/* If we ever get to this point, then something went wrong */
 	Error(_("%s: execvp(%s) failed and returned %d."),
@@ -1807,6 +1845,7 @@ cond_readstatus(FILE *fromchild)
 	}
 
 	/* XXX - Do something intelligent */
+	fprintf(stderr, "%s\n", errmsg);/* XXX add conduit name here.  */
 
 	return errcode; 
 }
