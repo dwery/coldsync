@@ -33,9 +33,6 @@
 - PAM for security throughout?
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
-- Installing new databases: make it possible to install an older
-  version of a database. (Actually, this is already possible with
-  restoring.)
 - Directory structure:
 	~/.palm/<id>/backup	Backup of what's on the Palm
 	~/.palm/<id>/archive	Old archived stuff
@@ -68,8 +65,6 @@
   GenericConduit) to make sense in this situation.
 	Presumably this is the equivalent of a slow sync, but don't
   bother downloading the database from the Palm.
-- Add convenience functions for the various RPC calls, or at least the
-  more useful ones. See SysTraps.h for list of traps.
 - Split up the doc directory into directories, one per document. (But
   see next item.)
 - Combine the documentation: there's no 'libpalm' anymore, and I'm
@@ -165,20 +160,6 @@
 - Open a Unix domain socket that a client can listen on. Send
   conduits' messages to that socket. Define error codes like 22z =
   progress, so that clients can monitor how things are going.
-- Use STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO (from <unistd.h>)
-  where applicable.
-- Having multiple Fetch conduits for the same database can be
-  dangerous, since if the conduits are naive, the results of the first
-  conduit will be clobbered by the second one, and so forth. Some
-  solutions include:
-	a) Add a flag to struct dlp_dbinfo indicating that a Fetch
-	   conduit has already been run on it. Add a keyword to the
-	   conduit block in .coldsyncrc saying that this conduit is
-	   smart enough to cope with this. Make it an error to run a
-	   second Fetch conduit on this database unless that flag is
-	   set.
-	b) Ignore or document the problem. Tell people not to write
-	   crappy code.
 - Variables set in .coldsyncrc should simply be propagated to the
   environment. Should this be done immediately, though?
 - Should send mail to the user with a report of the sync.
@@ -202,8 +183,9 @@
   portability comments in 'automake' documentation.
 - Bug: For now should complain if extraneous arguments are given on
   command line.
-- Include "todo-dump" and "mh-aliases" in the distribution.
-- Makefile.PM and such for ColdSync.pm
+- Include some conduits (including "todo-dump" and "mh-aliases") in
+  the distribution.
+- Include a sample .coldsyncrc in the distribution.
 - Add ColdSync.pm and friends to the BSD port.
 - No-brainer configuration: make "conduit -config" part of the spec.
   Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
@@ -227,3 +209,10 @@
 	VAR += VALUE
 	VAR ?= DEFAULT_VALUE
 	VAR != `cmd`	(or whatever)
+- Replace the "-b", "-r" options: add a "-m" (mode) option. Modes
+  should include:
+	-mb <dir>	Do a backup to <dir>
+	-mr <dir>	Restore from <dir>
+	-ms		Normal sync (default)
+	-md		Daemon mode: listen for connection, fork, wait
+			for child to terminate.
