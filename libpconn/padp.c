@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.23 2002-10-27 15:34:16 azummo Exp $
+ * $Id: padp.c,v 1.24 2003-02-24 23:56:25 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -141,6 +141,8 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 	if (err == 0)
 	{
 		/* select() timed out */
+		PADP_TRACE(5)
+			fprintf(stderr, "padp_read: timeout\n");
 		return -1;
 	}
 
@@ -158,7 +160,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		 * flag set.
 		 */
 		return err;		/* Error */
-
+	
 	/* XXX - At this point, we should check the packet to make
 	 * sure it's a valid PADP packet, but I'm not sure what to do
 	 * if it's not ("Never test for an error condition you don't
