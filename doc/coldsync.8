@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.44 2001-07-26 06:57:45 arensb Exp $
+.\" $Id: coldsync.8,v 1.44.4.1 2001-10-11 06:45:07 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -371,7 +371,7 @@ command-line argument.
 The
 .Pa .coldsyncrc
 file contains
-.Li listen , pda ,
+.Li listen , pda , options , 
 and
 .Li conduit
 directives.
@@ -760,6 +760,21 @@ specify explicitly in your
 whether you want it to run before or after the generic conduit, or
 whether the generic conduit should be run at all.
 .Pp
+.Ss options
+.Li options
+directives are of the form
+.Bd -literal -offset indent
+option {
+	CONDUITDIR: "$(CONDUITDIR):$(HOME)/.palm/conduits";
+	key:  "this is the value";
+}
+.Ed
+Options behave like shell variables, in that you may use them later on in the
+configuration file.  In fact, if you do not set an option before you use it,
+coldsync will try to use your environment variables to set it.
+Options may only be used inside quoted strings.
+.Pp
+The most useful option is $(CONDUITDIR), which is the search path for conduits.
 .Ss Quoting
 Values on the right side of a colon may be enclosed in double quotes.
 That is you can write either
@@ -773,6 +788,12 @@ or
 It is always safe to quote a value. The quotes may be omitted if the
 value does not contain whitespace or punctuation that might confuse
 the parser.
+.Pp
+If a string is enclosed in double quotes, it may contain standard escape
+characters, or option substitution, such as $(CONDUITDIR). Options are set
+in the 
+.Li options
+section mentioned above.
 .Pp
 PDA names may also be quoted, subject to the same rules. That is, you
 may say
