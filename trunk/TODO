@@ -34,7 +34,6 @@
 - Add identd support?
 - PAM for security throughout?
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
-- Under Solaris, fails to notice that cfmakeraw() doesn't exist.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
 - Need functions to begin and end pause: if the desktop pops up a
@@ -191,3 +190,30 @@
   (read: can run coldsync out of the ports directory).
 	When doing the main sync, if can't find any other conduit for
   a database, fall back on the built-in generic conduit.
+- "Timeout. Attempting to resend" when installing AmsterdamMaps.pdb
+  (166368 bytes) (from Heineken's BarTrek package).
+- There appears to be a timing(?) problem with 'xcopilot',
+  specifically when terminating. ColdSync thinks everything is fine,
+  but 'xcopilot' hangs. I think it thinks that ColdSync hasn't
+  received the final ACK. If you give the data time to drain, it
+  appears to work fine, though. Maybe it's just a problem with the tty
+  devices.
+- Installation: allow specifying a separate directory for
+  installation, for the benefit of 'depot' and 'stow'. That is, it
+  should be possible to have a conduit installed as
+  /usr/local/stow/coldsync-1.0.0/libexec/myconduit, but at runtime
+  it'll look for the conduit as /usr/local/libexec/myconduit.
+- It should be possible to have ColdSync just run the "pre-fetch"
+  conduits and terminate. That way, if the user has fetch conduits
+  that take a long time, he can just run them periodically from 'cron'
+  and not waste time during the actual sync.
+	The corollary is that it must be possible to tell ColdSync not
+  to run the fetch conduits during the normal sync. Perhaps the best
+  way to do this is to use something like:
+	.if $FROM_CRON
+		conduit fetch {
+			path "/my/conduit";
+		}
+	.endif
+- Additional arguments on command line: if an argument is of the form
+  "FOO=bar", it should set the variable FOO to the value "bar".
