@@ -1,14 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.6 1999-08-25 05:24:51 arensb Exp $
-
-# XXX - Should have two distributions: 'make dist' makes 'dist-src'
-# and 'dist-doc'. 'dist-src' contains all of the source necessary to
-# build everything including the documentation. 'dist-doc' contains
-# preprocessed documentation: .info, .dvi and .ps files built from
-# .texi files. These are the biggest parts of the distribution and
-# should be distributed separately.
-# Alternately, have a 'make' variable determine whether to include the
-# .ps, .dvi and .info files.
+# $Id: Makefile.in,v 1.7 1999-08-25 08:01:14 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
