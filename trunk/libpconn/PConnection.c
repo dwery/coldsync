@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.24 2001-08-22 06:42:24 arensb Exp $
+ * $Id: PConnection.c,v 1.25 2001-09-07 09:43:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -32,21 +32,21 @@ int	io_trace = 0;
 
 extern int pconn_serial_open(PConnection *pconn,
 			     const char *fname,
-			     const int protocol,
+			     const pconn_proto_t protocol,
 			     const Bool prompt_for_hotsync);
 extern int pconn_net_open(PConnection *pconn,
 			  const char *fname,
-			  const int protocol,
+			  const pconn_proto_t protocol,
 			  const Bool prompt_for_hotsync);
 extern int pconn_usbm50x_open(PConnection *pconn,
 			      const char *fname,
-			      const int protocol,
+			      const pconn_proto_t protocol,
 			      const Bool prompt_for_hotsync);
 
 #if WITH_USB
 extern int pconn_usb_open(PConnection *pconn,
 			  const char *fname,
-			  const int protocol,
+			  const pconn_proto_t protocol,
 			  const Bool prompt_for_hotsync);
 #endif
 
@@ -56,8 +56,8 @@ extern int pconn_usb_open(PConnection *pconn,
  */
 PConnection *
 new_PConnection(char *device,
-		const int listenType,
-		const int protocol,
+		const pconn_listen_t listenType,
+		const pconn_proto_t protocol,
 		int promptHotSync)
 {
 	PConnection *pconn;		/* New connection */
