@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.6 1999-03-11 10:04:37 arensb Exp $
+dnl # $Id: configure.in,v 1.7 1999-03-11 20:33:41 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -58,6 +58,13 @@ AC_CHECK_FUNCS(select \
 	cfsetspeed \
 	cfmakeraw \
 	snprintf)
+
+# XXX - Under RedHat, if you compile with "gcc -ansi", it complains
+# about "implicit declaration of cfmakeraw()". You can fix this with
+# "-D_BSD_SOURCE", but is there a better way of turning this on?
+# Ditto for cfsetspeed(), mkstemp()
+# XXX - Under RedHat 5.2 Linux, mkstemp() requires <stdlib.h>,
+# although the man page just says <unistd.h>
 
 # Tell the various Makefiles to use the compatibility function provided
 if test x"$ac_cv_func_cfmakeraw" = xno ; then
