@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.30 2001-01-28 22:38:41 arensb Exp $
+ * $Id: conduit.c,v 2.31 2001-02-20 12:39:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -219,6 +219,10 @@ format_header(char *buf,
 	      const char *name,
 	      const char *value)
 {
+		/* XXX - Replace with snprintf() (but make sure neither the
+		 * header name nor total length exceed their respective
+		 * limits.
+		 */
 		strncpy(buf, name,  COND_MAXHFIELDLEN);
 		strncat(buf, ": ",  COND_MAXLINELEN - strlen(buf));
 		strncat(buf, value, COND_MAXLINELEN - strlen(buf));
