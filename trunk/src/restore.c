@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.10 2000-09-03 07:31:48 arensb Exp $
+ * $Id: restore.c,v 2.11 2000-09-08 14:53:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,6 +48,12 @@
 int
 Restore(struct PConnection *pconn,
 	struct Palm *palm)		/* XXX - Unused argument */
+	/* XXX - Should take argc, argv arguments. If files are named
+	 * explicitly, restore only those files.
+	 * In fact, if passed the name of a file, restore that file;
+	 * if passed the name of a directory, restore the contents of
+	 * that directory.
+	 */
 {
 	int err;
 	DIR *dir;
