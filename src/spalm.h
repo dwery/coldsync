@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.6 2002-11-09 22:42:19 azummo Exp $
+ * $Id: spalm.h,v 2.7 2002-12-10 13:54:23 azummo Exp $
  */
 #ifndef _spalm_h_
 #define _spalm_h_
@@ -133,6 +133,7 @@ extern const int palm_reload(struct Palm *palm);
 /*  extern int ListDBs(PConnection *pconn, struct Palm *palm); */
 extern int palm_fetch_all_DBs(struct Palm *palm);
 extern void palm_fetch_some_DBs(struct Palm *palm, udword creator, udword type);
+extern void palm_print_dbs(struct Palm *palm, FILE *fd);
 extern const int palm_num_dbs(struct Palm *palm);
 extern void palm_resetdb(struct Palm *palm);
 extern const struct dlp_dbinfo *palm_nextdb(struct Palm *palm);
