@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.19 2000-01-22 05:36:59 arensb Exp $
+ * $Id: coldsync.c,v 1.20 2000-01-23 21:17:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -131,6 +131,13 @@ main(int argc, char *argv[])
 	struct PConnection *pconn;
 	int err;
 	int i;
+
+	MISC_TRACE(1)
+		/* So I'll know what people are running when they send me
+		 * stderr.
+		 */
+		/* XXX - Perhaps dump the contents of "config.h" as well? */
+		fprintf(stderr, "%s version %s\n", PACKAGE, VERSION);
 
 #if HAVE_LIBINTL
 	/* Set things up so that i18n works. The constants PACKAGE and
@@ -1113,11 +1120,13 @@ GetPalmInfo(struct PConnection *pconn,
 	}
 	MISC_TRACE(3)
 	{
-		printf("System info:\n");
-		printf("\tROM version: 0x%08lx\n", palm->sysinfo.rom_version);
-		printf("\tLocalization: 0x%08lx\n",
-		       palm->sysinfo.localization);
-		printf("\tproduct ID: 0x%08lx\n", palm->sysinfo.prodID);
+		fprintf(stderr, "System info:\n");
+		fprintf(stderr, "\tROM version: 0x%08lx\n",
+			palm->sysinfo.rom_version);
+		fprintf(stderr, "\tLocalization: 0x%08lx\n",
+			palm->sysinfo.localization);
+		fprintf(stderr, "\tproduct ID: 0x%08lx\n",
+			palm->sysinfo.prodID);
 	}
 
 	/* Get NetSync information from the Palm */
@@ -1132,15 +1141,15 @@ GetPalmInfo(struct PConnection *pconn,
 	    case DLPSTAT_NOERR:
 		MISC_TRACE(3)
 		{
-			printf("NetSync info:\n");
-			printf("\tLAN sync on: %d\n",
-			       palm->netsyncinfo.lansync_on);
-			printf("\thostname: \"%s\"\n",
-			       palm->netsyncinfo.hostname);
-			printf("\thostaddr: \"%s\"\n",
-			       palm->netsyncinfo.hostaddr);
-			printf("\tnetmask: \"%s\"\n",
-			       palm->netsyncinfo.hostnetmask);
+			fprintf(stderr, "NetSync info:\n");
+			fprintf(stderr, "\tLAN sync on: %d\n",
+				palm->netsyncinfo.lansync_on);
+			fprintf(stderr, "\thostname: \"%s\"\n",
+				palm->netsyncinfo.hostname);
+			fprintf(stderr, "\thostaddr: \"%s\"\n",
+				palm->netsyncinfo.hostaddr);
+			fprintf(stderr, "\tnetmask: \"%s\"\n",
+				palm->netsyncinfo.hostnetmask);
 		}
 		break;
 	    case DLPSTAT_NOTFOUND:
@@ -1402,17 +1411,17 @@ void
 usage(int argc, char *argv[])
 {
 	printf(_("Usage: %s [options] -p port\n"
-	       "Options:\n"
-	       "\t-h:\t\tPrint this help message and exit.\n"
-	       "\t-V:\t\tPrint version and exit.\n"
-	       "\t-f <file>:\tRead configuration from <file>.\n"
-	       "\t-b <dir>:\tPerform a backup to <dir>.\n"
-	       "\t-r <dir>:\tRestore from <dir>.\n"
-	       "\t-S:\t\tForce slow sync.\n"
-	       "\t-F:\t\tForce fast sync.\n"
-	       "\t-R:\t\tCheck ROM databases.\n"
-	       "\t-p <port>:\tListen on device <port>\n"
-	       "\t-d <fac[:level]>:\tSet debugging level.\n")
+		 "Options:\n"
+		 "\t-h:\t\tPrint this help message and exit.\n"
+		 "\t-V:\t\tPrint version and exit.\n"
+		 "\t-f <file>:\tRead configuration from <file>.\n"
+		 "\t-b <dir>:\tPerform a backup to <dir>.\n"
+		 "\t-r <dir>:\tRestore from <dir>.\n"
+		 "\t-S:\t\tForce slow sync.\n"
+		 "\t-F:\t\tForce fast sync.\n"
+		 "\t-R:\t\tCheck ROM databases.\n"
+		 "\t-p <port>:\tListen on device <port>\n"
+		 "\t-d <fac[:level]>:\tSet debugging level.\n")
 	       ,
 	       argv[0]);
 }
