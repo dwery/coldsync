@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.7 2001-03-16 03:48:02 arensb Exp $
+# $Id: todo-text,v 1.8 2001-06-04 02:29:19 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -34,7 +34,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.7 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.8 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -538,7 +538,7 @@ preserved exactly across runs.
 
 =head1 SEE ALSO
 
-coldsync(1)
+coldsync(8)
 
 =cut
 #'
