@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.96 2001-05-15 13:23:40 arensb Exp $
+ * $Id: coldsync.c,v 1.97 2001-06-04 03:07:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2370,7 +2370,7 @@ run_mode_Daemon(int argc, char *argv[])
 	free_sync_config(sync_config); 
 	if ((err = load_config(True)) < 0)
 	{
-		Error(_("Can't load configuration"));
+		Error(_("Can't load configuration."));
 		/* XXX - Write reason to Palm log */
 		if (conf_fname != NULL)
 			free(conf_fname);
