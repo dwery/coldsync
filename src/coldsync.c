@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.23 2000-01-27 02:34:34 arensb Exp $
+ * $Id: coldsync.c,v 1.24 2000-01-27 03:55:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -844,9 +844,9 @@ CheckLocalFiles(struct Palm *palm)
 	/* Check each file in the directory in turn */
 	while ((file = readdir(dir)) != NULL)
 	{
-		char *lastdot;		/* Pointer to last dot in filename */
 		struct dlp_dbinfo *db;
-		static char dbname[DLPCMD_DBNAME_LEN+1];
+		const char *dbname;	/* Database name, built from file
+					 * name */
 		static char fromname[MAXPATHLEN+1];
 					/* Full pathname of the database */
 		static char toname[MAXPATHLEN+1];
@@ -862,43 +862,18 @@ CheckLocalFiles(struct Palm *palm)
 				"CheckLocalFiles: Checking file \"%s\"\n",
 				file->d_name);
 
-		/* Check the extension, if any, on the filename.
-		 * The only files we care about here are those that end in
-		 * ".pdb" or ".prc". Anything other than these files is
-		 * unlikely to be taken for a database and erroneously
-		 * uploaded or something.
+		/* Construct the database name from the file name, and make
+		 * sure it's sane.
 		 */
-		lastdot = strrchr(file->d_name, '.');
-		if (lastdot == NULL)
-			/* No extension. Ignore this file */
-			continue;
-
-		if ((strcasecmp(lastdot, ".pdb") != 0) &&
-		    (strcasecmp(lastdot, ".prc") != 0))
-			/* The file doesn't have a database extension.
-			 * Ignore it.
-			 */
-			continue;
-
-		MISC_TRACE(5)
-			fprintf(stderr,
-				"Found a database: \"%s\"\n",
-				file->d_name);
-
-		/* See if a database by this name exists on the Palm. */
-
-		/* Extract the database name. Try not to overflow the
-		 * buffer
-		 */
-		if ((lastdot - file->d_name) >= DLPCMD_DBNAME_LEN)
+		dbname = fname2dbname(file->d_name);
+		if (dbname == NULL)
 		{
-			strncpy(dbname, file->d_name,
-				DLPCMD_DBNAME_LEN);
-			dbname[DLPCMD_DBNAME_LEN] = '\0';
-		} else {
-			strncpy(dbname, file->d_name,
-				lastdot - file->d_name);
-			dbname[lastdot - file->d_name] = '\0';
+			/* Not a valid database name */
+			MISC_TRACE(4)
+				fprintf(stderr, "CheckLocalFiles: \"%s\" not "
+					"a valid database name\n",
+					file->d_name);
+			continue;
 		}
 
 		/* See if this database exists on the Palm */
