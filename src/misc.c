@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.16 2001-02-22 14:34:29 arensb Exp $
+ * $Id: misc.c,v 2.16.8.1 2001-10-11 03:38:41 arensb Exp $
  */
 
 #include "config.h"
@@ -32,6 +32,11 @@
 #  define memmove(d,s,n)	bcopy ((s), (d), (n))
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
+
+/* XXX - Should this go in the "else" clause, above? */
+#if HAVE_STRINGS_H
+#  include <strings.h>		/* For bzero() */
+#endif	/* HAVE_STRINGS_H */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
