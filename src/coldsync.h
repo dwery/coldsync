@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.47 2001-01-25 07:49:13 arensb Exp $
+ * $Id: coldsync.h,v 1.48 2001-01-28 22:41:41 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -72,7 +72,7 @@ struct cmd_opts {
 	char *devname;		/* Name of the device on which to listen */
 	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
 	Bool use_syslog;	/* Use syslog for error messages? */
-/*	char *log_fname;*/	/* Where to write the log file */
+	char *log_fname;	/* Where to write the log file */
 	/* XXX - do_backup and do_restore are made obsolete by run modes */
 	/* XXX - backupdir and restoredir are made obsolete by
 	 * mode-specific functions.
@@ -361,6 +361,7 @@ extern int parse_config_file(const char *fname, struct sync_config *config);
 /* misc.c */
 extern int Warn(const char *format, ...);
 extern int Error(const char *format, ...);
+extern void Perror(const char *str);
 extern const char *mkfname(const char *first, ...);
 extern const char *mkpdbname(const char *dirname,
 			     const struct dlp_dbinfo *dbinfo,
