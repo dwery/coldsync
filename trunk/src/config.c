@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.95 2002-04-02 15:29:49 azummo Exp $
+ * $Id: config.c,v 1.96 2002-04-17 23:18:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -140,7 +140,7 @@ parse_args(int argc, char *argv[])
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
-	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:p:t:P:d:n:"))
+	while ((arg = getopt(argc, argv, ":hvVSFRIaszf:l:m:p:t:P:d:n:"))
 	       != -1)
 	{
 		switch (arg)
@@ -171,6 +171,10 @@ parse_args(int argc, char *argv[])
 
 		    case 'I':	/* -I: Install younger databases */
 			global_opts.force_install = True3;
+			break;
+
+		    case 'a':	/* -a: Auutoinitialize palm in daemon mode */
+			global_opts.autoinit = True3;
 			break;
 
 		    case 'z':	/* -z: Install databases after main sync */
@@ -305,6 +309,7 @@ load_config(const Bool read_user_config)
 	/* Initialize the options to be undefined */
 	sync_config->options.force_install = Undefined;
 	sync_config->options.install_first = Undefined;
+	sync_config->options.autoinit      = Undefined;
 
 	/* Add a default conduit to the head of the queue, equivalent
 	 * to:
@@ -448,6 +453,15 @@ load_config(const Bool read_user_config)
 		else
 			global_opts.force_install =
 				sync_config->options.force_install;
+	}
+
+	if (global_opts.autoinit == Undefined)
+	{
+		if (sync_config->options.autoinit == Undefined)
+			global_opts.autoinit = False3;
+		else
+			global_opts.autoinit =
+				sync_config->options.autoinit;
 	}
 
 	/* Make sure there's at least one listen block: if a port was

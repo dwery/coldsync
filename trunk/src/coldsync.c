@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.132 2002-04-14 08:36:45 arensb Exp $
+ * $Id: coldsync.c,v 1.133 2002-04-17 23:18:34 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -74,8 +74,9 @@ static int mkforw_addr(struct Palm *palm,
 int forward_netsync(PConnection *local, PConnection *remote);
 
 int CheckLocalFiles(struct Palm *palm);
-int UpdateUserInfo(PConnection *pconn,
-		   const struct Palm *palm, const int success);
+int UpdateUserInfo(const struct Palm *palm, const int success);
+int UpdateUserInfo2(struct Palm *palm, struct dlp_setuserinfo *newinfo);
+
 int reserve_fd(int fd, int flags);
 
 int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
@@ -108,6 +109,7 @@ main(int argc, char *argv[])
 	global_opts.install_first	= Undefined;	/* Defaults to True */
 	global_opts.verbosity		= 0;
 	global_opts.listen_name		= NULL;
+	global_opts.autoinit		= Undefined;	/* Default to False */
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;
@@ -297,6 +299,8 @@ main(int argc, char *argv[])
 			Bool3str(global_opts.install_first));
 		fprintf(stderr, "\tforce_install: %s\n",
 			Bool3str(global_opts.force_install));
+		fprintf(stderr, "\tautoinit: %s\n",
+			Bool3str(global_opts.autoinit));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
 		tmp = get_symbol("LOGFILE");
@@ -1145,7 +1149,7 @@ do_sync(pda_block *pda, struct Palm *palm)
 
 	/* XXX - Write updated NetSync info */
 	/* Write updated user info */
-	if ((err = UpdateUserInfo(palm_pconn(palm), palm, 1)) < 0)
+	if ((err = UpdateUserInfo(palm, 1)) < 0)
 	{
 		Error(_("Can't write user info."));
 		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
@@ -1823,70 +1827,35 @@ run_mode_Init(int argc, char *argv[])
 "\n"));
 		print_pda_block(stderr, pda, palm);
 	} else {
+
 		/* Update the user information on the Palm */
-		/* XXX - This section mostly duplicates UpdateUserInfo().
-		 * Is this a bad idea? Is UpdateUserInfo() broken?
-		 */
+
 		struct dlp_setuserinfo uinfo;
 
-		SYNC_TRACE(1)
-			fprintf(stderr, "Updating user info.\n");
-
-		uinfo.modflags = 0; 
-
-		/* User ID */
-		/* XXX - Should see if it's necessary to update this */
-		SYNC_TRACE(4)
-			fprintf(stderr, "Setting the userid to %ld\n",
-				new_userid);
-
-		uinfo.userid = new_userid;
-		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
-
-		va_add_to_log(palm_pconn(palm), "%s: %lu\n",
-			      _("Set user ID"), uinfo.userid);
+		/* Clear uinfo */
+		memset( &uinfo, sizeof(struct dlp_userinfo), 0x00);
 
 		/* XXX - Set viewer ID? */
 
-		/* Last sync PC */
-		SYNC_TRACE(3)
-			fprintf(stderr, "Setting lastsyncPC to 0x%08lx\n",
-				hostid);
-		uinfo.lastsyncPC = hostid;
-		uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCPC;
+		/* Se the values we want to update */
 
+		uinfo.userid		= new_userid;
+		uinfo.lastsyncPC	= hostid;
+		uinfo.username		= new_username;
+				
 		/* Time of last successful sync */
 		{
-			time_t now;		/* Current time */
+			time_t now;				/* Current time */
 
-			SYNC_TRACE(3)
-				fprintf(stderr,
-					"Setting last sync time to now\n");
-			time(&now);		/* Get current time */
-			time_time_t2dlp(now, &uinfo.lastsync);
-						/* Convert to DLP time */
-			uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
+			time(&now);				/* Get current time */
+			time_time_t2dlp(now, &uinfo.lastsync);	/* Convert to DLP time */
 		}
-
-		/* User name */
-		/* XXX - Should see if it's necessary to update this */
-		SYNC_TRACE(4)
-			fprintf(stderr, "Setting the username to [%s]\n",
-				(new_username == NULL ? "NULL" :
-				 new_username));
-		uinfo.usernamelen = strlen(new_username)+1;
-		uinfo.username = new_username;
-		uinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
-
-		va_add_to_log(palm_pconn(palm), "%s: %s\n",
-			      _("Set username"),
-			      uinfo.username);
 
 		/* XXX - Update last sync PC */
 		/* XXX - Update last sync time */
 		/* XXX - Update last successful sync time */
 
-		err = DlpWriteUserInfo(palm_pconn(palm), &uinfo);
+		err = UpdateUserInfo2(palm, &uinfo);
 		if (err != (int) DLPSTAT_NOERR)
 		{
 			Warn(_("DlpWriteUserInfo failed: %d."),
@@ -1953,7 +1922,7 @@ run_mode_Init(int argc, char *argv[])
  */
 
 static struct palment *
-lookup_palment(struct Palm *palm)
+lookup_palment(struct Palm *palm, ubyte match_type)
 {
 	const char *p_username;		/* Username on Palm */
 	const char *p_snum;		/* Serial number on Palm */
@@ -1992,11 +1961,11 @@ lookup_palment(struct Palm *palm)
 			p_userid);
 	}
 
-	return find_palment(p_snum, p_username, p_userid);
+	return find_palment(p_snum, p_username, p_userid, match_type);
 }
 
 /* getpasswd_from_palment
- * Given a palment struture tries to find a matching passwd.
+ * Given a palment structure tries to find a matching passwd.
  */
 
 static struct passwd *
@@ -2140,7 +2109,56 @@ run_mode_Daemon(int argc, char *argv[])
 	/* XXX - Should allow '*' in fields as wildcard */
 	/* XXX - If userid is 0, abort? */
 
-	palment = lookup_palment(palm);
+	/* Check if this palm is uninitialized and if autoinit is true*/
+	if( palm_userid(palm) == 0 && global_opts.autoinit == True)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "Found UserID = 0, trying autoinit.\n");
+	
+	
+		/* Yes, get the best match */
+		palment = lookup_palment(palm, PMATCH_SERIAL);
+
+		if (palment)
+		{
+			struct dlp_setuserinfo newinfo;					
+	
+			newinfo.username = palment->username;
+			newinfo.userid	 = palment->userid;
+			
+			err = UpdateUserInfo2(palm, &newinfo); 
+			if (err != (int) DLPSTAT_NOERR)
+			{
+				Warn(_("DlpWriteUserInfo failed: %d."),
+				     err);
+
+				switch (palm_errno)
+				{
+				    case PALMERR_TIMEOUT:
+					cs_errno = CSE_NOCONN;
+					palm_Free(palm);
+					return -1;
+				    default:
+					break;
+				}
+
+				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
+				return -1;
+			}
+
+			/* Force a reload */
+			err = palm_reload(palm);		
+		}
+		else
+		{
+			Error(_("No matching entry in %s, couldn't autoinit."), _PATH_PALMS);
+
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1; 
+		}
+	}
+
+	palment = lookup_palment(palm, PMATCH_EXACT);
 
 	if (palment == NULL)
 	{
@@ -2478,13 +2496,95 @@ CheckLocalFiles(struct Palm *palm)
 	return 0;
 }
 
+
+/* Updates the Palm's user info. Requires an initialized dlp_setuserinfo
+ * structure.
+ */
+ 
+int
+UpdateUserInfo2(struct Palm *palm, struct dlp_setuserinfo *newinfo)
+{
+	MISC_TRACE(1)
+		fprintf(stderr, "Updating user info.\n");
+
+	newinfo->modflags = 0;
+
+	if (palm_userid(palm) != newinfo->userid)
+	{
+		MISC_TRACE(3)
+			fprintf(stderr, "Setting UserID to %d (0x%04x)\n",
+				(int) newinfo->userid,
+				(unsigned int) newinfo->userid);
+
+		newinfo->modflags |= DLPCMD_MODUIFLAG_USERID;
+					/* Set modification flag */
+
+		va_add_to_log(palm_pconn(palm), "%s: %lu\n",
+			      _("Set user ID"), newinfo->userid);
+
+	}
+
+	/* Fill in the user name if there isn't one or if it has changed
+	 */
+
+	if ((newinfo->username != NULL) &&
+		/* XXX - Might be better to have something like palm_has_username(palm) */
+		( (palm_username_len(palm) < 1) || (strcmp(palm_username(palm), newinfo->username) != 0)))
+	{
+		MISC_TRACE(3)
+			fprintf(stderr, "Setting user name to \"%s\"\n",
+				newinfo->username);
+
+		newinfo->usernamelen	= strlen(newinfo->username)+1;
+		newinfo->modflags	|= DLPCMD_MODUIFLAG_USERNAME;
+
+		MISC_TRACE(3)
+			fprintf(stderr, "User name length == %d\n",
+				newinfo->usernamelen);
+
+		va_add_to_log(palm_pconn(palm), "%s: %s\n",
+			      _("Set username"),
+			      newinfo->username);
+	}
+
+	/* Check is the lastsyncPC is changed
+	 */
+
+	if (palm_lastsyncPC(palm) != newinfo->lastsyncPC)
+	{
+		/* Fill in this machine's host ID as the last sync PC */
+		MISC_TRACE(3)
+			fprintf(stderr, "Setting lastsyncPC to 0x%08lx\n", newinfo->lastsyncPC);
+
+		newinfo->modflags |= DLPCMD_MODUIFLAG_SYNCPC;
+	}
+
+
+	/* Should we update lastsync date?
+	 */
+
+	if (newinfo->lastsync.year != 0)
+	{
+		/* Yes */
+	
+		MISC_TRACE(3)
+			fprintf(stderr, "Setting lastsync date to %d\n",
+				(int) time_dlp2time_t(&newinfo->lastsync));
+	
+		newinfo->modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
+	}
+
+	/* Send the updated user info to the Palm */
+	return DlpWriteUserInfo(palm_pconn(palm), newinfo);
+}
+
+
 /* UpdateUserInfo
  * Update the Palm's user info. 'success' indicates whether the sync was
  * successful.
  */
 int
-UpdateUserInfo(PConnection *pconn,
-	       const struct Palm *palm,
+UpdateUserInfo(const struct Palm *palm,
 	       const int success)
 {
 	int err;
@@ -2570,7 +2670,7 @@ UpdateUserInfo(PConnection *pconn,
 #endif	/* 0 */
 
 	/* Send the updated user info to the Palm */
-	err = DlpWriteUserInfo(pconn,
+	err = DlpWriteUserInfo(palm_pconn(palm),
 			       &uinfo);
 	if (err != (int) DLPSTAT_NOERR)
 	{

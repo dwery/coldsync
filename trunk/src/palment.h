@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.4 2002-03-30 16:11:43 azummo Exp $
+ * $Id: palment.h,v 2.5 2002-04-17 23:18:34 azummo Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
@@ -31,6 +31,14 @@
 
 /* Path to /etc/palms */
 #define _PATH_PALMS	SYSCONFDIR "/palms"
+
+
+/* Match types */
+
+#define PMATCH_SERIAL	(1 << 0)
+#define PMATCH_USERNAME	(1 << 1)
+#define PMATCH_USERID	(1 << 2)
+#define PMATCH_EXACT	( PMATCH_SERIAL | PMATCH_USERNAME | PMATCH_USERID )
 
 struct palment
 {
@@ -50,7 +58,7 @@ extern const struct palment *getpalment(void);
 extern void setpalment(int stayopen);
 extern void endpalment(void);
 extern struct palment * find_palment(const char *p_snum,
-	const char *p_username, const udword p_userid);
+	const char *p_username, const udword p_userid, const ubyte match_type);
 
 #endif	/* _palment_h_ */
 

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.47 2002-04-02 16:51:00 azummo Exp $
+ * $Id: lexer.l,v 2.48 2002-04-17 23:18:34 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -18,8 +18,8 @@
 #include "parser.h"
 #include "symboltable.h"
 #include "y.tab.h"
+#include "trace.h"
 
-#define PARSE_TRACE(n)	if (parse_trace >= (n))
 
 #define KEYWORD(k) \
 	PARSE_TRACE(5) \
@@ -171,6 +171,7 @@ QSTR		[^\\\$\"\n]
 "forward"	{ KEYWORD(FORWARD);	}
 "hostid"	{ KEYWORD(HOSTID);	}
 "install_first"	{ KEYWORD(INSTALL_FIRST);	}
+"autoinit"	{ KEYWORD(AUTOINIT);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "options"	{ KEYWORD(OPTIONS);	}
 "path"		{ KEYWORD(PATH);	}
@@ -370,7 +371,7 @@ QSTR		[^\\\$\"\n]
 \"{QSTR}* {
 	int err;
 
-	PARSE_TRACE(5)
+	PARSE_TRACE(7)
 		fprintf(stderr, "Started string [%s]\n", yytext);
 
 	qstr_clear();		/* Erase previous qstring, if any */
@@ -713,7 +714,7 @@ qstr_append(const char *data,		/* Data to append */
 	if (len <= 0)
 		return 0;
 
-	PARSE_TRACE(6)
+	PARSE_TRACE(7)
 		fprintf(stderr, "qstr_append(\"%.*s\", %d)\n",
 			len, data, len);
 

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.63 2002-04-02 15:29:49 azummo Exp $
+ * $Id: coldsync.h,v 1.64 2002-04-17 23:18:34 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -18,6 +18,7 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "spalm.h"
+#include "trace.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
 #define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
@@ -25,8 +26,6 @@
 extern int sync_trace;		/* Debugging level for sync-related stuff */
 extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 
-#define SYNC_TRACE(n)	if (sync_trace >= (n))
-#define MISC_TRACE(n)	if (misc_trace >= (n))
 
 /* Bool3
  * This is just like a boolean, except that it also includes the value
@@ -78,7 +77,10 @@ struct cmd_opts {
 	char *log_fname;	/* Where to write the log file */
 	Bool force_slow;	/* If true, force slow syncing */
 	Bool force_fast;	/* If true, force fast syncing */
-	Bool check_ROM;		/* Iff false, ignore ROM databases */
+	Bool check_ROM;		/* If false, ignore ROM databases */
+	Bool3 autoinit;		/* If true, tries to initialize the palm 
+				 * when in daemon mode
+				 */
 	Bool3 install_first;	/* If true, install new databases before
 				 * doing the rest of the sync. Otherwise,
 				 * install them after everything else has
@@ -299,6 +301,9 @@ struct sync_config {
 					 */
 		Bool3 install_first;	/* Install new databases before the
 					 * main sync.
+					 */
+		Bool3 autoinit;		/* If true, tries to initialize the palm 
+					 * when in daemon mode
 					 */
 		/* XXX - Perhaps allow "final" here, so that the sysadmin
 		 * can lock options in place.
