@@ -6,9 +6,8 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.47 2001-10-12 02:22:59 arensb Exp $
+ * $Id: parser.y,v 2.48 2001-10-12 03:59:57 arensb Exp $
  */
-/* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
@@ -515,9 +514,6 @@ conduit_directive:
 
 		/* Path to the conduit program. If this is a relative
 		 * pathname, look for it in the path.
-		 * XXX - There should be a ConduitPath directive to specify
-		 * where to look for conduits.
-		 * XXX - Or else allow the user to set $PATH, or something.
 		 */
 		cur_conduit->path = $4;
 		$4 = NULL;
@@ -758,7 +754,7 @@ header_list:	header_list
 
 options_stmt: OPTIONS open_brace
 	{
-		lex_expect(LEX_HEADER);
+		lex_expect(LEX_VAR);
 	}
         options_list
 	{
@@ -768,6 +764,12 @@ options_stmt: OPTIONS open_brace
 	;
 
 options_list: options_list
+	/* XXX - This is still broken: it accepts assignments of the form
+	 *	options {
+	 *		"var-iable": value;
+	 *	}
+	 * Which may or may not be wrong, but doesn't feel right.
+	 */
         STRING colon
     	{
 		lex_expect(LEX_BSTRING);
@@ -777,24 +779,25 @@ options_list: options_list
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found symbol: %s ==> %s\n",
 				$2, $5);
+		lex_expect(0);
 		put_symbol($2, $5);
-		lex_expect(LEX_HEADER);		/* Prepare for the next line */
+		$2 = NULL;
+		$5 = NULL;
+		lex_expect(LEX_VAR);		/* Prepare for the next line */
 	}
 	|	/* Empty */
 	{
 		PARSE_TRACE(3)
-			fprintf(stderr, "Found empty header list\n");
-		lex_expect(LEX_HEADER);
+			fprintf(stderr, "Found empty option list\n");
 	}
-	| options_list ':' error
+	| error ';'
 	{
-		Error(_("\tMissing argument name near \": %s\"."),
+		Error(_("\tMissing option name near \"%s\"."),
 		      yytext);
 		ANOTHER_ERROR;
 		yyclearin;
-		lex_expect(LEX_HEADER);
+		lex_expect(LEX_VAR);
 	}
-	';'
 	;
 
 pda_stmt:	PDA
@@ -1201,6 +1204,7 @@ int parse_config_file(const char *fname,
 	retval = yyparse();
 	fclose(infile);
 
+	lex_tini();
 	if (cur_listen != NULL)
 		free_listen_block(cur_listen);
 	if (cur_pda != NULL)
