@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.85 2001-02-20 12:48:32 arensb Exp $
+ * $Id: coldsync.c,v 1.86 2001-02-20 14:06:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1820,6 +1820,11 @@ run_mode_Daemon(int argc, char *argv[])
 		char *dashp;			/* Pointer to "-" */
 
 		/* Get the serial number, but without the checksum */
+		/* XXX - Actually, this should look for the pattern
+		 *	/-[A-Z]$/
+		 * since in the future, there might be a special serial
+		 * number like "*Visor-Plus*" which would match.
+		 */
 		if (palment->serial != NULL)
 		{
 			strncpy(entserial, palm_serial(palm), SNUM_MAX);
@@ -1869,8 +1874,10 @@ run_mode_Daemon(int argc, char *argv[])
 		if (palment->userid != palm_userid(palm))
 		{
 			SYNC_TRACE(4)
-				fprintf(stderr, "Userid %lu doesn't match\n",
-					palment->userid);
+				fprintf(stderr,
+					"Userid %lu doesn't match %lu\n",
+					palment->userid,
+					palm_userid(palm));
 			continue;
 		}
 		SYNC_TRACE(5)
