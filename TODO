@@ -1,3 +1,11 @@
+- Would it be worth writing a 'coldsyncd', which just hangs around,
+  waiting for a UDP, serial, or USB connection?
+	Probably not. However, in inetd, it should be possible to have
+  inetd listen on the UDP port and launch coldsync (in an appropriate
+  mode). Once it launches, it can receive the wakeup packet on UDP,
+  and start listening on the TCP port. This is similar to 'ftp', where
+  inetd listens on the "ftp" port, but not the "ftp-data" port.
+- Add support for CMP 2.0 (once I find a CMP 2.0 Palm)
 - It should be possible to set the hostid in a config file. If it's
   set in /etc/coldsync.conf, then obviously it shouldn't be possible
   to override it in ~/.coldsyncrc .
@@ -5,6 +13,7 @@
   what this limit is (under 2311 bytes, I think). What to do if the
   sync log exceeds this size? Send the first N bytes? The last N bytes
   (those most likely to contain any errors)?
+- It would be nice if add_to_log() took printf()-like arguments.
 - Persistent "Bad CRC" problems under Linux:
 	As far as I can tell, the Linux serial driver is buggy, and
   drops characters. 'pilot-link' also sees bad CRCs; it just doesn't
@@ -52,6 +61,14 @@
   doesn't appear to notice that you cancelled. It keeps going, but
   every database upload fails.
 - Update doc/conduits.texi to talk about Install conduits.
+- Possible feature: degraded-mode NetSync: if ColdSync is supposed to
+  forward a connection to another host for NetSync, but can't, it
+  could go into degraded mode: do a local sync to a temporary
+  (mqueue-like?) directory, then try to sync with the real remote
+  host.
+	Is this even desirable? Would it cause problems if the user
+  manages to sync with the real remote host before the local host
+  manages to do so?
 - Bug: Under FreeBSD, when both Visor and Rio 600 are plugged in,
   Coldsync doesn't find the Visor correctly.
 - Bug: interaction with HotSync:
@@ -229,8 +246,6 @@
 - In .coldsyncrc, should be able to associate a name (or alias) with a
   pda block. In addition, should be able to specify that a given
   conduit block only applies to a given PDA.
-- During CMP connection, if the Palm suggests a speed and the
-  .coldsyncrc doesn't, should just go with what the Palm suggests.
 - Installing new databases is suboptimal. Currently, it sends the
   database over, then later downloads it all over again. There's got
   to be a better way to do this.
@@ -266,9 +281,6 @@
 - If a conduit dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
-- "ElectricFence Exiting: mmap() failed: Cannot allocate memory"
-	while doing a backup of PalmV (and doing some other stuff).
-  Did it really run out of memory? Is there a memory leak?
 - Work on archive2pdb
 	Figure out why it insists on writing the .pdb as "MemoDB" and
   not "MemoDB.pdb".
