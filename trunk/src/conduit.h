@@ -6,13 +6,44 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.3 1999-09-04 20:58:24 arensb Exp $
+ * $Id: conduit.h,v 1.4 1999-09-09 05:57:44 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
 
-#include "palm_types.h"
-#include "dlp_cmd.h"
+/* XXX - There are two aspects to conduit configuration: `struct
+ * conduit_desc' is supplied by the conduit (i.e., by the person writing
+ * the conduit) describes what a conduit _can_ do; `struct conduit_config'
+ * is supplied by the ColdSync config file(s) and specifies what a conduit
+ * _should_ do.
+ *
+ * At initialization, find out what conduits are available. Put all of
+ * these conduits (their `conduit_desc', that is) into a pool. Then read
+ * the config files and create "should" lists out of them. These lists
+ * specify which conduits ought to do what, and in what order to search for
+ * them.
+ *
+ * It's probably best to have one "should" list per function: that is, have
+ * one list for pre-fetch conduits, one for syncing, one for installs, and
+ * so forth. This should allow maximal flexibility: say you have two
+ * conduits, "Freshmeat" and "NewsDump" that both provide `sync' and
+ * `post-dump' functions for the same set of databases. The scheme outlined
+ * above allows you to use "Freshmeat"'s `sync' function and "NewsDump"'s
+ * `post-dump' function on the same database.
+ *
+ * `struct conduit_desc' contains the name of the conduit (possibly its
+ * version),
+ *
+ * Fvwm and the Gimp both appear to use a similar API for plug-ins: when
+ * the main program loads a plug-in, it passes file descriptors on the
+ * command line and uses those file descriptors to communicate. While this
+ * is indubitably more portable than libraries loaded at runtime, I don't
+ * think I like it all that much.
+ */
+
+/*#include "palm_types.h"
+#include "dlp_cmd.h"*/
+#include <pconn/pconn.h>	/* XXX - Clean this up */
 #include "coldsync.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
