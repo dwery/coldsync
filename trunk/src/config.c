@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.34 2000-09-08 15:53:26 arensb Exp $
+ * $Id: config.c,v 1.35 2000-09-17 21:24:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -40,6 +40,16 @@
 #define PALMDEV		"/dev/palm"	/* Default device */
 #define DIR_MODE	0700		/* Default permissions for new
 					 * directories. */
+
+/* Declarations of everything related to getopt(), for those OSes that
+ * don't have it already (Windows NT). Note that not all of these are used.
+ */
+extern int getopt(int argc, char * const *argv, const char *optstring);
+extern char *optarg;
+extern int optind;
+extern int optopt;
+extern int opterr;
+extern int optreset;
 
 extern struct config config;
 
