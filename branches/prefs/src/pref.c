@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 1.1.2.2 2000-09-01 06:14:42 arensb Exp $
+ * $Id: pref.c,v 1.1.2.3 2000-09-03 02:14:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -22,21 +22,14 @@
 
 extern struct pref_item *pref_cache;
 
-/* XXX - 'description' in the next few functions, is a struct that's passed
- * by value. Yuck! See if 'const struct pref_desc *description' will work.
- */
-struct pref_item *FindPrefItem(struct pref_desc description,
-			       struct pref_item *list);
-struct pref_item *GetPrefItem(struct pref_desc description);
-void FreePrefItem(struct pref_item *prefitem);
-
 /* Creates the pref_cache from a given conduit block */
 int
-CacheFromConduits(conduit_block *conduits, struct PConnection *pconn)
+CacheFromConduits(const conduit_block *conduits,
+		  struct PConnection *pconn)
 {
-	conduit_block *conduit_cursor;
+	const conduit_block *conduit_cursor;
 	pref_item *pref_cursor;
-	pref_item *item;
+	const pref_item *item;
 	int i;
 
 	/* Create a placeholder for first item */
@@ -101,7 +94,7 @@ CacheFromConduits(conduit_block *conduits, struct PConnection *pconn)
  */
 int
 FetchPrefItem(struct PConnection *pconn,
-	struct pref_item *prefitem)
+	      struct pref_item *prefitem)
 {
 	ubyte flags;
 	int err;
@@ -196,7 +189,7 @@ FetchPrefItem(struct PConnection *pconn,
  */
 int
 DownloadPrefItem(struct PConnection *pconn,
-	struct pref_item *prefitem)
+		 struct pref_item *prefitem)
 {
 	struct dlp_apppref *contents_info;
 	ubyte *contents;
@@ -316,11 +309,12 @@ DownloadPrefItem(struct PConnection *pconn,
 /* Finds a preference item from a list by matching it to the description.
  * Returns the found preference item if found, else returns NULL.
  */
-struct pref_item *
-FindPrefItem(struct pref_desc description,
-	struct pref_item *list)
+const struct pref_item *
+FindPrefItem(const struct pref_desc description,
+	     const struct pref_item *list)
 {
-    struct pref_item *match = list, *previous = NULL;
+    const struct pref_item *match = list;
+    const struct pref_item *previous = NULL;
 
     /* XXX - Rewrite this as a simple for loop. 'previous' is redundant */
     while (match != NULL)
@@ -336,10 +330,10 @@ FindPrefItem(struct pref_desc description,
 
 
 /* Returns a fully filled preference item or, if not found, returns NULL. */
-struct pref_item *
+const struct pref_item *
 GetPrefItem(struct pref_desc description)
 {
-    struct pref_item  *retval;
+    const struct pref_item  *retval;
 
     if ((retval = FindPrefItem(description,pref_cache)) == NULL)
 	return NULL;
@@ -371,9 +365,9 @@ FreePrefItem(struct pref_item *prefitem)
  * of the cache list.
  */
 void
-FreePrefList(struct pref_item *list)
+FreePrefList(const struct pref_item *list)
 {
-    struct pref_item *cursor;
+    const struct pref_item *cursor;
 
     for (cursor = list;
 	 cursor != NULL;
