@@ -2,18 +2,34 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.3 1999-03-11 20:38:04 arensb Exp $
+ * $Id: upload.c,v 1.4 1999-03-16 11:15:31 arensb Exp $
  */
 #include <stdio.h>
+#include <string.h>		/* For memcmp() */
 #include "pconn/PConnection.h"
 #include "pconn/dlp_cmd.h"
 #include "pdb.h"
+
+/* XXX - Include this in the documentation somewhere:
+ * Note: merely uploading a database is no guarantee that it'll be
+ * useful. In fact, uploading stuff without knowing what it is is
+ * asking for trouble.
+ * In theory, you could create a new database, of type 'DATA', creator
+ * 'memo', with a bunch of MemoPad records. You'd upload that, and the
+ * Palm would magically recognize all your new memos, since the new
+ * database has the right type and creator.
+ * Unfortunately, it doesn't work that way. Apparently, MemoPad (and
+ * presumably other apps) only reads "MemoDB". On the other hand, the
+ * "Memory" app sees that your new database is owned by "MemoPad", and
+ * doesn't even bother to show it to you. So you have a database lying
+ * around that you can't even delete.
+ */
 
 int
 UploadDatabase(struct PConnection *pconn,
 	       const struct pdb *db)
 {
-int i;
+/*  int i; */
 	int err;
 	struct dlp_createdbreq newdb;
 				/* Argument for creating a database */
@@ -38,6 +54,14 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 }
 
 	/* Delete the database */
+	/* XXX - Actually, shouldn't just wantonly delete data: if it
+	 * already exists, don't do anything: if it's an app, let the
+	 * user delete it first. If it's a record database, merge it
+	 * with the backup database and let it get uploaded at the
+	 * next sync.
+	 * XXX - Okay, what if it's a completely new record database
+	 * for an existing application?
+	 */
 	err = DlpDeleteDB(pconn, 0, db->name);
 				/* XXX - Card # shouldn't be hardcoded */
 	if ((err != DLPSTAT_NOERR) &&
