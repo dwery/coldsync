@@ -1,0 +1,34 @@
+# List of files in which to look for translatable messages
+libpconn/PConnection.c
+libpconn/PConnection_net.c
+libpconn/PConnection_serial.c
+libpconn/PConnection_usb.c
+libpconn/cfmakeraw.c
+libpconn/cmp.c
+libpconn/dlp.c
+libpconn/dlp_cmd.c
+libpconn/dlp_rpc.c
+libpconn/netsync.c
+libpconn/padp.c
+libpconn/palm_errno.c
+libpconn/slp.c
+libpconn/util.c
+libpdb/pdb.c
+src/archive.c
+src/backup.c
+src/coldsync.c
+src/conduit.c
+src/config.c
+src/install.c
+# 'xgettext' gets confused by some of the lex regular expressions, so
+# we get the strings from lex.yy.c instead.
+#src/lexer.l
+src/lex.yy.c
+src/log.c
+src/misc.c
+src/palm.c
+src/parser.y
+src/pref.c
+src/restore.c
+src/spc.c
+src/GenericConduit.cc
