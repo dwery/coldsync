@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.68 2002-10-26 12:05:12 azummo Exp $
+ * $Id: parser.y,v 2.69 2002-10-26 12:15:37 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -492,7 +492,8 @@ protocol_stack:
 	{
 		PARSE_TRACE(5)
 			fprintf(stderr, "Listen: protocol stack: simple\n");
-		$$ = PCONN_STACK_SIMPLE;
+		Warn(_("The \"simple\" protocol is now deprecated, use \"net\" instead."));
+		$$ = PCONN_STACK_NET;
 	}
 	| NET
 	{
