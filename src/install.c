@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.10 2000-02-07 01:46:32 arensb Exp $
+ * $Id: install.c,v 2.11 2000-04-09 14:25:11 arensb Exp $
  */
 
 #include "config.h"
@@ -141,7 +141,7 @@ InstallNewFiles(struct PConnection *pconn,
 
 		/* See if the database already exists on the Palm */
 		dbinfo = find_dbentry(palm, pdb->name);
-		if (dbinfo != NULL)
+		if ((dbinfo != NULL) && (!global_opts.force_install))
 		{
 			/* The database exists. Check its modification
 			 * number: if it's more recent than the version
