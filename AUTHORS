@@ -2,6 +2,8 @@ Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
 	benevolent dictator.
 Mark Coletti <mcoletti@clark.net>: The original Makefile.am, which has
 	since been mangled out of all recognition.
+Rob Fugina <robf@geeks.com>: Alpha-testing at personal risk to his
+	data.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
