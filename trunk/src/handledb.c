@@ -2,11 +2,11 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.11 2000-01-19 06:02:35 arensb Exp $
+ * $Id: handledb.c,v 1.12 2000-01-22 05:16:00 arensb Exp $
  */
 
 #include "config.h"
@@ -23,6 +23,10 @@
 #include "pdb.h"
 #include "conduit.h"
 
+extern int run_GenericConduit(struct PConnection *pconn,
+			      struct Palm *palm,
+			      struct dlp_dbinfo *db);
+
 /* HandleDB
  * Sync database number 'dbnum' with the desktop.
  */
@@ -34,8 +38,6 @@ HandleDB(struct PConnection *pconn,
 	int err;
 	struct dlp_dbinfo *dbinfo;	/* Info about the database we're
 					 * trying to handle. */
-	const struct conduit_spec *conduit;
-					/* Conduit for this database */
 
 	dbinfo = &(palm->dblist[dbnum]);	/* Convenience pointer */
 
@@ -55,27 +57,14 @@ HandleDB(struct PConnection *pconn,
 		return 0;
 	}
 
-	/* See if there's a conduit for this database. If so, invoke it and
-	 * let it do all the work.
-	 */
 	/* XXX - This should walk through the list of 'Sync'-flavored
 	 * conduits. If the path matches /^<.*>$/, then that refers to a
-	 * built-in conduit.
+	 * built-in conduit. If none was found, use run_GenericConduit().
 	 */
-	if ((conduit = find_conduit(dbinfo)) != NULL)
-	{
-		SYNC_TRACE(3)
-			fprintf(stderr, "Found a conduit for \"%s\"\n",
-				dbinfo->name);
-		err = (*(conduit->run))(pconn, palm, dbinfo);
-		SYNC_TRACE(3)
-			fprintf(stderr, "Conduit returned %d\n", err);
-		return err;
-	}
-
-	fprintf(stderr, _("***** Whoa nelly! Couldn't find a conduit for \"%s\"!\n"),
-		dbinfo->name);
-	return -1;
+	err = run_GenericConduit(pconn, palm, dbinfo);
+	SYNC_TRACE(3)
+		fprintf(stderr, "GenericConduit returned %d\n", err);
+	return err;
 }
 
 /* mkbakfname
