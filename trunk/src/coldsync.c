@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.148 2002-11-24 11:40:44 azummo Exp $
+ * $Id: coldsync.c,v 1.149 2002-12-28 21:13:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -285,6 +285,9 @@ main(int argc, char *argv[])
 		    case mode_Init:
 			fprintf(stderr, "Init\n");
 			break;
+		    case mode_List:
+			fprintf(stderr, "List\n");
+			break;
 		    default:
 			fprintf(stderr, "* UNKNOWN *\n");
 			break;
@@ -361,6 +364,9 @@ main(int argc, char *argv[])
 		break;
 	    case mode_Daemon:
 		err = run_mode_Daemon(argc, argv);
+		break;
+	    case mode_List:
+		err = run_mode_List(argc, argv);
 		break;
 	    default:
 		/* This should never happen */
