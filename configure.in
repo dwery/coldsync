@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.19 1999-08-01 07:56:56 arensb Exp $
+dnl # $Id: configure.in,v 1.20 1999-08-23 08:41:45 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -21,7 +21,7 @@ AC_INIT(src/PConnection.c)
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="0.4.4"
+VERSION="0.4.5"
 
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
@@ -33,7 +33,11 @@ AC_SUBST(VERSION)
 AC_SUBST(EDITION)
 
 # This is almost certainly a Good Thing
-LDFLAGS="-L/usr/local/lib"
+if test x"$prefix" = xNONE; then
+	LDFLAGS="-L/usr/local/lib"
+else
+	LDFLAGS="-L$prefix/lib"
+fi
 
 ## Checks for programs.
 
