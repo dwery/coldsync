@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.30 2000-05-21 07:59:33 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.31 2000-06-03 06:30:04 arensb Exp $
  */
 
 /* Note on I/O:
@@ -2171,6 +2171,11 @@ GenericConduit::write_backup(struct pdb *db)
 
 	/* XXX - FreeBSD's libc complains about mktemp() possibly being
 	 * used unsafely. True, but mkstemp() isn't portable.
+	 */
+	/* XXX - ... however, mkstemp() is a superset of what we're doing
+	 * here, so I guess it's okay. Presumably, we should add a
+	 * 'make_tempfile()' at the end of this file, with an #if
+	 * defined(HAVE_MKSTEMP) block. Or something.
 	 */
 	if (mktemp(stage_fname) == 0)
 	{
