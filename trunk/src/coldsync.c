@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.11 1999-11-09 06:36:47 arensb Exp $
+ * $Id: coldsync.c,v 1.12 1999-11-10 06:46:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -163,6 +163,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tDLPC:\t%d\n", dlpc_trace);
 		fprintf(stderr, "\tPDB:\t%d\n", pdb_trace);
 		fprintf(stderr, "\tSYNC:\t%d\n", sync_trace);
+		fprintf(stderr, "\tPARSE:\t%d\n", parse_trace);
 		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
@@ -1154,7 +1155,9 @@ UpdateUserInfo(struct PConnection *pconn,
 	int err;
 	struct dlp_setuserinfo uinfo;
 			/* Fill this in with new values */
-	
+
+	uinfo.userid = 0;		/* Mainly to make Purify happy */
+	uinfo.viewerid = 0;		/* XXX - What is this, anyway? */
 	uinfo.modflags = 0;		/* Initialize modification flags */
 	uinfo.usernamelen = 0;
 
@@ -1312,6 +1315,8 @@ set_debug_level(const char *str)
 		sync_trace = lvl;
 	else if (strncasecmp(str, "pdb:", 4) == 0)
 		pdb_trace = lvl;
+	else if (strncasecmp(str, "parse:", 6) == 0)
+		parse_trace = lvl;
 	else if (strncasecmp(str, "misc:", 5) == 0)
 		misc_trace = lvl;
 	else {
