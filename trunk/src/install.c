@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.2 1999-09-09 05:59:07 arensb Exp $
+ * $Id: install.c,v 2.3 1999-11-04 10:53:13 arensb Exp $
  */
 
 #include "config.h"
@@ -304,6 +304,11 @@ InstallNewFiles(struct PConnection *pconn,
 		}
 
 		free_pdb(pdb);
+
+		/* XXX - Walk though config.install_q, looking for
+		 * appropriate conduits to invoke. (Or should this be done
+		 * earlier, before installing at all?)
+		 */
 	}
 
 	closedir(dir);
