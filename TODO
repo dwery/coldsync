@@ -41,7 +41,6 @@
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
 - Perhaps initialize $CONDUIT_PATH to $PATH (from the environment).
-- Test $CONDUIT_PATH, $CONDUITDIR stuff.
 - Document $CONDUIT_PATH.
 - It'd be nice to add types to distinguish between bytes and letters,
   and between arrays of arbitrary data and strings of characters. This
@@ -182,7 +181,19 @@
 	}
   How do "type:" and "name:" interact? Multiple "type:" lines are
   or-ed together. Should "name:" entries be or-ed as well?
-- Feature: add a SIGINFO handler.
+	Counterintuitively, perhaps the "type:"s should be anded with
+  the "name:"s. That is,
+		type: aaaa/bbbb;
+		type: cccc/dddd;
+		name: FooDB;
+		name: BarDB;
+  means
+		((type aaaa/bbbb) || (type cccc/dddd)) &&
+		((name "FooDB")   || (name "BarDB"))
+
+  This way, it's possible to express "databases of type xxxx/yyyy and
+  with name "FooDB", which I don't think you can express under any
+  other interpretation.
 - Per-mode options
 	It appears possible (under FreeBSD) to allow mode-specific
   options: have the getopt() loop in "config.c" stop after a
