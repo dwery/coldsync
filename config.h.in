@@ -6,6 +6,9 @@
 /* Define to empty if your compiler doesn't understand the `inline' keyword */
 #undef inline
 
+/* The number of bytes in a long long (0 if it isn't supported) */
+#undef SIZEOF_LONG_LONG
+
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef gid_t
 
@@ -48,6 +51,12 @@
 /* Define if your <sys/time.h> declares struct tm.  */
 #undef TM_IN_SYS_TIME
 
+/* Define if 'struct sockaddr' has a 'sa_len' field */
+#undef HAVE_SOCKADDR_SA_LEN
+
+/* Define if 'struct sockaddr6' is defined */
+#undef HAVE_SOCKADDR6
+
 /* Define to `int' if <sys/types.h> doesn't define.  */
 #undef uid_t
 
@@ -59,6 +68,9 @@
 
 /* Define if you have the strncasecmp function.  */
 #undef HAVE_STRNCASECMP
+
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
 
 /* Define if you have the strchr function */
 #undef HAVE_STRCHR
@@ -80,6 +92,21 @@
 
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
+
+/* Define if you have the inet_aton function.  */
+#undef HAVE_INET_ATON
+
+/* Define if you have the inet_ntoa function.  */
+#undef HAVE_INET_NTOA
+
+/* Define if you have the inet_ntop function.  */
+#undef HAVE_INET_NTOP
+
+/* Define if you have the inet_pton function.  */
+#undef HAVE_INET_PTON
+
+/* Define if you have the gethostbyname2 function.  */
+#undef HAVE_GETHOSTBYNAME2
 
 /* Define if you have the gettext function.  */
 #undef HAVE_GETTEXT
@@ -157,6 +184,24 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define LONGLONG to be "long long" if it's supported, or "long" otherwise */
+#ifdef SIZEOF_LONG_LONG
+   /* 'configure' checked for "long long", i.e., it wasn't run with
+    * pedantic flags.
+    */
+#  if SIZEOF_LONG_LONG == 0
+#    define LONGLONG	long
+#  else
+#    define LONGLONG	long long
+#  endif	/* SIZEOF_LONG_LONG == 0 */
+#else
+   /* 'configure' was run with pedantic flags, so it didn't even check
+    * whether "long long" exists. Since we're being pedantic, and ANSI C
+    * doesn't support "long long", don't use it.
+    */
+#  define LONGLONG	long
+#endif	/* SIZEOF_LONG_LONG */
+
 /* Define str(n)casecmp() if they don't exist.
  *	"Here's a nickel, kid, get yourself a better OS"
  *			-- Scott Adams, paraphrased.
@@ -189,6 +234,13 @@
 #if !HAVE_FPURGE
 #  define	fpurge(stream)
 #endif	/* HAVE_FPURGE */
+
+/* Define gethostbyname2() if it doesn't exist. This version only supports
+ * IPv4.
+ */
+#if !HAVE_GETHOSTBYNAME2
+#  define gethostbyname2(name, family)	gethostbyname(name)
+#endif	/* HAVE_GETHOSTBYNAME2 */
 
 /* The internationalizable strings in the source are enclosed in _(), e.g.,
  * _("Hello, world!"). That way, they can be looked up by whichever i18n
