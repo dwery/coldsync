@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.72 2001-07-30 07:09:38 arensb Exp $
+ * $Id: config.c,v 1.72.4.1 2001-10-11 04:25:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -50,6 +50,7 @@ struct rtentry;
 #include "coldsync.h"
 #include "pconn/pconn.h"
 #include "parser.h"		/* For config file parser stuff */
+#include "symboltable.h"
 #include "cs_error.h"
 
 #ifndef MAXHOSTNAMELEN
@@ -195,6 +196,15 @@ parse_args(int argc, char *argv[])
 				 * <file>.
 				 */
 			global_opts.log_fname = optarg;
+ 			put_symbol("LOGFILE", optarg);
+				/* XXX - Figure out which of these two
+				 * methods is preferred.
+				 * Now would also be a good time to set
+				 * 'final' on the LOGFILE symbol: if it was
+				 * specified on the command line, that
+				 * overrides any value given in the
+				 * environment or config file(s).
+				 */
 			break;
 
 		    case 'm':	/* -m <mode>: Run in the given mode */
@@ -1664,7 +1674,7 @@ new_sync_config()
 
 	MISC_TRACE(5)
 		fprintf(stderr,
-			"Allocated sync_config %p\n", retval);
+			"Allocated sync_config %p\n", (void *) retval);
 	return retval;
 }
 
@@ -1682,7 +1692,7 @@ free_sync_config(struct sync_config *config)
 	conduit_block *nextc;
 
 	MISC_TRACE(5)
-		fprintf(stderr, "Freeing sync_config %p\n", config);
+		fprintf(stderr, "Freeing sync_config %p\n", (void *) config);
 
 	/* Free the listen blocks */
 	for (l = config->listen, nextl = NULL; l != NULL; l = nextl)
