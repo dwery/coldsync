@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.6 1999-11-04 10:48:59 arensb Exp $
+ * $Id: backup.c,v 2.7 1999-11-09 06:23:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -62,6 +62,7 @@ Backup(struct PConnection *pconn,
 		else
 			strncat(bakfname, ".pdb",
 				MAXPATHLEN - strlen(bakfname));
+		bakfname[MAXPATHLEN] = '\0';	/* Terminate the string */
 
 		/* XXX - This is logging, not debugging */
 		SYNC_TRACE(2)
