@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: zire71-photo,v 1.1 2003-06-24 12:33:38 azummo Exp $
+# $Id: zire71-photo,v 1.2 2003-06-25 19:49:04 azummo Exp $
 
 use strict;
 
@@ -37,6 +37,9 @@ StartConduit('sync');
 	
 	while (my $raw = dlp_ReadNextModifiedRec($dbh))
 	{
+		next if $raw->{'attributes'}{'deleted'};
+		next if $raw->{'attributes'}{'archived'};
+
 		my $thumb = Palm::ZirePhoto->ParseRecord(%{$raw});
 
 		my $name = $thumb->{'name'};
