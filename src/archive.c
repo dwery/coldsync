@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.10 2000-01-27 02:03:11 arensb Exp $
+ * $Id: archive.c,v 1.11 2000-01-27 02:33:07 arensb Exp $
  */
 
 #include "config.h"
@@ -176,6 +176,13 @@ arch_writerecord(int fd,
 	put_udword(&wptr, time(NULL));
 	write(fd, headerbuf, ARCH_RECLEN);
 	/* XXX - Error-checking */
+
+	SYNC_TRACE(6)
+	{
+		fprintf(stderr, "arch_writerecord: Archiving record, %ld bytes\n",
+			rec->data_len);
+		debug_dump(stderr, "ARCH", rec->data, rec->data_len);
+	}
 
 	write(fd, rec->data, rec->data_len);
 	/* XXX - Error-checking */
