@@ -125,6 +125,17 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define str(n)casecmp() if they don't exist.
+ *	"Here's a nickel, kid, get yourself a better OS"
+ *			-- Scott Adams, paraphrased.
+ */
+#if !HAVE_STRCASECMP
+#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
+#endif	/* HAVE_STRCASECMP */
+#if !HAVE_STRNCASECMP
+#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
+#endif	/* HAVE_STRNCASECMP */
+
 /* The internationalizable strings in the source are enclosed in _(), e.g.,
  * _("Hello, world!"). That way, they can be looked up by whichever i18n
  * package you happen to be using.
@@ -173,9 +184,9 @@
 #    endif	/* _BSD_SOURCE */
 #  endif /* _LINUX_C_LIB_VERSION_MAJOR */
 
-/* For any given version of 'gcc', one of these two should make 'gcc'
- * shut up about "implicit declaration of xxx".
- */
+  /* For any given version of 'gcc', one of these two should make 'gcc'
+   * shut up about "implicit declaration of xxx".
+   */
 #  define _GNU_SOURCE		1
 #  define __EXTENSIONS__	1
 #endif	/* __GNUC__ */
