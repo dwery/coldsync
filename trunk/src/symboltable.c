@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.c,v 1.1 2002-03-18 08:14:43 arensb Exp $
+ * $Id: symboltable.c,v 1.2 2002-03-18 08:27:31 arensb Exp $
  *
  * This file implements the symbol table, as used in the .coldsyncrc
  * parser. No, it's not terribly sophisticated, because we're likely
@@ -170,7 +170,7 @@ get_symbol(const char *name)
  * name already exists, replace it. Otherwise, append it to the list.
  */
 int
-x_put_symbol(const char *name, const char *value)
+put_symbol(const char *name, const char *value)
 {
 	struct symbol *oldsym = NULL;	/* Existing symbol with same name */
 	struct symbol *last = NULL;	/* Last symbol on the list */
