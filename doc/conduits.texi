@@ -1,13 +1,13 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.6 2000-02-03 02:52:22 arensb Exp $
+@c $Id: conduits.texi,v 1.7 2000-02-03 03:23:55 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
 @settitle ColdSync Conduits
 @dircategory ColdSync Documentation
 @direntry
-* Conduits: (conduits.info).    Extending ColdSync through conduits.
+* Conduits: (conduits.info).    Specification and Hacker's Guide.
 @end direntry
 @setchapternewpage odd
 @c %**end of header
