@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.6 2001-06-26 05:46:56 arensb Exp $
+ * $Id: util.h,v 1.7 2001-07-06 05:44:00 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
@@ -50,8 +50,6 @@ extern void time_palmtime2dlp(const udword palmt, struct dlp_time *dlpt);
 
 extern void debug_dump(FILE *outfile, const char *prefix,
 		       const ubyte *buf, const udword len);
-
-extern uword crc16(const ubyte *buf, uword len, const uword start);
 
 #endif	/* _util_h_ */
 
