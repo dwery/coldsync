@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.70 2001-07-26 06:59:34 arensb Exp $
+ * $Id: config.c,v 1.71 2001-07-28 22:48:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -733,6 +733,9 @@ set_mode(const char *str)
 static void
 usage(int argc, char *argv[])
 {
+	/* XXX - gcc 3.0 complains that this string is longer than 509
+	 * characters, which is what ISO C89 mandates.
+	 */
 	printf(_("Usage: %s [options] <mode> <mode args>\n"
 		 "Modes:\n"
 		 "\t-ms:\tSynchronize (default).\n"
