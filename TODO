@@ -1,9 +1,25 @@
+- Bug? The first real sync with the m500, it said it was doing a fast
+  sync. Did the userinfo get set during file backup or restore?
+- Add a ~/.palm/commands file, containing commands to execute on the
+  next sync. If absent, this should default to "sync". That way, you
+  don't have to kill 'usbd' or 'getty' to do a one-time backup.
+	Problem: what to do if the sync is aborted for whatever
+  reason? Nuke the "commands" file? Delete only those commands that
+  were successfully executed, and leave the rest for the next time?
+  Perhaps have one file for permanent commands (e.g., if the user
+  always wants to do a backup, or always wants to run some command
+  after the sync) and one for one-shots?
+	Allow execution of external programs.
+- Bug: with
+	listen serial {
+		device: /dev/cuaa2;
+	}
+  ColdSync tries to set the speed to 230400, even though the serial
+  port can't handle it.
 - Should all of the Dlp*() functions return type dlp_stat_t instead of
   int?
 - For man pages that cover several functions, write short ".so
   somefunc.3" man pages for the secondary ones.
-- Use enums instead of #defined values, so that compiler can warn
-  about unused values.
 - PConnection_net.c uses tini_slp() et al. even when it isn't
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
