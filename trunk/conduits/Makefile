@@ -1,11 +1,12 @@
-# $Id: Makefile,v 1.9 2001-06-04 01:48:29 arensb Exp $
+# $Id: Makefile,v 1.10 2001-06-04 02:27:45 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
 
 # Conduits are grouped by interpreter, since the #! path is munged at
 # install time.
-PERL_CONDUITS =	send-mail \
+PERL_CONDUITS =	copy-appinfo \
+		send-mail \
 		todo-text
 
 # XXX - memo-text and std-categories aren't ready for prime time, so
@@ -19,7 +20,6 @@ CLEAN =		*.1 \
 DISTFILES =	Makefile \
 		${CONDUITS} \
 		memo-text \
-		copy-appinfo \
 		std-categories
 
 all::
