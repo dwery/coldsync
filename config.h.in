@@ -314,7 +314,7 @@
  * the printf() statement, that we want to call gettext() on the string to
  * translate it.
  */
-#if HAVE_GETTEXT
+#if HAVE_GETTEXT && HAVE_LIBINTL_H
 #  define _(str)	gettext(str)
 #  ifdef gettext_noop
 #    define N_(str)	gettext_noop(str)
