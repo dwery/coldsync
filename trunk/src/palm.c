@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.12 2001-01-09 16:19:31 arensb Exp $
+ * $Id: palm.c,v 2.13 2001-01-10 09:36:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -241,7 +241,7 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		Error(_("Error reading NetSync info\n"));
+		Error(_("Can't read NetSync info\n"));
 		return -1;
 	}
 
@@ -366,7 +366,7 @@ fetch_serial(struct Palm *palm)
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
-		Error(_("Error: Can't get location of serial number\n"));
+		Error(_("Can't get location of serial number.\n"));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -390,7 +390,7 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
-		Error(_("Error: Can't read serial number\n"));
+		Error(_("Can't read serial number.\n"));
 		return -1;
 	}
 	SYNC_TRACE(7)
@@ -436,7 +436,7 @@ ListDBs(struct Palm *palm)
 		if (palm->num_dbs_ <= 0)
 		{
 			/* XXX - Fix this */
-			Error(_("### Error: you have an old Palm, one that "
+			Error(_("You have an old Palm, one that "
 				"doesn't say how many\n"
 				"databases it has. I can't cope with "
 				"this.\n"));
@@ -874,7 +874,7 @@ palm_append_dbentry(struct Palm *palm,
 			    sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
-		Error(_("Error resizing palm->dblist\n"));
+		Error(_("Can't resize palm->dblist\n"));
 		return -1;
 	}
 	palm->dblist_ = newdblist;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.55 2001-01-09 16:04:12 arensb Exp $
+ * $Id: config.c,v 1.56 2001-01-10 09:36:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -177,8 +177,8 @@ parse_args(int argc, char *argv[])
 			/* XXX - This option is obsolete. Remove it some
 			 * time after v1.4.6.
 			 */
-			Warn(_("Warning: The \"-b <dir>\" option is "
-			       "obsolete. Please use \"-mb <dir>\"\n"
+			Warn(_("The \"-b <dir>\" option is obsolete. "
+			       "Please use \"-mb <dir>\"\n"
 			       "instead.\n"));
 			global_opts.mode = mode_Backup;
 			global_opts.do_backup = True;
@@ -189,8 +189,8 @@ parse_args(int argc, char *argv[])
 			/* XXX - This option is obsolete. Remove it some
 			 * time after v1.4.6.
 			 */
-			Warn(_("Warning: The \"-r <dir>\" option is "
-			       "obsolete. Please use \"-mr <dir>\"\n"
+			Warn(_("The \"-r <dir>\" option is obsolete. "
+			       "Please use \"-mr <dir>\"\n"
 			       "instead.\n"));
 			global_opts.mode = mode_Restore;
 			global_opts.do_restore = True;
@@ -297,7 +297,7 @@ load_config()
 		if (fallback->path == NULL)
 		{
 			/* strdup() failed */
-			Error(_("Error initializing configuration.\n"));
+			Error(_("Couldn't initialize configuration.\n"));
 			perror("strdup");
 
 			free_conduit_block(fallback);
@@ -320,7 +320,7 @@ load_config()
 		err = parse_config_file(DEFAULT_GLOBAL_CONFIG, sync_config);
 		if (err < 0)
 		{
-			Error(_("Error reading configuration file \"%s\"\n"),
+			Error(_("Couldn't read configuration file \"%s\".\n"),
 			      DEFAULT_GLOBAL_CONFIG);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -345,8 +345,7 @@ load_config()
 			 * but it doesn't exist. Warn and continue with the
 			 * defaults.
 			 */
-			Error(_("Error: config file \"%s\" doesn't "
-				"exist.\n"),
+			Error(_("Config file \"%s\" doesn't exist.\n"),
 			      global_opts.conf_fname);
 
 			return -1;
@@ -370,7 +369,7 @@ load_config()
 		err = parse_config_file(global_opts.conf_fname, sync_config);
 		if (err < 0)
 		{
-			Error(_("Error reading configuration file \"%s\"\n"),
+			Error(_("Couldn't read configuration file \"%s\".\n"),
 			      global_opts.conf_fname);
 			free_sync_config(sync_config);
 			sync_config = NULL;
@@ -651,7 +650,7 @@ set_mode(const char *str)
 
 	/* Sanity check: if the user specifies the mode twice, complain. */
 	if (global_opts.mode != mode_None)
-		Warn(_("Warning: You shouldn't specify two -m<mode> options.\n"
+		Warn(_("You shouldn't specify two -m<mode> options.\n"
 		       "\tUsing -m%s\n"),
 		     str);
 
@@ -684,7 +683,7 @@ set_mode(const char *str)
 #endif	/* 0 */
 
 	    default:
-		Error(_("Error: unknown mode: \"%s\"\n"), str);
+		Error(_("Unknown mode: \"%s\"\n"), str);
 		return -1;
 	}
 }
@@ -903,7 +902,7 @@ get_hostaddrs()
 
 	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		Error(_("Error: %s: socket() returned %d\n"),
+		Error(_("%s: socket() returned %d\n"),
 		      "get_hostaddrs",
 		      sock);
 		perror("socket");
@@ -1378,7 +1377,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(basedir, DIR_MODE)) < 0)
 		{
-			Error(_("Error: can't create base sync directory.\n"));
+			Error(_("Can't create base sync directory.\n"));
 			perror("mkdir");
 			return -1;
 		}
@@ -1395,7 +1394,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
-			Error(_("Error: can't create backup directory.\n"));
+			Error(_("Can't create backup directory.\n"));
 			perror("mkdir");
 			return -1;
 		}
@@ -1412,7 +1411,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
-			Error(_("Error: can't create attic directory.\n"));
+			Error(_("Can't create attic directory.\n"));
 			perror("mkdir");
 			return -1;
 		}
@@ -1429,7 +1428,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
-			Error(_("Error: can't create archive directory.\n"));
+			Error(_("Can't create archive directory.\n"));
 			perror("mkdir");
 			return -1;
 		}
@@ -1446,7 +1445,7 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
-			Error(_("Error: can't create install directory.\n"));
+			Error(_("Can't create install directory.\n"));
 			perror("mkdir");
 			return -1;
 		}

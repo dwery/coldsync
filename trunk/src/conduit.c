@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.26 2001-01-09 16:19:25 arensb Exp $
+ * $Id: conduit.c,v 2.27 2001-01-10 09:36:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -446,7 +446,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			    NULL);
 	if (pid < 0)
 	{
-		Error(_("Error: %s: Can't spawn conduit\n"),
+		Error(_("%s: Can't spawn conduit\n"),
 		      "run_conduit");
 
 		/* Let's hope that this isn't a fatal problem */
@@ -612,8 +612,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			if (err < 0)
 			{
 				/* An error occurred */
-				Error(_("Error while sending header to "
-					"conduit.\n"));
+				Error(_("Couldn't send header to conduit.\n"));
 				perror("write");
 				goto abort;
 			}
@@ -671,7 +670,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				FD_SET(spcpipe[1], &out_fds);
 				break;
 			    default:
-				Error(_("%s: Error: conduit handler is in "
+				Error(_("%s: Conduit handler is in "
 					"an inconsistent state at\n"
 					"%s, line %d. Please notify the "
 					"maintainer.\n"),
@@ -1141,8 +1140,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			/* Make sure the flavor is okay. */
 			if ((flavor_mask & builtin->flavors) == 0)
 			{
-				Error(_("Error: conduit %s is not a %s "
-					"conduit\n"),
+				Error(_("Conduit %s is not a %s conduit.\n"),
 				      builtin->name, flavor);
 				continue;
 			}
@@ -1185,8 +1183,7 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 			/* Make sure the flavor is okay. */
 			if ((flavor_mask & builtin->flavors) == 0)
 			{
-				Error(_("Error: conduit %s is not a %s "
-					"conduit\n"),
+				Error(_("Conduit %s is not a %s conduit.\n"),
 				      builtin->name, flavor);
 				return -1;
 			}

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.75 2001-01-09 16:15:55 arensb Exp $
+ * $Id: coldsync.c,v 1.76 2001-01-10 09:36:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -228,7 +228,7 @@ main(int argc, char *argv[])
 	 */
 	if ((err = load_config()) < 0)
 	{
-		Error(_("Error loading configuration.\n"));
+		Error(_("Can't load configuration.\n"));
 		goto done;
 	}
 
@@ -442,7 +442,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* Allocate a new Palm description */
 	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		Error(_("Error: can't allocate struct Palm.\n"));
+		Error(_("Can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
@@ -477,7 +477,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* See if the userid matches. */
 	if (palm_userid(palm) != want_userid)
 	{
-		Error(_("Error: This Palm has user ID %ld (I was expecting "
+		Error(_("This Palm has user ID %ld (I was expecting "
 			"%ld).\n"
 			"Syncing would most likely destroy valuable data. "
 			"Please update your\n"
@@ -577,7 +577,7 @@ run_mode_Standalone(int argc, char *argv[])
 		 */
 		if ((err = get_hostaddrs()) < 0)
 		{
-			Error(_("Error: Can't get host addresses.\n"));
+			Error(_("Can't get host addresses.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			return -1;
@@ -586,7 +586,7 @@ run_mode_Standalone(int argc, char *argv[])
 		err = mkforw_addr(palm, pda, &sa, &sa_len);
 		if (err < 0)
 		{
-			Error(_("Error: can't resolve forwarding address.\n"));
+			Error(_("can't resolve forwarding address.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			return -1;
@@ -615,8 +615,8 @@ run_mode_Standalone(int argc, char *argv[])
 		if ((pconn_forw = new_PConnection(NULL, LISTEN_NET, 0))
 		    == NULL)
 		{
-			Error(_("Error: can't create connection to "
-				"forwarding host.\n"));
+			Error(_("Can't create connection to forwarding "
+				"host.\n"));
 			free(sa);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -627,8 +627,8 @@ run_mode_Standalone(int argc, char *argv[])
 		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
 		if (err < 0)
 		{
-			Error(_("Error: can't establish connection with "
-				"forwarding host.\n"));
+			Error(_("Can't establish connection with forwarding "
+				"host.\n"));
 			free(sa);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -639,7 +639,7 @@ run_mode_Standalone(int argc, char *argv[])
 		err = forward_netsync(pconn, pconn_forw);
 		if (err < 0)
 		{
-			Error(_("Error: network sync forwarding failed.\n"));
+			Error(_("Network sync forwarding failed.\n"));
 			free(sa);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -780,7 +780,7 @@ run_mode_Standalone(int argc, char *argv[])
 			      False);*/
 	if (err < 0)
 	{
-		Error(_("Error installing new files.\n"));
+		Error(_("Can't install new files.\n"));
 
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -878,7 +878,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* Write updated user info */
 	if ((err = UpdateUserInfo(pconn, palm, 1)) < 0)
 	{
-		Error(_("Error writing user info\n"));
+		Error(_("Can't write user info\n"));
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
@@ -893,7 +893,7 @@ run_mode_Standalone(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
-			Error(_("Error writing sync log.\n"));
+			Error(_("Couldn't write sync log.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 
@@ -926,7 +926,7 @@ run_mode_Standalone(int argc, char *argv[])
 
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
-		Error(_("Error disconnecting\n"));
+		Error(_("Couldn't disconnect.\n"));
 		return -1;
 	}
 
@@ -972,7 +972,7 @@ run_mode_Backup(int argc, char *argv[])
 	} else {
 		if (argc == 0)
 		{
-			Error(_("Error: no backup directory specified.\n"));
+			Error(_("No backup directory specified.\n"));
 			return -1;
 		}
 
@@ -995,11 +995,10 @@ run_mode_Backup(int argc, char *argv[])
 		 */
 		if (exists(NULL))
 		{
-			Error(_("Error: \"%s\" exists, but is not a "
-				"directory.\n"),
+			Error(_("\"%s\" exists, but is not a directory.\n"),
 			      backupdir);
 		} else {
-			Error(_("Error: no such directory: \"%s\"\n"),
+			Error(_("No such directory: \"%s\"\n"),
 			      backupdir);
 		}
 
@@ -1009,7 +1008,7 @@ run_mode_Backup(int argc, char *argv[])
 	/* Get listen block */
 	if (sync_config->listen == NULL)
 	{
-		Error(_("Error: no port specified.\n"));
+		Error(_("No port specified.\n"));
 		return -1;
 	}
 
@@ -1025,7 +1024,7 @@ run_mode_Backup(int argc, char *argv[])
 				     sync_config->listen->listen_type, 1))
 	    == NULL)
 	{
-		Error(_("Error: can't open connection.\n"));
+		Error(_("Can't open connection.\n"));
 		return -1;
 	}
 	pconn->speed = sync_config->listen->speed;
@@ -1041,7 +1040,7 @@ run_mode_Backup(int argc, char *argv[])
 	/* Allocate a new Palm description */
 	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		Error(_("Error: can't allocate struct Palm.\n"));
+		Error(_("Can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
@@ -1077,7 +1076,7 @@ run_mode_Backup(int argc, char *argv[])
 					 */
 			if (db == NULL)
 			{
-				Warn(_("Warning: no such database: \"%s\"\n"),
+				Warn(_("No such database: \"%s\".\n"),
 				     argv[i]);
 				add_to_log(_("Backup "));
 				add_to_log(argv[i]);
@@ -1090,7 +1089,7 @@ run_mode_Backup(int argc, char *argv[])
 			err = backup(pconn, db, backupdir);
 			if (err < 0)
 			{
-				Warn(_("Warning: Error backing up \"%s\".\n"),
+				Warn(_("Error backing up \"%s\".\n"),
 				     db->name);
 			}
 		}
@@ -1104,7 +1103,7 @@ run_mode_Backup(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
-			Error(_("Error writing sync log.\n"));
+			Error(_("Couldn't write sync log.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1121,7 +1120,7 @@ run_mode_Backup(int argc, char *argv[])
 
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
-		Error(_("Error disconnecting\n"));
+		Error(_("Couldn't disconnect.\n"));
 		return -1;
 	}
 	pconn = NULL;
@@ -1140,7 +1139,7 @@ run_mode_Restore(int argc, char *argv[])
 	/* Get listen block */
 	if (sync_config->listen == NULL)
 	{
-		Error(_("Error: no port specified.\n"));
+		Error(_("No port specified.\n"));
 		return -1;
 	}
 
@@ -1156,7 +1155,7 @@ run_mode_Restore(int argc, char *argv[])
 				     sync_config->listen->listen_type, 1))
 	    == NULL)
 	{
-		Error(_("Error: can't open connection.\n"));
+		Error(_("Can't open connection.\n"));
 		return -1;
 	}
 	pconn->speed = sync_config->listen->speed;
@@ -1172,7 +1171,7 @@ run_mode_Restore(int argc, char *argv[])
 	/* Allocate a new Palm description */
 	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		Error(_("Error: can't allocate struct Palm.\n"));
+		Error(_("Can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
@@ -1214,7 +1213,7 @@ run_mode_Restore(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
-			Error(_("Error writing sync log.\n"));
+			Error(_("Couldn't write sync log.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1228,7 +1227,7 @@ run_mode_Restore(int argc, char *argv[])
 
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
-		Error(_("Error disconnecting\n"));
+		Error(_("Couldn't disconnect.\n"));
 		return -1;
 	}
 	pconn = NULL;
@@ -1268,7 +1267,7 @@ run_mode_Init(int argc, char *argv[])
 	/* Get listen block */
 	if (sync_config->listen == NULL)
 	{
-		Error(_("Error: no port specified.\n"));
+		Error(_("No port specified.\n"));
 		return -1;
 	}
 
@@ -1284,7 +1283,7 @@ run_mode_Init(int argc, char *argv[])
 				     sync_config->listen->listen_type, 1))
 	    == NULL)
 	{
-		Error(_("Error: can't open connection.\n"));
+		Error(_("Can't open connection.\n"));
 		return -1;
 	}
 	pconn->speed = sync_config->listen->speed;
@@ -1300,7 +1299,7 @@ run_mode_Init(int argc, char *argv[])
 	/* Allocate a new Palm description */
 	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		Error(_("Error: can't allocate struct Palm.\n"));
+		Error(_("Can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
@@ -1573,7 +1572,7 @@ run_mode_Init(int argc, char *argv[])
 
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
-			Error(_("Error writing sync log.\n"));
+			Error(_("Couldn't write sync log.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
@@ -1588,7 +1587,7 @@ run_mode_Init(int argc, char *argv[])
 
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
-		Error(_("Error disconnecting\n"));
+		Error(_("Couldn't disconnect.\n"));
 		return -1;
 	}
 
