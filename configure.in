@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.29 1999-11-02 03:24:16 arensb Exp $
+dnl # $Id: configure.in,v 1.30 1999-11-02 04:28:54 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -66,7 +66,26 @@ AC_SUBST(CFLAGS)
 
 AC_PROG_RANLIB
 AC_PROG_INSTALL
-AC_PROG_LEX			# XXX - Check for a working lex (see below)
+
+dnl # This is basically the same as AC_PROG_LEX, but it uses
+dnl # AC_CHECK_PROGS to make sure that there's a working 'lex'.
+AC_CHECK_PROGS(LEX, flex lex)
+if test -z "$LEX"; then
+	AC_MSG_WARN([
+	Neither flex nor lex could be found. Please install them, then
+	run configure again.])
+	LEX=true		# Just in case the bozo tries to build anyway
+	EXIT_STATUS=1
+fi
+if test -z "$LEXLIB"
+then
+	case "$LEX" in
+	    flex*) ac_lib=fl ;;
+	    *) ac_lib=l ;;
+	esac
+	AC_CHECK_LIB($ac_lib, yywrap, LEXLIB="-l$ac_lib")
+fi
+AC_SUBST(LEXLIB)
 AC_SUBST(LEXARGS)		# Not defined by 'configure'. Just a hook.
 
 # I'm not using AC_PROG_YACC here because that doesn't actually make
