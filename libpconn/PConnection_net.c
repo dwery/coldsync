@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.24 2002-03-10 23:33:06 arensb Exp $
+ * $Id: PConnection_net.c,v 1.25 2002-04-27 17:17:35 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -170,18 +170,10 @@ net_write(PConnection *p, unsigned const char *buf, const int len)
 	return write(p->fd, buf, len);
 }
 
-/* net_connect
- * Establish a connection to the host whose address is 'addr':
- *	- Send a UDP wakeup packet to the given address.
- *	- Listen for a wakeup ACK packet.
- *	- Establish a TCP socket to the host that responded.
- *	- Exchange ritual packets.
- */
 static int
-net_connect(PConnection *pconn, const void *addr, const int addrlen)
+net_connect_udp(PConnection *pconn, const void *addr, const int addrlen)
 {
 	int err;
-	int i;
 	ubyte outbuf[1024];		/* XXX - Fixed size bad */
 	ubyte *wptr;			/* Pointer into outbuf, for writing */
 	ubyte inbuf[1024];		/* XXX - Fixed size bad */
@@ -191,9 +183,6 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	struct sockaddr_in servaddr;
 	socklen_t servaddr_len;
 	struct netsync_wakeup wakeup_pkt;
-	struct servent *service;
-
-	/* XXX - Break this monster function up into parts */
 
 	/* Copy the given address */
 	/* XXX - This assumes IPv4 */
@@ -310,6 +299,46 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 
 	close(pconn->fd);	/* We're done with the UDP socket */
 
+	return 0;
+}
+
+
+
+
+/* net_connect
+ * Establish a connection to the host whose address is 'addr':
+ *	- Send a UDP wakeup packet to the given address.
+ *	- Listen for a wakeup ACK packet.
+ *	- Establish a TCP socket to the host that responded.
+ *	- Exchange ritual packets.
+ */
+static int
+net_connect(PConnection *pconn, const void *addr, const int addrlen)
+{
+	int err;
+	int i;
+	struct sockaddr_in servaddr;
+	struct servent *service;
+
+	/* XXX - Break this monster function up into parts */
+
+	/* Copy the given address */
+	/* XXX - This assumes IPv4 */
+	memcpy(&servaddr, addr, sizeof(struct sockaddr_in));
+
+	IO_TRACE(3)
+	{
+#if HAVE_INET_NTOP
+		char namebuf[128];
+#endif	/* HAVE_INET_NTOP */
+
+		fprintf(stderr, "Inside net_connect(%s), port %d\n",
+			INET_NTOP(servaddr.sin_family,
+				  servaddr.sin_addr,
+				  namebuf, 128),
+			ntohs(servaddr.sin_port));
+	}
+
 	/* XXX - Open TCP connection to host that responded */
 	/* XXX - I suspect this is "wrong": presumably, the hostid in the
 	 * wakeup ACK is the hostid (IPv4 address) of the host with which
@@ -331,6 +360,10 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	 */
 	IO_TRACE(5)
 		fprintf(stderr, "Opening TCP socket to server.\n");
+	
+	/* We initiated the connection */
+	pconn->whosonfirst = 1;
+	
 	
 	pconn->fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (pconn->fd < 0)
@@ -373,7 +406,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 		servaddr.sin_port = service->s_port;
 
 	/* XXX - connect() should time out after a while. 10 seconds? */
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < PCONN_NET_CONNECT_RETRIES; i++)
 	{
 		IO_TRACE(3)
 		{
@@ -390,7 +423,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 
 		err = connect(pconn->fd,
 			      (struct sockaddr *) &servaddr,
-			      servaddr_len);
+			      sizeof(struct sockaddr));
 			/* Normally, the second argument ought to be cast
 			 * to (const struct sockaddr *), but Solaris
 			 * expects a (struct sockaddr *), so it complains.
@@ -401,7 +434,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 		if (err < 0)
 		{
 			perror("connect");
-			sleep(1);	/* Give the server time to appear */
+			sleep(PCONN_NET_CONNECT_DELAY);	/* Give the server time to appear */
 			continue;
 		}
 
@@ -409,11 +442,13 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 			fprintf(stderr, "connected\n");
 		break;
 	}
+
 	if (err < 0)
 	{
 		fprintf(stderr, _("Can't connect to server.\n"));
 		return -1;
 	}
+
 
 	/* Exchange ritual packets with server */
 	err = ritual_exch_client(pconn);
@@ -547,15 +582,18 @@ pconn_net_open(PConnection *pconn,
 	}
 
 	/* Set the methods used by the network connection */
-	pconn->io_bind = &net_bind;
-	pconn->io_read = &net_read;
-	pconn->io_write = &net_write;
-	pconn->io_connect = &net_connect;
-	pconn->io_accept = &net_accept;
-	pconn->io_close = &net_close;
-	pconn->io_select = &net_select;
-	pconn->io_drain = &net_drain;
-	pconn->io_private = 0;
+	pconn->io_bind		= &net_bind;
+	pconn->io_read		= &net_read;
+	pconn->io_write		= &net_write;
+	pconn->io_connect	= &net_connect;
+	pconn->io_accept	= &net_accept;
+	pconn->io_close		= &net_close;
+	pconn->io_select	= &net_select;
+	pconn->io_drain		= &net_drain;
+	pconn->io_private	= 0;
+
+	pconn->whosonfirst	= 0;
+	pconn->net.xid		= 0xFE;
 
 	/* Create a socket
 	 * Although we'll use pconn->fd for both the UDP and TCP sockets,
