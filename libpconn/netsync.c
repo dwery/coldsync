@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.26 2002-11-03 14:12:11 azummo Exp $
+ * $Id: netsync.c,v 1.27 2003-02-24 23:57:20 azummo Exp $
  */
 
 #include "config.h"
@@ -517,12 +517,20 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		perror("read");
 			/* XXX - Does PConn_read set errno? */
 		return -1;
+	
+	} else if (err == 0)
+	{
+		NET_TRACE(5)
+			fprintf(stderr, "EOF in header.\n");
+		return 0;
+
 	} else if (err != NETSYNC_HDR_LEN)
 	{
 		fprintf(stderr,
 			_("Error: only read %d bytes of NetSync "
 			  "packet header.\n"),
 			err);
+
 		PConn_set_palmerrno(pconn, PALMERR_SYSTEM);
 		return -1;
 	}
