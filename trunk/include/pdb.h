@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.2 1999-11-04 10:43:19 arensb Exp $
+ * $Id: pdb.h,v 1.3 2000-01-22 05:09:32 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -250,6 +250,7 @@ extern int pdb_InsertResource(
 	struct pdb_resource *newrsrc);
 struct pdb_record *new_Record(
 	const ubyte attributes,
+	const ubyte category,
 	const udword id,
 	const uword len,
 	const ubyte *data);
