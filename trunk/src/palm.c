@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.2 2000-11-18 22:54:40 arensb Exp $
+ * $Id: palm.c,v 2.3 2000-11-18 23:55:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -398,7 +398,7 @@ ListDBs(struct Palm *palm)
 	int err;
 	int card;		/* Memory card number */
 
-	if (palm->num_cards < 0)
+	if (palm->num_cards_ < 0)
 		fetch_meminfo(palm);
 	/* XXX - Error-checking */
 
