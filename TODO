@@ -81,23 +81,6 @@
   the dialog.
 - Move the DLP time conversion functions out of pconn/util.[ch]. Then
   take the #include <coldsync/whatever> out of util.c
-- Come up with a good archive file format. Presumably, this should be
-  just a series of records of the form
-	<type><headerlen><length><mod/del time?>
-	<data>
-  where <type> is the type of chunk (AppInfo block (for when it
-  changes), sort block, resource or record), <length> is the length in
-  bytes of the remainder of the chunk, and <data> is the record data
-  itself. <mod/del time> is the time when the record was modified or
-  deleted, or whatever other housecleaning stuff is necessary.
-  <headerlen> is the length of the header before the data. This ought
-  to help maintain compatibility with older versions.
-  Probably be good to add a magic cookie and version number at the
-  beginning of the file.
-  This way, adding a record to the archive is as simple as appending
-  it. Having the AppInfo and sort blocks give some hope of figuring
-  out which category and such the record was in. Similarly, deleting a
-  record from the archive doesn't affect the other records.
 - Write a utility to just dump the contents of a pdb file.
 - Add CTRACE() macro for debugging, like the *_TRACE() ones.
 - Turn the pdb stuff into its own library.
