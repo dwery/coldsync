@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.5 1999-11-04 11:33:36 arensb Exp $
+ * $Id: conduit.h,v 1.6 1999-11-20 05:16:24 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -45,7 +45,6 @@ extern int init_conduits(struct Palm *palm);
 					/* Initialize global conduit stuff */
 extern int tini_conduits();		/* Clean up global conduit stuff */
 extern int load_conduit(struct conduit_spec *spec);
-extern int unload_conduit(const char *name);
 extern struct conduit_spec *getconduitbyname(const char *name);
 extern int register_conduit(const char *name,
 			    const char *dbname,
