@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.81 2001-01-25 07:51:06 arensb Exp $
+ * $Id: coldsync.c,v 1.82 2001-01-28 22:42:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -80,6 +80,7 @@ struct sync_config *sync_config = NULL;
 				/* Configuration for the current sync */
 struct pref_item *pref_cache = NULL;
 				/* Preference cache */
+FILE *oldstderr = NULL;		/* stderr, before it was redirected */
 
 int
 main(int argc, char *argv[])
@@ -93,7 +94,7 @@ main(int argc, char *argv[])
 	global_opts.devname		= NULL;
 	global_opts.devtype		= -1;
 	global_opts.use_syslog		= False;
-/*  	global_opts.log_fname		= NULL; */
+	global_opts.log_fname		= NULL;
 	global_opts.do_backup		= False;
 	global_opts.backupdir		= NULL;
 	global_opts.do_restore		= False;
@@ -193,51 +194,76 @@ main(int argc, char *argv[])
 				 */
 	}
 
-Error("Return at end\n");
-
-#if 0
-	/* Open the debugging log file */
-	/* XXX - Need to clarify the purpose for this log file: what goes
-	 * there?
-	 * In getty mode, it gets everything that would normally go to
-	 * stderr, since stderr is normally redirected to the connection to
-	 * the Palm.
-	 * Otherwise, presumably the user wants a debugging(?) log of
-	 * what's going on, but stderr is a terminal. Hence, trace
-	 * statements should go to the log file, but error messages should
-	 * go to both the log file and stderr.
+	/* Open the logfile, if requested.
+	 * This block opens the log file given by the "-l" option, then
+	 * redirects stderr to it. We also keep a copy of the original
+	 * stderr as 'oldstderr', in case we ever need it.
+	 * I think this is almost equivalent to
+	 *	coldsync 3>&2 2>logfile
+	 * in the Bourne shell.
+	 * The main reason for doing this is getty mode: when a process is
+	 * run from getty or inetd, stderr is connected to the Palm, or the
+	 * network socket. Printing error messages there would screw things
+	 * up. The obvious thing to do would be to use "2>logfile", but
+	 * getty and inetd don't give us a Bourne shell with which to do
+	 * this.
 	 */
 	if (global_opts.log_fname != NULL)
 	{
-		time_t now;
+		int stderr_copy;	/* File descriptor of copy of stderr */
+		int log_fd;		/* Temporary file descriptor for
+					 * logfile */
+		int log_fd2;		/* Temporary file descriptor for
+					 * logfile */
+		time_t now;		/* For timestamp */
 
-		/* XXX - Check whether the filename is "syslog". If so, set
-		 * things up so tht it'll use syslog.
-		 */
-		/* XXX - Ought to redirect stderr to logfile if using a
-		 * file, to catch the inevitable mistakes.
-		 */
 		MISC_TRACE(1)
-			fprintf(stderr, "Opening log file \"%s\"\n",
+			fprintf(stderr,
+				"Redirecting stderr to \"%s\"\n",
 				global_opts.log_fname);
 
-		logfile = fopen(global_opts.log_fname, "a");
-		if (logfile == NULL)
+		/* Make a copy of the old stderr, in case we need it later. */
+		stderr_copy = dup(STDERR_FILENO);
+		if (stderr_copy < 0)
 		{
-			fprintf(stderr, _("Can't open log file \"%s\".\n"),
-				global_opts.log_fname);
+			Error(_("Can't dup(stderr)."));
+			Perror("dup");
+			goto done;
+		}
+		oldstderr = fdopen(stderr_copy, "a");
+
+		/* Open log file (with permissions that are either fascist
+		 * or privacy-enhancing, depending on your point of view).
+		 */
+		log_fd = open(global_opts.log_fname, O_WRONLY|O_APPEND|O_CREAT,
+			      0600);
+		if (log_fd < 0)
+		{
+			Error(_("Can't open log file \"%s\"."),
+			      global_opts.log_fname);
+			Perror("open");
 			goto done;
 		}
 
-		/* Make the log file be line-buffered */
-		setvbuf(logfile, (char *)NULL, _IOLBF, 0);
+		/* Move the log file from whichever file descriptor it's on
+		 * now, to stderr's.
+		 */
+		log_fd2 = dup2(log_fd, STDERR_FILENO);
+		if (log_fd2 < 0)
+		{
+			Error(_("Can't open log file on stderr."));
+			Perror("dup2");
+			close(log_fd);
+			goto done;
+		}
 
-		/* Note when the log file was created. */
+		/* Get rid of the now-unneeded duplicate log file descriptor */
+		close(log_fd);
+
+		/* Write a timestamp to the log file */
 		now = time(NULL);
-		fprintf(logfile, "Log started on %s\n",
-			ctime(&now));
+		fprintf(stderr, _("Log started on %s"), ctime(&now));
 	}
-#endif	/* 0 */
 
 	/* Load the configuration: read /etc/coldsync.conf, followed by
 	 * ~/.coldsyncrc .
@@ -314,6 +340,11 @@ Error("Return at end\n");
 			global_opts.install_first ? "True" : "False");
 		fprintf(stderr, "\tforce_install: %s\n",
 			global_opts.force_install ? "True" : "False");
+		fprintf(stderr, "\tuse_syslog: %s\n",
+			global_opts.use_syslog ? "True" : "False");
+		fprintf(stderr, "\tlog_fname: \"%s\"\n",
+			global_opts.log_fname == NULL ?
+				"(null)" : global_opts.log_fname);
 
 		fprintf(stderr, "\nhostid == 0x%08lx (%02d.%02d.%02d.%02d)\n",
 			hostid,
@@ -388,13 +419,14 @@ Error("Return at end\n");
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
 
-#if 0
-	if ((logfile != NULL) && (logfile != stderr))
+	/* Write a timestamp to the log file */
+	if (global_opts.log_fname != NULL)
 	{
-		/* XXX - Use closelog() if we're using syslog */
-		fclose(logfile);
+		time_t now;
+
+		now = time(NULL);
+		fprintf(stderr, _("\nLog closed on %s"), ctime(&now));
 	}
-#endif	/* 0 */
 
 	if (global_opts.use_syslog)
 		/* Close syslog */
@@ -447,6 +479,7 @@ run_mode_Standalone(int argc, char *argv[])
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
+		/* XXX - Say why */
 		return -1;
 	}
 	pconn->speed = sync_config->listen->speed;
@@ -455,6 +488,7 @@ run_mode_Standalone(int argc, char *argv[])
 	if ((err = Connect(pconn)) < 0)
 	{
 		Error(_("Can't connect to Palm."));
+		/* XXX - Say why */
 		PConnClose(pconn);
 		return -1;
 	}
@@ -1753,7 +1787,7 @@ CheckLocalFiles(struct Palm *palm)
 		Error(_("%s: Can't open directory \"%s\"."),
 		      "CheckLocalFiles",
 		      backupdir);
-		perror("opendir");
+		Perror("opendir");
 		return -1;
 	}
 
@@ -1863,7 +1897,7 @@ CheckLocalFiles(struct Palm *palm)
 					"\"%s\"."),
 				      "CheckLocalFiles",
 				      fromname, toname);
-				perror("rename");
+				Perror("rename");
 				closedir(dir);
 				return -1;
 			}
@@ -1911,7 +1945,7 @@ CheckLocalFiles(struct Palm *palm)
 					"\"%s\"."),
 				      "CheckLocalFiles",
 				      fromname, toname);
-				perror("rename");
+				Perror("rename");
 				closedir(dir);
 				return -1;
 			}
@@ -2242,7 +2276,7 @@ mkforw_addr(struct Palm *palm,
 				fprintf(stderr,
 					"Error in inet_pton(AF_INET6)\n");
 
-			perror("inet_pton");
+			Perror("inet_pton");
 		} else if (err == 0)
 		{
 			SYNC_TRACE(3)
@@ -2286,7 +2320,7 @@ mkforw_addr(struct Palm *palm,
 				fprintf(stderr,
 					"Error in inet_pton(AF_INET)\n");
 
-			perror("inet_pton");
+			Perror("inet_pton");
 		} else if (err == 0)
 		{
 			SYNC_TRACE(3)
@@ -2359,7 +2393,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*local->dlp.read)(local, &inbuf, &inlen);
 			if (err < 0)
 			{
-				perror("read local");
+				Perror("read local");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -2371,7 +2405,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*remote->dlp.write)(remote, inbuf, inlen);
 			if (err < 0)
 			{
-				perror("read local");
+				Perror("read local");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -2386,7 +2420,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*remote->dlp.read)(remote, &inbuf, &inlen);
 			if (err < 0)
 			{
-				perror("read local");
+				Perror("read local");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -2398,7 +2432,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*local->dlp.write)(local, inbuf, inlen);
 			if (err < 0)
 			{
-				perror("read local");
+				Perror("read local");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -2465,7 +2499,7 @@ open_tempfile(char *name_template)
 	{
 		Error(_("%s: Can't create staging file \"%s\"."),
 		      "open_tempfile", name_template);
-		perror("mkstemp");
+		Perror("mkstemp");
 		return -1;
 	}
 
@@ -2540,7 +2574,7 @@ reserve_fd(int fd,		/* File descriptor to check */
 	{
 		/* This can't happen, can it? */
 		MISC_TRACE(6)
-			perror("reserve_fd: open");
+			Perror("reserve_fd: open");
 		return -1;
 	}
 
@@ -2555,7 +2589,7 @@ reserve_fd(int fd,		/* File descriptor to check */
 
 		if (dup2(new_fd, fd) != fd)
 		{
-			perror("reserve_fd: dup2");
+			Perror("reserve_fd: dup2");
 			return -1;
 		}
 		close(new_fd);
