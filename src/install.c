@@ -6,12 +6,13 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.1 1999-09-04 21:05:41 arensb Exp $
+ * $Id: install.c,v 2.2 1999-09-09 05:59:07 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
+#include <errno.h>		/* For errno */
 #include <sys/types.h>
 
 #if HAVE_DIRENT_H
@@ -52,7 +53,6 @@
  * that don't exist on the Palm, install them.
  */
 /* XXX - Trace statements */
-/* XXX - Add an argument specifying which directory to look for files in */
 /* XXX - Add an argument to say whether or not to delete each file after
  * consideration. Actually, it'd probably be best not to use rename() for
  * this: we need to pdb_Read() the file in any case; so we should be able
@@ -65,15 +65,18 @@
  */
 int
 InstallNewFiles(struct PConnection *pconn,
-		struct Palm *palm)
+		struct Palm *palm,
+		char *newdir,		/* Directory from which to install */
+		Bool deletep)		/* Flag: delete after installing? */
 {
 	int err;
 	DIR *dir;
 	struct dirent *file;
 
 	MISC_TRACE(1)
-		fprintf(stderr, "Installing new databases\n");
-	if ((dir = opendir(installdir)) == NULL)
+		fprintf(stderr, "Installing new databases from \"%s\"\n",
+			newdir);
+	if ((dir = opendir(newdir)) == NULL)
 	{
 		fprintf(stderr, "InstallNewFiles: Can't open install directory\n");
 		perror("opendir");
@@ -87,6 +90,14 @@ InstallNewFiles(struct PConnection *pconn,
 		struct pdb *pdb;	/* The database */
 		static char fname[MAXPATHLEN+1];
 					/* The database's full pathname */
+		static char bakfname[MAXPATHLEN+1];
+					/* The database's full pathname in
+					 * the backup directory.
+					 */
+		int outfd;		/* File descriptor for writing the
+					 * database to the backup
+					 * directory.
+					 */
 		struct dlp_dbinfo *dbinfo;
 					/* Local information about the
 					 * database
@@ -106,12 +117,12 @@ InstallNewFiles(struct PConnection *pconn,
 			/* The file has an unknown extension. Ignore it */
 			continue;
 
-		/* XXX - Is it worth stat()ing the file, to make sure it's
+		/* XXX - Is it worth lstat()ing the file, to make sure it's
 		 * a file?
 		 */
 
 		/* Construct the file's full pathname */
-		strncpy(fname, installdir, MAXPATHLEN);
+		strncpy(fname, newdir, MAXPATHLEN);
 		strncat(fname, "/", MAXPATHLEN - strlen(fname));
 		strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
 
@@ -172,7 +183,7 @@ InstallNewFiles(struct PConnection *pconn,
 		 * so.
 		 */
 		SYNC_TRACE(5)
-			fprintf(stderr, "Uploading \"%s\"\n",
+			fprintf(stderr, "InstallNewFiles: Uploading \"%s\"\n",
 				pdb->name);
 
 		if (dbinfo != NULL)
@@ -197,6 +208,21 @@ InstallNewFiles(struct PConnection *pconn,
 				pdb->name);
 		}
 
+		/* Add the newly-uploaded database to the list of databases
+		 * in 'palm'.
+		 */
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"InstallNewFiles: see if this db exists\n");
+		if (find_dbentry(palm, pdb->name) == NULL)
+		{
+			/* It doesn't exist yet. Good */
+			SYNC_TRACE(4)
+				fprintf(stderr, "InstallNewFiles: "
+					"appending db to palm->dbinfo\n");
+			append_dbentry(palm, pdb);
+		}
+
 		/* XXX - After installing:
 		 * Ideally, instead of installing at all, we should find a
 		 * conduit for this database and tell it, "here's a new
@@ -212,6 +238,70 @@ InstallNewFiles(struct PConnection *pconn,
 		 * file doesn't immediately get moved to the attic.
 		 */
 		/* XXX - Add a message to the sync log */
+
+		/* Check to see whether this file exists in the backup
+		 * directory. If it does, then let the conduit deal with
+		 * the newly-uploaded version when the sync continues.
+		 * XXX - Actually, it might be better to sync with the
+		 * database now, no?
+		 * If the database doesn't yet exist in the backup
+		 * directory, write it there now.
+		 */
+		/* Construct the pathname to this database in the backup
+		 * directory.
+		 */
+		strncpy(bakfname, backupdir, MAXPATHLEN);
+		strncat(bakfname, "/", MAXPATHLEN - strlen(fname));
+		strncat(bakfname, pdb->name, MAXPATHLEN - strlen(fname));
+		if (IS_RSRC_DB(pdb))
+			strncat(bakfname, ".prc", MAXPATHLEN - strlen(fname));
+		else
+			strncat(bakfname, ".pdb", MAXPATHLEN - strlen(fname));
+
+		SYNC_TRACE(5)
+			fprintf(stderr, "Checking for \"%s\"\n",
+				bakfname);
+
+		/* If the file exists already, don't overwrite it */
+		err = 0;
+		outfd = open(bakfname, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		if (outfd < 0)
+		{
+			if (errno != EEXIST)
+			{
+				fprintf(stderr, "Error opening \"%s\"\n",
+					bakfname);
+				perror("open");
+				err = -1;	/* XXX */
+			}
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"\"%s\" already exists, maybe\n",
+					bakfname);
+		} else {
+			/* The file doesn't yet exist. Save the database to
+			 * it.
+			 */
+			SYNC_TRACE(4)
+				fprintf(stderr, "Writing \"%s\"\n",
+					bakfname);
+			err = pdb_Write(pdb, outfd);
+		}
+
+		/* Delete the newly-uploaded file, if appropriate */
+		if (deletep && (err == 0))
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr, "Deleting \"%s\"\n",
+					fname);
+			err = unlink(fname);
+			if (err < 0)
+			{
+				fprintf(stderr, "Error deleting \"%s\"\n",
+					fname);
+				perror("unlink");
+			}
+		}
 
 		free_pdb(pdb);
 	}
