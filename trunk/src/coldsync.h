@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.71 2002-11-02 12:51:18 azummo Exp $
+ * $Id: coldsync.h,v 1.72 2002-11-13 20:14:38 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -15,6 +15,11 @@
 #include <unistd.h>		/* For uid_t */
 #include <sys/types.h>		/* For uid_t */
 #include <sys/param.h>		/* For MAXPATHLEN */
+
+#ifdef USE_CAPABILITIES
+#  include <sys/capability.h>
+#endif /* USE_CAPABILITIES */
+
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "spalm.h"

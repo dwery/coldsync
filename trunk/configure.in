@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.150 2002-11-12 20:06:22 azummo Exp $
+dnl # $Id: configure.in,v 1.151 2002-11-13 20:14:37 azummo Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -477,6 +477,29 @@ if test x"$with_getopt_long" != x"no"; then
 	AC_SEARCH_LIBS(getopt_long, gnugetopt, AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG))
 fi
 
+# linux capability support.
+
+AC_CHECK_LIB(cap, cap_set_proc)
+AC_MSG_RESULT($ac_cv_lib_cap_cap_set_proc)
+
+AC_MSG_CHECKING([whether use of capabilities is requested])
+AC_ARG_WITH(capabilities,
+	[  --with-capabilities     Use linux capabilities (libcap).],
+	[use_capabilities="$withval"],
+	[use_capabilities=$ac_cv_lib_cap_cap_set_proc])
+AC_MSG_RESULT($use_capabilities)
+
+if test x"$use_capabilities" = x"yes"; then
+	if test x"$ac_cv_lib_cap_cap_set_proc"; then
+		AC_DEFINE(USE_CAPABILITIES)
+		LIBS="$LIBS -lcap"
+	else
+		AC_MSG_WARN([
+			libcap missing
+		])
+		EXIT_STATUS=1	
+	fi
+fi
 
 # Check for ENODEV error code, for Linux.
 AC_CACHE_CHECK([whether ENODEV is defined], ac_cv_enodev,
