@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.26 2000-06-15 07:28:15 arensb Exp $
+ * $Id: coldsync.h,v 1.27 2000-07-06 04:02:15 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -168,6 +168,15 @@ struct pref_desc {
 	char flags;			/* Flags. See PREFDFL_*, below */
 };
 
+/* crea_type_t
+ * A convenience type for representing the creator/type pair that owns a
+ * database.
+ */
+typedef struct crea_type_t {
+	udword creator;			/* 4-character creator */
+	udword type;			/* 4-character type */
+} crea_type_t;
+
 /* pref_desc flags:
  * If neither flag is set, then the location of the preference is
  * unspecified; look in both "Saved Preferences" and "Unsaved Preferences".
@@ -212,12 +221,18 @@ typedef struct conduit_block
 	unsigned short flavors;	/* Bitmap of flavors that this conduit
 				 * implements. See FLAVORFL_*, below.
 				 */
-	/* XXX - Should have list of creator/type pairs */
-	udword dbtype;		/* What database types does it apply to? */
-	udword dbcreator;
+
+	crea_type_t *ctypes;	/* Which creator/types the conduit applies
+				 * to. */
+	int ctypes_slots;	/* Size of the 'ctypes' array (how many
+				 * 'crea_type_t's will fit in it?
+				 */
+	int num_ctypes;		/* # of entries in the 'ctypes' array */
+
 	unsigned char flags;	/* CONDFL_* flags */
 	char *path;		/* Path to conduit */
 	struct cond_header *headers;	/* User-supplied headers */
+
 	struct pref_desc *prefs;	/* Array of preferences that this
 					 * conduit cares about. */
 	int prefs_slots;	/* Size of the 'prefs' array (how many
@@ -307,6 +322,9 @@ extern int append_pref_desc(conduit_block *cond,
 			    const udword creator,
 			    const uword id,
 			    const char flags);
+extern int append_crea_type(conduit_block *cond,
+			    const udword creator,
+			    const udword type);
 extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
