@@ -1,6 +1,10 @@
 /* archive.c
  *
- * $Id: archive.c,v 1.3 1999-08-01 08:02:11 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: archive.c,v 1.4 1999-09-04 20:53:51 arensb Exp $
  */
 
 #include "config.h"
@@ -13,6 +17,7 @@
 #include <sys/uio.h>		/* For write() */
 #include <unistd.h>		/* For write(), lseek() */
 #include <time.h>		/* For time() */
+#include <errno.h>		/* For errno */
 #include "palm_types.h"
 #include "util.h"		/* For put_*() */
 #include "archive.h"
@@ -158,8 +163,12 @@ arch_open(char *fname,
 	 */
 	if ((fd = open(fnamebuf, flags, 0600)) < 0)
 	{
-		fprintf(stderr, "arch_open: Can't open \"%s\"\n", fnamebuf);
-		perror("open");
+		if (errno != ENOENT)
+		{
+			fprintf(stderr, "arch_open: Can't open \"%s\"\n",
+				fnamebuf);
+			perror("open");
+		}
 		return -1;
 	}
 
