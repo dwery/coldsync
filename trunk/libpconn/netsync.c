@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.12 2001-09-07 10:04:37 arensb Exp $
+ * $Id: netsync.c,v 1.13 2001-10-12 01:24:20 arensb Exp $
  */
 
 #include "config.h"
@@ -47,9 +47,39 @@ int net_trace = 0;		/* Debugging level for NetSync */
  *
  * The comments are mostly conjecture and speculation.
  */
+/* The ritual packets appear to be similar to DLP, but with more
+ * udwords:
+ *
+ * struct ritual_packet
+ * {
+ *	ubyte cmd;		// cmd | 0x80, for responses
+ *	ubyte argc;
+ *	udword errno;
+ *	ritual_arg argv[];	// 'argc' number of arguments
+ * };
+ *
+ * struct ritual_argv
+ * {
+ *	udword len;
+ *	ubyte data[];		// 'len' bytes of data
+ * };
+ */
 /* XXX - Could these be CMP 2.0? When answering this question, might want
  * to keep in mind the underlying protocol, the one with the (other) XIDs,
  * implemented by netsync_read() and netsync_write().
+ */
+/* XXX - http://hcirisc.cs.binghamton.edu/pipermail/pilot-unix/2001-July/004238.html
+ * also mentions the following packet:
+ *
+ * +SLP HDR [ 0xbe 0xef 0xed 0x03 0x03 0x02 0x00 0x41 0x08 0xeb]
+ * +SLP RX 3->3 len=0x0041 Prot=2 ID=0x08
+ * +PADP DATA RX FL  len=0x003d
+ * +0000  90 01 00 00 20 37 00 00 30 39 00 00 00 00 00 00   .... 7..09......
+ * +0010  69 1d 07 d1 05 16 00 2a 1a 00 07 d1 05 16 00 2a   i......*.......*
+ * +0020  1a 00 09 10 4a 6f 65 20 55 73 65 72 00 20 2c b9   ....Joe User. ,.
+ * +0030  62 ac 59 07 5b 96 4b 07 15 2d 23 4b 70            b.Y.[.K..-#Kp
+ *
+ * The last 16 bytes are the md5 hash of the password ("123" in this case).
  */
 static ubyte ritual_resp1[] = {
 	0x90,				/* Command */
@@ -63,6 +93,12 @@ static ubyte ritual_resp1[] = {
 };
 static const int ritual_resp1_size =
 	sizeof(ritual_resp1) / sizeof(ritual_resp1[0]);
+/* First packet sent by NetSync daemon, when forwarding a NetSync
+ * connection:
+        01 ff 00 00 00 16
+        90 01 00 00 00 00 00 00 00 20 00 00 00 08 00 00
+        00 02 00 00 00 00
+*/
 
 static ubyte ritual_stmt2[] = {
 	0x12,				/* Command */
@@ -157,6 +193,9 @@ ritual_exch_server(PConnection *pconn)
 	uword inlen;
 
 	/* Receive ritual response 1 */
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_server: receiving "
+			"ritual packet 1\n");
 	/* Agh! This is hideous! Apparently NetSync and m50x modes are
 	 * identical except for just this one packet!
 	 */
@@ -253,9 +292,12 @@ int
 ritual_exch_client(PConnection *pconn)
 {
 	int err;
-	ubyte inbuf[1024];		/* XXX - Fixed size: bad */
 	const ubyte *netbuf;		/* Buffer from netsync layer */
 	uword inlen;
+
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_client: sending "
+			"ritual response 1\n");
 
 	/* Send ritual response 1 */
 	err = netsync_write(pconn, ritual_resp1, ritual_resp1_size);
@@ -268,21 +310,27 @@ ritual_exch_client(PConnection *pconn)
 		return -1;
 
 	/* Receive ritual statement 2 */
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_client: receiving "
+			"ritual statement 2\n");
 	err = netsync_read(pconn, &netbuf, &inlen);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 	{
 		fprintf(stderr,
-			"netsync_read(ritual stmt 2) returned %d\n",
-			err);
+			"netsync_read(ritual stmt 2) returned %d, len %d\n",
+			err, inlen);
 		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
+			debug_dump(stderr, "<<<", netbuf, inlen);
 	}
 	if (err < 0)
 		/* XXX - Indicate error */
 		return -1;
 
 	/* Send ritual response 2 */
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_client: sending "
+			"ritual response 2\n");
 	err = netsync_write(pconn, ritual_resp2, ritual_resp2_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
@@ -293,21 +341,27 @@ ritual_exch_client(PConnection *pconn)
 		return -1;
 
 	/* Receive ritual statement 3 */
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_client: receiving "
+			"ritual statement 3\n");
 	err = netsync_read(pconn, &netbuf, &inlen);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 	{
 		fprintf(stderr,
-			"netsync_read(ritual stmt 3) returned %d\n",
-			err);
+			"netsync_read(ritual stmt 3) returned %d, len %d\n",
+			err, inlen);
 		if (err > 0)
-			debug_dump(stderr, "<<<", inbuf, inlen);
+			debug_dump(stderr, "<<<", netbuf, inlen);
 	}
 	if (err < 0)
 		/* XXX - Indicate error */
 		return -1;
 
 	/* Send ritual response 3 */
+	IO_TRACE(6)
+		fprintf(stderr, "ritual_exch_client: sending "
+			"ritual response 3\n");
 	err = netsync_write(pconn, ritual_resp2, ritual_resp3_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
@@ -403,6 +457,9 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	if (!no_header)
 	{
 		/* Read packet header */
+		NET_TRACE(5)
+			fprintf(stderr,
+				"netsync_read: Reading packet header\n");
 	  	err = (*pconn->io_read)(pconn, hdr_buf, NETSYNC_HDR_LEN);
 		if (err < 0)
 		{
@@ -417,6 +474,12 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 			    "header.\n"),
 			  err);
 		  return -1;	/* XXX - Ought to continue reading */
+		}
+
+		NET_TRACE(7)
+		{
+			fprintf(stderr, "Read %d bytes:\n", err);
+			debug_dump(stderr, "NS<<", hdr_buf, err);
 		}
 
 		/* Parse the header */
@@ -466,6 +529,7 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
+debug_dump(stderr, "<<  ", pconn->net.inbuf+got, err);
 		got += err;
 		NET_TRACE(6)
 			fprintf(stderr, "want: %ld, got: %ld\n", want, got);
@@ -510,7 +574,7 @@ netsync_write(PConnection *pconn,
 	{
 		fprintf(stderr, "Sending NetSync header (%d bytes)\n",
 			len);
-		debug_dump(stderr, "NET >>>", out_hdr, NETSYNC_HDR_LEN);
+		debug_dump(stderr, "NET -->", out_hdr, NETSYNC_HDR_LEN);
 	}
 
 	err = (*pconn->io_write)(pconn, out_hdr, NETSYNC_HDR_LEN);
@@ -523,6 +587,11 @@ netsync_write(PConnection *pconn,
 	}
 
 	/* Send the packet data */
+	NET_TRACE(5)
+	{
+		fprintf(stderr, "Sending NetSync data\n");
+		debug_dump(stderr, "NET >>>", buf, len);
+	}
 	want = len;
 	sent = 0;
 	while (sent < want)
@@ -536,9 +605,6 @@ netsync_write(PConnection *pconn,
 		}
 		sent += err;
 	}
-
-	NET_TRACE(6)
-		debug_dump(stderr, "NET >>>", buf, len);
 
 	return len;		/* Success */
 }
