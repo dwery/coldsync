@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.3 2000-06-18 07:07:59 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.4 2000-12-10 21:40:11 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -165,10 +165,10 @@ DlpRPC(struct PConnection *pconn,	/* Connection to Palm */
 		debug_dump(stderr, "RPC>", outbuf, wptr-outbuf);
 	}
 
-	err = padp_write(pconn, outbuf, wptr-outbuf);
+	err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
-		fprintf(stderr, _("%s: Error: padp_write() returned %d\n"),
+		fprintf(stderr, _("%s: Error: dlp.write returned %d\n"),
 			"DlpRPC",
 			err);
 /*  		free(outbuf); */
@@ -176,7 +176,7 @@ DlpRPC(struct PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Get response */
-	err = padp_read(pconn, &inbuf, &inlen);
+	err = (*pconn->dlp.read)(pconn, &inbuf, &inlen);
 	DLPC_TRACE(5)
 		fprintf(stderr, "Got response. Err == %d\n", err);
 	DLPC_TRACE(6)
