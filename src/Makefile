@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.33 2002-12-10 14:31:46 arensb Exp $
+# $Id: Makefile,v 2.34 2002-12-10 14:38:30 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -76,6 +76,9 @@ CLEAN =		${CXXPROG} ${OBJS} \
 DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
 		lexer.l parser.y
+
+# Dummy target. It's just here so that 'make' will default to 'make all'.
+all::
 
 include ${TOP}/Make.rules
 
