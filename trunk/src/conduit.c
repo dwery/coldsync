@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.68 2003-10-05 17:49:47 azummo Exp $
+ * $Id: conduit.c,v 2.69 2004-06-23 22:43:00 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1823,21 +1823,30 @@ spawn_conduit(
 	 * but does it atomically.
 	 */
 
-	/* Dup stdin to the pipe */
-	if ((err = dup2(inpipe[0], STDIN_FILENO)) < 0)
+	/* Dup stdin to the pipe. When dump conduits are run, the connection
+	 * to the PDA has been closed. When running from inetd, that's STDIN
+	 * and STDOUT, so we want to explicitly handle that case.
+	 */
+	if (inpipe[0] != STDIN_FILENO)
 	{
-		Perror("dup2(stdin)");
-		exit(1);
+		if ((err = dup2(inpipe[0], STDIN_FILENO)) < 0)
+		{
+			Perror("dup2(stdin)");
+			exit(1);
+		}
+		close(inpipe[0]);
 	}
-	close(inpipe[0]);
 
 	/* Dup stdout to the pipe */
-	if ((err = dup2(outpipe[1], STDOUT_FILENO)) < 0)
+	if (outpipe[1] != STDOUT_FILENO)
 	{
-		Perror("dup2(stdout)");
-		exit(1);
+		if ((err = dup2(outpipe[1], STDOUT_FILENO)) < 0)
+		{
+			Perror("dup2(stdout)");
+			exit(1);
+		}
+		close(outpipe[1]);
 	}
-	close(outpipe[1]);
 
 	/* Unblock SIGCHLD in the child as well. */
 	unblock_sigchld(&sigmask);
