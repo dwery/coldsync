@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.cc,v 1.1.2.4 2001-10-11 10:08:26 arensb Exp $
+ * $Id: symboltable.cc,v 1.1.2.5 2001-10-11 10:18:23 arensb Exp $
  */
 
 #include <config.h>
@@ -63,7 +63,9 @@ get_symbol(const string &key)
 	return value;
 }
 
-/* Get a symbol from the table that matches the given key. */
+/* Get a symbol from the table that matches the given key.
+ * Note that caller is responsible for freeing the returned string.
+ */
 /* XXX - Should be inline */
 char *
 get_symbol(const char *name)
@@ -74,6 +76,7 @@ get_symbol(const char *name)
 
 /* make_c_string
  * C helper function: convert an STL string to a C-style "char *".
+ * Note that caller is responsible for freeing the returned string.
  */
 static char *
 make_c_string(const string &s)
@@ -90,6 +93,7 @@ make_c_string(const string &s)
 
 /* Get a symbol from the table that matches the given key. The key has
  * length len, and does not have to be null terminated.
+ * Note that caller is responsible for freeing the returned string.
  */
 char *
 get_symbol_n(const char *name, int len)
