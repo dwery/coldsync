@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.19 2000-01-22 05:36:59 arensb Exp $
+ * $Id: coldsync.c,v 1.19.2.1 2000-01-24 07:43:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -195,13 +195,14 @@ main(int argc, char *argv[])
 	 * become readable. Then fork, and let the child establish the
 	 * connection and sync.
 	 */
-	/* XXX - Figure out fastest speed at which each serial port will
-	 * run
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
 	 */
 	SYNC_TRACE(2)
 		fprintf(stderr, "Opening device [%s]\n",
 			config.listen[0].device);
-	if ((pconn = new_PConnection(config.listen[0].device)) == NULL)
+	if ((pconn = new_PConnection(config.listen[0].device,
+				     config.listen[0].listen_type)) == NULL)
 	{
 		fprintf(stderr, _("Error: can't open connection.\n"));
 		exit(1);
@@ -561,7 +562,6 @@ Connect(struct PConnection *pconn)
 	int err;
 	struct slp_addr pcaddr;
 	struct cmp_packet cmpp;
-	struct termios term;
 
 	pcaddr.protocol = SLP_PKTTYPE_PAD;	/* XXX - This ought to be
 						 * part of the initial
@@ -605,40 +605,12 @@ Connect(struct PConnection *pconn)
 
 	/* Change the speed */
 	/* XXX - This probably goes in Pconn_accept() or something */
-	err = tcgetattr(pconn->fd, &term);
-	if (err < 0)
-	{
-		perror("tcgetattr");
-		return -1;
-	}
-	err = cfsetispeed(&term, BSYNC_RATE);
-	if (err < 0)
-	{
-		perror("cfsetispeed");
-		return -1;
-	}
-	err = cfsetospeed(&term, BSYNC_RATE);
-	if (err < 0)
-	{
-		perror("cfsetospeed");
-		return -1;
-	}
-				/* XXX - Instead of syncing at a constant
-				 * speed, should figure out the fastest
-				 * speed that the serial port will support.
-				 */
-	err = tcsetattr(pconn->fd, TCSANOW, &term);
-	if (err < 0)
-	{
-		perror("tcsetattr");
-		return -1;
-	}
-	sleep(1);		/* XXX - Why is this necessary? (under
-				 * FreeBSD 3.x). Actually, various sensible
-				 * things work without the sleep(), but not
-				 * with xcopilot (pseudo-ttys).
-				 */
 
+	if ((err = (*pconn->io_setspeed)(pconn, BSYNC_RATE)) < 0)
+	{
+		fprintf(stderr, _("Error trying to set speed"));
+		return -1;
+	}
 	return 0;
 }
 
@@ -1309,10 +1281,6 @@ int
 find_max_speed(struct PConnection *pconn)
 {
 	int i;
-	struct termios term;
-
-	tcgetattr(pconn->fd, &term);
-	/* XXX - Error-checking */
 
 	/* Step through the array of speeds, one at a time. Stop as soon as
 	 * we find a speed that works, since the 'speeds' array is sorted
@@ -1321,9 +1289,7 @@ find_max_speed(struct PConnection *pconn)
 	for (i = 0; i < num_speeds; i++)
 	{
 /*  fprintf(stderr, "Trying %ld bps\n", speeds[i].bps); */
-		if (cfsetispeed(&term, speeds[i].tcspeed) == 0 &&
-		    cfsetospeed(&term, speeds[i].tcspeed) == 0 &&
-		    tcsetattr(pconn->fd, TCSANOW, &term) == 0)
+		if ((*pconn->io_setspeed)(pconn, speeds[i].tcspeed) == 0)
 			return i;
 /*  fprintf(stderr, "Nope\n"); */
 	}
@@ -1433,6 +1399,10 @@ print_version(void)
 	 */
 	printf(_("Compile-type options:\n"));
 
+#if WITH_USB
+	printf(
+_("    WITH_USB: USB support.\n"));
+#endif	/* WITH_USB */
 #if WITH_EFENCE
 	printf(
 _("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
