@@ -1,2 +1,19 @@
 - Implement timeouts and retries in PADP.
 - Documentation.
+- Combine all the protocols' errnos and error messages into one?
+- SLP should probably allocate memory for incoming packets, and return
+  pointers into its big buffer.
+- SLP and PADP should probably be able to deal with chains of buffers,
+  the way the network protocol stacks deal with chains of mbufs, or
+  like writev().
+- Error codes should probably be divided into two parts: high byte
+  indicating the protocol that gave the error, and low byte giving the
+  error code.
+- Ideally, you should be able to use Pilot VT100 and HotSync on the
+  same cradle, without having to change anything.
+- Write a class to sync two generic databases: a database is an
+  ordered list of records; if they differ, they need to be synched.
+  The normal case of synching a database on the palm with one on the
+  desktop is just a specific subclass. Allow subclasses to override
+  retrieving, comparing, storing, the logic underlying what to copy
+  where, etc.
