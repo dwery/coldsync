@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.135 2001-11-12 01:11:44 arensb Exp $
+dnl # $Id: configure.in,v 1.136 2001-11-19 17:06:52 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -234,6 +234,13 @@ if test -z "${LOCALEDIR}"; then
 fi
 AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
 
+# IPv6 support. Enabled by default, but I haven't managed to get this
+# to compile properly under Solaris, so let's make it optional.
+AC_ARG_WITH(ipv6,dnl
+[  --without-ipv6          Turn off experimental IPv6 support.],dnl
+	with_ipv6=no,
+	with_ipv6=yes)
+
 # I'm not using AC_PROG_YACC here because that doesn't actually make
 # sure that there is a working yacc.
 AC_CHECK_PROGS(YACC, 'bison -y' byacc yacc)
@@ -402,7 +409,9 @@ AC_CHECK_FUNCS(access \
 )
 
 # Look for inet_pton(). If it's not found, we'll use inet_aton() instead
-AC_SEARCH_LIBS(inet_pton, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_PTON))
+if test x"$with_ipv6" != x"no"; then
+	AC_SEARCH_LIBS(inet_pton, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_PTON))
+fi
 AC_SEARCH_LIBS(inet_aton, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_ATON))
 
 if test x"$ac_cv_search_inet_pton" = xno; then
@@ -417,7 +426,9 @@ fi
 #'
 
 # Look for inet_ntop(). If it's not found, we'll use inet_ntoa() instead
-AC_SEARCH_LIBS(inet_ntop, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_NTOP))
+if test x"$with_ipv6" != x"no"; then
+	AC_SEARCH_LIBS(inet_ntop, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_NTOP))
+fi
 AC_SEARCH_LIBS(inet_ntoa, nsl, AC_DEFINE_UNQUOTED(HAVE_INET_NTOA))
 
 if test x"$ac_cv_search_inet_ntop" = xno; then
@@ -437,8 +448,10 @@ fi
 # RedHat 6.0 has gethostbyname() in libnsl, but also has it in
 # libc.
 # Under UnixWare 7.1.0, gethostbyname() is in libsocket.
-AC_SEARCH_LIBS(gethostbyname2, resolv nsl socket,dnl
-	AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME2))
+if test x"$with_ipv6" != x"no"; then
+	AC_SEARCH_LIBS(gethostbyname2, resolv nsl socket,dnl
+		AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME2))
+fi
 AC_SEARCH_LIBS(gethostbyname, resolv nsl socket,dnl
 	AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME))
 
