@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2003, Christophe Beauregard
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: dump-dbs,v 1.1 2003-06-14 17:42:46 azummo Exp $
+
+# dumps the current database list (RAM, then ROM)
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+use Palm::Raw;
+
+StartConduit("sync");
+
+print STDERR "RAM databases.....\n";
+my $start = 0;
+while (my $dbinfo = dlp_ReadDBList(0, 0x80, $start)) {
+	print STDERR $dbinfo->{'name'}, "\n";
+	$start = $dbinfo->{'last_index'} + 1;
+}
+
+print STDERR "ROM databases.....\n";
+my $start = 0;
+while (my $dbinfo = dlp_ReadDBList(0, 0x40, $start)) {
+	print STDERR $dbinfo->{'name'}, "\n";
+	$start = $dbinfo->{'last_index'} + 1;
+}
+
+EndConduit;
+
+__END__;
+
+=head1 name
+
+dump-dbs - Dump Palm databases
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: none;
+		...
+		path: <...>/dump-dbs;
+	}
+
+=head1 DESCRIPTION
+
+This conduit dumps the Palm database list
+
+=head1 BUGS
+
+Only databases in main storage are listed, and the main storage
+isn't guaranteed to always be card zero.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
+
