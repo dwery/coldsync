@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.19 2001-07-09 10:56:58 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.20 2001-07-09 11:46:58 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -639,20 +639,6 @@ struct dlp_opendbinfo
 #define DLPRET_ReadNextRecInCategory_Rec	DLPRET_BASE
 #define DLPRETLEN_ReadNextRecInCategory_Rec	10
 
-/* XXX - Get rid of this struct */
-/* ReadNextRecInCategory() and ReadNextModifiedRecInCategory() both use
- * this
- */
-struct dlp_readrecret
-{
-	udword recid;		/* Unique record ID */
-	uword index;		/* Record index */
-	uword size;		/* Record size, in bytes */
-	ubyte attributes;	/* Record attributes (?) */
-	ubyte category;		/* Record category index */
-	const void *data;	/* Record data */
-};
-
 /** ReadNextModifiedRecInCategory **/
 #define DLPARG_ReadNextModifiedRecInCategory_Rec	DLPARG_BASE
 #define DLPARGLEN_ReadNextModifiedRecInCategory_Rec	2
@@ -972,16 +958,18 @@ extern int DlpReadRecordIDList(
 	uword *numread,
 	udword recids[]);
 /* v1.1 functions */
-extern int DlpReadNextRecInCategory(		/* XXX - bogus API */
+extern int DlpReadNextRecInCategory(
 	PConnection *pconn,
 	const ubyte handle,
 	const ubyte category,
-	struct dlp_readrecret *record);
-extern int DlpReadNextModifiedRecInCategory(	/* XXX - bogus API */
+	struct dlp_recinfo *recinfo,
+	const ubyte **data);
+extern int DlpReadNextModifiedRecInCategory(
 	PConnection *pconn,
 	const ubyte handle,
 	const ubyte category,
-	struct dlp_readrecret *record);
+	struct dlp_recinfo *recinfo,
+	const ubyte **data);
 extern int DlpReadAppPreference(
 	PConnection *pconn,
 	const udword creator,
