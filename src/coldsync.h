@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.13 2000-01-25 11:26:06 arensb Exp $
+ * $Id: coldsync.h,v 1.14 2000-01-27 02:34:59 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -360,8 +360,11 @@ extern int InstallNewFiles(struct PConnection *pconn,
 extern void usage(int argc, char *argv[]);
 extern void print_version(void);
 extern void set_debug_level(const char *str);
-/*  extern int load_config(); */	/* XXX - Obsolete */
+extern const char *mkfname(const char *dirname,
+			   const struct dlp_dbinfo *dbinfo,
+			   Bool add_suffix);
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
+extern const char *mkarchfname(const struct dlp_dbinfo *dbinfo);
 extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
 extern int append_dbentry(struct Palm *palm,
