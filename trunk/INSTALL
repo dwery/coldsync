@@ -1,4 +1,4 @@
-$Id: INSTALL,v 1.4 2001-04-15 04:32:25 arensb Exp $
+$Id: INSTALL,v 1.5 2004-02-09 09:00:58 azummo Exp $
 
 The latter part of this file is the standard GNU tool installation
 instructions. Skip them if you're used to building GNU packages.
@@ -29,6 +29,9 @@ Simple Installation
 	./configure
 	make
 	make install
+
+If you're trying to build from the CVS version, you'll need to run
+'autoconf' first.
 
 You can specify different run-time and install-time prefixes. For
 instance, if you use 'stow', you might want to install ColdSync in
