@@ -349,7 +349,7 @@ msgstr "%s: Kann \"%s\" nicht herunterladen."
 msgid "%s: Can't get child process status."
 msgstr "%s: Kann den Status des Kindprozesses nicht feststellen."
 
-#: ../libpconn/PConnection_usb.c:389
+#: ../libpconn/usb_bsd.c:133
 #, c-format
 msgid "%s: Can't get information about USB device.\n"
 msgstr "%s: Kann keine Informationen über USB-Gerät bekommen.\n"
@@ -392,7 +392,7 @@ msgstr "%s: Kann Zeichenkette nicht anlegen."
 msgid "%s: Can't open \"%s\"."
 msgstr "%s: Kann \"%s\" nicht öffnen."
 
-#: ../libpconn/PConnection_usb.c:584
+#: ../libpconn/usb_bsd.c:310
 #, c-format
 msgid "%s: Can't open \"%s\".\n"
 msgstr "%s: Kann \"%s\" nicht öffnen.\n"
@@ -404,7 +404,7 @@ msgstr "%s: Kann \"%s\" nicht öffnen.\n"
 msgid "%s: Can't open \"%s\": %d."
 msgstr "%s: Kann \"%s\" nicht öffnen: %d: %d."
 
-#: ../libpconn/PConnection_usb.c:375
+#: ../libpconn/usb_bsd.c:107
 #, c-format
 msgid "%s: Can't open USB device.\n"
 msgstr "%s: Kann USB-Gerät nicht öffnen.\n"
@@ -559,9 +559,9 @@ msgstr ""
 "%s: Conduit is running happily, but hasn't printed anything. \n"
 "And yet, I was notified. This is a bug. Please notify the maintainer.\n"
 
-#: ../libpconn/PConnection_usb.c:503
-#, c-format
-msgid "%s: Could not find HotSync endpoint on Visor.\n"
+#: ../libpconn/usb_bsd.c:245
+#, fuzzy, c-format
+msgid "%s: Could not find HotSync endpoint.\n"
 msgstr "%s: Konnte keinen Endpunkt für HotSync auf dem Visor finden.\n"
 
 #: ../src/restore.c:129
@@ -681,7 +681,7 @@ msgstr "%s: Zu viele offene Dateien. Abbruch."
 msgid "%s: Warning: Can't delete record 0x%08lx: %d."
 msgstr "%s: Warnung: Kann Datensatz 0x%08lx nicht löschen: %d."
 
-#: ../libpconn/PConnection_usb.c:420
+#: ../libpconn/usb_bsd.c:154
 #, c-format
 msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
 msgstr "%s: Warnung: Unbekannter USB-Hersteller ID %#x.\n"
@@ -782,12 +782,12 @@ msgstr "%s: select() gabe einen unerwarteten Fehler zurück."
 msgid "%s: socket() returned %d."
 msgstr "%s: Fehler beim Löschen von \"%s\"\n"
 
-#: ../libpconn/PConnection_usb.c:540
+#: ../libpconn/usb_bsd.c:274
 #, c-format
 msgid "%s: unexpected response %d to GetBytesAvailable.\n"
 msgstr "%s: Unerwartete Antwort %d auf GetBytesAvailable.\n"
 
-#: ../libpconn/PConnection.c:110
+#: ../libpconn/PConnection.c:121
 #, c-format
 msgid "%s: unknown listen type %d.\n"
 msgstr "%s: Unbekannter «listen type» %d.\n"
@@ -845,7 +845,7 @@ msgstr "Kann keinen neuen conduit_block anlegen."
 msgid "Can't allocate new configuration."
 msgstr "Kann keine neue Konfiguration erzeugen."
 
-#: ../libpconn/PConnection.c:49
+#: ../libpconn/PConnection.c:53
 #, fuzzy
 msgid "Can't allocate new connection.\n"
 msgstr "Kann keine neue Verbindung anlegen.\n"
@@ -861,7 +861,7 @@ msgstr ""
 msgid "Can't connect to Palm."
 msgstr "Keine Verbindung zum Palm\n"
 
-#: ../libpconn/PConnection_net.c:457
+#: ../libpconn/PConnection_net.c:390
 msgid "Can't connect to server.\n"
 msgstr ""
 
@@ -883,22 +883,22 @@ msgstr "Kann Zeichenkette nicht kopieren."
 msgid "Can't create \"%s\"."
 msgstr "Kann \"%s\" nicht erzeugen."
 
-#: ../src/config.c:1522
+#: ../src/config.c:1524
 #, fuzzy, c-format
 msgid "Can't create archive directory %s."
 msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
 
-#: ../src/config.c:1504
+#: ../src/config.c:1506
 #, fuzzy, c-format
 msgid "Can't create attic directory %s."
 msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
 
-#: ../src/config.c:1486
+#: ../src/config.c:1488
 #, fuzzy, c-format
 msgid "Can't create backup directory %s."
 msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
 
-#: ../src/config.c:1468
+#: ../src/config.c:1470
 #, fuzzy, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
@@ -907,7 +907,7 @@ msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
 msgid "Can't create connection to forwarding host."
 msgstr ""
 
-#: ../src/config.c:1540
+#: ../src/config.c:1542
 #, fuzzy, c-format
 msgid "Can't create install directory %s."
 msgstr "Kann Installationsverzeichnis %s nicht öffnen.\n"
@@ -999,7 +999,7 @@ msgstr "Kann Benutzerdaten nicht bekommen."
 msgid "Can't get user name from Palm."
 msgstr "Kann Benutzerdaten nicht bekommen."
 
-#: ../src/config.c:1694
+#: ../src/config.c:1696
 #, fuzzy
 msgid "Can't get user's full name."
 msgstr "Kann Benutzernamen nicht bekommen."
@@ -1337,12 +1337,12 @@ msgstr "Fehler in Systemaufruf oder Bibliotheksfunktion."
 msgid "Error opening \"%s\"."
 msgstr "Fehler beim Öffnen von \"%s\"."
 
-#: ../libpconn/netsync.c:103
+#: ../libpconn/netsync.c:202
 #, fuzzy
 msgid "Error reading NetSync packet header.\n"
 msgstr "Fehler beim Lesen der NetSync-Informationen.\n"
 
-#: ../libpconn/netsync.c:209
+#: ../libpconn/netsync.c:313
 #, fuzzy
 msgid "Error sending NetSync header.\n"
 msgstr "Fehler beim Lesen der NetSync-Informationen.\n"
@@ -1363,16 +1363,17 @@ msgstr "Fehler beim Übertragen von Datensatz 0x%08lx: %d."
 msgid "Error: "
 msgstr "Fehler: "
 
-#: ../libpconn/PConnection_serial.c:473 ../libpconn/PConnection_usb.c:344
+#: ../libpconn/PConnection_serial.c:473 ../libpconn/usb_bsd.c:94
+#: ../libpconn/usb_linux.c:63
 #, c-format
 msgid "Error: Can't open \"%s\".\n"
 msgstr "Fehler: Kann \"%s\" nicht öffnen.\n"
 
-#: ../libpconn/PConnection.c:104
+#: ../libpconn/PConnection.c:108
 msgid "Error: USB support not enabled.\n"
 msgstr ""
 
-#: ../libpconn/netsync.c:109
+#: ../libpconn/netsync.c:208
 #, c-format
 msgid "Error: only read %d bytes of NetSync packet header.\n"
 msgstr ""
@@ -1498,7 +1499,8 @@ msgstr "OK\n"
 msgid "Out of memory"
 msgstr "Kein Speicher mehr"
 
-#: ../libpconn/PConnection_serial.c:510 ../libpconn/PConnection_usb.c:321
+#: ../libpconn/PConnection_serial.c:510 ../libpconn/usb_bsd.c:68
+#: ../libpconn/usb_linux.c:85
 msgid "Please press the HotSync button.\n"
 msgstr "Bitte starten Sie den HotSync auf dem Palm.\n"
 
@@ -1733,6 +1735,11 @@ msgstr ""
 "Warnung: Kann die gewünschte Geschwindigkeit %ld bps nicht setzen.\n"
 "Benutzte Standart.\n"
 
+#: ../libpconn/usb_linux.c:59
+#, c-format
+msgid "Warning: no device on %s.  Sleeping\n"
+msgstr ""
+
 #: ../libpconn/PConnection_serial.c:465
 #, c-format
 msgid "Warning: no device on %s. Sleeping\n"
@@ -1800,21 +1807,23 @@ msgstr ""
 msgid "[generic]: Aborting."
 msgstr "[generic]: Abbruch."
 
-#: ../libpconn/PConnection_usb.c:526
-msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+#: ../libpconn/usb_bsd.c:380
+#, fuzzy
+msgid "bsd_usb_read: trying to fill a non-empty buffer.\n"
+msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
+
+#: ../libpconn/usb_bsd.c:262
+#, fuzzy
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
 
-#: ../libpconn/PConnection_usb.c:463
+#: ../libpconn/usb_bsd.c:202
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 
 #: ../src/GenericConduit.cc:340
 msgid "pdb_Download() failed."
 msgstr "Fehler in pdb_Download()."
-
-#: ../libpconn/PConnection_usb.c:164
-msgid "usb: trying to fill a non-empty buffer.\n"
-msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 
 #, fuzzy
 #~ msgid "Lost connection with Palm."

@@ -366,7 +366,7 @@ msgstr "%s: Impossible de télécharger « %s »."
 msgid "%s: Can't get child process status."
 msgstr "%s: Je n'arrive pas à connaitre l'état du processus fils."
 
-#: ../libpconn/PConnection_usb.c:389
+#: ../libpconn/usb_bsd.c:133
 #, c-format
 msgid "%s: Can't get information about USB device.\n"
 msgstr "%s: Je n'arrive pas à obtenir les informations du port USB.\n"
@@ -410,7 +410,7 @@ msgstr "%s: Impossible d'allouer une copie d'une chaîne."
 msgid "%s: Can't open \"%s\"."
 msgstr "%s: Impossible d'ouvrir « %s »."
 
-#: ../libpconn/PConnection_usb.c:584
+#: ../libpconn/usb_bsd.c:310
 #, c-format
 msgid "%s: Can't open \"%s\".\n"
 msgstr "%s: Impossible d'ouvrir « %s ».\n"
@@ -422,7 +422,7 @@ msgstr "%s: Impossible d'ouvrir « %s ».\n"
 msgid "%s: Can't open \"%s\": %d."
 msgstr "%s: Impossible d'ouvrir « %s »: %d."
 
-#: ../libpconn/PConnection_usb.c:375
+#: ../libpconn/usb_bsd.c:107
 #, c-format
 msgid "%s: Can't open USB device.\n"
 msgstr "%s: Je n'arrive pas à ouvrir le port USB.\n"
@@ -574,9 +574,9 @@ msgstr ""
 "Pourtant, on m'a averti. Ceci est un bug. Veuillez en informer le\n"
 "mainteneur."
 
-#: ../libpconn/PConnection_usb.c:503
-#, c-format
-msgid "%s: Could not find HotSync endpoint on Visor.\n"
+#: ../libpconn/usb_bsd.c:245
+#, fuzzy, c-format
+msgid "%s: Could not find HotSync endpoint.\n"
 msgstr "%s: Je n'arrive pas à établir la connection HotSync avec le Visor.\n"
 
 #: ../src/restore.c:129
@@ -697,7 +697,7 @@ msgstr ""
 msgid "%s: Warning: Can't delete record 0x%08lx: %d."
 msgstr "%s: Avertissement: Impossible d'effacer l'enregistrement 0x%08lx: %d."
 
-#: ../libpconn/PConnection_usb.c:420
+#: ../libpconn/usb_bsd.c:154
 #, c-format
 msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
 msgstr "%s: Avertissement: Numéro de vendeur USB %#x inattendu.\n"
@@ -805,12 +805,12 @@ msgstr ""
 msgid "%s: socket() returned %d."
 msgstr "%s: socket() a retourné %d."
 
-#: ../libpconn/PConnection_usb.c:540
+#: ../libpconn/usb_bsd.c:274
 #, c-format
 msgid "%s: unexpected response %d to GetBytesAvailable.\n"
 msgstr "%s: réponse inattendue à GetBytesAvailable: %d.\n"
 
-#: ../libpconn/PConnection.c:110
+#: ../libpconn/PConnection.c:121
 #, c-format
 msgid "%s: unknown listen type %d.\n"
 msgstr "%s: l'argument %d est d'un type inconnu.\n"
@@ -866,7 +866,7 @@ msgstr "Impossible d'allouer un conduit_block."
 msgid "Can't allocate new configuration."
 msgstr "Impossible d'allouer une nouvelle configuration."
 
-#: ../libpconn/PConnection.c:49
+#: ../libpconn/PConnection.c:53
 msgid "Can't allocate new connection.\n"
 msgstr "J'arrive pas à allouer une nouvelle connexion.\n"
 
@@ -880,7 +880,7 @@ msgstr "Je n'arrive pas à allouer un « struct Palm »."
 msgid "Can't connect to Palm."
 msgstr "Impossible de se connecter au Palm."
 
-#: ../libpconn/PConnection_net.c:457
+#: ../libpconn/PConnection_net.c:390
 msgid "Can't connect to server.\n"
 msgstr "Impossible de se connecter au serveur.\n"
 
@@ -901,22 +901,22 @@ msgstr "Impossible de copier une chaîne."
 msgid "Can't create \"%s\"."
 msgstr "Impossible de créer « %s »."
 
-#: ../src/config.c:1522
+#: ../src/config.c:1524
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'archive %s."
 
-#: ../src/config.c:1504
+#: ../src/config.c:1506
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Je n'arrive pas à créer le répertoire grenier %s."
 
-#: ../src/config.c:1486
+#: ../src/config.c:1488
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de backup %s."
 
-#: ../src/config.c:1468
+#: ../src/config.c:1470
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
@@ -925,7 +925,7 @@ msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
 msgid "Can't create connection to forwarding host."
 msgstr "Je n'arrive pas à lire l'index des enregistrements."
 
-#: ../src/config.c:1540
+#: ../src/config.c:1542
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'installation %s."
@@ -1012,7 +1012,7 @@ msgstr "Impossible d'obtenir les informations sur l'utilisateur."
 msgid "Can't get user name from Palm."
 msgstr "Impossible d'obtenir le nom de l'utilisateur du Palm."
 
-#: ../src/config.c:1694
+#: ../src/config.c:1696
 msgid "Can't get user's full name."
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur."
 
@@ -1336,11 +1336,11 @@ msgstr "Erreur dans un appel de système ou une fonction dans une bibliothèque"
 msgid "Error opening \"%s\"."
 msgstr "Erreur lors de l'ouverture de « %s »."
 
-#: ../libpconn/netsync.c:103
+#: ../libpconn/netsync.c:202
 msgid "Error reading NetSync packet header.\n"
 msgstr "Erreur lors de la lecture de l'entête d'un paquet NetSync.\n"
 
-#: ../libpconn/netsync.c:209
+#: ../libpconn/netsync.c:313
 msgid "Error sending NetSync header.\n"
 msgstr "Erreur lors de l'envoi d'une entête de paquet NetSync.\n"
 
@@ -1359,16 +1359,17 @@ msgstr "Erreur lors de l'installation de l'enregistrement 0x%08lx: %d."
 msgid "Error: "
 msgstr "Erreur: "
 
-#: ../libpconn/PConnection_serial.c:473 ../libpconn/PConnection_usb.c:344
+#: ../libpconn/PConnection_serial.c:473 ../libpconn/usb_bsd.c:94
+#: ../libpconn/usb_linux.c:63
 #, c-format
 msgid "Error: Can't open \"%s\".\n"
 msgstr "Erreur: Impossible d'ouvrir « %s ».\n"
 
-#: ../libpconn/PConnection.c:104
+#: ../libpconn/PConnection.c:108
 msgid "Error: USB support not enabled.\n"
 msgstr ""
 
-#: ../libpconn/netsync.c:109
+#: ../libpconn/netsync.c:208
 #, c-format
 msgid "Error: only read %d bytes of NetSync packet header.\n"
 msgstr ""
@@ -1493,7 +1494,8 @@ msgstr "OK\n"
 msgid "Out of memory"
 msgstr "Plus de mémoire"
 
-#: ../libpconn/PConnection_serial.c:510 ../libpconn/PConnection_usb.c:321
+#: ../libpconn/PConnection_serial.c:510 ../libpconn/usb_bsd.c:68
+#: ../libpconn/usb_linux.c:85
 msgid "Please press the HotSync button.\n"
 msgstr "Appuyez sur le bouton HotSync.\n"
 
@@ -1736,6 +1738,11 @@ msgstr ""
 "Avertissement: ne peux pas transmettre à la vitesse que vous avez demandé\n"
 "(%ld o/s). Je mettrai la vitesse de défaut.\n"
 
+#: ../libpconn/usb_linux.c:59
+#, c-format
+msgid "Warning: no device on %s.  Sleeping\n"
+msgstr ""
+
 #: ../libpconn/PConnection_serial.c:465
 #, c-format
 msgid "Warning: no device on %s. Sleeping\n"
@@ -1803,21 +1810,23 @@ msgstr ""
 msgid "[generic]: Aborting."
 msgstr ""
 
-#: ../libpconn/PConnection_usb.c:526
-msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+#: ../libpconn/usb_bsd.c:380
+#, fuzzy
+msgid "bsd_usb_read: trying to fill a non-empty buffer.\n"
+msgstr "usb: tentat de remplir un tampon qui n'est pas vide.\n"
+
+#: ../libpconn/usb_bsd.c:262
+#, fuzzy
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable a échoué"
 
-#: ../libpconn/PConnection_usb.c:463
+#: ../libpconn/usb_bsd.c:202
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo a échoué"
 
 #: ../src/GenericConduit.cc:340
 msgid "pdb_Download() failed."
 msgstr "pdb_Download() a échoué."
-
-#: ../libpconn/PConnection_usb.c:164
-msgid "usb: trying to fill a non-empty buffer.\n"
-msgstr "usb: tentat de remplir un tampon qui n'est pas vide.\n"
 
 #, fuzzy
 #~ msgid "Lost connection with Palm."

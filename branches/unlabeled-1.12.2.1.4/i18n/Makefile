@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12.2.1 2001-06-30 07:45:12 arensb Exp $
+# $Id: Makefile,v 1.12.2.1.4.1 2001-07-28 18:05:33 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -22,6 +22,8 @@ INPUTFILES =	\
 	${TOP}/libpconn/PConnection_net.c \
 	${TOP}/libpconn/PConnection_serial.c \
 	${TOP}/libpconn/PConnection_usb.c \
+	${TOP}/libpconn/usb_bsd.c \
+	${TOP}/libpconn/usb_linux.c \
 	${TOP}/libpconn/cfmakeraw.c \
 	${TOP}/libpconn/cmp.c \
 	${TOP}/libpconn/dlp.c \

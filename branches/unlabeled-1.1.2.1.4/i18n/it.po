@@ -362,7 +362,7 @@ msgstr "%s: Non posso ricevere \"%s\"."
 msgid "%s: Can't get child process status."
 msgstr "%s: Non posso acquisire lo stato del processo figlio."
 
-#: ../libpconn/PConnection_usb.c:389
+#: ../libpconn/usb_bsd.c:133
 #, c-format
 msgid "%s: Can't get information about USB device.\n"
 msgstr "%s: Non posso acquisire informazioni sul device USB.\n"
@@ -404,7 +404,7 @@ msgstr "%s: Non posso fare il malloc() della copia della stringa."
 msgid "%s: Can't open \"%s\"."
 msgstr "%s: Non posso aprire \"%s\"."
 
-#: ../libpconn/PConnection_usb.c:584
+#: ../libpconn/usb_bsd.c:310
 #, c-format
 msgid "%s: Can't open \"%s\".\n"
 msgstr "%s: Non posso aprire \"%s\".\n"
@@ -416,7 +416,7 @@ msgstr "%s: Non posso aprire \"%s\".\n"
 msgid "%s: Can't open \"%s\": %d."
 msgstr "%s: Non posso aprire \"%s\": %d."
 
-#: ../libpconn/PConnection_usb.c:375
+#: ../libpconn/usb_bsd.c:107
 #, c-format
 msgid "%s: Can't open USB device.\n"
 msgstr "%s: Non posso aprire il device USB.\n"
@@ -566,9 +566,9 @@ msgstr ""
 "Pero' sono stato avvertito. Questo e' un bug. Per favore, avverti il\n"
 "mantainer del progetto."
 
-#: ../libpconn/PConnection_usb.c:503
-#, c-format
-msgid "%s: Could not find HotSync endpoint on Visor.\n"
+#: ../libpconn/usb_bsd.c:245
+#, fuzzy, c-format
+msgid "%s: Could not find HotSync endpoint.\n"
 msgstr "%s: Non posso trovare l'endpoint HotSync sul Visor.\n"
 
 #: ../src/restore.c:129
@@ -689,7 +689,7 @@ msgstr "%s: Troppi descrittori di file aperti. Interrompo."
 msgid "%s: Warning: Can't delete record 0x%08lx: %d."
 msgstr "%s: Attenzione: Non posso cancellare il record 0x%08lx: %d."
 
-#: ../libpconn/PConnection_usb.c:420
+#: ../libpconn/usb_bsd.c:154
 #, c-format
 msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
 msgstr "%s: Attenzione: ID del produttore USB inatteso %#x.\n"
@@ -865,7 +865,7 @@ msgstr "Non posso allocare la struttura Palm."
 msgid "Can't connect to Palm."
 msgstr "Non posso collegarmi al Palm."
 
-#: ../libpconn/PConnection_net.c:457
+#: ../libpconn/PConnection_net.c:390
 msgid "Can't connect to server.\n"
 msgstr "Non posso collegarmi al server.\n"
 
@@ -1314,11 +1314,11 @@ msgstr "Errore durante una chiamata di sistema o di libreria."
 msgid "Error opening \"%s\"."
 msgstr "Errore durante l'apertura di \"%s\"."
 
-#: ../libpconn/netsync.c:103
+#: ../libpconn/netsync.c:202
 msgid "Error reading NetSync packet header.\n"
 msgstr "Errore durante la lettura dell'header del packet NetSync.\n"
 
-#: ../libpconn/netsync.c:209
+#: ../libpconn/netsync.c:313
 msgid "Error sending NetSync header.\n"
 msgstr "Errore durante l'invio dell'header NetSync.\n"
 
@@ -1472,7 +1472,8 @@ msgstr "OK\n"
 msgid "Out of memory"
 msgstr "Memoria esaurita"
 
-#: ../libpconn/PConnection_serial.c:510 ../libpconn/PConnection_usb.c:321
+#: ../libpconn/PConnection_serial.c:510 ../libpconn/usb_bsd.c:68
+#: ../libpconn/usb_linux.c:85
 msgid "Please press the HotSync button.\n"
 msgstr "Premi il tasto HotSync\n"
 
@@ -1724,6 +1725,11 @@ msgstr ""
 "Attenzione: non posso usare la velocita' che hai richiesto (%ld bps).\n"
 "Uso la velocita' di default.\n"
 
+#: ../libpconn/usb_linux.c:59
+#, fuzzy, c-format
+msgid "Warning: no device on %s.  Sleeping\n"
+msgstr "Attenzione: non ho trovato alcun device su %s. Torno in attesa\n"
+
 #: ../libpconn/PConnection_serial.c:465
 #, c-format
 msgid "Warning: no device on %s. Sleeping\n"
@@ -1790,21 +1796,23 @@ msgstr ""
 msgid "[generic]: Aborting."
 msgstr "[generic]: Operazione interrotta."
 
-#: ../libpconn/PConnection_usb.c:526
-msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
+#: ../libpconn/usb_bsd.c:380
+#, fuzzy
+msgid "bsd_usb_read: trying to fill a non-empty buffer.\n"
+msgstr "usb: si sta riempendo un buffer gia' pieno.\n"
+
+#: ../libpconn/usb_bsd.c:262
+#, fuzzy
+msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable fallito"
 
-#: ../libpconn/PConnection_usb.c:463
+#: ../libpconn/usb_bsd.c:202
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo fallito"
 
 #: ../src/GenericConduit.cc:340
 msgid "pdb_Download() failed."
 msgstr "pdb_Download() fallito"
-
-#: ../libpconn/PConnection_usb.c:164
-msgid "usb: trying to fill a non-empty buffer.\n"
-msgstr "usb: si sta riempendo un buffer gia' pieno.\n"
 
 #~ msgid "Can't load configuration"
 #~ msgstr "Non posso caricare la configurazione"
