@@ -20,56 +20,29 @@ void int_handler(int value);
 void stty_dump(struct termios *term);
 int open_tty(char *fname, speed_t speed);
 
-static long speeds[] = {
-	B300,
-	B600,
-	B1200,
-	B1800,
-	B2400,
-	B4800,
-	B7200,
-	B9600,
-	B14400,
-	B19200,
-	B28800,
-	B38400,
 #if 0
-	B57600,
-	B76800,
-	B115200,
-	B230400,
+static long speeds[] = {
+	B300,	B600,	B1200,	B1800,	B2400,	B4800,
+	B7200,	B9600,	B14400,	B19200,	B28800,	B38400,
+#if 0
+	B57600,	B76800,	B115200,B230400,
 #endif
 };
 #define NUM_SPEEDS	sizeof(speeds)/sizeof(long)
-
-ubyte ack[] = {
-	0xbe, 0xef, 0xed, 0x03, 0x03, 0x02, 0x00, 0x04,
-	0xff, 0xa5, 0x02, 0xc0, 0x00, 0x0a, 0x1a, 0x85,
-};
-ubyte dlp[] = {
-	0xbe, 0xef, 0xed, 0x03, 0x03, 0x02, 0x00, 0x0e,
-	0x02, 0xb2, 0x01, 0xc0, 0x00, 0x0a, 0x16, 0x01,
-	0xa0, 0x00, 0x00, 0x04, 0x80, 0x00, 0x00, 0x00,
-	0xd3, 0xaa,
-};
-ubyte dlp_endOfSync[] = {
-	0x2f, 0x01, 0x20, 0x02, 0x00, 0x00,
-};
+#endif	/* 0 */
 
 int
 main(int argc, char *argv[])
 {
-	int i;
+/*  	int i; */
 	int err;
 	int fd;
 	struct termios term;
-	struct cmp_packet pack;
 static ubyte inbuf[1024];
-static ubyte outbuf[1024];
+/*  static ubyte outbuf[1024]; */
 struct cmp_packet cmp_in;
 struct cmp_packet cmp_out;
-fd_set in_fds, out_fds;
-	uword dlp_arg; 
+	struct dlp_sysinfo sysinfo; 
 
 	if (argc != 2)
 	{
@@ -109,24 +82,19 @@ tcgetattr(fd, &term);
 stty_dump(&term);
 /*  sleep(2); */
 
-fprintf(stderr, "Adding a log message.\n");
-if ((err = DlpAddSyncLogEntry(fd, "Hello, world!")) < 0)
-fprintf(stderr, "DlpAddSyncLogEntry failed: %d\n", err);
+	fprintf(stderr, "Adding a log message.\n");
+	if ((err = DlpAddSyncLogEntry(fd, "Hello, world!")) < 0)
+		fprintf(stderr, "DlpAddSyncLogEntry failed: %d\n", err);
+
+	/* Get system information */
+	fprintf(stderr, "Getting system information\n");
+	if ((err = DlpReadSysInfo(fd, &sysinfo)) < 0)
+		fprintf(stderr, "DlpReadSysInfo failed: %d\n", err);
 
 	fprintf(stderr, "writing DLP\n");
 	if ((err = DlpEndOfSync(fd, 0)) < 0)
 		fprintf(stderr, "DlpEndOfSync failed: %d\n", err);
-#if 0
-	if ((err = dlp_send_req(fd, DLPREQ_ENDOFSYNC, 1)) < 0)
-		fprintf(stderr, "Error writing request header\n");
-	dlp_arg = 0;
-	if ((err = dlp_send_arg(fd, 0x20, (ubyte *) &dlp_arg, 2)) < 0)
-		fprintf(stderr, "Error writing request arg\n");
-/*  	if ((err = padp_send(fd, dlp_endOfSync, sizeof(dlp))) < 0) */
-/*  		perror("write(DLP)"); */
-#endif	/* 0 */
-	fprintf(stderr, "wrote DLP command\n");
-/*	padp_recv(fd, inbuf, 1023);*/	/* PADP ACK */
+	fprintf(stderr, "wrote DLP EndOfSync\n");
 
 fprintf(stderr, "Waiting for anything else\n");
 while ((err = read(fd, inbuf, 1)) == 1)
@@ -136,99 +104,6 @@ while ((err = read(fd, inbuf, 1)) == 1)
 fprintf(stderr, "read() returned %d\n", err);
 
 	exit(0);
-}
-
-long
-find_highest_speed(int fd, struct termios *term)
-{
-	int i;
-	int err;
-	long bestspeed = -1;
-
-	for (i = NUM_SPEEDS-1; i >= 0; i--)
-	{
-		printf("Trying %ld baud...", speeds[i]);
-		err = cfsetspeed(term, speeds[i]);
-		if (err < 0)
-		{
-			perror("cfsetspeed");
-			continue;
-		}
-		err = tcsetattr(fd, TCSANOW, term);
-		if (err < 0)
-		{
-			perror("tcsetattr");
-			continue;
-		}
-		printf("ok\n");
-		if (bestspeed < 0)
-			bestspeed = speeds[i];
-	}
-	return bestspeed;
-}
-
-long
-negotiate_speed(int fd, struct termios *term)
-{
-	int i;
-	int err;
-	struct cmp_packet pack;
-	struct timeval tp;
-
-gettimeofday(&tp, NULL);
-fprintf(stderr, "===== 1 %ld:%ld\n", tp.tv_sec, tp.tv_usec);
-
-cmp_recv(fd, &pack);
-
-gettimeofday(&tp, NULL);
-fprintf(stderr, "===== 2 %ld:%ld\n", tp.tv_sec, tp.tv_usec);
-
-pack.type = CMP_TYPE_INIT;
-pack.flags = CMP_INITFLAG_CHANGERATE;
-pack.rate = 57600/*9600*/;
-pack.ver_major = 0/*1*/;
-pack.ver_minor = 0;
-
-gettimeofday(&tp, NULL);
-fprintf(stderr, "===== 3 %ld:%ld\n", tp.tv_sec, tp.tv_usec);
-
-cmp_send(fd, &pack);
-
-gettimeofday(&tp, NULL);
-fprintf(stderr, "===== 4 %ld:%ld\n", tp.tv_sec, tp.tv_usec);
-
-cmp_recv(fd, &pack);
-err = cfsetspeed(term, 57600);
-if (err < 0)
-{
-	perror("cfsetspeed");
-	return -1;
-}
-err = tcsetattr(fd, TCSANOW, term);
-if (err < 0)
-{
-	perror("tcsetattr");
-	return -1;
-}
-
-gettimeofday(&tp, NULL);
-fprintf(stderr, "===== 5 %ld:%ld\n", tp.tv_sec, tp.tv_usec);
-
-#if 0
-	cmp_recv(fd, &pack);		/* Get the wakeup packet */
-	for (i = NUM_SPEEDS-1; i >= 0; i--)
-	{
-		pack.type = CMP_TYPE_INIT;
-		pack.flags = CMP_INITFLAG_CHANGERATE;
-		pack.rate = speeds[i];
-		cmp_send(fd, &pack);	/* Make a speed counteroffer */
-		cmp_recv(fd, &pack);	/* Await response */
-
-		if (pack.type == CMP_TYPE_INIT)
-			return speeds[i];
-	}
-#endif
-	return -1;
 }
 
 void
