@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.159 2002-12-28 22:41:21 arensb Exp $
+dnl # $Id: configure.in,v 1.160 2003-02-21 14:13:07 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -697,14 +697,18 @@ AC_MSG_CHECKING([for socks behind the sofa])
 AC_MSG_RESULT([no])
 
 ## Developer-only options
-AC_DIVERT_PUSH(AC_DIVERSION_NOTICE)dnl
-ac_help="$ac_help
-[Options for developers:]"
-AC_DIVERT_POP()dnl
+# The string "Options for developers", below, isn't properly speaking part
+# of the help string for "--with-efence", but rather a heading for the
+# output of './configure --help'.
+# Unfortunately, the way this was done for autoconf 2.13 broke under
+# autoconf 2.53, so we revert to a simpler, albeit uglier hack. This
+# heading must remain with the first developer option.
 
 # ElectricFence (optional)
 AC_ARG_WITH(efence,dnl
-[  --with-efence           Use Electric Fence memory checking library],dnl
+
+Options for developers:
+  --with-efence           Use Electric Fence memory checking library],dnl
 [if test x"$withval" != xno; then
 	AC_CHECK_LIB(efence,malloc)
 	if test "$ac_cv_lib_efence_malloc" = yes; then
