@@ -8,10 +8,11 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.2 1999-02-22 11:04:49 arensb Exp $
+ * $Id: util.c,v 1.3 1999-02-24 13:05:28 arensb Exp $
  */
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
+#include "config.h"
 #include "util.h"
 #include "palm/pdb.h"	/* For EPOCH_1904 */
 
@@ -131,8 +132,13 @@ time_dlp2time_t(const struct dlp_time *dlpt)
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 	tm.tm_isdst = 0;
+/* XXX - FreeBSD has this, Solaris doesn't. Detect it, or do without */
+#if HAVE_TM_ZONE
 	tm.tm_gmtoff = 0;
 	tm.tm_zone = NULL;
+#else
+#warning You do not have tm_zone
+#endif
 
 	return mktime(&tm);
 }
@@ -159,8 +165,11 @@ time_dlp2palmtime(const struct dlp_time *dlpt)
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 	tm.tm_isdst = 0;
+/* XXX - FreeBSD has this, Solaris doesn't. Detect it, or do without */
+#if HAVE_TM_ZONE
 	tm.tm_gmtoff = 0;
 	tm.tm_zone = NULL;
+#endif
 
 	now = mktime(&tm);
 	now += EPOCH_1904;
