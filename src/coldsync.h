@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.34 2000-11-14 16:24:55 arensb Exp $
+ * $Id: coldsync.h,v 1.35 2000-11-14 16:59:34 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -59,6 +59,23 @@ struct userinfo
 
 /* Palm
  * Information about the Palm being currently synced.
+ */
+/* XXX - This needs to be greatly expanded, and moved into its own file.
+ * The information in this struct is a source of confusion and wasted time
+ * for the user: the code to initialize this data takes a long time, and
+ * obfuscates the code (e.g., in run_mode_*()).
+ * A better approach would be to effectively turn this into a C++ object:
+ * write accessor functions for all of the information in here. These
+ * accessors read data from the Palm only as necessary: the first time
+ * around, they query the Palm; on subsequent calls, they simply return the
+ * cached information.
+ * Presumably, this means that 'struct Palm' will need to contain a pointer
+ * to the appropriate PConnection, so that it can fetch data as necessary.
+ * For things like 'dblist', it might even be desirable to ListDBs(), which
+ * fetches information about all databases, be separate from other
+ * functions, which only care about one database: only run DlpReadDBList()
+ * as often as necessary, and keep track of whether or not we have
+ * retrieved information about all databases.
  */
 struct Palm
 {
@@ -223,6 +240,11 @@ typedef struct crea_type_t {
  *   to wherever it likes. Some other conduit is responsible for putting
  *   the information in that .pdb file. This is useful for implementing
  *   "Handheld Overwrites Desktop" rules.
+
+ * - 'Install' (or pre-install) runs before a database is uploaded to the
+ *   Palm. It may modify its input, upload records manually (it runs while
+ *   a connection is active), or whatever it likes. Anything left in
+ *   ~/.palm/install after the Install conduits have run gets uploaded.
  */
 typedef struct conduit_block
 {
