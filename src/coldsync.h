@@ -2,7 +2,11 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.4 1999-08-25 08:20:00 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: coldsync.h,v 1.5 1999-09-04 20:57:55 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -39,7 +43,8 @@ struct Palm
 
 	/* Database information */
 	/* XXX - There should probably be one array of these per memory
-	 * card.
+	 * card. Or perhaps 'struct dlp_dbinfo' should say which memory
+	 * card it is on.
 	 */
 	int num_dbs;			/* # of databases */
 	struct dlp_dbinfo *dblist;	/* Database list */
@@ -119,6 +124,7 @@ extern char user_fullname[DLPCMD_USERNAME_LEN];
 /* XXX - There's probably a better place to put them */
 extern char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 extern char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
+extern char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 extern char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 extern char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
@@ -129,15 +135,15 @@ extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
 extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
 extern int HandleDB(struct PConnection *pconn, struct Palm *palm,
 		    const int dbnum);
-/*extern int Backup(struct PConnection *pconn,
-		  struct Palm *palm,
-		  struct dlp_dbinfo *dbinfo,
-		  char *bakfname);*/
 extern int Backup(struct PConnection *pconn,
 		  struct Palm *palm);
 extern int Restore(struct PConnection *pconn,
 		  struct Palm *palm);
+extern int InstallNewFiles(struct PConnection *pconn,
+			   struct Palm *palm);
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
+extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
+				       const char *name);
 
 #endif	/* _coldsync_h_ */
 
