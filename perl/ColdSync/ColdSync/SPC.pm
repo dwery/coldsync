@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.21 2003-06-14 21:43:20 azummo Exp $
+# $Id: SPC.pm,v 1.22 2003-06-15 11:53:37 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.21 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.22 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -1281,6 +1281,7 @@ sub _dlp_ReadRecord
 	dlp_ResetRecordIndex($dbh);
 
 Resets the modified index.
+
 =cut
 #'
 sub dlp_ResetRecordIndex($) {
@@ -1311,9 +1312,9 @@ sub dlp_ReadNextModifiedRec($) {
 			'data' => pack("C", $dbh),
 		});
 
-	# err is non zero when we reach the last record
 	return undef unless defined $err;
-	return undef unless $err != 0;
+	# err is non zero when we reach the last record
+	return undef if $err != 0;
 
 	return _unpackRecord(@argv);
 }
@@ -1337,9 +1338,9 @@ sub dlp_ReadNextRecInCategory($$) {
 			'data'  => pack("C C", $dbh, $catno)
 		});
 
-	# err is non zero when we reach the last record
 	return undef unless defined $err;
-	return undef unless $err != 0;
+	# err is non zero when we reach the last record
+	return undef if $err != 0;
 
 	return _unpackRecord(@argv);
 }
@@ -1363,9 +1364,9 @@ sub dlp_ReadNextModifiedRecInCategory($$) {
 			'data'  => pack("C C", $dbh, $catno)
 		});
 
-	# err is non zero when we reach the last record
 	return undef unless defined $err;
-	return undef unless $err != 0;
+	# err is non zero when we reach the last record
+	return undef if $err != 0;
 
 	return _unpackRecord(@argv);
 }
