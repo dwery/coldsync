@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.1 1999-01-31 22:25:58 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.2 1999-02-04 10:01:46 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -179,8 +179,8 @@ struct dlp_cardinfo
 	udword free_ram;	/* Free RAM size */
 	ubyte cardname_size;	/* Size of card name string */
 	ubyte manufname_size;	/* Size of manufacturer name string */
-	char *cardname;
-	char *manufname;
+	unsigned char *cardname;
+	unsigned char *manufname;
 };
 
 struct dlp_cardinfo_ext		/* 1.1 extension */
@@ -241,7 +241,7 @@ struct dlp_dbinfo
 	dlpExitNormal = 0,	/* Normal termination */
 	dlpExitNoMemory = 1,	/* Out of memory */
 	dlpExitUserCancel = 2,	/* User cancelled */
-	dlpExitOther = 3,	/* None of the above */
+	dlpExitOther = 3	/* None of the above */
 } dlpEndOfSyncStatus;	/* XXX - Bogus name */
 
 #ifdef __cplusplus
@@ -250,14 +250,14 @@ extern "C" {
 
 /* DLP command functions */
 extern int DlpReadUserInfo(int fd, struct dlp_userinfo *userinfo);
-extern int DlpWriteUserInfo(int fd, struct dlp_setuserinfo *userinfo);
+extern int DlpWriteUserInfo(int fd, const struct dlp_setuserinfo *userinfo);
 extern int DlpReadSysInfo(int fd, struct dlp_sysinfo *sysinfo);
 extern int DlpGetSysDateTime(int fd, struct dlp_time *ptime);
-extern int DlpSetSysDateTime(int fd, struct dlp_time *ptime);
+extern int DlpSetSysDateTime(int fd, const struct dlp_time *ptime);
 extern int DlpReadStorageInfo(int fd, int card);	/* XXX - API */
 extern int DlpReadDBList(int fd, ubyte flags, int card, uword start); /* XXX - API */
-extern int DlpAddSyncLogEntry(int fd, char *msg);
-extern int DlpEndOfSync(int fd, dlpEndOfSyncStatus status);
+extern int DlpAddSyncLogEntry(int fd, const char *msg);
+extern int DlpEndOfSync(int fd, const dlpEndOfSyncStatus status);
 
 #ifdef  __cplusplus
 }
