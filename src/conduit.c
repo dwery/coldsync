@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.70 2004-10-11 04:25:26 christophe Exp $
+ * $Id: conduit.c,v 2.71 2004-10-11 04:28:25 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -536,7 +536,7 @@ run_conduit(struct Palm *palm,
 		"PDA-Snum", palm_serial(palm));
 	add_header(&headers, &num_headers, &max_headers,
 		"PDA-Username", palm_username(palm));
-	sprintf(numbuf, "%d", palm_userid(palm));
+	sprintf(numbuf, "%d", (int) palm_userid(palm));
 	add_header(&headers, &num_headers, &max_headers,
 		"PDA-UID", numbuf);
 
