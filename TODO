@@ -1,3 +1,8 @@
+- Consider allowing database-at-a-time syncing.
+  Databases (or files?) named on the command line.
+- Consider "none" database type, to specify conduits to run without an
+  attached database. Preferably also allow user to specify whether it
+  should run before or after other conduits.
 - Bug: run_mode_Daemon() apparently ignores serial number when looking
   in /usr/local/etc/palms. When syncing a visor, it recognizes
 
@@ -9,7 +14,6 @@
 
 	109X7B28GC66-F|Gorko the Invincible|31337|arensb|Palm III|/folks/arensb/.coldsyncrc.test
 - Update FAQ.
-- Find someone to try a Japanese translation.
 - Rethink the Dlp*() functions.
 	They return a DLPSTAT_* error code, but this makes
   error-checking rather hairy. Would it be better if they just set
@@ -17,7 +21,6 @@
 - Consider adding a "transient" keyword to listen{} blocks, to
   indicate that failed open()s mean that the Visor hasn't been plugged
   in yet, so just sleep and retry until it's okay.
-- Document how to use ColdSync in daemon mode (getty, inetd, usbd.conf)
 - Under Solaris, defining _XPG4_2 might induce standards-compliance,
   and make things happier. There's a comment in PConnection_net.c that
   says that this causes all sorts of other problems, though.
@@ -51,18 +54,6 @@
   specify a network address and mask, e.g., "192.168.0.0/16"; or a
   network name, to be looked up with getnetbyname() (in this case,
   though, how do you get the mask?).
-- Would be nice to allow conduit headers consisting entirely of
-  whitespace.
-	Actually, it appears that this already works: you can quote an
-  argument, e.g.
-	arguments:
-	    Foo: "   ";
-  and apparently the parser will do the Right Thing. Furthermore,
-  IIRC, the conduit spec says that there is a single space after the
-  colon following the argument name. Hence, spec-compliant parsers
-  should be able to do the Right Thing. The only problem occurs when
-  you allow newlines in strings.
-	Test this, though.
 - "System MIDI Sounds.pdb" complains that
 	I have a new, deleted record that is neither archived nor expunged
 	What am I supposed to do?
