@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 2.1.2\n"
-"POT-Creation-Date: 2001-06-21 10:59-0400\n"
+"POT-Creation-Date: 2001-06-30 02:41-0400\n"
 "PO-Revision-Date: 2001-06-19 04:03:+0100\n"
 "Last-Translator: Alessandro Gatti <rigel@telemail.it>\n"
 "Language-Team: it <it@li.org>\n"
@@ -315,7 +315,7 @@ msgstr "%s: Non posso allocare un nuovo record."
 msgid "%s: Can't append new record to database: %d."
 msgstr "%s: Non posso aggiungere nuovi record in coda al database: %d."
 
-#: ../src/backup.c:695
+#: ../src/backup.c:713
 #, c-format
 msgid "%s: Can't back up \"%s\"."
 msgstr "%s: Non posso archiviare \"%s\"."
@@ -377,7 +377,7 @@ msgstr "%s: Non posso inserire il record 0x%08lx."
 msgid "%s: Can't load \"%s\"."
 msgstr "%s: Non posso caricare \"%s\"."
 
-#: ../src/install.c:271 ../src/install.c:527
+#: ../src/install.c:267 ../src/install.c:523
 #, c-format
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Non posso caricare il database \"%s\"."
@@ -398,7 +398,7 @@ msgid "%s: Can't malloc copy of string."
 msgstr "%s: Non posso fare il malloc() della copia della stringa."
 
 #: ../src/GenericConduit.cc:2446 ../src/archive.c:68 ../src/archive.c:127
-#: ../src/install.c:261 ../src/install.c:426 ../src/install.c:517
+#: ../src/install.c:257 ../src/install.c:422 ../src/install.c:513
 #: ../src/parser.y:1084
 #, c-format
 msgid "%s: Can't open \"%s\"."
@@ -426,7 +426,7 @@ msgstr "%s: Non posso aprire il device USB.\n"
 msgid "%s: Can't open directory \"%s\"."
 msgstr "%s: Non posso aprire la directory \"%s\"."
 
-#: ../src/install.c:404 ../src/install.c:469
+#: ../src/install.c:400 ../src/install.c:465
 #, c-format
 msgid "%s: Can't open install directory."
 msgstr "%s: Non posso aprire la directory di installazione."
@@ -436,17 +436,17 @@ msgstr "%s: Non posso aprire la directory di installazione."
 msgid "%s: Can't read %s backup file."
 msgstr "%s: Non posso leggere il file di backup %s."
 
-#: ../src/backup.c:161
+#: ../src/backup.c:166
 #, c-format
 msgid "%s: Can't read AppInfo block for %s: %d.\n"
 msgstr "%s: Non posso leggere l'AppInfo block di %s: %d.\n"
 
-#: ../src/backup.c:109
+#: ../src/backup.c:111
 #, c-format
 msgid "%s: Can't read database info: %d.\n"
 msgstr "%s: Non posso leggere le informazioni sul database: %d.\n"
 
-#: ../src/backup.c:198
+#: ../src/backup.c:206
 #, c-format
 msgid "%s: Can't read sort block for %s: %d.\n"
 msgstr "%s: Non posso leggere il sort block per %s: %d.\n"
@@ -576,7 +576,7 @@ msgstr "%s: Non posso trovare l'endpoint HotSync sul Visor.\n"
 msgid "%s: Database %s doesn't exist, yet it is open. Huh?"
 msgstr "%s: Il database %s non esiste, pero' e' aperto. Che sta succedendo?"
 
-#: ../src/install.c:336 ../src/install.c:584
+#: ../src/install.c:332 ../src/install.c:580
 #, c-format
 msgid "%s: Error deleting \"%s\"."
 msgstr "%s: Errore durante la cancellazione di \"%s\"."
@@ -617,7 +617,7 @@ msgstr "%s: Errore durante l'invio dei dati di risposta SPC."
 msgid "%s: Error sending dummy ACK. This is serious.\n"
 msgstr "%s: Errore durante l'invio del dummy ACK. Questo e' grave.\n"
 
-#: ../src/install.c:357 ../src/install.c:613
+#: ../src/install.c:353 ../src/install.c:609
 #, c-format
 msgid "%s: Error uploading \"%s\"."
 msgstr "%s: Errore durante l'invio di \"%s\"."
@@ -670,9 +670,9 @@ msgstr "%s: Memoria esaurita."
 #: ../libpconn/dlp_cmd.c:3886 ../libpdb/pdb.c:930 ../libpdb/pdb.c:1001
 #: ../libpdb/pdb.c:1055 ../libpdb/pdb.c:1100 ../libpdb/pdb.c:1409
 #: ../libpdb/pdb.c:1522 ../libpdb/pdb.c:1631 ../libpdb/pdb.c:1787
-#: ../libpdb/pdb.c:1921 ../src/backup.c:135 ../src/backup.c:181
-#: ../src/backup.c:277 ../src/backup.c:321 ../src/backup.c:439
-#: ../src/backup.c:492
+#: ../libpdb/pdb.c:1921 ../src/backup.c:138 ../src/backup.c:187
+#: ../src/backup.c:287 ../src/backup.c:333 ../src/backup.c:454
+#: ../src/backup.c:509
 #, c-format
 msgid "%s: Out of memory.\n"
 msgstr "%s: Memoria esaurita.\n"
@@ -719,7 +719,7 @@ msgstr "%s: non posso allocare i dati del record.\n"
 msgid "%s: can't allocate resource data.\n"
 msgstr "%s: non posso allocare i dati della risorsa.\n"
 
-#: ../src/backup.c:543
+#: ../src/backup.c:561
 #, c-format
 msgid ""
 "%s: can't create new backup file %s.\n"
@@ -728,7 +728,7 @@ msgstr ""
 "%s: non posso creare il file di backup %s.\n"
 "Potrebbe esistere gia'."
 
-#: ../src/backup.c:649
+#: ../src/backup.c:667
 #, c-format
 msgid "%s: can't write database \"%s\" to \"%s\"."
 msgstr "%s: non posso scrivere il database \"%s\" su \"%s\"."
@@ -795,7 +795,7 @@ msgstr "%s: socket() ha restituito %d."
 msgid "%s: unexpected response %d to GetBytesAvailable.\n"
 msgstr "%s: risposta %d inattesa a GetBytesAvaliable.\n"
 
-#: ../libpconn/PConnection.c:110
+#: ../libpconn/PConnection.c:119
 #, c-format
 msgid "%s: unknown listen type %d.\n"
 msgstr "%s: tipo %d di listen sconosciuto.\n"
@@ -817,12 +817,12 @@ msgstr "*Cancellato*\n"
 msgid "ACK Timeout. Attempting to resend.\n"
 msgstr "ACK Timeout. Ritento l'invio.\n"
 
-#: ../src/backup.c:535
+#: ../src/backup.c:553
 #, c-format
 msgid "Backing up \"%s\""
 msgstr "Sto archiviando \"%s\""
 
-#: ../src/backup.c:531 ../src/coldsync.c:1379
+#: ../src/backup.c:549 ../src/coldsync.c:1379
 msgid "Backup "
 msgstr "Backup "
 
@@ -835,7 +835,7 @@ msgstr "Descrittore di file errato"
 msgid "CacheFromConduits() returned %d."
 msgstr "CacheFromConduits() ha restituito %d."
 
-#: ../src/backup.c:383
+#: ../src/backup.c:396
 msgid "Can't allocate list of record IDs.\n"
 msgstr "Non posso allocare l'elenco degli ID dei record.\n"
 
@@ -851,7 +851,7 @@ msgstr "Non posso allocare un nuovo conduit block."
 msgid "Can't allocate new configuration."
 msgstr "Non posso allocare una nuova configurazione."
 
-#: ../libpconn/PConnection.c:49
+#: ../libpconn/PConnection.c:58
 msgid "Can't allocate new connection.\n"
 msgstr "Non posso allocare una nuova connessione.\n"
 
@@ -915,7 +915,7 @@ msgstr "Non posso creare una connessione con l'host di forwarding."
 msgid "Can't create install directory %s."
 msgstr "Non posso creare la directory di installazione %s."
 
-#: ../src/backup.c:217
+#: ../src/backup.c:226
 msgid "Can't download record or resource index.\n"
 msgstr "Non riesco a ricevere l'elenco dei record o l'elenco delle risorse.\n"
 
@@ -1009,7 +1009,7 @@ msgstr "Non posso installare nuovi files."
 msgid "Can't load configuration."
 msgstr "Non posso caricare la configurazione."
 
-#: ../src/install.c:435
+#: ../src/install.c:431
 msgid "Can't load header."
 msgstr "Non posso caricare l'header."
 
@@ -1030,11 +1030,11 @@ msgstr "Non posso controllare il mio indirizzo."
 msgid "Can't open %s."
 msgstr "Non posso aprire %s."
 
-#: ../src/backup.c:577
+#: ../src/backup.c:595
 msgid "Can't open backup conduit."
 msgstr "Non posso aprire il conduit di backup."
 
-#: ../src/install.c:95
+#: ../src/install.c:84
 #, c-format
 msgid "Can't open conduit for \"%s\": %d.\n"
 msgstr "Non posso aprire il conduit per \"%s\": %d.\n"
@@ -1044,7 +1044,7 @@ msgstr "Non posso aprire il conduit per \"%s\": %d.\n"
 msgid "Can't open connection."
 msgstr "Non posso aprire la connessione."
 
-#: ../src/backup.c:607
+#: ../src/backup.c:625
 #, c-format
 msgid "Can't open database \"%s\"."
 msgstr "Non posso aprire il database \"%s\"."
@@ -1089,12 +1089,12 @@ msgstr "Non posso leggere la lunghezza del numero di serie."
 msgid "Can't read record %d.\n"
 msgstr "Non posso leggere il record %d.\n"
 
-#: ../src/backup.c:453
+#: ../src/backup.c:469
 #, c-format
 msgid "Can't read record %d: %d.\n"
 msgstr "Non posso leggere il record %d: %d.\n"
 
-#: ../src/backup.c:407
+#: ../src/backup.c:421
 msgid "Can't read record ID list.\n"
 msgstr "Non posso leggere la lista di ID dei record.\n"
 
@@ -1111,7 +1111,7 @@ msgstr "Non posso leggere i record.\n"
 msgid "Can't read resource %d.\n"
 msgstr "Non posso leggere la risorsa %d.\n"
 
-#: ../src/backup.c:290
+#: ../src/backup.c:302
 #, c-format
 msgid "Can't read resource %d: %d.\n"
 msgstr "Non posso leggere la risorsa %d: %d.\n"
@@ -1137,7 +1137,7 @@ msgstr "Non posso leggere il sort block.\n"
 msgid "Can't reserve file descriptor %d."
 msgstr "Non posso riservare il descrittore di file %d."
 
-#: ../src/spalm.c:1002
+#: ../src/spalm.c:1010
 msgid "Can't resize palm->dblist."
 msgstr "Non posso ridimensioanre palm->dblist."
 
@@ -1158,11 +1158,11 @@ msgid "Can't write user info."
 msgstr "Non posso scrivere le user info."
 
 #: ../src/GenericConduit.cc:253 ../src/GenericConduit.cc:517
-#: ../src/GenericConduit.cc:1006 ../src/backup.c:565 ../src/restore.c:203
+#: ../src/GenericConduit.cc:1006 ../src/backup.c:583 ../src/restore.c:203
 msgid "Cancelled\n"
 msgstr "Cancellato\n"
 
-#: ../src/backup.c:561 ../src/coldsync.c:1345 ../src/coldsync.c:1393
+#: ../src/backup.c:579 ../src/coldsync.c:1345 ../src/coldsync.c:1393
 #: ../src/coldsync.c:1515 ../src/coldsync.c:1540 ../src/coldsync.c:1564
 #: ../src/conduit.c:1174 ../src/conduit.c:1232 ../src/restore.c:294
 msgid "Cancelled by Palm."
@@ -1218,7 +1218,7 @@ msgstr "Non posso mandare l'header al conduit."
 msgid "Couldn't write sync log."
 msgstr "Non posso scrivere il log della sincronizzazione."
 
-#: ../src/backup.c:415
+#: ../src/backup.c:430
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
 msgstr "DlpReadRecordIDList() ha letto 0 records. Che e' successo?\n"
 
@@ -1253,10 +1253,10 @@ msgstr "Fine del file"
 #: ../src/GenericConduit.cc:1071 ../src/GenericConduit.cc:1111
 #: ../src/GenericConduit.cc:1212 ../src/GenericConduit.cc:1447
 #: ../src/GenericConduit.cc:1475 ../src/GenericConduit.cc:1501
-#: ../src/backup.c:548 ../src/backup.c:579 ../src/backup.c:610
-#: ../src/backup.c:636 ../src/backup.c:655 ../src/install.c:339
-#: ../src/install.c:360 ../src/install.c:587 ../src/install.c:616
-#: ../src/install.c:719 ../src/restore.c:213
+#: ../src/backup.c:566 ../src/backup.c:597 ../src/backup.c:628
+#: ../src/backup.c:654 ../src/backup.c:673 ../src/install.c:335
+#: ../src/install.c:356 ../src/install.c:583 ../src/install.c:612
+#: ../src/install.c:715 ../src/restore.c:213
 msgid "Error\n"
 msgstr "Errore\n"
 
@@ -1281,12 +1281,12 @@ msgstr "Errore %d durante l'esecuzione di conduits di pre-fetch."
 msgid "Error backing up \"%s\"."
 msgstr "Errore durante il backup di \"%s\"."
 
-#: ../src/install.c:112
+#: ../src/install.c:103
 #, c-format
 msgid "Error creating database \"%s\": %d.\n"
 msgstr "Errore durante la creazione del database \"%s\": %d.\n"
 
-#: ../src/install.c:737
+#: ../src/install.c:733
 #, c-format
 msgid "Error deleting \"%s\"."
 msgstr "Errore durante la cancellazione \"%s\"."
@@ -1309,7 +1309,7 @@ msgstr "Errore durante la creazione di una connessione CMP.\n"
 msgid "Error in system call or library function"
 msgstr "Errore durante una chiamata di sistema o di libreria."
 
-#: ../src/install.c:700
+#: ../src/install.c:696
 #, c-format
 msgid "Error opening \"%s\"."
 msgstr "Errore durante l'apertura di \"%s\"."
@@ -1342,7 +1342,7 @@ msgstr "Errore: "
 msgid "Error: Can't open \"%s\".\n"
 msgstr "Errore: Non posso aprire \"%s\".\n"
 
-#: ../libpconn/PConnection.c:104
+#: ../libpconn/PConnection.c:113
 msgid "Error: USB support not enabled.\n"
 msgstr "Errore: il supporto USB non e' abilitato.\n"
 
@@ -1381,7 +1381,7 @@ msgstr ""
 msgid "Inside run_DummyConduit.\n"
 msgstr "Dentro run_DummyConduit.\n"
 
-#: ../src/install.c:318 ../src/install.c:575
+#: ../src/install.c:314 ../src/install.c:571
 msgid "Install "
 msgstr "Installazione "
 
@@ -1463,8 +1463,8 @@ msgid "No such directory: \"%s\"."
 msgstr "La directory \"%s\" non esiste."
 
 #: ../src/GenericConduit.cc:485 ../src/GenericConduit.cc:974
-#: ../src/GenericConduit.cc:1511 ../src/backup.c:665 ../src/install.c:698
-#: ../src/install.c:721 ../src/restore.c:217
+#: ../src/GenericConduit.cc:1511 ../src/backup.c:683 ../src/install.c:694
+#: ../src/install.c:717 ../src/restore.c:217
 msgid "OK\n"
 msgstr "OK\n"
 
@@ -1476,7 +1476,7 @@ msgstr "Memoria esaurita"
 msgid "Please press the HotSync button.\n"
 msgstr "Premi il tasto HotSync\n"
 
-#: ../src/install.c:703
+#: ../src/install.c:699
 msgid "Problem\n"
 msgstr "Problema\n"
 
