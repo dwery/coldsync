@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001-11-20 14:40:58 arensb Exp $
+# $Id: Makefile,v 1.14 2001-12-06 13:45:00 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -53,7 +53,7 @@ MAN3FILES =	libpconn.3 \
 		RDLP_PluggedIn.3 \
 		RDLP_ROMToken.3 \
 		new_PConnection.3 \
-		time_dlp2palmtime.3
+		time_dlp2palmtime.3 \
 		libpdb.3 \
 		new_Record.3 \
 		new_pdb.3 \
