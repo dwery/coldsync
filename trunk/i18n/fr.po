@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-04-09 09:38-0400\n"
+"POT-Creation-Date: 2000-04-10 04:58-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Jorge Barros <jorge.barros@lecroy.com>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
 
-#: src/coldsync.c:1547
+#: src/coldsync.c:1539
 #, c-format
 msgid ""
 "\n"
@@ -22,7 +22,7 @@ msgstr ""
 "\n"
 "    Fichier d'initialisation globale par défaut: %s\n"
 
-#: src/coldsync.c:1542
+#: src/coldsync.c:1534
 msgid ""
 "    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 "        to case, whenever possible.\n"
@@ -31,11 +31,11 @@ msgstr ""
 "        caractères seront comparées sans faire la distinction entre\n"
 "        les majuscules et les minuscules\n"
 
-#: src/coldsync.c:1537
+#: src/coldsync.c:1529
 msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
 msgstr ""
 
-#: src/coldsync.c:1533
+#: src/coldsync.c:1525
 msgid "    WITH_USB: USB support.\n"
 msgstr "    WITH_USB: support pour USB.\n"
 
@@ -43,7 +43,7 @@ msgstr "    WITH_USB: support pour USB.\n"
 msgid " (1st) - "
 msgstr " (1er) - "
 
-#: src/coldsync.c:533
+#: src/coldsync.c:525
 msgid "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"
 msgstr "!!! Horreur! Un conduit s'est planté! Sauve qui peut!\n"
 
@@ -53,7 +53,7 @@ msgid "\"%s\" is a read-only database. Not uploading\n"
 msgstr ""
 "« %s » est une base de données `read-only'. Elle ne sera pas installée\n"
 
-#: src/coldsync.c:888
+#: src/coldsync.c:880
 msgid ""
 "### Error: you have an old Palm, one that doesn't say how many\n"
 "databases it has. I can't cope with this.\n"
@@ -168,17 +168,17 @@ msgstr "%s: Erreur: Je n'arrive pas à écrire le fichier de backup.\n"
 msgid "%s error: can't clean up database: %d\n"
 msgstr "%s: Erreur: Impossible de nettoyer une base de données: %d\n"
 
-#: src/coldsync.c:1521
+#: src/coldsync.c:1513
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s version %s\n"
 
-#: src/parser.y:430
+#: src/parser.y:442
 #, c-format
 msgid "%s: Bogus creator \"%s\", line %d\n"
 msgstr "%s: Créateur bidon: « %s », ligne %d\n"
 
-#: src/parser.y:455
+#: src/parser.y:467
 #, c-format
 msgid "%s: Bogus type \"%s\", line %d\n"
 msgstr "%s: Type bidon: « %s », ligne %d\n"
@@ -188,12 +188,17 @@ msgstr "%s: Type bidon: « %s », ligne %d\n"
 msgid "%s: Can't allocate %ld-byte buffer\n"
 msgstr "%s: Je n'arrive pas à allouer un tampon de %ld octets\n"
 
-#: src/parser.y:222
+#: src/parser.y:500
+#, fuzzy, c-format
+msgid "%s: Can't allocate PDA block\n"
+msgstr "%s: Impossible d'allouer un bloc d'écoute\n"
+
+#: src/parser.y:234
 #, c-format
 msgid "%s: Can't allocate conduit_block!\n"
 msgstr "%s: Impossible d'allouer un conduit_block!\n"
 
-#: src/parser.y:125
+#: src/parser.y:137
 #, c-format
 msgid "%s: Can't allocate listen block\n"
 msgstr "%s: Impossible d'allouer un bloc d'écoute\n"
@@ -256,7 +261,7 @@ msgstr "%s: Impossible de charger la base de données « %s »\n"
 msgid "%s: Can't make child's stdout be line-buffered\n"
 msgstr ""
 
-#: src/archive.c:125 src/install.c:121 src/parser.y:502
+#: src/archive.c:125 src/install.c:121 src/parser.y:667
 #, c-format
 msgid "%s: Can't open \"%s\"\n"
 msgstr "%s: Impossible d'ouvrir « %s »\n"
@@ -303,7 +308,7 @@ msgstr "%s: Je n'arrive pas à lire l'information sur une base de données: %d\n"
 msgid "%s: Can't read sort block for %s: %d\n"
 msgstr "%s: Je n'arrive pas à lire le bloc de tri pour %s: %d\n"
 
-#: src/coldsync.c:1101 src/coldsync.c:1166
+#: src/coldsync.c:1093 src/coldsync.c:1158
 #, c-format
 msgid "%s: Can't rename \"%s\" to \"%s\"\n"
 msgstr "%s: Impossible de renommer « %s » en « %s »\n"
@@ -320,7 +325,8 @@ msgstr ""
 #: src/restore.c:237
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application\n"
-msgstr "%s: Ne peux pas restaurer %s: elle est ouverte pas un autre utilitaire\n"
+msgstr ""
+"%s: Ne peux pas restaurer %s: elle est ouverte pas un autre utilitaire\n"
 
 #: src/archive.c:136
 #, c-format
@@ -426,7 +432,7 @@ msgstr "%s: Erreur lors de l'effaçage de « %s »\n"
 msgid "%s: Error deleting record 0x%08lx: %d\n"
 msgstr "%s: Erreur lors de l'effaçage de l'enregistrement 0x%08lx: %d\n"
 
-#: src/coldsync.c:1082 src/coldsync.c:1147
+#: src/coldsync.c:1074 src/coldsync.c:1139
 #, c-format
 msgid "%s: Error in checking for \"%s\"\n"
 msgstr "%s: Erreur lors de l'examination de « %s »\n"
@@ -441,7 +447,7 @@ msgstr ""
 #: libpdb/pdb.c:715 libpdb/pdb.c:1212 libpdb/pdb.c:1281 libpdb/pdb.c:1325
 #: libpdb/pdb.c:1628 libpdb/pdb.c:1738 libpdb/pdb.c:1840 libpdb/pdb.c:1979
 #: libpdb/pdb.c:2103 libpdb/pdb.c:2180 libpdb/pdb.c:2223 libpdb/pdb.c:2340
-#: libpdb/pdb.c:2400 src/log.c:67
+#: libpdb/pdb.c:2400 src/log.c:72
 #, c-format
 msgid "%s: Out of memory.\n"
 msgstr "%s: Plus de mémoire.\n"
@@ -500,7 +506,7 @@ msgstr ""
 "%s: Impossible de créer le nouveau fichier de secours %s<\n"
 "Peut-être qu'il existe déjà.\n"
 
-#: src/coldsync.c:975
+#: src/coldsync.c:967
 #, c-format
 msgid "%s: can't open \"%s/\"\n"
 msgstr "%s: erreur lors de l'ouverture de « %s »\n"
@@ -548,12 +554,12 @@ msgstr "%s: execvp(%s) a échoué et a retourné %d\n"
 msgid "%s: header cannot be longer than %d characters long\n"
 msgstr "%s: une entête ne peut pas faire plus de %d caractères de long\n"
 
-#: src/parser.y:285
+#: src/parser.y:297
 #, c-format
 msgid "%s: line %d: Unknown conduit flavor %d\n"
 msgstr "%s: ligne %d: Goût de conduit %d inconnu\n"
 
-#: src/log.c:89
+#: src/log.c:101
 #, c-format
 msgid "%s: realloc failed\n"
 msgstr "%s: realloc a échoué\n"
@@ -660,11 +666,11 @@ msgstr "Je n'arrive pas à trouver le bloc de tri!\n"
 msgid "Can't get host name\n"
 msgstr "Impossible de trouver le nom de l'hôte\n"
 
-#: src/coldsync.c:324
+#: src/coldsync.c:316
 msgid "Can't get per-Palm config.\n"
 msgstr "Impossible de lire la configuration du Palm.\n"
 
-#: src/coldsync.c:1206
+#: src/coldsync.c:1198
 msgid "Can't get system info\n"
 msgstr "Impossible d'obtenir les informations sur le système\n"
 
@@ -674,15 +680,15 @@ msgstr ""
 "Impossible d'obtenir l'information sur le système, l'utilisateur, ou "
 "NetSync\n"
 
-#: src/coldsync.c:1254 src/config.c:369
+#: src/coldsync.c:1246 src/config.c:369
 msgid "Can't get user info\n"
 msgstr "Impossible d'obtenir les informations sur l'utilisateur\n"
 
-#: src/config.c:1031
+#: src/config.c:1111
 msgid "Can't get user's full name.\n"
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur.\n"
 
-#: src/coldsync.c:342
+#: src/coldsync.c:334
 msgid "Can't initialize conduits\n"
 msgstr "Impossible d'initialiser les conduits\n"
 
@@ -765,19 +771,20 @@ msgstr "Je n'arrive pas à lire le bloc de tri\n"
 msgid "Can't read the useless two bytes\n"
 msgstr "Impossible de lire les deux octets inutiles\n"
 
-#: src/coldsync.c:1529
+#: src/coldsync.c:1521
 msgid "Compile-type options:\n"
 msgstr "Options indiquées lors de la compilation:\n"
 
 #: libpdb/pdb.c:2316
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
-msgstr "DlpReadRecordIDList() a lu 0 enregistrements. Qu'est-ce qui s'est passé?\n"
+msgstr ""
+"DlpReadRecordIDList() a lu 0 enregistrements. Qu'est-ce qui s'est passé?\n"
 
 #: libpconn/dlp_cmd.c:2007
 msgid "DlpWriteRecord: Can't allocate output buffer.\n"
 msgstr "DlpWriteRecord: J'arrive pas à allouer un tampon de sortie.\n"
 
-#: src/coldsync.c:1389
+#: src/coldsync.c:1381
 #, c-format
 msgid "DlpWriteUserInfo failed: %d\n"
 msgstr "DlpWriteUserInfo a échoué: %d\n"
@@ -803,17 +810,17 @@ msgstr "Fin de fichier"
 msgid "Error\n"
 msgstr "Erreur\n"
 
-#: src/coldsync.c:608
+#: src/coldsync.c:600
 #, c-format
 msgid "Error %d running post-dump conduits.\n"
 msgstr "Erreur %d lors de l'éxecution des conduits post-dump.\n"
 
-#: src/coldsync.c:517
+#: src/coldsync.c:509
 #, c-format
 msgid "Error %d running pre-fetch conduits.\n"
 msgstr "Erreur %d lors de l'exécution des conduits pre-fetch.\n"
 
-#: src/coldsync.c:623
+#: src/coldsync.c:615
 msgid "Error cleaning up conduits\n"
 msgstr "Erreur lors du nettoyage après les conduits\n"
 
@@ -827,16 +834,16 @@ msgstr "Erreur lors de la création de la base de données « %s », err == %d\n"
 msgid "Error deleting \"%s\"\n"
 msgstr "Erreur en effaçant « %s »\n"
 
-#: src/coldsync.c:590
+#: src/coldsync.c:582
 msgid "Error disconnecting\n"
 msgstr "Erreur lors de la déconnexion\n"
 
-#: src/coldsync.c:771
+#: src/coldsync.c:763
 #, c-format
 msgid "Error during DlpEndOfSync: (%d) %s\n"
 msgstr "Erreur dans DlpEndOfSync: (%d) %s\n"
 
-#: src/coldsync.c:670
+#: src/coldsync.c:662
 #, c-format
 msgid "Error during cmp_read: (%d) %s\n"
 msgstr "Erreur dans cmp_read: (%d) %s\n"
@@ -846,7 +853,7 @@ msgstr "Erreur dans cmp_read: (%d) %s\n"
 msgid "Error in system call or library function"
 msgstr "Erreur dans un appel de système ou une fonction dans une bibliothèque"
 
-#: src/coldsync.c:483
+#: src/coldsync.c:475
 msgid "Error installing new files.\n"
 msgstr "Erreur lors de l'installation de nouveaux fichiers.\n"
 
@@ -864,7 +871,7 @@ msgstr "Erreur lors de l'ouverture de « %s »\n"
 msgid "Error reading %s\n"
 msgstr "Erreur lors de la lecture de %s\n"
 
-#: src/coldsync.c:1247
+#: src/coldsync.c:1239
 msgid "Error reading NetSync info\n"
 msgstr "Erreur lors de la lecture des informations sur NetSync\n"
 
@@ -873,11 +880,11 @@ msgstr "Erreur lors de la lecture des informations sur NetSync\n"
 msgid "Error reading configuration file \"%s\"\n"
 msgstr "Erreur lors de la lecture du fichier de configuration « %s »\n"
 
-#: src/coldsync.c:1597
+#: src/coldsync.c:1589
 msgid "Error resizing palm->dblist\n"
 msgstr "Impossible de changer la taille de palm->dblist\n"
 
-#: src/coldsync.c:756
+#: src/coldsync.c:748
 msgid "Error trying to set speed"
 msgstr "Erreur lors du règlage de vitesse"
 
@@ -888,11 +895,11 @@ msgstr "Erreur lors du règlage de vitesse"
 msgid "Error uploading record 0x%08lx: %d\n"
 msgstr ""
 
-#: src/coldsync.c:578
+#: src/coldsync.c:570
 msgid "Error writing sync log.\n"
 msgstr "Erreur lors de l'écriture de l'historique.\n"
 
-#: src/coldsync.c:564
+#: src/coldsync.c:556
 msgid "Error writing user info\n"
 msgstr "Erreur lors de l'écriture des informations sur l'utilisateur\n"
 
@@ -904,14 +911,15 @@ msgstr ""
 
 #: src/coldsync.c:273
 msgid "Error: Can't get location of serial number\n"
-msgstr "Erreur: Ne peux pas trouver l'endroit où se trouve le numéro de série\n"
+msgstr ""
+"Erreur: Ne peux pas trouver l'endroit où se trouve le numéro de série\n"
 
 #: src/restore.c:152
 #, c-format
 msgid "Error: Can't open %s\n"
 msgstr "Erreur: Impossible d'ouvrir %s\n"
 
-#: src/coldsync.c:295
+#: src/coldsync.c:296
 msgid "Error: Can't read serial number\n"
 msgstr "Erreur: Impossible de lire le numéro de série\n"
 
@@ -934,7 +942,7 @@ msgstr "Erreur: vous n'avez pas précisé de port.\n"
 msgid "File isn't seekable.\n"
 msgstr "Ce fichier ne peut pas être positionné.\n"
 
-#: src/coldsync.c:350
+#: src/coldsync.c:342
 #, c-format
 msgid "GetMemInfo() returned %d\n"
 msgstr "GetMemInfo() a rendu le code de retour %d\n"
@@ -974,7 +982,7 @@ msgstr "Numéro de demande invalable"
 msgid "Invalid result ID"
 msgstr "Numéro de résultat invalable"
 
-#: src/coldsync.c:385
+#: src/coldsync.c:377
 #, c-format
 msgid "ListDBs returned %d\n"
 msgstr "ListDBs a rendu le code de retour %d\n"
@@ -989,7 +997,7 @@ msgstr "Argument manquant après l'option « %s »\n"
 msgid "My canonical name is \"%s\"\n"
 msgstr "Mon nom officiel est « %s »\n"
 
-#: src/coldsync.c:1244
+#: src/coldsync.c:1236
 msgid "No NetSync info.\n"
 msgstr "Pas d'informations sur NetSync.\n"
 
@@ -1060,7 +1068,7 @@ msgstr "Timeout"
 msgid "Timeout. Attempting to resend\n"
 msgstr "Timeout. J'essaie d'envoyer de nouveau\n"
 
-#: src/coldsync.c:1185
+#: src/coldsync.c:1177
 #, c-format
 msgid "Too many files named \"%s\" in the attic.\n"
 msgstr "Trop de fichiers nommés « %s » au grenier.\n"
@@ -1069,7 +1077,7 @@ msgstr "Trop de fichiers nommés « %s » au grenier.\n"
 msgid "Transfer aborted"
 msgstr "Transfert annulé"
 
-#: src/parser.y:255
+#: src/parser.y:267
 #, c-format
 msgid "Unknown conduit flavor: %d"
 msgstr "Goût de conduit inconnu: %d"
@@ -1079,7 +1087,7 @@ msgstr "Goût de conduit inconnu: %d"
 msgid "Unknown device type: \"%s\"\n"
 msgstr "Type d'appareil « %s » inconnu.\n"
 
-#: src/coldsync.c:1485
+#: src/coldsync.c:1477
 #, c-format
 msgid "Unknown facility \"%s\"\n"
 msgstr "Catégorie inconnue: « %s »\n"
@@ -1089,7 +1097,7 @@ msgstr "Catégorie inconnue: « %s »\n"
 msgid "Unrecognized option: \"%s\"\n"
 msgstr "L'option « %s » n'est pas reconnue\n"
 
-#: src/coldsync.c:1497
+#: src/coldsync.c:1489
 #, c-format
 msgid ""
 "Usage: %s [options] -p port\n"
@@ -1141,13 +1149,14 @@ msgstr ""
 "Avertissement: Le numéro de série en ROM a %d caractères de long. Veuillez\n"
 "en informer le mainteneur.\n"
 
-#: src/coldsync.c:713
+#: src/coldsync.c:705
 #, c-format
 msgid ""
 "Warning: can't set the speed you requested (%d bps).\n"
 "Using default (%d bps)\n"
 msgstr ""
-"Avertissement: ne peux pas mettre la vitesse que vous avez demandé (%d o/s).\n"
+"Avertissement: ne peux pas mettre la vitesse que vous avez demandé (%d "
+"o/s).\n"
 "Je mettrai la vitesse de défaut (%d o/s)\n"
 
 #: src/config.c:415
@@ -1156,6 +1165,15 @@ msgid "Warning: config file \"%s\" doesn't exist. Using defaults.\n"
 msgstr ""
 "Attention: le fichier de configuration « %s » n'existe pas. Les défauts\n"
 "seront utilisés.\n"
+
+#: src/parser.y:618
+#, c-format
+msgid ""
+"Warning: incorrect checksum for serial number \"%s-%c\".\n"
+"Should be \"%s-%c\"\n"
+msgstr ""
+"Avertissement: total de contrôle incorrect pour le numéro de série\n"
+"« %s-%c ». Il devrait être « %s-%c »\n"
 
 #: libpdb/pdb.c:2044
 #, c-format
@@ -1175,6 +1193,15 @@ msgstr ""
 "Attention: la resource No. %d n'est pas là où je m'y attendais.\n"
 "Je croyais qu'elle serait à 0x%lx, mais nous sommes à 0x%lx\n"
 
+#: src/parser.y:597
+#, c-format
+msgid ""
+"Warning: serial number \"%s\" has no checksum. You may want\n"
+"to rewrite it as \"%s-%c\"\n"
+msgstr ""
+"Avertissement: le numéro de série « %s » n'a pas de total de\n"
+"contrôle. Vous voudrez peut-être le récrire comme « %s-%c »\n"
+
 #: libpdb/pdb.c:1852
 #, c-format
 msgid ""
@@ -1189,7 +1216,7 @@ msgstr ""
 msgid "Write timeout. Attempting to resend.\n"
 msgstr "Timeout lors de l'écriture. J'essaie d'envoyer de nouveau.\n"
 
-#: src/parser.y:487
+#: src/parser.y:652
 #, c-format
 msgid "Yacc error: \"%s\" at line %d\n"
 msgstr "Erreur yacc: « %s », ligne %d\n"
