@@ -3,7 +3,7 @@
  * Structures and definitions and such for Palm's Desktop Link
  * Protocol (DLP).
  *
- * $Id: dlp.h,v 1.1 1999-01-22 18:13:12 arensb Exp $
+ * $Id: dlp.h,v 1.2 1999-01-23 23:06:40 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
@@ -142,27 +142,53 @@ struct dlp_arg
 {
 	uword id;		/* Argument ID */
 	udword size;		/* Argument size, 0..0xffffffff bytes */
-	void *data;		/* The argument data itself */
+	ubyte *data;		/* The argument data itself */
+};
+
+/* dlp_time
+ * Structure for giving date and time.
+ */
+struct dlp_time
+{
+	uword year;		/* Year (4 digits) */
+	ubyte month;		/* Month, 1-12 */
+	ubyte day;		/* Day of month, 1-31 */
+	ubyte hour;		/* Hour, 0-23 */
+	ubyte minute;		/* Minute, 0-59 */
+	ubyte second;		/* Second, 0-59 */
+	ubyte unused;		/* Unused. Set to 0 */
+};
+
+/* dlp_sysinfo
+ * The data returned from a DlpReadSysInfo command.
+ */
+struct dlp_sysinfo
+{
+	udword rom_version;	/* ROM system software version */
+	udword localization;	/* Localization ID (?) */
+	ubyte unused;		/* Set this to 0 */
+	ubyte prodIDsize;	/* Size of product/ID field */
+	udword prodID;		/* Product ID */
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif	/* __cplusplus */
 
-/* Protocol functions */
-/*  extern int dlp_send_req(int fd, ubyte id, ubyte argc); */
-/*  extern int dlp_send_arg(int fd, uword id, ubyte *buf, udword len); */
-/*  extern int dlp_recv_resp(int fd, ubyte *argc, ubyte *errno); */
-/*  extern int dlp_recv_arg(int fd, uword id, ubyte *buf, udword len); */
+extern char *dlp_errlist[];	/* List of error code meanings */
 
+/* Protocol functions */
 extern int dlp_send_req(int fd,
 			struct dlp_req_header *header,
 			struct dlp_arg *argv);
-extern int dlp_read_resp(int fd /* XXX */);
+extern int dlp_read_resp(int fd, struct dlp_resp_header *header,
+			 struct dlp_arg **argv_ret);
+extern void dlp_free_arglist(int argc, struct dlp_arg *argv);
 
 /* Convenience functions */
 extern int DlpEndOfSync(int fd, uword status);
 extern int DlpAddSyncLogEntry(int fd, char *msg);
+extern int DlpReadSysInfo(int fd, struct dlp_sysinfo *sysinfo);
 
 #ifdef  __cplusplus
 }
