@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.53 2000-02-04 16:05:25 arensb Exp $
+dnl # $Id: configure.in,v 1.54 2000-02-06 22:31:23 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -104,7 +104,7 @@ dnl #'
 
 AC_MSG_CHECKING([whether the C++ compiler understands new-style casts])
 AC_TRY_COMPILE([],
-	[int i; int *p = &i; i = static_cast<int>(p);],
+	[int i; char c = 3; i = static_cast<int>(c);],
 	AC_MSG_RESULT(yes),
 	AC_MSG_WARN([
 	Alack! This venerable compiler doth not understand the sweet
@@ -151,7 +151,19 @@ with_i18n=yes
 )
 
 # The above just checked whether the user asked for --with-i18n, and
-# set a default. Now we look for -lintl if necessary
+# set a default. Now we look for -lintl and the various catalog-making
+# utilities if necessary
+
+# Do-nothing defaults, in case the user doesn't want i18n.
+XGETTEXT=true
+GETTEXT=true
+MSGMERGE=true
+MSGFMT=true
+AC_SUBST(XGETTEXT)
+AC_SUBST(GETTEXT)
+AC_SUBST(MSGMERGE)
+AC_SUBST(MSGFMT)
+
 if test x"$with_i18n" != x"no"; then
 	AC_CHECK_LIB(intl, gettext)
 	if test "$ac_cv_lib_intl_gettext" = yes; then
@@ -162,6 +174,11 @@ if test x"$with_i18n" != x"no"; then
 		fi
 		AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
 	fi
+	# I18n-related utilities
+	AC_CHECK_PROGS(XGETTEXT, xgettext)
+	AC_CHECK_PROGS(GETTEXT, gettext)
+	AC_CHECK_PROGS(MSGMERGE, msgmerge)
+	AC_CHECK_PROGS(MSGFMT, msgfmt)
 fi
 
 # I'm not using AC_PROG_YACC here because that doesn't actually make
