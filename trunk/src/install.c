@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.6 1999-11-20 05:20:01 arensb Exp $
+ * $Id: install.c,v 2.7 1999-11-27 05:53:59 arensb Exp $
  */
 
 #include "config.h"
@@ -74,7 +74,8 @@ InstallNewFiles(struct PConnection *pconn,
 			newdir);
 	if ((dir = opendir(newdir)) == NULL)
 	{
-		fprintf(stderr, _("InstallNewFiles: Can't open install directory\n"));
+		fprintf(stderr, _("%s: Can't open install directory\n"),
+			"InstallNewFiles");
 		perror("opendir");
 	}
 
@@ -125,7 +126,8 @@ InstallNewFiles(struct PConnection *pconn,
 		/* Open the file, and load it as a Palm database */
 		if ((fd = open(fname, O_RDONLY)) < 0)
 		{
-			fprintf(stderr, _("InstallNewFiles: Can't open \"%s\"\n"),
+			fprintf(stderr, _("%s: Can't open \"%s\"\n"),
+				"InstallNewFiles",
 				fname);
 			continue;
 		}
@@ -135,7 +137,8 @@ InstallNewFiles(struct PConnection *pconn,
 		if (pdb == NULL)
 		{
 			fprintf(stderr,
-				_("InstallNewFiles: Can't load database \"%s\"\n"),
+				_("%s: Can't load database \"%s\"\n"),
+				"InstallNewFiles",
 				fname);
 			close(fd);
 			continue;
@@ -192,7 +195,8 @@ InstallNewFiles(struct PConnection *pconn,
 			if (err < 0)
 			{
 				fprintf(stderr,
-					_("InstallNewFiles: Error deleting \"%s\"\n"),
+					_("%s: Error deleting \"%s\"\n"),
+					"InstallNewFiles",
 					pdb->name);
 				add_to_log(_("Error\n"));
 				free_pdb(pdb);
@@ -204,7 +208,8 @@ InstallNewFiles(struct PConnection *pconn,
 		if (err < 0)
 		{
 			fprintf(stderr,
-				_("InstallNewFiles: Error uploading \"%s\"\n"),
+				_("%s: Error uploading \"%s\"\n"),
+				"InstallNewFiles",
 				pdb->name);
 			add_to_log(_("Error\n"));
 			free_pdb(pdb);
