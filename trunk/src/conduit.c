@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.50 2002-04-02 15:29:49 azummo Exp $
+ * $Id: conduit.c,v 2.51 2002-04-24 17:07:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2190,7 +2190,7 @@ crea_type_matches(const conduit_block *cond,
 			"conduit \"%s\",\n"
 			"\tcreator: [%c%c%c%c] (0x%08lx) / "
 			"type: [%c%c%c%c] (0x%08lx)\n"
-			"\tflags: 0x%02lx\n",
+			"\tflags: 0x%02x\n",
 
 			cond->path,
 
