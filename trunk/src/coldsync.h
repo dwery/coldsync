@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.62 2002-03-30 15:58:21 azummo Exp $
+ * $Id: coldsync.h,v 1.63 2002-04-02 15:29:49 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -160,7 +160,14 @@ struct pref_desc {
 typedef struct crea_type_t {
 	udword creator;			/* 4-character creator */
 	udword type;			/* 4-character type */
+	unsigned char flags;		/* Flags. See CREATYPEFL_* below */
 } crea_type_t;
+
+/* crea_type_t flags:
+ */
+
+#define CREATYPEFL_ISNONE (1<<0)	/* "none" was given as creator/type pair */
+
 
 /* pref_desc flags:
  * If neither flag is set, then the location of the preference is
@@ -359,7 +366,8 @@ extern int append_pref_desc(conduit_block *cond,
 			    const char flags);
 extern int append_crea_type(conduit_block *cond,
 			    const udword creator,
-			    const udword type);
+			    const udword type,
+			    const unsigned char flags);
 
 /* backup.c */
 extern struct pdb * download_database(

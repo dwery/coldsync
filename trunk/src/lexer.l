@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.45 2002-03-18 10:06:45 arensb Exp $
+ * $Id: lexer.l,v 2.46 2002-04-02 15:29:49 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -257,6 +257,7 @@ QSTR		[^\\\$\"\n]
 		(yytext[6] << 16) |
 		(yytext[7] <<  8) |
 		yytext[8];
+	yylval.crea_type.flags = 0L;
 	return CREA_TYPE;
 	}
 
@@ -270,6 +271,7 @@ QSTR		[^\\\$\"\n]
 		(yytext[2] <<  8) |
 		yytext[3];
 	yylval.crea_type.type = 0L;
+	yylval.crea_type.flags = 0L;
 	return CREA_TYPE;
 	}
 
@@ -283,6 +285,7 @@ QSTR		[^\\\$\"\n]
 		(yytext[6] << 16) |
 		(yytext[7] <<  8) |
 		yytext[8];
+	yylval.crea_type.flags = 0L;
 	return CREA_TYPE;
 	}
 
@@ -292,6 +295,17 @@ QSTR		[^\\\$\"\n]
 
 	yylval.crea_type.creator = 0L;
 	yylval.crea_type.type = 0L;
+	yylval.crea_type.flags = 0L;
+	return CREA_TYPE;
+	}
+
+<CTPAIR>"none" {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+
+	yylval.crea_type.creator = 0L;
+	yylval.crea_type.type = 0L;
+	yylval.crea_type.flags = CREATYPEFL_ISNONE;
 	return CREA_TYPE;
 	}
 

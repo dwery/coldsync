@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.130 2002-03-30 17:46:32 azummo Exp $
+ * $Id: coldsync.c,v 1.131 2002-04-02 15:29:49 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -560,8 +560,10 @@ palm_Connect( void )
 	return palm;
 }
 
+/* XXX - Remove those sanity if (palm == NULL) checks. */
+
 static void
-palm_Disconnect( struct Palm *palm, ubyte status )
+palm_Disconnect(struct Palm *palm, ubyte status)
 {
 	int err;
 
@@ -587,7 +589,7 @@ palm_Disconnect( struct Palm *palm, ubyte status )
 }
 
 static void
-palm_Free( struct Palm *palm )
+palm_Free(struct Palm *palm)
 {
 	if (palm)
 		free_Palm( palm );
@@ -596,7 +598,7 @@ palm_Free( struct Palm *palm )
 }
 
 static void
-palm_DisconnectAndFree( struct Palm *palm, ubyte status )
+palm_DisconnectAndFree(struct Palm *palm, ubyte status)
 {
 	if (palm == NULL)
 		fprintf(stderr, "Undefined palm * passed to palm_DisconnectAndFree\n");
@@ -726,6 +728,16 @@ conduits_install( struct Palm *palm )
 	 */
 	Verbose(1, _("Running Install conduits"));
 
+	/* Run "none" conduits */
+ 	err = run_Install_conduits(NULL);
+ 	if (err < 0)
+ 	{
+ 	 	Error(_("Error %d running install conduits."),
+ 	 	      err);
+ 	 	return -1;
+ 	}
+
+
 	while (NextInstallFile(&dbinfo)>=0) {
 		err = run_Install_conduits(&dbinfo);
 		if (err < 0) {
@@ -756,6 +768,15 @@ conduits_dump( struct Palm *palm )
 
 	Verbose(1, _("Running Dump conduits"));
 
+	/* Run "none" conduits */
+ 	err = run_Dump_conduits(NULL);
+ 	if (err < 0)
+ 	{
+ 	 	Error(_("Error %d running post-dump conduits."),
+ 	 	      err);
+ 	 	return -1;
+ 	}
+
 	palm_resetdb(palm);
 
 	while ((cur_db = palm_nextdb(palm)) != NULL)
@@ -782,6 +803,16 @@ conduits_fetch( struct Palm *palm )
 
 	Verbose(1, _("Running Fetch conduits"));
 
+	/* Run "none" conduits */
+ 	err = run_Fetch_conduits(NULL);
+ 	if (err < 0)
+ 	{
+ 	 	Error(_("Error %d running pre-fetch conduits."),
+ 	 	      err);
+ 	 	return -1;
+ 	}
+ 
+
 	palm_resetdb(palm);
 
 	while ((cur_db = palm_nextdb(palm)) != NULL)
@@ -799,14 +830,58 @@ conduits_fetch( struct Palm *palm )
 }
 
 static int
-do_sync( pda_block *pda, struct Palm *palm )
+conduits_sync(struct Palm *palm)
+{
+	int err;
+	const struct dlp_dbinfo *cur_db;
+
+	/* Synchronize the databases */
+	Verbose(1, _("Running Sync conduits"));
+
+	/* Run "none" conduits */
+ 	err = run_Sync_conduits(NULL, palm_pconn(palm));
+ 	if (err < 0)
+ 	{
+ 	 	Error(_("Error %d running sync conduits."),
+ 	 	      err);
+ 	 	return -1;
+ 	}
+
+
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
+	{
+		/* Run the Sync conduits for this database. This includes
+		 * built-in conduits.
+		 */
+		Verbose(2, _("Syncing %s"), cur_db->name);
+
+		err = run_Sync_conduits(cur_db, palm_pconn(palm));
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_CANCEL:
+			    case CSE_NOCONN:
+				return -1;
+
+			    default:
+				Warn(_("Conduit failed for unknown "
+				       "reason."));
+				/* Continue, and hope for the best */
+				continue;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int
+do_sync(pda_block *pda, struct Palm *palm)
 {
 	int err;
 	struct pref_item *pref_cursor;
-	const struct dlp_dbinfo *cur_db;
-					/* Used when iterating over all
-					 * databases */
-
 
 	udword p_lastsyncPC;		/* Hostid of last host Palm synced
 					 * with */
@@ -1008,70 +1083,38 @@ do_sync( pda_block *pda, struct Palm *palm )
 	 * pre-fetch conduit. (Or maybe this would be a good time to run
 	 * the install conduit.)
 	 */
+
 	if ((err = conduits_fetch(palm)) < 0)
 	{
 		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
 
-
-	/* Synchronize the databases */
-	Verbose(1, _("Running Sync conduits"));
-	palm_resetdb(palm);
-	while ((cur_db = palm_nextdb(palm)) != NULL)
+	if ((err = conduits_sync(palm)) < 0)
 	{
-		/* Run the Sync conduits for this database. This includes
-		 * built-in conduits.
-		 */
-		Verbose(2, "Syncing %s", cur_db->name);
-		err = run_Sync_conduits(cur_db, palm_pconn(palm));
-		if (err < 0)
+		switch (cs_errno)
 		{
-			switch (cs_errno)
-			{
-			    case CSE_CANCEL:
-				Warn(_("Sync cancelled."));
-				va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
-					/* Doesn't really matter if it
-					 * fails, since we're terminating
-					 * anyway.
-					 */
-				break;
+		    case CSE_CANCEL:
+			Warn(_("Sync cancelled by Palm."));
+			va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
+				/* Doesn't really matter if it
+				 * fails, since we're terminating
+				 * anyway.
+				 */
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1;
 
-			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
-				palm_Free(palm);
-				return -1;
+		    case CSE_NOCONN:
+			Error(_("Lost connection to Palm."));
+			palm_Free(palm);
+			return -1;
 
-			    default:
-				Warn(_("Conduit failed for unknown "
-				       "reason."));
-				/* Continue, and hope for the best */
-				continue;
-			}
-
+		    default:
 			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		}
 	}
 
-
-	/* See how the above loop terminated */
-	switch (cs_errno)
-	{
-		case CSE_CANCEL:
-			Error(_("Sync cancelled by Palm."));
-			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-
-		case CSE_NOCONN:
-			Error(_("Lost connection to Palm."));
-			palm_Free(palm);
-			return -1;
-		default:
-			/* No error, nor not an important one */
-		break;
-	}
 
 	/* XXX - If it's configured to install new databases last, install
 	 * new databases now.
@@ -1158,7 +1201,7 @@ do_sync( pda_block *pda, struct Palm *palm )
 	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
 
 	/* Run Dump conduits */
-	err = conduits_dump( palm);
+	err = conduits_dump(palm);
 
 	/* XXX - Is this check still needed ? */
 	if (cs_errno == CSE_NOCONN)
