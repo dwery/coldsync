@@ -1,0 +1,20 @@
+# $Id: AUTHORS,v 1.7 2000-03-04 11:32:24 arensb Exp $
+
+Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
+	benevolent dictator.
+Louis A. Mamakos <louie@TransSys.COM>: USB support.
+Mark Coletti <mcoletti@clark.net>: The original Makefile.am, which was
+	then mangled out of all recognition and finally tossed.
+Rob Fugina <robf@geeks.com>: Alpha-testing at personal risk to his
+	data.
+
+	A big thank you to Kenneth Albanowski and the rest of the
+authors of the pilot-link code, for providing a reference
+implementation.
+
+Patches and such:
+	Justin Ferguson <jferg@lusars.net>: groveled through .h files
+	to come up with a patch for misbehaving 'gcc's.
+	Pace Willisson <pace@blitz.com>.
+	Jorge Barros <jorge.barros@lecroy.com>: French translation.
+	Christian Kirsch <ck@ix.heise.de>: German translation.
