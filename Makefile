@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.10 2000-02-06 22:33:19 arensb Exp $
+# $Id: Makefile,v 1.11 2000-02-06 22:50:44 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -38,8 +38,8 @@ EXTRA_DISTFILES =
 # Files to delete when making `clean', `distclean' and `spotless',
 # respectively. Each one deletes the ones before.
 CLEAN =		core *.core *.bak *~ errs errs.*
-DISTCLEAN =	config.cache Make.rules config.h config.log config.status ID \
-		.depend
+DISTCLEAN =	config.cache Make.rules config.h config.log config.status \
+		ID TAGS .depend
 SPOTLESS =	configure
 
 all::		Make.rules
