@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.107 2000-12-17 09:45:11 arensb Exp $
+dnl # $Id: configure.in,v 1.108 2000-12-23 11:34:19 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -148,22 +148,13 @@ with_i18n=yes
 
 # The above just checked whether the user asked for --with-i18n, and
 # set a default. Now we look for -lintl and the various catalog-making
-# utilities if necessary
+# utilities.
 
-# XXX - Bleah. Solaris's "xgettext" only looks for strings of the form
+# Solaris's 'xgettext' is unsuitable, since it only looks for
 #	gettext("some string")
-# There doesn't seem to be any way to tell it to look for
+# and can't be told to look for
 #	_("some string")
-# (short of running 'cpp' on each file in turn and piping it to
-# xgettext's stdin)
-# I guess the easiest way to deal with this is to run
-#	xgettext -V 1>&2 | grep GNU >/dev/null
-# and check the exit status.
-
-# XXX - Need further refinement: i18n/*.po are part of the (full)
-# distribution, and that ought to be sufficient to build the .mo files
-# (or whatever the local equivalent is), even if the machine doesn't
-# have the GNU libintl tools.
+# Hence, look for the GNU version of 'xgettext'.
 
 if test x"$with_i18n" = x"no"; then
 	# Do-nothing defaults, in case the user doesn't want i18n.
@@ -250,10 +241,8 @@ if test -z "$LINTARGS"; then
 fi
 AC_SUBST(LINTARGS)
 
-# XXX - I think there are other programs called 'makeinfo'. It would
-# be nice to make sure that this is the right one. It's probably
-# enough to run '$MAKEINFO --version' and grep for "GNU" in the
-# output.
+# There are other programs called 'makeinfo' out there. We want the
+# GNU one.
 CS_CHECK_GNU_PROGS(MAKEINFO, makeinfo, true)
 if test "$ac_cv_have_gnu_makeinfo" = no; then
 	ac_cv_prog_MEKEINFO=true
@@ -326,6 +315,10 @@ AC_CHECK_HEADERS([\
 ## Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
 AC_C_CONST
+if test x"$cs_cv_pedantic" = xno; then
+	# ANSI C does not support "long long"
+	AC_CHECK_SIZEOF(long long, 8)
+fi
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
@@ -336,14 +329,42 @@ AC_HEADER_TIME
 dnl AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 
-CS_CHECK_TYPE(socklen_t,int,[#include <sys/socket.h>])
-
 # socklen_t is defined (if it's defined) in <sys/socket.h>, so can't
 # use AC_CHECK_TYPE.
+CS_CHECK_TYPE(socklen_t,int,[#include <sys/socket.h>])
+
+# Check for existence of struct sockaddr.sa_len (4.4BSD).
+AC_CACHE_CHECK([for sa_len in struct sockaddr], ac_cv_struct_sockaddr_sa_len,
+[AC_TRY_COMPILE([#include <sys/types.h>
+#include <sys/socket.h>],dnl
+	[struct sockaddr sa; sa.sa_len;],
+	ac_cv_struct_sockaddr_sa_len=yes,
+	ac_cv_struct_sockaddr_sa_len=no)])
+
+if test $ac_cv_struct_sockaddr_sa_len = yes; then
+	AC_DEFINE(HAVE_SOCKADDR_SA_LEN)
+fi
+
+# Check for existence of struct sockaddr_in6
+AC_CACHE_CHECK([for struct sockaddr_in6], ac_cv_struct_sockaddr6,
+[AC_TRY_COMPILE([#include <sys/types.h>
+#include <netinet/in.h>],dnl
+	[int s; s = sizeof(struct sockaddr_in6);],
+	ac_cv_struct_sockaddr6=yes,
+	ac_cv_struct_sockaddr6=no)])
+
+if test $ac_cv_struct_sockaddr6 = yes; then
+	AC_DEFINE(HAVE_SOCKADDR6)
+fi
 
 ## Checks for library functions.
 AC_CHECK_FUNCS(fpurge \
 	getopt \
+	inet_aton \
+	inet_ntoa \
+	inet_ntop \
+	inet_pton \
+	gethostbyname2 \
 	memcpy \
 	memset \
 	bzero \
@@ -355,8 +376,22 @@ AC_CHECK_FUNCS(fpurge \
 	cfmakeraw \
 	socketpair \
 	strcasecmp \
-	strncasecmp
+	strncasecmp \
+	snprintf
 )
+
+if test x"$ac_cv_func_inet_pton" != xyes; then
+	if test x"$ac_cv_func_inet_aton" != xyes; then
+		AC_MSG_WARN([
+	Gah! You have neither inet_pton() nor inet_aton()! You need to
+	install a newer OS. I bet this one won't even run BLAZEMONGER,
+	and that runs on Amigas, toasters, and even dead rodents!])
+		EXIT_STATUS=1
+	fi
+fi
+#'
+# Assume that if inet_pton() or inet_aton() exists, then so does
+# inet_ntop() or inet_ntoa()
 
 # Check whether O_BINARY is defined. It's known to exist under Windows
 # (NT); not sure whether it's universal or if it's specific to Cygwin,
