@@ -66,6 +66,9 @@
 /* Define if you have the mkstemp function */
 #undef HAVE_MKSTEMP
 
+/* Define if you have the fpurge function */
+#undef HAVE_FPURGE
+
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
 
@@ -152,6 +155,13 @@
 #if !HAVE_STRNCASECMP
 #  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
 #endif	/* HAVE_STRNCASECMP */
+
+/* Define an empty fpurge() if it doesn't exist. It isn't critical, but
+ * IMHO it's nice to have.
+ */
+#if !HAVE_FPURGE
+#  define	fpurge(stream)
+#endif	/* HAVE_FPURGE */
 
 /* The internationalizable strings in the source are enclosed in _(), e.g.,
  * _("Hello, world!"). That way, they can be looked up by whichever i18n
