@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.17 2000-02-07 19:09:04 arensb Exp $
+ * $Id: conduit.c,v 1.18 2000-04-09 14:33:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,8 +57,8 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 */
 
 static int run_conduits(struct dlp_dbinfo *dbinfo,
-			conduit_block *queue,
-			char *flavor);
+			char *flavor,
+			conduit_block *queue);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -121,6 +121,148 @@ tini_conduits()
 	return 0;
 }
 
+/* run_conduit
+ * Run a single conduit, of the given flavor.
+ * Returns a negative value in case of an error running the conduit.
+ * Otherwise, returns the last status returned by the conduit (which may
+ * indicate an error with the conduit).
+ */
+static int
+run_conduit(struct dlp_dbinfo *dbinfo,
+	    char *flavor,
+	    conduit_block *conduit)
+{
+	int err;
+	static char * argv[4];	/* Conduit's argv */
+	pid_t pid;		/* Conduit's PID */
+	FILE *fromchild;	/* File handle to child's stdout */
+	FILE *tochild;		/* File handle to child's stdin */
+	const char *bakfname;	/* Path to backup file */
+	int laststatus;		/* The last status code printed by the
+				 * child. This is used as its exit status.
+				 */
+
+
+	/* XXX - See if conduit->path is a predefined string (set up a
+	 * table of built-in conduits). If so, run the corresponding
+	 * built-in conduit.
+	 */
+	/* XXX - Ideally, it should be possible to define a conduit with no
+	 * path: just say
+	 *	conduit dump {
+	 *		type * / *;
+	 *		final;
+	 *	}
+	 * as a dummy conduit, just to say that it's the last conduit.
+	 */
+
+	argv[0] = conduit->path;	/* Path to conduit */
+	argv[1] = "conduit";		/* Mandatory argument */
+	argv[2] = flavor;		/* Flavor argument */
+	argv[3] = NULL;			/* Terminator */
+
+	pid = spawn_conduit(conduit->path,
+			    argv,
+			    &tochild, &fromchild,
+			    NULL);
+	if (pid < 0)
+	{
+		fprintf(stderr, "%s: Can't spawn conduit\n",
+			"run_conduits");
+
+		/* Let's hope that this isn't a fatal problem */
+		return -1;
+	}
+
+	laststatus = -1;	/* Child hasn't sent anything yet. If it
+				 * exits before printing a status code,
+				 * that'll be an error.
+				 */
+
+	/* Feed the various parameters to the child via 'tochild'. */
+
+	/* XXX - These ought to be integrated into a single list (or maybe
+	 * two lists: one for the common headers, and one for the
+	 * user-supplied ones).
+	 */
+	/* Daemon: the name of the ColdSync daemon. Under the terms of the
+	 * Artistic license, you can come up with your own version of
+	 * ColdSync, but you have to call it something else. The "Daemon"
+	 * header is there in case it matters.
+	 */
+	cond_sendheader("Daemon",
+			PACKAGE, strlen(PACKAGE),
+			tochild, fromchild);
+		/* XXX - Error-checking */
+
+	/* Version: version of the program given by "Daemon" */
+	cond_sendheader("Version",
+			VERSION, strlen(VERSION),
+			tochild, fromchild);
+		/* XXX - Error-checking */
+
+	/* InputDB: location of existing database */
+	/* XXX - This is only applicable for certain flavors of conduit
+	 * (dump, sync). Deal with this.
+	 */
+	bakfname = mkbakfname(dbinfo);
+	cond_sendheader("InputDB",
+			bakfname, strlen(bakfname),
+			tochild, fromchild);
+		/* XXX - Error-checking */
+
+	/* OutputDB: Location of database to dump to */
+	/* XXX - This is only applicable for certain flavors of conduit
+	 * (fetch, sync). Deal with this.
+	 */
+	cond_sendheader("OutputDB",
+			bakfname, strlen(bakfname),
+			tochild, fromchild);
+		/* XXX - Error-checking */
+
+	/* XXX - "PalmOS": Version of PalmOS running on the Palm (For Sync
+	 * conduit only)
+	 */
+	/* XXX - Other header lines */
+	/* XXX - User-supplied header lines */
+
+	/* Send an empty line to the child (end of input) */
+	cond_sendline("\n", 1, tochild, fromchild);
+		/* XXX - Error-checking */
+	fflush(tochild);
+
+	while ((err = cond_readstatus(fromchild)) > 0)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr,
+				"run_conduits: got status %d\n",
+				err);
+
+		/* Save the error status for later use: the last error
+		 * status printed is the final result from the conduit.
+		 */
+		laststatus = err;
+	}
+
+
+	SYNC_TRACE(4)
+		fprintf(stderr, "Closing child's file descriptors\n");
+	fclose(tochild);
+	fclose(fromchild);
+
+	/* If this is a final conduit, don't look any further. */
+	if (conduit->flags & CONDFL_FINAL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "This is a final conduit. "
+				"Not looking any further.\n");
+
+		return laststatus;
+	}
+
+	return laststatus;
+}
+
 /* run_conduits
  * This function encapsulates the common parts of the run_*_conduits()
  * functions. It takes the dlp_dbinfo for a database and a list of conduit
@@ -134,15 +276,19 @@ tini_conduits()
  */
 static int
 run_conduits(struct dlp_dbinfo *dbinfo,
-	     conduit_block *queue,
-	     char *flavor)		/* Dump flavor: will be sent to
+	     char *flavor,		/* Dump flavor: will be sent to
 					 * conduit.
 					 */
+	     conduit_block *queue)
 {
 	int err;
 	conduit_block *conduit;
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
 	conduit_block *def_conduit;	/* Default conduit */
+	Bool found_conduit;		/* Set to true if a "real" (not
+					 * just a default) matching conduit
+					 * was found.
+					 */
 
 	/* Set handler for SIGCHLD, so that we can keep track of what
 	 * happens to conduit child processes.
@@ -157,20 +303,13 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	}
 
 	def_conduit = NULL;		/* No default conduit yet */
+	found_conduit = False;
+
+	/* Walk the queue */
 	for (conduit = queue;
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
-		pid_t pid;		/* Conduit's PID */
-		static char * argv[4];	/* Conduit's argv */
-		FILE *fromchild;	/* File handle to child's stdout */
-		FILE *tochild;		/* File handle to child's stdin */
-		const char *bakfname;	/* Path to backup file */
-		int laststatus;		/* The last status code printed by
-					 * the child. This is used as its
-					 * exit status.
-					 */
-
 		SYNC_TRACE(3)
 			fprintf(stderr, "Trying conduit...\n");
 
@@ -228,134 +367,32 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		if (conduit->flags & CONDFL_DEFAULT)
 		{
 			SYNC_TRACE(2)
-				fprintf(stderr, "This is a default conduit\n");
+				fprintf(stderr, "This is a default conduit. "
+					"Remembering for later.\n");
 
 			/* Remember this conduit as the default if no other
 			 * conduits match.
-			 */
-			/* XXX - Need to run this conduit if no others
-			 * match. Can't just 'goto' into the middle of this
-			 * loop, though, since that would cause all of the
-			 * other conduits to run as well.
 			 */
 			def_conduit = conduit;
 			continue;
 		}
 
-		/* XXX - See if conduit->path is a predefined string (set
-		 * up a table of built-in conduits). If so, run the
-		 * corresponding built-in conduit.
+		found_conduit = True;
+		err = run_conduit(dbinfo, flavor, conduit);
+
+		/* XXX - Error-checking. Report the conduit's exit status
 		 */
-		/* XXX - Ideally, it should be possible to define a conduit
-		 * with no path: just say
-		 *	conduit dump {
-		 *		type * / *;
-		 *		final;
-		 *	}
-		 * as a dummy conduit, just to say that it's the last
-		 * conduit.
+	}
+
+	if ((!found_conduit) && (def_conduit != NULL))
+	{
+		/* No matching conduit was found, but there's a default.
+		 * Run it now.
 		 */
-
-		argv[0] = conduit->path;	/* Path to conduit */
-		argv[1] = "conduit";		/* Mandatory argument */
-		argv[2] = flavor;		/* Flavor argument */
-		argv[3] = NULL;			/* Terminator */
-
-		pid = spawn_conduit(conduit->path,
-				    argv,
-				    &tochild, &fromchild,
-				    NULL);
-		if (pid < 0)
-		{
-			fprintf(stderr, "%s: Can't spawn conduit\n",
-				"run_conduits");
-
-			/* Let's hope that this isn't a fatal problem */
-			continue;
-		}
-
-		laststatus = -1;	/* Child hasn't sent anything yet */
-
-		/* Feed the various parameters to the child via 'tochild'.
-		 */
-
-		/* Daemon: the name of the ColdSync daemon. Under the terms
-		 * of the Artistic license, you can come up with your own
-		 * version of ColdSync, but you have to call it something
-		 * else. The "Daemon" header is there in case it matters.
-		 */
-		cond_sendheader("Daemon",
-				PACKAGE, strlen(PACKAGE),
-				tochild, fromchild);
-			/* XXX - Error-checking */
-
-		/* Version: version of the program given by "Daemon" */
-		cond_sendheader("Version",
-				VERSION, strlen(VERSION),
-				tochild, fromchild);
-			/* XXX - Error-checking */
-
-		/* InputDB: location of existing database */
-		/* XXX - This is only applicable for certain flavors of
-		 * conduit (dump, sync). Deal with this.
-		 */
-		bakfname = mkbakfname(dbinfo);
-		cond_sendheader("InputDB",
-				bakfname, strlen(bakfname),
-				tochild, fromchild);
-			/* XXX - Error-checking */
-
-		/* OutputDB: Location of database to dump to */
-		/* XXX - This is only applicable for certain flavors of
-		 * conduit (fetch, sync). Deal with this.
-		 */
-		cond_sendheader("OutputDB",
-				bakfname, strlen(bakfname),
-				tochild, fromchild);
-			/* XXX - Error-checking */
-
-		/* XXX - "PalmOS": Version of PalmOS running on the Palm
-		 * (For Sync conduit only)
-		 */
-		/* XXX - Other header lines */
-		/* XXX - User-supplied header lines */
-
-		/* Send an empty line to the child (end of input) */
-		cond_sendline("\n", 1, tochild, fromchild);
-					/* XXX - Error-checking */
-		fflush(tochild);
-
-		while ((err = cond_readstatus(fromchild)) > 0)
-		{
-			SYNC_TRACE(2)
-				fprintf(stderr,
-					"run_conduits: got status %d\n",
-					err);
-
-			/* XXX - Save the error status for later use: the
-			 * last error status printed is the final result
-			 * from the conduit.
-			 */
-			laststatus = err; 
-		}
-
-
 		SYNC_TRACE(4)
-			fprintf(stderr, "Closing child's file descriptors\n");
-		fclose(tochild);
-		fclose(fromchild);
+			fprintf(stderr, "Running default conduit\n");
 
-		/* XXX - May want to do something with 'laststatus' */
-
-		/* If this is a final conduit, don't look any further. */
-		if (conduit->flags & CONDFL_FINAL)
-		{
-			SYNC_TRACE(2)
-				fprintf(stderr, "This is a final conduit. "
-					"Not looking any further.\n");
-
-			break;
-		}
+		err = run_conduit(dbinfo, flavor, def_conduit);
 	}
 
 	/* Restore previous SIGCHLD handler */
@@ -384,7 +421,7 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, config.fetch_q, "fetch");
+	return run_conduits(dbinfo, "fetch", config.fetch_q);
 }
 
 /* run_Dump_conduits
@@ -413,7 +450,7 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, config.dump_q, "dump");
+	return run_conduits(dbinfo, "dump", config.dump_q);
 }
 
 /* spawn_conduit
