@@ -1,3 +1,12 @@
+- For man pages that cover several functions, write short ".so
+  somefunc.3" man pages for the secondary ones.
+- Use enums instead of #defined values, so that compiler can warn
+  about unused values.
+- PConnection_net.c uses tini_slp() et al. even when it isn't
+  appropriate. Better to add a pconn->tini() or pconn->unwind()
+  method.
+- <Shortcut>-.-4 displays user name and userid. Mention this in the
+  docs.
 - Move the ritual_{stmt,resp} constants from "netsync.h" back to
   "netsync.c", since that's the only place they're used.
 - Document the -P <protocol> option. Add it to the usage string.
