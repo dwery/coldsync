@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.12 2000-09-03 05:05:38 arensb Exp $
+# $Id: Makefile,v 2.13 2000-09-17 22:24:32 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -11,7 +11,7 @@ C_SRCS =	coldsync.c \
 		restore.c \
 		install.c \
 		config.c \
-		handledb.c \
+		misc.c \
 		log.c \
 		conduit.c \
 		pref.c \
