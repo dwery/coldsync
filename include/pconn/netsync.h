@@ -34,7 +34,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.4 2001-07-26 06:58:55 arensb Exp $
+ * $Id: netsync.h,v 1.5 2001-07-30 07:06:15 arensb Exp $
  */
 
 #ifndef _netsync_h_
@@ -112,6 +112,8 @@ extern int netsync_read_method(PConnection *pconn,
 extern int netsync_write(PConnection *pconn,
 			 const ubyte *buf,
 			 const uword len);
+extern int ritual_exch_client(PConnection *pconn);
+extern int ritual_exch_server(PConnection *pconn);
 
 #endif	/* _netsync_h_ */
 
