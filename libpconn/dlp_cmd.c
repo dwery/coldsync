@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.23 2001-09-07 10:40:32 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.24 2001-09-07 10:42:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -108,7 +108,7 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpReadUserInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadUserInfo,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadUserInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;	/* Error */
@@ -285,7 +285,8 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpWriteUserInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteUserInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteUserInfo,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -343,7 +344,8 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 		return err;
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadSysInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadSysInfo,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -446,7 +448,7 @@ DlpGetSysDateTime(PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	err = dlp_recv_resp(pconn, DLPCMD_GetSysDateTime,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_GetSysDateTime,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -538,7 +540,7 @@ DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpSetSysDateTime: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_SetSysDateTime,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_SetSysDateTime,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -614,7 +616,7 @@ DlpReadStorageInfo(PConnection *pconn,
 		fprintf(stderr, "DlpReadStorageInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadStorageInfo,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadStorageInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -795,7 +797,8 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpReadDBList: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadDBList, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadDBList,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1002,7 +1005,8 @@ DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpOpenDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_OpenDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_OpenDB,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1109,7 +1113,8 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpCreateDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_CreateDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CreateDB,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1200,7 +1205,8 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpCloseDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_CloseDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CloseDB,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1283,7 +1289,8 @@ DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpDeleteDB: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_DeleteDB, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteDB,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1364,7 +1371,7 @@ DlpReadAppBlock(PConnection *pconn,	/* Connection */
 		fprintf(stderr, "DlpReadAppBlock: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadAppBlock,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadAppBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1472,8 +1479,8 @@ DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 	DLPC_TRACE(10)
 		fprintf(stderr,
 			"DlpWriteAppBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_WriteAppBlock, &resp_header,
-			    &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteAppBlock,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1553,7 +1560,7 @@ DlpReadSortBlock(PConnection *pconn,	/* Connection */
 	/* Get a response */
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpReadSortBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_ReadSortBlock,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadSortBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1652,7 +1659,7 @@ DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 	/* Get a response */
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpWriteSortBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_WriteSortBlock,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteSortBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1726,7 +1733,7 @@ DlpReadNextModifiedRec(
 			"DlpReadNextModifiedRec: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRec,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextModifiedRec,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -1839,7 +1846,8 @@ DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpReadRecordByID: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecord,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -1961,7 +1969,8 @@ DlpReadRecordByIndex(
 			"DlpReadRecordByIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecord,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2102,7 +2111,7 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteRecord,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 	{
@@ -2198,7 +2207,8 @@ DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpDeleteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_DeleteRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteRecord,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2283,8 +2293,8 @@ DlpReadResourceByIndex(
 			"DlpReadResourceByIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header,
-			    &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadResource,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2391,7 +2401,8 @@ DlpReadResourceByType(
 			"DlpReadResourceByType: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadResource,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2514,7 +2525,7 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpWriteResource: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteResource,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteResource,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 	{
@@ -2607,7 +2618,7 @@ DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpDeleteResource: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_DeleteResource,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteResource,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2676,7 +2687,8 @@ DlpCleanUpDatabase(
 		fprintf(stderr, "DlpCleanUpDatabase: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_CleanUpDatabase, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CleanUpDatabase,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2742,7 +2754,7 @@ DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpResetSyncFlags: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ResetSyncFlags,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetSyncFlags,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2873,7 +2885,7 @@ DlpCallApplication(
 		fprintf(stderr, "DlpCallApplication: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_CallApplication,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CallApplication,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -2955,7 +2967,7 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 		fprintf(stderr, "DlpResetSystem: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ResetSystem,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetSystem,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3041,7 +3053,7 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpAddSyncLogEntry: waiting for response\n");
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_AddSyncLogEntry,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_AddSyncLogEntry,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3109,7 +3121,7 @@ DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 	/* Get a response */
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpReadOpenDBInfo: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_ReadOpenDBInfo,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadOpenDBInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3190,7 +3202,7 @@ DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpMoveCategory: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_MoveCategory,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_MoveCategory,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3249,7 +3261,7 @@ DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 		fprintf(stderr, "DlpOpenConduit: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_OpenConduit,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_OpenConduit,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3318,7 +3330,8 @@ DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 	/* Get a response */
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpEndOfSync: waiting for response\n");
-	err = dlp_recv_resp(pconn, DLPCMD_EndOfSync, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_EndOfSync,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -3384,7 +3397,7 @@ DlpResetRecordIndex(
 		fprintf(stderr, "DlpResetRecordIndex: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ResetRecordIndex,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetRecordIndex,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3494,7 +3507,7 @@ DlpReadRecordIDList(
 		fprintf(stderr, "DlpReadRecordIDList: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadRecordIDList,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecordIDList,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3592,7 +3605,7 @@ DlpReadNextRecInCategory(
 			"DlpReadNextRecInCategory: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadNextRecInCategory,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextRecInCategory,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3704,7 +3717,7 @@ DlpReadNextModifiedRecInCategory(
 			"response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRecInCategory,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextModifiedRecInCategory,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3821,7 +3834,7 @@ DlpReadAppPreference(
 			"DlpReadAppPreference: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadAppPreference,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadAppPreference,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3934,7 +3947,7 @@ DlpWriteAppPreference(
 		fprintf(stderr, "WriteAppPreference: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteAppPreference,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteAppPreference,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -3999,7 +4012,7 @@ DlpReadNetSyncInfo(PConnection *pconn,
 		fprintf(stderr, "DlpReadNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadNetSyncInfo,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNetSyncInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -4161,7 +4174,7 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, "DlpWriteNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteNetSyncInfo,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteNetSyncInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
@@ -4247,7 +4260,7 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "DlpReadFeature: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadFeature,
+	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadFeature,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
