@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.13 2001-01-28 22:41:04 arensb Exp $
+ * $Id: misc.c,v 2.14 2001-02-08 07:39:56 arensb Exp $
  */
 
 #include "config.h"
@@ -141,6 +141,41 @@ Perror(const char *str)
 			 str, strerror(errno));
 		syslog(LOG_ERR, msgbuf);
 	}
+}
+
+/* Verbose
+ * Prints a message if the overall verbosity is >= 'level'.
+ * Takes printf()-like arguments.
+ * Returns a negative value if unsuccessful.
+ */
+int
+Verbose(const int level, const char *format, ...)
+{
+	int err = 0;
+	va_list ap;
+
+	if (global_opts.verbosity < level)
+		return 0;		/* Don't print this message */
+
+	va_start(ap, format);
+
+	err = vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	/* Log with syslog, if necessary */
+	if (global_opts.use_syslog)
+	{
+		/* It'd be nice to use vsyslog() here, but I'm pretty sure
+		 * it's not portable.
+		 */
+		char msgbuf[256];	/* Error messages shouldn't be long */
+
+		err = vsnprintf(msgbuf, sizeof(msgbuf),
+				format, ap);
+		syslog(LOG_INFO, msgbuf);
+	}
+
+	return err;
 }
 
 /* mkfname
