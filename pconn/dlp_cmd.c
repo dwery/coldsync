@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.12 1999-06-24 02:46:54 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.13 1999-07-04 02:53:54 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -290,6 +290,15 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
+	/* Before parsing the arguments, set the DLP 1.2 fields to 0, for
+	 * devices that don't return them.
+	 */
+	sysinfo->dlp_ver_maj = 0;
+	sysinfo->dlp_ver_min = 0;
+	sysinfo->comp_ver_maj = 0;
+	sysinfo->comp_ver_min = 0;
+	sysinfo->max_rec_size = 0L;
+
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
 	{
@@ -310,7 +319,23 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 				   sysinfo->prodIDsize,
 				   sysinfo->prodID);
 			break;
-		    /* XXX - Palm III returns 0x21 here */
+
+		    case DLPRET_ReadSysInfo_Ver:
+		    {
+			    sysinfo->dlp_ver_maj = get_uword(&rptr);
+			    sysinfo->dlp_ver_min = get_uword(&rptr);
+			    sysinfo->comp_ver_maj = get_uword(&rptr);
+			    sysinfo->comp_ver_min = get_uword(&rptr);
+			    sysinfo->max_rec_size = get_udword(&rptr);
+
+			    DLPC_TRACE(1, "Got version sysinfo: DLP v%d.%d, compatibility v%d.%d, max record size 0x%08lx\n",
+				       sysinfo->dlp_ver_maj,
+				       sysinfo->dlp_ver_min,
+				       sysinfo->comp_ver_maj,
+				       sysinfo->comp_ver_min,
+				       sysinfo->max_rec_size);
+		    }
+			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadSysInfo: Unknown argument type: 0x%02x\n",
 				ret_argv[i].id);
