@@ -3,11 +3,11 @@
  * USB-related stuff for Visors.
  *
  *	Copyright (C) 2000, Louis A. Mamakos.
- *	Copyright (C) 2002, Alessandro Zummo.
+ *	Copyright (C) 2002-04, Alessandro Zummo.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.6 2003-03-02 13:37:14 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.7 2004-10-21 00:24:01 azummo Exp $
  */
 
 #include "config.h"
@@ -51,7 +51,8 @@
 
 struct usb_data {
 	usb_dev_handle *dev;
-	int hotsync_ep;
+	int hotsync_ep_out;
+	int hotsync_ep_in;
 	unsigned char iobuf[IOBUF_LEN];
 	unsigned char *iobufp;
 	int iobuflen;
@@ -80,18 +81,32 @@ struct usb_data {
  */
 #define usbRequestVendorGetConnectionInfo		0x03
 
-/* Required on some PalmOS 4.0 devices. Unknown meaning.
+/* Similar to the previous one, is used on newer devices.
  */
-#define usbRequestVendorUnknown				0x04
+#define usbRequestVendorGetExtConnectionInfo		0x04
 
 
 typedef struct {
-	unsigned short	numPorts;
+	unsigned short numPorts;
 	struct {
 		unsigned char	portFunctionID;
 		unsigned char	port;
 	} connections[20];
 } UsbConnectionInfoType, * UsbConnectionInfoPtr;
+
+typedef struct {
+	unsigned char numPorts;
+	unsigned char differentEndPoints;
+
+	unsigned short reserved;
+
+	struct {
+		unsigned char creatorID[4];
+		unsigned char port;
+		unsigned char info;
+		unsigned short reserved;
+	} connections[2];
+} UsbExtConnectionInfoType, * UsbExtConnectionInfoPtr;
 
 #define	hs_usbfun_Generic	0
 #define	hs_usbfun_Debugger	1
@@ -106,6 +121,7 @@ typedef struct {
 #define HANDSPRING_VENDOR_ID		0x082d
 #define HANDSPRING_VISOR_ID		0x0100
 #define HANDSPRING_TREO_ID		0x0200
+#define HANDSPRING_TREO_600_ID		0x0300
 
 #define PALM_VENDOR_ID			0x0830
 #define PALM_M500_ID			0x0001
@@ -117,6 +133,9 @@ typedef struct {
 #define PALM_TUNGSTEN_T_ID              0x0060
 #define PALM_TUNGSTEN_Z_ID		0x0031
 #define PALM_ZIRE_ID			0x0070
+#define PALM_ZIRE_31_72_ID		0x0061 /* Those USB ids must be very procey, they
+						* keep using the same...
+						*/
 
 #define SONY_VENDOR_ID			0x054C
 #define SONY_CLIE_3_5_ID		0x0038
@@ -124,6 +143,15 @@ typedef struct {
 #define SONY_CLIE_S360_ID		0x0095
 #define SONY_CLIE_4_1_ID		0x009A
 #define SONY_CLIE_NX60_ID		0x00DA
+#define SONY_CLIE_NZ90V_ID		0x00E9
+#define SONY_CLIE_UX50_ID		0x0144
+#define SONY_CLIE_TJ25_ID		0x0169
+
+#define ACEECA_VENDOR_ID		0x4766
+#define ACEECA_MEZ_1000_ID		0x0001
+
+#define GARMIN_VENDOR_ID		0x091E
+#define GARMIN_IQUE_3600_ID		0x0004
 
 static char *hs_usb_functions[] = {
 	"Generic",
@@ -208,11 +236,11 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 			}
 
 			u->iobufp = u->iobuf;
-			IO_TRACE(2)
-				fprintf(stderr, "calling usb_bulk_read(%02x)\n", u->hotsync_ep | 0x80);
-			u->iobuflen = usb_bulk_read(u->dev, u->hotsync_ep | 0x80,
+			IO_TRACE(3)
+				fprintf(stderr, "calling usb_bulk_read(%02x)\n", u->hotsync_ep_in | 0x80);
+			u->iobuflen = usb_bulk_read(u->dev, u->hotsync_ep_in | 0x80,
 				(char *)u->iobufp, sizeof(u->iobuf), 5000);
-			IO_TRACE(2)
+			IO_TRACE(3)
 				fprintf(stderr, "usb read %d, ret %d\n", sizeof(u->iobuf), u->iobuflen);
 			if (u->iobuflen < 0) {
 				fprintf(stderr, "usb read: %s\n", usb_strerror());
@@ -230,8 +258,8 @@ usb_write(PConnection *p, unsigned const char *buf, const int len)
 	struct usb_data *u = p->io_private;
 	int ret;
 
-	ret = usb_bulk_write(u->dev, u->hotsync_ep, (char *)buf, len, 5000);
-	IO_TRACE(2)
+	ret = usb_bulk_write(u->dev, u->hotsync_ep_out, (char *)buf, len, 5000);
+	IO_TRACE(3)
 		fprintf(stderr, "usb write %d, ret %d\n", len, ret);
 	if (ret < 0)
 		fprintf(stderr, "usb write: %s\n", usb_strerror());
@@ -355,6 +383,72 @@ usb_drain(PConnection *p)
 }
 
 int
+pconn_libusb_probe_os4(PConnection *pconn,
+		struct usb_data *u)
+{
+	int ret, i;
+	UsbExtConnectionInfoType extci;
+
+	ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+		usbRequestVendorGetExtConnectionInfo, 0, 0,
+		(char *)&extci, sizeof(UsbExtConnectionInfoType) , 5000);
+
+	if (ret < 0)
+	{
+		perror(_("usb_control_msg(usbRequestVendorGetExtConnectionInfo) failed"));
+		return 0;
+	}
+
+	IO_TRACE(1) {
+		fprintf(stderr,
+			"GetExtConnectionInfo:\n"
+			"     ports: %d\n"
+			" different: %d\n",
+			extci.numPorts,
+			extci.differentEndPoints
+		);
+ 
+	}
+
+
+	for (i = 0; i < extci.numPorts; i++)
+	{
+		IO_TRACE(1) {
+			fprintf(stderr,
+				"   port[%d]: %d\n"
+				"   info[%d]: %x\n",
+				i, extci.connections[i].port,
+				i, extci.connections[i].info
+			);
+ 		}
+	}
+
+	/* XXX We are always using the first connection entry */
+
+	if (extci.differentEndPoints)
+	{
+		u->hotsync_ep_in	= extci.connections[0].info >> 4;
+		u->hotsync_ep_out	= extci.connections[0].info & 0x0F;
+	}
+	else
+	{
+		u->hotsync_ep_in = extci.connections[0].port;
+		u->hotsync_ep_out = extci.connections[0].port;
+	}
+
+	IO_TRACE(1) {
+		fprintf(stderr,
+			"Using endpoints: %d (in), %d (out)\n",
+				u->hotsync_ep_in,
+				u->hotsync_ep_out
+		);
+	}
+
+	/* Make it so */
+	return 1;
+}
+
+int
 pconn_libusb_open(PConnection *pconn,
 		const char *device,
 		const pconn_proto_t protocol)
@@ -362,7 +456,6 @@ pconn_libusb_open(PConnection *pconn,
 	struct usb_data *u;
 	int i, ret;
 	unsigned char usbresponse[50];
-	UsbConnectionInfoType ci;
 
 	struct usb_bus *bus;
 	struct usb_device *dev;
@@ -403,7 +496,10 @@ pconn_libusb_open(PConnection *pconn,
 	usb_init();
 
 	dev = NULL;
-	for (i = 0; i < 30; i++)
+	
+	i = 0;
+	
+	while (i < 30)
 	{
 		struct usb_bus *busses;
 
@@ -425,6 +521,12 @@ pconn_libusb_open(PConnection *pconn,
 
 				if (dev->descriptor.idVendor == SONY_VENDOR_ID)
 					break;
+
+				if (dev->descriptor.idVendor == ACEECA_VENDOR_ID)
+					break;
+
+				if (dev->descriptor.idVendor == GARMIN_VENDOR_ID)
+					break;
 			}
 		}
 
@@ -432,6 +534,9 @@ pconn_libusb_open(PConnection *pconn,
 			break;
 
 		sleep(1);
+		
+		if (!(pconn->flags & PCONNFL_DAEMON))
+			i++;
 	}
 
 	/*
@@ -534,14 +639,6 @@ pconn_libusb_open(PConnection *pconn,
 	}
 
 	/*
-	 *  Eventually, it might be necessary to split out the following
-	 *  code should another Palm device with a USB peripheral interface
-	 *  need to be supported in a different way.  Hopefully, they will
-	 *  simply choose to inherit this existing interface rather then
-	 *  inventing Yet Another exquisitely round wheel of their own.
-	 */
-
-	/*
 	 *  Ensure that the device is set to the default configuration.
 	 *  For Visors seen so far, the default is the only one they
 	 *  support.
@@ -552,141 +649,10 @@ pconn_libusb_open(PConnection *pconn,
 	if (usb_claim_interface(u->dev, 0) < 0)
 		perror("warning: usb_claim_interface failed");
 
-	/*
-	 *  Now, ask the device (which we believe to be a Handspring Visor)
-	 *  about the various USB endpoints which we can make a connection 
-	 *  to.  Obviously, here we're looking for the endpoint associated 
-	 *  with the Hotsync running on the other end.  This has been observed
-	 *  to be endpoint "2", but this is not statically defined, and might
-	 *  change based on what other applications are running and perhaps
-	 *  on future hardware platforms.
-	 */
 
-	bzero((void *)&ci, sizeof(ci));
-	if (usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-		usbRequestVendorGetConnectionInfo, 0, 0, (char *)&ci, 18, 5000) < 0)
-	{
-		perror(_("usb_control_msg(usbRequestVendorGetConnectionInfo) failed"));
+	/* Adjust for other devices */
 
-		usb_close(u->dev);
-
-		free((void *)u);
-		u = pconn->io_private = NULL;
-
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;
-	}
-
-	/*
-	 *  Now search the list of functions supported over the USB interface
-	 *  for the endpoint associated with the HotSync function.  So far,
-	 *  this has seen to "always" be on endpoint 2, but this might 
-	 *  change and we use this binding mechanism to discover where it
-	 *  lives now.  Sort of like the portmap(8) daemon..
-	 *
-	 *  Also, beware:  as this is "raw" USB function, the result
-	 *  we get is in USB-specific byte order.  This happens to be
-	 *  little endian, but we should use the accessor macros to ensure
-	 *  the code continues to run on big endian CPUs too.
-	 */
-
-	/* XXX Fix endian for ci.numPorts */
-	for (i = 0; i < ci.numPorts; i++) {
-		IO_TRACE(2)
-		fprintf(stderr,
-			"ConnectionInfo: entry %d function %s on port %d\n",
-			i, 
-			(ci.connections[i].portFunctionID <= hs_usbfun_MAX)
-			  ? hs_usb_functions[ci.connections[i].portFunctionID]
-			  : "unknown",
-			ci.connections[i].port);
-
-		if (ci.connections[i].portFunctionID == hs_usbfun_Hotsync)
-			u->hotsync_ep = ci.connections[i].port;
-	}
-
-	if (u->hotsync_ep < 0) {
-		fprintf(stderr,
-			_("%s: Could not find HotSync endpoint on your PDA.\n"),
-			"PConnection_usb");
-		usb_close(u->dev);
-		free((void *)u);
-		u = pconn->io_private = NULL;
-
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;
-	}
-
-	/* Hack for PalmOS 4.0 devices */
-
-	if (dev->descriptor.idVendor == SONY_VENDOR_ID)
-	{
-		if (dev->descriptor.idProduct == SONY_CLIE_4_0_ID ||
-			dev->descriptor.idProduct == SONY_CLIE_S360_ID)
-		{
-			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
-
-			if (ret < 0)
-				perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
-
-			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
-
-			if (ret < 0)
-				perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
-		}
-	}
-
-	if (dev->descriptor.idVendor == PALM_VENDOR_ID)
-	{
-		if (dev->descriptor.idProduct == PALM_M500_ID ||
-			dev->descriptor.idProduct == PALM_M505_ID ||
-			dev->descriptor.idProduct == PALM_M125_ID ||
-			dev->descriptor.idProduct == PALM_M130_ID ||
-			dev->descriptor.idProduct == PALM_I705_ID)
-		{
-			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
-
-			if (ret < 0)
-				perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
-
-			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
-
-			if (ret < 0)
-				perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
-		}
-	}
-
-
-	ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-		usbRequestVendorGetBytesAvailable, 0, 5, (char *)usbresponse, 2, 5000);
-
-	if (ret < 0)
-		perror(_("usb_control_msg(usbRequestVendorGetBytesAvailable) failed"));
-
-
-	IO_TRACE(2) {
-		if (ret > 0) {
-			for (i = 0; i < ret; i++)
-				fprintf(stderr, " 0x%02x", usbresponse[i]);
- 
- 			fprintf(stderr, "\n");
- 		}
-	}
-
-	if ((usbresponse[0] | (usbresponse[1] << 8)) != 1) {
-		fprintf(stderr,
-			_("%s: unexpected response %d to "
-			"GetBytesAvailable.\n"),
-			"PConnection_usb", usbresponse[0] | (usbresponse[1] << 8));
-	}
+	pconn_libusb_probe_os4(pconn, u);
 
 	/* Make it so */
 	return 1;
