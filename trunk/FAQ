@@ -1,3 +1,30 @@
+Q: My Palm got reset, and when I synched with ColdSync, all my stuff got
+   deleted! Help!
+A: First of all, don't panic. This is the so-called Bargle Bug.
+	1) Make a backup of your .palm directory:
+		cp -rp .palm .palm.backup
+   This isn't required, but is prudent in case you mess up your .palm
+   directory.
+	2) Make a restore directory, say
+		mkdir /tmp/restore
+	3) Copy your applications (.prc files) to the restore directory.
+   They should be in ~/.palm/backup/Attic .
+	4) All of the contents of your record databases (.pdb files) should
+   be in the archive files in ~/.palm/archive . These files are in archive
+   format, not .pdb format. Convert them to .pdb format using the
+   `archive2pdb' tool, available at
+	http://www.ooblick.com/software/coldsync/archive2pdb
+   Note that `archive2pdb' is very rough and unfinished, which is why it
+   isn't part of the standard distribution. It will copy all of the records
+   in the archive file to the .pdb file, including all of the stuff that
+   you deleted months ago, which means that you'll have to delete it all
+   over again.
+	5) Restore your .pdb and .prc files to the Palm:
+		coldsync -r /tmp/restore
+	6) Clean up. Delete (on the Palm) all of the old stuff that you
+   didn't mean to re-upload. All of your application categories will have
+   been lost as well, so you'll need to recreate them again.
+
 Q: Are these *really* frequently-asked questions?
 A: No. ColdSync really doesn't have enough of a following for any questions
    to have been asked often enough to become tedious. But if I had called
@@ -29,6 +56,15 @@ A: Well, *I* think so, otherwise I wouldn't have written it.
    never need to interact with directly.
 	If that's not what you're looking for, well, there are plenty of
    other applications out there. Take your pick or write your own.
+
+Q: Does ColdSync do X?
+A: Depends on the value of X.
+
+Q: Why doesn't ColdSync do X?
+A: Depending on the value of X, there are three possible answers:
+	1) I haven't had time to add it yet, and nobody's volunteered.
+	2) I've considered it and rejected it.
+	3) I haven't thought of it.
 
 Q: I've set "speed 9600;" and now all I get is timeouts.
 A: This is a known, if not understood problem.
