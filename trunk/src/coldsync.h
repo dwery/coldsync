@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.6 1999-09-09 05:57:01 arensb Exp $
+ * $Id: coldsync.h,v 1.7 1999-10-24 19:55:43 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -15,21 +15,8 @@
 #include <unistd.h>		/* For uid_t */
 #include <sys/types.h>		/* For uid_t */
 #include <sys/param.h>		/* For MAXPATHLEN */
-
-/*#include "PConnection.h"
-#include "dlp_cmd.h"*/
-#include <pconn/pconn.h>		/* XXX - Clean this up */
+#include <pconn/pconn.h>	/* XXX - Clean this up */
 #include <pdb.h>
-
-#if 0
-#define CARD0	0		/* Memory card #0. The only real purpose of
-				 * this is to make it marginally easier to
-				 * find all of the places where card #0 has
-				 * been hardcoded, once support for
-				 * multiple memory cards is added, if it
-				 * ever is.
-				 */
-#endif	/* 0 */
 
 /* Palm
  * Information about the Palm being currently synced.
@@ -58,6 +45,7 @@ struct Palm
  * Command-line options. This nameless struct acts sort of like a C++
  * namespace, and just serves to make sure there are no name collisions.
  */
+/* XXX - This should be renamed */
 struct cmd_opts {
 	char *config_file;	/* Pathname of configuration file */
 	Bool do_backup;		/* True iff we should do a full backup */
@@ -86,6 +74,8 @@ struct cmd_opts {
 };
 
 extern struct cmd_opts global_opts;
+
+#define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.rc"
 
 /* debug_flags
  * Debugging levels. This nameless struct acts sort of like a C++
@@ -143,8 +133,6 @@ extern int Backup(struct PConnection *pconn,
 		  struct Palm *palm);
 extern int Restore(struct PConnection *pconn,
 		  struct Palm *palm);
-/*  extern int InstallNewFiles(struct PConnection *pconn, */
-/*  			   struct Palm *palm); */
 extern int InstallNewFiles(struct PConnection *pconn,
 			   struct Palm *palm,
 			   char *newdir,
