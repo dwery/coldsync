@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.88 2000-09-17 22:08:07 arensb Exp $
+dnl # $Id: configure.in,v 1.89 2000-09-23 21:31:50 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -23,7 +23,7 @@ test "x$prefix" = xNONE && prefix=${ac_default_prefix}
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="1.4.4"
+VERSION="1.4.5"
 
 dnl # Autoconf 2.13 or higher required for the three-argument version
 dnl # of AC_DEFINE_UNQUOTED
