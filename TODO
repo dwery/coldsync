@@ -392,3 +392,5 @@
   versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
   "1.002_003_004", which might be desirable. Is it worth fixing this?
 	Will Perl 5.6 make this comment obsolete?
+- send-mail and send-mail-2 conduits should be able to send directly using
+  something like Net::SMTP.
