@@ -88,3 +88,27 @@
   the size of those variables ('off_t's, generally) or get rid of
   those printf() statements.
 - Test with xcopilot (and real Palm) under Linux and other OSes.
+- Test under Purify.
+- Ought to be more careful with the "palm_install" stuff: don't just
+  wantonly delete the database if it's already there. For now, the
+  best thing to do might be to a) do nothing, b) prompt the user.
+  Later, it might get more sophisticated and merge the new database
+  with the existing one. OTOH, the best solution might be to not
+  install anything that's already installed. If you want to install a
+  new app, delete it first. If you want to install a new .pdb file,
+  merge it with the backup copy first, then do a sync.
+- It'd be nice to import/export sets of records into external
+  databases. But you can't just upload any random database. Need to
+  integrate with what you've got, somehow.
+- Fix backups: the first time you sync a database, there's no backup
+  copy on the desktop. But if that database includes deleted records,
+  they'll be marked as deleted in the backup. Presumably they should
+  be deleted. Or will this fix itself the next time you do a sync?
+- Directory structure:
+	~/.palm/<id>/backup	Backup of what's on the Palm
+	~/.palm/<id>/archive	Old archived stuff
+	~/.palm/<id>/install	Stuff to install at next sync
+  where <id> is the Palm's unique ID. This is fine for the Palm III,
+  but what about older ones (PalmPilot et al.)? How does one create
+  one?
+- Add the vc-mode RCS/CVS Id headers everywhere.
