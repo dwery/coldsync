@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.1 2000-11-18 10:48:04 arensb Exp $
+ * $Id: palm.c,v 2.2 2000-11-18 22:54:40 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -60,14 +60,14 @@ new_Palm(struct PConnection *pconn)
 	retval->have_all_DBs_ = False;
 	retval->num_dbs_ = -1;
 	retval->dblist_ = NULL;
-	retval->dbit_ = -1;
+	retval->dbit_ = 0;
 
 	return retval;
 }
 
 /* free_Palm
- * Free a 'struct Palm'. The PConnection that was passed to it remains
- * untouched; that's the caller's responsibility.
+ * Destructor. Free a 'struct Palm'. The PConnection that was passed to it
+ * remains untouched; that's the caller's responsibility.
  */
 void
 free_Palm(struct Palm *palm)
@@ -108,13 +108,10 @@ fetch_meminfo(struct Palm *palm)
 				      palm->cardinfo_)) < 0)
 		return -1;
 
-	if (more != 0)
-		fprintf(stderr,
-			_("You have more than one memory card. Please notify "
-			  "the maintainer, so that\n"
-			  "your setup can be properly supported.\n"));
-
 	palm->num_cards_ = 1;	/* XXX - Hard-wired, for the reasons above */
+			/* This also indicates to other functions that
+			 * fetch_meminfo() has already been called.
+			 */
 
 	MISC_TRACE(4)
 	{
@@ -155,13 +152,10 @@ fetch_meminfo(struct Palm *palm)
 			palm->cardinfo_[CARD0].ram_dbs);
 	}
 
-	/* XXX - Check DLP version */
-
 	return 0;
 }
 
 /* fetch_sysinfo
-
  * Read system info from Palm.
  */
 static int
@@ -205,6 +199,9 @@ fetch_sysinfo(struct Palm *palm)
 	return 0;		/* Success */
 }
 
+/* fetch_netsyncinfo
+ * Fetch NetSync information from the Palm.
+ */
 static int
 fetch_netsyncinfo(struct Palm *palm)
 {
@@ -250,6 +247,9 @@ fetch_netsyncinfo(struct Palm *palm)
 	return 0;		/* Success */
 }
 
+/* fetch_userinfo
+ * Fetch user info from the Palm.
+ */
 static int
 fetch_userinfo(struct Palm *palm)
 {
@@ -323,7 +323,9 @@ fetch_userinfo(struct Palm *palm)
 }
 
 /* fetch_serial
- * Fetch the serial number from the Palm, if possible.
+ * Fetch the serial number (and its length) from the Palm, if possible. If
+ * not, the serial number is set to the empty string, and its length is set
+ * to 0.
  */
 static int
 fetch_serial(struct Palm *palm)
@@ -388,7 +390,6 @@ fetch_serial(struct Palm *palm)
 /* ListDBs
  * Fetch the list of database info records from the Palm, both for ROM and
  * RAM.
- * This function must be called after GetMemInfo().
  */
 /* XXX - This needs to be rewritten from scratch */
 static int
@@ -396,6 +397,10 @@ ListDBs(struct Palm *palm)
 {
 	int err;
 	int card;		/* Memory card number */
+
+	if (palm->num_cards < 0)
+		fetch_meminfo(palm);
+	/* XXX - Error-checking */
 
 	/* Iterate over each memory card */
 	for (card = 0; card < palm_num_cards(palm); card++)
@@ -535,6 +540,9 @@ ListDBs(struct Palm *palm)
 	return 0;
 }
 
+/* palm_rom_version
+ * Returns the version of the Palm's ROM, or 0 if case of error.
+ */
 const udword
 palm_rom_version(struct Palm *palm)
 {
@@ -553,6 +561,12 @@ palm_rom_version(struct Palm *palm)
 	return palm->sysinfo_.rom_version;
 }
 
+/* palm_lastsyncPC
+ * Returns the ID of the last host that this Palm synced with, or 0 in case
+ * of error.
+ * XXX - 0 can also mean that the Palm has never synced, so the error value
+ * should be something else.
+ */
 const udword
 palm_lastsyncPC(struct Palm *palm)
 {
@@ -569,6 +583,9 @@ palm_lastsyncPC(struct Palm *palm)
 	return palm->userinfo_.lastsyncPC;
 }
 
+/* palm_serial_len
+ * Returns the length of the Palm's serial number.
+ */
 const int
 palm_serial_len(struct Palm *palm)
 {
@@ -585,6 +602,10 @@ palm_serial_len(struct Palm *palm)
 	return palm->serial_len_;
 }
 
+/* palm_serial
+ * Returns a pointer to the Palm's serial number (a string).
+ * The caller is not responsible for freeing this string.
+ */
 const char *
 palm_serial(struct Palm *palm)
 {
@@ -601,6 +622,9 @@ palm_serial(struct Palm *palm)
 	return palm->serial_;
 }
 
+/* palm_num_cards
+ * Returns the number of memory cards on the Palm.
+ */
 const int
 palm_num_cards(struct Palm *palm)
 {
@@ -618,13 +642,20 @@ palm_num_cards(struct Palm *palm)
 }
 
 /* palm_fetch_all_DBs
-
- * Fetch descriptions of all of the databases on
+ * Fetch descriptions of all of the databases on the Palm. This is mainly
+ * useful for functions which know that they will be dealing with all of
+ * the databases on the Palm: this function can fetch and cache them all
+ * reasonably quickly. The database iterator functions (palm_resetdb() and
+ * palm_nextdb()) may generate more traffic to get the entire list of
+ * databases.
  */
 int
 palm_fetch_all_DBs(struct Palm *palm)
 {
 	int err;
+
+	MISC_TRACE(6)
+		fprintf(stderr, "Inside palm_fetch_all_DBs\n");
 
 	/* Fetch list of databases, if we haven't done so yet */
 	if (!palm->have_all_DBs_)
@@ -637,6 +668,9 @@ palm_fetch_all_DBs(struct Palm *palm)
 	return 0;	/* Success */
 }
 
+/* palm_num_dbs
+ * Returns the total number of databases on the Palm.
+ */
 const int
 palm_num_dbs(struct Palm *palm)
 {
@@ -660,6 +694,9 @@ palm_num_dbs(struct Palm *palm)
 void
 palm_resetdb(struct Palm *palm)
 {
+	MISC_TRACE(6)
+		fprintf(stderr, "Resetting Palm database iterator.\n");
+
 	palm->dbit_ = 0;
 }
 
@@ -683,6 +720,9 @@ palm_nextdb(struct Palm *palm)
 	int err;
 	const struct dlp_dbinfo *retval;
 
+	MISC_TRACE(6)
+		fprintf(stderr, "Palm database iterator++\n");
+
 	/* XXX - This is a naive implementation. It can be improved: this
 	 * function should fetch as few databases as possible, to save
 	 * time.
@@ -705,11 +745,89 @@ palm_nextdb(struct Palm *palm)
 
 	/* Have we reached the end of the list yet? */
 	if (palm->dbit_ >= palm_num_dbs(palm) - 1)
+	{
+		MISC_TRACE(6)
+			fprintf(stderr, "Reached end of list\n");
 		return NULL;	/* Reached end of list */
+	}
+
+	/* Haven't reached the end of the list yet */
+	MISC_TRACE(6)
+		fprintf(stderr, "Returning database %d\n", palm->dbit_);
 
 	retval = &(palm->dblist_[palm->dbit_]);
 	palm->dbit_++;
 	return retval;
+}
+
+/* palm_find_dbentry
+ * Look through the list of databases in 'palm' and try to find the one
+ * named 'name'. Returns a pointer to its entry in 'palm->dblist' if it
+ * exists, or NULL otherwise.
+ */
+const struct dlp_dbinfo *
+palm_find_dbentry(struct Palm *palm,
+		  const char *name)
+{
+	const struct dlp_dbinfo *cur_db;	/* Database iterator */
+
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
+	{
+		if (strncmp(name, cur_db->name,
+			    DLPCMD_DBNAME_LEN) == 0)
+			/* Found it */
+			return cur_db;
+	}
+
+	return NULL;		/* Couldn't find it */
+}
+
+/* palm_append_dbentry
+ * Append an entry for 'pdb' to palm->dblist.
+ */
+int
+palm_append_dbentry(struct Palm *palm,
+		    struct pdb *pdb)
+{
+	struct dlp_dbinfo *newdblist;
+	struct dlp_dbinfo *dbinfo;
+
+	MISC_TRACE(4)
+		fprintf(stderr, "append_dbentry: adding \"%s\"\n",
+			pdb->name);
+
+	/* Resize the existing 'dblist'. */
+	newdblist = realloc(palm->dblist_,
+			    (palm_num_dbs(palm)+1) *
+			    sizeof(struct dlp_dbinfo));
+	if (newdblist == NULL)
+	{
+		fprintf(stderr, _("Error resizing palm->dblist\n"));
+		return -1;
+	}
+	palm->dblist_ = newdblist;
+	palm->num_dbs_++;
+
+	/* Fill in the new entry */
+	dbinfo = &(palm->dblist_[palm_num_dbs(palm)-1]);
+	return dbinfo_fill(dbinfo, pdb);
+}
+
+const char *
+palm_netsync_hostname(struct Palm *palm)
+{
+	int err;
+
+	/* Fetch NetSync info if we haven't done so yet */
+	if (!palm->have_netsyncinfo_)
+	{
+		if ((err = fetch_netsyncinfo(palm)) < 0)
+			/* XXX - Error-checking */
+			return NULL;
+	}
+
+	return palm->netsyncinfo_.hostname;
 }
 
 /* This is for Emacs's benefit:
