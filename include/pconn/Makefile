@@ -1,9 +1,10 @@
-# $Id: Makefile,v 1.4 2000-11-10 03:36:09 arensb Exp $
+# $Id: Makefile,v 1.5 2000-12-13 16:13:38 arensb Exp $
 
 TOP =		../..
 SUBDIR =	include/pconn
 
 HEADERS =	PConnection.h \
+		netsync.h \
 		cmp.h \
 		dlp.h \
 		dlp_cmd.h \
