@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.3 2002-04-17 23:18:34 azummo Exp $
+ * $Id: palment.c,v 2.4 2002-05-03 00:01:03 arensb Exp $
  */
 
 #include "config.h"
@@ -192,11 +192,10 @@ endpalment(void)
  * When given a serial numer, an username and an userid, this routine
  * tries to find a matching palment entry.
  */
-
-struct palment *
+const struct palment *
 find_palment(const char *p_snum, const char *p_username, const udword p_userid, const ubyte match_type)
 {
-	struct palment *palment;
+	const struct palment *palment;
 
 	while ((palment = getpalment()) != NULL)
 	{
