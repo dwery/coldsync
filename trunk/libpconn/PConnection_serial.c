@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.27 2001-04-15 04:37:10 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.28 2001-04-15 05:10:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -113,6 +113,22 @@ static struct {
 	/* I doubt anyone wants to go any slower than 1200 bps */
 };
 #define num_speeds	sizeof(speeds) / sizeof(speeds[0])
+
+#if !HAVE_USLEEP
+/* usleep
+ * Sleep for 'usec' microseconds. A reimplementation for those OSes that
+ * don't have it.
+ */
+int
+usleep(unsigned int usec)
+{
+	struct timeval tv;
+
+	tv.tv_sec  = usec / 1000000;
+	tv.tv_usec = usec % 1000000;
+	return select(0, NULL, NULL, NULL, &tv);
+}
+#endif	/* HAVE_USLEEP */
 
 /* find_available_speeds
  * Go through the entries in 'speeds[]', and see if the serial port can go
@@ -537,12 +553,7 @@ setspeed(PConnection *pconn, int speed)
 		return -1;
 	}
 
-	/* XXX - This sleep() bothers me tremendously. On one hand, under
-	 * FreeBSD with xcopilot, if this sleep isn't there, no
-	 * communication appears to occur after tcsetattr(), above.
-	 * On the other hand, I've gotten reports that this is also
-	 * necessary under Linux.
-	 */
+	/* Some serial drivers need some time to settle down */
 	usleep(50000);
 
 	return 0;
