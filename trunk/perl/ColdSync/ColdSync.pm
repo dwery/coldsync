@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.17 2002-03-24 23:56:36 azummo Exp $
+# $Id: ColdSync.pm,v 1.18 2002-04-02 15:33:04 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.17 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.18 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -106,10 +106,10 @@ $FLAVOR = undef;		# Flavor with which this conduit was invoked
 
 # Lists the headers that are required for each flavor of conduit
 %MANDATORY_HEADERS = (
-	"fetch"		=> [ qw( Daemon Version OutputDB ) ],
-	"dump"		=> [ qw( Daemon Version InputDB ) ],
-	"sync"		=> [ qw( Daemon Version InputDB OutputDB ) ],
-	"install"	=> [ qw( Daemon Version InputDB ) ],
+	"fetch"		=> [ qw( Daemon Version ) ],
+	"dump"		=> [ qw( Daemon Version ) ],
+	"sync"		=> [ qw( Daemon Version ) ],
+	"install"	=> [ qw( Daemon Version ) ],
 );
 
 # Warn
@@ -405,7 +405,7 @@ sub EndConduit
 	if (($FLAVOR eq "fetch") or ($FLAVOR eq "sync"))
 	{
 		# XXX - Barf if $PDB undefined
-		if (defined $PDB and not defined($HEADERS{NoAutoWriteDB}))
+		if (defined $PDB and defined $HEADERS{OutputDB} and not defined($HEADERS{NoAutoWriteDB}))
 		{
 			$PDB->Write($HEADERS{OutputDB}) or
 				die "405 Can't write output database \"$HEADERS{OutputDB}\"\n";
