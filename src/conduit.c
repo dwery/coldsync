@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.17 2000-11-04 23:00:24 arensb Exp $
+ * $Id: conduit.c,v 2.18 2000-11-14 16:26:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -110,7 +110,7 @@ struct ConduitDef
 
 struct ConduitDef builtin_conduits[] = {
 	{ "[dummy]", run_DummyConduit,
-	  FLAVORFL_FETCH | FLAVORFL_DUMP | FLAVORFL_SYNC, },
+	  FLAVORFL_INSTALL | FLAVORFL_FETCH | FLAVORFL_DUMP | FLAVORFL_SYNC, },
 	{ "[generic]", run_GenericConduit, FLAVORFL_SYNC, },
 };
 #define num_builtin_conduits	sizeof(builtin_conduits) / sizeof(builtin_conduits[0])
@@ -256,6 +256,7 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 static int
 run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	    char *flavor,		/* Name of the flavor */
+	    unsigned short flavor_mask,	/* Mask of the flavor */
 	    conduit_block *conduit,	/* Conduit to be run */
 	    const Bool with_spc,	/* Allow SPC calls? */
 	    struct PConnection *pconn)	/* Connection to Palm */
@@ -266,7 +267,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	pid_t pid;		/* Conduit's PID */
 	FILE *fromchild = NULL;	/* File handle to child's stdout */
 	FILE *tochild = NULL;	/* File handle to child's stdin */
-	const char *bakfname;	/* Path to backup file */
+	const char *bakfname;	/* Path to backup file (backup or install) */
 	volatile int laststatus = 501;
 				/* The last status code printed by the
 				 * child. This is used as its exit status.
@@ -324,11 +325,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	const struct pref_item ** volatile pref_list = NULL;
 				/* Array of pointers to preference items in
 				 * the cache */
-
-	/* XXX - See if conduit->path is a predefined string (set up a
-	 * table of built-in conduits). If so, run the corresponding
-	 * built-in conduit.
-	 */
 
 	if (conduit->path == NULL)
 		/* This conduit has no path. It does nothing. This can be
@@ -457,7 +453,13 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	/* Initialize the standard header values */
 	block_sigchld(&sigmask);	/* Don't disturb me now */
 
-	bakfname = mkbakfname(dbinfo);
+	/* Construct the input filename to pass to the conduit. For install
+	 * conduits, this file is in ~/.palm/install/; for all other
+	 * flavors, it is in ~/.palm/backup/.
+	 */
+	bakfname = (flavor_mask & FLAVORFL_INSTALL) ?
+		mkinstfname(dbinfo) :
+		mkbakfname(dbinfo);
 
 	/* Turn the array of system headers into a linked list. */
 	for (i = 0; i < MAX_SYS_HEADERS-1; i++)
@@ -1130,8 +1132,8 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		/* See if it's a built-in conduit */
 		if ((builtin = findConduitByName(conduit->path)) == NULL)
 			/* It's an external program. Run it */
-			err = run_conduit(dbinfo, flavor, conduit, with_spc,
-					  pconn);
+			err = run_conduit(dbinfo, flavor, flavor_mask,
+					  conduit, with_spc, pconn);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1174,8 +1176,8 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		/* See if it's a built-in conduit */
 		if ((builtin = findConduitByName(def_conduit->path)) == NULL)
 			/* It's an external program. Run it */
-			err = run_conduit(dbinfo, flavor, def_conduit,
-					  with_spc, pconn);
+			err = run_conduit(dbinfo, flavor, flavor_mask,
+					  def_conduit, with_spc, pconn);
 		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
@@ -1266,6 +1268,21 @@ run_Sync_conduits(struct dlp_dbinfo *dbinfo,
 
 	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn);
 }
+
+/* run_Install_conduits 
+ * Go through all Install conduits in the install directory and run
+ * whichever ones are applicable for that database.
+ */
+int
+run_Install_conduits(struct dlp_dbinfo *dbinfo)
+{
+	SYNC_TRACE(1)
+		fprintf(stderr, 
+			"Running install conduits for \"%s\".\n",
+			dbinfo->name);
+	
+	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
+}	
 
 /* spawn_conduit
  * Spawn a conduit. Runs the program named by 'path', passing it the
