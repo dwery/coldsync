@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.4 2000-05-21 07:59:15 arensb Exp $
+ * $Id: palm_errno.c,v 1.5 2001-03-16 14:08:31 arensb Exp $
  */
 #include "config.h"
 
@@ -36,10 +36,8 @@ const char *palm_errlist[] = {		/* Error messages */
 /* PALMERR_BADRESID */	N_("Invalid result ID"),
 /* PALMERR_BADARGID*/	N_("Invalid argument ID"),
 };
-/* XXX - Need something to check the size of this array, so if someone adds
- * an error code and forgets to update this array, you can keep from
- * reading off the end of the array.
- */
+
+const int palm_numerrs = sizeof(palm_errlist)/sizeof(palm_errlist[0]);
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
