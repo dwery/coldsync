@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.10 2000-12-11 09:07:28 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.11 2000-12-11 09:24:04 arensb Exp $
  */
 
 #include "config.h"
@@ -366,6 +366,8 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		fprintf(stderr, _("%s: Can't open USB device"),
 			"pconn_usb_open");
 		perror("open");
+		free(u);
+		u = pconn->io_private = NULL;
 		return -1;
 	}
 
@@ -376,6 +378,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		perror("ioctl(USB_GET_DEVICEINFO)");
 		(void) close(usb_ep0);
 		free((void *)u);
+		u = pconn->io_private = NULL;
 		return -1;
 	}
 
@@ -443,6 +446,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"));
 		(void) close(usb_ep0);
 		free((void *)u);
+		u = pconn->io_private = NULL;
 		return -1;	  
 	}
 
@@ -479,6 +483,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 			"PConnection_usb");
 		(void) close(usb_ep0);
 		free((void *)u);
+		u = pconn->io_private = NULL;
 		return -1;	  
 	}
 
@@ -533,6 +538,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	 */
 	if ((hotsync_ep_name = malloc(strlen(device)+20)) == NULL) {
 		free((void *)u);
+		u = pconn->io_private = NULL;
 		return -1;
 	}
 
@@ -547,6 +553,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		(void) close(usb_ep0);
 		free(hotsync_ep_name);
 		free((void *)u);
+		u = pconn->io_private = NULL;
 		return -1;	  
 	}
 
