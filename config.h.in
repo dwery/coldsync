@@ -219,6 +219,11 @@
 /* Version number of package */
 #undef VERSION
 
+#ifdef c_plusplus		/* Cfront 1.2 defines c_plusplus instead
+				 * of __cplusplus */
+#  define __cplusplus
+#endif	/* c_plusplus */
+
 /* Define LONGLONG to be "long long" if it's supported, or "long" otherwise */
 #ifdef SIZEOF_LONG_LONG
    /* 'configure' checked for "long long", i.e., it wasn't run with
