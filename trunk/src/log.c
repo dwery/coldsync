@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.6 1999-08-26 14:20:09 arensb Exp $
+ * $Id: log.c,v 1.7 1999-09-05 03:30:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -71,7 +71,7 @@ add_to_log(char *msg)
 		log_size = newsize;
 	}
 	strcat(synclog, msg);
-	SYNC_TRACE(5)
+	SYNC_TRACE(6)
 		fprintf(stderr, "Now log is \"%s\"\n", synclog);
 	return 0;
 }
