@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.19 2000-03-14 06:17:08 arensb Exp $
+ * $Id: config.c,v 1.20 2000-04-09 14:24:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -209,7 +209,10 @@ get_config(int argc, char *argv[])
 		{
 		    case 'h':	/* -h: Print usage message and exit */
 			usage(argc,argv);
-			return -1;
+			return -1;	/* XXX - Returning -1 causes main()
+					 * to print an error message. This
+					 * shouldn't happen.
+					 */
 
 		    case 'V':	/* -V: Print version number and exit */
 			print_version();
@@ -372,8 +375,10 @@ get_config(int argc, char *argv[])
 	 */
 	/* XXX - Ought to see if /etc/coldsync.common (or whatever) exists;
 	 * if it does, get site-wide defaults from there. The user's config
-	 * file overrides that, and command-line arguments override
-	 * everything, naturally.
+	 * file overrides (some of) that, and command-line arguments
+	 * override (almost) everything, naturally.
+	 * The exception is that the sysadmin must be able to forbid
+	 * certain things, e.g., ve may mandate a set of conduits.
 	 */
 	if (config_fname == NULL)
 	{
