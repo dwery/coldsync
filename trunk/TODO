@@ -278,3 +278,8 @@
   generate a warning.
 - When (after?) reading config file, check the specified conduits to
   make sure they exist and are executable. Warn if they aren't.
+- Update man page
+	Colons after directives.
+	BUGS: error-reporting is misleading.
+- Parser: if something is specified twice (e.g., "path"), the former
+  value isn't freed, which causes a memory leak.
