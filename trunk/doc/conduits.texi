@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.13 2001-01-09 16:27:32 arensb Exp $
+@c $Id: conduits.texi,v 1.14 2001-03-19 09:24:32 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -1690,6 +1690,16 @@ ColdSync (caller) error. A 4@i{yz} code indicates that the conduit has
 failed because it was given improper input, e.g., invalid or missing
 command-line arguments, nonexistent @code{InputDB} file, unsupported
 version of ColdSync, and so forth.
+
+	@table @asis
+
+	@item 401
+	Unspecified Error.
+
+	@item 402
+	Lost connection to Palm.
+
+	@end table
 
 @item 5@i{yz}
 @cindex Error messages
