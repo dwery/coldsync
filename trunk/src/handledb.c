@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.15 2000-01-27 05:23:31 arensb Exp $
+ * $Id: handledb.c,v 1.16 2000-01-27 07:38:48 arensb Exp $
  */
 
 #include "config.h"
@@ -145,7 +145,7 @@ mkfname(const char *dirname,
 			break;
 
 		/* Is this a weird character? */
-		if ((!isprint(dbinfo->name[i])) ||
+		if ((!isprint((int) dbinfo->name[i])) ||
 		    (dbinfo->name[i] == '/') ||	/* '/' is a weird character */
 		    (dbinfo->name[i] == '%'))	/* The escape character
 						 * needs to be escaped.
