@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.20 2002-03-19 11:59:31 arensb Exp $
+# $Id: Makefile,v 1.21 2003-02-21 13:23:47 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -90,7 +90,7 @@ snapshot:	distfiles-core
 	rm -rf ${TOPDISTDIR}
 
 spotless::
-	rm -rf ${TOPDISTDIR}
+	rm -rf ${TOPDISTDIR} autom4te.cache
 
 # This is for Emacs's benefit:
 # Local Variables:	***
