@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38.2.1 2001-10-09 01:41:26 arensb Exp $
+ * $Id: conduit.c,v 2.38.2.2 2001-10-11 04:50:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -316,7 +316,6 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		 * useful for defining a do-nothing default.
 		 */
 		return 201;		/* Success (trivially) */
-
 
 	/* If this conduit might understand SPC, set up a pipe for the
 	 * child to communicate to the parent.
@@ -1341,33 +1340,57 @@ run_Install_conduits(struct dlp_dbinfo *dbinfo)
 }	
 /* exec_from_path
  * Search each of the paths $(CONDUITDIR) and try to execute the given process.
- * It starts with the name as stated, in case it is in the default search path. 
+ * It starts with the name as stated, in case it is in the default search path.
+ */
+/* XXX - I'd rather have find_executable_in_path() or some such: if
+ * $(CONDUITDIR) is empty, return NULL. Otherwise, split $(CONDUITDIR)
+ * along /:/, and look for an executable in that directory.
+ * Oh, and if 'name' contains a slash (i.e., it's not just a plain
+ * filename), just use that.
  */
 static int
 exec_from_path(const char *name, char *const argv[])
 {
 	int err = ENOENT;
-	char *path, *search;	/* current path, and search path. */
+	const char *path;	/* Current path */
+	char *search;		/* Search path */
 	char *dir;
 
 	search = get_symbol("CONDUITDIR");
 	path = (char *)name;
-	while(1) {
-		printf("Trying path '%s'.\n", path);
+	while(1)
+	{
+		SYNC_TRACE(3)
+			fprintf(stderr, "Trying path '%s'.\n", path);
+		/* XXX - No, don't just do this: execvp() can fail for any
+		 * number of reasons. Rather, try the various possible
+		 * pathnames; test them with access(fname, X_OK) (I _think_
+		 * that tests for execute permissions for the current
+		 * user); once access() indicates that a file is
+		 * executable, try that. If it fails, don't try anything
+		 * else.
+		 * IOW, find_executable_in_path() should just return the
+		 * first executable file that looks like it could be run.
+		 */
 		execvp(path, argv);
-		printf("%s: error = %d, <%s>\n", path, errno, strerror(errno));
-		if( err != ENOENT ) err = errno;
+		SYNC_TRACE(3)
+			fprintf(stderr, "%s: error = %d, <%s>\n",
+				path, errno, strerror(errno));
+		if (err != ENOENT)
+			err = errno;
 		/* If we make it here, then that path didn't work. */
-		if( search == NULL ) return err;
+		if (search == NULL)
+			return err;
 		dir = search;
 		search = strchr(search, ':'); /* find next colon. */
-		if( search != NULL ) { /* replace the colon with a \0. */
+		if (search != NULL)	/* replace the colon with a \0. */
+		{
 			search[0] = 0;
 			search++;
 		}
 		/* We don't need to free anything, because we will throw out
 		 * this memory image with execvp. */
-		path = (char *)malloc(strlen(dir) + 1 + strlen(name) + 1);
+		path = (char *) malloc(strlen(dir) + 1 + strlen(name) + 1);
 		sprintf(path, "%s/%s", dir, name);
 	}
 }
