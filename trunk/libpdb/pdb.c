@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.15 2000-02-03 02:54:45 arensb Exp $
+ * $Id: pdb.c,v 1.16 2000-02-06 22:26:41 arensb Exp $
  */
 
 #include "config.h"
@@ -2171,7 +2171,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 		     malloc(sizeof(struct pdb_resource)))
 		    == NULL)
 		{
-			fprintf(stderr, _("%s: out of memory.\n"),
+			fprintf(stderr, _("%s: Out of memory.\n"),
 				"pdb_DownloadResources");
 			return -1;
 		}
@@ -2289,9 +2289,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		uword num_read;		/* # of record IDs read this time */
 
 		PDB_TRACE(4)
-			fprintf(stderr, _("%s: Reading a chunk of record IDs "
-					  "starting at %d\n"),
-				"pdb_DownloadRecords",
+			fprintf(stderr, "pdb_DownloadRecords: Reading a chunk "
+				"of record IDs starting at %d\n",
 				numrecs);
 
 		/* Get the list of record IDs, as described above */
