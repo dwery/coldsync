@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.38 2000-06-03 08:06:44 arensb Exp $
+ * $Id: coldsync.c,v 1.39 2000-06-18 07:08:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1334,7 +1334,7 @@ UpdateUserInfo(struct PConnection *pconn,
 	uinfo.usernamelen = 0;
 
 	MISC_TRACE(1)
-		fprintf(stderr, "* UpdateUserInfo:\n");
+		fprintf(stderr, "Updating user info.\n");
 
 	/* If the Palm doesn't have a user ID, or if it's the wrong one,
 	 * update it.

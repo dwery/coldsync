@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.24 2000-05-21 07:59:26 arensb Exp $
+ * $Id: pdb.c,v 1.25 2000-06-18 07:08:12 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -309,7 +309,8 @@ pdb_Read(int fd)
 	if ((useless_buf[0] != '\0') ||
 	    (useless_buf[1] != '\0'))
 	{
-		fprintf(stderr, _("The useless two bytes contain 0x%02x%02x instead of NULs. This is unexpected.\n"),
+		fprintf(stderr, _("The useless two bytes contain 0x%02x%02x "
+				  "instead of NULs. This is unexpected.\n"),
 			useless_buf[0],
 			useless_buf[1]);
 	}
