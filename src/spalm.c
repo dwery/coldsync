@@ -6,13 +6,17 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.2 2001-06-30 06:45:28 arensb Exp $
+ * $Id: spalm.c,v 2.2.2.1 2001-10-10 23:40:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
-#include <string.h>		/* For bzero() */
+#include <string.h>		/* For memcpy() */
 #include "coldsync.h"
+
+#if HAVE_STRINGS_H
+#  include <strings.h>		/* For bzero() */
+#endif	/* HAVE_STRINGS_H */
 
 /* Include I18N-related stuff, if necessary */
 #if HAVE_LIBINTL_H
