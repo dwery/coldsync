@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.14 2000-11-10 03:36:29 arensb Exp $
+# $Id: Makefile,v 2.15 2000-11-18 10:47:15 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -14,6 +14,7 @@ C_SRCS =	coldsync.c \
 		misc.c \
 		log.c \
 		conduit.c \
+		palm.c \
 		pref.c \
 		spc.c
 C_OBJS =	${C_SRCS:.c=.o}
@@ -27,6 +28,7 @@ HEADERS =	archive.h \
 		coldsync.h \
 		conduit.h \
 		cs_error.h \
+		palm.h \
 		parser.h \
 		spc.h \
 		pref.h \
