@@ -8,7 +8,7 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.3 1999-08-01 08:08:54 arensb Exp $
+ * $Id: util.c,v 1.4 1999-08-23 08:46:36 arensb Exp $
  */
 
 #include "config.h"
@@ -164,7 +164,6 @@ time_dlp2palmtime(const struct dlp_time *dlpt)
 	tm.tm_min = dlpt->minute;
 	tm.tm_hour = dlpt->hour;
 	tm.tm_mday = dlpt->day;
-/*  	tm.tm_mon = dlpt->month; */
 	tm.tm_mon = dlpt->month - 1;
 	tm.tm_year = dlpt->year - 1900;
 	tm.tm_wday = 0;
@@ -195,7 +194,6 @@ time_time_t2dlp(const time_t t,
 
 	/* Copy the relevant fields over to 'dlpt' */
 	dlpt->year = tm->tm_year + 1900;
-/*  	dlpt->month = tm->tm_mon; */
 	dlpt->month = tm->tm_mon + 1;
 	dlpt->day = tm->tm_mday;
 	dlpt->hour = tm->tm_hour;
@@ -223,7 +221,6 @@ time_palmtime2dlp(const udword palmt,
 
 	/* Copy the relevant fields over to 'dlpt' */
 	dlpt->year = tm->tm_year + 1900;
-/*  	dlpt->month = tm->tm_mon; */
 	dlpt->month = tm->tm_mon + 1;
 	dlpt->day = tm->tm_mday;
 	dlpt->hour = tm->tm_hour;
