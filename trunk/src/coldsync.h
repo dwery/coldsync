@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.56 2001-10-18 02:47:46 arensb Exp $
+ * $Id: coldsync.h,v 1.57 2001-11-10 03:13:54 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -27,6 +27,11 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 
 #define SYNC_TRACE(n)	if (sync_trace >= (n))
 #define MISC_TRACE(n)	if (misc_trace >= (n))
+
+/* XXX - Perhaps
+ * typedef enum { False = 0, True = 1, Undefined = 2 } Bool3;
+ * for things like options, where "Undefined" means "use the default".
+ */
 
 /* userinfo
  * Information about the user whose Palm we're syncing.
