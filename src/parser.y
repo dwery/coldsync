@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.6 1999-11-13 00:19:57 arensb Exp $
+ * $Id: parser.y,v 2.7 1999-11-27 05:54:52 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -14,6 +14,11 @@
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
 #include <string.h>		/* For strncpy() et al. */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
 #include "parser.h"
 
 int parse_trace = 0;		/* Debugging level for config file parser */
@@ -104,8 +109,13 @@ listen_stmt:
 		 * substatements inside a 'listen' block will fill in
 		 * fields in this struct.
 		 */
-		cur_listen = new_listen_block();
-			/* XXX - Error-checking */
+		if ((cur_listen = new_listen_block()) == NULL)
+		{
+			fprintf(stderr,
+				_("%s: Can't allocate listen block\n"),
+				"yyparse");
+			return -1;
+		}
 		cur_listen->listen_type = LISTEN_SERIAL;
 	}
 	listen_block '}'
@@ -178,7 +188,9 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		cur_conduit = new_conduit_block();
 		if (cur_conduit == NULL)
 		{
-			fprintf(stderr, "Can't allocate conduit_block!\n");
+			fprintf(stderr,
+				_("%s: Can't allocate conduit_block!\n"),
+				"yyparse");
 			/* XXX - Try to recover gracefully */
 			exit(1);
 		}
@@ -210,7 +222,8 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 				fprintf(stderr, "Uninstall");
 			break;
 		    default:
-			fprintf(stderr, "Unknown conduit flavor!");
+			fprintf(stderr, _("Unknown conduit flavor: %d"),
+				cur_conduit->flavor);
 			YYERROR;
 		}
 		PARSE_TRACE(4)
@@ -239,7 +252,9 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			list = &(file_config->uninstall_q);
 			break;
 		    default:
-			fprintf(stderr, "line %d: Unknown conduit flavor %d\n",
+			fprintf(stderr, _("%s: line %d: Unknown conduit "
+					  "flavor %d\n"),
+				"yyparse",
 				lineno, cur_conduit->flavor);
 			YYERROR;
 		}
@@ -318,7 +333,9 @@ conduit_directive:
 			if (strlen($2) != 4)
 			{
 				fprintf(stderr,
-					"Bogus creator \"%s\", line %d\n",
+					_("%s: Bogus creator \"%s\", line "
+					  "%d\n"),
+					"yyparse",
 					$2, lineno);
 				free($2); $2 = NULL;
 				free($4); $4 = NULL;
@@ -339,7 +356,9 @@ conduit_directive:
 			/* Stated type */
 			if (strlen($4) != 4)
 			{
-				fprintf(stderr, "Bogus type \"%s\", line %d\n",
+				fprintf(stderr,
+					_("%s: Bogus type \"%s\", line %d\n"),
+					"yyparse",
 					$4, lineno);
 				cur_conduit->dbtype = 0L;
 				free($2); $2 = NULL;
@@ -382,7 +401,7 @@ conduit_directive:
 int
 yyerror(const char *msg)
 {
-	fprintf(stderr, "Yacc error: \"%s\" at line %d\n", msg, lineno);
+	fprintf(stderr, _("Yacc error: \"%s\" at line %d\n"), msg, lineno);
 	return 1;
 }
 
@@ -397,7 +416,8 @@ int parse_config(const char *fname,
 
 	if ((infile = fopen(fname, "r")) == NULL)
 	{
-		fprintf(stderr, "Can't open \"%s\"\n", fname);
+		fprintf(stderr, _("%s: Can't open \"%s\"\n"),
+			"parse_config", fname);
 		perror("fopen");
 		return -1;
 	}
