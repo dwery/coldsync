@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.33 2000-11-04 22:59:59 arensb Exp $
+ * $Id: coldsync.h,v 1.34 2000-11-14 16:24:55 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -91,6 +91,7 @@ typedef enum {
 	mode_Standalone,	/* Single-shot mode: sync once, then exit */
 	mode_Backup,		/* Back up a Palm */
 	mode_Restore,		/* Restore from backups */
+	mode_Install,		/* Install only */
 	mode_Daemon,		/* Daemon mode: run continuously in the
 				 * background, waiting for connections and
 				 * forking as necessary.
@@ -258,9 +259,10 @@ typedef struct conduit_block
 /* Conduit flavor flags. These are really bitmasks for
  * conduit_block.flavors.
  */
-#define FLAVORFL_FETCH	(1 << 0)
-#define FLAVORFL_DUMP	(1 << 1)
-#define FLAVORFL_SYNC	(1 << 2)
+#define FLAVORFL_FETCH		(1 << 0)
+#define FLAVORFL_DUMP		(1 << 1)
+#define FLAVORFL_SYNC		(1 << 2)
+#define FLAVORFL_INSTALL	(1 << 3)
 
 /* pda_block
  * The information specified in a 'pda' block in the config file: the
@@ -342,6 +344,7 @@ extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
 extern int run_mode_Standalone(int argc, char *argv[]);
 extern int run_mode_Backup(int argc, char *argv[]);
 extern int run_mode_Restore(int argc, char *argv[]);
+/*  extern int run_mode_Install(int argc, char *argv[]); */
 extern int backup(struct PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
@@ -354,6 +357,7 @@ extern int restore_file(struct PConnection *pconn,
 extern int restore_dir(struct PConnection *pconn,
 		       struct Palm *palm,
 		       const char *dirname);
+extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
 extern int InstallNewFiles(struct PConnection *pconn,
 			   struct Palm *palm,
 			   char *newdir,
@@ -366,16 +370,20 @@ extern const char *mkfname(const char *dirname,
 			   const struct dlp_dbinfo *dbinfo,
 			   Bool add_suffix);
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
+extern const char *mkinstfname(const struct dlp_dbinfo *dbinfo);
 extern const char *mkarchfname(const struct dlp_dbinfo *dbinfo);
 extern const char *fname2dbname(const char *fname);
 extern const Bool exists(const char *fname);
 extern const Bool lexists(const char *fname);
 extern const Bool is_file(const char *fname);
 extern const Bool is_directory(const char *fname);
+extern const Bool is_database_name(const char *fname);
 extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
 extern int append_dbentry(struct Palm *palm,
 			  struct pdb *pdb);
+extern int dbinfo_fill(struct dlp_dbinfo *dbinfo,
+		       struct pdb *pdb);
 extern char snum_checksum(const char *snum, int len);
 extern int open_tempfile(char *name_template);
 extern int load_config(void);
