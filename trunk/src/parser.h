@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.9 2001-01-09 16:28:14 arensb Exp $
+ * $Id: parser.h,v 2.10 2001-09-07 10:38:06 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -19,10 +19,13 @@
 /* Start states.
  * See lex_expect() in "lexer.l".
  */
-#define LEX_HEADER	1	/* Conduit argument header name */
-#define LEX_BSTRING	2	/* "Bareword" (unquoted) string */
-#define LEX_CTPAIR	3	/* Creator/type pair */
-#define LEX_ID4		4	/* 4-character identifier */
+typedef enum {
+	LEX_NONE = 100,		/* Normal starting state */
+	LEX_HEADER,		/* Conduit argument header name */
+	LEX_BSTRING,		/* "Bareword" (unquoted) string */
+	LEX_CTPAIR,		/* Creator/type pair */
+	LEX_ID4			/* 4-character identifier */
+} lex_state_t;
 
 /* crea_type_pair
  * A convenience struct that holds a creator-type pair, as long ints.
@@ -35,7 +38,7 @@ typedef struct {
 extern int parse_trace;		/* Debugging level for config file parser */
 extern int lineno;		/* Line number */
 
-extern void lex_expect(const int state);
+extern void lex_expect(const lex_state_t state);
 
 #endif	/* _parser_h_ */
 
