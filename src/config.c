@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.72.2.2 2001-10-11 04:26:13 arensb Exp $
+ * $Id: config.c,v 1.72.2.3 2001-10-11 04:28:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -195,7 +195,16 @@ parse_args(int argc, char *argv[])
 		    case 'l':	/* -l <file>: Write debugging log to
 				 * <file>.
 				 */
+			global_opts.log_fname = optarg;
  			put_symbol("LOGFILE", optarg);
+				/* XXX - Figure out which of these two
+				 * methods is preferred.
+				 * Now would also be a good time to set
+				 * 'final' on the LOGFILE symbol: if it was
+				 * specified on the command line, that
+				 * overrides any value given in the
+				 * environment or config file(s).
+				 */
 			break;
 
 		    case 'm':	/* -m <mode>: Run in the given mode */
