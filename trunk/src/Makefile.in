@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.4 1999-08-01 08:01:08 arensb Exp $
+# $Id: Makefile.in,v 1.5 1999-08-23 08:43:00 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -12,6 +12,12 @@ srcdir =	@srcdir@
 subdir =	src
 top_srcdir =	@top_srcdir@
 curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-c -m 555
 
 #CC =		@CC@
 #DEFS =		@DEFS@
@@ -33,6 +39,7 @@ COMPATOBJS =	@COMPATOBJS@
 
 SRCS =		PConnection.c \
 		util.c \
+		pack.c \
 		slp.c \
 		cmp.c \
 		padp.c \
@@ -53,6 +60,7 @@ SRCS =		PConnection.c \
 
 OBJS =		PConnection.o \
 		util.o \
+		pack.o \
 		slp.o \
 		cmp.o \
 		padp.o \
@@ -73,6 +81,7 @@ OBJS =		PConnection.o \
 
 HEADERS =	PConnection.h \
 		util.h \
+		pack.h \
 		slp.h \
 		cmp.h \
 		padp.h \
@@ -120,6 +129,9 @@ all:	coldsync
 
 coldsync:	${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+install:	coldsync
+	${INSTALL} ${INSTALLARGS} coldsync ${BINDIR}
 
 # XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
 # specify -I/usr/include/g++
