@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001-11-12 04:31:25 arensb Exp $
+# $Id: Makefile,v 1.9 2002-03-10 23:05:03 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -21,6 +21,13 @@ DISTFILES =	Makefile ${LIBSRCS}
 OTHERTAGFILES =	${LIBSRCS}
 
 include ${TOP}/Make.rules
+
+# "util.c" is a symlink because both "libpdb" and "libpconn" use it, but I
+# don't want to maintain two identical copies of the same file. However,
+# CVS doesn't handle symlinks, so instead we create it here.
+${RECURSIVE_TARGETS}::	util.c
+util.c:
+	ln -s ${TOP}/libpconn/util.c util.c
 
 depend::
 	${MKDEP} ${CPPFLAGS} ${LIBSRCS}
