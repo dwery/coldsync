@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.9 2000-01-22 05:14:38 arensb Exp $
+ * $Id: conduit.h,v 1.10 2000-05-06 11:40:32 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -40,7 +40,7 @@
 #include "coldsync.h"
 #include "parser.h"
 
-#define COND_MAXHFIELDLEN	32	/* Max allowable length of a header
+#define COND_MAXHFIELDLEN	31	/* Max allowable length of a header
 					 * field label. That is, when
 					 * sending the header
 					 *    Foo: bar baz
