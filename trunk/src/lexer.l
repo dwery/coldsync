@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.38 2001-10-18 01:59:00 arensb Exp $
+ * $Id: lexer.l,v 2.39 2001-11-10 03:02:51 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -153,19 +153,6 @@ QSTR		[^\\\$\"\n]
 	return STRING;
 	}
 
-<VARNAME>{VAR1}{VAR}*	{
-	PARSE_TRACE(3)
-		fprintf(stderr, "Found variable name [%s]\n", yytext);
-	if ((yylval.string = strdup(yytext)) == NULL)
-	{
-		Error(_("%s: Can't make copy of string."),
-		      "yylex");
-		return -1;
-	}
-	BEGIN 0;
-	return STRING;
-	}
-
  /* Ignore comments */
 #.*		;
 
@@ -180,7 +167,9 @@ QSTR		[^\\\$\"\n]
 "conduit"	{ KEYWORD(CONDUIT);	}
 "device"	{ KEYWORD(DEVICE);	}
 "directory"	{ KEYWORD(DIRECTORY);	}
+"force_install"	{ KEYWORD(FORCE_INSTALL);	}
 "forward"	{ KEYWORD(FORWARD);	}
+"install_first"	{ KEYWORD(INSTALL_FIRST);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "options"	{ KEYWORD(OPTIONS);	}
 "path"		{ KEYWORD(PATH);	}
@@ -222,6 +211,19 @@ QSTR		[^\\\$\"\n]
  /* Conduit options */
 "final"		{ KEYWORD(FINAL);	}
 "default"	{ KEYWORD(DEFAULT);	}
+
+<VARNAME>{VAR1}{VAR}*	{
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found variable name [%s]\n", yytext);
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		Error(_("%s: Can't make copy of string."),
+		      "yylex");
+		return -1;
+	}
+	BEGIN 0;
+	return STRING;
+	}
 
  /* Conduit creator-type pairs. There are four rules for this, for
   * simplicity: "cccc/tttt", "cccc / *", "* / tttt", and "* / *" (without
