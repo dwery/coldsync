@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.45 2004-10-20 22:45:55 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.46 2005-03-09 03:16:40 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -15,6 +15,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #ifndef HAVE_ENODEV
 #  define ENODEV	999	/* Some hopefully-impossible value */
@@ -732,6 +734,19 @@ pconn_serial_open(PConnection *pconn,
 
 		tcsetattr(pconn->fd, TCSANOW, &term); /* Make it so */
 		/* XXX - Error-checking */
+	} else {
+		/* Setting TCP_NODELAY reduces latency in RPC protocols. It can also
+		 * reduce throughput where many small write() calls are being done
+		 */
+		int flag = 1;
+		int err = setsockopt(pconn->fd, IPPROTO_TCP, TCP_NODELAY,
+			(char *) &flag, sizeof(int));
+		if(err < 0)
+		{
+			/* this is non-fatal. The worst that can happen when we
+			 * don't set nodelay is that the sync takes longer */
+			IO_TRACE(4) fprintf(stderr, "Can't set tcp_nodelay\n");
+		}
 	}
 
 	/* XXX Should this message go to stderr instead? */
