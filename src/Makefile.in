@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.14 1999-11-10 06:44:32 arensb Exp $
+# $Id: Makefile.in,v 1.15 1999-11-12 09:49:14 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -50,6 +50,18 @@ OBJS =		coldsync.o \
 		lex.yy.o \
 		y.tab.o
 
+LINTOBJS =	coldsync.ln \
+		archive.ln \
+		backup.ln \
+		restore.ln \
+		install.ln \
+		config.ln \
+		handledb.ln \
+		log.ln \
+		conduit.ln \
+		lex.yy.ln \
+		y.tab.ln
+
 HEADERS =	coldsync.h \
 		archive.h \
 		conduit.h \
@@ -61,7 +73,7 @@ DISTFILES =	${SRCS} ${HEADERS} \
 		lexer.l parser.y \
 		Makefile.in
 
-CLEAN =		coldsync *.o *.bak *~ core *.core \
+CLEAN =		coldsync *.o *.ln *.bak *~ core *.core \
 		lex.yy.o lex.yy.c y.tab.o y.tab.c y.tab.h y.output
 DISTCLEAN =	Makefile .depend
 SPOTLESS =
@@ -91,14 +103,19 @@ YACCARGS =	@YACCARGS@ -d
 LIBYACC =	@LIBYACC@
 LIBS =		@LIBS@ ${LIBPCONN} ${LIBPDB} ${LIBYACC} ${LIBLEX}
 LDFLAGS =	@LDFLAGS@ ${LIBS}
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
 
-.SUFFIXES:	.c .o .cc
+.SUFFIXES:	.c .o .cc .ln
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
 
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
+
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
 
 all:	coldsync
 
@@ -144,3 +161,6 @@ y.tab.c y.tab.h:	parser.y
 #PURELINK =      /usr/imports/pure/purify
 #purify: ${OBJS}
 #       ${PURELINK} ${CXX} ${CXXFLAGS} ${OBJS} -o coldsync ${LDFLAGS}
+
+lint:	${LINTOBJS}
+	${LINT} ${LINTARGS} ${LINTOBJS} @LDFLAGS@ ${LIBPCONN} ${LIBPDB}

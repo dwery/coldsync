@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.2 1999-11-02 03:33:36 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-11-12 09:48:02 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -31,7 +31,7 @@ MKDEP =		@MKDEP@
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
 RECURSIVE_TARGETS = \
-		all depend clean distclean spotless distdir install
+		all depend clean distclean spotless distdir install lint
 
 HEADERS =	pdb.h
 
