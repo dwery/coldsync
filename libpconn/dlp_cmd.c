@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.9 2000-03-04 12:05:38 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.10 2000-05-17 12:45:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -752,6 +752,7 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */ 
 	ubyte *wptr;		/* Pointer into buffers (for writing) */ 
+	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -834,9 +835,15 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 			 * DLPCMD_DBNAME_LEN-1 (31) characters, and ensure
 			 * a trailing NUL.
 			 */
-			memcpy(dbs->name, rptr,
-			       dbs->size - DLPCMD_DBNAME_LEN);
-			rptr += dbs->size - DLPCMD_DBNAME_LEN;
+			/* Get the database name. Everything up to the end
+			 * of the returned argument, or DLPCMD_DBNAME_LEN
+			 * characters, whichever is shorter.
+			 */
+			max = ret_argv[i].data + ret_argv[i].size - rptr;
+			if (max > DLPCMD_DBNAME_LEN)
+				max = DLPCMD_DBNAME_LEN;
+			memcpy(dbs->name, rptr, max);
+			rptr += max;
 
 
 			DLPC_TRACE(5)
