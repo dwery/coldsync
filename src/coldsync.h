@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.36 2000-11-18 22:43:26 arensb Exp $
+ * $Id: coldsync.h,v 1.37 2000-11-18 23:55:28 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -27,15 +27,6 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 
 #define SYNC_TRACE(n)	if (sync_trace >= (n))
 #define MISC_TRACE(n)	if (misc_trace >= (n))
-
-/* Types of listen blocks */
-/* XXX - This should go elsewhere, in PConnection.h or something */
-/* XXX - Perhaps this ought to be an enum */
-#define LISTEN_NONE	0	/* Dunno if this will be useful */
-#define LISTEN_SERIAL	1	/* Listen on serial port */
-#define LISTEN_TCP	2	/* Listen on TCP port (not
-				 * implemented yet). */
-#define LISTEN_USB	3	/* USB for Handspring Visor */
 
 typedef int comm_type;
 
