@@ -47,7 +47,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.1 1999-09-09 05:16:56 arensb Exp $
+ * $Id: slp.h,v 1.2 2000-04-09 14:16:01 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -115,7 +115,6 @@ extern int slp_bind(struct PConnection *pconn, struct slp_addr *addr);
 				/* XXX - Ought to take the same
 				 * arguments as bind().
 				 */
-/*  extern int slp_read(int fd, ubyte *buf, uword len); */
 extern int slp_read(struct PConnection *pconn, const ubyte **buf, uword *len);
 extern int slp_write(struct PConnection *pconn, const ubyte *buf,
 		     const uword len);
