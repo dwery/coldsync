@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.1 1999-07-04 14:37:44 arensb Exp $
+# $Id: Makefile.in,v 1.2 1999-07-12 08:48:10 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -25,16 +25,19 @@ DISTFILES =	Makefile.in \
 		pdb.ps \
 		version.texi.in \
 		texinfo.tex \
+		coldsync.8 \
 		${PSFILES}
 
 CLEAN =		${INFOFILES} ${DVIFILES} ${PSFILES} \
-		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr
-DISTCLEAN =	Makefile
+		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr \
+		*.bak *~ errs errs.*
+DISTCLEAN =	Makefile version.texi .depend
+SPOTLESS =
 
 .SUFFIXES:	.dvi .info .ps .texi
 
 .texi.info:
-	makeinfo `echo $< | sed 's,.*/,,'`
+	makeinfo $<
 
 .texi.dvi:
 	texi2dvi $<
@@ -47,6 +50,8 @@ all-doc:	info dvi ps
 info:	${INFOFILES}
 dvi:	${DVIFILES}
 ps:	${PSFILES}
+
+depend:		# XXX
 
 distdir:	${DISTFILES}
 	if test ! -d ${DISTDIR}/${subdir}; then \
