@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.22 2000-01-25 11:26:04 arensb Exp $
+ * $Id: coldsync.c,v 1.23 2000-01-27 02:34:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -133,12 +133,6 @@ main(int argc, char *argv[])
 	int err;
 	int i;
 
-	MISC_TRACE(1)
-		/* So I'll know what people are running when they send me
-		 * stderr.
-		 */
-		print_version();
-
 #if HAVE_LIBINTL
 	/* Set things up so that i18n works. The constants PACKAGE and
 	 * LOCALEDIR are strings set up in ../config.h by 'configure'.
@@ -154,6 +148,12 @@ main(int argc, char *argv[])
 		fprintf(stderr, _("Error loading configuration\n"));
 		exit(1);
 	}
+
+	MISC_TRACE(1)
+		/* So I'll know what people are running when they send me
+		 * stderr.
+		 */
+		print_version();
 
 	MISC_TRACE(2)
 	{
