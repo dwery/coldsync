@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.44.2.3 2001-10-11 10:06:23 arensb Exp $
+ * $Id: parser.y,v 2.44.2.4 2001-10-11 11:19:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -780,6 +780,8 @@ options_list: options_list
 				$2, $5);
 		lex_expect(0);
 		put_symbol($2, $5);
+		$2 = NULL;
+		$5 = NULL;
 		lex_expect(LEX_VAR);		/* Prepare for the next line */
 	}
 	|	/* Empty */
