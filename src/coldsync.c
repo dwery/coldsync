@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.7 1999-09-04 20:57:08 arensb Exp $
+ * $Id: coldsync.c,v 1.8 1999-09-09 05:55:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,11 +23,12 @@
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
-#include "palm_errno.h"
+/*#include "palm_errno.h"
 #include "PConnection.h"
 #include "cmp.h"
 #include "dlp_cmd.h"
-#include "util.h"
+#include "util.h"*/
+#include <pconn/pconn.h>	/* XXX - Clean this up */
 #include "coldsync.h"
 #include "pdb.h"
 #include "conduit.h"
@@ -342,10 +343,21 @@ main(int argc, char *argv[])
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a sync.\n");
 
-		/* XXX - If it's configured to install new databases first,
-		 * install new databases now.
+		/* Install new databases */
+		/* XXX - It should be configurable whether new databases
+		 * get installed at the beginning or the end.
 		 */
-		err = InstallNewFiles(pconn, &palm);
+		err = InstallNewFiles(pconn, &palm, installdir, True);
+
+		/* XXX - This is just for purposes of illustration; it
+		 * should be possible to specify a list of directories to
+		 * look in: that way, the user can put new databases in
+		 * ~/.palm/install, whereas in a larger site, the sysadmin
+		 * can install databases in /usr/local/stuff; they'll be
+		 * uploaded from there, but not deleted.
+		 */
+		/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
+				      False);*/
 		if (err < 0)
 		{
 			fprintf(stderr, "Error installing new files.\n");
@@ -370,12 +382,12 @@ main(int argc, char *argv[])
 		 * install new databases now.
 		 */
 
-		/* XXX - Get list of local files: if there are any that
-		 * aren't on the Palm, it probably means that they existed
-		 * once, but were deleted on the Palm. Assuming that the
-		 * user knew what he was doing, these databases should be
-		 * deleted. However, just in case, they should be saved to
-		 * an "attic" directory.
+		/* Get list of local files: if there are any that aren't on
+		 * the Palm, it probably means that they existed once, but
+		 * were deleted on the Palm. Assuming that the user knew
+		 * what he was doing, these databases should be deleted.
+		 * However, just in case, they should be saved to an
+		 * "attic" directory.
 		 */
 		err = CheckLocalFiles(&palm);
 
@@ -1482,7 +1494,6 @@ print_version(void)
 
 /* find_dbinfo
  * XXX - This really doesn't belong in this file.
-
  * Look through the list of databases in 'palm' and try to find the one
  * named 'name'. Returns a pointer to its entry in 'palm->dblist' if it
  * exists, or NULL otherwise.
@@ -1505,6 +1516,57 @@ find_dbentry(struct Palm *palm,
 	}
 
 	return NULL;		/* Couldn't find it */
+}
+
+/* append_dbentry
+ * Append an entry for 'pdb' to palm->dblist.
+ */
+int
+append_dbentry(struct Palm *palm,
+	       struct pdb *pdb)
+{
+	struct dlp_dbinfo *newdblist;
+	struct dlp_dbinfo *dbinfo;
+
+	MISC_TRACE(4)
+		fprintf(stderr, "append_dbentry: adding \"%s\"\n",
+			pdb->name);
+
+	/* Resize the existing 'dblist'. */
+	newdblist = realloc(palm->dblist,
+			    (palm->num_dbs+1) * sizeof(struct dlp_dbinfo));
+	if (newdblist == NULL)
+	{
+		fprintf(stderr, "Error resizing palm->dblist\n");
+		return -1;
+	}
+	palm->dblist = newdblist;
+	palm->num_dbs++;
+
+	/* Fill in the new entry */
+	dbinfo = &(palm->dblist[palm->num_dbs-1]);
+	dbinfo->size = 0;		/* XXX - Bogus, but I don't think
+					 * this is used anywhere.
+					 */
+	dbinfo->misc_flags = 0x40;	/* Kind of bogus, but it probably
+					 * doesn't matter. FWIW, 0x40 means
+					 * "RAM-based".
+					 */
+	dbinfo->db_flags = pdb->attributes;
+	dbinfo->type = pdb->type;
+	dbinfo->creator = pdb->creator;
+	dbinfo->version = pdb->version;
+	dbinfo->modnum = pdb->modnum;
+
+	time_palmtime2dlp(pdb->ctime, &(dbinfo->ctime));
+	time_palmtime2dlp(pdb->mtime, &(dbinfo->mtime));
+	time_palmtime2dlp(pdb->baktime, &(dbinfo->baktime));
+	dbinfo->index =	0;		/* Bogus, but I don't think this is
+					 * ever used.
+					 */
+	strncpy(dbinfo->name, pdb->name, DLPCMD_DBNAME_LEN);
+
+	return 0;		/* Success */
 }
 
 /* This is for Emacs's benefit:
