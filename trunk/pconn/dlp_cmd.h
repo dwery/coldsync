@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.5 1999-03-11 03:19:33 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.6 1999-03-16 10:33:33 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -597,17 +597,7 @@ struct dlp_recinfo
 	ubyte category;		/* Record category */
 };
 
-/* XXX - These identifiers need work */
-struct dlp_readrecreq_byindex
-{
-	ubyte dbid;		/* Database ID (handle) */
-	ubyte unused;		/* Set to 0 */
-	uword index;		/* Record index */
-	uword offset;		/* Offset into the record */
-	uword len;		/* How many bytes to read, starting at
-				 * 'offset' (-1 == to the end). */
-};
-
+/* XXX - Get rid of this */
 struct dlp_readrecret
 {
 	udword recid;		/* Unique record ID */
@@ -619,13 +609,6 @@ struct dlp_readrecret
 };
 
 /*** WriteRecord ***/
-struct dlp_writerec
-{
-	ubyte flags;		/* Record flags */
-	udword recid;		/* Unique record ID */
-	ubyte attributes;	/* Record attributes */
-	ubyte category;		/* Record category */
-};
 
 /*** DeleteRecord ***/
 #define DLPCMD_DELRECFLAG_ALL		0x80
@@ -847,7 +830,6 @@ extern int DlpWriteSortBlock(
 extern int DlpReadNextModifiedRec(	/* XXX - Bogus API */
 	struct PConnection *pconn,
 	const ubyte handle,
-/*  	struct dlp_readrecret *record); */
 	struct dlp_recinfo *recinfo,
 	const ubyte **data);
 /* These next two functions both use ReadRecord */
@@ -859,14 +841,18 @@ extern int DlpReadRecordByID(
 	const uword len,
 	struct dlp_recinfo *recinfo,
 	const ubyte **data);
-extern int DlpReadRecordByIndex(	/* XXX - bogus API */
-	struct PConnection *pconn,
-	const struct dlp_readrecreq_byindex *req,
-	struct dlp_readrecret *record);
-extern int DlpWriteRecord(		/* XXX - bogus API */
+extern int DlpReadRecordByIndex(
 	struct PConnection *pconn,
 	const ubyte handle,
-	const struct dlp_writerec *rec,
+	const uword index,
+	struct dlp_recinfo *recinfo);
+extern int DlpWriteRecord(
+	struct PConnection *pconn,
+	const ubyte handle,
+	const ubyte flags,
+	const udword id,
+	const ubyte attributes,
+	const ubyte category,
 	const udword len,
 	const ubyte *data,
 	udword *recid);
