@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.23 2001-08-15 04:17:39 arensb Exp $
+ * $Id: PConnection.c,v 1.24 2001-08-22 06:42:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -85,9 +85,6 @@ new_PConnection(char *device,
 
 	switch (listenType) {
 	    case LISTEN_SERIAL:
-		/* XXX - Should be able to specify "-" for the filename to
-		 * listen on stdin/stdout.
-		 */
 		if (pconn_serial_open(pconn, device, protocol, promptHotSync)
 		    < 0)
 		{
