@@ -8,13 +8,13 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: util.c,v 1.2 1999-07-12 09:28:57 arensb Exp $
  */
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
 #include "config.h"
 #include "util.h"
-#include "pdb.h"	/* For EPOCH_1904 */	/* XXX - this shouldn't need to refer to <coldsync/ *> */
+#include "pdb.h"	/* For EPOCH_1904 */
 
 INLINE ubyte
 peek_ubyte(const ubyte *buf)
@@ -127,7 +127,8 @@ time_dlp2time_t(const struct dlp_time *dlpt)
 	tm.tm_min = dlpt->minute;
 	tm.tm_hour = dlpt->hour;
 	tm.tm_mday = dlpt->day;
-	tm.tm_mon = dlpt->month;
+/*  	tm.tm_mon = dlpt->month; */
+	tm.tm_mon = dlpt->month - 1;
 	tm.tm_year = dlpt->year - 1900;
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
@@ -159,7 +160,8 @@ time_dlp2palmtime(const struct dlp_time *dlpt)
 	tm.tm_min = dlpt->minute;
 	tm.tm_hour = dlpt->hour;
 	tm.tm_mday = dlpt->day;
-	tm.tm_mon = dlpt->month;
+/*  	tm.tm_mon = dlpt->month; */
+	tm.tm_mon = dlpt->month - 1;
 	tm.tm_year = dlpt->year - 1900;
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
@@ -189,7 +191,8 @@ time_time_t2dlp(const time_t t,
 
 	/* Copy the relevant fields over to 'dlpt' */
 	dlpt->year = tm->tm_year + 1900;
-	dlpt->month = tm->tm_mon;
+/*  	dlpt->month = tm->tm_mon; */
+	dlpt->month = tm->tm_mon + 1;
 	dlpt->day = tm->tm_mday;
 	dlpt->hour = tm->tm_hour;
 	dlpt->minute = tm->tm_min;
@@ -216,7 +219,8 @@ time_palmtime2dlp(const udword palmt,
 
 	/* Copy the relevant fields over to 'dlpt' */
 	dlpt->year = tm->tm_year + 1900;
-	dlpt->month = tm->tm_mon;
+/*  	dlpt->month = tm->tm_mon; */
+	dlpt->month = tm->tm_mon + 1;
 	dlpt->day = tm->tm_mday;
 	dlpt->hour = tm->tm_hour;
 	dlpt->minute = tm->tm_min;
