@@ -8,8 +8,7 @@ use ExtUtils::MakeMaker;
 # out for is if a plain user wants to install this in his home
 # directory. Set PREFIX, maybe? See "CONFIGURE => ...".
 
-# XXX - 'make dist' should write to ${TOP}/${DISTDIR}
-# XXX - 'make spotless' should work.
+# XXX - 'make clean' shouldn't delete Makefile
 
 WriteMakefile(
     'NAME'		=> 'ColdSync',
