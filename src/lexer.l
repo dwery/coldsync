@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.15 2000-05-20 19:22:20 arensb Exp $
+ * $Id: lexer.l,v 2.16 2000-05-20 23:15:15 arensb Exp $
  */
 /* XXX - 'flex' by itself can (apparently) deal with infinitely-long
  * tokens. 'flex -l' (and presumably 'lex') can't. Figure out some way of
@@ -25,6 +25,11 @@
 #include "y.tab.h"
 
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
+
+#define KEYWORD(k) \
+	PARSE_TRACE(3) \
+		fprintf(stderr, "Found keyword " #k "\n"); \
+	return k;
 
 #define YY_NO_UNPUT	/* We never yyunput() anything, so this keeps
 			 * the compiler from complaining.
@@ -65,11 +70,17 @@ static int nextstate = 0;	/* State in which to start the next yylex()
 %option noyywrap
 
  /* Start states */
- /* An error has occurred. Just return the rest of the line */
-%s ERROR
 
- /* Looking for a conduit header */
+ /* Looking for a header name */
 %s HEADER
+
+ /* Looking for a "bareword" string: a string that isn't delimited by
+  * quotation marks.
+  */
+%s BSTRING
+
+ /* Creator/type pair (two four-character words with a slash in between) */
+%s CTPAIR
 
  /* Character classes */
 
@@ -81,6 +92,8 @@ ODIGIT		[0-7]
 XDIGIT		[0-9a-fA-F]
  /* Whitespace */
 WS		[ \t\f\r]
+ /* Characters allowed in "bareword" strings */
+BWORD		[^ \t\f\n\r;:{}\"]
  /* Alphanumeric character */
 ALNUM		[a-zA-Z0-9]
  /* Leading character for an identifier (anything that looks like a word) */
@@ -111,75 +124,30 @@ ID		[-a-zA-Z_0-9]
 	}
 %}
 
- /* XXX - Perhaps this should be rewritten to stop at a semicolon */
-<ERROR>.*	{
-	yylval.string = strdup(yytext);
+<HEADER>{ID1}{ID}*	{
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found header name [%s]\n", yytext);
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		fprintf(stderr, _("%s: Can't make copy of string.\n"),
+			"yylex");
+		return -1;
+	}
+	BEGIN 0;
 	return STRING;
 	}
 
-<HEADER>^{WS}*{ID1}{ID}*:{WS}*.*	{
-		/* It's actually easier to just recognize the entire line
-		 * all at once and parse it here.
-		 */
-		/* XXX - The spec gives a maximum length for both the
-		 * header name and header value. Deal with them here.
-		 */
-		char *hname;	/* Pointer to header name */
-		char *hvalue;	/* Pointer to header value */
-		char *colon;	/* Pointer to colon within the line */
-
-		/* XXX - If line ends in "\", there's a continuation line.
-		 * If it ends in ';', that's the end of the line.
-		 * How to deal with whitespace at the beginning of the
-		 * continuation line? Or would it be best to just bag the
-		 * whole continuation line idea entirely?
-		 */
-		if (yytext[yyleng-1] == ';')
-			/* Put the semicolon back on the input stream */
-			yyless(yyleng-1);
-
-		hname = yytext;
-		hname += strspn(hname, " \t\f");
-					/* Skip leading whitespace */
-
-		/* Find the colon that separates the header name from the
-		 * value.
-		 */
-		colon = strchr(hname, ':');
-		*colon = '\0';		/* XXX - Ugly? */
-
-		PARSE_TRACE(6)
-			fprintf(stderr, "Header name: [%s]\n", hname);
-		yylval.header_type.name = strdup(hname);
-				/* Save the header name */
-				/* XXX - Should truncate at
-				 * COND_MAXHFIELDLEN characters.
-				 */
-
-		/* Find the header value after the colon */
-		hvalue = colon + 1;
-		hvalue += strspn(hvalue, " \t\f");
-
-		PARSE_TRACE(6)
-			fprintf(stderr, "Header value: [%s]\n", hvalue);
-
-		/* XXX - If value begins and ends with double quotes, strip
-		 * them.
-		 */
-		/* XXX - Process escaped characters */
-		yylval.header_type.value = strdup(hvalue);
-				/* Save the header value */
-				/* XXX - Should truncate at COND_MAXLINELEN
-				 * - COND_MAXHFIELDLEN-2 characters.
-				 */
-
-		return HEADER_PAIR;
+<BSTRING>{BWORD}+	{
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found bareword string [%s]\n", yytext);
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		fprintf(stderr, _("%s: Can't make copy of string.\n"),
+			"yylex");
+		return -1;
 	}
-
- /* XXX - This is really a hack. Need to redo the whole header thing */
-<HEADER>"}"	{
 	BEGIN 0;
-	return yytext[0];
+	return STRING;
 	}
 
  /* Ignore comments */
@@ -192,32 +160,32 @@ ID		[-a-zA-Z_0-9]
 \n		{ lineno++; }
 
  /* Keywords */
-"arguments"	{ return ARGUMENTS;	}
-"conduit"	{ return CONDUIT;	}
-"device"	{ return DEVICE;	}
-"directory"	{ return DIRECTORY;	}
-"listen"	{ return LISTEN;	}
-"path"		{ return PATH;		}
-"pda"		{ return PDA;		}
-"palm"		{ return PDA; /* Synonym */	}
-"serial"	{ return SERIAL;	}
-"usb"		{ return USB;		}
-"snum"		{ return SNUM;		}
-"speed"		{ return SPEED;		}
-"type"		{ return TYPE;		}
+"arguments"	{ KEYWORD(ARGUMENTS);	}
+"conduit"	{ KEYWORD(CONDUIT);	}
+"device"	{ KEYWORD(DEVICE);	}
+"directory"	{ KEYWORD(DIRECTORY);	}
+"listen"	{ KEYWORD(LISTEN);	}
+"path"		{ KEYWORD(PATH);	}
+"pda"		{ KEYWORD(PDA);		}
+"palm"		{ KEYWORD(PDA);		/* Synonym */	}
+"serial"	{ KEYWORD(SERIAL);	}
+"usb"		{ KEYWORD(USB);		}
+"snum"		{ KEYWORD(SNUM);	}
+"speed"		{ KEYWORD(SPEED);	}
+"type"		{ KEYWORD(TYPE);	}
 
  /* Conduit flavors */
-"sync"		{ return SYNC;		}
-"fetch"		{ return FETCH;		}
-"pre-fetch"	{ return FETCH;	/* Synonym */	}
-"dump"		{ return DUMP;		}
-"post-dump"	{ return DUMP;	/* Synonym */	}
-"install" 	{ return INSTALL;		}
-"uninstall" 	{ return UNINSTALL;	}
+"sync"		{ KEYWORD(SYNC);	}
+"fetch"		{ KEYWORD(FETCH);	}
+"pre-fetch"	{ KEYWORD(FETCH);	/* Synonym */	}
+"dump"		{ KEYWORD(DUMP);	}
+"post-dump"	{ KEYWORD(DUMP);	/* Synonym */	}
+"install" 	{ KEYWORD(INSTALL);	}
+"uninstall" 	{ KEYWORD(UNINSTALL);	}
 
  /* Conduit options */
-"final"		{ return FINAL;		}
-"default"	{ return DEFAULT;	}
+"final"		{ KEYWORD(FINAL);	}
+"default"	{ KEYWORD(DEFAULT);	}
 
  /* Conduit creator-type pairs. There are four rules for this, for
   * simplicity: "cccc/tttt", "cccc / *", "* / tttt", and "* / *" (without
@@ -228,7 +196,7 @@ ID		[-a-zA-Z_0-9]
   * context, e.g., if relative conduit pathnames without quotes become
   * acceptable, and the user decides to specify ``path quux/cond;''.
   */
-{ALNUM}{4}"/"{ALNUM}{4} {
+<CTPAIR>{ALNUM}{4}"/"{ALNUM}{4} {
 	PARSE_TRACE(5)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
@@ -245,7 +213,7 @@ ID		[-a-zA-Z_0-9]
 	return CREA_TYPE;
 	}
 
-{ALNUM}{4}"/*" {
+<CTPAIR>{ALNUM}{4}"/*" {
 	PARSE_TRACE(5)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
@@ -258,7 +226,7 @@ ID		[-a-zA-Z_0-9]
 	return CREA_TYPE;
 	}
 
-"*/"{ALNUM}{4} {
+<CTPAIR>"*/"{ALNUM}{4} {
 	PARSE_TRACE(5)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
@@ -271,7 +239,7 @@ ID		[-a-zA-Z_0-9]
 	return CREA_TYPE;
 	}
 
-"*/*" {
+<CTPAIR>"*/*" {
 	PARSE_TRACE(5)
 		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
 
@@ -297,6 +265,8 @@ ID		[-a-zA-Z_0-9]
   */
  /* XXX - Strip out escapes in strings */
 \"([^\"]|\\\")*\"	{
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found string [%s]\n", yytext);
 	if ((yylval.string = malloc(yyleng-1)) == NULL)
 	{
 		fprintf(stderr, _("%s: Can't malloc copy of string\n"),
@@ -310,6 +280,9 @@ ID		[-a-zA-Z_0-9]
 
 [-+]?{DIGIT}{1,10}	{
 		int value;
+
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%i", &value);
 		yylval.integer = value;
 		return NUMBER;
@@ -317,6 +290,9 @@ ID		[-a-zA-Z_0-9]
 
 [-+]?0{ODIGIT}{1,11}	{
 		int value;
+
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%i", &value);
 		yylval.integer = value;
 		return NUMBER;
@@ -324,21 +300,32 @@ ID		[-a-zA-Z_0-9]
 
 [-+]?0x{XDIGIT}{1,8}	{
 		int value;
+
+		PARSE_TRACE(3)
+			fprintf(stderr, "Found number [%s]\n", yytext);
 		sscanf(yytext, "%i", &value);
 		yylval.integer = value;
 		return NUMBER;
 	}
 
+ /* This isn't actually used, except in error-reporting: a WORD isn't
+  * actually used in any parse rules, but yacc prints the bogus token that
+  * caused the error. In this case, it's better to print an entire word,
+  * rather than just the first character that caused the error.
+  */
 {ID1}{ID}*	{
-		if ((yylval.string = malloc(yyleng+1)) == NULL)
-		{
-			fprintf(stderr, _("%s: Can't malloc copy of word\n"),
-				"yylex");
-			return -1;
-		}
-		strncpy(yylval.string, yytext, yyleng);
-		yylval.string[yyleng] = '\0';
-		return WORD;
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found word [%s]\n", yytext);
+
+	/* XXX - Easier to just use strdup() */
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		fprintf(stderr, _("%s: Can't make copy of string.\n"),
+			"yylex");
+		return -1;
+	}
+
+	return WORD;
 	}
 
  /* Anything else, just return it. */
@@ -355,16 +342,22 @@ ID		[-a-zA-Z_0-9]
 void
 lex_expect(const int state)
 {
+	PARSE_TRACE(5)
+		fprintf(stderr, "Lex: expecting state %d\n", state);
+
 	switch (state)
 	{
 	    case 0:
 		nextstate = 0;
 		break;
-	    case LEX_ERROR:
-		nextstate = ERROR;
-		break;
 	    case LEX_HEADER:
 		nextstate = HEADER;
+		break;
+	    case LEX_BSTRING:
+		nextstate = BSTRING;
+		break;
+	    case LEX_CTPAIR:
+		nextstate = CTPAIR;
 		break;
 	    default:
 		fprintf(stderr, _("%s: unknown start state %d\n"),
