@@ -4,13 +4,11 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.3 1999-11-12 09:48:02 arensb Exp $
+# $Id: Makefile.in,v 1.4 1999-11-27 05:37:27 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
 
-# XXX - This is broken: "srcdir" is "..", which breaks the "entering
-# directory" and "leaving directory" messages for recursive targets.
 SRCDIR =	@srcdir@
 subdir =	include
 top_srcdir =	@top_srcdir@
@@ -64,9 +62,6 @@ LDFLAGS =	@LDFLAGS@ ${LIBS}
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
 
-# XXX - "libpdb.a" should probably be a 'make' symbol, in case we
-# decide to build shared libraries. Don't forget to change it
-# throughout.
 all::	
 
 install::	${HEADERS}
@@ -94,7 +89,7 @@ spotless::
 
 ${RECURSIVE_TARGETS}::
 	@for dir in ${SUBDIRS}; do \
-		echo "$@: Entering directory \`${curdir}/$$dir'"; \
+		echo "$@: Entering directory \`${subdir}/$$dir'"; \
 		(cd $$dir && ${MAKE} $@); \
-		echo "$@: Leaving directory \`${curdir}/$$dir'"; \
+		echo "$@: Leaving directory \`${subdir}/$$dir'"; \
 	done
