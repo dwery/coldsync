@@ -2,3 +2,4 @@ pilot.ram
 pilot.scratch
 errs*
 *.core
+.depend
