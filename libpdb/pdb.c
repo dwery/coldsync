@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.19 2000-02-09 08:14:54 arensb Exp $
+ * $Id: pdb.c,v 1.20 2000-05-03 04:42:10 arensb Exp $
  */
 
 #include "config.h"
@@ -58,6 +58,46 @@ static int pdb_DownloadResources(struct PConnection *pconn,
 static int pdb_DownloadRecords(struct PConnection *pconn,
 			       ubyte dbh,
 			       struct pdb *db);
+
+/* merge_attributes
+ * Takes a record's flags and category, and merges them into a single byte,
+ * with the flags in the top nybble and the category in the bottom one
+ */
+static inline ubyte
+merge_attributes(const ubyte flags,
+		 const ubyte category)
+{
+	/* The PDB_REC_ARCHIVED flag is troublesome, since it overlaps the
+	 * category field. The idea here is that if the record was deleted,
+	 * then it doesn't have a category anymore, so the category part
+	 * gets set to 0.
+	 */
+	if ((flags & PDB_REC_DELETED) == 0)
+		return (flags & 0xf0) |
+			(category & 0x0f);
+	else
+		return (flags & 0xf8);
+}
+
+/* split_attributes
+ * The converse of merge_attributes(). Takes the combined field attributes
+ * and writes its contents to *flags and *category, using the same rules as
+ * merge_attributes(), above.
+ */
+static inline void
+split_attributes(const ubyte attributes,
+		 ubyte *flags,
+		 ubyte *category)
+{
+	if ((attributes & PDB_REC_DELETED) == 0)
+	{
+		*flags = (attributes & 0xf0);
+		*category = (attributes & 0x0f);
+	} else {
+		*flags = (attributes & 0xf8);
+		*category = 0;
+	}
+}
 
 /* new_pdb
  * struct pdb constructor.
@@ -457,7 +497,9 @@ pdb_Write(const struct pdb *db,
 			/* Construct the record index entry */
 			wptr = recbuf;
 			put_udword(&wptr, offset);
-			put_ubyte(&wptr, rec->attributes);
+			put_ubyte(&wptr, merge_attributes(
+				rec->flags,
+				rec->category));
 			put_ubyte(&wptr, (char) ((rec->id >> 16) & 0xff));
 			put_ubyte(&wptr, (char) ((rec->id >> 8) & 0xff));
 			put_ubyte(&wptr, (char) (rec->id & 0xff));
@@ -891,12 +933,13 @@ pdb_Upload(struct PConnection *pconn,
 							 * to make sure the
 							 * high bit is set,
 							 * at which point
-							 * this argument be
-							 * allowed to be 0.
+							 * this argument
+							 * will be allowed
+							 * to be 0.
 							 */
 					     rec->id,
-					     (rec->attributes & 0xf0),
-					     (rec->attributes & 0x0f),
+					     rec->flags,
+					     rec->category,
 					     rec->data_len,
 					     rec->data,
 					     &newid);
@@ -1188,7 +1231,7 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
  * attributes/category field.
  */
 struct pdb_record *
-new_Record(const ubyte attributes,
+new_Record(const ubyte flags,
 	   const ubyte category,
 	   const udword id,
 	   const uword len,
@@ -1199,7 +1242,7 @@ new_Record(const ubyte attributes,
 	PDB_TRACE(6)
 	{
 		fprintf(stderr, "New_Record: Creating new record:\n");
-		fprintf(stderr, "\tattributes == 0x%02x\n", attributes);
+		fprintf(stderr, "\tflags == 0x%02x\n", flags);
 		fprintf(stderr, "\tcategory == 0x%02x\n", category);
 		fprintf(stderr, "\tid == 0x%08lx\n", id);
 		fprintf(stderr, "\tlen == %d\n", len);
@@ -1217,21 +1260,9 @@ new_Record(const ubyte attributes,
 	/* Initialize the new record */
 	retval->next = NULL;
 	retval->offset = 0L;
-	retval->attributes = attributes;
-	if ((attributes & PDB_REC_DELETED) == 0)	/* XXX - Is this
-							 * the correct
-							 * test? */
-	{
-		/* The record is not being deleted; it still has a category
-		 * (in the lower 4 bits).
-		 */
-		retval->attributes |= (category & 0x0f);
-	}
+	retval->flags = flags;
+	retval->category = category;
 	retval->id = id;
-
-	PDB_TRACE(6)
-		fprintf(stderr, "   attributes + category -> 0x%02x\n",
-			retval->attributes);
 
 	/* Allocate space to put the record data */
 	if (len == 0)
@@ -1286,9 +1317,10 @@ struct pdb_record *pdb_CopyRecord(
 	retval->next = NULL;		/* For cleanliness */
 
 	/* Copy the old record to the new copy */
-	retval->offset = rec->offset;
-	retval->attributes = rec->attributes;
-	retval->id = rec->id;
+	retval->offset	= rec->offset;
+	retval->flags	= rec->flags;
+	retval->category = rec->category;
+	retval->id	= rec->id;
 
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rec->data_len)) == NULL)
@@ -1619,6 +1651,7 @@ pdb_LoadRecIndex(int fd,
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
 		struct pdb_record *rec;
 					/* New record entry */
+		ubyte attributes;	/* Combined flags+category field */
 
 		/* Allocate the record entry */
 		if ((rec = (struct pdb_record *)
@@ -1650,7 +1683,9 @@ pdb_LoadRecIndex(int fd,
 		/* Parse it */
 		rptr = inbuf;
 		rec->offset = get_udword(&rptr);
-		rec->attributes = get_ubyte(&rptr);
+		attributes = get_ubyte(&rptr);
+		split_attributes(attributes, &(rec->flags), &(rec->category));
+
 		rec->id =
 			((udword) (get_ubyte(&rptr) << 16)) |
 			((udword) (get_ubyte(&rptr) << 8)) |
@@ -1658,11 +1693,12 @@ pdb_LoadRecIndex(int fd,
 
 		PDB_TRACE(6)
 			fprintf(stderr,
-				"\tRecord %d: offset 0x%04lx, attr 0x%02x, "
-				"ID 0x%08lx\n",
+				"\tRecord %d: offset 0x%04lx, flags 0x%02x, "
+				" category 0x%02x, ID 0x%08lx\n",
 				i,
 				rec->offset,
-				rec->attributes,
+				rec->flags,
+				rec->category,
 				rec->id);
 
 		/* Append the new record to the database */
@@ -2371,15 +2407,9 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		/* Fill in the record index data */
 		rec->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
-		rec->attributes = recinfo.attributes;
-		if ((recinfo.attributes & PDB_REC_DELETED) == 0)
-			/* XXX - Is this the right test? */
-		{
-			/* Add the category (unless the record has been
-			 * deleted)
-			 */
-			rec->attributes |= (recinfo.category & 0x0f);
-		}
+		split_attributes(recinfo.attributes,
+				 &(rec->flags),
+				 &(rec->category));
 		rec->id = recinfo.id;
 
 		/* Fill in the data size entry */
