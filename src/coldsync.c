@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.35 2000-05-21 08:07:00 arensb Exp $
+ * $Id: coldsync.c,v 1.36 2000-06-03 06:32:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -54,7 +54,7 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
  * Of course, these are the same people who didn't define B38400 = 38400,
  * so what did you expect?
  */
-#define SYNC_RATE		38400
+#define SYNC_RATE		38400L
 #define BSYNC_RATE		B38400
 
 extern int load_palm_config(struct Palm *palm);
@@ -689,7 +689,8 @@ Connect(struct PConnection *pconn)
 		int i;
 
 		SYNC_TRACE(3)
-			fprintf(stderr, "pconn->speed == %d\n", pconn->speed);
+			fprintf(stderr, "pconn->speed == %ld\n",
+				pconn->speed);
 
 		/* Go through the speed table. Make sure the requested
 		 * speed appears in the table: this is to make sure that
@@ -698,7 +699,7 @@ Connect(struct PConnection *pconn)
 		for (i = 0; i < num_speeds; i++)
 		{
 			SYNC_TRACE(7)
-				fprintf(stderr, "Comparing %ld ==? %d\n",
+				fprintf(stderr, "Comparing %ld ==? %ld\n",
 					speeds[i].bps, pconn->speed);
 
 			if (speeds[i].bps == pconn->speed)
@@ -716,11 +717,11 @@ Connect(struct PConnection *pconn)
 		{
 			/* The requested speed wasn't found */
 			fprintf(stderr, _("Warning: can't set the speed you "
-					  "requested (%d bps).\nUsing "
-					  "default (%d bps)\n"),
+					  "requested (%ld bps).\nUsing "
+					  "default (%ld bps)\n"),
 				pconn->speed,
 				SYNC_RATE);
-			pconn->speed = 0;
+			pconn->speed = 0L;
 		}
 	}
 
@@ -730,7 +731,7 @@ Connect(struct PConnection *pconn)
 		 * the one that was specified was bogus.
 		 */
 		SYNC_TRACE(2)
-			fprintf(stderr, "Using default speed (%d bps)\n",
+			fprintf(stderr, "Using default speed (%ld bps)\n",
 				SYNC_RATE);
 		bps = SYNC_RATE;
 		tcspeed = BSYNC_RATE;
@@ -1334,18 +1335,19 @@ UpdateUserInfo(struct PConnection *pconn,
 	MISC_TRACE(1)
 		fprintf(stderr, "* UpdateUserInfo:\n");
 
-	/* Does this Palm have a user ID yet? */
-	/* XXX - If the Palm has a user ID, but it's not that of the
-	 * current user, it should be possible to overwrite it. Perhaps
-	 * this should be an "administrative mode" option.
+	/* If the Palm doesn't have a user ID, or if it's the wrong one,
+	 * update it.
 	 */
-	if (palm->userinfo.userid == 0)
+	/* XXX - Is it a mistake to update the userid/username if it
+	 * doesn't match?
+	 */
+	if ((palm->userinfo.userid == 0) ||
+	    (palm->userinfo.userid != user_uid))
 	{
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting UID to %d (0x%04x)\n",
 				(int) user_uid,
 				(unsigned int) user_uid);
-		/* XXX - Fill this in */
 		uinfo.userid = (udword) user_uid;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
 					/* Set modification flag */
