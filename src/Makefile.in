@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.5 1999-08-23 08:43:00 arensb Exp $
+# $Id: Makefile.in,v 1.6 1999-08-25 09:53:10 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -154,3 +154,9 @@ distclean:
 	-rm -f ${CLEAN} ${DISTCLEAN}
 spotless:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+# Egcs's toupper() is broken. Print a message about this.
+config.o:	config.o.warning
+config.o.warning:
+	@echo "	If you're using egcs, ignore the warning about"
+	@echo "	\"ANSI C forbids braced-groups within expressions\""
