@@ -6,12 +6,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.67 2001-04-08 08:26:02 arensb Exp $
+ * $Id: config.c,v 1.68 2001-05-06 06:04:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
-#include <stdlib.h>		/* For atoi(), getenv() */
+#include <stdlib.h>		/* For atoi() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
 #include <sys/stat.h>		/* For mkdir() */
 #include <sys/ioctl.h>		/* For ioctl() and ioctl values */
@@ -751,7 +751,10 @@ usage(int argc, char *argv[])
 		 "\t-F:\t\tForce fast sync.\n"
 		 "\t-R:\t\tCheck ROM databases.\n"
 		 "\t-p <port>:\tListen on device <port>.\n"
-		 "\t-t <devtype>:\tPort type [serial|usb].\n"
+		 "\t-t <devtype>:\tPort type [serial|usb|tcp].\n"
+		 "\t-s:\t\tLog error messages to syslog.\n"
+		 "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
+		 "\t-v:\t\tIncrease verbosity.\n"
 		 "\t-d <fac[:level]>:\tSet debugging level.\n"),
 	       argv[0]);
 }
@@ -1462,7 +1465,8 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(basedir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create base sync directory."));
+			Error(_("Can't create base sync directory %s."),
+			      basedir);
 			Perror("mkdir");
 			return -1;
 		}
@@ -1479,7 +1483,8 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(backupdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create backup directory."));
+			Error(_("Can't create backup directory %s."),
+			      backupdir);
 			Perror("mkdir");
 			return -1;
 		}
@@ -1496,7 +1501,8 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create attic directory."));
+			Error(_("Can't create attic directory %s."),
+			      atticdir);
 			Perror("mkdir");
 			return -1;
 		}
@@ -1513,7 +1519,8 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(archivedir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create archive directory."));
+			Error(_("Can't create archive directory %s."),
+			      archivedir);
 			Perror("mkdir");
 			return -1;
 		}
@@ -1530,7 +1537,8 @@ make_sync_dirs(const char *basedir)
 
 		if ((err = mkdir(installdir, DIR_MODE)) < 0)
 		{
-			Error(_("Can't create install directory."));
+			Error(_("Can't create install directory %s."),
+			      installdir);
 			Perror("mkdir");
 			return -1;
 		}
@@ -1663,13 +1671,14 @@ get_userinfo(struct userinfo *userinfo)
 {
 	uid_t uid;		/* Current (real) uid */
 	struct passwd *pwent;	/* Password entry for current user */
-	char *home;		/* Value of $HOME */
 
 	uid = getuid();
 	userinfo->uid = uid;
 
 	MISC_TRACE(2)
-		fprintf(stderr, "UID: %lu\n", (unsigned long) uid);
+		fprintf(stderr, "UID: %lu, euid %lu\n",
+			(unsigned long) uid,
+			(unsigned long) geteuid());
 
 	/* Get the user's password file info */
 	if ((pwent = getpwuid(uid)) == NULL)
@@ -1686,16 +1695,15 @@ get_userinfo(struct userinfo *userinfo)
 		return -1;
 	}
 
-	/* Get the user's home directory */
-	home = getenv("HOME");
-	if (home == NULL)
-	{
-		/* There's no $HOME environment variable. Use the home
-		 * directory from the password file entry.
-		 */
-		home = pwent->pw_dir;
-	}
-	strncpy(userinfo->homedir, home,
+	/* Get the user's home directory
+	 * Don't use the $HOME environment variable: under FreeBSD, when
+	 * usbd is started, it gets HOME=/ . This is passed down to the
+	 * child processes. Plus, the UID and EUID are the same, so you
+	 * can't even use that to distinguish this particular case.
+	 * And besides, the benefit you get from being able to override
+	 * $HOME is minuscule.
+	 */
+	strncpy(userinfo->homedir, pwent->pw_dir,
 		sizeof(userinfo->homedir) - 1);
 	userinfo->homedir[sizeof(userinfo->homedir)-1] = '\0';
 				/* Make sure the string is terminated */
