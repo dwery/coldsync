@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.21 2002-05-03 17:31:13 azummo Exp $
+ * $Id: netsync.c,v 1.22 2002-09-10 18:26:41 azummo Exp $
  */
 
 #include "config.h"
@@ -217,6 +217,8 @@ ritual_exch_server(PConnection *pconn)
 	 */
 	/* XXX - Actually, no: this appears to be due to a bug in Linux's
 	 * USB-to-serial thingy.
+	 * Maybe: I just noticed that simple works fine for the m505 while i
+	 * had to use net for the m515.
 	 */
 	switch (pconn->protocol)
 	{
