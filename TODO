@@ -9,9 +9,6 @@
   How do "type:" and "name:" interact? Multiple "type:" lines are
   or-ed together. Should "name:" entries be or-ed as well?
 - Feature: add a SIGINFO handler.
-- Bug: When ColdSync uploads the name, it is followed by some garbage.
-  Presumably something's not getting the name right. Perhaps the user
-  name isn't terminated somewhere?
 - Per-mode options
 	It appears possible (under FreeBSD) to allow mode-specific
   options: have the getopt() loop in "config.c" stop after a
