@@ -6,14 +6,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.14 2000-01-27 03:57:18 arensb Exp $
+ * $Id: handledb.c,v 1.15 2000-01-27 05:23:31 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
-#include <string.h>		/* For strncpy() and friends */
 #include <sys/param.h>		/* For MAXPATHLEN */
+#include <sys/types.h>		/* For stat() */
+#include <sys/stat.h>		/* For stat() */
 #include <ctype.h>		/* For isprint() and friends */
+#include <errno.h>		/* For errno. Duh. */
 
 #if STDC_HEADERS
 # include <string.h>		/* For memcpy() et al. */
@@ -61,15 +63,13 @@ HandleDB(struct PConnection *pconn,
 
 	if (DBINFO_ISRSRC(dbinfo))
 	{
-/* XXX - Crud. There's no function to back up a single database */
-#if 0
 		struct stat statbuf;	/* For stat(), to see if the backup
 					 * file exists.
 					 */
 		const char *bakfname;
 
 		/* See if the backup file exists */
-		bakfname = mkbakfname(dbinfo->name);
+		bakfname = mkbakfname(dbinfo);
 		err = lstat(bakfname, &statbuf);
 		if ((err < 0) && (errno == ENOENT))
 		{
@@ -77,19 +77,17 @@ HandleDB(struct PConnection *pconn,
 				fprintf(stderr, "%s doesn't exist. Doing a "
 					"backup\n",
 					bakfname);
-			err = Backup(pconn, palm);
+			err = backup(pconn, dbinfo, backupdir);
+			/* XXX - Error-checking */
 			MISC_TRACE(2)
-				fprintf(stderr, "Backup() returned %d\n", err);
+				fprintf(stderr, "backup() returned %d\n", err);
 		}
-#endif	/* 0 */
 
 		SYNC_TRACE(2)
 			fprintf(stderr,
 				"HandleDB: \"%s\": I don't deal with "
 				"resource databases (yet).\n",
 			dbinfo->name);
-		/* XXX - If the backup file doesn't exist, make a backup */
-/*  		return -1; */
 		return 0;
 	}
 
@@ -102,10 +100,6 @@ HandleDB(struct PConnection *pconn,
 		fprintf(stderr, "GenericConduit returned %d\n", err);
 	return err;
 }
-
-/* XXX - Should also have, mkatticfname()(?), and function to convert from
- * escaped names, so can check whether something goes in the attic.
- */
 
 /* mkfname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
