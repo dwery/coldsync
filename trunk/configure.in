@@ -1,0 +1,46 @@
+dnl #
+dnl # $Id: configure.in,v 1.1 1999-02-19 22:38:36 arensb Exp $
+dnl #
+
+dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
+dnl # culprit is a couple of lines in the generated Makefile that say
+dnl #	test "$var1" = value && var2=true
+dnl # Berkeley 'make' copes quite well with the equivalent
+dnl #	if test "$var1" = value; then var2=true; fi
+
+AC_INIT(pconn/PConnection.c)
+AM_INIT_AUTOMAKE(coldsync, 0.0.3)
+AM_CONFIG_HEADER(config.h)
+
+dnl # XXX - Without this, the Makefile contains
+dnl #	SHELL = @SHELL@
+dnl # but 'configure' doesn't substitute @SHELL@.
+SHELL=sh
+AC_SUBST(SHELL)
+
+dnl # Checks for programs.
+
+AC_PROG_CC
+AC_PROG_RANLIB
+
+dnl # XXX - This should check to make sure CC is 'gcc'.
+CPPFLAGS="-g -Wall -ansi -pedantic"
+
+dnl # Checks for libraries.
+
+dnl # Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
+
+dnl # Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_HEADER_TIME
+
+dnl # Checks for library functions.
+AC_CHECK_FUNCS(select)
+
+AC_OUTPUT([Makefile
+	palm/Makefile
+	pconn/Makefile
+	coldsync/Makefile
+	doc/Makefile])
