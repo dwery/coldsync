@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.57 2002-08-31 19:26:03 azummo Exp $
+ * $Id: conduit.c,v 2.58 2002-09-07 15:08:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -538,8 +538,8 @@ run_conduit(struct Palm *palm,
 			{
 			    case CSE_NOCONN:
 			    case CSE_CANCEL:
-			    	/* print_cs_errno(cs_errno); */
 				break;
+
 			    default:
 				Error(_("Can't get preference item."));
 				break;
@@ -1248,7 +1248,6 @@ run_conduits(struct Palm *palm,
 			{
 			    case CSE_CANCEL:
 			    case CSE_NOCONN:
-			    	/* print_cs_errno(cs_errno); */
 				return -1;
 
 			    default:
@@ -1308,7 +1307,6 @@ run_conduits(struct Palm *palm,
 			{
 			    case CSE_CANCEL:
 			    case CSE_NOCONN:
-			    	/* print_cs_errno(cs_errno); */
 				return -1;
 
 			    default:

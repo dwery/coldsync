@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: runmode.c,v 2.3 2002-09-07 15:08:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -74,26 +74,15 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* Figure out which Palm we're dealing with */
 	pda = find_pda_block(palm, True);
-	if (pda == NULL)
+	if (pda == NULL && !palm_ok(palm))
 	{
 		/* Error-checking (not to be confused with "pda == NULL"
 		 * because the Palm doesn't have a serial number).
 		 */
-		switch (cs_errno)
-		{
-		    case CSE_NOERR:	/* No error */
-			break;
+		Error(_("Can't look up Palm."));
 
-		    case CSE_NOCONN:
-			/* print_cs_errno(cs_errno); */
-			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
-			return -1;
-
-		    default:
-			Error(_("Can't look up Palm."));
-			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
+		palm_CSDisconnect(palm);
+		return -1;
 	}
 
 	if (pda == NULL)
@@ -132,7 +121,7 @@ run_mode_Standalone(int argc, char *argv[])
 	if (p_userid == 0 && !palm_ok(palm))
 	{
 		Error(_("Can't get user ID from Palm."));
-		/* print_cs_errno(cs_errno); */
+
 		palm_CSDisconnect(palm);
 		return -1;
 	}
@@ -174,7 +163,7 @@ run_mode_Standalone(int argc, char *argv[])
 	if (p_username == NULL && !palm_ok(palm))
 	{
 		Error(_("Can't get user name from Palm."));
-		/* print_cs_errno(cs_errno); */
+
 		palm_CSDisconnect(palm);
 		return -1;
 	}
@@ -280,7 +269,6 @@ run_mode_Backup(int argc, char *argv[])
 						 * log */
 
 			    case CSE_NOCONN:
-				/* print_cs_errno(cs_errno); */
 				palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 				return -1;
 			    default:
@@ -329,7 +317,6 @@ run_mode_Backup(int argc, char *argv[])
 							 * upload log */
 
 				    case CSE_NOCONN:
-					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -377,7 +364,6 @@ run_mode_Restore(int argc, char *argv[])
 					Error(_("Cancelled by Palm."));
 					goto done;
 				    case CSE_NOCONN:
-					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -399,7 +385,6 @@ run_mode_Restore(int argc, char *argv[])
 					Error(_("Cancelled by Palm."));
 					goto done;
 				    case CSE_NOCONN:
-					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
 				    default:
@@ -455,6 +440,7 @@ run_mode_Init(int argc, char *argv[])
 	if (p_snum_len < 0)
 	{
 		Error(_("Can't read length of serial number."));
+
 		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
@@ -467,6 +453,7 @@ run_mode_Init(int argc, char *argv[])
 		if (p_snum == NULL)
 		{
 			Error(_("Can't read serial number."));
+
 			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 			return -1;
 		}
@@ -496,7 +483,6 @@ run_mode_Init(int argc, char *argv[])
 	{
 		/* Something went wrong */
 		Error(_("Can't get user name from Palm."));
-		/* print_cs_errno(cs_errno); */
 		palm_CSDisconnect(palm);
 		return -1;
 	}
@@ -561,7 +547,7 @@ run_mode_Init(int argc, char *argv[])
 	{
 		/* Something went wrong */
 		Error(_("Can't get user ID from Palm."));
-		/* print_cs_errno(cs_errno); */
+
 		palm_CSDisconnect(palm);
 		return -1;
 	}
@@ -799,7 +785,7 @@ run_mode_Daemon(int argc, char *argv[])
 		return -1;
 
 	/* Check if this palm is uninitialized and if autoinit is true*/
-	if( palm_userid(palm) == 0 && global_opts.autoinit == True)
+	if (palm_userid(palm) == 0 && global_opts.autoinit == True)
 	{
 		/* Yes, get the best match */
 		palment = lookup_palment(palm, PMATCH_SERIAL);
@@ -835,6 +821,7 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("No matching entry in %s."), _PATH_PALMS);
 		/* XXX - Write reason to Palm log */
+
 		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1; 
 	}
@@ -846,7 +833,6 @@ run_mode_Daemon(int argc, char *argv[])
 	{
 		Error(_("Unknown user/uid: \"%s\"."),
 			palment->luser);
-
 		/* XXX - Write reason to Palm log */
 
 		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
@@ -860,6 +846,7 @@ run_mode_Daemon(int argc, char *argv[])
 		Error(_("Can't setuid"));
 		Perror("setuid");
 		/* XXX - Write reason to Palm log */
+
 		palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
 		return -1;
 	}
