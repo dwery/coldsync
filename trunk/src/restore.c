@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.28 2001-09-08 00:22:06 arensb Exp $
+ * $Id: restore.c,v 2.29 2001-10-06 22:16:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -79,31 +79,11 @@ restore_file(PConnection *pconn,
 
 	close(bakfd);
 
-	/* XXX - Make sure the database isn't read-only: either it was
-	 * originally a ROM database (and is probably still there), or
-	 * else the database will be impossible to delete.
-	 * XXX - Then again, maybe the intelligent user should be
-	 * allowed to do this.
-	 * XXX - Perhaps best solution is to upload if the user
-	 * specifies -R flag, and discourage people from using it.
-	 */
-	/* XXX - No, the most reasonable thing to do is to check the
-	 * database list in 'palm': if the database already exists,
-	 * delete it. If it's a read-only database, presumably it's a
-	 * ROM database and the delete will fail, in which case skip
-	 * the upload. The question is, is it possible to delete a
-	 * read-only database in RAM?
-	 */
-	SYNC_TRACE(3)
-		fprintf(stderr, "Checking read-only attribute\n");
-	if (pdb->attributes & PDB_ATTR_RO)
-	{
-		Error(_("\"%s\" is a read-only database. Not uploading."),
-		      fname);
-		return -1;
-	}
-
 	err = DlpDeleteDB(pconn, CARD0, pdb->name);
+		/* XXX - It isn't immediately clear what would be returned
+		 * if you tried deleting a read-only database. Try it and
+		 * find out.
+		 */
 	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
@@ -174,9 +154,6 @@ restore_file(PConnection *pconn,
 	/* Call pdb_Upload() to install the file. It shouldn't exist
 	 * any more by now.
 	 */
-	add_to_log(_("Restore "));
-	add_to_log(pdb->name);
-	add_to_log(" - ");
 	err = upload_database(pconn, pdb);
 		/* XXX - This appears to fail for "Graffiti Shortcuts": it
 		 * tries to create the database on the Palm, but since the
@@ -200,7 +177,8 @@ restore_file(PConnection *pconn,
 		switch (cs_errno)
 		{
 		    case CSE_CANCEL:
-			add_to_log(_("Cancelled\n"));
+			va_add_to_log(pconn, "%s %s - %s\n",
+				      _("Restore"), pdb->name, _("Cancelled"));
 			free_pdb(pdb);
 			return -1;
 		    case CSE_NOCONN:
@@ -210,11 +188,13 @@ restore_file(PConnection *pconn,
 			/* Anything else, we hope is transient.
 			 * Continue and hope for the best.
 			 */
-			add_to_log(_("Error\n"));
+			va_add_to_log(pconn, "%s %s - %s\n",
+				      _("Restore"), pdb->name, _("Error"));
 			break;
 		}
 	} else
-		add_to_log(_("OK\n"));
+		va_add_to_log(pconn, "%s %s - %s\n",
+			      _("Restore"), pdb->name, _("OK"));
 
 	/* Free the PDB */
 	free_pdb(pdb);
