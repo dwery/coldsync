@@ -1,0 +1,37 @@
+.\" RDLP_PluggedIn.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: RDLP_PluggedIn.3,v 1.1 2001-09-05 07:29:49 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt RDLP_PluggedIn 3
+.Sh NAME
+.Nm RDLP_PluggedIn
+.Nd tests whether a PalmOS device is plugged in
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn RDLP_PluggedIn "PConnection *pconn"
+.Sh DESCRIPTION
+Presumably,
+.Nm
+tests whether the Palm is plugged into a cradle. Of course, if you're
+calling this over a serial or USB connection, then it is trivially
+true.
+.Sh RETURN VALUE
+Presumably returns a non-zero value if the Palm is plugged into a
+cradle, and 0 if it isn't.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
+.Sh BUGS
+This function is untested.

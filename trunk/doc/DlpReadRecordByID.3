@@ -1,0 +1,153 @@
+.\" function.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadRecordByID.3,v 1.1 2001-09-05 07:29:23 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadRecordByID 3
+.Sh NAME
+.Nm DlpReadRecordByID ,
+.Nm DlpReadNextModifiedRec ,
+.Nm DlpReadRecordByIndex ,
+.Nm DlpReadNextRecInCategory ,
+.Nm DlpReadNextModifiedRecInCategory
+.Nd read a record from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadRecordByID "PConnection *pconn" "const ubyte handle" "const udword id" "const uword offset" "const uword len" "struct dlp_recinfo *recinfo" "const ubyte **data"
+.Ft int
+.Fn DlpReadRecordByIndex "PConnection *pconn" "const ubyte handle" "const uword index" "struct dlp_recinfo *recinfo"
+.Ft int
+.Fn DlpReadNextModifiedRec "PConnection *pconn" "const ubyte handle" "struct dlp_recinfo *recinfo" "const ubyte **data"
+.Ft int
+.Fn DlpReadNextRecInCategory "PConnection *pconn" "const ubyte handle" "const ubyte category" "struct dlp_recinfo *recinfo" "const ubyte **data"
+.Ft int
+.Fn DlpReadNextModifiedRecInCategory "PConnection *pconn" "const ubyte handle" "const ubyte category" "struct dlp_recinfo *recinfo" "const ubyte **data"
+.Sh DESCRIPTION
+These functions read a record from the Palm. In all of these
+functions,
+.Fa pconn
+is the Palm connection, as returned by
+.Xr new_PConnection 3 .
+.Fa handle
+is a database handle, as returned by
+.Xr DlpOpenDB 3 .
+.Pp
+If a record has been deleted and expunged (\fIi.e.\fR, when the record
+was deleted and the
+.Dq Save archive copy on PC
+checkbox was unchecked), the length of the record's data will be given
+as 0, and
+.Fa data
+will point to an empty string.
+.Pp
+.Nm DlpReadRecordByID
+is the preferred way of reading a record from the Palm.
+.Pp
+.Fa id
+specifies the identifier of the record to be retrieved; this
+identifier is usually gotten with
+.Fn DlpReadRecordIDList .
+.Pp
+.Fa offset
+is the offset at which to begin reading the record: to read the record
+from the beginning, use 0; to skip the first 10 bytes, use 10.
+.Pp
+.Fa len
+specifies the maximum number of bytes to read.
+.Pp
+.Fa recinfo
+will be filled with the record header, which has the following form:
+.Bd -literal -offset indent
+struct dlp_recinfo
+{
+	udword id;
+	uword index;
+	uword size;
+	ubyte attributes;
+	ubyte category;
+};
+.Ed
+.Pp
+.Fa data
+will be filled in with a pointer to the record data. This pointer is
+to an internal buffer, and must not be freed. The length of the data
+will be the smaller of
+.Fa recinfo.size
+and
+.Fa len .
+.Pp
+.Nm DlpReadRecordByIndex
+is less useful than it might seem. It reads the header of the
+.Fa index\fRth
+record, but not the record data. Thus, if you only want to read the
+twelfth record in a database and nothing else, you can use
+.Fn DlpReadRecordByIndex
+to get the index of the twelfth record, then use
+.Fn DlpReadRecordByID
+to read the record's data.
+.Pp
+.Fa index
+specifies the index of the record whose header to retrieve. Record
+indices begin at 0.
+.Fa recinfo ,
+as with
+.Fn DlpReadRecordByID ,
+will be filled in with the record header.
+.Pp
+.Nm DlpReadNextModifiedRec
+reads the next record in the database that has been modified since the
+last sync (or, more accurately, since the modification flags were
+reset by
+.Xr DlpResetSyncFlags 3 ).
+Modified records include those whose contents have changed;
+those that have been moved to a different category; and those that
+have been deleted, with or without an archive copy.
+.Pp
+.Fa handle ,
+.Fa recinfo ,
+and
+.Fa data
+are as for
+.Fn DlpReadRecordByID .
+.Pp
+.Nm DlpReadNextRecInCategory
+reads the next record in the given category.
+.Pp
+.Fa category
+specifies the index of the category, in the range 0-15, with 0 being
+reserved for the
+.Dq Unused
+category. The category ID can be gotten from the category list at the
+start of the AppInfo block. Sadly, although the category list is in a
+standard format, libpconn does not include a facility for parsing it.
+.Pp
+.Fa recinfo
+and
+.Fa data
+are as for
+.Fn DlpReadRecordByID .
+.Pp
+.Nm DlpReadNextModifiedRecInCategory
+reads the next modified record in the given category. All arguments
+are as for
+.Fn DlpReadNextRecInCategory .
+.Sh RETURN VALUE
+All of these functions return 0 if successful, or a negative value
+otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 ,
+.Xr DlpOpenDB 3 ,
+.Xr DlpReadRecordIDList 3 ,
+.Xr DlpResetRecordIndex 3 .

@@ -1,0 +1,124 @@
+.\" DlpRPC.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpRPC.3,v 1.1 2001-09-05 07:29:12 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpRPC 3
+.Sh NAME
+.Nm DlpRPC
+.Nd make remote procedure call on PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpRPC "PConnection *pconn" "uword trap" "udword *D0" "udword *A0" "int argc" "struct DLPRPC_param *argv"
+.Sh DESCRIPTION
+.Nm
+makes a remote procedure call on the Palm. That is, this function
+requests that the Palm execute a particular system function with
+certain arguments.
+.Nm
+then returns the (integer) return value of the system call, and fills
+in any by-reference arguments.
+.Pp
+.Fa trap
+specifies the trap number of the system call to make.
+.Pp
+.Fa D0
+and
+.Fa A0
+specify the initial values of the D0 and A0 registers. After the
+remote procedure call, these arguments are filled in with the new
+values of D0 and A0. D0 is typically used for the return value.
+.Pp
+.Fa argc
+specifies the number of arguments in
+.Fa argv .
+.Pp
+.Fa argv
+is an array of function arguments to pass. The elements of
+.Fa argv
+are in reverse order from the function declaration. That is, if a
+system call is declared as
+.Fn SysFunc "a" "b" "c" ,
+then
+.Fa argv[0]
+will contain
+.Fa a ,
+.Fa argv[1]
+will contain
+.Fa b ,
+and
+.Fa argv[2]
+will contain
+.Fa c
+.\" XXX - Why is there a space between "(" and "argc"?
+(\"
+.Fa argc
+should, of course, be set to 3). The
+.Ft DLPRPC_param
+structure is defined as
+.Bd -literal -offset indent
+struct DLPRPC_param {
+	Bool byref;
+	ubyte size;
+	char type;
+	union {
+		ubyte bool_v;
+		ubyte byte_v;
+		uword word_v;
+		udword dword_v;
+		void *raw_v;
+	} data;
+};
+.Ed
+where
+.Fa byref
+is true if this argument is passed by reference,
+.Fa size
+specifies the size of the argument (this is only required for raw
+arguments),
+.Fa type
+specifies the argument type (see the
+.Dv RPCP_*
+constants in
+.Pa <pconn/dlp_rpc.h>\"
+), and
+.Fa data
+contains the actual argument data.
+.Pp
+This should be relatively straightforward for boolean and integer
+arguments. Raw arguments deal with byte strings of arbitrary length.
+The length of the data is specified with
+.Fa argv[i].size .
+.Fa argv[i].data.raw_v
+must point to a buffer of sufficient size to hold the returned data.
+.Nm
+reads from and writes to this pointer, but does not allocate or free
+it.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise. Note that it
+is quite possible for
+.Nm
+to succeed, and for the remote procedure call to fail. For example, if
+.Nm
+is used to read a nonexistent memory range,
+.Nm
+will return 0, but
+.Fa D0
+(which is typically used for the system call's return value) will be
+nonzero.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr RDLP_ROMToken 3 ,
+.Xr RDLP_MemMove 3 .

@@ -1,0 +1,35 @@
+.\" DlpOpenConduit.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpOpenConduit.3,v 1.1 2001-09-05 07:29:08 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpOpenConduit 3
+.Sh NAME
+.Nm DlpOpenConduit
+.Nd used before a conduit is opened, when syncing a Palm database
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpOpenConduit "PConnection *pconn"
+.Sh DESCRIPTION
+.Nm
+is used before synchronizing a Palm database, usually just before
+opening the database with
+.Xr DlpOpenDB 3 .
+It is not clear what this function does, although it appears to update
+the "Synchronizing ..." message on the Palm.
+.Sh RETURN VALUE
+.Nm
+returns 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 .

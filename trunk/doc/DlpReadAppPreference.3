@@ -1,0 +1,92 @@
+.\" DlpReadAppPreference.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadAppPreference.3,v 1.1 2001-09-05 07:29:15 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadAppPreference 3
+.Sh NAME
+.Nm DlpReadAppPreference ,
+.Nm DlpWriteAppPreference
+.Nd read/write PalmOS application preference
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadAppPreference "PConnection *pconn" "const udword creator" "const uword id" "const uword len" "const ubyte flags" "struct dlp_apppref *pref" "ubyte *data"
+.Ft int
+.Fn DlpWriteAppPreference "PConnection *pconn" "const udword creator" "const uword id" "const ubyte flags" "const struct dlp_apppref *pref" "const ubyte *data"
+.Sh DESCRIPTION
+Palm applications have preferences associated with them. These are
+typically user options. The Mail application also stores the signature
+for outgoing messages in a preference. Preferences are stored in the
+.Pa Saved Preferences
+and
+.Pa Unsaved Preferences
+resource databases.
+.Pp
+.Nm DlpReadAppPreference
+reads an application preference from the Palm.
+.Pp
+.Fa creator
+specifies the four-letter application identifier.
+.Pp
+.Fa id
+specifies the preference ID.
+.Pp
+.Fa len
+specifies the maximum number of bytes to return in
+.Fa data .
+.Pp
+.Fa flags
+specifies flags: if
+.Dv DLPC_READAPPFL_BACKEDUP
+is set,
+.Nm DlpReadAppPreference
+reads from
+.Pa Saved Preferences .
+Otherwise, it reads from
+.Pa Unsaved Preferences .
+.Pp
+.Fa pref
+is filled in with information about the preference. The
+.Ft dlp_apppref
+structure is defined as
+.Bd -literal -offset indent
+struct dlp_apppref
+{
+	uword version;
+	uword size;
+	uword len;
+};
+.Ed
+where
+.Fa size
+gives the actual size of the preference, and
+.Fa len
+gives the number of bytes returned in
+.Fa data .
+It is not clear what
+.Fa version
+is.
+.Pp
+.Fa data
+is filled in with the preference data.
+.Pp
+.Nm DlpWriteAppPreference
+writes an application preference to the Palm. The arguments are
+similar to those for
+.Nm DlpReadAppPreference .
+.Sh RETURN VALUE
+These functions return 0 if successful, or a negative value otherwise.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
