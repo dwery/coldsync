@@ -15,6 +15,10 @@
   daemon, or whatever.
 - A lot of assertion-checking would probably be a Good Thing.
 - (When ColdSync actually gets written:) Gnome and KDE support
+- KDE korganizer just uses vCalendar format for both events and todo
+  list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
+  for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
+  sure what for.
 - Fix PADP so it can dump when writing, as well as when reading.
 - Modem sync
 - NetSync: figure out just how it works and stuff.
@@ -31,15 +35,8 @@
 - Make the *_TRACE stuff go to a separate debugging log file.
 - Add identd support?
 - PAM for security throughout?
-- Add code to check ~/.palm/backup to look for databases that aren't
-  on the Palm. Best solution is probably: if database exists on
-  desktop but not on Palm, move it to an 'attic' directory (like CVS).
-  That way, at least it's not gone. Should also be possible to force a
-  backup from the backup directory: don't try to do anything fancy,
-  just restore everything as is.
-	List of Palm's databases is in 'palm->dblist[]', so check the
-  backup directory for files that aren't in there.
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
+- Under Solaris, fails to notice that cfmakeraw() doesn't exist.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
 - Need functions to begin and end pause: if the desktop pops up a
@@ -49,23 +46,15 @@
   probably return an error if the sync is being run in batch
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
-- Write a utility to just dump the contents of a pdb file.
 - Test under Purify.
+- Add Makefile targets for Purify.
 - Installing new databases: make it possible to install an older
-  version of a database.
+  version of a database. (Actually, this is already possible with
+  restoring.)
 - It'd be nice to import/export sets of records into external
   databases. But you can't just upload any random database. Need to
-  integrate with what you've got, somehow.
-- Fix backups: the first time you sync a database, there's no backup
-  copy on the desktop. But if that database includes deleted records,
-  they'll be marked as deleted in the backup. Presumably they should
-  be deleted. Or will this fix itself the next time you do a sync?
-	The Right Thing might be to have two modes: a simple backup
-  just backs everything up to a directory, without any changes (also,
-  it shouldn't reset the sync flags!). You can then restore from this
-  directory. The other, more common mode, does a complete backup of a
-  database if it doesn't exist on the desktop; then it archives the
-  archived records and deletes the expunged ones.
+  integrate with what you've got, somehow. Presumably, the Right Thing
+  here is to let the conduits do this.
 - Directory structure:
 	~/.palm/<id>/backup	Backup of what's on the Palm
 	~/.palm/<id>/archive	Old archived stuff
@@ -86,26 +75,6 @@
   plugged in yet: some of the structures are of the form <n>, <n-byte
   string>, which means that currently, you can't just have one
   function call to unpack a whole structure.
-- For starters, define a conduit map that does an ordinary sync for
-  everything. Make SlowSync() and FastSync() part of the generic
-  conduit. Then add PalmOverwritesDesktop(), DesktopOverwritesPalm()
-  and Backup() conduits. Put all this in a config file.
-- Conduits should have pre-fetch and post-dump hooks, with C and Perl
-  libraries to simplify things. This should make a number of common
-  things easier to write. The pre-fetch hook reads, say, a file, and
-  returns a list of records; the post-dump hook takes a list of
-  records and does something to them, e.g., dump them to a file.
-	This way, if you want to keep "ToDoDB" in sync with ~/TODO,
-  you just need to provide a hook that'll read ~/TODO and convert it
-  to a list of records; and a hook that'll take a list of records and
-  write them to ~/TODO. This is easy, and allows you to use the
-  generic conduit instead of having to write your own.
-- Dynamically-loaded objects: if the 'coldsync' binary has a variable
-  'foo' or a function func(), how does it make these available to a
-  dynamically-loaded library?
-  I suspect that the way to do this is to have dummy variables in the
-  loadable object that the main program has to fill in manually when
-  the object is loaded.
 - Lock files while syncing.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -167,13 +136,6 @@
   complicated, just something better than the default "All records
   successfully synchronized." Maybe just "Backup successful" or
   something.
-- Optimization: don't sync a database if its modification number is
-  the same as the desktop copy. We already know that this database
-  hasn't changed, so there's no need to open the database, send a
-  "send me the next modified record" request that we know is going to
-  fail, and close the database.
-  This presumes that the modnum on the desktop doesn't get updated.
-  Then again, is this worth worrying about?
 - BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - Should man pages be compressed after installation, or should the
@@ -193,4 +155,22 @@
   server": a friend has just beamed you a new application; you sync;
   coldsync looks in some central repository, finds a conduit that
   handles your database type, downloads it, and runs it automatically.
-	This has serious security implications, though.
+	This has serious security implications, though. Perhaps one
+  solution would be to have the conduit signed with PGP; set up a
+  listed of trusted signers, and if the conduit doesn't come from one
+  of those trusted signers, don't run it.
+	A worse problem, however, is that there can be any number of
+  conduits to do any number of weird things. If there are a dozen
+  conduits, how does ColdSync decide which one(s) to run?
+- Should all of the .h files be lumped under #include <palm/foo.h> ?
+- Figure out the rules for building libraries on all the various platforms.
+- Perl: Write helper function to parse/pack category blocks, for
+  well-behaved applications (i.e., the ones that store categories the
+  same way as the built-in ones).
+- Test parser with old lex and yacc. See if it's worth supporting
+  them, or whether it's easier to just require flex.
+- Documentation for the config file format.
+- 'make install' is broken: installs 'conduits/memodump/memodump' as
+  /usr/local/libexec/coldsync. Needs to check for target directory,
+  and create it if necessary.
+- Add a "make snapshot" target. Use date "+%Y%m%d"
