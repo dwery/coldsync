@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.45 2000-11-24 22:55:27 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.46 2000-12-23 11:35:32 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1079,6 +1079,11 @@ GenericConduit::FastSync()
 					"is neither archived nor expunged\n"
 					"What am I supposed to do?\n");
 			}
+
+			/* XXX - Check the case where remoterec is EXPUNGED
+			 * (and possibly DIRTY), but not DELETED.
+			 * Back-patch version 1.4.6.
+			 */
 
 			/* This record is new. Add it to the local
 			 * database.
