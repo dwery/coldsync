@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.158 2002-12-28 21:12:01 arensb Exp $
+dnl # $Id: configure.in,v 1.159 2002-12-28 22:41:21 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -560,11 +560,14 @@ AC_ARG_WITH(usb,dnl
 [  --without-usb           Disable USB support (FreeBSD 4.x only).],
 	[
 		cs_cv_usb="$withval"
-		# This is a kludge to give something like a section header.
-		# We won't know whether USB is supported until after we
-		# perform the other tests in the following block.
-		AC_MSG_CHECKING([for USB support])
-		AC_MSG_RESULT()
+		if test x"$cs_cv_usb" != xno; then
+			# This is a kludge to give something like a section
+			# header. We won't know whether USB is supported
+			# until after we perform the other tests in the
+			# following block.
+			AC_MSG_CHECKING([for USB support])
+			AC_MSG_RESULT()
+		fi
 	],dnl
 	[AC_CACHE_CHECK([for USB support],cs_cv_usb,:)])
 
