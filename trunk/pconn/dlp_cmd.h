@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.7 1999-03-16 11:41:10 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.8 1999-03-28 09:58:54 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -71,7 +71,8 @@
 #define DLPCMD_SetDBInfo		0x3a
 
 /* dlp_time
- * Structure for giving date and time.
+ * Structure for giving date and time. If the year is zero, then this is a
+ * nonexistent date, regardless of what values the other fields may have.
  */
 struct dlp_time
 {
