@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.2 1999-07-12 08:48:10 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-08-01 07:58:17 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -18,15 +18,17 @@ DVIFILES =	libpalm.dvi \
 PSFILES =	libpalm.ps \
 		pdb.ps
 
+EXTRA_DISTFILES = \
+		${INFOFILES} \
+		${PSFILES}
+
 DISTFILES =	Makefile.in \
 		libpalm.texi \
-		libpalm.ps \
 		pdb.texi \
-		pdb.ps \
 		version.texi.in \
 		texinfo.tex \
 		coldsync.8 \
-		${PSFILES}
+		${EXTRA_DISTFILES}
 
 CLEAN =		${INFOFILES} ${DVIFILES} ${PSFILES} \
 		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr \
