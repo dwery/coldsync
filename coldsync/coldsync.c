@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.8 1999-05-31 20:59:00 arensb Exp $
+ * $Id: coldsync.c,v 1.9 1999-06-27 05:56:54 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -20,6 +20,7 @@
 #include <pconn/util.h>
 #include "coldsync.h"
 #include "pdb.h"
+#include "conduit.h"
 
 /* XXX - This should be defined elsewhere (e.g., in a config file). The
  * reason there are two macros here is that under Solaris, B19200 != 19200
@@ -28,6 +29,10 @@
 #define SYNC_RATE		57600
 #define BSYNC_RATE		B57600
 
+extern int slp_debug;
+extern int cmp_debug;
+extern int dlp_debug;
+extern int dlpc_debug;
 extern int sync_debug;
 
 extern int load_config(int argc, char *argv[]);
@@ -106,6 +111,15 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* Initialize (per-user) conduits */
+	fprintf(stderr, "Initializing conduits\n");
+	if ((err = init_conduits(&palm)) < 0)
+	{
+		fprintf(stderr, "Can't initialize conduits\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
+
 	if ((err = GetMemInfo(pconn, &palm)) < 0)
 	{
 		fprintf(stderr, "GetMemInfo() returned %d\n", err);
@@ -114,6 +128,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Find out whether we need to do a slow sync or not */
+	/* XXX - Actually, it's not as simple as this (see comment below) */
 	if (hostid == palm.userinfo.lastsyncPC)
 		/* We synced with this same machine last time, so we can do
 		 * a fast sync this time.
@@ -139,7 +154,12 @@ main(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	/* XXX - Get list of local files */
+	/* XXX - Get list of local files: if there are any that aren't on
+	 * the Palm, it probably means that they existed once, but were
+	 * deleted on the Palm. Assuming that the user knew what he was
+	 * doing, these databases should be deleted. However, just in case,
+	 * they should be save to an "attic" directory.
+	 */
 /*  listlocalfiles(pconn); */
 
 	/* Get a list of all databases on the Palm */
@@ -210,16 +230,21 @@ sync_debug = 10;
 	{
 		err = HandleDB(pconn, &palm, i);
 		if (err < 0)
+		{
+fprintf(stderr, "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n");
+			/* XXX - Ought to try to send abort packet to Palm */
 			/* XXX - Error-handling */
 			exit(1);
+		}
 	}
 
 	/* XXX - If it's configured to install new databases last, install
 	 * new databases now.
 	 */
+/*  slp_debug = cmp_debug = dlp_debug = dlpc_debug = sync_debug = 100; */
 
 	/* XXX - Write updated NetSync info */
-	/* XXX - Write updated user info */
+	/* Write updated user info */
 	if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
 	{
 		fprintf(stderr, "Error writing user info\n");
@@ -231,6 +256,14 @@ sync_debug = 10;
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, "Error disconnecting\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
+
+	/* XXX - Clean up conduits */
+	if ((err = tini_conduits()) < 0)
+	{
+		fprintf(stderr, "Error cleaning up conduits\n");
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -385,6 +418,9 @@ fprintf(stderr, "\tManufacturer name (%d) \"%s\"\n",
 	return 0;
 }
 
+/* XXX - This ought to be a run-time option */
+#define CHECK_ROM_DBS	0
+
 /* ListDBs
  * Fetch the list of database info records from the Palm, both for ROM and
  * RAM.
@@ -408,7 +444,10 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		ubyte num;
 
 		/* Get total # of databases */
-		palm->num_dbs = palm->cardinfo[card].rom_dbs +
+		palm->num_dbs =
+#if CHECK_ROM_DBS
+			palm->cardinfo[card].rom_dbs +
+#endif
 			palm->cardinfo[card].ram_dbs;
 		if (palm->num_dbs <= 0)
 		{
@@ -424,8 +463,11 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		    == NULL)
 			return -1;
 
-		iflags = DLPCMD_READDBLFLAG_RAM |
-			DLPCMD_READDBLFLAG_ROM;
+		iflags = DLPCMD_READDBLFLAG_RAM
+#if CHECK_ROM_DBS
+			| DLPCMD_READDBLFLAG_ROM
+#endif
+			;
 				/* Flags: read both ROM and RAM databases */
 
 		start = 0;	/* Index at which to start reading */
@@ -557,11 +599,15 @@ printf("\tnetmask: \"%s\"\n", palm->netsyncinfo.hostnetmask);
 	}
 
 	/* Get user information from the Palm */
+/*  dlpc_debug = 10; */
+/*  dlp_debug = 10; */
 	if ((err = DlpReadUserInfo(pconn, &(palm->userinfo))) < 0)
 	{
 		fprintf(stderr, "Can't get user info\n");
 		return -1;
 	}
+/*  dlp_debug = 1; */
+/*  dlpc_debug = 1; */
 printf("User info:\n");
 printf("\tUserID: 0x%08lx\n", palm->userinfo.userid);
 printf("\tViewerID: 0x%08lx\n", palm->userinfo.viewerid);
@@ -590,6 +636,7 @@ if (palm->userinfo.lastsync.year == 0)
 	       palm->userinfo.lastsync.month,
 	       palm->userinfo.lastsync.year);
 }
+printf("\tUser name length: %d\n", palm->userinfo.usernamelen);
 printf("\tUser name: \"%s\"\n", palm->userinfo.username);
 printf("\tPassword: <%d bytes>\n", palm->userinfo.passwdlen);
 
@@ -610,6 +657,7 @@ UpdateUserInfo(struct PConnection *pconn,
 			/* Fill this in with new values */
 	
 	userinfo.modflags = 0;		/* Initialize modification flags */
+	userinfo.usernamelen = 0;
 
 fprintf(stderr, "* UpdateUserInfo:\n");
 	/* Does this Palm have a user ID yet? */
@@ -650,10 +698,16 @@ fprintf(stderr, "Setting last sync time to now\n");
 	{
 fprintf(stderr, "Setting user name to \"%s\"\n", user_fullname);
 		userinfo.username = user_fullname;
+		userinfo.usernamelen = strlen(userinfo.username)+1;
 		userinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
+fprintf(stderr, "User name length == %d\n", userinfo.usernamelen);
 	}
 
 	/* Send the updated user info to the Palm */
+/*  dlpc_debug = 10; */
+/*  dlp_debug = 10; */
+/*  cmp_debug = 10; */
+/*  slp_debug = 10; */
 	err = DlpWriteUserInfo(pconn,
 			       &userinfo);
 	if (err != DLPSTAT_NOERR)
