@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.8 2002-11-09 22:42:19 azummo Exp $
+ * $Id: runmode.c,v 2.9 2002-11-13 12:08:43 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -892,6 +892,12 @@ run_mode_Daemon(int argc, char *argv[])
 		global_opts.conf_fname = conf_fname;
 		global_opts.conf_fname_given = True;
 	}
+
+	/* Set some useful symbols */
+
+	put_symbol("CS_PALMUSERNAME", palm_username(palm));
+	put_symbol("CS_PALMSERIALNUM", palm_serial(palm));
+	put_symbol("CS_LOCALUSERNAME", palment->luser);
 
 	/* Now that we've setuid() to the proper user, clear the current
 	 * configuration, and load it again, this time from the user's
