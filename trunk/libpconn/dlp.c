@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.14 2001-12-09 22:41:38 arensb Exp $
+ * $Id: dlp.c,v 1.15 2001-12-10 07:26:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -222,6 +222,8 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Send the request */
+	DLP_TRACE(7)
+		debug_dump(stderr, "DLP>>>", outbuf, wptr-outbuf);
 	err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
@@ -258,6 +260,9 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 	err = (*pconn->dlp.read)(pconn, &inbuf, &inlen);
 	if (err < 0)
 		return err;	/* Error */
+
+	DLP_TRACE(7)
+		debug_dump(stderr, "DLP<<<", inbuf, inlen);
 
 	/* Parse the response header */
 	rptr = inbuf;
