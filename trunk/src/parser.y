@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.30 2000-11-04 07:45:10 arensb Exp $
+ * $Id: parser.y,v 2.31 2000-11-14 16:38:13 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -103,6 +103,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token SYNC
 %token FETCH
 %token DUMP
+%token INSTALL
 
 %union {
 	long integer;
@@ -367,6 +368,12 @@ flavor:
 		PARSE_TRACE(5)
 			fprintf(stderr, "Found a conduit_flavor: Dump\n");
 		cur_conduit->flavors |= FLAVORFL_DUMP;
+	}
+	| INSTALL
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Found a conduit_flavor: Install\n");
+		cur_conduit->flavors |= FLAVORFL_INSTALL;
 	}
 	| error
 	{
