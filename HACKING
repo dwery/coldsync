@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.5 1999-11-27 05:35:29 arensb Exp $
+  $Id: HACKING,v 1.6 2000-06-03 04:16:24 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -30,6 +30,18 @@
   of a language lawyer looking over your shoulder). If you stick to
   the rules, you're less likely to introduce some non-portability or a
   memory leak.
+
+- If you modify an existing struct, see if it has a "constructor" or
+  "destructor"-like function, and update them accordingly.. My
+  convention is that if you have a 'struct foo', then the constructor
+  will be named 'new_foo()', and the destructor will be named
+  'free_foo()'.
+	There might be other, "accessor" functions that manipulate the
+  struct. Make sure to update them as well, if necessary.
+	Hint: if you're changing the meaning of a field within a
+  struct, change its name (temporarily). That way, you'll get a
+  compilation error everywhere the old field is used. This forces you
+  to make sure each use of the field is updated to the new meaning.
 
 - Don't name any files "errs.*". They'll get clobbered by "make
   spotless".
