@@ -1,0 +1,282 @@
+.\" libpdb.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: libpdb.3,v 1.1 2001-10-12 01:20:54 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd July 10, 2001
+.Dt LIBPDB 3
+.Sh NAME
+.Nm libpdb
+.Nd library for reading and writing Palm database files
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pdb.h>
+.Pp
+Function prototypes are given in their respective man pages.
+.Pp
+If
+.Nm
+was built with I18N support, you may need to link with
+.Ar -lintl
+.Sh DESCRIPTION
+The
+.Nm
+library provides functions for reading and writing Palm database
+files, both PDB (record database) and PRC (resource database).
+.Sh INTRODUCTION
+A Palm database file has the following overall structure:
+.Bl -bullet
+.It
+Header.
+.Pp
+This includes the database's name; attribute flags; version; creation,
+modification, and backup time; modification number; type; creator; and
+unique ID number seed. It also specifies whether or not the database
+has an AppInfo and/or sort block.
+.Pp
+The creator field identifies the application with which the database
+is associated: it will be the same as the creator field of the
+application database.
+.It
+Index header.
+.It
+Record/resource index.
+.Pp
+The index lists the locations of records or resources in the database.
+The index header specifies the number of records in the index, and may
+optionally point to another index in the database.
+.Nm
+manages the index and index header.
+.It
+Optional AppInfo block.
+.Pp
+The AppInfo block contains application-specific data that pertains to
+the database as a whole. Typically, it contains category information,
+as well as user preference settings.
+.It
+Optional sort block.
+.Pp
+I'm not sure what this is. I think it specifies the order in which to
+display the records.
+.It
+Records/resources.
+.Pp
+.El
+
+.\" XXX
+.Sh FUNCTIONS
+.Nm
+includes the following functions, which are described in their
+respective manual pages:
+
+.Ft struct pdb *
+.Fn new_pdb
+.Bd -ragged -offset indent
+blah blah blah
+.Ed
+
+.Pp
+.Ft PConnection *
+.Fn new_PConnection "char *fname" "int listenType" "int promptHotSync"
+
+.Ft int
+.Fn PConnClose "PConnection *pconn"
+
+.Ft int
+.Fn PConn_bind "PConnection *pconn" "const void *addr" "const int addrlen"
+
+.Ft int
+.Fn DlpReadUserInfo "PConnection *pconn" "struct dlp_userinfo *userinfo"
+
+.Ft int
+.Fn DlpWriteUserInfo "PConnection *pconn" "const struct dlp_setuserinfo *userinfo"
+
+.Ft int
+.Fn DlpReadSysInfo "PConnection *pconn" "struct dlp_sysinfo *sysinfo"
+
+.Ft int
+.Fn DlpGetSysDateTime "PConnection *pconn" "struct dlp_time *ptime"
+
+.Ft int
+.Fn DlpSetSysDateTime "PConnection *pconn" "const struct dlp_time *ptime"
+
+.Ft int
+.Fn DlpReadStorageInfo "PConnection *pconn" "const ubyte card" "ubyte *last_card" "ubyte *more" "struct dlp_cardinfo *cinfo"
+
+.Ft int
+.Fn DlpReadDBList "PConnection *pconn" "const ubyte iflags" "const int card" "const uword start" "uword *last_index" "ubyte *oflags" "ubyte *num" "struct dlp_dbinfo *dbs"
+
+.Ft int
+.Fn DlpOpenDB "PConnection *pconn" "int card" "const char *name" "ubyte mode" "ubyte *dbhandle"
+
+.Ft int
+.Fn DlpCreateDB "PConnection *pconn" "const struct dlp_createdbreq *newdb" "ubyte *dbhandle"
+
+.Ft int
+.Fn DlpCloseDB "PConnection *pconn" "ubyte dbhandle"
+
+.Ft int
+.Fn DlpDeleteDB "PConnection *pconn" "const int card" "const char *name"
+
+.Ft int
+.Fn DlpReadAppBlock "PConnection *pconn" "const ubyte handle" "const uword offset" "const uword len" "uword *size" "const ubyte **data"
+
+.Ft int
+.Fn DlpWriteAppBlock "PConnection *pconn" "const ubyte handle" "const uword len" "const ubyte *data"
+
+.Ft int
+.Fn DlpReadSortBlock "PConnection *pconn" "const ubyte handle" "const uword offset" "const uword len" "uword *size" "const ubyte **data"
+
+.Ft int
+.Fn DlpWriteSortBlock "PConnection *pconn" "const ubyte handle" "const uword len" "const ubyte *data"
+
+.Ft int
+.Fn DlpReadNextModifiedRec "PConnection *pconn" "const ubyte handle" "struct dlp_recinfo *recinfo" "const ubyte **data"
+
+.Ft int
+.Fn DlpReadRecordByID "PConnection *pconn" "const ubyte handle" "const udword id" "const uword offset" "const uword len" "struct dlp_recinfo *recinfo" "const ubyte **data"
+
+.Ft int
+.Fn DlpReadRecordByIndex "PConnection *pconn" "const ubyte handle" "const uword index" "struct dlp_recinfo *recinfo"
+
+.Ft int
+.Fo DlpWriteRecord
+.Fa "PConnection *pconn"
+.Fa "const ubyte handle"
+.Fa "const ubyte flags"
+.Fa "const udword id"
+.Fa "const ubyte attributes"
+.Fa "const ubyte category"
+.Fa "const udword len"
+.Fa "const ubyte *data"
+.Fa "udword *recid"
+.Fc
+
+.Ft int
+.Fn DlpDeleteRecord "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const udword recid"
+
+.Ft int
+.Fn DlpReadResourceByIndex "PConnection *pconn" "const ubyte handle" "const uword index" "const uword offset" "const uword len" "struct dlp_resource *value" "const ubyte **data"
+
+.Ft int
+.Fn DlpReadResourceByType "PConnection *pconn" "const ubyte handle" "const udword type" "const uword id" "const uword offset" "const uword len" "struct dlp_resource *value" "ubyte *data"
+
+.Ft int
+.Fn DlpWriteResource "PConnection *pconn" "const ubyte handle" "const udword type" "const uword id" "const uword size" "const ubyte *data"
+
+.Ft int
+.Fn DlpDeleteResource "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const udword type" "const uword id"
+
+.Ft int
+.Fn DlpCleanUpDatabase "PConnection *pconn" "const ubyte handle"
+
+.Ft int
+.Fn DlpResetSyncFlags "PConnection *pconn" "const ubyte handle"
+
+.Ft int
+.Fn DlpCallApplication "PConnection *pconn" "const udword version" "const struct dlp_appcall *appcall" "const udword paramsize" "const ubyte *param" "struct dlp_appresult *appresult"
+
+.Ft int
+.Fn DlpResetSystem "PConnection *pconn"
+
+.Ft int
+.Fn DlpAddSyncLogEntry "PConnection *pconn" "const char *msg"
+
+.Ft int
+.Fn DlpReadOpenDBInfo "PConnection *pconn" "ubyte handle" "struct dlp_opendbinfo *dbinfo"
+
+.Ft int
+.Fn DlpMoveCategory "PConnection *pconn" "const ubyte handle" "const ubyte from" "const ubyte to"
+
+.Ft int
+.Fn DlpOpenConduit "PConnection *pconn"
+
+.Ft int
+.Fn DlpEndOfSync "PConnection *pconn" "const ubyte status"
+
+.Ft int
+.Fn DlpResetRecordIndex "PConnection *pconn" "const ubyte handle"
+
+.Ft int
+.Fn DlpReadRecordIDList "PConnection *pconn" "const ubyte handle" "const ubyte flags" "const uword start" "const uword max" "uword *numread" "udword recids[]"
+
+.Ft int
+.Fn DlpReadNextRecInCategory "PConnection *pconn" "const ubyte handle" "const ubyte category" "struct dlp_recinfo *recinfo" "const ubyte **data"
+
+.Ft int
+.Fn DlpReadNextModifiedRecInCategory "PConnection *pconn" "const ubyte handle" "const ubyte category" "struct dlp_recinfo *recinfo" "const ubyte **data"
+
+.Ft int
+.Fn DlpReadAppPreference "PConnection *pconn" "const udword creator" "const uword id" "const uword len" "const ubyte flags" "struct dlp_apppref *pref" "ubyte *data"
+
+.Ft int
+.Fn DlpWriteAppPreference "PConnection *pconn" "const udword creator" "const uword id" "const ubyte flags" "const struct dlp_apppref *pref" "const ubyte *data"
+
+.Ft int
+.Fn DlpReadNetSyncInfo "PConnection *pconn" "struct dlp_netsyncinfo *netsyncinfo"
+
+.Ft int
+.Fn DlpWriteNetSyncInfo "PConnection *pconn" "const ubyte modflags" "const struct dlp_netsyncinfo *newinfo"
+
+.Ft int
+.Fn DlpReadFeature "PConnection *pconn" "const udword creator" "const word featurenum" "udword *value"
+
+.Ft int
+.Fn DlpRPC "PConnection *pconn" "uword trap" "udword *D0" "udword *A0" "int argc" "struct DLPRPC_param *argv"
+
+.Ft int
+.Fn RDLP_Backlight "PConnection *pconn" "Bool set" "Bool newState"
+
+.Ft int
+.Fn RDLP_BatteryLevel "PConnection *pconn"
+
+.Ft int
+.Fn RDLP_PluggedIn "PConnection *pconn"
+
+.Ft int
+.Fn RDLP_ROMToken "PConnection *pconn" "uword cardno" "udword token" "udword *data_ptr" "uword *data_len"
+
+.Ft int
+.Fn RDLP_MemHandleNew "PConnection *pconn" "udword size"
+
+.Ft int
+.Fn RDLP_GetOSVersionString "PConnection *pconn"
+
+.Ft int
+.Fn RDLP_BatteryDialog "PConnection *pconn"
+
+.Ft int
+.Fn RDLP_MemMove "PConnection *pconn" "ubyte *dst" "const udword src" "const udword len"
+
+.Ft int
+.Fn RDLP_MemReadable "PConnection *pconn" "udword addr"
+
+.Ft time_t
+.Fn time_dlp2time_t "const struct dlp_time *dlpt"
+
+.Ft udword
+.Fn time_dlp2palmtime "const struct dlp_time *dlpt"
+
+.Ft void
+.Fn time_time_t2dlp "const time_t t" "struct dlp_time *dlpt"
+
+.Ft void
+.Fn time_palmtime2dlp "const udword palmt" "struct dlp_time *dlpt"
+
+.Sh RETURN VALUES
+When a
+.Nm
+function encounters an error, it sets
+.Dv palm_errno
+to one of the
+.Dv PALMERR_*
+values defined in
+.Pa <pconn/palm_errno.h> .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
