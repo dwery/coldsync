@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.10 2000-01-13 17:50:19 arensb Exp $
+ * $Id: handledb.c,v 1.11 2000-01-19 06:02:35 arensb Exp $
  */
 
 #include "config.h"
@@ -50,6 +50,7 @@ HandleDB(struct PConnection *pconn,
 				"HandleDB: \"%s\": I don't deal with "
 				"resource databases (yet).\n",
 			dbinfo->name);
+		/* XXX - If the backup file doesn't exist, make a backup */
 /*  		return -1; */
 		return 0;
 	}
