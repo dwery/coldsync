@@ -43,7 +43,6 @@
   probably return an error if the sync is being run in batch
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
-- Add Makefile targets for Purify.
 - Installing new databases: make it possible to install an older
   version of a database. (Actually, this is already possible with
   restoring.)
@@ -217,3 +216,14 @@
 	.endif
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
+- Add libraries to dependencies?
+- Perl: methods: $pdb->append($record). $pdb->find($ID) or
+  $pdb->find($record). The latter should use
+  $pdb->cmp($record1,$record2) to see if two records are equal.
+- Snapshots don't need to contain everything. Specifically, they don't
+  need bulky .info and .ps files. Ditto for .mo files, presumably,
+  once i18n is fully implemented. Split "distdir" into "distdir" and
+  "distdir-lite" or something.
+- Finish i18n.
+- Translate everything to French.
+- Make i18n optional: --without-i18n
