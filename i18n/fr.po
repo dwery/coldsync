@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-05-19 07:09-0400\n"
+"POT-Creation-Date: 2000-05-21 16:30-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Andrew Arensburger <arensb@ooblick.com>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -13,6 +13,42 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
 "Last-Knowledgeable-Translator: Jorge Barros <jorge.barros@lecroy.com>\n"
+
+#: src/parser.y:289 src/parser.y:559 src/parser.y:938
+#, c-format
+msgid "\tError near \"%s\"\n"
+msgstr "\tErreur près de « %s »\n"
+
+#: src/parser.y:970
+msgid "\tMissing ':'\n"
+msgstr "\t« : » manquant\n"
+
+#: src/parser.y:985
+msgid "\tMissing ';'\n"
+msgstr "\t« ; » manquant\n"
+
+#: src/parser.y:978
+msgid "\tMissing '{'\n"
+msgstr "\t« { » manquant\n"
+
+#: src/parser.y:715
+#, c-format
+msgid "\tMissing argument name near \": %s\".\n"
+msgstr "Nom d'argument manquant près de « : %s ».\n"
+
+#: src/parser.y:222
+msgid "\tMissing listen block type\n"
+msgstr "\tType de bloc « listen » manquant\n"
+
+#: src/parser.y:449
+#, c-format
+msgid "\tUnrecognized conduit flavor \"%s\"\n"
+msgstr "\tLe goût de conduit « %s » n'est pas reconnu.\n"
+
+#: src/parser.y:225
+#, c-format
+msgid "\tUnrecognized listen type \"%s\"\n"
+msgstr "\tLe type d'écoute « %s » n'est pas reconnu\n"
 
 #: src/coldsync.c:1552
 #, c-format
@@ -168,44 +204,126 @@ msgstr "%s: Erreur: Impossible de nettoyer une base de données: %d\n"
 #: libpdb/pdb.c:515
 #, c-format
 msgid "%s record 0x%08lx has length 0\n"
-msgstr ""
+msgstr "Dans %s, l'enregistrement 0x%08lx a une longueur de 0\n"
 
 #: src/coldsync.c:1526
 #, c-format
 msgid "%s version %s\n"
 msgstr "%s version %s\n"
 
-#: src/parser.y:465
+#: src/parser.y:579
 #, c-format
-msgid "%s: Bogus creator \"%s\", line %d\n"
-msgstr "%s: Créateur bidon: « %s », ligne %d\n"
+msgid "%s: %d: Bogus creator \"%s\"\n"
+msgstr "%s: %d: Créateur bidon: « %s »\n"
 
-#: src/parser.y:491
+#: src/parser.y:603
 #, c-format
-msgid "%s: Bogus type \"%s\", line %d\n"
-msgstr "%s: Type bidon: « %s », ligne %d\n"
+msgid "%s: %d: Bogus type \"%s\"\n"
+msgstr "%s: %d: Type bidon: « %s »\n"
+
+#: src/parser.y:349 src/parser.y:383
+#, c-format
+msgid "%s: %d: Unknown conduit flavor %d\n"
+msgstr "%s: %d: Goût de conduit %d inconnu\n"
+
+#: src/parser.y:335
+#, c-format
+msgid "%s: %d: Warning: Install conduits are not implemented.\n"
+msgstr "%s: %d: Avertissement: Les conduits « Install » ne marchent pas encore.\n"
+
+#: src/parser.y:319
+#, c-format
+msgid "%s: %d: Warning: Sync conduits are not implemented.\n"
+msgstr "%s: %d: Avertissement: Les conduits « Sync » ne marchent pas encore.\n"
+
+#: src/parser.y:343
+#, c-format
+msgid "%s: %d: Warning: Uninstall conduits are not implemented.\n"
+msgstr "%s: %d: Avertissement: Les conduits « Uninstall » ne marchent pas encore.\n"
+
+#: src/parser.y:264
+#, c-format
+msgid "%s: %d: Warning: device already defined.\n"
+msgstr "%s: %d: Avertissement: commande « device » déjà définie.\n"
+
+#: src/parser.y:918
+#, c-format
+msgid "%s: %d: Warning: directory already defined.\n"
+msgstr "%s: %d: Avertissement: le répertoire a déjà été défini.\n"
+
+#: src/parser.y:894
+#, c-format
+msgid ""
+"%s: %d: Warning: incorrect checksum\n"
+"for serial number \"%s-%c\". Should be \"%s-%c\"\n"
+msgstr ""
+"%s: %d: Avertissement: total de contrôle incorrect\n"
+"pour le numéro de série « %s-%c ». Il devrait être\n"
+"« %s-%c »\n"
+
+#: src/parser.y:955
+#, c-format
+msgid ""
+"%s: %d: Warning: missing ':'\n"
+"\tColons are now required after most directives.\n"
+"\t(This warning will only be shown once.)\n"
+msgstr ""
+"%s: %d: Avertissement: « : » manquant\n"
+"\tIl est maintenant obligatoire d'avoir un deux-points après la\n"
+"\tplupart des commandes.\n"
+"\t(Cet avertissement ne sera affiché qu'une fois.)\n"
+
+#: src/parser.y:520
+#, c-format
+msgid "%s: %d: Warning: path already defined.\n"
+msgstr "%s: %d: Avertissement: commande « path » déjà définie.\n"
+
+#: src/parser.y:872
+#, c-format
+msgid ""
+"%s: %d: Warning: serial number \"%s\" has no checksum.\n"
+"You may want to rewrite it as \"%s-%c\"\n"
+msgstr ""
+"%s: %d: Avertissement: le numéro de série « %s »\n"
+"n'a pas de total de contrôle. Vous voudrez peut-être\n"
+"le récrire comme « %s-%c »\n"
+
+#: src/parser.y:845
+#, c-format
+msgid "%s: %d: Warning: serial number already defined.\n"
+msgstr "%s: %d: Avertissement: numéro de série déjà défini.\n"
+
+#: src/parser.y:280
+#, c-format
+msgid "%s: %d: Warning: speed already defined.\n"
+msgstr "%s: %d: Avertissement: vitesse déjà définie.\n"
+
+#: src/parser.y:502
+#, c-format
+msgid "%s: %d: Warning: type already defined.\n"
+msgstr "%s: %d: Avertissement: type déjà défini.\n"
 
 #: libpconn/dlp.c:144
 #, c-format
 msgid "%s: Can't allocate %ld-byte buffer\n"
 msgstr "%s: Je n'arrive pas à allouer un tampon de %ld octets\n"
 
-#: src/parser.y:601
+#: src/parser.y:739
 #, c-format
 msgid "%s: Can't allocate PDA block\n"
 msgstr "%s: Impossible d'allouer un bloc PDA\n"
 
-#: src/parser.y:551
-#, fuzzy, c-format
+#: src/parser.y:673
+#, c-format
 msgid "%s: Can't allocate conduit header\n"
-msgstr "%s: Impossible d'allouer un conduit_block!\n"
+msgstr "%s: Impossible d'allouer une entête de conduit!\n"
 
-#: src/parser.y:250
+#: src/parser.y:304
 #, c-format
 msgid "%s: Can't allocate conduit_block!\n"
 msgstr "%s: Impossible d'allouer un conduit_block!\n"
 
-#: src/parser.y:143
+#: src/parser.y:159
 #, c-format
 msgid "%s: Can't allocate listen block\n"
 msgstr "%s: Impossible d'allouer un bloc d'écoute\n"
@@ -268,7 +386,7 @@ msgstr "%s: Impossible de charger la base de données « %s »\n"
 msgid "%s: Can't make child's stdout be line-buffered\n"
 msgstr ""
 
-#: src/archive.c:125 src/install.c:118 src/parser.y:806
+#: src/archive.c:125 src/install.c:118 src/parser.y:1012
 #, c-format
 msgid "%s: Can't open \"%s\"\n"
 msgstr "%s: Impossible d'ouvrir « %s »\n"
@@ -447,7 +565,7 @@ msgstr "%s: Erreur lors de l'examination de « %s »\n"
 #: src/install.c:200
 #, c-format
 msgid "%s: Error uploading \"%s\"\n"
-msgstr ""
+msgstr "%s: Erreur lors de l'installation de « %s »\n"
 
 #: libpconn/dlp_cmd.c:1409 libpconn/dlp_cmd.c:1590 libpconn/dlp_cmd.c:2450
 #: libpconn/dlp_cmd.c:2762 libpconn/dlp_cmd.c:3837 libpdb/pdb.c:732
@@ -557,11 +675,6 @@ msgstr "%s: execvp(%s) a échoué et a retourné %d\n"
 msgid "%s: header cannot be longer than %d characters long\n"
 msgstr "%s: une entête ne peut pas faire plus de %d caractères de long\n"
 
-#: src/parser.y:314
-#, c-format
-msgid "%s: line %d: Unknown conduit flavor %d\n"
-msgstr "%s: ligne %d: Goût de conduit %d inconnu\n"
-
 #: src/log.c:101
 #, c-format
 msgid "%s: realloc failed\n"
@@ -600,7 +713,7 @@ msgstr "%s: write() a échoué\n"
 
 #: src/coldsync.c:527
 msgid "*Cancelled*\n"
-msgstr ""
+msgstr "*Annulé*\n"
 
 #: src/backup.c:41
 msgid "Backup "
@@ -691,7 +804,7 @@ msgstr ""
 msgid "Can't get user info\n"
 msgstr "Impossible d'obtenir les informations sur l'utilisateur\n"
 
-#: src/config.c:1159
+#: src/config.c:1179
 msgid "Can't get user's full name.\n"
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur.\n"
 
@@ -781,7 +894,7 @@ msgstr "Impossible de lire les deux octets inutiles\n"
 #: src/GenericConduit.cc:227 src/GenericConduit.cc:449
 #: src/GenericConduit.cc:879
 msgid "Cancelled\n"
-msgstr ""
+msgstr "Annulé\n"
 
 #: src/coldsync.c:1534
 msgid "Compile-type options:\n"
@@ -789,7 +902,7 @@ msgstr "Options indiquées lors de la compilation:\n"
 
 #: src/coldsync.c:539
 msgid "Conduit failed for unknown reason\n"
-msgstr ""
+msgstr "Un conduit a échoué pour une raison inconnue\n"
 
 #: libpdb/pdb.c:2380
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
@@ -907,7 +1020,7 @@ msgstr "Erreur lors du règlage de vitesse"
 #: src/GenericConduit.cc:1743 src/GenericConduit.cc:1932
 #, c-format
 msgid "Error uploading record 0x%08lx: %d\n"
-msgstr ""
+msgstr "Erreur lors de l'installation de l'enregistrement 0x%08lx: %d\n"
 
 #: src/coldsync.c:581
 msgid "Error writing sync log.\n"
@@ -1061,7 +1174,7 @@ msgstr "SLP: mauvais CRC: je m'attendais à 0x%04x, mais j'ai reçu 0x%04x\n"
 
 #: src/coldsync.c:526
 msgid "Sync cancelled.\n"
-msgstr ""
+msgstr "Synchronisation annulée.\n"
 
 #: libpdb/pdb.c:312
 #, c-format
@@ -1095,11 +1208,6 @@ msgstr "Trop de fichiers nommés « %s » au grenier.\n"
 msgid "Transfer aborted"
 msgstr "Transfert annulé"
 
-#: src/parser.y:283
-#, c-format
-msgid "Unknown conduit flavor: %d"
-msgstr "Goût de conduit inconnu: %d"
-
 #: src/config.c:265
 #, c-format
 msgid "Unknown device type: \"%s\"\n"
@@ -1109,11 +1217,6 @@ msgstr "Type d'appareil « %s » inconnu.\n"
 #, c-format
 msgid "Unknown facility \"%s\"\n"
 msgstr "Catégorie inconnue: « %s »\n"
-
-#: src/parser.y:203
-#, fuzzy, c-format
-msgid "Unrecognized listen type at line %d\n"
-msgstr "L'option « %s » n'est pas reconnue\n"
 
 #: src/config.c:277
 #, c-format
@@ -1163,16 +1266,6 @@ msgstr ""
 "Attention: Le bloc AppInfo n'est pas là où je m'y attendais.\n"
 "Je croyais qu'il serait à 0x%lx, mais nous sommes à 0x%lx\n"
 
-#: src/parser.y:778
-#, c-format
-msgid "Warning: Missing ';' at line %d\n"
-msgstr ""
-
-#: src/parser.y:769
-#, c-format
-msgid "Warning: Missing '{' at line %d\n"
-msgstr ""
-
 #: src/coldsync.c:286
 #, c-format
 msgid ""
@@ -1199,15 +1292,6 @@ msgstr ""
 "Attention: le fichier de configuration « %s » n'existe pas. Les défauts\n"
 "seront utilisés.\n"
 
-#: src/parser.y:739
-#, c-format
-msgid ""
-"Warning: incorrect checksum for serial number \"%s-%c\".\n"
-"Should be \"%s-%c\"\n"
-msgstr ""
-"Avertissement: total de contrôle incorrect pour le numéro de série\n"
-"« %s-%c ». Il devrait être « %s-%c »\n"
-
 #: libpdb/pdb.c:2108
 #, c-format
 msgid ""
@@ -1226,15 +1310,6 @@ msgstr ""
 "Attention: la resource No. %d n'est pas là où je m'y attendais.\n"
 "Je croyais qu'elle serait à 0x%lx, mais nous sommes à 0x%lx\n"
 
-#: src/parser.y:718
-#, c-format
-msgid ""
-"Warning: serial number \"%s\" has no checksum. You may want\n"
-"to rewrite it as \"%s-%c\"\n"
-msgstr ""
-"Avertissement: le numéro de série « %s » n'a pas de total de\n"
-"contrôle. Vous voudrez peut-être le récrire comme « %s-%c »\n"
-
 #: libpdb/pdb.c:1916
 #, c-format
 msgid ""
@@ -1248,11 +1323,6 @@ msgstr ""
 #: libpconn/padp.c:614
 msgid "Write timeout. Attempting to resend.\n"
 msgstr "Timeout lors de l'écriture. J'essaie d'envoyer de nouveau.\n"
-
-#: src/parser.y:791
-#, c-format
-msgid "Yacc error: \"%s\" at line %d\n"
-msgstr "Erreur yacc: « %s », ligne %d\n"
 
 #: src/config.c:294
 #, c-format
@@ -1280,8 +1350,18 @@ msgid "usb: trying to fill a non-empty buffer\n"
 msgstr "usb: tentat de remplir un tampon qui n'est pas vide\n"
 
 #, fuzzy
-#~ msgid "Malformed listen statement at line %d\n"
+#~ msgid "\tMangled header near \"%s\"\n"
+#~ msgstr "Argument manquant après l'option « %s »\n"
+
+#, fuzzy
+#~ msgid "\tMalformed conduit argument near \"%s\".\n"
 #~ msgstr "L'option « %s » n'est pas reconnue\n"
+
+#~ msgid "Unknown conduit flavor: %d"
+#~ msgstr "Goût de conduit inconnu: %d"
+
+#~ msgid "Yacc error: \"%s\" at line %d\n"
+#~ msgstr "Erreur yacc: « %s », ligne %d\n"
 
 #~ msgid "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"
 #~ msgstr "!!! Horreur! Un conduit s'est planté! Sauve qui peut!\n"
