@@ -7,15 +7,18 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.7 2000-07-18 15:59:10 arensb Exp $
+ * $Id: conduit.c,v 2.8 2000-07-31 09:15:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
+#include <stdlib.h>			/* For malloc(), free() */
 #include <string.h>
 #include <sys/types.h>			/* For pid_t, for select(); write() */
 #include <sys/uio.h>			/* For write() */
 #include <sys/time.h>			/* For select() */
 #include <sys/wait.h>			/* For waitpid() */
+#include <sys/socket.h>			/* For socketpair() */
+#include <sys/param.h>			/* For ntohs() and friends */
 #include <unistd.h>			/* For select(), write() */
 #include <signal.h>			/* For signal() */
 #include <setjmp.h>			/* For sigsetjmp()/siglongjmp() */
@@ -41,6 +44,7 @@
 #endif	/* WCOREDUMP */
 
 #include "conduit.h"
+#include "spc.h"
 
 typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
@@ -48,7 +52,8 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 
 static int run_conduits(struct dlp_dbinfo *dbinfo,
 			char *flavor,
-			unsigned short flavor_mask);
+			unsigned short flavor_mask,
+			const Bool with_spc);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -193,11 +198,28 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
  * Otherwise, returns the last status returned by the conduit (which may
  * indicate an error with the conduit).
  */
+/* XXX - This function is rather ugly, since it tries to be everything to
+ * all conduits. This, in turn, is because about half of what
+ * run_conduit() does is common to all conduit flavors, so it is
+ * appropriate that it be encapsulated in a function.
+ * Is it possible to abstract out just the common parts, and let other
+ * functions take care of the flavor types' idiosyncracies?
+ */
+#define MAX_SYS_HEADERS	10		/* Size of the array holding system
+					 * headers */
+
 static int
-run_conduit(struct dlp_dbinfo *dbinfo,
-	    char *flavor,
-	    conduit_block *conduit)
+run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
+	    char *flavor,		/* Name of the flavor */
+	    conduit_block *conduit,	/* Conduit to be run */
+	    const Bool with_spc)	/* Allow SPC calls? */
 {
+	/* In most cases below, if a variable is declared 'volatile', it's
+	 * because 'gcc' complains that the variable might get clobbered by
+	 * longjmp() (presumably these are register variables, since these
+	 * warnings go away when optimization is turned off). This
+	 * shouldn't matter, but it shuts the compiler up.
+	 */
 	int err;
 	int i;
 	static char * argv[4];	/* Conduit's argv */
@@ -214,11 +236,45 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 				 */
 	struct cond_header *hdr;	/* User-supplied header */
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
-	struct {		/* Array of standard headers */
-		char *name;
-		const char *value;
-	} headers[10];		/* XXX - Numeric constants are bogus */
+	struct cond_header headers[MAX_SYS_HEADERS];
+				/* System headers */
 	int last_header = 0;
+	int spcpipe[2];		/* Pipe for SPC-based communication */
+	char spcnumbuf[4];	/* Buffer to hold the child's SPC file
+				 * descriptor number. This only goes up to
+				 * 999, but if that's not enough, then
+				 * there's a serious file descriptor leak
+				 * going on.
+				 */
+	static enum { SPC_Read_Header,  SPC_Read_Data,
+		      SPC_Write_Header, SPC_Write_Data
+	} spc_state;		/* This variable helps us implement a state
+				 * machine, by indicating what needs to be
+				 * done next:
+				 *	- read the header of the next SPC
+				 *	request from the conduit
+				 *	- read (more of) the data of an SPC
+				 *	request from the conduit
+				 *	- send the SPC response header to
+				 *	the conduit
+				 *	- send (more of) the SPC response
+				 *	data to the conduit
+				 */
+
+	struct spc_hdr spc_req;
+				/* SPC request header */
+	unsigned char *spc_inbuf = NULL;
+				/* SPC input buffer */
+	unsigned long spc_toread = 0;
+				/* # bytes of an SPC request left to read */
+	unsigned char *spc_outbuf = NULL;
+				/* SPC output buffer */
+	unsigned long spc_towrite = 0;
+				/* # bytes of an SPC response left to write */
+	unsigned char *spcp = NULL;
+				/* Pointer into spc_inbuf or spc_outbuf */
+	sigset_t sigmask;
+				/* Signal mask for {,un}block_sigchld() */
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -230,6 +286,36 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		 * useful for defining a do-nothing default.
 		 */
 		return 201;		/* Success (trivially) */
+
+	/* If this conduit might understand SPC, set up a pipe for the
+	 * child to communicate to the parent.
+	 */
+	if (with_spc)
+	{
+		/* Set up a pair of pipes for talking SPC with the child */
+		if ((err = socketpair(AF_UNIX, SOCK_STREAM, 0, spcpipe)) < 0)
+		{
+			perror("pipe(spcpipe)");
+			return 501;
+		}
+
+		/* XXX - Arrange for the parent end of the pipe to be
+		 * closed upon exec().
+		 */
+		/* XXX - Ditto for the Palm file descriptor */
+
+		/* XXX - Should this pipe be made unbuffered? (Probably
+		 * not, but it'd be nice to flush it after writing.)
+		 */
+
+		spc_state = SPC_Read_Header;	/* Next thing to do */
+
+		SYNC_TRACE(6)
+		{
+			fprintf(stderr, "spcpipe == (%d, %d)\n",
+				spcpipe[0], spcpipe[1]);
+		}
+	}
 
 	/* Set handler for SIGCHLD, so that we can keep track of what
 	 * happens to conduit child processes.
@@ -249,6 +335,17 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	 */
 	if ((err = sigsetjmp(chld_jmpbuf, 1)) != 0)
 	{
+		/* XXX - NB: Both FreeBSD's and the Open Group's manual
+		 * entries say that longjmp() restores the environment
+		 * saved by _the most recent_ invocation of setjmp().
+		 *
+		 * Furthermore, Stevens says that you can't call longjmp()
+		 * if the function that called setjmp() has already
+		 * terminated.
+		 *
+		 * This implies that it's okay to call setjmp() multiple
+		 * times with the same jump buffer.
+		 */
 		SYNC_TRACE(4)
 			fprintf(stderr, "Returned from sigsetjmp(): %d\n",
 				err);
@@ -281,7 +378,14 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	/* Feed the various parameters to the child via 'tochild'. */
 
 	/* Initialize the standard header values */
+	block_sigchld(&sigmask);	/* Don't disturb me now */
+
 	bakfname = mkbakfname(dbinfo);
+
+	/* Turn the array of system headers into a linked list. */
+	for (i = 0; i < MAX_SYS_HEADERS-1; i++)
+		headers[i].next = &(headers[i+1]);
+	headers[MAX_SYS_HEADERS-1].next = NULL;
 
 	last_header = 0;
 	headers[last_header].name = "Daemon";
@@ -293,18 +397,38 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 
 	++last_header;
 	headers[last_header].name = "InputDB";
-	headers[last_header].value = bakfname;
+	headers[last_header].value = (char *) bakfname;
+				/* The cast is just to stop the compiler
+				 * from complaining. */
 
 	++last_header;
 	headers[last_header].name = "OutputDB";
-	headers[last_header].value = bakfname;
+	headers[last_header].value = (char *) bakfname;
+				/* The cast is just to stop the compiler
+				 * from complaining. */
 
-	/* XXX - SPC file descriptor number goes here */
-
-	/* NB: if you make any changes here, make sure to make them in the
-	 * "user header" section, below.
+	/* If the conduit might understand SPC, tell it what file
+	 * descriptor to use to talk to the parent.
 	 */
-	for (i = 0; i <= last_header; i++)
+	if (with_spc)
+	{
+		++last_header;
+		headers[last_header].name = "SPCPipe";
+		/* XXX - Should barf if spcpipe[0] > 999 */
+		sprintf(spcnumbuf, "%d", spcpipe[0]);
+		headers[last_header].value = spcnumbuf;
+	}
+
+	/* Now append the user-supplied headers to the system headers. This
+	 * is a semi-ugly hack that allows us to treat the whole set of
+	 * headers as a single list.
+	 */
+	headers[last_header].next = conduit->headers;
+
+	unblock_sigchld(&sigmask);
+
+	/* Iterate over the list of headers */
+	for (hdr = headers; hdr != NULL; hdr = hdr->next)
 	{
 		static char buf[COND_MAXLINELEN+2];
 				/* Buffer to hold the line we're about to
@@ -317,7 +441,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		int len;	/* How many bytes of 'bufp' to write */
 
 		/* Create the header line */
-		format_header(buf, headers[i].name, headers[i].value);
+		format_header(buf, hdr->name, hdr->value);
 		bufp = buf;
 		len = strlen(bufp);
 
@@ -342,79 +466,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 			if (err > 0)
 				laststatus = err;
 			goto check_status;
-		}
-
-		/* Okay, now that the child has nothing to say, we can send
-		 * it the current header.
-		 */
-		SYNC_TRACE(4)
-			fprintf(stderr, ">>> %s: %s\n",
-				headers[i].name,
-				headers[i].value);
-
-		while (len > 0)
-		{
-			SYNC_TRACE(7)
-				fprintf(stderr, "writing chunk [%s] (%d)\n",
-					bufp, len);
-			err = write(fileno(tochild), bufp, len);
-			if (err < 0)
-			{
-				/* An error occurred */
-				fprintf(stderr, _("Error while sending "
-						  "header to conduit.\n"));
-				perror("write");
-				goto abort;
-			}
-
-			/* write() might not have written all of 'bufp' */
-			len -= err;
-			bufp += err;
-		}
-	}
-
-	/* User-supplied header lines */
-	/* NB: if you make any changes here, make sure to make them in the
-	 * "standard header" section, above.
-	 */
-	for (hdr = conduit->headers; hdr != NULL; hdr = hdr->next)
-	{
-		static char buf[COND_MAXLINELEN+2];
-				/* Buffer to hold the line we're about to
-				 * send. The +2 is to hold a \n and a NUL
-				 * at the end.
-				 */
-		char *bufp;	/* Pointer to the part of 'buf' that should
-				 * be written next.
-				 */
-		int len;	/* How many bytes of 'bufp' to write */
-
-		/* Create the header line */
-		format_header(buf, hdr->name, hdr->value);
-		bufp = buf;
-		len = strlen(bufp);
-
-	  check_status2:
-		/* Before proceeding, see if the child has written a status
-		 * message.
-		 */
-		err = poll_fd(fileno(fromchild), False);
-		if (err < 0)
-		{
-			/* An error occurred. I don't think we care at this
-			 * point.
-			 */
-			SYNC_TRACE(5)
-				perror("poll_fd");
-		} else if (err > 0)
-		{
-			/* The child has printed something. Read it, then
-			 * check again.
-			 */
-			err = cond_readstatus(fromchild);
-			if (err > 0)
-				laststatus = err;
-			goto check_status2;
 		}
 
 		/* Okay, now that the child has nothing to say, we can send
@@ -450,27 +501,315 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	fprintf(tochild, "\n");
 	fflush(tochild);
 
-	/* Read from the child's stdout.
+	/* Listen for the child to either a) print a status message on its
+	 * stdout, or b) send an SPC request on its SPC file descriptor.
 	 */
-	/* XXX - This should really select() 'fromchild' and the SPC file
-	 * descriptor (for Sync conduits). This time around, the select()
-	 * should block on input.
-	 */
-	while ((err = cond_readstatus(fromchild)) > 0)
+	while (1)
 	{
-		SYNC_TRACE(2)
+		fd_set in_fds;		/* Set of file descriptors to
+					 * listen to */
+		fd_set out_fds;		/* Set of file descriptors to
+					 * write to */
+		int max_fd;		/* Highest-numbered file descriptor
+					 * to listen to. */
+
+		FD_ZERO(&in_fds);
+		FD_ZERO(&out_fds);
+		FD_SET(fileno(fromchild), &in_fds);
+		max_fd = fileno(fromchild);
+		if (with_spc)
+		{
+			/* Depending on the state of the SPC state machine,
+			 * we should either expect to read from or expect
+			 * to write to the SPC pipe, but not both.
+			 * This is because the SPC pipe will usually be
+			 * writable even if we have nothing to write to it,
+			 * and we don't want to busy-wait.
+			 */
+			switch (spc_state)
+			{
+			    case SPC_Read_Header:
+			    case SPC_Read_Data:
+				FD_SET(spcpipe[1], &in_fds);
+				break;
+			    case SPC_Write_Header:
+			    case SPC_Write_Data:
+				FD_SET(spcpipe[1], &out_fds);
+				break;
+			    default:
+				/* XXX - Should complain: this can't happen */
+				break;
+			}
+
+			if (spcpipe[1] > max_fd)
+				max_fd = spcpipe[1];
+		}
+
+		err = select(max_fd+1, &in_fds, &out_fds, NULL, NULL);
+		SYNC_TRACE(7)
 			fprintf(stderr,
-				"run_conduits: got status %d\n",
+				"run_conduit: select() returned %d\n",
 				err);
 
-		/* Save the error status for later use: the last error
-		 * status printed is the final result from the conduit.
+		if (err < 0)
+		{
+			if (errno != EINTR)
+			{
+				fprintf(stderr,
+					_("%s: error in select()\n"),
+					"run_conduit");
+				perror("select");
+
+				/* EINTR is harmless. All of the other ways
+				 * select() can return -1 are severe
+				 * errors. I don't know how to continue.
+				 */
+				goto abort;
+			}
+		}
+		if (err == 0)
+			/* This should never happen */
+			/* XXX - Should probably print an error message to
+			 * this effect.
+			 */
+			continue;
+
+		/* Check fromchild, to see if the child has printed a
+		 * status message to stdout.
 		 */
-		laststatus = err;
+		if (FD_ISSET(fileno(fromchild), &in_fds))
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr,
+					"Child has printed to stdout.\n");
+
+			block_sigchld(&sigmask);
+			err = cond_readstatus(fromchild);
+			unblock_sigchld(&sigmask);
+
+			SYNC_TRACE(2)
+				fprintf(stderr,
+					"run_conduit: got status %d\n",
+					err);
+			if (err <= 0)
+				/* Got an end of file (or an error) */
+				goto abort;
+
+			/* cond_readstatus() got a legitimate status.
+			 * Remember it for later.
+			 */
+			laststatus = err;
+		}
+
+		if (!with_spc)
+			/* From here on in, everything has to do with SPC */
+			continue;
+
+		/* Check the state of the SPC state machine, and figure out
+		 * what to do next.
+		 */
+
+		/* State 0: expecting to read a header */
+		if ((spc_state == SPC_Read_Header) &&
+		    FD_ISSET(spcpipe[1], &in_fds))
+		{
+			static unsigned char spc_header[SPC_HEADER_LEN];
+
+			/* Read the SPC header. This consists of an opcode,
+			 * a status code (ignored), and a length.
+			 */
+			err = read(spcpipe[1], spc_header, SPC_HEADER_LEN);
+			if (err < 0)
+			{
+				fprintf(stderr,
+					_("%s: error reading SPC request "
+					  "from conduit.\n"),
+					"run_conduit");
+				perror("read");
+				/* XXX - What now? Abort? */
+			}
+			if (err != SPC_HEADER_LEN)
+			{
+				/* The child printed something, but it's
+				 * not the right length for an SPC request.
+				 */
+				/* XXX - Send a "bad request" header to the
+				 * child.
+				 */
+			}
+
+			/* Very crude parsing of the received header */
+			/* XXX - There should probably be a function to
+			 * parse this.
+			 */
+			spc_req.op = ntohs(*((unsigned short *) spc_header));
+			spc_req.len = ntohl(
+				* ((unsigned long *) (spc_header+4)));
+
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"SPC request OP == %d, "
+					"len == %ld\n",
+					spc_req.op,
+					spc_req.len);
+
+			spc_toread = spc_req.len;
+			if (spc_req.len > 0)
+			{
+				block_sigchld(&sigmask);
+
+				spc_inbuf = malloc(spc_req.len);
+				/* XXX - Error-checking */
+				spcp = spc_inbuf;
+
+				unblock_sigchld(&sigmask);
+			}
+
+			spc_state = SPC_Read_Data;
+
+			continue;
+		}
+
+		/* State 1: Expecting to read SPC data. */
+		if ((spc_state == SPC_Read_Data) &&
+		    FD_ISSET(spcpipe[1], &in_fds))
+		{
+			/* Need to read (continue reading) SPC data */
+
+			if (spc_toread > 0)
+			{
+				/* Read the next chunk */
+				err = read(spcpipe[1], spcp, spc_toread);
+
+				if (err < 0)
+				{
+					fprintf(stderr,
+						_("%s: Error reading SPC "
+						  "request.\n"),
+						"run_conduit");
+					perror("read");
+					/* XXX - What now? Abort or
+					 * something.
+					 */
+				}
+
+				spc_toread -= err;
+			}
+
+			if (spc_toread > 0)
+				/* There's more left to read. Wait for it */
+				continue;
+
+			/* Now we've read all of the SPC request, and can
+			 * process it.
+			 */
+			block_sigchld(&sigmask);
+			err = spc_send(&spc_req,
+				       spc_inbuf,
+				       &spc_outbuf);
+			unblock_sigchld(&sigmask);
+
+			/* We're done with spc_inbuf */
+			if (spc_inbuf != NULL)
+				free(spc_inbuf);
+			spc_towrite = spc_req.len;
+
+			spc_state = SPC_Write_Header;
+
+			continue;
+		}
+
+		/* State 2: Want to write the header of an SPC response */
+		if ((spc_state == SPC_Write_Header) &&
+		    FD_ISSET(spcpipe[1], &out_fds))
+		{
+			/* Need to send the SPC response header */
+			static unsigned char spc_header[SPC_HEADER_LEN];
+
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Sending SPC response OP == %d, "
+					"status == %d, "
+					"len == %ld\n",
+					spc_req.op,
+					spc_req.status,
+					spc_req.len);
+
+			/* Write the header to 'spc_header' */
+			/* XXX - This is very crude. There ought to be a
+			 * function to do it.
+			 */
+			*((unsigned short *) spc_header) = htons(spc_req.op);
+			*((unsigned short *) (spc_header+2)) =
+				htons(spc_req.status);
+			*((unsigned long *) (spc_header+4)) =
+				htonl(spc_req.len);
+
+			err = write(spcpipe[1], spc_header, SPC_HEADER_LEN);
+			if (err != SPC_HEADER_LEN)
+			{
+				fprintf(stderr,
+					_("%s: error sending SPC response "
+					  "header.\n"),
+					"run_conduit");
+				if (err < 0)
+					perror("write");
+				/* XXX - What now? Abort? */
+			}
+
+			spc_towrite = spc_req.len;
+			spcp = spc_outbuf;
+
+			spc_state = SPC_Write_Data;
+			continue;
+		}
+
+		/* State 3: Want to write the data of an SPC response */
+		if ((spc_state == SPC_Write_Data) &&
+		    FD_ISSET(spcpipe[1], &out_fds))
+		{
+			/* Need to send (continue sending) SPC response
+			 * data.
+			 */
+
+			if (spc_towrite > 0)
+			{
+fprintf(stderr, "spc_outbuf == 0x%08lx, spcp == 0x%08lx\n", spc_outbuf, spcp);
+				/* Send the next chunk */
+				err = write(spcpipe[1], spcp, spc_towrite);
+
+				if (err < 0)
+				{
+					fprintf(stderr,
+						_("%s: Error sending SPC "
+						  "response data.\n"),
+						"run_conduit");
+					perror("write");
+					/* XXX - What now? Abort? */
+				}
+
+				spc_towrite -= err;
+				spcp += err;
+			}
+
+			if (spc_towrite <= 0)
+			{
+				/* We're done sending the request */
+				free(spc_outbuf);
+				spc_state = SPC_Read_Header;
+			}
+ 
+			continue;
+		}
 	}
 
   abort:
 	/* The conduit has exited */
+
+	/* XXX - We may have jumped here because of an internal error, and
+	 * not because the child has died. It would be good to kill the
+	 * child if it isn't dead yet.
+	 */
 
 	/* See if there is anything pending on 'fromchild' */
 	while (1)
@@ -531,7 +870,8 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	     char *flavor,		/* Dump flavor: will be sent to
 					 * conduit.
 					 */
-	     unsigned short flavor_mask)
+	     unsigned short flavor_mask,
+	     const Bool with_spc)	/* Allow SPC calls? */
 {
 	int err;
 	conduit_block *conduit;
@@ -598,7 +938,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		}
 
 		found_conduit = True;
-		err = run_conduit(dbinfo, flavor, conduit);
+		err = run_conduit(dbinfo, flavor, conduit, with_spc);
 
 		/* XXX - Error-checking. Report the conduit's exit status
 		 */
@@ -622,7 +962,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(4)
 			fprintf(stderr, "Running default conduit\n");
 
-		err = run_conduit(dbinfo, flavor, def_conduit);
+		err = run_conduit(dbinfo, flavor, def_conduit, with_spc);
 	}
 
 	return 0;
@@ -648,7 +988,7 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH);
+	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False);
 }
 
 /* run_Dump_conduits
@@ -677,7 +1017,7 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP);
+	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False);
 }
 
 /* run_Sync_conduits
@@ -702,7 +1042,7 @@ run_Sync_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "dump", FLAVORFL_SYNC);
+	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True);
 }
 
 /* spawn_conduit
@@ -745,7 +1085,7 @@ spawn_conduit(
 	if ((err = pipe(inpipe)) < 0)
 	{
 		perror("pipe(inpipe)");
-		exit(1);
+		exit(1);	/* XXX - Shouldn't die so violently */
 	}
 	SYNC_TRACE(6)
 		fprintf(stderr, "spawn_conduit: inpipe == %d, %d\n",
@@ -770,7 +1110,7 @@ spawn_conduit(
 	if ((err = pipe(outpipe)) < 0)
 	{
 		perror("pipe(outpipe)");
-		exit(1);
+		exit(1);	/* XXX - Shouldn't die so violently */
 	}
 	SYNC_TRACE(6)
 		fprintf(stderr, "spawn_conduit: outpipe == %d, %d\n",
@@ -967,6 +1307,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 			/* Poll the child to see if it printed something
 			 * before exiting.
 			 */
+			/* XXX - Use poll_fd() */
 			zerotime.tv_sec = 0;
 			zerotime.tv_usec = 0;
 			FD_ZERO(&infds);
@@ -1180,10 +1521,22 @@ cond_readstatus(FILE *fromchild)
  * default value once a signal has been received. Find out about this, and
  * cope with it.
  */
+/* XXX - Make sure this contains only reentrant functions (Stevens, AUP,
+ * 10.6)
+ */
+/* XXX - Save and restore errno: this signal may have interrupted some
+ * other function that uses errno.
+ */
 static RETSIGTYPE
 sigchld_handler(int sig)
 {
 	pid_t p;	/* Temporary variable. Return value from waitpid() */
+	int old_errno;
+
+	/* Save the old value of 'errno', in case this signal interrupted
+	 * something that uses it.
+	 */
+	old_errno = errno;
 
 	MISC_TRACE(4)
 		fprintf(stderr, "Got a SIGCHLD\n");
@@ -1193,6 +1546,7 @@ sigchld_handler(int sig)
 		/* Unexpected signal. Ignore it */
 		SYNC_TRACE(5)
 			fprintf(stderr, "Unexpected signal. Ignoring.\n");
+		errno = old_errno;	/* Restore old errno */
 		return;
 	}
 
@@ -1208,12 +1562,13 @@ sigchld_handler(int sig)
 			fprintf(stderr,
 				"Got a SIGCHLD, but conduit_pid == %d. "
 				"Ignoring.\n", conduit_pid);
+		errno = old_errno;	/* Restore old errno */
 		return;
 	}
 
 	/* Find out what just happened */
-	/* XXX - WUNTRACED not specified. This means we won't find out
-	 * about stopped processes. Is this a Bad Thing?
+	/* WUNTRACED not specified. This means we won't find out about
+	 * stopped processes.
 	 */
 	p = waitpid(conduit_pid, &conduit_status, WNOHANG);
 	if (p < 0)
@@ -1226,11 +1581,12 @@ sigchld_handler(int sig)
 
 		SYNC_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
+		errno = old_errno;	/* Restore old errno */
 		siglongjmp(chld_jmpbuf, 1);
 	}
 
 	/* Find out whether the conduit process is still running */
-	/* XXX - If WUNTRACED is deemed to be a good thing, we'll need to
+	/* If WUNTRACED is ever deemed to be a good thing, we'll need to
 	 * check WIFSTOPPED here as well.
 	 */
 	if (WIFEXITED(conduit_status) ||
@@ -1256,12 +1612,14 @@ sigchld_handler(int sig)
 
 		SYNC_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
+		errno = old_errno;	/* Restore old errno */
 		siglongjmp(chld_jmpbuf, 1);
 	}
 	MISC_TRACE(5)
 		fprintf(stderr, "Conduit is still running.\n");
 
-	return;		/* Nothing to do */
+	errno = old_errno;	/* Restore old errno */
+	return;			/* Nothing to do */
 }
 
 /* crea_type_matches
