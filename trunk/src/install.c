@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.28 2001-02-20 12:39:57 arensb Exp $
+ * $Id: install.c,v 2.29 2001-02-22 14:34:18 arensb Exp $
  */
 
 #include "config.h"
@@ -206,10 +206,8 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 			continue;	/* No. Ignore it */
 
 		/* Construct the file's full pathname */
-		/* XXX - Replace with snprintf() */
-                strncpy(fname, installdir, MAXPATHLEN);
-		strncat(fname, "/", MAXPATHLEN - strlen(fname));
-                strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
+		snprintf(fname, MAXPATHLEN,
+			 "%s/%s", installdir, file->d_name);
 
 		/* Open the file */
                 if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
@@ -300,10 +298,7 @@ InstallNewFiles(PConnection *pconn,
 		 */
 
 		/* Construct the file's full pathname */
-		/* XXX - Replace with snprintf() */
-		strncpy(fname, newdir, MAXPATHLEN);
-		strncat(fname, "/", MAXPATHLEN - strlen(fname));
-		strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
+		snprintf(fname, MAXPATHLEN, "%s/%s", newdir, file->d_name);
 
 		/* Open the file, and load it as a Palm database */
 		if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)

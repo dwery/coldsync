@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.86 2001-02-20 14:06:32 arensb Exp $
+ * $Id: coldsync.c,v 1.87 2001-02-22 14:33:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2587,20 +2587,14 @@ CheckLocalFiles(struct Palm *palm)
 		 */
 
 		/* Get the database's current full pathname */
-		/* XXX - Replace with snprintf() */
-		strncpy(fromname, backupdir, MAXPATHLEN);
-		strncat(fromname, "/", MAXPATHLEN - strlen(fromname));
-		strncat(fromname, file->d_name,
-			MAXPATHLEN - strlen(fromname));
+		snprintf(fromname, MAXPATHLEN,
+			 "%s/%s", backupdir, file->d_name);
 
 		/* First try at a destination pathname:
 		 * <atticdir>/<filename>.
 		 */
-		/* XXX - Replace with snprintf() */
-		strncpy(toname, atticdir, MAXPATHLEN);
-		strncat(toname, "/", MAXPATHLEN - strlen(toname));
-		strncat(toname, file->d_name,
-			MAXPATHLEN - strlen(toname));
+		snprintf(toname, MAXPATHLEN,
+			 "%s/%s", atticdir, file->d_name);
 
 		/* Check to see if the destination filename exists. We use
 		 * lstat() because, although we don't care if it's a
@@ -2637,22 +2631,11 @@ CheckLocalFiles(struct Palm *palm)
 		 */
 		for (n = 0; n < 100; n++)
 		{
-			static char nbuf[5];
-
-			/* Write out the new extension */
-			sprintf(nbuf, "~%d", n);
-
 			/* Construct the proposed destination name:
 			 * <atticdir>/<filename>~<n>
 			 */
-			/* XXX - Replace with snprintf() */
-			strncpy(toname, atticdir, MAXPATHLEN);
-			strncat(toname, "/",
-				MAXPATHLEN - strlen(toname));
-			strncat(toname, file->d_name,
-				MAXPATHLEN - strlen(toname));
-			strncat(toname, nbuf,
-				MAXPATHLEN - strlen(toname));
+			snprintf(toname, MAXPATHLEN,
+				 "%s/%s~%d", atticdir, file->d_name, n);
 
 			/* Check to see whether this file exists */
 			if (lexists(toname))
