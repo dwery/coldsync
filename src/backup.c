@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.22 2000-11-27 09:53:34 arensb Exp $
+ * $Id: backup.c,v 2.23 2000-11-28 01:42:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -105,6 +105,7 @@ backup(struct PConnection *pconn,
 		 * typically the problem is that the connection to the Palm
 		 * was lost.
 		 */
+		err = DlpCloseDB(pconn, dbh);
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */
 		close(bakfd);
@@ -124,6 +125,7 @@ backup(struct PConnection *pconn,
 				  "to \"%s\"\n"),
 			"Backup",
 			dbinfo->name, bakfname);
+		err = DlpCloseDB(pconn, dbh);
 		close(bakfd);
 		add_to_log(_("Error\n"));
 		return -1;
@@ -132,6 +134,7 @@ backup(struct PConnection *pconn,
 		fprintf(stderr, "Wrote \"%s\" to \"%s\"\n",
 			dbinfo->name, bakfname);
 
+	err = DlpCloseDB(pconn, dbh);
 	close(bakfd);
 	add_to_log(_("OK\n"));
 	return 0;
