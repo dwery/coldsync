@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: std-categories,v 3.1 2000-11-24 04:53:36 arensb Exp $
+# $Id: std-categories,v 3.2 2000-11-27 14:22:16 arensb Exp $
 #
 # This is a ColdSync Sync conduit for synchronizing the categories between
 # a database on the Palm and one on the desktop.
@@ -27,7 +27,7 @@ use constant NumCategories => Palm::StdAppInfo::numCategories;
 					# Number of categories in a
 					# standard AppInfo block
 
-$DEBUG = 0;		# Turns debugging on
+$DEBUG = 1;		# Turns debugging on
 
 StartConduit("sync");
 select STDERR;		# XXX - Just for debugging
@@ -160,6 +160,10 @@ for (my $i = 0; $i < NumCategories; $i++)
 				$Dcategory->{_moveto} = $i;
 			}
 		} else {
+
+			# XXX - The category might exist, renamed, on the
+			# desktop, in which case &find_cat_by_name won't
+			# find it.
 			$Dcategory = &find_cat_by_name($PDB->{appinfo},
 						       $category->{name});
 
@@ -359,9 +363,9 @@ for (my $i = 0; $i < NumCategories; $i++)
 
 # Upload the AppInfo block to the Palm.
 $Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
-$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
+#$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
 # XXX - Error-checking
-$err = &dlp_CloseDB($dbh);
+#$err = &dlp_CloseDB($dbh);
 # XXX - Error-checking
 
 #die "599 Dying for no good reason";
