@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.23 2001-09-07 09:36:27 arensb Exp $
+ * $Id: PConnection.h,v 1.24 2001-09-07 09:41:34 arensb Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -197,7 +197,7 @@ typedef struct PConnection
 
 extern PConnection *new_PConnection(char *fname,
 				    const pconn_listen_t listenType,
-				    const int protocol,
+				    const pconn_proto_t protocol,
 				    int prompt_for_hotsync);
 extern int PConnClose(PConnection *pconn);
 extern int PConn_bind(PConnection *pconn,
