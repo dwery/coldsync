@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.34 2001-01-14 11:51:53 arensb Exp $
+.\" $Id: coldsync.8,v 1.35 2001-01-14 12:13:26 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -95,6 +95,9 @@ processed in turn; if it is a file, then that file is uploaded. If the
 argument is a directory, then all files in that directory will be
 uploaded (this is not recursive). If a database of the same name
 exists on the Palm, that database is deleted.
+.Pp
+Note that in this mode, files are uploaded as-is. No Install conduits
+are run.
 .El
 .Ss Common Options
 .Bl -tag -width -indent
