@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.6 1999-06-24 02:45:12 arensb Exp $
+ * $Id: PConnection.c,v 1.7 1999-06-29 14:46:44 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -16,16 +16,6 @@
 #if !HAVE_CFMAKERAW
 extern void cfmakeraw(struct termios *t);
 #endif	/* HAVE_CFMAKERAW */
-
-/* XXX - Aw, just use cfsetispeed() and cfsetospeed() in the code. */
-#if !HAVE_CFSETSPEED
-static int
-cfsetspeed(struct termios *t, speed_t speed)
-{
-	cfsetispeed(t, speed);
-	return cfsetospeed(t, speed);
-}
-#endif	/* HAVE_CFSETSPEED */
 
 /* new_PConnection
  * Opens a new connection on the named port. Returns a handle to the
@@ -82,8 +72,11 @@ new_PConnection(char *fname)
 
 	/* Set up the terminal characteristics */
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
-	cfsetspeed(&term, B9600);	/* Set initial rate. 9600 bps required
-					 * for handshaking */
+
+	/* Set initial rate. 9600 bps required for handshaking */
+	cfsetispeed(&term, B9600);
+	cfsetospeed(&term, B9600);
+
 	cfmakeraw(&term);		/* Make it raw */
 	tcsetattr(pconn->fd, TCSANOW, &term);
 					/* Make it so */
@@ -98,6 +91,14 @@ PConnClose(struct PConnection *pconn)
 
 	if (pconn == NULL)
 		return 0;
+
+	/* Make sure everything that was sent to the Palm has actually been
+	 * sent. Without this, the file descriptor gets closed before
+	 * having been properly flushed, so the Palm never gets the final
+	 * ACK for the DLP EndOfSync command, and hangs until it times out,
+	 * which wastes the user's time.
+	 */
+	tcdrain(pconn->fd);
 
 	/* Clean up the DLP part of the PConnection */
 	dlp_tini(pconn);
