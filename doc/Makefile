@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2001-12-09 22:45:26 arensb Exp $
+# $Id: Makefile,v 1.17 2002-04-14 07:26:20 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -105,8 +105,8 @@ install::	coldsync.8 ${INFOFILES}
 		echo "Synonyms for $$i are $$*"; \
 		shift; \
 		for j in "$$@"; do \
-			echo "ln -s -f $$i ${MAN3DIR}/$$j.3"; \
-			ln -s -f "$$i" "${MAN3DIR}/$$j.3"; \
+			echo "ln -f -s $$i ${MAN3DIR}/$$j.3"; \
+			ln -f -s "$$i" "${MAN3DIR}/$$j.3"; \
 		done; \
 	done
 	-${MKDIR} ${MAN8DIR}
@@ -117,8 +117,8 @@ install::	coldsync.8 ${INFOFILES}
 		echo "Synonyms for $$i are $$*"; \
 		shift; \
 		for j in "$$@"; do \
-			echo "ln -s -f $$i ${MAN8DIR}/$$j.8"; \
-			ln -s -f "$$i" "${MAN8DIR}/$$j.8"; \
+			echo "ln -f -s $$i ${MAN8DIR}/$$j.8"; \
+			ln -f -s "$$i" "${MAN8DIR}/$$j.8"; \
 		done; \
 	done
 	-${MKDIR} ${SYSCONFDIR}
