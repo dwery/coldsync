@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.1 2000-01-27 01:47:50 arensb Exp $
+# $Id: Make.rules.in,v 1.2 2000-01-27 06:25:24 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -11,6 +11,8 @@ VERSION =	@VERSION@
 
 # Various directories gleaned from `configure'
 PREFIX =	@prefix@
+prefix =	${PREFIX}		# Grrr... Freakin' capitalization!
+exec_prefix =	@exec_prefix@		# GNU 'configure'-ism
 BINDIR =	@bindir@
 SBINDIR =	@sbindir@
 LIBEXECDIR =	@libexecdir@
@@ -55,11 +57,27 @@ TEXI2HTML =	@TEXI2HTML@
 DVIPS =		@DVIPS@
 MKID =		@MKID@
 
-INSTALL =	@INSTALL@
-# XXX - INSTALL_BIN, INSTALL_MAN, INSTALL_LIB
 TOPDISTDIR =	${TOP}/${PACKAGE}-${VERSION}
 DISTDIR =	${TOPDISTDIR}/${SUBDIR}
 TARBALL =	${TOPDISTDIR}.tar.gz
+
+INSTALL =	@INSTALL@
+# Default owners and modes. These may be overridden on the 'make'
+# command line, naturally.
+# Arguments to 'install'. These are shamelessly stolen from BSD
+BINOWN =	root
+BINGRP =	wheel
+SHAREOWN =	root
+SHAREGRP =	wheel
+MANOWN =	root
+MANGRP =	wheel
+INSTALL_PROGRAM = \
+		${INSTALL} -s -o ${BINOWN} -g ${BINGRP} \
+		-m ${BINMODE}
+INSTALL_SCRIPT = \
+		${INSTALL} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE}
+INSTALL_DATA =	${INSTALL} -o ${SHAREOWN} -g ${SHAREGRP} -m ${SHAREMODE}
+INSTALL_MAN =	${INSTALL} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE}
 
 # End of 'configure'-generated stuff.
 
