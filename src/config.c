@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.102 2002-05-03 16:39:57 azummo Exp $
+ * $Id: config.c,v 1.103 2002-07-12 22:57:06 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -990,7 +990,7 @@ print_version(FILE *outfile)
 	       PACKAGE,
 	       VERSION);
 	fprintf(outfile,
-		_("ColdSync homepage at http://www.ooblick.com/software/"
+		_("ColdSync homepage at http://www.coldsync.org/"
 		 "coldsync/\n"));
 	/* XXX - Ought to print out other information, e.g., copyright,
 	 * compile-time flags, optional packages, maybe OS name and
