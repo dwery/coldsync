@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.62 2000-12-08 06:29:51 arensb Exp $
+ * $Id: coldsync.c,v 1.63 2000-12-08 07:07:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1506,6 +1506,7 @@ static int
 Connect(struct PConnection *pconn)
 {
 	int err;
+	int i;
 	struct slp_addr pcaddr;
 	struct cmp_packet cmpp;
 	udword bps = SYNC_RATE;		/* Connection speed, in bps */
@@ -1523,9 +1524,10 @@ Connect(struct PConnection *pconn)
 	PConn_bind(pconn, &pcaddr);
 	/* XXX - PConn_accept(fd) */
 
-	SYNC_TRACE(5)
-		fprintf(stderr, "===== Waiting for wakeup packet\n");
 	do {
+		SYNC_TRACE(5)
+			fprintf(stderr, "===== Waiting for wakeup packet\n");
+
 		err = cmp_read(pconn, &cmpp);
 		if (err < 0)
 		{
@@ -1541,47 +1543,48 @@ Connect(struct PConnection *pconn)
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Got a wakeup packet\n");
 
-	/* Find the speed at which to connect */
-	if (pconn->speed != 0)
+	/* Find the speed at which to connect.
+	 * If the listen block in .coldsyncrc specifies a speed, use that.
+	 * If it doesn't (or the speed is set to 0), then go with what the
+	 * Palm suggests.
+	 */
+	if (pconn->speed == 0)
+		pconn->speed = cmpp.rate;
+
+	SYNC_TRACE(3)
+		fprintf(stderr, "pconn->speed == %ld\n",
+			pconn->speed);
+
+	/* Go through the speed table. Make sure the requested speed
+	 * appears in the table: this is to make sure that there is a valid
+	 * B* speed to pass to cfsetspeed().
+	 */
+	for (i = 0; i < num_speeds; i++)
 	{
-		/* The .coldsyncrc specifies a speed */
-		int i;
+		SYNC_TRACE(7)
+			fprintf(stderr, "Comparing %ld ==? %ld\n",
+				speeds[i].bps, pconn->speed);
 
-		SYNC_TRACE(3)
-			fprintf(stderr, "pconn->speed == %ld\n",
-				pconn->speed);
-
-		/* Go through the speed table. Make sure the requested
-		 * speed appears in the table: this is to make sure that
-		 * there is a valid B* speed to pass to cfsetspeed().
-		 */
-		for (i = 0; i < num_speeds; i++)
+		if (speeds[i].bps == pconn->speed)
 		{
-			SYNC_TRACE(7)
-				fprintf(stderr, "Comparing %ld ==? %ld\n",
-					speeds[i].bps, pconn->speed);
-
-			if (speeds[i].bps == pconn->speed)
-			{
 				/* Found it */
-				SYNC_TRACE(7)
-					fprintf(stderr, "Found it\n");
-				bps = speeds[i].bps;
-				tcspeed = speeds[i].tcspeed;
-				break;
-			}
+			SYNC_TRACE(7)
+				fprintf(stderr, "Found it\n");
+			bps = speeds[i].bps;
+			tcspeed = speeds[i].tcspeed;
+			break;
 		}
+	}
 
-		if (i >= num_speeds)
-		{
-			/* The requested speed wasn't found */
-			fprintf(stderr, _("Warning: can't set the speed you "
-					  "requested (%ld bps).\nUsing "
-					  "default (%ld bps)\n"),
-				pconn->speed,
-				SYNC_RATE);
-			pconn->speed = 0L;
-		}
+	if (i >= num_speeds)
+	{
+		/* The requested speed wasn't found */
+		fprintf(stderr, _("Warning: can't set the speed you "
+				  "requested (%ld bps).\nUsing "
+				  "default (%ld bps)\n"),
+			pconn->speed,
+			SYNC_RATE);
+		pconn->speed = 0L;
 	}
 
 	if (pconn->speed == 0)
@@ -1603,8 +1606,11 @@ Connect(struct PConnection *pconn)
 	cmpp.type = CMP_TYPE_INIT;
 	cmpp.ver_major = 1;	/* XXX - Should be constants in header file */
 	cmpp.ver_minor = 1;
-	cmpp.rate = bps;
-	cmpp.flags = CMP_IFLAG_CHANGERATE;
+	if (cmpp.rate != bps)
+	{
+		cmpp.rate = bps;
+		cmpp.flags = CMP_IFLAG_CHANGERATE;
+	}
 
 	SYNC_TRACE(5)
 		fprintf(stderr, "===== Sending INIT packet\n");
