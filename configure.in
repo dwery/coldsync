@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.34 1999-11-20 04:57:57 arensb Exp $
+dnl # $Id: configure.in,v 1.35 1999-11-27 05:36:20 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -23,7 +23,7 @@ test "x$prefix" = xNONE && prefix=${ac_default_prefix}
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="0.5.3"
+VERSION="0.5.4"
 
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
