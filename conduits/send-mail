@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.9 2001-11-13 13:51:00 arensb Exp $
+# $Id: send-mail,v 1.10 2003-05-26 14:25:07 azummo Exp $
 #
 use strict;
 use Palm::Mail;
@@ -21,7 +21,7 @@ use Text::Wrap;
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.9 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.10 $ ))[1];	# Conduit version
 
 # print_header
 # Print a valid mail header. Headers with empty values are ignored.
@@ -52,6 +52,10 @@ foreach $record (@{$PDB->{records}})
 		eq $HEADERS{"Outbox-name"};
 
 	my $whoami = $HEADERS{"My-Address"};
+
+	$whoami = $record->{'from'}
+		if defined $record->{'from'} and $record->{'from'} ne "";
+
 	my @sm_args;		# Sendmail command-line arguments
 
 	@sm_args = ("-t", "-i");	# -t: get addressee from the
@@ -140,6 +144,12 @@ F</usr/sbin/sendmail>.
 Specifies the return address to put on outgoing messages. If omitted,
 defaults to your username (or, more precisely, the username of the
 first user with your uid).
+
+If using Gable Watts' simplified mail application eMail with the sender
+address correctly configured in the Preferences, that address will be
+used instead (and My-Address left out). Other mail client apps that
+allow the user to specify the sender address on the Palm itself might
+also work correctly.
 
 =item C<Wrap>
 
