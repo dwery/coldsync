@@ -6,15 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.21 2001-03-16 14:13:30 arensb Exp $
- */
-/* XXX - The code to find the maximum speed ought to be in this file. The
- * table of available speeds should be here, not in coldsync.c.
- * pconn_serial_open() should set the device to each speed in turn, to see
- * if that speed is even available, marking all of the available speeds.
- * Then, the part of Connect() that sets the speed can just call
- * pconn->io_setspeed(). This, in turn, accepts a speed of 0 as "as fast as
- * possible".
+ * $Id: PConnection_serial.c,v 1.22 2001-03-17 04:42:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -22,6 +14,11 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <errno.h>
+
+#ifndef HAVE_ENODEV
+#  define ENODEV	999	/* Some hopefully-impossible value */
+#endif	/* HAVE_ENODEV */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -423,16 +420,46 @@ pconn_serial_open(PConnection *pconn, char *device, Bool prompt)
 		/* Use stdin */
 		pconn->fd = STDIN_FILENO;
 	} else {
-		/* Open the device. */
-		if ((pconn->fd = open(device, O_RDWR | O_BINARY)) < 0) 
+		/* Open the device.
+		 * This is rather funky, due to the fact that the Visor as
+		 * a USB device doesn't exist until the sync starts, but
+		 * under Linux, you use it as if it were a serial port (and
+		 * there doesn't appear to be an equivalent of usbd :-( ).
+		 *
+		 * Under Linux, open() returns ENXIO if the device doesn't
+		 * exist at all, and ENODEV if it doesn't exist at the
+		 * moment. I don't think open() ever returns ENODEV under
+		 * any other OS, so this should be okay. Otherwise, it
+		 * might be necessary to check the major and/or minor
+		 * device numbers under Linux, and add other Linux-specfic
+		 * hacks.
+		 */
+		while (1)
 		{
-			fprintf(stderr, _("Error: Can't open \"%s\".\n"),
-				device);
-			perror("open");
-			dlp_tini(pconn);
-			padp_tini(pconn);
-			slp_tini(pconn);
-			return pconn->fd;
+			if ((pconn->fd = open(device, O_RDWR | O_BINARY))
+			    >= 0)
+				break;	/* Okay. Break out of bogus loop */
+
+			switch (errno)
+			{
+			    case ENODEV:
+				fprintf(stderr,
+					_("Warning: no device on %s. "
+					  "Sleeping\n"),
+					device);
+				sleep(5);
+				continue;
+
+			    default:
+				fprintf(stderr,
+					_("Error: Can't open \"%s\".\n"),
+					device);
+				perror("open");
+				dlp_tini(pconn);
+				padp_tini(pconn);
+				slp_tini(pconn);
+				return pconn->fd;
+			}
 		}
 	}
 
