@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2000-12-17 09:50:56 arensb Exp $
+# $Id: Makefile,v 1.9 2000-12-18 08:08:04 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -15,6 +15,40 @@ LANGS =		fr de
 POFILES =	${LANGS:=.po}
 MOFILES =	${LANGS:=.mo}
 
+# 'xgettext' gets confused by some of the lex regular expressions, so
+# we get the strings from lex.yy.c instead of src/lexer.l
+INPUTFILES =	\
+	${TOP}/libpconn/PConnection.c \
+	${TOP}/libpconn/PConnection_net.c \
+	${TOP}/libpconn/PConnection_serial.c \
+	${TOP}/libpconn/PConnection_usb.c \
+	${TOP}/libpconn/cfmakeraw.c \
+	${TOP}/libpconn/cmp.c \
+	${TOP}/libpconn/dlp.c \
+	${TOP}/libpconn/dlp_cmd.c \
+	${TOP}/libpconn/dlp_rpc.c \
+	${TOP}/libpconn/netsync.c \
+	${TOP}/libpconn/padp.c \
+	${TOP}/libpconn/palm_errno.c \
+	${TOP}/libpconn/slp.c \
+	${TOP}/libpconn/util.c \
+	${TOP}/libpdb/pdb.c \
+	${TOP}/src/archive.c \
+	${TOP}/src/backup.c \
+	${TOP}/src/coldsync.c \
+	${TOP}/src/conduit.c \
+	${TOP}/src/config.c \
+	${TOP}/src/install.c \
+	${TOP}/src/lex.yy.c \
+	${TOP}/src/log.c \
+	${TOP}/src/misc.c \
+	${TOP}/src/palm.c \
+	${TOP}/src/parser.y \
+	${TOP}/src/pref.c \
+	${TOP}/src/restore.c \
+	${TOP}/src/spc.c \
+	${TOP}/src/GenericConduit.cc
+
 DISTFILES =	Makefile \
 		messages.po \
 		${POFILES} \
@@ -27,10 +61,8 @@ include ${TOP}/Make.rules
 
 all::	${MOFILES}
 
-# XXX - Shouldn't rebuild messages.po every single time. Ideally,
-# should rebuild it only if the files in 'FILES' have changed.
-messages.po::
-	${XGETTEXT} -D${TOP} -LC++   -f FILES        -s -k_ -kN_ -o $@
+messages.po::	${INPUTFILES}
+	${XGETTEXT} -LC++ -s -k_ -kN_ -o $@ ${INPUTFILES}
 
 # I thought I needed to include this line, but things seems to work
 # without it. Oh, well. Here it is, in case it turns out to be
