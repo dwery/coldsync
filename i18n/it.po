@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 2.1.2\n"
-"POT-Creation-Date: 2002-01-01 21:48-0500\n"
+"POT-Creation-Date: 2002-03-10 13:19+0100\n"
 "PO-Revision-Date: 2001-06-19 04:03:+0100\n"
 "Last-Translator: Alessandro Gatti <rigel@telemail.it>\n"
 "Language-Team: it <it@li.org>\n"
@@ -847,8 +847,8 @@ msgstr "%s: non posso scrivere l'header della lista dei record.\n"
 #, fuzzy, c-format
 msgid "%s: error reading record index entry for \"%.*s\" (%d bytes): %d.\n"
 msgstr ""
-"%s: errore durante la lettura dell'entry dell'indice dei record (%d bytes): "
-"%d.\n"
+"%s: errore durante la lettura dell'entry dell'indice dei record (%d bytes): %"
+"d.\n"
 
 #: ../src/conduit.c:942
 #, c-format
@@ -856,9 +856,9 @@ msgid "%s: error sending SPC response header."
 msgstr "%s: errore durante l'invio dell'header di risposta SPC."
 
 #: ../src/conduit.c:1672
-#, c-format
-msgid "%s: execvp(%s) failed and returned %d."
-msgstr "%s: execvp(%s) fallita con %d."
+#, fuzzy, c-format
+msgid "%s: execv(%s) failed and returned %d."
+msgstr "%s: execv(%s) fallita con %d."
 
 #: ../src/config.c:1224 lexer.l:731
 #, c-format
@@ -995,22 +995,22 @@ msgstr "Non posso copiare la stringa."
 msgid "Can't create \"%s\"."
 msgstr "Non posso creare \"%s\"."
 
-#: ../src/config.c:1626
+#: ../src/config.c:1627
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Non posso creare la directory archivio %s."
 
-#: ../src/config.c:1608
+#: ../src/config.c:1609
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Non posso creare la directory solaio %s."
 
-#: ../src/config.c:1590
+#: ../src/config.c:1591
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Non posso creare la directory di backup %s."
 
-#: ../src/config.c:1572
+#: ../src/config.c:1573
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Non posso creare la directory principale per la sincronizzazione %s."
@@ -1019,7 +1019,7 @@ msgstr "Non posso creare la directory principale per la sincronizzazione %s."
 msgid "Can't create connection to forwarding host."
 msgstr "Non posso creare una connessione con l'host di forwarding."
 
-#: ../src/config.c:1644
+#: ../src/config.c:1645
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Non posso creare la directory di installazione %s."
@@ -1107,7 +1107,7 @@ msgstr "Non riesco ad acquisire le userinfo."
 msgid "Can't get user name from Palm."
 msgstr "Non riesco ad acquisire lo username dal Palm."
 
-#: ../src/config.c:1798
+#: ../src/config.c:1799
 msgid "Can't get user's full name."
 msgstr "Non posso acquisire il nome completo dell'utente."
 
@@ -1717,6 +1717,11 @@ msgstr "Questo host sembra che non abbia un indirizzo IP."
 msgid "Timeout"
 msgstr "Tempo scaduto"
 
+#: ../src/parser.y:32
+#, fuzzy
+msgid "Too many errors. Aborting."
+msgstr "%s: Troppi descrittori di file aperti. Interrompo."
+
 #: ../src/coldsync.c:3103
 #, c-format
 msgid "Too many files named \"%s\" in the attic."
@@ -1980,7 +1985,8 @@ msgstr "usb: si sta riempendo un buffer gia' pieno.\n"
 #~ "\t(This warning will only be shown once.)"
 #~ msgstr ""
 #~ "%s: %d: Manca ':'\n"
-#~ "\tOrmai i due punti dopo la maggior parte delle direttive sono obbligatori.\n"
+#~ "\tOrmai i due punti dopo la maggior parte delle direttive sono "
+#~ "obbligatori.\n"
 #~ "\t(Questo avviso verra' visualizzato solo una volta.)"
 
 #~ msgid ""

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 2.1.3\n"
-"POT-Creation-Date: 2002-01-01 21:48-0500\n"
+"POT-Creation-Date: 2002-03-10 13:19+0100\n"
 "PO-Revision-Date: 2001-12-07 00:01+0100\n"
 "Last-Translator: Petr Kubánek <petr@kubanek.net>\n"
 "Language-Team: cs <cs@li.org>\n"
@@ -855,9 +855,9 @@ msgid "%s: error sending SPC response header."
 msgstr "%s: chyba pøi posílání SPC odpovìdní hlavièky."
 
 #: ../src/conduit.c:1672
-#, c-format
-msgid "%s: execvp(%s) failed and returned %d."
-msgstr "%s: selhalo execvp(%s). Jeho návratová hodnota: %d."
+#, fuzzy, c-format
+msgid "%s: execv(%s) failed and returned %d."
+msgstr "%s: selhalo execv(%s). Jeho návratová hodnota: %d."
 
 #: ../src/config.c:1224 lexer.l:731
 #, c-format
@@ -995,22 +995,22 @@ msgstr "Nemohu zkopírovat øetìzec."
 msgid "Can't create \"%s\"."
 msgstr "Nemohu vytvoøit \"%s\"."
 
-#: ../src/config.c:1626
+#: ../src/config.c:1627
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Nemohu vytvoøit archivní adresáø %s."
 
-#: ../src/config.c:1608
+#: ../src/config.c:1609
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Nemohu vytvoøit attic adresáø %s."
 
-#: ../src/config.c:1590
+#: ../src/config.c:1591
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Nemohu vytvoøit zálo¾ní adresáø %s."
 
-#: ../src/config.c:1572
+#: ../src/config.c:1573
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Nemohu vytvoøit základní adresáø %s."
@@ -1019,7 +1019,7 @@ msgstr "Nemohu vytvoøit základní adresáø %s."
 msgid "Can't create connection to forwarding host."
 msgstr "Nemohu vytvoøit spojení na forwardující host."
 
-#: ../src/config.c:1644
+#: ../src/config.c:1645
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Nemohu vytvoøit instalaèní adresáø %s."
@@ -1105,7 +1105,7 @@ msgstr "Nemohu obdr¾et u¾ivatelské informace."
 msgid "Can't get user name from Palm."
 msgstr "Nemohu obdr¾et z Palmu jméno u¾ivatele."
 
-#: ../src/config.c:1798
+#: ../src/config.c:1799
 msgid "Can't get user's full name."
 msgstr "Nemohu obdr¾et plné jméno u¾ivatele."
 
@@ -1727,6 +1727,10 @@ msgstr "Tento host nevypadá na to, ¾e by mìl IP adresu."
 msgid "Timeout"
 msgstr "Timeout (vypr¹el èas)"
 
+#: ../src/parser.y:32
+msgid "Too many errors. Aborting."
+msgstr "Pøíli¹ mnoho chyb. Konèím."
+
 #: ../src/coldsync.c:3103
 #, c-format
 msgid "Too many files named \"%s\" in the attic."
@@ -1982,9 +1986,6 @@ msgstr "usb: pokou¹ím se naplnit neprázdný buffer.\n"
 #~ msgstr ""
 #~ "Optiona \"-r <dir>\" je zastaralá. Prosím pou¾ijte místo ní\n"
 #~ "\"-mr <dir>."
-
-#~ msgid "Too many errors. Aborting."
-#~ msgstr "Pøíli¹ mnoho chyb. Konèím."
 
 #~ msgid ""
 #~ "Usage: %s [options] <mode> <mode args>\n"

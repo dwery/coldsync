@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2002-01-01 21:48-0500\n"
+"POT-Creation-Date: 2002-03-10 13:19+0100\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Nicolas Bouthors <nicolas@bouthors.org>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -881,9 +881,9 @@ msgid "%s: error sending SPC response header."
 msgstr "%s: erreur en envoyant l'entête de réponse SPC."
 
 #: ../src/conduit.c:1672
-#, c-format
-msgid "%s: execvp(%s) failed and returned %d."
-msgstr "%s: execvp(%s) a échoué et a retourné %d."
+#, fuzzy, c-format
+msgid "%s: execv(%s) failed and returned %d."
+msgstr "%s: execv(%s) a échoué et a retourné %d."
 
 #: ../src/config.c:1224 lexer.l:731
 #, c-format
@@ -1021,22 +1021,22 @@ msgstr "Impossible de copier une chaîne."
 msgid "Can't create \"%s\"."
 msgstr "Impossible de créer « %s »."
 
-#: ../src/config.c:1626
+#: ../src/config.c:1627
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'archive %s."
 
-#: ../src/config.c:1608
+#: ../src/config.c:1609
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Je n'arrive pas à créer le répertoire grenier %s."
 
-#: ../src/config.c:1590
+#: ../src/config.c:1591
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de backup %s."
 
-#: ../src/config.c:1572
+#: ../src/config.c:1573
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
@@ -1045,7 +1045,7 @@ msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
 msgid "Can't create connection to forwarding host."
 msgstr "Je n'arrive pas à lire l'index des enregistrements."
 
-#: ../src/config.c:1644
+#: ../src/config.c:1645
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'installation %s."
@@ -1134,7 +1134,7 @@ msgstr "Impossible d'obtenir les informations sur l'utilisateur."
 msgid "Can't get user name from Palm."
 msgstr "Impossible d'obtenir le nom de l'utilisateur du Palm."
 
-#: ../src/config.c:1798
+#: ../src/config.c:1799
 msgid "Can't get user's full name."
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur."
 
@@ -1735,6 +1735,10 @@ msgstr "Cet hôte n'a pas l'air d'avoir une adresse IP."
 #: ../libpconn/palm_errno.c:46
 msgid "Timeout"
 msgstr "Timeout"
+
+#: ../src/parser.y:32
+msgid "Too many errors. Aborting."
+msgstr ""
 
 #: ../src/coldsync.c:3103
 #, c-format
