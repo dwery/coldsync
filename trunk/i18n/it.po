@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 2.1.2\n"
-"POT-Creation-Date: 2001-10-06 16:39-0400\n"
+"POT-Creation-Date: 2001-10-09 10:32-0400\n"
 "PO-Revision-Date: 2001-06-19 04:03:+0100\n"
 "Last-Translator: Alessandro Gatti <rigel@telemail.it>\n"
 "Language-Team: it <it@li.org>\n"
@@ -63,7 +63,7 @@ msgstr ""
 "\n"
 "    File globale di configurazione di default: %s\n"
 
-#: ../src/coldsync.c:445
+#: ../src/coldsync.c:434
 #, c-format
 msgid ""
 "\n"
@@ -72,7 +72,7 @@ msgstr ""
 "\n"
 "Log chiuso il %s"
 
-#: ../src/coldsync.c:1898
+#: ../src/coldsync.c:1785
 msgid ""
 "\n"
 "This Palm already has user information that matches neither what's in your\n"
@@ -111,7 +111,7 @@ msgstr "    CON_USB: supporto USB.\n"
 msgid "\"%.*s\" record 0x%08lx has length 0.\n"
 msgstr "\"%.*s\" record 0x%08lx ha lunghezza 0.\n"
 
-#: ../src/coldsync.c:1304
+#: ../src/coldsync.c:1255
 #, c-format
 msgid "\"%s\" exists, but is not a directory."
 msgstr "\"%s\" esiste, ma non e' una directory."
@@ -301,29 +301,29 @@ msgstr "%s: Non posso allocare conduit_block!"
 msgid "%s: Can't allocate listen block."
 msgstr "%s: Non posso allocare un listen block."
 
-#: ../src/GenericConduit.cc:1152
+#: ../src/GenericConduit.cc:1121
 #, c-format
 msgid "%s: Can't allocate new record."
 msgstr "%s: Non posso allocare un nuovo record."
 
-#: ../src/GenericConduit.cc:1253
+#: ../src/GenericConduit.cc:1221
 #, c-format
 msgid "%s: Can't append new record to database: %d."
 msgstr "%s: Non posso aggiungere nuovi record in coda al database: %d."
 
-#: ../src/backup.c:727
+#: ../src/backup.c:716
 #, c-format
 msgid "%s: Can't back up \"%s\"."
 msgstr "%s: Non posso archiviare \"%s\"."
 
-#: ../src/GenericConduit.cc:458 ../src/GenericConduit.cc:970
-#: ../src/GenericConduit.cc:1524
+#: ../src/GenericConduit.cc:448 ../src/GenericConduit.cc:948
+#: ../src/GenericConduit.cc:1490
 #, c-format
 msgid "%s: Can't clean up database: %d."
 msgstr "%s: Non posso pulire il database: %d."
 
-#: ../src/GenericConduit.cc:1997 ../src/GenericConduit.cc:2035
-#: ../src/GenericConduit.cc:2169
+#: ../src/GenericConduit.cc:1960 ../src/GenericConduit.cc:1998
+#: ../src/GenericConduit.cc:2132
 #, c-format
 msgid "%s: Can't copy record."
 msgstr "%s: Non posso copiare il record."
@@ -338,17 +338,17 @@ msgstr "%s: Non posso creare il filehandle per l'input del figlio."
 msgid "%s: Can't create file handle to child's stdout."
 msgstr "%s: Non posso creare il filehandle per l'output del figlio."
 
-#: ../src/coldsync.c:3821 ../src/coldsync.c:3841
+#: ../src/coldsync.c:3638 ../src/coldsync.c:3658
 #, c-format
 msgid "%s: Can't create staging file \"%s\"."
 msgstr "%s: Non posso creare il file di staging \"%s\"."
 
-#: ../src/coldsync.c:3831
+#: ../src/coldsync.c:3648
 #, c-format
 msgid "%s: Can't create staging file name."
 msgstr "%s: Non posso creare il nome del file di staging."
 
-#: ../src/GenericConduit.cc:627
+#: ../src/GenericConduit.cc:608
 #, c-format
 msgid "%s: Can't download \"%s\"."
 msgstr "%s: Non posso ricevere \"%s\"."
@@ -363,17 +363,17 @@ msgstr "%s: Non posso acquisire lo stato del processo figlio."
 msgid "%s: Can't get information about USB device.\n"
 msgstr "%s: Non posso acquisire informazioni sul device USB.\n"
 
-#: ../src/GenericConduit.cc:2131 ../src/GenericConduit.cc:2180
+#: ../src/GenericConduit.cc:2094 ../src/GenericConduit.cc:2143
 #, c-format
 msgid "%s: Can't insert record 0x%08lx."
 msgstr "%s: Non posso inserire il record 0x%08lx."
 
-#: ../src/GenericConduit.cc:2542
+#: ../src/GenericConduit.cc:2505
 #, c-format
 msgid "%s: Can't load \"%s\"."
 msgstr "%s: Non posso caricare \"%s\"."
 
-#: ../src/install.c:273 ../src/install.c:529
+#: ../src/install.c:270 ../src/install.c:526
 #, c-format
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Non posso caricare il database \"%s\"."
@@ -393,8 +393,8 @@ msgstr "%s: Non posso copiare la stringa."
 msgid "%s: Can't malloc copy of string."
 msgstr "%s: Non posso fare il malloc() della copia della stringa."
 
-#: ../src/GenericConduit.cc:2532 ../src/archive.c:68 ../src/archive.c:127
-#: ../src/install.c:263 ../src/install.c:428 ../src/install.c:519
+#: ../src/GenericConduit.cc:2495 ../src/archive.c:68 ../src/archive.c:127
+#: ../src/install.c:260 ../src/install.c:425 ../src/install.c:516
 #: ../src/parser.y:1143
 #, c-format
 msgid "%s: Can't open \"%s\"."
@@ -405,9 +405,9 @@ msgstr "%s: Non posso aprire \"%s\"."
 msgid "%s: Can't open \"%s\".\n"
 msgstr "%s: Non posso aprire \"%s\".\n"
 
-#: ../src/GenericConduit.cc:304 ../src/GenericConduit.cc:325
-#: ../src/GenericConduit.cc:585 ../src/GenericConduit.cc:605
-#: ../src/GenericConduit.cc:1092 ../src/GenericConduit.cc:1112
+#: ../src/GenericConduit.cc:298 ../src/GenericConduit.cc:318
+#: ../src/GenericConduit.cc:568 ../src/GenericConduit.cc:587
+#: ../src/GenericConduit.cc:1063 ../src/GenericConduit.cc:1082
 #, c-format
 msgid "%s: Can't open \"%s\": %d."
 msgstr "%s: Non posso aprire \"%s\": %d."
@@ -417,17 +417,17 @@ msgstr "%s: Non posso aprire \"%s\": %d."
 msgid "%s: Can't open USB device.\n"
 msgstr "%s: Non posso aprire il device USB.\n"
 
-#: ../src/coldsync.c:3082
+#: ../src/coldsync.c:2899
 #, c-format
 msgid "%s: Can't open directory \"%s\"."
 msgstr "%s: Non posso aprire la directory \"%s\"."
 
-#: ../src/install.c:406 ../src/install.c:471
+#: ../src/install.c:403 ../src/install.c:468
 #, c-format
 msgid "%s: Can't open install directory."
 msgstr "%s: Non posso aprire la directory di installazione."
 
-#: ../src/GenericConduit.cc:196
+#: ../src/GenericConduit.cc:194
 #, c-format
 msgid "%s: Can't read %s backup file."
 msgstr "%s: Non posso leggere il file di backup %s."
@@ -447,12 +447,12 @@ msgstr "%s: Non posso leggere le informazioni sul database: %d.\n"
 msgid "%s: Can't read sort block for %s: %d.\n"
 msgstr "%s: Non posso leggere il sort block per %s: %d.\n"
 
-#: ../src/coldsync.c:3187 ../src/coldsync.c:3225
+#: ../src/coldsync.c:3004 ../src/coldsync.c:3042
 #, c-format
 msgid "%s: Can't rename \"%s\" to \"%s\"."
 msgstr "%s: Non posso rinominare \"%s\" in \"%s\"."
 
-#: ../src/GenericConduit.cc:2601
+#: ../src/GenericConduit.cc:2564
 #, c-format
 msgid ""
 "%s: Can't rename staging file.\n"
@@ -461,8 +461,8 @@ msgstr ""
 "%s: Non posso rinominare il file di staging.\n"
 "Per fortuna il backup e' rimasto in \"%s\""
 
-#: ../src/GenericConduit.cc:479 ../src/GenericConduit.cc:990
-#: ../src/GenericConduit.cc:1545
+#: ../src/GenericConduit.cc:468 ../src/GenericConduit.cc:967
+#: ../src/GenericConduit.cc:1510
 #, c-format
 msgid "%s: Can't reset sync flags: %d."
 msgstr "%s: Non posso resettare i flags di sincronizzazione: %d."
@@ -497,8 +497,8 @@ msgstr "%s: Non posso scrivere l'AppInfo block.\n"
 msgid "%s: Can't write archive file header."
 msgstr "%s: Non posso scrivere l'header del file di archivio."
 
-#: ../src/GenericConduit.cc:428 ../src/GenericConduit.cc:946
-#: ../src/GenericConduit.cc:1494
+#: ../src/GenericConduit.cc:419 ../src/GenericConduit.cc:925
+#: ../src/GenericConduit.cc:1461
 #, c-format
 msgid "%s: Can't write backup file."
 msgstr "%s: Non posso scrivere il file di backup."
@@ -528,7 +528,7 @@ msgstr "%s: Non posso scrivere l'entry dell'indice delle risorse.\n"
 msgid "%s: Can't write sort block for \"%.*s\".\n"
 msgstr "%s: Non posso scrivere il sort block.\n"
 
-#: ../src/GenericConduit.cc:2589
+#: ../src/GenericConduit.cc:2552
 #, c-format
 msgid "%s: Can't write staging file \"%s\"."
 msgstr "%s: Non posso scrivere il file di staging \"%s\"."
@@ -572,12 +572,12 @@ msgstr "%s: Non posso trovare l'endpoint HotSync sul Visor.\n"
 msgid "%s: Database %s doesn't exist, yet it is open. Huh?"
 msgstr "%s: Il database %s non esiste, pero' e' aperto. Che sta succedendo?"
 
-#: ../src/install.c:338 ../src/install.c:586
+#: ../src/install.c:335 ../src/install.c:580
 #, c-format
 msgid "%s: Error deleting \"%s\"."
 msgstr "%s: Errore durante la cancellazione di \"%s\"."
 
-#: ../src/GenericConduit.cc:1388 ../src/GenericConduit.cc:1427
+#: ../src/GenericConduit.cc:1355 ../src/GenericConduit.cc:1394
 #, c-format
 msgid "%s: Error deleting record 0x%08lx: %d."
 msgstr "%s: Errore durante la cancellazione del record 0x%08lx: %d."
@@ -613,7 +613,7 @@ msgstr "%s: Errore durante l'invio dei dati di risposta SPC."
 msgid "%s: Error sending dummy ACK. This is serious.\n"
 msgstr "%s: Errore durante l'invio del dummy ACK. Questo e' grave.\n"
 
-#: ../src/install.c:359 ../src/install.c:619
+#: ../src/install.c:356 ../src/install.c:612
 #, c-format
 msgid "%s: Error uploading \"%s\"."
 msgstr "%s: Errore durante l'invio di \"%s\"."
@@ -633,10 +633,10 @@ msgstr ""
 "una perdita di descrittori di file. Per favore, avverti il mantainer del\n"
 "progetto."
 
-#: ../src/GenericConduit.cc:1380 ../src/GenericConduit.cc:1419
-#: ../src/GenericConduit.cc:1667 ../src/GenericConduit.cc:1717
-#: ../src/GenericConduit.cc:1883 ../src/GenericConduit.cc:2235
-#: ../src/GenericConduit.cc:2277
+#: ../src/GenericConduit.cc:1347 ../src/GenericConduit.cc:1386
+#: ../src/GenericConduit.cc:1630 ../src/GenericConduit.cc:1680
+#: ../src/GenericConduit.cc:1846 ../src/GenericConduit.cc:2198
+#: ../src/GenericConduit.cc:2240
 #, c-format
 msgid "%s: Lost connection to Palm."
 msgstr "%s: Connessione al Palm persa."
@@ -656,7 +656,7 @@ msgstr ""
 "\tnella definizione di \"%s\"."
 
 #: ../src/config.c:1041 ../src/config.c:1077 ../src/config.c:1099
-#: ../src/log.c:78 ../src/pref.c:234 ../src/pref.c:299
+#: ../src/pref.c:234 ../src/pref.c:299
 #, c-format
 msgid "%s: Out of memory."
 msgstr "%s: Memoria esaurita."
@@ -678,9 +678,9 @@ msgstr "%s: Memoria esaurita.\n"
 msgid "%s: Too many file descriptors. Aborting."
 msgstr "%s: Troppi descrittori di file aperti. Interrompo."
 
-#: ../src/GenericConduit.cc:1675 ../src/GenericConduit.cc:1725
-#: ../src/GenericConduit.cc:1891 ../src/GenericConduit.cc:2243
-#: ../src/GenericConduit.cc:2285
+#: ../src/GenericConduit.cc:1638 ../src/GenericConduit.cc:1688
+#: ../src/GenericConduit.cc:1854 ../src/GenericConduit.cc:2206
+#: ../src/GenericConduit.cc:2248
 #, c-format
 msgid "%s: Warning: Can't delete record 0x%08lx: %d."
 msgstr "%s: Attenzione: Non posso cancellare il record 0x%08lx: %d."
@@ -715,7 +715,7 @@ msgstr "%s: non posso allocare i dati del record.\n"
 msgid "%s: can't allocate resource data for \"%.*s\".\n"
 msgstr "%s: non posso allocare i dati della risorsa.\n"
 
-#: ../src/backup.c:561
+#: ../src/backup.c:557
 #, c-format
 msgid ""
 "%s: can't create new backup file %s.\n"
@@ -724,7 +724,7 @@ msgstr ""
 "%s: non posso creare il file di backup %s.\n"
 "Potrebbe esistere gia'."
 
-#: ../src/backup.c:677
+#: ../src/backup.c:668
 #, c-format
 msgid "%s: can't write database \"%s\" to \"%s\"."
 msgstr "%s: non posso scrivere il database \"%s\" su \"%s\"."
@@ -756,7 +756,7 @@ msgstr "%s: errore durante l'invio dell'header di risposta SPC."
 msgid "%s: execvp(%s) failed and returned %d."
 msgstr "%s: execvp(%s) fallita con %d."
 
-#: ../src/config.c:1165 ../src/log.c:107
+#: ../src/config.c:1165
 #, c-format
 msgid "%s: realloc(%d) failed."
 msgstr "%s: realloc(%d) fallita."
@@ -796,14 +796,14 @@ msgstr "%s: risposta %d inattesa a GetBytesAvaliable.\n"
 msgid "%s: unknown listen type %d.\n"
 msgstr "%s: tipo %d di listen sconosciuto.\n"
 
-#: ../src/GenericConduit.cc:256 ../src/GenericConduit.cc:310
-#: ../src/GenericConduit.cc:331 ../src/GenericConduit.cc:352
-#: ../src/GenericConduit.cc:433 ../src/GenericConduit.cc:463
-#: ../src/GenericConduit.cc:492 ../src/GenericConduit.cc:505
+#: ../src/GenericConduit.cc:250 ../src/GenericConduit.cc:303
+#: ../src/GenericConduit.cc:323 ../src/GenericConduit.cc:343
+#: ../src/GenericConduit.cc:423 ../src/GenericConduit.cc:452
+#: ../src/GenericConduit.cc:480 ../src/GenericConduit.cc:492
 msgid "(1st)"
 msgstr "(1o)"
 
-#: ../src/coldsync.c:1042 ../src/coldsync.c:2789
+#: ../src/coldsync.c:1023 ../src/coldsync.c:2636
 msgid "*Cancelled*\n"
 msgstr "*Cancellato*\n"
 
@@ -811,14 +811,14 @@ msgstr "*Cancellato*\n"
 msgid "ACK Timeout. Attempting to resend.\n"
 msgstr "ACK Timeout. Ritento l'invio.\n"
 
-#: ../src/backup.c:553
+#: ../src/backup.c:549
 #, c-format
 msgid "Backing up \"%s\""
 msgstr "Sto archiviando \"%s\""
 
-#: ../src/backup.c:568 ../src/backup.c:587 ../src/backup.c:603
-#: ../src/backup.c:636 ../src/backup.c:664 ../src/backup.c:685
-#: ../src/backup.c:697 ../src/coldsync.c:1407
+#: ../src/backup.c:563 ../src/backup.c:581 ../src/backup.c:596
+#: ../src/backup.c:628 ../src/backup.c:655 ../src/backup.c:675
+#: ../src/backup.c:686 ../src/coldsync.c:1354
 msgid "Backup"
 msgstr "Backup"
 
@@ -826,7 +826,7 @@ msgstr "Backup"
 msgid "Bad file descriptor"
 msgstr "Descrittore di file errato"
 
-#: ../src/coldsync.c:849 ../src/coldsync.c:2611
+#: ../src/coldsync.c:831 ../src/coldsync.c:2459
 #, c-format
 msgid "CacheFromConduits() returned %d."
 msgstr "CacheFromConduits() ha restituito %d."
@@ -851,13 +851,13 @@ msgstr "Non posso allocare una nuova configurazione."
 msgid "Can't allocate new connection.\n"
 msgstr "Non posso allocare una nuova connessione.\n"
 
-#: ../src/coldsync.c:523 ../src/coldsync.c:1348 ../src/coldsync.c:1526
-#: ../src/coldsync.c:1723 ../src/coldsync.c:2212
+#: ../src/coldsync.c:505 ../src/coldsync.c:1299 ../src/coldsync.c:1443
+#: ../src/coldsync.c:1610 ../src/coldsync.c:2060
 msgid "Can't allocate struct Palm."
 msgstr "Non posso allocare la struttura Palm."
 
-#: ../src/coldsync.c:514 ../src/coldsync.c:1340 ../src/coldsync.c:1518
-#: ../src/coldsync.c:1715 ../src/coldsync.c:2203
+#: ../src/coldsync.c:496 ../src/coldsync.c:1291 ../src/coldsync.c:1435
+#: ../src/coldsync.c:1602 ../src/coldsync.c:2051
 msgid "Can't connect to Palm."
 msgstr "Non posso collegarmi al Palm."
 
@@ -865,11 +865,11 @@ msgstr "Non posso collegarmi al Palm."
 msgid "Can't connect to server.\n"
 msgstr "Non posso collegarmi al server.\n"
 
-#: ../src/GenericConduit.cc:740 ../src/GenericConduit.cc:2122
+#: ../src/GenericConduit.cc:720 ../src/GenericConduit.cc:2085
 msgid "Can't copy a new record."
 msgstr "Non posso copiare un nuovo record."
 
-#: ../src/coldsync.c:2408
+#: ../src/coldsync.c:2256
 msgid "Can't copy config file name"
 msgstr "Non posso copiare il nome del file di configurazione"
 
@@ -877,7 +877,7 @@ msgstr "Non posso copiare il nome del file di configurazione"
 msgid "Can't copy string."
 msgstr "Non posso copiare la stringa."
 
-#: ../src/GenericConduit.cc:2473
+#: ../src/GenericConduit.cc:2436
 #, c-format
 msgid "Can't create \"%s\"."
 msgstr "Non posso creare \"%s\"."
@@ -902,7 +902,7 @@ msgstr "Non posso creare la directory di backup %s."
 msgid "Can't create base sync directory %s."
 msgstr "Non posso creare la directory principale per la sincronizzazione %s."
 
-#: ../src/coldsync.c:775 ../src/coldsync.c:2531
+#: ../src/coldsync.c:757 ../src/coldsync.c:2379
 msgid "Can't create connection to forwarding host."
 msgstr "Non posso creare una connessione con l'host di forwarding."
 
@@ -915,19 +915,19 @@ msgstr "Non posso creare la directory di installazione %s."
 msgid "Can't download record or resource index.\n"
 msgstr "Non riesco a ricevere l'elenco dei record o l'elenco delle risorse.\n"
 
-#: ../src/coldsync.c:237
+#: ../src/coldsync.c:231
 msgid "Can't dup(stderr)."
 msgstr "Non posso duplicare(stderr)."
 
-#: ../src/coldsync.c:787 ../src/coldsync.c:2543
+#: ../src/coldsync.c:769 ../src/coldsync.c:2391
 msgid "Can't establish connection with forwarding host."
 msgstr "Non riesco a stabilire una connessione con l'host di forwarding."
 
-#: ../src/coldsync.c:926 ../src/coldsync.c:2677
+#: ../src/coldsync.c:908 ../src/coldsync.c:2525
 msgid "Can't fetch list of databases."
 msgstr "Non riesco a prelevare la lista dei database."
 
-#: ../src/coldsync.c:1177 ../src/coldsync.c:2915
+#: ../src/coldsync.c:1128 ../src/coldsync.c:2732
 #, c-format
 msgid "Can't fetch preference 0x%08lx/%d."
 msgstr "Non riesco a prelevare la preference 0x%08lx/%d."
@@ -952,11 +952,11 @@ msgstr "Non riesco a trovare l'AppInfo block!\n"
 msgid "Can't find the sort block in \"%.*s\"!\n"
 msgstr "Non riesco a trovare il sort block!\n"
 
-#: ../src/coldsync.c:175
+#: ../src/coldsync.c:169
 msgid "Can't get host ID."
 msgstr "Non riesco ad acquisire l'ID dell'host."
 
-#: ../src/coldsync.c:735 ../src/coldsync.c:2492
+#: ../src/coldsync.c:717 ../src/coldsync.c:2340
 msgid "Can't get host addresses."
 msgstr "Non riesco ad acquisire gli indirizzi dei vari host."
 
@@ -964,7 +964,7 @@ msgstr "Non riesco ad acquisire gli indirizzi dei vari host."
 msgid "Can't get host name."
 msgstr "Non riesco ad acquisire l'hostname."
 
-#: ../src/coldsync.c:860 ../src/coldsync.c:2622
+#: ../src/coldsync.c:842 ../src/coldsync.c:2470
 msgid "Can't get last sync PC from Palm"
 msgstr ""
 "Non riesco ad acquisire dal Palm l'ID dell'ultimo PC che ha fatto\n"
@@ -982,7 +982,7 @@ msgstr "Non riesco ad acquisire il preference item."
 msgid "Can't get system info."
 msgstr "Non riesco ad acquisire le informazioni sul sistema."
 
-#: ../src/coldsync.c:592 ../src/coldsync.c:1837
+#: ../src/coldsync.c:574 ../src/coldsync.c:1724
 msgid "Can't get user ID from Palm."
 msgstr "Non riesco ad acquisire lo user ID dal Palm."
 
@@ -990,7 +990,7 @@ msgstr "Non riesco ad acquisire lo user ID dal Palm."
 msgid "Can't get user info."
 msgstr "Non riesco ad acquisire le userinfo."
 
-#: ../src/coldsync.c:645
+#: ../src/coldsync.c:627
 msgid "Can't get user name from Palm."
 msgstr "Non riesco ad acquisire lo username dal Palm."
 
@@ -998,16 +998,16 @@ msgstr "Non riesco ad acquisire lo username dal Palm."
 msgid "Can't get user's full name."
 msgstr "Non posso acquisire il nome completo dell'utente."
 
-#: ../src/coldsync.c:961 ../src/coldsync.c:1211 ../src/coldsync.c:2712
-#: ../src/coldsync.c:2949
+#: ../src/coldsync.c:943 ../src/coldsync.c:1162 ../src/coldsync.c:2560
+#: ../src/coldsync.c:2766
 msgid "Can't install new files."
 msgstr "Non posso installare nuovi files."
 
-#: ../src/coldsync.c:286 ../src/coldsync.c:2425
+#: ../src/coldsync.c:280 ../src/coldsync.c:2273
 msgid "Can't load configuration."
 msgstr "Non posso caricare la configurazione."
 
-#: ../src/install.c:437
+#: ../src/install.c:434
 msgid "Can't load header."
 msgstr "Non posso caricare l'header."
 
@@ -1020,7 +1020,7 @@ msgstr "Non posso leggere l'header.\n"
 msgid "Can't load record list header for \"%.*s\".\n"
 msgstr "%s: non posso scrivere l'header della lista dei record.\n"
 
-#: ../src/coldsync.c:546
+#: ../src/coldsync.c:528
 msgid "Can't look up Palm."
 msgstr "Non posso controllare il Palm."
 
@@ -1033,7 +1033,7 @@ msgstr "Non posso controllare il mio indirizzo."
 msgid "Can't open %s."
 msgstr "Non posso aprire %s."
 
-#: ../src/backup.c:599
+#: ../src/backup.c:593
 msgid "Can't open backup conduit."
 msgstr "Non posso aprire il conduit di backup."
 
@@ -1042,26 +1042,26 @@ msgstr "Non posso aprire il conduit di backup."
 msgid "Can't open conduit for \"%s\": %d.\n"
 msgstr "Non posso aprire il conduit per \"%s\": %d.\n"
 
-#: ../src/coldsync.c:502 ../src/coldsync.c:1332 ../src/coldsync.c:1510
-#: ../src/coldsync.c:1707 ../src/coldsync.c:2194
+#: ../src/coldsync.c:487 ../src/coldsync.c:1283 ../src/coldsync.c:1427
+#: ../src/coldsync.c:1594 ../src/coldsync.c:2042
 msgid "Can't open connection."
 msgstr "Non posso aprire la connessione."
 
-#: ../src/backup.c:631
+#: ../src/backup.c:624
 #, c-format
 msgid "Can't open database \"%s\"."
 msgstr "Non posso aprire il database \"%s\"."
 
-#: ../src/coldsync.c:250
+#: ../src/coldsync.c:244
 #, c-format
 msgid "Can't open log file \"%s\"."
 msgstr "Non posso aprire il file di log \"%s\"."
 
-#: ../src/coldsync.c:262
+#: ../src/coldsync.c:256
 msgid "Can't open log file on stderr."
 msgstr "Non posso redirigere il log su stderr."
 
-#: ../src/coldsync.c:184
+#: ../src/coldsync.c:178
 msgid "Can't parse command-line arguments."
 msgstr "Non posso interpretare i parametri della linea di comando."
 
@@ -1079,12 +1079,12 @@ msgstr "%s: Non posso leggere l'AppInfo block di %s: %d.\n"
 msgid "Can't read NetSync info."
 msgstr "Non posso leggere le informazioni di NetSync."
 
-#: ../src/restore.c:233
+#: ../src/restore.c:227
 #, c-format
 msgid "Can't read contents of directory %s."
 msgstr "Non posso leggere il contenuto della directory %s."
 
-#: ../src/coldsync.c:1732
+#: ../src/coldsync.c:1619
 msgid "Can't read length of serial number."
 msgstr "Non posso leggere la lunghezza del numero di serie."
 
@@ -1132,7 +1132,7 @@ msgstr "Non posso leggere l'indice delle risorse.\n"
 msgid "Can't read resources for \"%.*s\".\n"
 msgstr "Non posso leggere la risorsa %d.\n"
 
-#: ../src/coldsync.c:1744 ../src/spalm.c:484
+#: ../src/coldsync.c:1631 ../src/spalm.c:484
 msgid "Can't read serial number."
 msgstr "Non posso leggere il numero di serie."
 
@@ -1141,7 +1141,7 @@ msgstr "Non posso leggere il numero di serie."
 msgid "Can't read sort block for \"%.*s\".\n"
 msgstr "%s: Non posso leggere il sort block per %s: %d.\n"
 
-#: ../src/coldsync.c:158 ../src/coldsync.c:163 ../src/coldsync.c:168
+#: ../src/coldsync.c:152 ../src/coldsync.c:157 ../src/coldsync.c:162
 #, c-format
 msgid "Can't reserve file descriptor %d."
 msgstr "Non posso riservare il descrittore di file %d."
@@ -1150,30 +1150,30 @@ msgstr "Non posso riservare il descrittore di file %d."
 msgid "Can't resize palm->dblist."
 msgstr "Non posso ridimensioanre palm->dblist."
 
-#: ../src/coldsync.c:744 ../src/coldsync.c:2501
+#: ../src/coldsync.c:726 ../src/coldsync.c:2349
 msgid "Can't resolve forwarding address."
 msgstr "Non posso risolvere l'indirizzo di forwarding."
 
-#: ../src/coldsync.c:1552 ../src/coldsync.c:1578 ../src/coldsync.c:1602
+#: ../src/coldsync.c:1469 ../src/coldsync.c:1495 ../src/coldsync.c:1519
 msgid "Can't restore directory."
 msgstr "Non posso ripristinare la directory."
 
-#: ../src/coldsync.c:2390
+#: ../src/coldsync.c:2238
 msgid "Can't setuid"
 msgstr "Non posso effettuare un setuid"
 
-#: ../src/coldsync.c:1113 ../src/coldsync.c:2852
+#: ../src/coldsync.c:1094 ../src/coldsync.c:2698
 msgid "Can't write user info."
 msgstr "Non posso scrivere le user info."
 
-#: ../src/GenericConduit.cc:256 ../src/GenericConduit.cc:539
-#: ../src/GenericConduit.cc:1048 ../src/backup.c:587 ../src/restore.c:185
+#: ../src/GenericConduit.cc:250 ../src/GenericConduit.cc:522
+#: ../src/GenericConduit.cc:1019 ../src/backup.c:581 ../src/restore.c:181
 msgid "Cancelled"
 msgstr "Cancellato"
 
-#: ../src/backup.c:581 ../src/coldsync.c:1368 ../src/coldsync.c:1420
-#: ../src/coldsync.c:1546 ../src/coldsync.c:1571 ../src/coldsync.c:1595
-#: ../src/conduit.c:1177 ../src/conduit.c:1237 ../src/restore.c:280
+#: ../src/backup.c:576 ../src/coldsync.c:1319 ../src/coldsync.c:1367
+#: ../src/coldsync.c:1463 ../src/coldsync.c:1488 ../src/coldsync.c:1512
+#: ../src/conduit.c:1177 ../src/conduit.c:1237 ../src/restore.c:274
 msgid "Cancelled by Palm."
 msgstr "Cancellato dal Palm."
 
@@ -1195,7 +1195,7 @@ msgstr "Il conduit %s e' terminato in maniera anormale. Continuo."
 msgid "Conduit %s is not a %s conduit."
 msgstr "Il conduit %s non e' un conduit %s."
 
-#: ../src/coldsync.c:1055 ../src/coldsync.c:2803
+#: ../src/coldsync.c:1036 ../src/coldsync.c:2649
 msgid "Conduit failed for unknown reason."
 msgstr "Il conduit e' fallito per motivi sconosciuti."
 
@@ -1204,8 +1204,8 @@ msgstr "Il conduit e' fallito per motivi sconosciuti."
 msgid "Config file \"%s\" doesn't exist."
 msgstr "Il file di configurazione \"%s\" non esiste."
 
-#: ../src/coldsync.c:1226 ../src/coldsync.c:1476 ../src/coldsync.c:1651
-#: ../src/coldsync.c:2072 ../src/coldsync.c:2964
+#: ../src/coldsync.c:1177 ../src/coldsync.c:1393 ../src/coldsync.c:1538
+#: ../src/coldsync.c:1920 ../src/coldsync.c:2781
 msgid "Couldn't disconnect."
 msgstr "Non posso scollegarmi."
 
@@ -1222,11 +1222,6 @@ msgstr "Non posso leggere il file di configurazione \"%s\"."
 msgid "Couldn't send header to conduit."
 msgstr "Non posso mandare l'header al conduit."
 
-#: ../src/coldsync.c:1129 ../src/coldsync.c:1446 ../src/coldsync.c:1624
-#: ../src/coldsync.c:2044 ../src/coldsync.c:2868
-msgid "Couldn't write sync log."
-msgstr "Non posso scrivere il log della sincronizzazione."
-
 #: ../src/backup.c:430
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
 msgstr "DlpReadRecordIDList() ha letto 0 records. Che e' successo?\n"
@@ -1235,16 +1230,16 @@ msgstr "DlpReadRecordIDList() ha letto 0 records. Che e' successo?\n"
 msgid "DlpWriteRecord: Can't allocate output buffer.\n"
 msgstr "DlpWriteRecord: Non posso allocare il buffer di output.\n"
 
-#: ../src/coldsync.c:1981 ../src/coldsync.c:3357
+#: ../src/coldsync.c:1860 ../src/coldsync.c:3174
 #, c-format
 msgid "DlpWriteUserInfo failed: %d."
 msgstr "DlpWriteUserInfo fallita: %d."
 
-#: ../src/coldsync.c:881 ../src/coldsync.c:885
+#: ../src/coldsync.c:863 ../src/coldsync.c:867
 msgid "Doing a fast sync."
 msgstr "Sto facendo una sincronizzazione veloce."
 
-#: ../src/coldsync.c:879 ../src/coldsync.c:883
+#: ../src/coldsync.c:861 ../src/coldsync.c:865
 msgid "Doing a slow sync."
 msgstr "Sto facendo una sincronizzazione lenta."
 
@@ -1252,58 +1247,58 @@ msgstr "Sto facendo una sincronizzazione lenta."
 msgid "End of file"
 msgstr "Fine del file"
 
-#: ../src/GenericConduit.cc:310 ../src/GenericConduit.cc:331
-#: ../src/GenericConduit.cc:352 ../src/GenericConduit.cc:433
-#: ../src/GenericConduit.cc:463 ../src/GenericConduit.cc:493
-#: ../src/GenericConduit.cc:590 ../src/GenericConduit.cc:610
-#: ../src/GenericConduit.cc:632 ../src/GenericConduit.cc:744
-#: ../src/GenericConduit.cc:951 ../src/GenericConduit.cc:975
-#: ../src/GenericConduit.cc:1002 ../src/GenericConduit.cc:1097
-#: ../src/GenericConduit.cc:1117 ../src/GenericConduit.cc:1159
-#: ../src/GenericConduit.cc:1262 ../src/GenericConduit.cc:1499
-#: ../src/GenericConduit.cc:1529 ../src/GenericConduit.cc:1557
-#: ../src/backup.c:568 ../src/backup.c:603 ../src/backup.c:636
-#: ../src/backup.c:664 ../src/backup.c:685 ../src/install.c:593
-#: ../src/install.c:626 ../src/install.c:741 ../src/restore.c:197
+#: ../src/GenericConduit.cc:303 ../src/GenericConduit.cc:323
+#: ../src/GenericConduit.cc:343 ../src/GenericConduit.cc:423
+#: ../src/GenericConduit.cc:452 ../src/GenericConduit.cc:481
+#: ../src/GenericConduit.cc:572 ../src/GenericConduit.cc:591
+#: ../src/GenericConduit.cc:612 ../src/GenericConduit.cc:723
+#: ../src/GenericConduit.cc:929 ../src/GenericConduit.cc:952
+#: ../src/GenericConduit.cc:978 ../src/GenericConduit.cc:1067
+#: ../src/GenericConduit.cc:1086 ../src/GenericConduit.cc:1127
+#: ../src/GenericConduit.cc:1229 ../src/GenericConduit.cc:1465
+#: ../src/GenericConduit.cc:1494 ../src/GenericConduit.cc:1521
+#: ../src/backup.c:563 ../src/backup.c:596 ../src/backup.c:628
+#: ../src/backup.c:655 ../src/backup.c:675 ../src/install.c:586
+#: ../src/install.c:618 ../src/install.c:730 ../src/restore.c:192
 msgid "Error"
 msgstr "Errore"
 
-#: ../src/install.c:341 ../src/install.c:362
+#: ../src/install.c:338 ../src/install.c:359
 msgid "Error\n"
 msgstr "Errore\n"
 
-#: ../src/coldsync.c:949 ../src/coldsync.c:1199 ../src/coldsync.c:2700
-#: ../src/coldsync.c:2937
+#: ../src/coldsync.c:931 ../src/coldsync.c:1150 ../src/coldsync.c:2548
+#: ../src/coldsync.c:2754
 #, c-format
 msgid "Error %d running install conduits."
 msgstr "Errore %d durante l'esecuzione di conduits di install."
 
-#: ../src/coldsync.c:1240 ../src/coldsync.c:2977
+#: ../src/coldsync.c:1191 ../src/coldsync.c:2794
 #, c-format
 msgid "Error %d running post-dump conduits."
 msgstr "Errore %d durante l'esecuzione di conduits di post-dump."
 
-#: ../src/coldsync.c:1008 ../src/coldsync.c:2757
+#: ../src/coldsync.c:990 ../src/coldsync.c:2605
 #, c-format
 msgid "Error %d running pre-fetch conduits."
 msgstr "Errore %d durante l'esecuzione di conduits di pre-fetch."
 
-#: ../src/coldsync.c:1428
+#: ../src/coldsync.c:1375
 #, c-format
 msgid "Error backing up \"%s\"."
 msgstr "Errore durante il backup di \"%s\"."
 
-#: ../src/install.c:109
+#: ../src/install.c:106
 #, c-format
 msgid "Error creating database \"%s\": %d.\n"
 msgstr "Errore durante la creazione del database \"%s\": %d.\n"
 
-#: ../src/install.c:763
+#: ../src/install.c:751
 #, c-format
 msgid "Error deleting \"%s\"."
 msgstr "Errore durante la cancellazione \"%s\"."
 
-#: ../src/coldsync.c:3044
+#: ../src/coldsync.c:2861
 #, c-format
 msgid "Error during DlpEndOfSync: (%d) %s."
 msgstr "Errore durante DlpEndOfSync: (%d) %s."
@@ -1321,7 +1316,7 @@ msgstr "Errore durante la creazione di una connessione CMP.\n"
 msgid "Error in system call or library function"
 msgstr "Errore durante una chiamata di sistema o di libreria."
 
-#: ../src/install.c:714
+#: ../src/install.c:705
 #, c-format
 msgid "Error opening \"%s\"."
 msgstr "Errore durante l'apertura di \"%s\"."
@@ -1338,9 +1333,9 @@ msgstr "Errore durante l'invio dell'header NetSync.\n"
 msgid "Error trying to set speed.\n"
 msgstr "Errore durante l'impostazione della velocita'.\n"
 
-#: ../src/GenericConduit.cc:909 ../src/GenericConduit.cc:1464
-#: ../src/GenericConduit.cc:1781 ../src/GenericConduit.cc:1926
-#: ../src/GenericConduit.cc:2092 ../src/GenericConduit.cc:2326
+#: ../src/GenericConduit.cc:888 ../src/GenericConduit.cc:1431
+#: ../src/GenericConduit.cc:1744 ../src/GenericConduit.cc:1889
+#: ../src/GenericConduit.cc:2055 ../src/GenericConduit.cc:2289
 #, c-format
 msgid "Error uploading record 0x%08lx: %d."
 msgstr "Errore durante l'invio del record 0x%08lx: %d."
@@ -1392,7 +1387,7 @@ msgstr "Attento! Non posso trovare la %da risorsa!\n"
 msgid "Hey! This isn't an AF_INET address!"
 msgstr "Attento! Questo non e' un indirizzo AF_INET!"
 
-#: ../src/GenericConduit.cc:1232
+#: ../src/GenericConduit.cc:1200
 msgid ""
 "I have a new, deleted record that is neither archived nor expunged\n"
 "What am I supposed to do?"
@@ -1404,12 +1399,12 @@ msgstr ""
 msgid "Inside run_DummyConduit.\n"
 msgstr "Dentro run_DummyConduit.\n"
 
-#: ../src/install.c:591 ../src/install.c:624 ../src/install.c:710
-#: ../src/install.c:719 ../src/install.c:739 ../src/install.c:745
+#: ../src/install.c:584 ../src/install.c:616 ../src/install.c:701
+#: ../src/install.c:709 ../src/install.c:728 ../src/install.c:733
 msgid "Install"
 msgstr "Installazione"
 
-#: ../src/install.c:320
+#: ../src/install.c:317
 msgid "Install "
 msgstr "Installazione "
 
@@ -1425,19 +1420,19 @@ msgstr "Request ID invalido"
 msgid "Invalid result ID"
 msgstr "Result ID invalido"
 
-#: ../src/coldsync.c:273
+#: ../src/coldsync.c:267
 #, c-format
 msgid "Log started on %s"
 msgstr "Log cominciato il %s"
 
-#: ../src/coldsync.c:540 ../src/coldsync.c:586 ../src/coldsync.c:639
-#: ../src/coldsync.c:921 ../src/coldsync.c:1020 ../src/coldsync.c:1050
-#: ../src/coldsync.c:1077 ../src/coldsync.c:1173 ../src/coldsync.c:1249
-#: ../src/coldsync.c:1373 ../src/coldsync.c:1425 ../src/coldsync.c:1549
-#: ../src/coldsync.c:1574 ../src/coldsync.c:1598 ../src/coldsync.c:2673
-#: ../src/coldsync.c:2769 ../src/coldsync.c:2798 ../src/coldsync.c:2819
-#: ../src/coldsync.c:2911 ../src/coldsync.c:2986 ../src/conduit.c:498
-#: ../src/restore.c:284
+#: ../src/coldsync.c:522 ../src/coldsync.c:568 ../src/coldsync.c:621
+#: ../src/coldsync.c:903 ../src/coldsync.c:1002 ../src/coldsync.c:1031
+#: ../src/coldsync.c:1058 ../src/coldsync.c:1124 ../src/coldsync.c:1200
+#: ../src/coldsync.c:1324 ../src/coldsync.c:1372 ../src/coldsync.c:1466
+#: ../src/coldsync.c:1491 ../src/coldsync.c:1515 ../src/coldsync.c:2521
+#: ../src/coldsync.c:2617 ../src/coldsync.c:2644 ../src/coldsync.c:2665
+#: ../src/coldsync.c:2728 ../src/coldsync.c:2803 ../src/conduit.c:498
+#: ../src/restore.c:278
 msgid "Lost connection to Palm."
 msgstr "La connessione col Palm e' stata persa."
 
@@ -1450,7 +1445,7 @@ msgstr "La connessione col Palm e' stata persa. Interrompo."
 msgid "Missing option argument after \"%s\"."
 msgstr "Manca l'argomento dell'opzione dopo \"%s\"."
 
-#: ../src/coldsync.c:799 ../src/coldsync.c:2555
+#: ../src/coldsync.c:781 ../src/coldsync.c:2403
 msgid "Network sync forwarding failed."
 msgstr "Il forwarding della sincronizzazione via rete e' fallito."
 
@@ -1458,7 +1453,7 @@ msgstr "Il forwarding della sincronizzazione via rete e' fallito."
 msgid "No NetSync info.\n"
 msgstr "Non ci sono informazioni su NetSync.\n"
 
-#: ../src/coldsync.c:1281
+#: ../src/coldsync.c:1232
 msgid "No backup directory specified."
 msgstr "Non e' stata specificata alcuna directory di backup."
 
@@ -1466,33 +1461,33 @@ msgstr "Non e' stata specificata alcuna directory di backup."
 msgid "No error"
 msgstr "Nessun errore"
 
-#: ../src/coldsync.c:2339
+#: ../src/coldsync.c:2187
 #, c-format
 msgid "No matching entry in %s."
 msgstr "Non ho trovato nulla in %s."
 
-#: ../src/coldsync.c:487 ../src/coldsync.c:1317 ../src/coldsync.c:1495
-#: ../src/coldsync.c:1692 ../src/coldsync.c:2176
+#: ../src/coldsync.c:472 ../src/coldsync.c:1268 ../src/coldsync.c:1412
+#: ../src/coldsync.c:1579 ../src/coldsync.c:2024
 msgid "No port specified."
 msgstr "Nessuna porta specificata"
 
-#: ../src/coldsync.c:1409
+#: ../src/coldsync.c:1356
 msgid "No such database"
 msgstr "Il database non esiste"
 
-#: ../src/coldsync.c:1400
+#: ../src/coldsync.c:1351
 #, c-format
 msgid "No such database: \"%s\"."
 msgstr "Il database \"%s\" non esiste."
 
-#: ../src/coldsync.c:1307
+#: ../src/coldsync.c:1258
 #, c-format
 msgid "No such directory: \"%s\"."
 msgstr "La directory \"%s\" non esiste."
 
-#: ../src/GenericConduit.cc:505 ../src/GenericConduit.cc:1014
-#: ../src/GenericConduit.cc:1568 ../src/backup.c:697 ../src/install.c:712
-#: ../src/install.c:747 ../src/restore.c:203
+#: ../src/GenericConduit.cc:492 ../src/GenericConduit.cc:989
+#: ../src/GenericConduit.cc:1531 ../src/backup.c:686 ../src/install.c:703
+#: ../src/install.c:735 ../src/restore.c:197
 msgid "OK"
 msgstr "OK"
 
@@ -1504,11 +1499,11 @@ msgstr "Memoria esaurita"
 msgid "Please press the HotSync button.\n"
 msgstr "Premi il tasto HotSync\n"
 
-#: ../src/install.c:721
+#: ../src/install.c:711
 msgid "Problem"
 msgstr "Problema"
 
-#: ../src/restore.c:185 ../src/restore.c:197 ../src/restore.c:203
+#: ../src/restore.c:181 ../src/restore.c:192 ../src/restore.c:197
 msgid "Restore"
 msgstr "Ripristino"
 
@@ -1517,20 +1512,20 @@ msgstr "Ripristino"
 msgid "Restore: Can't delete database \"%s\": %d."
 msgstr "Ripristino: Non posso cancellare il database \"%s\": %d."
 
-#: ../src/coldsync.c:1233
+#: ../src/coldsync.c:1184
 msgid "Running Dump conduits"
 msgstr "Sto eseguendo i conduits di Dump"
 
-#: ../src/coldsync.c:1001
+#: ../src/coldsync.c:983
 msgid "Running Fetch conduits"
 msgstr "Sto eseguendo i conduits di Fetch"
 
-#: ../src/coldsync.c:945 ../src/coldsync.c:1195 ../src/coldsync.c:2696
-#: ../src/coldsync.c:2933
+#: ../src/coldsync.c:927 ../src/coldsync.c:1146 ../src/coldsync.c:2544
+#: ../src/coldsync.c:2750
 msgid "Running Install conduits"
 msgstr "Sto eseguendo i conduits di Install"
 
-#: ../src/coldsync.c:1026
+#: ../src/coldsync.c:1008
 msgid "Running Sync conduits"
 msgstr "Sto eseguendo i conduits di Sync"
 
@@ -1539,19 +1534,19 @@ msgstr "Sto eseguendo i conduits di Sync"
 msgid "SLP: bad CRC: expected 0x%04x, got 0x%04x.\n"
 msgstr "SLP: CRC non corretto: mi aspettavo 0x%04x, ho ricevuto 0x%04x.\n"
 
-#: ../src/coldsync.c:1933
+#: ../src/coldsync.c:1815
 msgid "Set user ID"
 msgstr "Setta lo user ID"
 
-#: ../src/coldsync.c:1971
+#: ../src/coldsync.c:1850
 msgid "Set username"
 msgstr "Setta lo username"
 
-#: ../src/coldsync.c:1072
+#: ../src/coldsync.c:1053
 msgid "Sync cancelled by Palm."
 msgstr "Sincronizzazione cancellata dal Palm."
 
-#: ../src/coldsync.c:1040 ../src/coldsync.c:2787
+#: ../src/coldsync.c:1022 ../src/coldsync.c:2635
 msgid "Sync cancelled."
 msgstr "Sincronizzazione cancellata."
 
@@ -1571,7 +1566,7 @@ msgstr ""
 "L'opzione \"-r <directory>\" e' obsoleta. Per favore, usa\n"
 "\"-mr <directory>\"."
 
-#: ../src/coldsync.c:600
+#: ../src/coldsync.c:582
 #, c-format
 msgid ""
 "This Palm has user ID %ld (I was expecting %ld).\n"
@@ -1588,7 +1583,7 @@ msgstr ""
 "\tIl tuo file di configurazione dovrebbe contenere un PDA block simile\n"
 "a questo:"
 
-#: ../src/coldsync.c:655
+#: ../src/coldsync.c:637
 #, c-format
 msgid ""
 "This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
@@ -1613,7 +1608,7 @@ msgstr "Questo host sembra che non abbia un indirizzo IP."
 msgid "Timeout"
 msgstr "Tempo scaduto"
 
-#: ../src/coldsync.c:3243
+#: ../src/coldsync.c:3060
 #, c-format
 msgid "Too many files named \"%s\" in the attic."
 msgstr "Troppi files chiamati \"%s\" in soffitta."
@@ -1642,7 +1637,7 @@ msgstr "Facility sconosciuta \"%s\"."
 msgid "Unknown mode: \"%s\"."
 msgstr "Modalita' sconosciuta: \"%s\"."
 
-#: ../src/coldsync.c:404
+#: ../src/coldsync.c:398
 #, c-format
 msgid ""
 "Unknown mode: %d.\n"
@@ -1656,7 +1651,7 @@ msgstr ""
 msgid "Unknown protocol: \"%s\"."
 msgstr "Opzione sconosciuta: \"%s\"."
 
-#: ../src/coldsync.c:2370
+#: ../src/coldsync.c:2218
 #, c-format
 msgid "Unknown user/uid: \"%s\"."
 msgstr "Utente/UID sconosciuto: \"%s\"."
@@ -1833,7 +1828,7 @@ msgstr ""
 "Hai specificato un'opzione apparentemente valida (\"-%c\"), ma non so\n"
 "cosa farne. Questo e' un bug. Per favore, avverti il mantainer del progetto."
 
-#: ../src/GenericConduit.cc:179
+#: ../src/GenericConduit.cc:177
 msgid "[generic]: Aborting."
 msgstr "[generic]: Operazione interrotta."
 
@@ -1845,13 +1840,16 @@ msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable fallito"
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo fallito"
 
-#: ../src/GenericConduit.cc:348
+#: ../src/GenericConduit.cc:340
 msgid "pdb_Download() failed."
 msgstr "pdb_Download() fallito"
 
 #: ../libpconn/PConnection_usb.c:184
 msgid "usb: trying to fill a non-empty buffer.\n"
 msgstr "usb: si sta riempendo un buffer gia' pieno.\n"
+
+#~ msgid "Couldn't write sync log."
+#~ msgstr "Non posso scrivere il log della sincronizzazione."
 
 #~ msgid "OK\n"
 #~ msgstr "OK\n"
