@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8.2.1 2001-10-09 01:41:25 arensb Exp $
+# $Id: Makefile,v 1.8.2.2 2001-10-11 02:42:16 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -32,7 +32,7 @@ SPOTLESS =
 
 DISTFILES =	Makefile ${LIBSRCS}
 
-OTHERTAGFILES = ${LIBSRCS}
+OTHERTAGFILES =	${LIBSRCS}
 
 include ${TOP}/Make.rules
 
