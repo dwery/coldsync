@@ -6,16 +6,36 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.18 2000-01-27 04:20:07 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.19 2000-02-06 22:25:52 arensb Exp $
  */
-/* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
- * construct doesn't lend itself well to this. It might be necessary to
- * fall back on C-style I/O.
+
+/* Note on I/O:
+ *
+ * C++-style I/O,
+ *	cout << "foo" << bar << endl;
+ * does not lend itself well to internationalization: a phrase like "file
+ * <N>" might be translated into French as "le <N>ième fichier":
+ *
+ * cout << "file " << n                   << endl;	// English
+ * cout << "le "   << n << "ième fichier" << endl;	// French
+ *
+ * This example presents an intractable problem: how does one code this
+ * print statement so that it can be looked up in a message catalog and
+ * written in the user's language?
+ *
+ * From this point of view, it is much easier to use C-style I/O:
+ *
+ *	printf(_("file %n\n"), n);
+ *
+ * Scott Meyers[1] advocates using C++-style I/O for a number of reasons,
+ * mainly having to do with flexibility. But since we're not doing anything
+ * fancy here--just printing ordinary strings and integers--it's much
+ * easier to use C-style printf()s.
+ *
+ * [1] Meyers, Scott, "Effective C++," Addison-Wesley, 1992
  */
 #include "config.h"
-#include <iostream.h>
-#include <iomanip.h>		// Probably only needed for debugging
-#include <stdio.h>		// For perror(), rename()
+#include <stdio.h>		// For perror(), rename(), printf()
 #include <stdlib.h>		// For free()
 #include <fcntl.h>		// For open()
 #include <sys/stat.h>
@@ -26,6 +46,13 @@
 
 extern "C" {
 #include <unistd.h>
+
+/* Include I18N-related stuff, if necessary */
+#if HAVE_LIBINTL
+#  include <locale.h>		/* For setlocale() and friends */
+#  include <libintl.h>
+#endif	/* HAVE_LIBINTL */
+
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "coldsync.h"
@@ -111,15 +138,16 @@ GenericConduit::run()
 	if (DBINFO_ISROM(_dbinfo) && !global_opts.check_ROM)
 	{
 		SYNC_TRACE(3)
-			cerr << "\"" << _dbinfo->name
-			     << "\" is a ROM database. Ignoring it." << endl;
-		add_to_log("ROM\n"); 
+			fprintf(stderr, "\"%s\" is a ROM database. "
+				"ignoring it\n",
+				_dbinfo->name);
+		add_to_log(_("ROM\n")); 
 		return 0; 
 	}
 	SYNC_TRACE(4)
-		cerr << "\"" << _dbinfo->name
-		     << "\" is not a ROM database, or else "
-		        "I'm not ignoring it." << endl;
+		fprintf(stderr, "\"%s\" is not a ROM database, or else "
+			"I'm not ignoring it.\n",
+			_dbinfo->name);
 
 	/* Resource databases are entirely different beasts, so don't
 	 * sync them. This function should never be called for a
@@ -128,8 +156,8 @@ GenericConduit::run()
 	 */
 	if (DBINFO_ISRSRC(_dbinfo))
 	{
-		cerr << "I don't deal with resource databases." << endl;
-		add_to_log("Not synced\n");
+		fprintf(stderr, _("I don't deal with resource databases.\n"));
+		add_to_log(_("Not synced\n"));
 		return -1;
 	}
 
@@ -137,9 +165,9 @@ GenericConduit::run()
 	err = this->read_backup();
 	if (err < 0)
 	{
-		cerr << "GenericConduit error: Can't read "
-		     << _dbinfo->name
-		     << " backup file." << endl;
+		fprintf(stderr, _("%s error: Can't read "
+				  "%s backup file.\n"),
+			"GenericConduit", _dbinfo->name);
 		return -1;
 	}
 
@@ -155,11 +183,11 @@ GenericConduit::run()
 	} else if (global_opts.force_slow || need_slow_sync)
 	{
 		SYNC_TRACE(3)
-			cerr << "Doing a slow sync." << endl;
+			fprintf(stderr, "Doing a slow sync\n");
 		err = this->SlowSync();
 	} else {
 		SYNC_TRACE(3)
-			cerr << "Doing a fast sync." << endl;
+			fprintf(stderr, "Doing a fast sync\n");
 		err = this->FastSync(); 
 	}
 
@@ -184,14 +212,15 @@ GenericConduit::FirstSync()
 	ubyte dbh;		// Database handle
 
 	add_to_log(_dbinfo->name);
-	add_to_log(" (1st) - ");
+	add_to_log(_(" (1st) - "));
 
 	err = DlpOpenConduit(_pconn);
 	if (err != DLPSTAT_NOERR)
 	{
 		SYNC_TRACE(4)
-			cerr << "DlpOpenConduit() returned " << err << endl;
-		add_to_log("Error\n");
+			fprintf(stderr, "DlpOpenConduit() returned %d\n",
+				err);
+		add_to_log(_("Error\n"));
 		return -1; 
 	}
 
@@ -220,19 +249,21 @@ GenericConduit::FirstSync()
 		/* Can't complete this particular operation, but
 		 * it's not a show-stopper. The sync can go on.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::FirstSync",
+			_dbinfo->name,
+			err);
+		add_to_log(_("Error\n"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::FirstSync",
+			_dbinfo->name,
+			err);
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -240,9 +271,9 @@ GenericConduit::FirstSync()
 	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
-		cerr << "pdb_Download() failed." << endl;
+		fprintf(stderr, _("pdb_Download() failed.\n"));
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -262,20 +293,22 @@ GenericConduit::FirstSync()
 
 		SYNC_TRACE(5)
 		{
-			cerr << "Remote Record:" << endl;
-			cerr << "\tID: 0x"
-			     << hex << setw(8) << setfill('0')
-			     << remoterec->id << endl;
-			cerr << "\tattributes: 0x" << hex << setw(2)
-			     << setfill('0')
-			     << static_cast<int>(remoterec->attributes)
-			     << " ";
-			if (EXPUNGED(remoterec))	cerr << "EXPUNGED ";
-			if (DIRTY(remoterec))		cerr << "DIRTY ";
-			if (DELETED(remoterec))		cerr << "DELETED ";
-			if (PRIVATE(remoterec))		cerr << "PRIVATE ";
-			if (ARCHIVE(remoterec))		cerr << "ARCHIVE ";
-			cerr << endl;
+			fprintf(stderr, "Remote Record:\n");
+			fprintf(stderr, "\tID: 0x%08lx\n",
+				remoterec->id);
+			fprintf(stderr, "\tattributes: 0x%02x ",
+				remoterec->attributes);
+			if (EXPUNGED(remoterec))
+				fprintf(stderr, "EXPUNGED ");
+			if (DIRTY(remoterec))
+				fprintf(stderr, "DIRTY ");
+			if (DELETED(remoterec))
+				fprintf(stderr, "DELETED ");
+			if (PRIVATE(remoterec))
+				fprintf(stderr, "PRIVATE ");
+			if (ARCHIVE(remoterec))
+				fprintf(stderr, "ARCHIVE ");
+			fprintf(stderr, "\n");
 		}
 
 		/* This hairy expression just boils down to "if
@@ -297,18 +330,18 @@ GenericConduit::FirstSync()
 
 			// Archive this record
 			SYNC_TRACE(5)
-				cerr << "Archiving this record" << endl;
+				fprintf(stderr, "Archiving this record\n");
 			this->archive_record(remoterec);
 		} else if (EXPUNGED(remoterec))
 		{
 			// Delete this record
 			SYNC_TRACE(5)
-				cerr << "Deleting this record" << endl; 
+				fprintf(stderr, "Deleting this record\n");
 			pdb_DeleteRecordByID(_remotedb,
 					     remoterec->id);
 		} else {
 			SYNC_TRACE(5)
-				cerr << "Need to save this record" << endl; 
+				fprintf(stderr, "Need to save this record\n");
 			// Clear flags
 			remoterec->attributes &=
 				~(PDB_REC_EXPUNGED |
@@ -322,10 +355,10 @@ GenericConduit::FirstSync()
 	err = this->write_backup(_remotedb);
 	if (err < 0)
 	{
-		cerr << "GenericConduit error: Can't write backup file."
-		     << endl;
+		fprintf(stderr, _("%s error: Can't write backup file.\n"),
+			"GenericConduit");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -337,34 +370,35 @@ GenericConduit::FirstSync()
 		 * catch impossible errors.
 		 */
 		SYNC_TRACE(3)
-			cerr << "### Cleaning up database." << endl;
+			fprintf(stderr, "### Cleaning up database.\n");
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			cerr << "GenericConduit error: Can't clean up database: "
-			     << err << endl;
+			fprintf(stderr, _("%s error: can't clean up database: "
+				"%d\n"),
+				"GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
-			add_to_log("Error\n");
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 	}
 
 	SYNC_TRACE(3)
-		cerr << "### Resetting sync flags." << endl;
+		fprintf(stderr, "### Resetting sync flags.\n");
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		cerr << "GenericConduit error: Can't reset sync flags: "
-		     << err << endl;
+		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
+			"GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log("OK\n");
+	add_to_log(_("OK\n"));
 	return 0; 
 }
 
@@ -386,14 +420,15 @@ GenericConduit::SlowSync()
 	add_to_log(" - ");
 
 	SYNC_TRACE(3)
-		cerr << "*** Phase 1:" << endl;
+		fprintf(stderr, "*** Phase 1:\n");
 	/* Phase 1: grab the entire database from the Palm */
 	err = DlpOpenConduit(_pconn);
 	if (err != DLPSTAT_NOERR)
 	{
 		SYNC_TRACE(4)
-			cerr << "DlpOpenConduit() returned " << err << endl;
-		add_to_log("Error\n");
+			fprintf(stderr, "DlpOpenConduit() returned %d\n",
+				err);
+		add_to_log(_("Error\n"));
 		return -1; 
 	}
 
@@ -424,20 +459,20 @@ GenericConduit::SlowSync()
 		 * XXX - Need to indicate to the caller that the sync
 		 * can go on.
 		 */
-		cerr << "GenericConduit::SlowSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::SlowSync",
+			_dbinfo->name, err);
+		add_to_log(_("Error\n"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 * XXX - Need to indicate this to the caller.
 		 */
-		cerr << "GenericConduit::SlowSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::SlowSync",
+			_dbinfo->name, err);
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -445,10 +480,10 @@ GenericConduit::SlowSync()
 	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
-		cerr << "GenericConduit error: Can't download \""
-		     << _dbinfo->name << '"' << endl;
+		fprintf(stderr, _("%s error: Can't download \"%s\"\n"),
+			"GenericConduit", _dbinfo->name);
 		DlpCloseDB(_pconn, dbh);
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -462,27 +497,29 @@ GenericConduit::SlowSync()
 	 * copy in the local database.
 	 */
 	SYNC_TRACE(3)
-		cerr << "Checking remote database entries." << endl;
+		fprintf(stderr, "Checking remote database entries.\n");
 	for (remoterec = _remotedb->rec_index.rec;
 	     remoterec != 0;
 	     remoterec = remoterec->next)
 	{
 		SYNC_TRACE(5)
 		{
-			cerr << "Remote Record:" << endl;
-			cerr << "\tID: 0x"
-			     << hex << setw(8) << setfill('0')
-			     << remoterec->id << endl;
-			cerr << "\tattributes: 0x" << hex << setw(2)
-			     << setfill('0')
-			     << static_cast<int>(remoterec->attributes)
-			     << " ";
-			if (EXPUNGED(remoterec))	cerr << "EXPUNGED ";
-			if (DIRTY(remoterec))		cerr << "DIRTY ";
-			if (DELETED(remoterec))		cerr << "DELETED ";
-			if (PRIVATE(remoterec))		cerr << "PRIVATE ";
-			if (ARCHIVE(remoterec))		cerr << "ARCHIVE ";
-			cerr << endl;
+			fprintf(stderr, "Remote Record:\n");
+			fprintf(stderr, "\tID: 0x%08lx\n",
+				remoterec->id);
+			fprintf(stderr, "\tattributes: 0x%02x ",
+				remoterec->attributes);
+			if (EXPUNGED(remoterec))
+				fprintf(stderr, "EXPUNGED ");
+			if (DIRTY(remoterec))
+				fprintf(stderr, "DIRTY ");
+			if (DELETED(remoterec))
+				fprintf(stderr, "DELETED ");
+			if (PRIVATE(remoterec))
+				fprintf(stderr, "PRIVATE ");
+			if (ARCHIVE(remoterec))
+				fprintf(stderr, "ARCHIVE ");
+			fprintf(stderr, "\n");
 			debug_dump(stderr, "REM", remoterec->data,
 				   remoterec->data_len > 64 ?
 					64 : remoterec->data_len);
@@ -515,20 +552,24 @@ GenericConduit::SlowSync()
 
 				// Archive this record
 				SYNC_TRACE(5)
-					cerr << "Archiving this record"
-					     << endl;
+					fprintf(stderr,
+						"Archiving this record\n");
 				this->archive_record(remoterec);
 			} else if (EXPUNGED(remoterec))
 			{
 				/* This record has been completely deleted */
 				SYNC_TRACE(5)
-					cerr << "Deleting this record (local record doesn't exist, remote record expunged)" << endl;
+					fprintf(stderr,
+						"Deleting this record (local "
+						"record doesn't exist, remote "
+						"record expunged)\n");
 				pdb_DeleteRecordByID(_remotedb, remoterec->id);
 			} else {
 				struct pdb_record *newrec;
 
 				SYNC_TRACE(5)
-					cerr << "Saving this record" << endl;
+					fprintf(stderr,
+						"Saving this record\n");
 				/* This record is merely new. Clear any
 				 * dirty flags it might have, and add it to
 				 * the local database.
@@ -543,9 +584,9 @@ GenericConduit::SlowSync()
 				newrec = pdb_CopyRecord(_remotedb, remoterec);
 				if (newrec == 0)
 				{
-					cerr << "Can't copy a new record."
-					     << endl;
-					add_to_log("Error\n");
+					fprintf(stderr,
+						"Can't copy a new record\n");
+					add_to_log(_("Error\n"));
 					return -1;
 				}
 
@@ -559,20 +600,22 @@ GenericConduit::SlowSync()
 		/* The remote record exists in the local database. */
 		SYNC_TRACE(5)
 		{
-			cerr << "Local Record:" << endl;
-			cerr << "\tID: 0x"
-			     << hex << setw(8) << setfill('0')
-			     << localrec->id << endl;
-			cerr << "\tattributes: 0x" << hex << setw(2)
-			     << setfill('0')
-			     << static_cast<int>(localrec->attributes)
-			     << " ";
-			if (EXPUNGED(localrec))		cerr << "EXPUNGED ";
-			if (DIRTY(localrec))		cerr << "DIRTY ";
-			if (DELETED(localrec))		cerr << "DELETED ";
-			if (PRIVATE(localrec))		cerr << "PRIVATE ";
-			if (ARCHIVE(localrec))		cerr << "ARCHIVE ";
-			cerr << endl;
+			fprintf(stderr, "Local Record:\n");
+			fprintf(stderr, "\tID: 0x%08lx\n",
+				localrec->id);
+			fprintf(stderr, "\tattributes: 0x%02x ",
+				localrec->attributes);
+			if (EXPUNGED(localrec))
+				fprintf(stderr, "EXPUNGED ");
+			if (DIRTY(localrec))
+				fprintf(stderr, "DIRTY ");
+			if (DELETED(localrec))
+				fprintf(stderr, "DELETED ");
+			if (PRIVATE(localrec))
+				fprintf(stderr, "PRIVATE ");
+			if (ARCHIVE(localrec))
+				fprintf(stderr, "ARCHIVE ");
+			fprintf(stderr, "\n");
 			debug_dump(stderr, "LOC", localrec->data,
 				   localrec->data_len > 64 ?
 					64 : localrec->data_len);
@@ -601,7 +644,7 @@ GenericConduit::SlowSync()
 		/* Sync the two records */
 		err = this->SyncRecord(dbh, _localdb, localrec, remoterec);
 		SYNC_TRACE(5)
-			cerr << "SyncRecord returned " << err << endl;
+			fprintf(stderr, "SyncRecord returned %d\n ", err);
 
 		/* Mark the remote record as clean for the next phase */
 		remoterec->attributes &=
@@ -616,7 +659,7 @@ GenericConduit::SlowSync()
 	 * above. Otherwise, it's a new record in the local database.
 	 */
 	SYNC_TRACE(3)
-		cerr << "Checking local database entries." << endl;
+		fprintf(stderr, "Checking local database entries.\n");
 
 	struct pdb_record *nextrec;	// Next record in list
 
@@ -633,7 +676,7 @@ GenericConduit::SlowSync()
 		if (remoterec != 0)
 		{
 			SYNC_TRACE(4)
-				cerr << "Seen this record already" << endl;
+				fprintf(stderr, "Seen this record already\n");
 			/* This local record exists in the remote
 			 * database. We've dealt with it already, so
 			 * we can skip it now.
@@ -659,13 +702,14 @@ GenericConduit::SlowSync()
 
 			// Archive this record
 			SYNC_TRACE(5)
-				cerr << "Archiving this record" << endl;
+				fprintf(stderr, "Archiving this record\n");
 			this->archive_record(localrec);
 		} else if (EXPUNGED(localrec))
 		{
 			/* The local record has been completely deleted */
 			SYNC_TRACE(5)
-				cerr << "Deleting this record (local record deleted or something)" << endl;
+				fprintf(stderr, "Deleting this record (local "
+					"record deleted or something)\n");
 			pdb_DeleteRecordByID(_localdb, localrec->id);
 		} else if (DIRTY(localrec))
 		{
@@ -681,10 +725,9 @@ GenericConduit::SlowSync()
 				  PDB_REC_ARCHIVE);
 
 			SYNC_TRACE(6)
-				cerr << "> Sending local record (ID 0x"
-				     << hex << setw(8) << setfill('0')
-				     << ") to Palm"
-				     << endl;
+				fprintf(stderr, "> Sending local record "
+					"(ID 0x%08lx) to Palm\n",
+					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     /* XXX - The category is the
@@ -699,10 +742,9 @@ GenericConduit::SlowSync()
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "Error uploading record "
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("Error uploading record "
+						  "0x%08lx: %d\n"),
+					localrec->id, err);
 				return -1;
 			}
 
@@ -712,9 +754,8 @@ GenericConduit::SlowSync()
 			 */
 			localrec->id = newID;
 			SYNC_TRACE(7)
-				cerr << "newID == "
-				     << hex << setw(8) << setfill('0')
-				     << newID << endl;
+				fprintf(stderr, "newID == 0x%08lx\n",
+					newID);
 		} else {
 			/* This record is clean but doesn't exist on the
 			 * Palm. Archive it, then delete it.
@@ -738,42 +779,42 @@ GenericConduit::SlowSync()
 	err = this->write_backup(_localdb);
 	if (err < 0)
 	{
-		cerr << "GenericConduit::SlowSync: Can't write backup file."
-		     << endl;
+		fprintf(stderr, _("%s: Can't write backup file.\n"),
+			"GenericConduit::SlowSync");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
 	/* Post-sync cleanup */
 	SYNC_TRACE(3)
-		cerr << "### Cleaning up database." << endl;
+		fprintf(stderr, "### Cleaning up database.\n");
 	err = DlpCleanUpDatabase(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		cerr << "GenericConduit error: Can't clean up database: "
-		     << err << endl;
+		fprintf(stderr, _("%s error: Can't clean up database: %d\n"),
+			"GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
 	SYNC_TRACE(3)
-		cerr << "### Resetting sync flags." << endl;
+		fprintf(stderr, "### Resetting sync flags.\n");
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		cerr << "GenericConduit error: Can't reset sync flags: "
-		     << err << endl;
+		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
+			"GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log("OK\n");
+	add_to_log(_("OK\n"));
 	return 0;
 }
 
@@ -800,10 +841,10 @@ GenericConduit::FastSync()
 	if (err != DLPSTAT_NOERR)
 	{
 		SYNC_TRACE(4)
-			cerr << "GenericConduit::FastSync: DlpOpenConduit()"
-			        " returned "
-			     << err << endl;
-		add_to_log("Error\n");
+			fprintf(stderr, "GenericConduit::FastSync: "
+				"DlpOpenConduit() returned %d\n",
+				err);
+		add_to_log(_("Error\n"));
 		return -1; 
 	}
 
@@ -832,19 +873,19 @@ GenericConduit::FastSync()
 		/* Can't complete this particular operation, but it's
 		 * not a show-stopper. The sync can go on.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::FirstSync",
+			_dbinfo->name, err);
+		add_to_log(_("Error\n"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
-		     << _dbinfo->name << "\": "
-		     << err << endl;
-		add_to_log("Error\n");
+		fprintf(stderr, _("%s: Can't open \"%s\": %d\n"),
+			"GenericConduit::FirstSync",
+			_dbinfo->name, err);
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -866,13 +907,16 @@ GenericConduit::FastSync()
 	       == DLPSTAT_NOERR)
 	{
 		SYNC_TRACE(7)
-			cerr << "Got next modified record:" << endl
-			     << "\tsize == " << recinfo.size << endl
-			     << "\tcategory == " << recinfo.category << endl
-			     << "\tID == 0x" << hex << setw(8) << setfill('0')
-			     << recinfo.id << endl
-			     << "\tattributes == 0x" << hex << setw(4)
-			     << static_cast<int>(recinfo.attributes) << endl;
+		{
+			fprintf(stderr, "Got next modified record:\n");
+			fprintf(stderr, "\tsize == %d\n", recinfo.size);
+			fprintf(stderr, "\tcategory == %d\n",
+				recinfo.category);
+			fprintf(stderr, "\tID == 0x%08lx\n", recinfo.id);
+			fprintf(stderr, "\tattributes == 0x%04x\n",
+				recinfo.attributes);
+		}
+
 		/* Got the next modified record. Deal with it */
 		remoterec = new_Record(recinfo.attributes,
 				       recinfo.category,
@@ -881,17 +925,18 @@ GenericConduit::FastSync()
 				       rptr);
 		if (remoterec == 0)
 		{
-			cerr << "GenericConduit Error: can't allocate new record."
-			     << endl;
+			fprintf(stderr,
+				_("%s error: Can't allocate new record\n"),
+				"GenericConduit");
 			this->close_archive();
 
 			DlpCloseDB(_pconn, dbh);
-			add_to_log("Error\n");
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 		SYNC_TRACE(5)
-			cerr << "Created new record from downloaded record"
-			     << endl;
+			fprintf(stderr,
+				"Created new record from downloaded record\n");
 
 		/* Look up the modified record in the local database
 		 * Contract: 'localrec', here, is effectively
@@ -907,7 +952,7 @@ GenericConduit::FastSync()
 		if (localrec == 0)
 		{
 			SYNC_TRACE(6)
-				cerr << "localrec == 0" << endl;
+				fprintf(stderr, "localrec == 0\n");
 
 			/* If the record was created and deleted since the
 			 * last sync, it requires special handling.
@@ -923,7 +968,9 @@ GenericConduit::FastSync()
 					 * file.
 					 */
 					SYNC_TRACE(5)
-						cerr << "This is a new archived record" << endl;
+						fprintf(stderr,
+							"This is a new "
+							"archived record\n");
 					remoterec->attributes &= 0x0f;
 						/* XXX - Presumably, this
 						 * should just become a
@@ -934,8 +981,8 @@ GenericConduit::FastSync()
 						 */
 
 					SYNC_TRACE(5)
-						cerr << "Archiving this record"
-						     << endl;
+						fprintf(stderr,
+							"Archiving this record\n");
 					this->archive_record(remoterec);
 					pdb_FreeRecord(remoterec);
 					continue;
@@ -948,15 +995,15 @@ GenericConduit::FastSync()
 					 * the last sync. Ignore it.
 					 */
 					SYNC_TRACE(5)
-						cerr << "This is a new expunged record" << endl;
+						fprintf(stderr, "This is a new expunged record\n");
 					pdb_FreeRecord(remoterec);
 					continue;
 				}
 
-				cerr << "I have a new, deleted record that is neither archived nor expunged."
-				     << endl
-				     << "What am I supposed to do?"
-				     << endl;
+				fprintf(stderr,
+					"I have a new, deleted record that "
+					"is neither archived nor expunged\n"
+					"What am I supposed to do?\n");
 			}
 
 			/* This record is new. Add it to the local
@@ -977,11 +1024,14 @@ GenericConduit::FastSync()
 			/* Add the new record to localdb */
 			if ((err = pdb_AppendRecord(_localdb, remoterec)) < 0)
 			{
-				cerr << "GenericConduit::FastSync: Can't append new record to database: "
-				     << err << endl;
+				fprintf(stderr,
+					_("%s: Can't append new record to "
+					  "database: %d\n"),
+					"GenericConduit::FastSync",
+					err);
 				pdb_FreeRecord(remoterec);
 				DlpCloseDB(_pconn, dbh);
-				add_to_log("Error\n");
+				add_to_log(_("Error\n"));
 				return -1;
 			}
 
@@ -991,19 +1041,18 @@ GenericConduit::FastSync()
 
 		/* This record already exists in localdb. */
 		SYNC_TRACE(5)
-			cerr << "Found record by ID ("
-			     << hex << setw(8) << setfill('0')
-			     << remoterec->id << ")" << endl;
+			fprintf(stderr, "Found record by ID (0x%08lx)\n",
+				remoterec->id);
 		err = this->SyncRecord(dbh,
 				       _localdb, localrec,
 				       remoterec);
 		SYNC_TRACE(6)
-			cerr << "SyncRecord() returned " << err << endl;
+			fprintf(stderr, "SyncRecord() returned %d\n", err);
 		if (err < 0)
 		{
 			SYNC_TRACE(6)
-				cerr << "GenericConduit Error: SyncRecord returned "
-				     << err << endl;
+				fprintf(stderr, "GenericConduit Error: "
+					"SyncRecord returned %d\n", err);
 			DlpCloseDB(_pconn, dbh);
 
 			this->close_archive();
@@ -1024,13 +1073,14 @@ GenericConduit::FastSync()
 		 * part.
 		 */
 		SYNC_TRACE(5)
-			cerr << "GenericConduit: no more modified records."
-			     << endl;
+			fprintf(stderr,
+				"GenericConduit: no more modified records.\n");
 		break;
 	    default:
 		SYNC_TRACE(6)
-			cerr << "GenericConduit: DlpReadNextModifiedRec returned "
-			     << err << endl;
+			fprintf(stderr, "GenericConduit: "
+				"DlpReadNextModifiedRec returned %d\n",
+				err);
 		DlpCloseDB(_pconn, dbh);
 
 		this->close_archive();
@@ -1041,7 +1091,7 @@ GenericConduit::FastSync()
 	 * deleted, or whatever, deal with it.
 	 */
 	SYNC_TRACE(3)
-		cerr << "Checking local database entries." << endl;
+		fprintf(stderr, "Checking local database entries.\n");
 
 	struct pdb_record *nextrec;	// Next record in list
 
@@ -1070,13 +1120,13 @@ GenericConduit::FastSync()
 
 			// Archive this record
 			SYNC_TRACE(5)
-				cerr << "Archiving this record" << endl;
+				fprintf(stderr, "Archiving this record\n");
 			this->archive_record(localrec);
 		} else if (EXPUNGED(localrec))
 		{
 			/* The local record has been completely deleted */
 			SYNC_TRACE(5)
-				cerr << "Deleting this record" << endl;
+				fprintf(stderr, "Deleting this record\n");
 			pdb_DeleteRecordByID(_localdb, localrec->id);
 		} else if (DIRTY(localrec))
 		{
@@ -1092,10 +1142,9 @@ GenericConduit::FastSync()
 				  PDB_REC_ARCHIVE);
 
 			SYNC_TRACE(6)
-				cerr << "> Sending local record (ID 0x"
-				     << hex << setw(8) << setfill('0')
-				     << ") to Palm"
-				     << endl;
+				fprintf(stderr, "> Sending local record (ID "
+					"0x%08lx) to Palm\n",
+					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     /* XXX - The category is the
@@ -1110,10 +1159,9 @@ GenericConduit::FastSync()
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "Error uploading record "
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("Error uploading record "
+						  "0x%08lx: %d\n"),
+					localrec->id, err);
 				return -1;
 			}
 
@@ -1123,9 +1171,7 @@ GenericConduit::FastSync()
 			 */
 			localrec->id = newID;
 			SYNC_TRACE(7)
-				cerr << "newID == "
-				     << hex << setw(8) << setfill('0')
-				     << newID << endl;
+				fprintf(stderr, "newID == 0x%08lx\n", newID);
 		} else {
 			/* This record is clean, but isn't in the list of
 			 * records that we downloaded from the Palm. Hence,
@@ -1133,7 +1179,7 @@ GenericConduit::FastSync()
 			 * clean.
 			 */
 			SYNC_TRACE(5)
-				cerr << "This record is clean" << endl;
+				fprintf(stderr, "This record is clean\n");
 		}
 	}
 
@@ -1141,10 +1187,10 @@ GenericConduit::FastSync()
 	err = this->write_backup(_localdb);
 	if (err < 0)
 	{
-		cerr << "GenericConduit::SlowSync: Can't write backup file."
-		     << endl;
+		fprintf(stderr, _("%s: Can't write backup file.\n"),
+			"GenericConduit::SlowSync");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
@@ -1156,34 +1202,35 @@ GenericConduit::FastSync()
 		 * a "can't possibly happen" condition.
 		 */
 		SYNC_TRACE(3)
-			cerr << "### Cleaning up database." << endl;
+			fprintf(stderr, "### Cleaning up database.\n");
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			cerr << "GenericConduit error: Can't clean up database: "
-			     << err << endl;
+			fprintf(stderr,
+				_("%s error: Can't clean up database: %d\n"),
+				"GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
-			add_to_log("Error\n");
+			add_to_log(_("Error\n"));
 			return -1;
 		}
 	}
 
 	SYNC_TRACE(3)
-		cerr << "### Resetting sync flags." << endl;
+		fprintf(stderr, "### Resetting sync flags.\n");
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		cerr << "GenericConduit error: Can't reset sync flags: "
-		     << err << endl;
+		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
+			"GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
-		add_to_log("Error\n");
+		add_to_log(_("Error\n"));
 		return -1;
 	}
 
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log("OK\n");
+	add_to_log(_("OK\n"));
 	return 0;		// Success
 }
 
@@ -1236,8 +1283,8 @@ GenericConduit::SyncRecord(
 	    ARCHIVE(remoterec))
 	{
 		SYNC_TRACE(5)
-			cerr << "Remote: deleted, archived"
-			     << endl;
+			fprintf(stderr, "Remote: deleted, archived\n");
+
 		/* Remote record has been deleted; user wants an
 		 * archive copy.
 		 */
@@ -1245,8 +1292,8 @@ GenericConduit::SyncRecord(
 		    ARCHIVE(localrec))
 		{
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, archived"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, archived\n");
+
 			/* Local record has been deleted; user wants an
 			 * archive copy.
 			 */
@@ -1271,17 +1318,14 @@ GenericConduit::SyncRecord(
 
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record on Palm"
-				     << endl;
+				fprintf(stderr, "> Deleting record on Palm\n");
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "SlowSync: Warning: "
-					"can't delete record "
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("%s: Warning: Can't delete "
+						  "record 0x%08lx: %d\n"),
+					"SlowSync", remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -1290,36 +1334,31 @@ GenericConduit::SyncRecord(
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, expunged"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, expunged\n");
 
 			/* Archive remoterec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving remote record"
-				     << endl;
+				fprintf(stderr, "> Archiving remote record\n");
 			this->archive_record(remoterec);
 
 			/* Delete the record on the Palm */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record on Palm"
-				     << endl;
+				fprintf(stderr, "> Deleting record on Palm\n");
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "SlowSync: Warning: "
-					"can't delete record "
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("%s: Warning: Can't delete "
+						  "record 0x%08lx: %d\n"),
+					"SlowSync", remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -1328,8 +1367,8 @@ GenericConduit::SyncRecord(
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
@@ -1338,13 +1377,11 @@ GenericConduit::SyncRecord(
 
 			/* Local record has changed */
 			SYNC_TRACE(5)
-				cerr << "Local:  dirty"
-				     << endl;
+				fprintf(stderr, "Local:  dirty\n");
 
 			/* Archive remoterec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving remote record"
-				     << endl;
+				fprintf(stderr, "> Archiving remote record\n");
 			this->archive_record(remoterec);
 
 			/* Fix flags */
@@ -1359,10 +1396,9 @@ GenericConduit::SyncRecord(
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
-				cerr << "> Sending local record (ID 0x"
-				     << hex << setw(8) << setfill('0')
-				     << ") to Palm"
-				     << endl;
+				fprintf(stderr, "> Sending local record (ID "
+					"0x%08lx) to Palm\n",
+					localrec->id);
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     /* XXX - The category is the
@@ -1377,10 +1413,9 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "Error uploading record "
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("Error uploading record "
+						  "0x%08lx: %d\n"),
+					localrec->id, err);
 				return -1;
 			}
 
@@ -1390,26 +1425,21 @@ GenericConduit::SyncRecord(
 			 */
 			localrec->id = newID;
 			SYNC_TRACE(7)
-				cerr << "newID == "
-				     << hex << setw(8) << setfill('0')
-				     << newID << endl;
-
+				fprintf(stderr, "newID == 0x%08lx\n", newID);
 		} else {
 			/* Local record hasn't changed */
 			SYNC_TRACE(5)
-				cerr << "Local:  clean"
-				     << endl;
+				fprintf(stderr, "Local:  clean\n");
 
 			/* Archive remoterec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving remote record"
-				     << endl;
+				fprintf(stderr, "> Archiving remote record\n");
 			this->archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		}
@@ -1417,8 +1447,7 @@ GenericConduit::SyncRecord(
 	{
 		/* Remote record has been deleted without a trace. */
 		SYNC_TRACE(5)
-			cerr << "Remote: deleted, expunged"
-			     << endl;
+			fprintf(stderr, "Remote: deleted, expunged\n");
 
 		if ((DELETED(localrec) || DIRTY(localrec)) &&
 		    ARCHIVE(localrec))
@@ -1427,34 +1456,32 @@ GenericConduit::SyncRecord(
 			 * archive copy.
 			 */
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, archived"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix flags */
 			localrec->attributes &= 0x0f;
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving local record"
-				     << endl;
+				fprintf(stderr, "> Archiving local record\n");
 			this->archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, expunged" << endl;
+				fprintf(stderr, "Local:  deleted, expunged\n");
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
@@ -1464,19 +1491,18 @@ GenericConduit::SyncRecord(
 			udword newID;	/* ID of uploaded record */
 
 			SYNC_TRACE(5)
-				cerr << "Local:  dirty" << endl;
+				fprintf(stderr, "Local:  dirty\n");
 
 			/* Delete remoterec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting remote record"
-				     << endl;
+				fprintf(stderr, "> Deleting remote record\n");
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "SlowSync: Warning: can't delete record "
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id << ": " << err << endl;
+				fprintf(stderr, _("%s: Warning: Can't delete "
+						  "record 0x%08lx: %d\n"),
+					"SlowSync", remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -1492,8 +1518,8 @@ GenericConduit::SyncRecord(
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
-				cerr << "> Uploading local record to Palm"
-				     << endl;
+				fprintf(stderr,
+					"> Uploading local record to Palm\n");
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     /* XXX - The bottom nybble of
@@ -1508,10 +1534,9 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "Error uploading record "
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("Error uploading record "
+						  "0x%08lx: %d\n"),
+					localrec->id, err);
 				return -1;
 			}
 
@@ -1521,20 +1546,16 @@ GenericConduit::SyncRecord(
 			 */
 			localrec->id = newID;
 			SYNC_TRACE(7)
-				cerr << "newID == "
-				     << hex << setw(8) << setfill('0')
-				     << newID << endl;
-
+				fprintf(stderr, "newID == 0x%08lx\n", newID);
 		} else {
 			/* Local record hasn't changed */
 			SYNC_TRACE(5)
-				cerr << "Local:  clean"
-				     << endl;
+				fprintf(stderr, "Local:  clean\n");
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		}
@@ -1542,8 +1563,7 @@ GenericConduit::SyncRecord(
 	{
 		/* Remote record has changed */
 		SYNC_TRACE(5)
-			cerr << "Remote: dirty"
-			     << endl;
+			fprintf(stderr, "Remote: dirty\n");
 
 		/* XXX - Can these next two cases be combined? If the local
 		 * record has been deleted, it needs to be deleted. The
@@ -1560,8 +1580,7 @@ GenericConduit::SyncRecord(
 			struct pdb_record *newrec;
 
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, archived"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix flags */
 			localrec->attributes &= 0x0f;
@@ -1572,14 +1591,13 @@ GenericConduit::SyncRecord(
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving local record"
-				     << endl;
+				fprintf(stderr, "> Archiving local record\n");
 			this->archive_record(localrec);
 
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6)
-				cerr << "> Copying remote record to local database"
-				     << endl;
+				fprintf(stderr, "> Copying remote record to "
+					"local database\n");
 			newrec = new_Record(remoterec->attributes,
 					    remoterec->attributes,
 						/* XXX - Category. Sloppy */
@@ -1588,8 +1606,8 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				cerr << "SyncRecord: can't copy record"
-				     << endl;
+				fprintf(stderr, _("%s: Can't copy record\n"),
+					"SyncRecord");
 				return -1;
 			}
 
@@ -1608,19 +1626,17 @@ GenericConduit::SyncRecord(
 			struct pdb_record *newrec;
 
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, expunged"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, expunged\n");
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting local record"
-				     << endl;
+				fprintf(stderr, "> Deleting local record\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6)
-				cerr << "> Copying remote record to local database"
-				     << endl;
+				fprintf(stderr, "> Copying remote record to "
+					"local database\n");
 			newrec = new_Record(remoterec->attributes,
 					    remoterec->attributes,
 						/* XXX - Category. Sloppy */
@@ -1629,8 +1645,8 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				cerr << "SyncRecord: can't copy record"
-				     << endl;
+				fprintf(stderr, _("%s: Can't copy record\n"),
+					"SyncRecord");
 				return -1;
 			}
 
@@ -1647,7 +1663,7 @@ GenericConduit::SyncRecord(
 		{
 			/* Local record has changed */
 			SYNC_TRACE(5)
-				cerr << "Local:  dirty" << endl;
+				fprintf(stderr, "Local:  dirty\n");
 
 			/* See if the records are identical */
 			/* XXX - Use method to compare records */
@@ -1684,8 +1700,8 @@ GenericConduit::SyncRecord(
 
 				/* Upload localrec to Palm */
 				SYNC_TRACE(6)
-					cerr << "> Uploading local record to Palm"
-					     << endl;
+					fprintf(stderr, "> Uploading local "
+						"record to Palm\n");
 				err = DlpWriteRecord(_pconn, dbh, 0x80,
 						     localrec->id,
 						     /* XXX - The bottom
@@ -1701,10 +1717,8 @@ GenericConduit::SyncRecord(
 						     &newID);
 				if (err != DLPSTAT_NOERR)
 				{
-					cerr << "Error uploading record "
-					     << hex << setw(8) << setfill('0')
-					     << localrec->id
-					     << ": " << err << endl;
+					fprintf(stderr, _("Error uploading record 0x%08lx: %d\n"),
+						localrec->id, err);
 					return -1;
 				}
 
@@ -1714,14 +1728,13 @@ GenericConduit::SyncRecord(
 				 */
 				localrec->id = newID;
 				SYNC_TRACE(7)
-					cerr << "newID == "
-					     << hex << setw(8) << setfill('0')
-					     << newID << endl;
+					fprintf(stderr, "newID == 0x%08lx\n",
+						newID);
 
 				/* Add remoterec to local database */
 				SYNC_TRACE(7)
-					cerr << "Adding remote record to local database."
-					     << endl;
+					fprintf(stderr, "Adding remote record "
+						"to local database.\n");
 				/* First, make a copy (with clean flags) */
 				/* XXX - Get category */
 				newrec = new_Record(
@@ -1736,8 +1749,8 @@ GenericConduit::SyncRecord(
 					remoterec->data);
 				if (newrec == 0)
 				{
-					cerr << "Can't copy a new record."
-					     << endl;
+					fprintf(stderr, _("Can't copy a new "
+							  "record.\n"));
 					return -1;
 				}
 
@@ -1746,9 +1759,10 @@ GenericConduit::SyncRecord(
 						       newrec);
 				if (err < 0)
 				{
-					cerr << "SlowSync: Can't insert record "
-					     << hex << setw(8) << setfill('0')
-					     << newrec->id << endl;
+					fprintf(stderr, _("%s: Can't insert "
+							  "record 0x%08lx\n"),
+						"SyncRecord",
+						newrec->id);
 					pdb_FreeRecord(newrec);
 					return -1;
 				}
@@ -1760,12 +1774,11 @@ GenericConduit::SyncRecord(
 			struct pdb_record *newrec;
 
 			SYNC_TRACE(5)
-				cerr << "Local:  clean"
-				     << endl;
+				fprintf(stderr, "Local:  clean\n");
 
 			SYNC_TRACE(6)
-				cerr << "> Replacing local record with remote one"
-				     << endl;
+				fprintf(stderr, "> Replacing local record "
+					"with remote one\n");
 			/* Replace localrec with remoterec.
 			 * This is done in three stages:
 			 * - copy 'remoterec' to 'newrec'
@@ -1773,8 +1786,8 @@ GenericConduit::SyncRecord(
 			 * - delete 'localrec'
 			 */
 			SYNC_TRACE(6)
-				cerr << "> Copying remote record to local database"
-				     << endl;
+				fprintf(stderr, "> Copying remote record to "
+					"local database\n");
 			newrec = new_Record(remoterec->attributes,
 					    remoterec->attributes,
 						/* XXX - Category. Sloppy. */
@@ -1783,8 +1796,8 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				cerr << "SyncRecord: can't copy record"
-				     << endl;
+				fprintf(stderr, _("%s: Can't copy record\n"),
+					"SyncRecord");
 				return -1;
 			}
 
@@ -1798,9 +1811,8 @@ GenericConduit::SyncRecord(
 			err = pdb_InsertRecord(localdb, localrec, newrec);
 			if (err < 0)
 			{
-				cerr << "SlowSync: Can't insert record "
-				     << hex << setw(8) << setfill('0')
-				     << newrec->id << endl;
+				fprintf(stderr, _("%s: Can't insert record 0x%08lx\n"),
+					"SlowSync", newrec->id);
 				pdb_FreeRecord(newrec);
 				return -1;
 			}
@@ -1813,8 +1825,7 @@ GenericConduit::SyncRecord(
 	} else {
 		/* Remote record has not changed */
 		SYNC_TRACE(5)
-			cerr << "Remote: clean"
-			     << endl;
+			fprintf(stderr, "Remote: clean\n");
 
 		if ((DELETED(localrec) || DIRTY(localrec)) &&
 		    ARCHIVE(localrec))
@@ -1823,8 +1834,7 @@ GenericConduit::SyncRecord(
 			 * archive copy.
 			 */
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, archived"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, archived\n");
 
 			/* Fix local flags */
 			localrec->attributes &= 0x0f;
@@ -1835,27 +1845,25 @@ GenericConduit::SyncRecord(
 
 			/* Archive localrec */
 			SYNC_TRACE(6)
-				cerr << "> Archiving local record"
-				     << endl;
+				fprintf(stderr, "> Archiving local record\n");
 			this->archive_record(localrec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)
-				cerr << "Local:  deleted, expunged"
-				     << endl;
+				fprintf(stderr, "Local:  deleted, expunged\n");
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				cerr << "> Deleting record in local database"
-				     << endl;
+				fprintf(stderr, "> Deleting record in local "
+					"database\n");
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		} else if (DIRTY(localrec))
@@ -1864,8 +1872,7 @@ GenericConduit::SyncRecord(
 			udword newID;	/* ID of uploaded record */
 
 			SYNC_TRACE(5)
-				cerr << "Local:  dirty"
-				     << endl;
+				fprintf(stderr, "Local:  dirty\n");
 
 			/* Fix local flags */
 			localrec->attributes &= 0x0f;
@@ -1876,8 +1883,8 @@ GenericConduit::SyncRecord(
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
-				cerr << "> Uploading local record to Palm"
-				     << endl;
+				fprintf(stderr, "> Uploading local record to "
+					"Palm\n");
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
 					     /* XXX - The bottom nybble of
@@ -1892,10 +1899,9 @@ GenericConduit::SyncRecord(
 					     &newID);
 			if (err != DLPSTAT_NOERR)
 			{
-				cerr << "Error uploading record "
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id
-				     << ": " << err << endl;
+				fprintf(stderr, _("Error uploading record "
+						  "0x%08lx: %d\n"),
+					localrec->id, err);
 				return -1;
 			}
 
@@ -1905,20 +1911,15 @@ GenericConduit::SyncRecord(
 			 */
 			localrec->id = newID;
 			SYNC_TRACE(7)
-				cerr << "newID == "
-				     << hex << setw(8) << setfill('0')
-				     << newID << endl;
-
+				fprintf(stderr, "newID == 0x%08lx\n", newID);
 		} else {
 			/* Local record hasn't changed */
 			SYNC_TRACE(5)
-				cerr << "Local:  clean"
-				     << endl;
+				fprintf(stderr, "Local:  clean\n");
 
 			/* Do nothing */
 			SYNC_TRACE(6)
-				cerr << "> Not doing anything"
-				     << endl;
+				fprintf(stderr, "> Not doing anything\n");
 		}
 	}
 
@@ -2006,12 +2007,13 @@ GenericConduit::archive_record(const struct pdb_record *rec)
 		if ((_archfd = arch_open(_dbinfo, O_WRONLY)) < 0)
 		{
 			SYNC_TRACE(2)
-				cerr << "Can't open \"" << _dbinfo->name
-				     << "\". Attempting to create" << endl;
+				fprintf(stderr, "Can't open \"%s\". "
+					"Attempting to create\n",
+					_dbinfo->name);
 			if ((_archfd = arch_create(_dbinfo)) < 0)
 			{
-				cerr << "Can't create \"" << _dbinfo->name
-				     << "\"" << endl;
+				fprintf(stderr, _("Can't create \"%s\"\n"),
+					_dbinfo->name);
 				return -1;
 			}
 		}
@@ -2088,7 +2090,8 @@ GenericConduit::read_backup()
 	int infd;		// File descriptor for backup file
 	if ((infd = open(bakfname, O_RDONLY)) < 0)
 	{
-		cerr << "read_backup error: Can't open " << bakfname << endl;
+		fprintf(stderr, _("%s error: Can't open \"%s\"\n"),
+			"read_backup", bakfname);
 		return -1;
 	}
 	_localdb = pdb_Read(infd);
@@ -2096,8 +2099,8 @@ GenericConduit::read_backup()
 
 	if (_localdb == 0)
 	{
-		cerr << "read_backup error: can't load \"" << bakfname
-		     << '"' << endl;
+		fprintf(stderr, _("%s error: Can't load \"%s\"\n"),
+			"read_backup", bakfname);
 		return -1; 
 	}
 
@@ -2136,8 +2139,8 @@ GenericConduit::write_backup(struct pdb *db)
 	strncat(stage_fname, stage_ext, stage_ext_len);
 	if (mktemp(stage_fname) == 0)
 	{
-		cerr << "GenericConduit::write_backup: Can't create staging file name"
-		     << endl;
+		fprintf(stderr, _("%s: Can't create staging file name\n"),
+			"GenericConduit::write_backup");
 		return -1;
 	}
 
@@ -2146,8 +2149,8 @@ GenericConduit::write_backup(struct pdb *db)
 			  O_WRONLY | O_CREAT | O_EXCL,
 			  0600)) < 0)
 	{
-		cerr << "GenericConduit::write_backup: Can't create staging file \""
-		     << stage_fname << "\"" << endl;
+		fprintf(stderr, _("%s: Can't create staging file \"%s\"\n"),
+			"GenericConduit::write_backup", stage_fname);
 		return -1;
 	}
 	/* XXX - Lock the file */
@@ -2155,8 +2158,8 @@ GenericConduit::write_backup(struct pdb *db)
 	err = pdb_Write(db, outfd);
 	if (err < 0)
 	{
-		cerr << "GenericConduit::write_backup: Can't write staging file "
-		     << stage_fname << endl;
+		fprintf(stderr, _("%s: Can't write staging file \"%s\"\n"),
+			"GenericConduit::write_backup", stage_fname);
 		close(outfd);
 		return err;
 	}
@@ -2166,10 +2169,10 @@ GenericConduit::write_backup(struct pdb *db)
 	err = rename(stage_fname, bakfname);
 	if (err < 0)
 	{
-		cerr << "GenericConduit::write_backup: Can't rename staging file."
-		     << endl
-		     << "Backup left in " << stage_fname << ", hopefully"
-		     << endl;
+		fprintf(stderr, _("%s: Can't rename staging file.\n"
+				  "Backup left in \"%s\", hopefully\n"),
+			"GenericConduit::write_backup",
+			stage_fname);
 		return err;
 	}
 
