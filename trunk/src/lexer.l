@@ -6,7 +6,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.12 2000-04-10 09:33:47 arensb Exp $
+ * $Id: lexer.l,v 2.13 2000-05-06 11:48:36 arensb Exp $
+ */
+/* XXX - 'flex' by itself can (apparently) deal with infinitely-long
+ * tokens. 'flex -l' (and presumably 'lex') can't. Figure out some way of
+ * dealing with this, particularly wrt strings and user-supplied conduit
+ * arguments. Perhaps replace ".*" with ".{0,255}" or some such.
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,12 +51,24 @@ extern int fileno(FILE *);
 #endif  /* fileno */
 
 int lineno;
+
+Bool start_header = False;
+			/* Tells yylex() to go to the HEADER state. Set by
+			 * yacc.
+			 */
 %}
 
  /* We don't use yywrap(), and this option makes
   * things compile cleanly under Irix.
+  * XXX - This appears to be a 'flex'-ism, and makes non-flex lexes choke.
   */
 %option noyywrap
+
+ /* Start states */
+ /* Looking for a conduit header */
+%s HEADER
+
+ /* Character classes */
 
  /* Decimal digit */
 DIGIT		[0-9]
@@ -63,6 +80,12 @@ XDIGIT		[0-9a-fA-F]
 WS		[ \t\f\r]
  /* Alphanumeric character */
 ALNUM		[a-zA-Z0-9]
+ /* Leading character for an identifier */
+ID1		[a-zA-Z_]
+ /* Subsequent characters for an identifier */
+ID		[a-zA-Z_0-9]
+ /* Subsequent characters for a header identifier */
+HID		[-a-zA-Z_0-9]
 
 %%
 
@@ -73,7 +96,83 @@ ALNUM		[a-zA-Z0-9]
 	 */
 	if (0) goto find_rule;
 #endif	/* YY_FLEX_LEX_COMPAT */
+
+	/* XXX - Add a more general "lex_expect(state)" function. It should
+	 * set a new start state.
+	 */
+	if (start_header)
+	{
+		PARSE_TRACE(7)
+			fprintf(stderr, "Going into <HEADER> mode\n");
+		BEGIN HEADER;
+		start_header = False;
+	}
 %}
+
+<HEADER>^{WS}*{ID1}{HID}*:{WS}*.*	{
+		/* It's actually easier to just recognize the entire line
+		 * all at once and parse it here.
+		 */
+		/* XXX - The spec gives a maximum length for both the
+		 * header name and header value. Deal with them here.
+		 */
+		char *hname;	/* Pointer to header name */
+		char *hvalue;	/* Pointer to header value */
+		char *colon;	/* Pointer to colon within the line */
+
+		/* XXX - If line ends in "\", there's a continuation line.
+		 * If it ends in ';', that's the end of the line.
+		 * How to deal with whitespace at the beginning of the
+		 * continuation line? Or would it be best to just bag the
+		 * whole continuation line idea entirely?
+		 */
+		if (yytext[yyleng-1] == ';')
+			/* Put the semicolon back on the input stream */
+			yyless(yyleng-1);
+
+		hname = yytext;
+		hname += strspn(hname, " \t\f");
+					/* Skip leading whitespace */
+
+		/* Find the colon that separates the header name from the
+		 * value.
+		 */
+		colon = strchr(hname, ':');
+		*colon = '\0';		/* XXX - Ugly? */
+
+		PARSE_TRACE(6)
+			fprintf(stderr, "Header name: [%s]\n", hname);
+		yylval.header_type.name = strdup(hname);
+				/* Save the header name */
+				/* XXX - Should truncate at
+				 * COND_MAXHFIELDLEN characters.
+				 */
+
+		/* Find the header value after the colon */
+		hvalue = colon + 1;
+		hvalue += strspn(hvalue, " \t\f");
+
+		PARSE_TRACE(6)
+			fprintf(stderr, "Header value: [%s]\n", hvalue);
+
+		/* XXX - If value begins and ends with double quotes, strip
+		 * them.
+		 */
+		/* XXX - Process escaped characters */
+		yylval.header_type.value = strdup(hvalue);
+				/* Save the header value */
+				/* XXX - Should truncate at COND_MAXLINELEN
+				 * - COND_MAXHFIELDLEN-2 characters.
+				 */
+
+		return HEADER_PAIR;
+	}
+
+ /* XXX - This is really a hack. Need to redo the whole header thing */
+<HEADER>"}"	{
+	BEGIN 0;
+	return yytext[0];
+	}
 
  /* Ignore comments */
 #.*		;
@@ -85,32 +184,33 @@ ALNUM		[a-zA-Z0-9]
 \n		{ lineno++; }
 
  /* Keywords */
-"conduit"	{ return CONDUIT; }
-"device"	{ return DEVICE; }
-"directory"	{ return DIRECTORY; }
-"listen"	{ return LISTEN; }
-"name"		{ return NAME; }
-"path"		{ return PATH; }
-"pda"		{ return PDA; }
-"palm"		{ return PDA; /* Synonym */}
-"serial"	{ return SERIAL; }
-"usb"		{ return USB; }
-"snum"		{ return SNUM; }
-"speed"		{ return SPEED; }
-"type"		{ return TYPE; }
+"arguments"	{ return ARGUMENTS;	}
+"conduit"	{ return CONDUIT;	}
+"device"	{ return DEVICE;	}
+"directory"	{ return DIRECTORY;	}
+"listen"	{ return LISTEN;	}
+"name"		{ return NAME;		}
+"path"		{ return PATH;		}
+"pda"		{ return PDA;		}
+"palm"		{ return PDA; /* Synonym */	}
+"serial"	{ return SERIAL;	}
+"usb"		{ return USB;		}
+"snum"		{ return SNUM;		}
+"speed"		{ return SPEED;		}
+"type"		{ return TYPE;		}
 
  /* Conduit flavors */
-"sync"		{ return SYNC; }
-"fetch"		{ return FETCH; }
-"pre-fetch"	{ return FETCH;	/* Synonym */}
-"dump"		{ return DUMP; }
-"post-dump"	{ return DUMP;	/* Synonym */}
-"install" 	{ return INSTALL; }
-"uninstall" 	{ return UNINSTALL; }
+"sync"		{ return SYNC;		}
+"fetch"		{ return FETCH;		}
+"pre-fetch"	{ return FETCH;	/* Synonym */	}
+"dump"		{ return DUMP;		}
+"post-dump"	{ return DUMP;	/* Synonym */	}
+"install" 	{ return INSTALL;		}
+"uninstall" 	{ return UNINSTALL;	}
 
  /* Conduit options */
-"final"		{ return FINAL; }
-"default"	{ return DEFAULT; }
+"final"		{ return FINAL;		}
+"default"	{ return DEFAULT;	}
 
  /* Conduit creator-type pairs. There are four rules for this, for
   * simplicity: "cccc/tttt", "cccc / *", "* / tttt", and "* / *" (without
@@ -220,6 +320,20 @@ ALNUM		[a-zA-Z0-9]
 		sscanf(yytext, "%i", &value);
 		yylval.integer = value;
 		return NUMBER;
+	}
+
+ /* XXX - Is this actually used anywhere? */
+{ID1}{ID}*	{
+		if ((yylval.string = malloc(yyleng+1)) == NULL)
+		{
+			fprintf(stderr, _("%s: Can't malloc copy of word\n"),
+				"yylex");
+			return -1;
+		}
+		strncpy(yylval.string, yytext, yyleng);
+		yylval.string[yyleng] = '\0';
+fprintf(stderr, "Returning WORD [%s]\n", yylval.string);
+		return WORD;
 	}
 
  /* Anything else, just return it. */
