@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.8 1999-06-24 02:51:52 arensb Exp $
+ * $Id: coldsync.h,v 1.9 1999-07-04 02:41:38 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -14,11 +14,13 @@
 #include "pconn/PConnection.h"
 #include "pconn/dlp_cmd.h"
 
-#define INSTALL_DIR	"palm_install"	/* XXX - This should be gotten from
-					 * the password info and the config
-					 * file. It should also be an
-					 * absolute pathname.
-					 */
+#define CARD0	0		/* XXX - Memory card #0. The only real
+				 * purpose of this is to make it marginally
+				 * easier to find all of the places where
+				 * card #0 has been hardcoded, once support
+				 * for multiple memory cards is added, if
+				 * it ever is.
+				 */
 
 /* Palm
  * Information about the Palm being currently synced.
@@ -41,6 +43,38 @@ struct Palm
 	int num_dbs;			/* # of databases */
 	struct dlp_dbinfo *dblist;	/* Database list */
 };
+
+/* cmd_opts
+ * Command-line options. This nameless struct acts sort of like a C++
+ * namespace, and just serves to make sure there are no name collisions.
+ */
+struct cmd_opts {
+	Bool do_backup;		/* True iff we should do a full backup */
+	char *backupdir;	/* Where to put the files when doing a 
+				 * backup */
+	Bool do_restore;	/* True iff we should restore from a
+				 * full backup */
+	char *restoredir;	/* Where to restore from */
+	Bool do_clean;		/* If 'do_backup' is true, remove all files
+				 * from the backup directory first.
+				 * If 'do_restore' is true, delete all
+				 * databases from the Palm before
+				 * restoring.
+				 */
+	Bool force_slow;	/* If true, force slow syncing */
+	Bool force_fast;	/* If true, force fast syncing */
+
+	char *port;		/* Serial port to sync on */
+				/* XXX - It should be possible to listen on
+				 * multiple ports at once, at which point
+				 * this will have to become an array or
+				 * linked list or something.
+				 */
+	char *username;		/* Name of user to run as */
+	uid_t uid;		/* UID of user to run as */
+};
+
+extern struct cmd_opts global_opts;
 
 extern int need_slow_sync;
 extern udword hostid;		/* This host's ID */
@@ -71,10 +105,6 @@ extern int Backup(struct PConnection *pconn,
 		  struct Palm *palm,
 		  struct dlp_dbinfo *dbinfo,
 		  char *bakfname);
-extern int RecordSync(struct PConnection *pconn,
-		      struct Palm *palm,
-		      struct dlp_dbinfo *dbinfo,
-		      char *bakfname);
 struct pdb *LoadDatabase(char *fname);
 extern int SlowSync(struct PConnection *pconn,
 		    struct dlp_dbinfo *remotedb,
