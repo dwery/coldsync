@@ -5,9 +5,9 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.8 2000-08-09 15:37:09 arensb Exp $
+# $Id: ColdSync.pm,v 1.9 2000-08-29 11:16:50 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.8 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.9 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -115,6 +115,8 @@ sub Warn
 sub Die
 {
 	my $msg = shift;
+
+	# XXX - Should run exit hooks, if applicable
 
 	# XXX - Deal with multi-line warning messages.
 	print STDOUT "501 " unless $msg =~ /^\d{3}[- ]/;
@@ -442,6 +444,8 @@ sub ConduitMain
 
 	# Call the appropriate handler. Note that $handler has to be
 	# a hard reference, not a symbolic one.
+	# XXX - Should this be inside an eval, to catch fatal errors in the
+	# user's code?
 
 	&{$handler} or die "501 Conduit failed\n";
 
