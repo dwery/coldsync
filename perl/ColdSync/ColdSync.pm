@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.26 2003-10-10 11:06:05 azummo Exp $
+# $Id: ColdSync.pm,v 1.27 2003-11-09 18:50:19 azummo Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.26 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -196,7 +196,7 @@ sub DumpConfig
 	# requires a rewrite of the corresponding lex/yacc code to accept
 	# quotes, though.
 
-	if (defined(%HEADERS) && (%HEADERS ne ()))
+	if (defined(%HEADERS) && scalar(keys %HEADERS) > 0)
 	{
 		my $key;
 		my $value;
@@ -232,7 +232,7 @@ sub ParseArgs
 		exit 1;
 	}
 
-	if ($ARGV[0] ne "conduit")
+	if ($ARGV[0] ne "conduit" and $ARGV[0] ne "run")
 	{
 		# This conduit was not invoked as a conduit, but
 		# rather as a standalone program.
@@ -248,9 +248,12 @@ sub ParseArgs
 		exit 1;
 	}
 
-	# This program isn't being run standalone
-	$SIG{__WARN__} = \&Warn;
-	$SIG{__DIE__} = \&Die;
+	if ($ARGV[0] eq "conduit")
+	{
+		# This program isn't being run standalone
+		$SIG{__WARN__} = \&Warn;
+		$SIG{__DIE__} = \&Die;
+	}
 
 	# Check flavor argument
 
@@ -358,6 +361,24 @@ sub ReadHeaders
 	return;
 }
 
+# Make headers from the command line, not stdin.
+sub SetupHeaders
+{
+	# running "standalone" as a conduit, from cron or something.
+
+	$HEADERS{'Daemon'} = "ColdSync/standalone";
+	$HEADERS{'Version'} = "1.0";
+
+	$HEADERS{'CS-AutoLoad'} = $HEADERS{'CS-AutoSave'} = 1;
+
+	# Headers are given as Header=Value arguments
+	for (my $i = 2; $i < @ARGV; $i ++)
+	{
+		next unless $ARGV[$i] =~ /^([^=]+)=(.*)$/o;
+		$HEADERS{$1} = $2;
+	}
+}
+
 =head1 FUNCTIONS
 
 =over 2
@@ -377,6 +398,18 @@ StartConduit() supports the C<-config> option: when this option is
 given, the program prints to STDOUT a sample configuration entry that
 may be appended to F<.coldsyncrc>.
 
+StartConduit() also supports the ability to run conduits without coldsync
+using a "run <flavor> <database> [header1=value] [header2=value] ..."
+format. i.e.
+
+	dump-env run sync
+	mbox-inbox run fetch InputDB=~/.palm/backup/MailDB.pdb \
+		OutputDB=~/.palm/backup/MailDB.pdb Mailbox=~/Mail/palm
+
+This is useful for running from C<cron> or for debugging conduits. Of
+course, sync conduits won't be able to use SPC to communicate with a
+PDA.
+
 =cut
 #'
 
@@ -392,7 +425,13 @@ sub StartConduit
 		die "403 Unsupported flavor\n";
 	}
 
-	ReadHeaders;
+	if( $ARGV[0] eq "run" )
+	{
+		SetupHeaders;
+	} else
+	{
+		ReadHeaders;
+	}
 
 	# Read the input database, if one was specified.
 	$PDB = new Palm::PDB;
@@ -485,6 +524,19 @@ ConduitMain() supports the C<-config> option: when this option is
 given, the program prints to STDOUT a set of sample configuration
 entries that may be appended to F<.coldsyncrc>.
 
+ConduitMain() also supports the ability to run conduits without coldsync
+using a "run <flavor> [header1=value] [header2=value] ..."
+format. i.e.
+
+	dump-env run sync
+	mbox-inbox run fetch InputDB=~/.palm/backup/MailDB.pdb \
+		OutputDB=~/.palm/backup/MailDB.pdb Mailbox=~/Mail/palm
+
+This is useful for running from C<cron> or for debugging conduits. Of
+course, sync conduits won't be able to use SPC to communicate with a
+PDA.
+
+
 =cut
 
 # ConduitMain
@@ -524,7 +576,13 @@ sub ConduitMain
 		die "403 Unsupported flavor\n";
 	}
 
-	ReadHeaders;
+	if( $ARGV[0] eq "run" and @ARGV >= 3 )
+	{
+		SetupHeaders;
+	} else
+	{
+		ReadHeaders;
+	}
 
 	$PDB = new Palm::PDB;
 	if (defined $HEADERS{InputDB} and $HEADERS{'CS-AutoLoad'} eq 1)
