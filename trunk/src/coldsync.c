@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.87 2001-02-22 14:33:25 arensb Exp $
+ * $Id: coldsync.c,v 1.88 2001-03-16 14:14:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -47,6 +47,7 @@
 #include "parser.h"
 #include "pref.h"
 #include "palment.h"
+#include "net_compat.h"
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
@@ -1934,7 +1935,7 @@ run_mode_Daemon(int argc, char *argv[])
 	SYNC_TRACE(3)
 	{
 		fprintf(stderr, "pw_name: [%s]\n", pwent->pw_name);
-		fprintf(stderr, "pw_uid: [%d]\n", pwent->pw_uid);
+		fprintf(stderr, "pw_uid: [%ld]\n", (long) pwent->pw_uid);
 	}
 
 	/* Setuid to the user whose Palm this is */
@@ -2884,7 +2885,7 @@ mkforw_addr(struct Palm *palm,
 		fprintf(stderr, "forward hostname is [%s]\n",
 			(hostname == NULL ? "(null)" : hostname));
 
-#if HAVE_IPV6
+#if HAVE_SOCKADDR6
 	/* Try to look up the name as IPv6 hostname */
 	if ((hostent = gethostbyname2(hostname, AF_INET6)) != NULL)
 	{
@@ -2927,7 +2928,7 @@ mkforw_addr(struct Palm *palm,
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "It's not an IPv6 hostname\n");
-#endif	/* HAVE_IPV6 */
+#endif	/* HAVE_SOCKADDR6 */
 
 	/* Try to look up the name as IPv4 hostname */
 	if ((hostent = gethostbyname2(hostname, AF_INET)) != NULL)
@@ -2972,7 +2973,7 @@ mkforw_addr(struct Palm *palm,
 	SYNC_TRACE(3)
 		fprintf(stderr, "It's not an IPv4 hostname\n");
 
-#if HAVE_IPV6
+#if HAVE_SOCKADDR6
 	/* Try to use the name as an IPv6 address */
 	{
 		struct in6_addr addr6;
@@ -3015,7 +3016,7 @@ mkforw_addr(struct Palm *palm,
 			return 0;		/* Success */
 		}
 	}
-#endif	/* HAVE_IPV6 */
+#endif	/* HAVE_SOCKADDR6 */
 
 	/* Try to use the name as an IPv4 address */
 	{
