@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.8 1999-03-28 09:58:25 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.9 1999-05-31 20:50:42 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -3483,13 +3483,13 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 
 			/* Fill in the address and hostname */
 			/* XXX - Possible buffer overflows */
-			memcpy(netsyncinfo->synchostname, rptr,
+			memcpy(netsyncinfo->hostname, rptr,
 			       netsyncinfo->hostnamesize);
 			rptr += netsyncinfo->hostnamesize;
-			memcpy(netsyncinfo->synchostaddr, rptr,
+			memcpy(netsyncinfo->hostaddr, rptr,
 			       netsyncinfo->hostaddrsize);
 			rptr += netsyncinfo->hostaddrsize;
-			memcpy(netsyncinfo->synchostnetmask, rptr,
+			memcpy(netsyncinfo->hostnetmask, rptr,
 			       netsyncinfo->hostnetmasksize);
 			rptr += netsyncinfo->hostnetmasksize;
 
@@ -3498,13 +3498,13 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 				   netsyncinfo->lansync_on);
 			DLPC_TRACE(6, "\thostname: (%d) \"%s\"\n",
 				   netsyncinfo->hostnamesize,
-				   netsyncinfo->synchostname);
+				   netsyncinfo->hostname);
 			DLPC_TRACE(6, "\taddress: (%d) \"%s\"\n",
 				   netsyncinfo->hostaddrsize,
-				   netsyncinfo->synchostaddr);
+				   netsyncinfo->hostaddr);
 			DLPC_TRACE(6, "\tnetmask: (%d) \"%s\"\n",
 				   netsyncinfo->hostnetmasksize,
-				   netsyncinfo->synchostnetmask);
+				   netsyncinfo->hostnetmask);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -3542,11 +3542,11 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 		   netsyncinfo->modflags,
 		   netsyncinfo->netsyncinfo.lansync_on,
 		   netsyncinfo->netsyncinfo.hostnamesize,
-		   netsyncinfo->netsyncinfo.synchostname,
+		   netsyncinfo->netsyncinfo.hostname,
 		   netsyncinfo->netsyncinfo.hostaddrsize,
-		   netsyncinfo->netsyncinfo.synchostaddr,
+		   netsyncinfo->netsyncinfo.hostaddr,
 		   netsyncinfo->netsyncinfo.hostnetmasksize,
-		   netsyncinfo->netsyncinfo.synchostnetmask);
+		   netsyncinfo->netsyncinfo.hostnetmask);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteNetSyncInfo;
@@ -3565,13 +3565,13 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 	put_uword(&wptr, netsyncinfo->netsyncinfo.hostnamesize);
 	put_uword(&wptr, netsyncinfo->netsyncinfo.hostaddrsize);
 	put_uword(&wptr, netsyncinfo->netsyncinfo.hostnetmasksize);
-	memcpy(wptr, netsyncinfo->netsyncinfo.synchostname,
+	memcpy(wptr, netsyncinfo->netsyncinfo.hostname,
 	       netsyncinfo->netsyncinfo.hostnamesize);
 	wptr += netsyncinfo->netsyncinfo.hostnamesize;
-	memcpy(wptr, netsyncinfo->netsyncinfo.synchostaddr,
+	memcpy(wptr, netsyncinfo->netsyncinfo.hostaddr,
 	       netsyncinfo->netsyncinfo.hostaddrsize);
 	wptr += netsyncinfo->netsyncinfo.hostaddrsize;
-	memcpy(wptr, netsyncinfo->netsyncinfo.synchostnetmask,
+	memcpy(wptr, netsyncinfo->netsyncinfo.hostnetmask,
 	       netsyncinfo->netsyncinfo.hostnetmasksize);
 	wptr += netsyncinfo->netsyncinfo.hostnetmasksize;
 

@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.8 1999-03-28 09:58:54 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.9 1999-05-31 20:50:16 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -716,12 +716,11 @@ struct dlp_netsyncinfo
 				 * including terminating NUL. */
 
 	/* This follows the header */
-	/* XXX - Remove the 'sync' */
-	char synchostname[DLPCMD_MAXHOSTNAMELEN];
+	char hostname[DLPCMD_MAXHOSTNAMELEN];
 				/* Name of sync host */
-	char synchostaddr[DLPCMD_MAXADDRLEN];
+	char hostaddr[DLPCMD_MAXADDRLEN];
 				/* Address of sync host */
-	char synchostnetmask[DLPCMD_MAXNETMASKLEN];
+	char hostnetmask[DLPCMD_MAXNETMASKLEN];
 				/* Netmask of sync host */
 };
 
