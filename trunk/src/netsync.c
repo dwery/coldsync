@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: netsync.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: netsync.c,v 2.3 2002-12-18 01:41:04 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -370,7 +370,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*remote->dlp.write)(remote, inbuf, inlen);
 			if (err < 0)
 			{
-				Perror("read local");
+				Perror("write remote");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -385,7 +385,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*remote->dlp.read)(remote, &inbuf, &inlen);
 			if (err < 0)
 			{
-				Perror("read local");
+				Perror("read remote");
 				break;
 			}
 			SYNC_TRACE(5)
@@ -397,7 +397,7 @@ forward_netsync(PConnection *local, PConnection *remote)
 			err = (*local->dlp.write)(local, inbuf, inlen);
 			if (err < 0)
 			{
-				Perror("read local");
+				Perror("write local");
 				break;
 			}
 			SYNC_TRACE(5)
