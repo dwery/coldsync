@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.22 2000-06-03 06:33:10 arensb Exp $
+ * $Id: coldsync.h,v 1.23 2000-06-03 08:04:32 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -328,6 +328,7 @@ extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 extern int append_dbentry(struct Palm *palm,
 			  struct pdb *pdb);
 extern char snum_checksum(const char *snum, int len);
+extern int open_tempfile(char *name_template);
 extern int get_config(int argc, char *argv[]);
 extern int add_to_log(char *msg);
 
