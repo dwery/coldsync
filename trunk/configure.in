@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.136 2001-11-19 17:06:52 arensb Exp $
+dnl # $Id: configure.in,v 1.137 2001-12-06 13:45:30 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -425,7 +425,9 @@ if test x"$ac_cv_search_inet_pton" = xno; then
 fi
 #'
 
-# Look for inet_ntop(). If it's not found, we'll use inet_ntoa() instead
+# Look for inet_ntop(). If it's not found, we'll use inet_ntoa() instead.
+# XXX - Solaris has this, but the header files <arpa/nameser.h> and
+# <resolv.h> cause problems. It'd be nice to check for this as well.
 if test x"$with_ipv6" != x"no"; then
 	AC_SEARCH_LIBS(inet_ntop, resolv, AC_DEFINE_UNQUOTED(HAVE_INET_NTOP))
 fi
