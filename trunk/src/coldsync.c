@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.98 2001-07-30 07:13:02 arensb Exp $
+ * $Id: coldsync.c,v 1.99 2001-09-07 03:26:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -78,7 +78,7 @@ int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
 			 * another field in 'struct Palm' or 'sync_config'.
 			 */
 
-int cs_errno = CSE_NOERR;	/* ColdSync error code. */
+CSErrno cs_errno = CSE_NOERR;	/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
 struct sync_config *sync_config = NULL;
 				/* Configuration for the current sync */
