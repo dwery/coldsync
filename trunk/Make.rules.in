@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.16 2001-07-09 10:57:23 arensb Exp $
+# $Id: Make.rules.in,v 1.17 2001-08-22 06:41:24 arensb Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -35,6 +35,7 @@ INCLUDEDIR =	@includedir@
 INFODIR =	@infodir@
 MANDIR =	@mandir@
 MAN1DIR =	${MANDIR}/man1
+MAN3DIR =	${MANDIR}/man3
 MAN8DIR =	${MANDIR}/man8
 
 # Subdirectory containing the Perl modules. Used by "configure --without-perl"
