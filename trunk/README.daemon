@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.2 2002-03-24 03:19:55 azummo Exp $
+$Id: README.daemon,v 2.3 2002-03-24 03:20:31 azummo Exp $
 
 Introduction
 ============
@@ -20,7 +20,7 @@ you want to connect to the Palm:
 
 
 These connection types are not mutually-exclusive. A given machine can
-support all three simultaneously, including multiple serial
+support all two simultaneously, including multiple serial
 connections.
 
 	Actually, ColdSync doesn't really run as a standalone daemon.
