@@ -25,14 +25,6 @@
   where, etc.
   How do you sync two heterogenous databases (e.g., ToDo.pdb and an
   XPostitNote of things to do)?
-- Add a Makefile target to build a distribution tarball. The tarball
-  should consist of everyting Joe Average needs to build `coldsync',
-  without requiring any of the fancy tools developers need. That is,
-  the distribution tarball should contain a Makefile (built from
-  Makefile.in by `autoconf') and a PostScript version of the info
-  documentation (with index), so that he doesn't have to get
-  `autoconf' or `makeinfo'.
-  (Actually, I think `automake' takes care of this.)
 - A lot of assertion-checking would probably be a Good Thing.
 - (When ColdSync actually gets written:) Gnome and KDE support
 - Fix PADP so it can dump when writing, as well as when reading.
@@ -41,10 +33,6 @@
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
-- Whenever a DLPCMD function returns a variable-sized response, have
-  the function that implements it take an ubyte* argument: that way,
-  the caller will allocate a buffer on his own, and won't have to
-  worry about freeing memory in some struct.
 - Add functions InitPalmLog(), AddToPalmLog(char *), WritePalmLog(),
   to make logging work more or less the way you expect.
 - Make the *_TRACE stuff go to a separate debugging log file.
@@ -54,4 +42,10 @@
 - PAM for security throughout?
 - Figure out a sane source directory organization and stick to it. I'm
   not going to worry about it too much in this alpha stage, though.
-- Screw the socket idea. Just come up with a good abstraction.
+- Screw the socket idea. Just come up with a good abstraction. Get rid
+  of the file descriptors, just pass pointers to PConnections.
+- Figure out why 'pconn/foo' and HotSync on the Palm don't always
+  finish at the same time.
+- Would it be a good idea to grab as many of the identifiers from the
+  Palm header files as practical, to make it easier to switch to them
+  at some future point?
