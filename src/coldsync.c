@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.26 2000-01-27 05:21:52 arensb Exp $
+ * $Id: coldsync.c,v 1.27 2000-02-03 01:53:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1323,23 +1323,23 @@ set_debug_level(const char *str)
 	}
 
 	/* Set the appropriate debugging facility. */
-	if (strncasecmp(str, "slp:", 4) == 0)
+	if (strncasecmp(str, "slp", 3) == 0)
 		slp_trace = lvl;
-	else if (strncasecmp(str, "cmp:", 4) == 0)
+	else if (strncasecmp(str, "cmp", 3) == 0)
 		cmp_trace = lvl;
-	else if (strncasecmp(str, "padp:", 5) == 0)
+	else if (strncasecmp(str, "padp", 4) == 0)
 		padp_trace = lvl;
-	else if (strncasecmp(str, "dlpc:", 5) == 0)
+	else if (strncasecmp(str, "dlpc", 4) == 0)
 		dlpc_trace = lvl;
-	else if (strncasecmp(str, "dlp:", 4) == 0)
+	else if (strncasecmp(str, "dlp", 3) == 0)
 		dlp_trace = lvl;
-	else if (strncasecmp(str, "sync:", 5) == 0)
+	else if (strncasecmp(str, "sync", 4) == 0)
 		sync_trace = lvl;
-	else if (strncasecmp(str, "pdb:", 4) == 0)
+	else if (strncasecmp(str, "pdb", 3) == 0)
 		pdb_trace = lvl;
-	else if (strncasecmp(str, "parse:", 6) == 0)
+	else if (strncasecmp(str, "parse", 5) == 0)
 		parse_trace = lvl;
-	else if (strncasecmp(str, "misc:", 5) == 0)
+	else if (strncasecmp(str, "misc", 4) == 0)
 		misc_trace = lvl;
 	else {
 		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
