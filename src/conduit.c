@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.63 2002-11-13 12:06:35 azummo Exp $
+ * $Id: conduit.c,v 2.64 2002-12-10 12:04:04 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -59,6 +59,8 @@
 #include "cs_error.h"
 #include "symboltable.h"
 
+#include "conduits.h"
+
 #define MAX_SANE_FD	32	/* Highest-numbered file descriptor one
 				 * might get in a sane universe. Anything
 				 * higher than this means that there's a
@@ -98,10 +100,6 @@ typedef int (*ConduitFunc)(PConnection *pconn,
 			   const conduit_block *block,
 			   const pda_block *pda);
 
-int run_DummyConduit(PConnection *pconn,
-		     const struct dlp_dbinfo *dbinfo,
-		     const conduit_block *block,
-		     const pda_block *pda);
 extern int run_GenericConduit(
 	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
@@ -2317,16 +2315,6 @@ crea_type_matches(const conduit_block *cond,
 	CONDUIT_TRACE(7)
 		fprintf(stderr, "crea_type_matches: No match found.\n");
 	return False;
-}
-
-/* XXX - Experimental */
-int run_DummyConduit(PConnection *pconn,
-		     const struct dlp_dbinfo *dbinfo,
-		     const conduit_block *block,
-		     const pda_block *pda)
-{
-	fprintf(stderr, _("Inside run_DummyConduit.\n"));
-	return 0;
 }
 
 struct ConduitDef *
