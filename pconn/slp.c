@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.2 1999-02-21 08:14:02 arensb Exp $
+ * $Id: slp.c,v 1.3 1999-02-22 11:03:40 arensb Exp $
  */
 
 #include <stdio.h>
@@ -10,6 +10,7 @@
 #include <sys/uio.h>	/* For read() */
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
+#include <string.h>	/* For memset() */
 #include "palm_errno.h"
 #include "slp.h"
 #include "util.h"
@@ -95,19 +96,9 @@ slp_tini(struct PConnection *pconn)
  * before a HotSync.
  */
 int
-slp_bind(int fd, struct slp_addr *addr)
+slp_bind(struct PConnection *pconn, struct slp_addr *addr)
 {
-	struct PConnection *pconn;
-
 	palm_errno = PALMERR_NOERR;
-
-	/* Find the PConnection for this connection */
-	if ((pconn = PConnLookup(fd)) == NULL)
-	{
-		fprintf(stderr, "Can't find a PConnection for fd %d\n", fd);
-		palm_errno = PALMERR_BADF;
-		return -1;
-	}
 
 	/* Copy 'addr' to the "SLP local address" portion of the
 	 * PConnection */
@@ -131,14 +122,13 @@ slp_bind(int fd, struct slp_addr *addr)
  * should not be used.
  */
 int
-slp_read(int fd,		/* File descriptor to read from */
+slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	 const ubyte **buf,	/* Pointer to the data read */
 	 uword *len)		/* Length of received message */
 {
 	int i;
 	ssize_t err;		/* Length of read, and error code */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
-	struct PConnection *pconn;	/* The connection */
 	struct slp_header header;	/* Parsed incoming header */
 	ubyte checksum;		/* Packet checksum, for checking */
 	uword got;		/* How many bytes we've read so far */
@@ -147,14 +137,6 @@ slp_read(int fd,		/* File descriptor to read from */
 	uword my_crc;		/* Computed CRC for the packet */
 
 	palm_errno = PALMERR_NOERR;
-
-	/* Get the PConnection from the file descriptor */
-	if ((pconn = PConnLookup(fd)) == NULL)
-	{
-		fprintf(stderr, "slp_read: can't find PConnection for %d\n", fd);
-		palm_errno = PALMERR_BADF;
-		return -1;
-	}
 
   redo:			/* I hope I may be forgiven for using gotos,
 			 * but SLP's only response to errors of any
@@ -185,7 +167,7 @@ slp_read(int fd,		/* File descriptor to read from */
 			goto redo;
 		}
 	}
-/*  	SLP_TRACE(5, "Got a preamble\n"); */
+	SLP_TRACE(10, "Got a preamble\n");
 
 	/* Read the header */
 	want = SLP_HEADER_LEN;
@@ -286,6 +268,12 @@ slp_read(int fd,		/* File descriptor to read from */
 	}
 
 	/* Read the body */
+	memset(pconn->slp.inbuf, '\0', pconn->slp.inbuf_len);
+					/* Clear out the remains of the
+					 * last packet read.
+					 * XXX - Does this introduce
+					 * significant overhead?
+					 */
 	want = header.size;
 	got = 0;
 	while (want > got)
@@ -380,13 +368,12 @@ slp_read(int fd,		/* File descriptor to read from */
  * Returns the number of bytes written (excluding SLP overhead)
  */
 int
-slp_write(int fd,
+slp_write(struct PConnection *pconn,
 	  const ubyte *buf,
 	  const uword len)
 {
 	int i;
 	int err;
-	struct PConnection *pconn;	/* The connection */
 	static ubyte header_buf[SLP_HEADER_LEN];
 				/* Buffer to hold the SLP header on output */
 	static ubyte crc_buf[SLP_CRC_LEN];
@@ -399,14 +386,6 @@ slp_write(int fd,
 
 	palm_errno = PALMERR_NOERR;
 
-	/* Get the PConnection from the file descriptor */
-	if ((pconn = PConnLookup(fd)) == NULL)
-	{
-		fprintf(stderr, "slp_write: can't find PConnection for %d\n", fd);
-		palm_errno = PALMERR_BADF;
-		return -1;
-	}
-
 	/* Build a packet header in 'header_buf' */
 	wptr = header_buf;
 	put_ubyte(&wptr, slp_preamble[0]);
@@ -417,11 +396,10 @@ slp_write(int fd,
 	put_ubyte(&wptr, pconn->slp.local_addr.protocol);/* type */
 	put_uword(&wptr, len);				/* size */
 	put_ubyte(&wptr, pconn->padp.xid);		/* xid */
-			/* XXX - It's unfortunate that the SLP layer
-			 * has to reach into the PADP layer this way,
-			 * but the SLP and PADP protocols are so
-			 * tightly interwoven, I'm not sure there's a
-			 * better way to do this.
+			/* It's unfortunate that the SLP layer has to reach
+			 * into the PADP layer this way, but the SLP and
+			 * PADP protocols are so tightly interwoven, I'm
+			 * not sure there's a better way to do this.
 			 */
 	/* Compute the header checksum */
 	checksum = 0;
