@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.43 2001-11-08 01:57:54 arensb Exp $
+ * $Id: pdb.c,v 1.44 2001-11-20 14:32:01 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -755,6 +755,7 @@ pdb_DeleteRecordByID(
 		{
 			/* Found it */
 
+			/* XXX - Presumably better to use pdb_FreeRecord() */
 			/* Free 'rec's data */
 			if (rec->data != NULL)
 				free(rec->data);
