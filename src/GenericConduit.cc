@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.39 2000-09-09 21:26:25 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.40 2000-09-17 21:23:12 arensb Exp $
  */
 
 /* Note on I/O:
@@ -171,9 +171,18 @@ GenericConduit::run()
 					"backup\n",
 					bakfname);
 			err = backup(_pconn, _dbinfo, backupdir);
-			/* XXX - Error-checking */
+
 			MISC_TRACE(2)
 				fprintf(stderr, "backup() returned %d\n", err);
+
+			if (err < 0)
+			{
+				/* backup() has already printed a
+				 * descriptive error message.
+				 */
+				fprintf(stderr, _("[generic]: Aborting.\n");
+				return -1;
+			}
 		}
 
 		SYNC_TRACE(2)

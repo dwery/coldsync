@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.48 2000-09-08 15:55:10 arensb Exp $
+ * $Id: coldsync.c,v 1.49 2000-09-17 21:23:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -161,10 +161,21 @@ main(int argc, char *argv[])
 	 * [1] Stevens, W. Richard, "Advanced Programming in the UNIX
 	 * Environment", Addison-Wesley, 1993
 	 */
-	reserve_fd(0, O_RDONLY);
-	reserve_fd(1, O_WRONLY);
-	reserve_fd(2, O_RDONLY);
-	/* XXX - Error-checking, just for completeness */
+	if (reserve_fd(0, O_RDONLY) < 0)
+	{
+		fprintf(stderr, _("Error: can't reserve file descriptor 0\n"));
+		exit(1);
+	}
+	if (reserve_fd(1, O_WRONLY) < 0)
+	{
+		fprintf(stderr, _("Error: can't reserve file descriptor 1\n"));
+		exit(1);
+	}
+	if (reserve_fd(2, O_RDONLY) < 0)
+	{
+		fprintf(stderr, _("Error: can't reserve file descriptor 2\n"));
+		exit(1);
+	}
 
 #if HAVE_GETTEXT
 	/* Set things up so that i18n works. The constants PACKAGE and
