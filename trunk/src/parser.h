@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.11 2001-10-12 02:22:29 arensb Exp $
+ * $Id: parser.h,v 2.12 2001-10-18 01:37:23 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -24,7 +24,8 @@ typedef enum {
 	LEX_HEADER,		/* Conduit argument header name */
 	LEX_BSTRING,		/* "Bareword" (unquoted) string */
 	LEX_CTPAIR,		/* Creator/type pair */
-	LEX_ID4			/* 4-character identifier */
+	LEX_ID4,		/* 4-character identifier */
+	LEX_VAR			/* Variable name */
 } lex_state_t;
 
 /* crea_type_pair
