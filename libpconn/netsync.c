@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.9.2.1 2001-10-10 23:41:31 arensb Exp $
+ * $Id: netsync.c,v 1.9.2.2 2001-10-11 01:01:42 arensb Exp $
  */
 
 #include "config.h"
@@ -33,6 +33,20 @@
 int net_trace = 0;		/* Debugging level for NetSync */
 #define NET_TRACE(n)	if (net_trace >= (n))
 
+/*
+ * Ritual statements
+ * These packets are sent back and forth during the initial handshaking
+ * phase. I don't know what they mean. The sequence is:
+ * client sends UDP wakeup packet
+ * server sends UDP wakeup ACK
+ * client sends ritual response 1
+ * server sends ritual statement 2
+ * client sends ritual response 2
+ * server sends ritual statement 3
+ * client sends ritual response 3
+ *
+ * The comments are mostly conjecture and speculation.
+ */
 /* XXX - Could these be CMP 2.0? When answering this question, might want
  * to keep in mind the underlying protocol, the one with the (other) XIDs,
  * implemented by netsync_read() and netsync_write().
@@ -47,6 +61,8 @@ static ubyte ritual_resp1[] = {
 	0x00, 0x00, 0x00, 0x01,
 	0x80, 0x00, 0x00, 0x00,
 };
+static const int ritual_resp1_size =
+	sizeof(ritual_resp1) / sizeof(ritual_resp1[0]);
 
 static ubyte ritual_stmt2[] = {
 	0x12,				/* Command */
@@ -67,6 +83,8 @@ static ubyte ritual_stmt2[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 };
+static const int ritual_stmt2_size =
+	sizeof(ritual_stmt2) / sizeof(ritual_stmt2[0]);
 
 static ubyte ritual_resp2[] = {
 	0x92,				/* Command */
@@ -90,6 +108,8 @@ static ubyte ritual_resp2[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 };
+static const int ritual_resp2_size =
+	sizeof(ritual_resp2) / sizeof(ritual_resp2[0]);
 
 static ubyte ritual_stmt3[] = {
 	0x13,				/* Command */
@@ -110,6 +130,8 @@ static ubyte ritual_stmt3[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 };
+static const int ritual_stmt3_size =
+	sizeof(ritual_stmt3) / sizeof(ritual_stmt3[0]);
 
 static ubyte ritual_resp3[] = {
 	0x93,				/* Command */
@@ -117,6 +139,8 @@ static ubyte ritual_resp3[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00,
 };
+static const int ritual_resp3_size =
+	sizeof(ritual_resp3) / sizeof(ritual_resp3[0]);
 
 /* ritual_exch_server
  * Exchange ritual packets with the Palm. We are acting as the server
@@ -252,7 +276,7 @@ ritual_exch_client(PConnection *pconn)
 		return -1;
 
 	/* Send ritual response 2 */
-	err = netsync_write(pconn, ritual_resp1, ritual_resp2_size);
+	err = netsync_write(pconn, ritual_resp2, ritual_resp2_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 2) returned %d\n",
@@ -277,7 +301,7 @@ ritual_exch_client(PConnection *pconn)
 		return -1;
 
 	/* Send ritual response 3 */
-	err = netsync_write(pconn, ritual_resp1, ritual_resp3_size);
+	err = netsync_write(pconn, ritual_resp3, ritual_resp3_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 3) returned %d\n",
