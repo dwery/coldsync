@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.7 1999-03-16 11:03:22 arensb Exp $
+ * $Id: coldsync.c,v 1.8 1999-05-31 20:59:00 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -34,8 +34,15 @@ extern int load_config(int argc, char *argv[]);
 extern int load_palm_config(struct Palm *palm);
 /*  int listlocalfiles(struct PConnection *pconn); */
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
+int UpdateUserInfo(struct PConnection *pconn,
+		   const struct Palm *palm, const int success);
 
 struct Palm palm;
+int need_slow_sync;
+
+/* XXX - Command-line options:
+ * -u <user>:	run as <user>
+ */
 
 int
 main(int argc, char *argv[])
@@ -105,6 +112,32 @@ main(int argc, char *argv[])
 		/* XXX - Clean up */
 		exit(1);
 	}
+
+	/* Find out whether we need to do a slow sync or not */
+	if (hostid == palm.userinfo.lastsyncPC)
+		/* We synced with this same machine last time, so we can do
+		 * a fast sync this time.
+		 */
+		need_slow_sync = 0;
+	else
+		/* The Palm synced with some other machine, the last time
+		 * it synced. We need to do a slow sync.
+		 */
+		need_slow_sync = 1;
+
+	/* XXX - It should be possible to force a slow sync */
+	/* XXX - The desktop needs to keep track of other hosts that it has
+	 * synced with, possibly on a per-database basis.
+	 * Scenario: I sync with the machine at home, whose hostID is 1.
+	 * While I'm driving in to work, the machine at home talks to the
+	 * machine at work, whose hostID is 2. I come in to work and sync
+	 * with the machine there. The machine there should realize that
+	 * even though the Palm thinks it has last synced with machine 1,
+	 * everything is up to date on machine 2, so it's okay to do a fast
+	 * sync.
+	 * This is actually a good candidate for optimization, since it
+	 * reduces the amount of time the user has to wait.
+	 */
 
 	/* XXX - Get list of local files */
 /*  listlocalfiles(pconn); */
@@ -187,6 +220,12 @@ sync_debug = 10;
 
 	/* XXX - Write updated NetSync info */
 	/* XXX - Write updated user info */
+	if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
+	{
+		fprintf(stderr, "Error writing user info\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
 
 	/* Finally, close the connection */
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
@@ -436,6 +475,7 @@ listlocalfiles(struct PConnection *pconn)
 	struct pdb *db;
 char fnamebuf[MAXPATHLEN];
 
+/* XXX - Use 'installdir' from coldsync.h */ 
 printf("Listing directory \"%s\"\n", INSTALL_DIR);
 	dir = opendir(INSTALL_DIR);
 	if (dir == NULL)
@@ -504,9 +544,9 @@ printf("\tproduct ID: 0x%08lx\n", palm->sysinfo.prodID);
 	    case DLPSTAT_NOERR:
 printf("NetSync info:\n");
 printf("\tLAN sync on: %d\n", palm->netsyncinfo.lansync_on);
-printf("\thostname: \"%s\"\n", palm->netsyncinfo.synchostname);
-printf("\thostaddr: \"%s\"\n", palm->netsyncinfo.synchostaddr);
-printf("\tnetmask: \"%s\"\n", palm->netsyncinfo.synchostnetmask);
+printf("\thostname: \"%s\"\n", palm->netsyncinfo.hostname);
+printf("\thostaddr: \"%s\"\n", palm->netsyncinfo.hostaddr);
+printf("\tnetmask: \"%s\"\n", palm->netsyncinfo.hostnetmask);
 		break;
 	    case DLPSTAT_NOTFOUND:
 		printf("No NetSync info.\n");
@@ -554,6 +594,75 @@ printf("\tUser name: \"%s\"\n", palm->userinfo.username);
 printf("\tPassword: <%d bytes>\n", palm->userinfo.passwdlen);
 
 	return 0;
+}
+
+/* UpdateUserInfo
+ * Update the Palm's user info. 'success' indicates whether the sync was
+ * successful.
+ */
+int
+UpdateUserInfo(struct PConnection *pconn,
+	       const struct Palm *palm,
+	       const int success)
+{
+	int err;
+	struct dlp_setuserinfo userinfo;
+			/* Fill this in with new values */
+	
+	userinfo.modflags = 0;		/* Initialize modification flags */
+
+fprintf(stderr, "* UpdateUserInfo:\n");
+	/* Does this Palm have a user ID yet? */
+	/* XXX - If the Palm has a user ID, but it's not that of the
+	 * current user, it should be possible to overwrite it. Perhaps
+	 * this should be an "administrative mode" option.
+	 */
+	if (palm->userinfo.userid == 0)
+	{
+fprintf(stderr, "Setting UID to %d (0x%04x)\n", user_uid, user_uid);
+		/* XXX - Fill this in */
+		userinfo.userid = (udword) user_uid;
+		userinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
+					/* Set modification flag */
+	}
+
+	/* Fill in this machine's host ID as the last sync PC */
+fprintf(stderr, "Setting lastsyncPC to 0x%08lx\n", hostid);
+	userinfo.lastsyncPC = hostid;
+	userinfo.modflags |= DLPCMD_MODUIFLAG_SYNCPC;
+
+	/* If successful, update the "last successful sync" date */
+	if (success)
+	{
+		time_t now;		/* Current time */
+
+fprintf(stderr, "Setting last sync time to now\n");
+		time(&now);		/* Get current time */
+		time_time_t2dlp(now, &userinfo.lastsync);
+					/* Convert to DLP time */
+		userinfo.modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
+	}
+
+	/* Fill in the user name if there isn't one, or if it has changed
+	 */
+	if ((palm->userinfo.usernamelen == 0) ||
+	    (strcmp(palm->userinfo.username, user_fullname) != 0))
+	{
+fprintf(stderr, "Setting user name to \"%s\"\n", user_fullname);
+		userinfo.username = user_fullname;
+		userinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
+	}
+
+	/* Send the updated user info to the Palm */
+	err = DlpWriteUserInfo(pconn,
+			       &userinfo);
+	if (err != DLPSTAT_NOERR)
+	{
+		fprintf(stderr, "DlpWriteUserInfo failed: %d\n", err);
+		return -1;
+	}
+
+	return 0;		/* Success */
 }
 
 /* This is for Emacs's benefit:
