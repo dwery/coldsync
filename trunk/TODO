@@ -112,3 +112,4 @@
   but what about older ones (PalmPilot et al.)? How does one create
   one?
 - Add the vc-mode RCS/CVS Id headers everywhere.
+- Use syslog for logging.
