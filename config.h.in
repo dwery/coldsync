@@ -61,11 +61,8 @@
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
 
-/* Define if you have the <sys/time.h> header file.  */
-#undef HAVE_SYS_TIME_H
-
-/* Define if you have the <sys/types.h> header file.  */
-#undef HAVE_SYS_TYPES_H
+/* Define if you have the <strings.h> header file.  */
+#undef HAVE_STRINGS_H
 
 /* Define if you have the <termios.h> header file.  */
 #undef HAVE_TERMIOS_H
@@ -73,19 +70,37 @@
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
 
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
+
 /* Name of package */
 #undef PACKAGE
 
 /* Version number of package */
 #undef VERSION
 
+#if __GNUC__
+#  define __EXTENSIONS__	/* Necessary for various headers to
+				 * find prototypes for certain
+				 * functions and such that aren't
+				 * explicitly mentioned in the ANSI
+				 * standard.
+				 */
+#endif	/* __GNUC__ */
+
 /* strcasecmp() is nice to have, but if it doesn't exist, just use
  * strcmp().
  */
 #if !HAVE_STRCASECMP
-#define	strcasecmp(s1,s2)	strcmp((s1),(s2))
+#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
 #endif	/* !HAVE_STRCASECMP */
 
 #if !HAVE_STRNCASECMP
-#define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
+#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
 #endif	/* !HAVE_STRCASECMP */

@@ -2,14 +2,14 @@
  *
  * Convenience functions for logging.
  *
- * $Id: log.c,v 1.2 1999-07-12 09:30:49 arensb Exp $
+ * $Id: log.c,v 1.3 1999-07-14 13:53:18 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
 #include "coldsync.h"
 
-extern char *log;
+extern char *synclog;
 extern int log_size;
 extern int log_len;
 
@@ -50,7 +50,7 @@ add_to_log(char *msg)
 		if (log_size == 0)
 			newlog = malloc(newsize);
 		else
-			newlog = realloc(log, newsize);
+			newlog = realloc(synclog, newsize);
 
 		if (newlog == NULL)
 		{
@@ -58,11 +58,11 @@ add_to_log(char *msg)
 			perror("realloc");
 			return -1;
 		}
-		log = newlog;
+		synclog = newlog;
 		log_size = newsize;
 	}
-	strcat(log, msg);
+	strcat(synclog, msg);
 	SYNC_TRACE(5)
-		fprintf(stderr, "Now log is \"%s\"\n", log);
+		fprintf(stderr, "Now log is \"%s\"\n", synclog);
 	return 0;
 }
