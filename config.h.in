@@ -128,11 +128,34 @@
 /* The internationalizable strings in the source are enclosed in _(), e.g.,
  * _("Hello, world!"). That way, they can be looked up by whichever i18n
  * package you happen to be using.
+ * N_() is a dummy macro that marks translatable strings when they're
+ * defined but not used. The most common case for this is in arrays of
+ * strings:
+ *	char *msgs[] = {
+ *		N_("Hello"),
+ *		N_("Goodbye"),
+ *	};
+ *	...
+ *	printf(_(msgs[0]));
+ * Here, the N_ marks the strings in 'msgs' so that a tool like 'xgettext'
+ * can identify them and extract them into a catalog. It is only later, in
+ * the printf() statement, that we want to call gettext() on the string to
+ * translate it.
  */
 #if HAVE_LIBINTL
 #  define _(str)	gettext(str)
+#  ifdef gettext_noop
+#    define N_(str)	gettext_noop(str)
+#  else
+#    define N_(str)	str
+#  endif	/* gettext_noop */
 #else	/* HAVE_LIBINTL */
 #  define _(str)	str
+#  ifdef gettext_noop
+#    define N_(str)	gettext_noop(str)
+#  else
+#    define N_(str)	str
+#  endif	/* gettext_noop */
 #endif	/* HAVE_LIBINTL */
 
 #if __GNUC__
