@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.4 1999-03-11 03:40:14 arensb Exp $
+ * $Id: coldsync.h,v 1.5 1999-03-11 04:14:18 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -38,24 +38,24 @@ struct Palm
 	struct dlp_dbinfo *dblist;	/* Database list */
 };
 
-extern int Cold_Connect(struct PConnection *pconn, const char *name);
-extern int Cold_Disconnect(struct PConnection *pconn, const ubyte status);
-extern int Cold_GetMemInfo(struct PConnection *pconn, struct Palm *palm);
-extern int Cold_ListDBs(struct PConnection *pconn, struct Palm *palm);
-extern int Cold_HandleDB(struct PConnection *pconn, struct Palm *palm,
-			 const int dbnum);
-extern int Cold_BackupDB(struct PConnection *pconn, struct Palm *palm,
-			 struct dlp_dbinfo *dbinfo, const char *fname);
-extern int Cold_SyncDB(struct PConnection *pconn, struct Palm *palm,
-		       const int dbnum);
-extern int Cold_Backup(struct PConnection *pconn,
-		       struct Palm *palm,
-		       struct dlp_dbinfo *dbinfo,
-		       char *bakfname);
-extern int Cold_RecordSync(struct PConnection *pconn,
-			   struct Palm *palm,
-			   struct dlp_dbinfo *dbinfo,
-			   char *bakfname);
+extern int Connect(struct PConnection *pconn, const char *name);
+extern int Disconnect(struct PConnection *pconn, const ubyte status);
+extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
+extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
+extern int HandleDB(struct PConnection *pconn, struct Palm *palm,
+		    const int dbnum);
+extern int BackupDB(struct PConnection *pconn, struct Palm *palm,
+		    struct dlp_dbinfo *dbinfo, const char *fname);
+extern int SyncDB(struct PConnection *pconn, struct Palm *palm,
+		  const int dbnum);
+extern int Backup(struct PConnection *pconn,
+		  struct Palm *palm,
+		  struct dlp_dbinfo *dbinfo,
+		  char *bakfname);
+extern int RecordSync(struct PConnection *pconn,
+		      struct Palm *palm,
+		      struct dlp_dbinfo *dbinfo,
+		      char *bakfname);
 struct pdb *LoadDatabase(char *fname);
 extern int SlowSync(struct PConnection *pconn,
 		    struct dlp_dbinfo *remotedb,

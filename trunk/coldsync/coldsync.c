@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.5 1999-03-11 03:45:47 arensb Exp $
+ * $Id: coldsync.c,v 1.6 1999-03-11 04:14:05 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -72,7 +72,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Connect to the Palm */
-	if ((err = Cold_Connect(pconn, argv[1])) < 0)
+	if ((err = Connect(pconn, argv[1])) < 0)
 	{
 		fprintf(stderr, "Can't connect to Palm\n");
 		/* XXX - Clean up */
@@ -97,9 +97,9 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if ((err = Cold_GetMemInfo(pconn, &palm)) < 0)
+	if ((err = GetMemInfo(pconn, &palm)) < 0)
 	{
-		fprintf(stderr, "Cold_GetMemInfo() returned %d\n", err);
+		fprintf(stderr, "GetMemInfo() returned %d\n", err);
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -108,9 +108,9 @@ main(int argc, char *argv[])
 /*  listlocalfiles(pconn); */
 
 	/* Get a list of all databases on the Palm */
-	if ((err = Cold_ListDBs(pconn, &palm)) < 0)
+	if ((err = ListDBs(pconn, &palm)) < 0)
 	{
-		fprintf(stderr, "Cold_ListDBs returned %d\n", err);
+		fprintf(stderr, "ListDBs returned %d\n", err);
 		/* XXX - Clean up */
 		exit(1);
 	}
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 	/* Synchronize the databases */
 	for (i = 0; i < palm.num_dbs; i++)
 	{
-		err = Cold_HandleDB(pconn, &palm, i);
+		err = HandleDB(pconn, &palm, i);
 		if (err < 0)
 			/* XXX - Error-handling */
 			exit(1);
@@ -186,7 +186,7 @@ main(int argc, char *argv[])
 	/* XXX - Write updated user info */
 
 	/* Finally, close the connection */
-	if ((err = Cold_Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, "Error disconnecting\n");
 		/* XXX - Clean up */
@@ -197,11 +197,11 @@ main(int argc, char *argv[])
 	exit(0);
 }
 
-/* Cold_Connect
+/* Connect
  * Wait for a Palm to show up on the other end.
  */
 int
-Cold_Connect(struct PConnection *pconn/*int fd*/,
+Connect(struct PConnection *pconn/*int fd*/,
 	  const char *name)
 {
 	int err;
@@ -255,7 +255,7 @@ Cold_Connect(struct PConnection *pconn/*int fd*/,
 }
 
 int
-Cold_Disconnect(struct PConnection *pconn/*int fd*/, const ubyte status)
+Disconnect(struct PConnection *pconn/*int fd*/, const ubyte status)
 {
 	int err;
 
@@ -275,11 +275,11 @@ Cold_Disconnect(struct PConnection *pconn/*int fd*/, const ubyte status)
 	return 0;
 }
 
-/* Cold_GetMemInfo
+/* GetMemInfo
  * Get info about the memory on the Palm and record it in 'palm'.
  */
 int
-Cold_GetMemInfo(struct PConnection *pconn,
+GetMemInfo(struct PConnection *pconn,
 		struct Palm *palm)
 {
 	int err;
@@ -341,13 +341,13 @@ fprintf(stderr, "\tManufacturer name (%d) \"%s\"\n",
 	return 0;
 }
 
-/* Cold_ListDBs
+/* ListDBs
  * Fetch the list of database info records from the Palm, both for ROM and
  * RAM.
- * This function must be called after Cold_GetMemInfo().
+ * This function must be called after GetMemInfo().
  */
 int
-Cold_ListDBs(struct PConnection *pconn, struct Palm *palm)
+ListDBs(struct PConnection *pconn, struct Palm *palm)
 {
 	int err;
 	int card;		/* Memory card number */
