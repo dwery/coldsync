@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.12 2000-01-23 21:16:18 arensb Exp $
+ * $Id: pdb.c,v 1.13 2000-01-25 10:26:58 arensb Exp $
  */
 
 #include "config.h"
@@ -109,6 +109,8 @@ pdb_FreeResource(struct pdb_resource *rsrc)
 void
 free_pdb(struct pdb *db)
 {
+	/* XXX - Add some PDB_TRACE statements in here */
+
 	if (db == NULL)
 		/* Trivial case */
 		return;
