@@ -2,8 +2,9 @@
  *
  * Methods and such for the generic conduit.
  *
- * $Id: GenericConduit.cc,v 1.2 1999-07-12 09:54:47 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.3 1999-08-01 07:59:41 arensb Exp $
  */
+#include "config.h"
 #include <iostream.h>
 #include <iomanip.h>		// Probably only needed for debugging
 #include <stdio.h>		// For perror(), rename()
@@ -18,7 +19,6 @@
 extern "C" {
 /* XXX - Should all of the "standard" header files be inside this block? */
 #include <unistd.h>
-#include "config.h"
 #include "dlp_cmd.h"
 #include "util.h"
 #include "coldsync.h"
@@ -600,10 +600,17 @@ GenericConduit::SlowSync()
 	 */
 	SYNC_TRACE(3)
 		cerr << "Checking local database entries." << endl;
-	for (localrec = _localdb->rec_index.rec;
+
+	struct pdb_record *nextrec;	// Next record in list
+
+	for (localrec = _localdb->rec_index.rec, nextrec = 0;
 	     localrec != 0;
-	     localrec = localrec->next)
+	     localrec = nextrec)
 	{
+		/* 'localrec' might get deleted, so we need to make a note
+		 * of the next record in the list now.
+		 */
+		nextrec = localrec->next;
 		/* Try to look this record up in the remote database. */
 		remoterec = pdb_FindRecordByID(_remotedb, localrec->id);
 		if (remoterec != 0)
