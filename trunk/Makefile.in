@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.11 1999-10-24 19:38:53 arensb Exp $
+# $Id: Makefile.in,v 1.12 1999-11-02 03:22:56 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -7,6 +7,7 @@ VERSION =	@VERSION@
 SRCDIR =	@srcdir@
 CURDIR =	${SRCDIR}
 SUBDIRS =	include libpconn libpdb src doc
+PREFIX = 	@prefix@
 
 TAR =		@TAR@
 GZIP =		@GZIP@
@@ -44,6 +45,12 @@ SPOTLESS =	${TARBALL} ${DISTDIR} configure
 # 'make all' (build the "all" target) build the same thing, the way
 # you'd expect.
 all::
+
+install::
+	if test ! -d ${PREFIX}; then \
+		mkdir ${PREFIX}; \
+		chmod 755 ${PREFIX}; \
+	fi
 
 distdir::
 	rm -rf ${DISTDIR}
