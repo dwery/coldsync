@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.1 1999-09-09 05:18:04 arensb Exp $
+ * $Id: padp.c,v 1.2 1999-11-04 10:45:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -28,7 +28,6 @@
 #  include <strings.h>			/* For bzero() under AIX */
 #endif	/* HAVE_STRINGS_H */
 #include <stdlib.h>			/* For free() */
-/*  #include "coldsync.h" */
 #include <pconn/palm_types.h>
 #include <pconn/palm_errno.h>
 #include <pconn/slp.h>
@@ -36,9 +35,8 @@
 #include <pconn/util.h>
 #include <pconn/PConnection.h>
 
-#define PADP_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
-				 * back in.
-				 */
+int padp_trace = 0;		/* Debugging level for PADP */
+#define PADP_TRACE(n)	if (padp_trace >= (n))
 
 /* bump_xid
  * Pick a new transaction ID by incrementing the existing one, and
