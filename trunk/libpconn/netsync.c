@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.16 2001-10-30 15:41:45 arensb Exp $
+ * $Id: netsync.c,v 1.17 2001-12-09 22:43:40 arensb Exp $
  */
 
 #include "config.h"
@@ -451,6 +451,7 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers, for reading */
 	udword got;		/* How many bytes we've read so far */
 	udword want;		/* How many bytes we still want to read */
+	struct timeval timeout;	/* How long to wait for incoming data */
 
 	NET_TRACE(3)
 		fprintf(stderr, "Inside netsync_read()\n");
@@ -461,20 +462,36 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		NET_TRACE(5)
 			fprintf(stderr,
 				"netsync_read: Reading packet header\n");
+
+		/* Wait for there to be something to read */
+		timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
+		timeout.tv_usec = 0L;
+		err = (*pconn->io_select)(pconn, forReading, &timeout);
+		if (err == 0)
+		{
+			/* select() timed out */
+			palm_errno = PALMERR_TIMEOUT2;
+			return -1;
+		}
+
+		/* Now we can read the packet */
 	  	err = (*pconn->io_read)(pconn, hdr_buf, NETSYNC_HDR_LEN);
 		if (err < 0)
 		{
-		  fprintf(stderr, _("Error reading NetSync packet header.\n"));
-		  perror("read");
+			fprintf(stderr,
+				_("Error reading NetSync packet header.\n"));
+			perror("read");
 				/* XXX - Does (*pconn->io_read) set errno? */
-		  return -1;	/* XXX - Ought to retry */
+			palm_errno = PALMERR_SYSTEM;
+			return -1;
 		} else if (err != NETSYNC_HDR_LEN)
 		{
-		  fprintf(stderr,
-			  _("Error: only read %d bytes of NetSync packet "
-			    "header.\n"),
-			  err);
-		  return -1;	/* XXX - Ought to continue reading */
+			fprintf(stderr,
+				_("Error: only read %d bytes of NetSync "
+				  "packet header.\n"),
+				err);
+			palm_errno = PALMERR_SYSTEM;
+			return -1;
 		}
 
 		NET_TRACE(7)
@@ -490,9 +507,10 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		hdr.len = get_udword(&rptr);
 
 		NET_TRACE(5)
-		  fprintf(stderr,
-			  "Got header: cmd 0x%02x, xid 0x%02x, len 0x%08lx\n",
-			  hdr.cmd, hdr.xid, hdr.len);
+			fprintf(stderr,
+				"Got header: cmd 0x%02x, xid 0x%02x, "
+				"len 0x%08lx\n",
+				hdr.cmd, hdr.xid, hdr.len);
 
 		/* XXX - What to do if cmd != 1? */
 	} else
@@ -516,6 +534,18 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
+		/* Wait for there to be something to read */
+		timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
+		timeout.tv_usec = 0L;
+		err = (*pconn->io_select)(pconn, forReading, &timeout);
+		if (err == 0)
+		{
+			/* select() timed out */
+			palm_errno = PALMERR_TIMEOUT2;
+			return -1;
+		}
+
+		/* Now we can read the packet */
 		err = (*pconn->io_read)(pconn, pconn->net.inbuf+got, want-got);
 		if (err < 0)
 		{
