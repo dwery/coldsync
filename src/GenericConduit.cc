@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.26 2000-05-03 04:47:19 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.27 2000-05-06 11:34:02 arensb Exp $
  */
 
 /* Note on I/O:
@@ -418,6 +418,7 @@ GenericConduit::FirstSync()
  * and must download the entire database and compare it with the local
  * copy.
  */
+/* XXX - Should the record's category be synced as well? */
 int
 GenericConduit::SlowSync()
 {
@@ -538,8 +539,6 @@ GenericConduit::SlowSync()
 				remoterec->id);
 			fprintf(stderr, "\tflags: 0x%02x ",
 				remoterec->flags);
-			fprintf(stderr, "\tcategory: 0x%02x ",
-				remoterec->category);
 			if (EXPUNGED(remoterec))
 				fprintf(stderr, "EXPUNGED ");
 			if (DIRTY(remoterec))
@@ -551,6 +550,8 @@ GenericConduit::SlowSync()
 			if (ARCHIVE(remoterec))
 				fprintf(stderr, "ARCHIVE ");
 			fprintf(stderr, "\n");
+			fprintf(stderr, "\tcategory: 0x%02x\n",
+				remoterec->category);
 			debug_dump(stderr, "REM", remoterec->data,
 				   remoterec->data_len > 64 ?
 					64 : remoterec->data_len);
@@ -628,8 +629,6 @@ GenericConduit::SlowSync()
 				localrec->id);
 			fprintf(stderr, "\tflags: 0x%02x ",
 				localrec->flags);
-			fprintf(stderr, "\tcategory: 0x%02x ",
-				localrec->category);
 			if (EXPUNGED(localrec))
 				fprintf(stderr, "EXPUNGED ");
 			if (DIRTY(localrec))
@@ -641,6 +640,8 @@ GenericConduit::SlowSync()
 			if (ARCHIVE(localrec))
 				fprintf(stderr, "ARCHIVE ");
 			fprintf(stderr, "\n");
+			fprintf(stderr, "\tcategory: 0x%02x\n",
+				localrec->category);
 			debug_dump(stderr, "LOC", localrec->data,
 				   localrec->data_len > 64 ?
 					64 : localrec->data_len);
@@ -659,11 +660,21 @@ GenericConduit::SlowSync()
 		 */
 		if (!DIRTY(remoterec))
 		{
+			/* XXX - localrec often has an extra NUL at the end
+			 * (and sometimes more, so it's not just alignment
+			 * to an even address), which screws up the
+			 * comparison.
+			 */
 			if (this->compare_rec(localrec, remoterec) != 0)
 				/* The records are different. Mark the
 				 * remote record as dirty.
 				 */
+			{
+				SYNC_TRACE(6)
+					fprintf(stderr, "Setting remote dirty "
+						"flag.\n");
 				remoterec->flags |= PDB_REC_DIRTY;
+			}
 		}
 
 		/* Sync the two records */
