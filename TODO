@@ -262,6 +262,3 @@
   whitespace.
 - Install .mo files in
 	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
-- Straighten out the various uid variables. 'user_uid' is a global
-  variable that gets uploaded to the Palm. What about 'userinfo.uid'?
-  Is it ignored?
