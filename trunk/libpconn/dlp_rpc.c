@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.5 2000-12-24 21:24:37 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.6 2001-01-11 08:27:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -168,7 +168,7 @@ DlpRPC(PConnection *pconn,		/* Connection to Palm */
 	err = (*pconn->dlp.write)(pconn, outbuf, wptr-outbuf);
 	if (err < 0)
 	{
-		fprintf(stderr, _("%s: Error: dlp.write returned %d\n"),
+		fprintf(stderr, _("%s: Error: dlp.write returned %d.\n"),
 			"DlpRPC",
 			err);
 /*  		free(outbuf); */
@@ -439,7 +439,7 @@ RDLP_MemMove(PConnection *pconn,
 	err = DlpRPC(pconn, RPCTRAP_MemMove, &D0, &A0, 3, argv);
 	if (err < 0)
 	{
-		fprintf(stderr, _("%s: Error in DlpRPC()\n"),
+		fprintf(stderr, _("%s: Error in DlpRPC().\n"),
 			"RDLP_MemMove");
 		return -1;
 	}

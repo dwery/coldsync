@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.19 2001-01-10 09:36:57 arensb Exp $
+ * $Id: restore.c,v 2.20 2001-01-11 08:27:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -98,7 +98,7 @@ restore_file(PConnection *pconn,
 		fprintf(stderr, "Checking read-only attribute\n");
 	if (pdb->attributes & PDB_ATTR_RO)
 	{
-		Error(_("\"%s\" is a read-only database. Not uploading\n"),
+		Error(_("\"%s\" is a read-only database. Not uploading.\n"),
 		      fname);
 		return -1;
 	}
@@ -138,8 +138,7 @@ restore_file(PConnection *pconn,
 			== 0)
 		    {
 			    Warn(_("%s: Can't restore %s: it is "
-				   "opened by another application"
-				   "\n"),
+				   "opened by another application.\n"),
 				 "Restore",
 				 pdb->name);
 			    return -1;
@@ -158,7 +157,7 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
-		Warn(_("Restore: Can't delete database \"%s\". err == %d\n"),
+		Warn(_("Restore: Can't delete database \"%s\": %d.\n"),
 		     pdb->name, err);
 		return -1;
 	}
@@ -213,7 +212,7 @@ restore_dir(PConnection *pconn,
 	dir = opendir(dirname);
 	if (dir == NULL)
 	{
-		Error(_("Can't read contents of directory %s\n"),
+		Error(_("Can't read contents of directory %s.\n"),
 		      dirname);
 		perror("opendir");
 		return -1;

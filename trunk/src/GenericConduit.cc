@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.50 2001-01-09 16:19:19 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.51 2001-01-11 08:27:19 arensb Exp $
  */
 
 /* Note on I/O:
@@ -192,7 +192,7 @@ GenericConduit::run()
 	err = this->read_backup();
 	if (err < 0)
 	{
-		Error(_("%s error: Can't read %s backup file.\n"),
+		Error(_("%s: Can't read %s backup file.\n"),
 		      "GenericConduit", _dbinfo->name);
 		return -1;
 	}
@@ -288,7 +288,7 @@ GenericConduit::FirstSync()
 		/* Can't complete this particular operation, but
 		 * it's not a show-stopper. The sync can go on.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::FirstSync",
 		      _dbinfo->name,
 		      err);
@@ -298,7 +298,7 @@ GenericConduit::FirstSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::FirstSync",
 		      _dbinfo->name,
 		      err);
@@ -388,7 +388,7 @@ GenericConduit::FirstSync()
 	err = this->write_backup(_remotedb);
 	if (err < 0)
 	{
-		Error(_("%s error: Can't write backup file.\n"),
+		Error(_("%s: Can't write backup file.\n"),
 		      "GenericConduit");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
 		add_to_log(_("Error\n"));
@@ -407,7 +407,7 @@ GenericConduit::FirstSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			Error(_("%s error: can't clean up database: %d\n"),
+			Error(_("%s: Can't clean up database: %d.\n"),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
 			add_to_log(_("Error\n"));
@@ -426,7 +426,7 @@ GenericConduit::FirstSync()
 		err = DlpResetSyncFlags(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			Error(_("%s error: Can't reset sync flags: %d\n"),
+			Error(_("%s: Can't reset sync flags: %d.\n"),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
 			add_to_log(_("Error\n"));
@@ -506,7 +506,7 @@ GenericConduit::SlowSync()
 		 * XXX - Need to indicate to the caller that the sync
 		 * can go on.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
 		add_to_log(_("Error\n"));
@@ -516,7 +516,7 @@ GenericConduit::SlowSync()
 		 * can't continue.
 		 * XXX - Need to indicate this to the caller.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
 		add_to_log(_("Error\n"));
@@ -527,7 +527,7 @@ GenericConduit::SlowSync()
 	_remotedb = pdb_Download(_pconn, _dbinfo, dbh);
 	if (_remotedb == 0)
 	{
-		Error(_("%s error: Can't download \"%s\"\n"),
+		Error(_("%s: Can't download \"%s\".\n"),
 		      "GenericConduit", _dbinfo->name);
 		DlpCloseDB(_pconn, dbh);
 		add_to_log(_("Error\n"));
@@ -795,7 +795,7 @@ GenericConduit::SlowSync()
 			if (err != DLPSTAT_NOERR)
 			{
 				Error(_("Error uploading record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      localrec->id, err);
 				return -1;
 			}
@@ -844,7 +844,7 @@ GenericConduit::SlowSync()
 	err = DlpCleanUpDatabase(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		Error(_("%s error: Can't clean up database: %d\n"),
+		Error(_("%s: Can't clean up database: %d.\n"),
 		      "GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
 		add_to_log(_("Error\n"));
@@ -862,7 +862,7 @@ GenericConduit::SlowSync()
 		err = DlpResetSyncFlags(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			Error(_("%s error: Can't reset sync flags: %d\n"),
+			Error(_("%s: Can't reset sync flags: %d.\n"),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
 			add_to_log(_("Error\n"));
@@ -940,7 +940,7 @@ GenericConduit::FastSync()
 		/* Can't complete this particular operation, but it's
 		 * not a show-stopper. The sync can go on.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
 		add_to_log(_("Error\n"));
@@ -949,7 +949,7 @@ GenericConduit::FastSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		Error(_("%s: Can't open \"%s\": %d\n"),
+		Error(_("%s: Can't open \"%s\": %d.\n"),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
 		add_to_log(_("Error\n"));
@@ -996,7 +996,7 @@ GenericConduit::FastSync()
 				       rptr);
 		if (remoterec == 0)
 		{
-			Error(_("%s error: Can't allocate new record\n"),
+			Error(_("%s: Can't allocate new record.\n"),
 			      "GenericConduit");
 			this->close_archive();
 
@@ -1096,7 +1096,7 @@ GenericConduit::FastSync()
 			if ((err = pdb_AppendRecord(_localdb, remoterec)) < 0)
 			{
 				Error(_("%s: Can't append new record to "
-					"database: %d\n"),
+					"database: %d.\n"),
 				      "GenericConduit::FastSync",
 				      err);
 				pdb_FreeRecord(remoterec);
@@ -1211,7 +1211,7 @@ GenericConduit::FastSync()
 
 			    default:
 				Error(_("%s: Error deleting record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      "FastSync",
 				      localrec->id, err);
 				break;
@@ -1241,7 +1241,7 @@ GenericConduit::FastSync()
 
 			    default:
 				Error(_("%s: Error deleting record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      "FastSync",
 				      localrec->id, err);
 				continue;
@@ -1269,7 +1269,7 @@ GenericConduit::FastSync()
 			if (err != DLPSTAT_NOERR)
 			{
 				Error(_("Error uploading record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      localrec->id, err);
 				return -1;
 			}
@@ -1317,7 +1317,7 @@ GenericConduit::FastSync()
 		err = DlpCleanUpDatabase(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			Error(_("%s error: Can't clean up database: %d\n"),
+			Error(_("%s: Can't clean up database: %d.\n"),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
 			add_to_log(_("Error\n"));
@@ -1336,7 +1336,7 @@ GenericConduit::FastSync()
 		err = DlpResetSyncFlags(_pconn, dbh);
 		if (err != DLPSTAT_NOERR)
 		{
-			Error(_("%s error: Can't reset sync flags: %d\n"),
+			Error(_("%s: Can't reset sync flags: %d.\n"),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
 			add_to_log(_("Error\n"));
@@ -1443,7 +1443,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d\n"),
+				       "0x%08lx: %d.\n"),
 				     "SlowSync",
 				     remoterec->id, err);
 				/* XXX - For now, just ignore this,
@@ -1483,7 +1483,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d\n"),
+				       "0x%08lx: %d.\n"),
 				     "SlowSync",
 				     remoterec->id, err);
 				/* XXX - For now, just ignore this,
@@ -1532,7 +1532,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Error(_("Error uploading record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      localrec->id, err);
 				return -1;
 			}
@@ -1630,7 +1630,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Warn(_("%s: Warning: Can't delete "
-				       "record 0x%08lx: %d\n"),
+				       "record 0x%08lx: %d.\n"),
 				     "SlowSync",
 				     remoterec->id, err);
 				/* XXX - For now, just ignore this,
@@ -1658,7 +1658,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Error(_("Error uploading record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      localrec->id, err);
 				return -1;
 			}
@@ -1728,7 +1728,7 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				Error(_("%s: Can't copy record\n"),
+				Error(_("%s: Can't copy record.\n"),
 				      "SyncRecord");
 				return -1;
 			}
@@ -1766,7 +1766,7 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				Error(_("%s: Can't copy record\n"),
+				Error(_("%s: Can't copy record.\n"),
 				      "SyncRecord");
 				return -1;
 			}
@@ -1815,7 +1815,7 @@ GenericConduit::SyncRecord(
 				if (err != DLPSTAT_NOERR)
 				{
 					Error(_("Error uploading record "
-						"0x%08lx: %d\n"),
+						"0x%08lx: %d.\n"),
 					      localrec->id, err);
 					return -1;
 				}
@@ -1854,7 +1854,7 @@ GenericConduit::SyncRecord(
 				if (err < 0)
 				{
 					Error(_("%s: Can't insert record "
-						"0x%08lx\n"),
+						"0x%08lx.\n"),
 					      "SyncRecord",
 					      newrec->id);
 					pdb_FreeRecord(newrec);
@@ -1891,7 +1891,7 @@ GenericConduit::SyncRecord(
 					    remoterec->data);
 			if (newrec == 0)
 			{
-				Error(_("%s: Can't copy record\n"),
+				Error(_("%s: Can't copy record.\n"),
 				      "SyncRecord");
 				return -1;
 			}
@@ -1902,7 +1902,7 @@ GenericConduit::SyncRecord(
 			err = pdb_InsertRecord(localdb, localrec, newrec);
 			if (err < 0)
 			{
-				Error(_("%s: Can't insert record 0x%08lx\n"),
+				Error(_("%s: Can't insert record 0x%08lx.\n"),
 				      "SlowSync",
 				      newrec->id);
 				pdb_FreeRecord(newrec);
@@ -1954,7 +1954,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d\n"),
+				       "0x%08lx: %d.\n"),
 				     "SlowSync",
 				     localrec->id, err);
 				/* XXX - For now, just ignore this,
@@ -1985,8 +1985,8 @@ GenericConduit::SyncRecord(
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
 			{
-				Warn(_("%s: Warning: Can't delete record "
-				       "0x%08lx: %d\n"),
+				Warn(_("%s: Can't delete record 0x%08lx: "
+				       "%d.\n"),
 				     "SlowSync",
 				     remoterec->id, err);
 				/* XXX - For now, just ignore this,
@@ -2020,7 +2020,7 @@ GenericConduit::SyncRecord(
 			if (err != DLPSTAT_NOERR)
 			{
 				Error(_("Error uploading record "
-					"0x%08lx: %d\n"),
+					"0x%08lx: %d.\n"),
 				      localrec->id, err);
 				return -1;
 			}
@@ -2137,7 +2137,7 @@ GenericConduit::archive_record(const struct pdb_record *rec)
 					_dbinfo->name);
 			if ((_archfd = arch_create(_dbinfo)) < 0)
 			{
-				Error(_("Can't create \"%s\"\n"),
+				Error(_("Can't create \"%s\".\n"),
 				      _dbinfo->name);
 				return -1;
 			}
@@ -2196,7 +2196,7 @@ GenericConduit::read_backup()
 	int infd;		// File descriptor for backup file
 	if ((infd = open(bakfname, O_RDONLY | O_BINARY)) < 0)
 	{
-		Error(_("%s error: Can't open \"%s\"\n"),
+		Error(_("%s: Can't open \"%s\".\n"),
 		      "read_backup",
 		      bakfname);
 		return -1;
@@ -2206,7 +2206,7 @@ GenericConduit::read_backup()
 
 	if (_localdb == 0)
 	{
-		Error(_("%s error: Can't load \"%s\"\n"),
+		Error(_("%s: Can't load \"%s\".\n"),
 		      "read_backup",
 		      bakfname);
 		return -1; 
@@ -2253,7 +2253,7 @@ GenericConduit::write_backup(struct pdb *db)
 	err = pdb_Write(db, outfd);
 	if (err < 0)
 	{
-		Error(_("%s: Can't write staging file \"%s\"\n"),
+		Error(_("%s: Can't write staging file \"%s\".\n"),
 		      "GenericConduit::write_backup",
 		      stage_fname);
 		close(outfd);
@@ -2266,7 +2266,7 @@ GenericConduit::write_backup(struct pdb *db)
 	if (err < 0)
 	{
 		Error(_("%s: Can't rename staging file.\n"
-			"Backup left in \"%s\", hopefully\n"),
+			"Backup left in \"%s\", hopefully.\n"),
 		      "GenericConduit::write_backup",
 		      stage_fname);
 		return err;

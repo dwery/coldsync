@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.18 2001-01-09 16:19:20 arensb Exp $
+ * $Id: archive.c,v 1.19 2001-01-11 08:27:20 arensb Exp $
  */
 
 #include "config.h"
@@ -65,7 +65,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 		       O_RDWR | O_CREAT | O_TRUNC | O_BINARY,
 		       0600)) < 0)
 	{
-		Error(_("%s: Can't open file \"%s\"\n"),
+		Error(_("%s: Can't open \"%s\".\n"),
 		      "arch_create",
 		      archfname);
 		perror("open");
@@ -86,7 +86,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 	/* Write the archive header to the file */
 	if ((err = write(fd, headerbuf, ARCH_HEADERLEN)) < 0)
 	{
-		Error(_("%s: Can't write archive file header\n"),
+		Error(_("%s: Can't write archive file header.\n"),
 		      "arch_create");
 		perror("write");
 		close(fd);
@@ -124,7 +124,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 	{
 		if (errno != ENOENT)
 		{
-			Error(_("%s: Can't open \"%s\"\n"),
+			Error(_("%s: Can't open \"%s\".\n"),
 			      "arch_open",
 			      archfname);
 			perror("open");
@@ -135,7 +135,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 	/* Seek to the end of the file */
 	if ((err = lseek(fd, 0L, SEEK_END)) < 0)
 	{
-		Error(_("%s: Can't seek to end of file\n"),
+		Error(_("%s: Can't seek to end of file.\n"),
 		      "arch_open");
 		perror("lseek");
 		close(fd);

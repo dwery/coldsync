@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.13 2001-01-10 09:36:54 arensb Exp $
+ * $Id: palm.c,v 2.14 2001-01-11 08:27:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -174,7 +174,7 @@ fetch_sysinfo(struct Palm *palm)
 	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
 	{
 		/* XXX - This message doesn't really belong here */
-		Error(_("Can't get system info\n"));
+		Error(_("Can't get system info.\n"));
 		return -1;
 	}
 	MISC_TRACE(3)
@@ -241,7 +241,7 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		Error(_("Can't read NetSync info\n"));
+		Error(_("Can't read NetSync info.\n"));
 		return -1;
 	}
 
@@ -265,7 +265,7 @@ fetch_userinfo(struct Palm *palm)
 	/* Get user information from the Palm */
 	if ((err = DlpReadUserInfo(palm->pconn_, &(palm->userinfo_))) < 0)
 	{
-		Error(_("Can't get user info\n"));
+		Error(_("Can't get user info.\n"));
 		return -1;
 	}
 
@@ -378,7 +378,7 @@ fetch_serial(struct Palm *palm)
 	{
 		Error(_("Warning: ROM serial number is %d characters long. "
 			"Please notify the\n"
-			"maintainer\n"),
+			"maintainer.\n"),
 		      snum_len);
 		snum_len = SNUM_MAX;
 	}
@@ -874,7 +874,7 @@ palm_append_dbentry(struct Palm *palm,
 			    sizeof(struct dlp_dbinfo));
 	if (newdblist == NULL)
 	{
-		Error(_("Can't resize palm->dblist\n"));
+		Error(_("Can't resize palm->dblist.\n"));
 		return -1;
 	}
 	palm->dblist_ = newdblist;

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.27 2001-01-09 16:19:22 arensb Exp $
+ * $Id: backup.c,v 2.28 2001-01-11 08:27:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,7 +53,7 @@ backup(PConnection *pconn,
 		     O_WRONLY | O_CREAT | O_EXCL | O_BINARY, 0600);
 	if (bakfd < 0)
 	{
-		Error(_("%s: can't create new backup file %s\n"
+		Error(_("%s: can't create new backup file %s.\n"
 			"It may already exist.\n"),
 		      "backup",
 		      bakfname);
@@ -88,7 +88,7 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		Error(_("Can't open database \"%s\"\n"),
+		Error(_("Can't open database \"%s\".\n"),
 		      dbinfo->name);
 		close(bakfd);
 		add_to_log(_("Error\n"));
@@ -121,7 +121,7 @@ backup(PConnection *pconn,
 	err = pdb_Write(pdb, bakfd);
 	if (err < 0)
 	{
-		Error(_("%s: can't write database \"%s\" to \"%s\"\n"),
+		Error(_("%s: can't write database \"%s\" to \"%s\".\n"),
 		      "backup",
 		      dbinfo->name, bakfname);
 		err = DlpCloseDB(pconn, dbh);
@@ -166,7 +166,7 @@ full_backup(PConnection *pconn,
 		err = backup(pconn, cur_db, backupdir);
 		if (err < 0)
 		{
-			Error(_("%s: Can't back up \"%s\"\n"),
+			Error(_("%s: Can't back up \"%s\".\n"),
 			      "full_backup",
 			      cur_db->name);
 

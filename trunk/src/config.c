@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.56 2001-01-10 09:36:52 arensb Exp $
+ * $Id: config.c,v 1.57 2001-01-11 08:27:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -209,7 +209,7 @@ parse_args(int argc, char *argv[])
 			global_opts.devtype = name2listen_type(optarg);
 			if (global_opts.devtype < 0)
 			{
-				Error(_("Unknown device type: \"%s\"\n"),
+				Error(_("Unknown device type: \"%s\".\n"),
 				      optarg);
 				usage(argc, argv);
 				return -1;
@@ -221,7 +221,7 @@ parse_args(int argc, char *argv[])
 			break;
 
 		    case '?':	/* Unknown option */
-			Error(_("Unrecognized option: \"%s\"\n"),
+			Error(_("Unrecognized option: \"%s\".\n"),
 				argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
@@ -230,7 +230,7 @@ parse_args(int argc, char *argv[])
 				 * was given (e.g., "-u" instead of "-u
 				 * daemon").
 				 */
-			Error(_("Missing option argument after \"%s\"\n"),
+			Error(_("Missing option argument after \"%s\".\n"),
 			      argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
@@ -334,7 +334,7 @@ load_config()
 		err = get_userinfo(&userinfo);
 		if (err < 0)
 		{
-			Error(_("Can't get user info\n"));
+			Error(_("Can't get user info.\n"));
 			return -1;
 		}
 
@@ -627,7 +627,7 @@ set_debug_level(const char *str)
 	else if (strncasecmp(str, "net", 3) == 0)
 		net_trace = lvl;
 	else {
-		Error(_("Unknown facility \"%s\"\n"), str);
+		Error(_("Unknown facility \"%s\".\n"), str);
 	}
 }
 
@@ -651,7 +651,7 @@ set_mode(const char *str)
 	/* Sanity check: if the user specifies the mode twice, complain. */
 	if (global_opts.mode != mode_None)
 		Warn(_("You shouldn't specify two -m<mode> options.\n"
-		       "\tUsing -m%s\n"),
+		       "\tUsing -m%s.\n"),
 		     str);
 
 	switch (str[0])
@@ -683,7 +683,7 @@ set_mode(const char *str)
 #endif	/* 0 */
 
 	    default:
-		Error(_("Unknown mode: \"%s\"\n"), str);
+		Error(_("Unknown mode: \"%s\".\n"), str);
 		return -1;
 	}
 }
@@ -723,7 +723,7 @@ usage(int argc, char *argv[])
 void
 print_version(FILE *outfile)
 {
-	fprintf(outfile, _("%s version %s\n"),
+	fprintf(outfile, _("%s version %s.\n"),
 	       /* These two strings are defined in "config.h" */
 	       PACKAGE,
 	       VERSION);
@@ -776,7 +776,7 @@ get_hostinfo()
 	/* Get the hostname */
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
-		Error(_("Can't get host name\n"));
+		Error(_("Can't get host name.\n"));
 		perror("gethostname");
 		return -1;
 	}
@@ -785,7 +785,7 @@ get_hostinfo()
 
 	if ((myaddr = gethostbyname2(hostname, AF_INET)) == NULL)
 	{
-		Error(_("Can't look up my address\n"));
+		Error(_("Can't look up my address.\n"));
 		perror("gethostbyname");
 		return -1;
 	}
@@ -902,7 +902,7 @@ get_hostaddrs()
 
 	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		Error(_("%s: socket() returned %d\n"),
+		Error(_("%s: socket() returned %d.\n"),
 		      "get_hostaddrs",
 		      sock);
 		perror("socket");
