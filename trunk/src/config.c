@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.45 2000-11-24 23:01:14 arensb Exp $
+ * $Id: config.c,v 1.46 2000-11-28 00:45:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -734,11 +734,64 @@ _("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
 _("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 "        to case, whenever possible.\n"));
 #endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
-/* XXX */
 	printf(
 _("\n"
 "    Default global configuration file: %s\n"),
 		DEFAULT_GLOBAL_CONFIG);
+}
+
+/* print_pda_block
+ * Print to 'outfile' a suggested PDA block that would go in a user's
+ * .coldsyncrc . The values in the suggested PDA block come from 'pda' and
+ * 'palm'.
+ */
+void
+print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
+{
+	const udword p_userid = palm_userid(palm);
+	const char *p_username = palm_username(palm);
+	const char *p_snum = palm_serial(palm);
+	const int p_snum_len = palm_serial_len(palm);
+
+	/* First line of PDA block */
+	if ((pda == NULL) || (pda->name == NULL) ||
+	    (pda->name[0] == '\0'))
+		printf("pda {\n");
+	else
+		printf("pda \"%s\" {\n", pda->name);
+
+	/* "snum:" line in PDA block */
+	if ((p_snum == NULL) || (p_snum[0] == '\0'))
+	{
+		/* This Palm doesn't have a serial number. Say so. */
+		printf("\tsnum: \"\";\n");
+	} else {
+		/* Print the Palm's serial number. */
+		printf("\tsnum: \"%s-%c\";\n",
+		       p_snum,
+		       snum_checksum(p_snum, p_snum_len));
+	}
+
+	/* "directory:" line in PDA block */
+	if ((pda != NULL) && (pda->directory != NULL) &&
+	    (pda->directory[0] != '\0'))
+		printf("\tdirectory: \"%s\";\n", pda->directory);
+
+	/* "username:" line in PDA block */
+	if ((p_username == NULL) || (p_username[0] == '\0'))
+		printf("\tusername: \"%s\";\n", userinfo.fullname);
+	else
+		printf("\tusername: \"%s\";\n", p_username);
+
+	/* "userid:" line in PDA block */
+	if (p_userid == 0)
+		printf("\tuserid: %ld;\n",
+		       (long) userinfo.uid);
+	else
+		printf("\tuserid: %ld;\n", p_userid);
+
+	/* PDA block closing brace. */
+	printf("}\n");
 }
 
 /* name2listen_type
@@ -764,18 +817,36 @@ name2listen_type(const char *str)
  * Helper function. Finds the best-matching PDA block for the given Palm.
  * Returns a pointer to it if one was defined in the config file(s), or
  * NULL otherwise.
+ *
+ * If 'check_user' is false, find_pda_block() only checks the serial
+ * number. If 'check_user' is true, it also checks the user name and ID. If
+ * the user name or ID aren't set in a PDA block, they act as wildcards, as
+ * far as find_pda_block() is concerned.
  */
 pda_block *
-find_pda_block(struct Palm *palm)
+find_pda_block(struct Palm *palm, const Bool check_user)
 {
 	pda_block *cur;		/* The pda-block we're currently looking at */
 	pda_block *default_pda;	/* pda_block for the default PDA, if no
 				 * better match is found.
 				 */
 
+	MISC_TRACE(4)
+	{
+		fprintf(stderr, "Looking for a PDA block.\n");
+		if (check_user)
+			fprintf(stderr, "  Also checking user info\n");
+		else
+			fprintf(stderr, "  But not checking user info\n");
+	}
+
 	default_pda = NULL;
 	for (cur = sync_config->pda; cur != NULL; cur = cur->next)
 	{
+		MISC_TRACE(5)
+			fprintf(stderr, "Checking PDA \"%s\"\n",
+				(cur->name == NULL ? "" : cur->name));
+
 		/* See if this pda_block has a serial number and if so,
 		 * whether it matches the one we read off of the Palm.
 		 * Palms with pre-3.0 ROMs don't have serial numbers. They
@@ -790,7 +861,36 @@ find_pda_block(struct Palm *palm)
 		     != 0))
 		{
 			/* The serial number doesn't match */
+			MISC_TRACE(5)
+				fprintf(stderr,
+					"\tSerial number doesn't match\n");
+
 			continue;
+		}
+
+		/* Check the username and userid, if asked */
+		if (check_user)
+		{
+			/* Check the user ID */
+			if (cur->userid_given &&
+			    (cur->userid != palm_userid(palm)))
+			{
+				MISC_TRACE(5)
+					fprintf(stderr,
+						"\tUserid doesn't match\n");
+				continue;
+			}
+
+			/* Check the user name */
+			if ((cur->username != NULL) &&
+			    strncmp(cur->username, palm_username(palm),
+				    DLPCMD_USERNAME_LEN) != 0)
+			{
+				MISC_TRACE(5)
+					fprintf(stderr,
+						"\tUsername doesn't match\n");
+				continue;
+			}
 		}
 
 		MISC_TRACE(3)
@@ -805,7 +905,7 @@ find_pda_block(struct Palm *palm)
 		{
 			MISC_TRACE(3)
 				fprintf(stderr,
-					"Found a default PDA\n");
+					"This is a default PDA\n");
 
 			/* Mark this as the default pda_block */
 			default_pda = cur;
@@ -833,111 +933,6 @@ find_pda_block(struct Palm *palm)
 			 * PDA, nor a default, so it should return NULL
 			 * anyway.
 			 */
-}
-
-/* XXX - This function's purpose isn't very well defined. And it does far
- * too much.
- */
-int
-load_palm_config(struct Palm *palm)
-{
-	/* XXX - For now, this assumes that 'coldsync' runs as a user app,
-	 * i.e., it's started by the user at login time (or 'startx' time).
-	 * This simplifies things, in that we can just use getuid() to get
-	 * the Palm owner's uid.
-	 * Eventually, what should happen is this: 'coldsync' will become a
-	 * daemon. It'll use the information from ReadUserInfo and/or
-	 * ReadSysInfo to determine which Palm it's talking to, look this
-	 * information up in a table (or something), and determine which
-	 * directory it needs to sync with, where to get the per-Palm
-	 * configuration, and so forth.
-	 */
-	int err;
-	uid_t uid;		/* UID of user running 'coldsync' */
-	struct passwd *pwent;	/* /etc/passwd entry for current user */
-	pda_block *pda;		/* Description of the current PDA */
-
-	pda = find_pda_block(palm);
-				/* Try to find a pda_block for the
-				 * current PDA */
-
-	MISC_TRACE(3)
-		if (pda == NULL)
-			fprintf(stderr, "No PDA found in config file. Using "
-				"system defaults.\n");
-
-	/* Get the current user's UID */
-	uid = getuid();		/* Can't fail, according to TFM */
-
-	MISC_TRACE(2)
-		fprintf(stderr, "UID: %lu\n", (unsigned long) uid);
-
-	/* Get the user's password file info */
-	if ((pwent = getpwuid(uid)) == NULL)
-	{
-		perror("load_palm_config: getpwuid");
-		return -1;
-	}
-	MISC_TRACE(2)
-	{
-		fprintf(stderr, "pwent:\n");
-		fprintf(stderr, "\tpw_name: \"%s\"\n", pwent->pw_name);
-		fprintf(stderr, "\tpw_uid: %lu\n",
-			(unsigned long) pwent->pw_uid);
-		fprintf(stderr, "\tpw_gecos: \"%s\"\n", pwent->pw_gecos);
-		fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
-	}
-
-	/* See if the PDA block has overridden the default user name.
-	 */
-	if ((pda != NULL) && (pda->username != NULL))
-	{
-		MISC_TRACE(4)
-			fprintf(stderr, "Overriding user name: [%s]\n",
-				pda->username);
-		strncpy(userinfo.fullname, pda->username,
-			sizeof(userinfo.fullname));
-	}
-
-	/* See if the PDA block has overridden the user ID */
-	if ((pda != NULL) && (pda->userid != 0))
-	{
-		/* Use the UID supplied by the PDA block */
-		MISC_TRACE(4)
-			fprintf(stderr, "Overriding user ID: %ld\n",
-				pda->userid);
-		userinfo.uid = pda->userid;
-	} else {
-		/* Use the current user's UID */
-		/* XXX - Hasn't this already been done by get_userinfo? () */
-		userinfo.uid = pwent->pw_uid;	/* Get the user's UID */
-	}
- 
-	/* Make sure the various directories (~/.palm/...) exist, and create
-	 * them if necessary.
-	 */
-
-	/* Figure out what the base directory is */
-	if ((pda != NULL) && (pda->directory != NULL))
-	{
-		/* Use the directory specified in the config file */
-		strncpy(palmdir, pda->directory, MAXPATHLEN);
-	} else {
-		/* Either there is no applicable PDA, or else it doesn't
-		 * specify a directory. Use the default (~/.palm).
-		 */
-		strncpy(palmdir,
-			mkfname(userinfo.homedir, "/.palm", NULL),
-			MAXPATHLEN);
-	}
-	MISC_TRACE(3)
-		fprintf(stderr, "Base directory is [%s]\n", palmdir);
-
-	err = make_sync_dirs(palmdir);
-	if (err < 0)
-		return -1;
-
-	return 0; 
 }
 
 /* make_sync_dirs
