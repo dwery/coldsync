@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9.2.3 2000-09-03 02:12:08 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.4 2000-09-03 02:24:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -426,7 +426,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		/* Set the pointer to the right preference in the cache
 		 * list and if necessary, download it
 		 */
-		pref_list[i] = GetPrefItem(conduit->prefs[i]);
+		pref_list[i] = GetPrefItem(&(conduit->prefs[i]));
 
 		/* Set the header */
 		++last_header;
