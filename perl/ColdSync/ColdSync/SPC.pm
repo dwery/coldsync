@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.22 2003-06-15 11:53:37 azummo Exp $
+# $Id: SPC.pm,v 1.23 2003-06-24 12:34:47 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.22 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.23 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -230,6 +230,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_ReadNextModifiedRec
 	dlp_ReadNextModifiedRecInCategory
 	dlp_ReadDBList
+	dlp_ResetSyncFlags
 );
 
 Exporter::export_ok_tags('dlp_vfs', 'dlp_args', 'dlp_expslot');
@@ -1749,6 +1750,25 @@ sub dlp_ReadDBList($$$)
 
 	return undef unless exists $retval->{'name'};
 	return $retval;
+}
+
+=head2 dlp_ResetSyncFlags
+
+	dlp_ResetSyncFlags($dbh);
+
+=cut
+#'
+sub dlp_ResetSyncFlags
+{
+	my $dbh = shift;	# Database handle
+
+	my ($err, @argv) = dlp_req(DLPCMD_ResetSyncFlags,
+			{
+				id	=> dlpFirstArgID,
+				data	=> pack("C", $dbh),
+			});
+
+	return $err;
 }
 
 1;
