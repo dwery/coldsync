@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.3 2002-11-03 16:37:32 azummo Exp $
+# $Id: ExpSlot.pm,v 1.4 2002-11-07 20:40:02 azummo Exp $
 
 # XXX - Write POD
 
@@ -30,13 +30,15 @@ You can use them to play with files on your memory card.
 
 =cut
 
+use 5.008_000;
+
 use ColdSync;
 use ColdSync::SPC qw( :DEFAULT :dlp_expslot :dlp_args );
 use Exporter;
 
 
 @ColdSync::SPC::ExpSlot::ISA	 = qw( Exporter );
-$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.3 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.4 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 @ColdSync::SPC::ExpSlot::EXPORT = qw( 
@@ -100,7 +102,7 @@ sub dlp_ExpSlotEnumerate
 			{
 				my $ref;
 
-				( $ref, $retval->{'_data'} ) = unpack('n a*', $retval->{'_data'});
+				($ref, $retval->{'_data'}) = unpack('n a*', $retval->{'_data'});
 
 				$retval->{'slots'}[$i] = $ref;
 			}
@@ -132,22 +134,17 @@ sub dlp_ExpCardInfo
 		if ($arg->{id} == dlpFirstArgID)
 		{
 			my $data;
-			my $ns;
+			my $numstrings;
 
 			(
 				$retval->{'capabilities'},
-				$ns,
+				$numstrings,
 				$data
 			) = unpack("N n a*",$arg->{data});
 
 
 			# Retrieve the strings
-			my @s = split( /\0/, $data, $ns + 1 );
-
-
-			# Remove the last one, if array len > $ns
-			pop(@s) if scalar @s > $ns;
-
+			my @s = unpack("(Z*)$numstrings", $data);
 
 			# Store them
 			$retval->{'strings'} = \@s;
@@ -165,7 +162,7 @@ sub dlp_ExpCardInfo
 		}
 	}
 
-	return ($err,$retval);
+	return ($err, $retval);
 }
 
 __END__
