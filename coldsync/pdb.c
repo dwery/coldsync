@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.4 1999-02-24 13:18:13 arensb Exp $
+ * $Id: pdb.c,v 1.5 1999-02-24 14:12:26 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -19,10 +19,6 @@
 #define IS_RSRC_DB(db) 		((db)->header.attributes & PDB_ATTR_RESDB)
 
 /* XXX - Need functions:
- *
- * pdb *read_pdb(fd) - Read a PDB/PRC from a file, return it as a data
- * structure
- *
  * int write_pdb(fd, struct pdb *pdb) - Write a struct pdb to a file.
  */
 struct pdb *LoadDatabase(char *fname);
@@ -200,6 +196,30 @@ free_pdb(struct pdb *db)
 	if (db == NULL)
 		/* Trivial case */
 		return;
+
+	/* Free the array of records */
+	if (db->data != NULL)
+	{
+		int i;
+
+		/* Free each record in turn */
+		for (i = 0; i < db->reclist_header.len)
+		{
+			if (data[i] != NULL)
+				free(data[i]);
+		}
+
+		/* Finally, free the array itself */
+		free(data);
+	}
+
+	/* Free the array of record lengths */
+	if (db->data_len != NULL)
+		free(db->data_len);
+
+	/* Free the sort block */
+	if (db->sortinfo != NULL)
+		free(db->sortinfo);
 
 	/* Free the app info block */
 	if (db->appinfo != NULL)
