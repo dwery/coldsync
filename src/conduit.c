@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.58 2002-09-07 15:08:20 azummo Exp $
+ * $Id: conduit.c,v 2.59 2002-09-08 19:54:09 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1546,17 +1546,21 @@ find_in_path(const char *conduit)
 	return NULL;
 }
 
-/* XXX - This should return an error code, since it can fail.
- */
-static void
-mychdir( const char *d )
+static int
+mychdir(const char *directory)
 {
 	CONDUIT_TRACE(4)
-		fprintf( stderr, "Switching to directory: \"%s\"\n", d );   
+		fprintf(stderr, "Switching to directory: \"%s\"\n", directory);   
 
-	if (chdir(d) != 0)
+	if (chdir(directory) != 0)
+	{
 		Error(_("%s: Couldn't change directory to \"%s\"."),
-		      "spawn_conduit", d);
+		      "spawn_conduit", directory);
+
+		return -1;
+	}
+
+	return 0;
 }
 
 /* spawn_conduit

@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.4 2002-09-04 14:47:39 azummo Exp $
+ * $Id: palmconn.c,v 2.5 2002-09-08 19:54:09 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -76,7 +76,7 @@ Disconnect(PConnection *pconn, const ubyte status)
 		{
 			Error(_("Error during DlpEndOfSync: (%d) %s."),
 			      (int) PConn_get_palmerrno(pconn),
-			      _(palm_strerror(PConn_get_palmerrno(pconn))));
+			      palm_strerror(PConn_get_palmerrno(pconn)));
 		}
 	}
 
