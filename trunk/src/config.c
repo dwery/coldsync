@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.111 2002-11-23 16:30:55 azummo Exp $
+ * $Id: config.c,v 1.112 2002-11-26 00:15:32 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -993,7 +993,7 @@ _("    WITH_USB: USB (BSD) support.\n"));
 #endif	/* WITH_USB */
 #if WITH_LIBUSB
 	fprintf(outfile,
-_("    WITH_USB: USB (libusb) support.\n"));
+_("    WITH_LIBUSB: USB (libusb) support.\n"));
 #endif	/* WITH_LIBUSB */
 #if WITH_EFENCE
 	fprintf(outfile,
