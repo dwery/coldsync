@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.60 2000-11-24 22:58:46 arensb Exp $
+ * $Id: coldsync.c,v 1.61 2000-11-28 00:53:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -349,9 +349,12 @@ main(int argc, char *argv[])
 		sync_config = NULL;
 	}
 
-	MISC_TRACE(6)
-		fprintf(stderr, "Freeing pref_cache\n");
-	FreePrefList(pref_cache);
+	if (pref_cache != NULL)
+	{
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+		FreePrefList(pref_cache);
+	}
 
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
@@ -374,6 +377,11 @@ run_mode_Standalone(int argc, char *argv[])
 					 * databases */
 	struct dlp_dbinfo dbinfo;	/* Used when installing files */
 	struct Palm *palm;
+	pda_block *pda;			/* The PDA we're syncing with. */
+	const char *want_username;	/* The username we expect to see on
+					 * the Palm. */
+	udword want_userid;		/* The userid we expect to see on
+					 * the Palm. */
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -418,35 +426,115 @@ run_mode_Standalone(int argc, char *argv[])
 		return -1;
 	}
 
-	/* Get the Palm's serial number, if possible */
-	if (palm_serial_len(palm) > 0)
+	/* Figure out which Palm we're dealing with */
+	pda = find_pda_block(palm, True);
+	if (pda == NULL)
 	{
-		char checksum;		/* Serial number checksum */
+		/* There's no PDA block defined in .coldsyncrc that matches
+		 * this Palm. Hence, the username on the Palm should be the
+		 * current user's name from /etc/passwd, and the userid
+		 * should be the current user's UID.
+		 */
+		want_userid = userinfo.uid;
+		want_username = userinfo.fullname;
+	} else {
+		/* Found a matching PDA block. If it has defined a username
+		 * and/or userid, then the Palm should have those values.
+		 * Otherwise, the Palm should have the defaults as above.
+		 */
+		if (pda->userid_given)
+			want_userid = pda->userid;
+		else
+			want_userid = userinfo.uid;
 
-		/* Calculate the checksum for the serial number */
-		checksum = snum_checksum(palm_serial(palm),
-					 palm_serial_len(palm));
-		SYNC_TRACE(2)
-			fprintf(stderr, "Serial number is \"%s-%c\"\n",
-				palm_serial(palm), checksum);
+		if (pda->username == NULL)
+			want_username = userinfo.fullname;
+		else
+			want_username = pda->username;
 	}
 
-	/* Figure out which Palm we're dealing with, and initialize
-	 * per-palm config.
-	 */
-	/* XXX - This also creates ~/.palm/<stuff> . Perhaps that's not the
-	 * right place for it?
-	 */
-	if ((err = load_palm_config(palm)) < 0)
+	/* See if the userid matches. */
+	if (palm_userid(palm) != want_userid)
 	{
-		fprintf(stderr, _("Can't get per-Palm config.\n"));
+		fprintf(stderr,
+			_("Error: This Palm has user ID %ld (I was expecting "
+			  "%ld).\n"
+			  "Syncing would most likely destroy valuable data. "
+			  "Please update your\n"
+			  "configuration file and/or initialize this Palm "
+			  "(with 'coldsync -mI')\n"
+			  "before proceeding.\n"
+			  "\tYour configuration file should contain a PDA "
+			  "block that looks\n"
+			  "something like this:\n"),
+			palm_userid(palm), want_userid);
+		pda = find_pda_block(palm, False);
+				/* There might be a PDA block in the config
+				 * file with the appropriate serial number,
+				 * but the wrong username or userid. Find
+				 * it and use it for suggesting a pda
+				 * block.
+				 */
+		print_pda_block(stdout, pda, palm);
+
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
 		return -1;
 	}
 
-	/* XXX - Check user name and ID. Make sure they match */
+	/* See if the username matches */
+	if (strncmp(palm_username(palm), want_username, DLPCMD_USERNAME_LEN)
+	    != 0)
+	{
+		fprintf(stderr,
+			_(
+"Error: This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
+"Syncing would most likely destroy valuable data. Please update your\n"
+"configuration file and/or initialize this Palm (with 'coldsync -mI')\n"
+"before proceeding.\n"
+"\tYour configuration file should contain a PDA block that looks\n"
+"something like this:\n"),
+			DLPCMD_USERNAME_LEN, palm_username(palm),
+			DLPCMD_USERNAME_LEN, want_username);
+		pda = find_pda_block(palm, False);
+				/* There might be a PDA block in the config
+				 * file with the appropriate serial number,
+				 * but the wrong username or userid. Find
+				 * it and use it for suggesting a pda
+				 * block.
+				 */
+		print_pda_block(stdout, pda, palm);
+
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
+
+	/* Figure out what the base sync directory is */
+	if ((pda != NULL) && (pda->directory != NULL))
+	{
+		/* Use the directory specified in the config file */
+		strncpy(palmdir, pda->directory, MAXPATHLEN);
+	} else {
+		/* Either there is no applicable PDA, or else it doesn't
+		 * specify a directory. Use the default (~/.palm).
+		 */
+		strncpy(palmdir,
+			mkfname(userinfo.homedir, "/.palm", NULL),
+			MAXPATHLEN);
+	}
+	MISC_TRACE(3)
+		fprintf(stderr, "Base directory is [%s]\n", palmdir);
+
+	/* Make sure the sync directories exist */
+	err = make_sync_dirs(palmdir);
+	if (err < 0)
+	{
+		/* An error occurred while creating the sync directories */
+		free_Palm(palm);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		return -1;
+	}
 
 	/* XXX - In daemon mode, presumably load_palm_config() (or
 	 * something) should tell us which user to run as. Therefore fork()
@@ -467,7 +555,6 @@ run_mode_Standalone(int argc, char *argv[])
 			_("CacheFromConduits() returned %d\n"), err);
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
 		return -1;
 	}
 
@@ -529,13 +616,8 @@ run_mode_Standalone(int argc, char *argv[])
 			fprintf(stderr, 
 				_("Error %d running install conduits.\n"),
 				err);
-			MISC_TRACE(6)
-				fprintf(stderr,
-					"Freeing pref_cache\n");
-			FreePrefList(pref_cache);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-			pconn = NULL;
 			return -1;
 		}
 	}
@@ -558,13 +640,8 @@ run_mode_Standalone(int argc, char *argv[])
 	{
 		fprintf(stderr, _("Error installing new files.\n"));
 
-		MISC_TRACE(6)
-			fprintf(stderr, "Freeing pref_cache\n");
-
-		FreePrefList(pref_cache);
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
 		return -1;
 	}
 
@@ -599,13 +676,8 @@ run_mode_Standalone(int argc, char *argv[])
 					  "conduits.\n"),
 				err);
 
-			MISC_TRACE(6)
-				fprintf(stderr,
-					"Freeing pref_cache\n");
-			FreePrefList(pref_cache);
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-			pconn = NULL;
 			return -1;
 		}
 	}
@@ -646,11 +718,7 @@ run_mode_Standalone(int argc, char *argv[])
 
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
 
-			MISC_TRACE(6)
-				fprintf(stderr, "Freeing pref_cache\n");
-			FreePrefList(pref_cache);
 			return -1;
 		}
 	}
@@ -674,11 +742,7 @@ run_mode_Standalone(int argc, char *argv[])
 		fprintf(stderr, _("Error writing user info\n"));
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-		pconn = NULL;
 
-		MISC_TRACE(6)
-			fprintf(stderr, "Freeing pref_cache\n");
-		FreePrefList(pref_cache);
 		return -1;
 	}
 
@@ -693,11 +757,7 @@ run_mode_Standalone(int argc, char *argv[])
 			fprintf(stderr, _("Error writing sync log.\n"));
 			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
 
-			MISC_TRACE(6)
-				fprintf(stderr, "Freeing pref_cache\n");
-			FreePrefList(pref_cache);
 			return -1;
 		}
 	}
@@ -895,7 +955,13 @@ run_mode_Backup(int argc, char *argv[])
 
 			/* Back up the database */
 			err = backup(pconn, db, backupdir);
-			/* XXX - Error-checking */
+			if (err < 0)
+			{
+				fprintf(stderr,
+					_("Warning: Error backing up "
+					  "\"%s\".\n"),
+					db->name);
+			}
 		}
 	}
 
@@ -1122,7 +1188,7 @@ run_mode_Init(int argc, char *argv[])
 	}
 
 	/* Get the PDA block for this Palm, from the config file(s) */
-	pda = find_pda_block(palm);
+	pda = find_pda_block(palm, False);
 
 	/* Decide what to update, if anything.
 	 * The "do no harm" rule applies here. If the Palm already has
@@ -1255,42 +1321,7 @@ run_mode_Init(int argc, char *argv[])
 "\n"
 "Your .coldsyncrc should contain something like the following:\n"
 "\n"));
-
-		/* First line of PDA block */
-		if ((pda == NULL) || (pda->name == NULL) ||
-		    (pda->name[0] == '\0'))
-			printf("pda {");
-		else
-			printf("pda \"%s\" {\n", pda->name);
-
-		/* "snum:" line in PDA block */
-		if ((pda != NULL) && (pda->snum != NULL) &&
-		    (pda->snum[0] != '\0'))
-			printf("\tsnum: \"%s-%c\";\n",
-			       palm_serial(palm),
-			       snum_checksum(palm_serial(palm),
-					     palm_serial_len(palm)));
-
-		/* "directory:" line in PDA block */
-		if ((pda != NULL) && (pda->directory != NULL) &&
-		    (pda->directory[0] != '\0'))
-			printf("\tdirectory: \"%s\";\n", pda->directory);
-
-		/* "username:" line in PDA block */
-		if ((p_username == NULL) || (p_username[0] == '\0'))
-			printf("\tusername: \"%s\";\n", userinfo.fullname);
-		else
-			printf("\tusername: \"%s\";\n", p_username);
-
-		/* "userid:" line in PDA block */
-		if (p_userid == 0)
-			printf("\tuserid: %ld;\n",
-			       (long) userinfo.uid);
-		else
-			printf("\tuserid: %ld;\n", p_userid);
-
-		/* PDA block closing brace. */
-		printf("}\n");
+		print_pda_block(stdout, pda, palm);
 	} else {
 		/* Update the user information on the Palm */
 		/* XXX - This section mostly duplicates UpdateUserInfo().
