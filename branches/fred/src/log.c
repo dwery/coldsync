@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.22.8.1 2001-10-09 01:41:27 arensb Exp $
+ * $Id: log.c,v 1.22.8.2 2001-10-11 02:57:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -47,8 +47,6 @@ add_to_log(const char *msg)
 	if (msg == NULL)
 		return 0;	/* Don't bother with empty messages */
 	msglen = strlen(msg);
-
-	fprintf(stderr, "%s", msg);/* send to the default log file. */
 
 	/* Increase the size of the log buffer, if necessary */
 	if (log_len + msglen >= log_size)
