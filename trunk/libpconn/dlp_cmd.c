@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.16 2001-02-21 11:20:00 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.17 2001-03-16 14:07:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1154,7 +1154,7 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
  */
 int
 DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
-	   ubyte handle)	/* Handle of database to close */
+	   ubyte handle)		/* Handle of database to close */
 {
 	int i;
 	int err;
