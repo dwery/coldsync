@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.h,v 2.3 2000-11-19 00:12:31 arensb Exp $
+ * $Id: palm.h,v 2.4 2000-11-19 00:23:35 arensb Exp $
  */
 #ifndef _palm_h_
 #define _palm_h_
@@ -33,6 +33,9 @@
  * the accessor function does so. Thus, information is only fetched if
  * and when it is needed, which should lead to clearer and more
  * efficient code.
+ *
+ * NB: All of the members of this struct are private! Don't touch them
+ * outside of "palm.c"!
  *
  * [1] Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides,
  * "Design Patterns," Addison-Wesley.
