@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.10 2000-01-25 11:26:09 arensb Exp $
+ * $Id: log.c,v 1.11 2000-01-26 11:29:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -87,7 +87,7 @@ add_to_log(char *msg)
 			if ((newlog = realloc(synclog, newsize)) == NULL)
 			{
 				fprintf(stderr, _("%s: realloc failed\n"),
-					add_to_log);
+					"add_to_log");
 				perror("realloc");
 				return -1;
 			}
