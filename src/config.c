@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.10 1999-11-09 06:25:25 arensb Exp $
+ * $Id: config.c,v 1.11 1999-11-10 06:46:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -794,6 +794,10 @@ get_config(int argc, char *argv[])
 		/* No device specified on the command line. Use the one(s)
 		 * from the config file.
 		 */
+		MISC_TRACE(4)
+			fprintf(stderr, "No device specified on the "
+				"command line.\n");
+
 		config.listen = user_config->listen;
 		user_config->listen = NULL;
 
