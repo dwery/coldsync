@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.4 1999-11-04 03:47:14 arensb Exp $
+ * $Id: pdb.c,v 1.5 1999-11-04 10:46:58 arensb Exp $
  */
 
 #include "config.h"
@@ -35,8 +35,8 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 
-#define PDB_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
-				 * back */
+int pdb_trace = 0;		/* Debugging level for PDB stuff */
+#define PDB_TRACE(n)	if (pdb_trace >= (n))
 
 /* Helper functions */
 static uword get_file_length(int fd);
@@ -164,16 +164,6 @@ free_pdb(struct pdb *db)
 	free(db);
 }
 
-/* XXX - Separate pdb_Read() into two functions: one to load the header and
- * record index, and one to read the actual data. This should simplify
- * syncing, since you can have a list of databases on disk (and their
- * relevant characteristics, like creator, type, and modification number)
- * without having to load their entire contents.
- * OTOH, if the desktop machine has infinite memory and CPU, it might be
- * reasonable to assume that it can keep everything in memory with
- * negligible overhead.
- */
-
 /* pdb_Read
  * Read a PDB from the file descriptor 'fd'. This must already have been
  * opened for reading and/or writing.
@@ -198,6 +188,13 @@ pdb_Read(int fd)
 
 	/* Find out how long the file is */
 	retval->file_size = get_file_length(fd);
+	if (retval->file_size < 0)
+	{
+		/* The file isn't seekable */
+		fprintf(stderr, "File isn't seekable.\n");
+		free_pdb(retval);
+		return NULL;
+	}
 
 	/* Load the header */
 	if ((err = pdb_LoadHeader(fd, retval)) < 0)
@@ -1108,6 +1105,7 @@ pdb_InsertRecord(struct pdb *db,	/* The database to insert into */
 	/* XXX - This function doesn't actually check to make sure that
 	 * 'prev' is in 'db'. You could really fuck yourself over with
 	 * this.
+	 * So make it a documented requirement.
 	 */
 	/* The new record goes in the middle of the list. Insert it. */
 	newrec->next = prev->next;
@@ -1143,6 +1141,7 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
 	/* XXX - This function doesn't actually check to make sure that
 	 * 'prev' is in 'db'. You could really fuck yourself over with
 	 * this.
+	 * So make it a documented requirement.
 	 */
 	/* The new resource goes in the middle of the list. Insert it. */
 	newrsrc->next = prev->next;
@@ -1296,7 +1295,11 @@ get_file_length(int fd)
 
 	/* Get the current position within the file */
 	here = lseek(fd, 0, SEEK_CUR);
-	/* XXX - What if the file isn't seekable? */
+	if (here < 0)
+		/* The file isn't seekable, presumably either because it
+		 * isn't open, or because it's a pipe/socket/FIFO/tty.
+		 */
+		return -1;
 
 	/* Go to the end of the file */
 	eof = lseek(fd, 0, SEEK_END);
