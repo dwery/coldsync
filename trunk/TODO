@@ -1,3 +1,5 @@
+- Document "-s" option.
+- Document "-l logfile" option.
 - With a Visor, if there's no pda{} block that matches exactly,
   ColdSync defaults to ~/.palm and username/userid from /etc/passwd.
 	This seems like the Right Thing to do for the naive user, but
@@ -6,11 +8,6 @@
 	Not sure what the fix should be. Add an "abort" pda flag,
   meaning "if you get this far, abort 'cos you overshot the real pda
   block"?
-- Need a "logit(...)" function that'll write its arguments to the log
-  file, or send them to syslog if necessary. Should use snprintf() to
-  avoid buffer overruns.
-- Need Warning(...) and Error(...) functions that'll print the error
-  both to stderr and to the log (if the log isn't syslog).
 - When accepting a connection from a remote host, first open the TCP
   socket, and only then acknowledge the UDP packet. That way, if the
   TCP socket can't be opened for some reason, we can abort before
