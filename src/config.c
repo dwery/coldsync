@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.18 2000-02-07 01:39:29 arensb Exp $
+ * $Id: config.c,v 1.19 2000-03-14 06:17:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -127,10 +127,11 @@ get_config(int argc, char *argv[])
 	struct hostent *myaddr;
 
 	/* Initialize the global options to sane values */
-	global_opts.do_backup	= False;
-	global_opts.backupdir	= NULL;
-	global_opts.do_restore	= False;
-	global_opts.restoredir	= NULL;
+	global_opts.do_backup		= False;
+	global_opts.backupdir		= NULL;
+	global_opts.do_restore		= False;
+	global_opts.restoredir		= NULL;
+	global_opts.force_install	= False;
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;
@@ -202,7 +203,7 @@ get_config(int argc, char *argv[])
 
 	/* Start by reading command-line options. */
 	config_fname_given = False;
-	while ((arg = getopt(argc, argv, ":hVSFRf:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hVSFRIf:b:r:p:t:d:")) != -1)
 	{
 		switch (arg)
 		{
@@ -224,6 +225,10 @@ get_config(int argc, char *argv[])
 
 		    case 'R':	/* -R: Consider ROM databases */
 			global_opts.check_ROM = True;
+			break;
+
+		    case 'I':	/* -I: Install younger databases */
+			global_opts.force_install = True;
 			break;
 
 		    case 'f':	/* -f <file>: Read configuration from
