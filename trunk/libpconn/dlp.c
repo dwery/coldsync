@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.2 1999-11-04 10:44:58 arensb Exp $
+ * $Id: dlp.c,v 1.3 1999-11-27 05:39:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -30,12 +30,16 @@
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
 
-#include <pconn/palm_types.h>
-#include <pconn/palm_errno.h>
-#include <pconn/dlp.h>
-#include <pconn/padp.h>
-#include <pconn/util.h>
-#include <pconn/PConnection.h>
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
+#include "pconn/palm_types.h"
+#include "pconn/palm_errno.h"
+#include "pconn/dlp.h"
+#include "pconn/padp.h"
+#include "pconn/util.h"
+#include "pconn/PConnection.h"
 
 int dlp_trace = 0;			/* Debugging level for DLP */
 
@@ -137,7 +141,8 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 	if (outbuf == NULL)
 	{
 		fprintf(stderr,
-			"dlp_send_req: Can't allocate %ld-byte buffer\n",
+			_("%s: Can't allocate %ld-byte buffer\n"),
+			"dlp_send_req",
 			buflen);
 		return -1;
 	}
@@ -259,14 +264,14 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 	/* Make sure it's really a DLP response */
 	if ((header->id & 0x80) != 0x80)
 	{
-		fprintf(stderr, "##### Expected a DLP response, but this isn't one!\n");
+		fprintf(stderr, _("##### Expected a DLP response, but this isn't one!\n"));
 		return -1;
 	}
 
 	/* Make sure the response ID matches the request ID */
 	if ((header->id & 0x7f) != id)
 	{
-		fprintf(stderr, "##### Bad response ID: expected 0x%02x, got 0x%02x\n",
+		fprintf(stderr, _("##### Bad response ID: expected 0x%02x, got 0x%02x\n"),
 			id | 0x80, header->id);
 		palm_errno = PALMERR_BADID;
 		return -1;

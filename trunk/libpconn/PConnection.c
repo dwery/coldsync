@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.2 1999-11-09 04:04:56 arensb Exp $
+ * $Id: PConnection.c,v 1.3 1999-11-27 05:38:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,7 +14,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <pconn/PConnection.h>
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
+#include "pconn/PConnection.h"
 /*  #include "coldsync.h" */
 
 #define MISC_TRACE(n)	if (0)
@@ -37,7 +42,7 @@ new_PConnection(char *fname)
 	if ((pconn = (struct PConnection *) malloc(sizeof(struct PConnection)))
 	    == NULL)
 	{
-		fprintf(stderr, "Can't allocate new connection\n");
+		fprintf(stderr, _("Can't allocate new connection\n"));
 		return NULL;
 	}
 
@@ -68,7 +73,8 @@ new_PConnection(char *fname)
 	/* Open the file */
 	if ((pconn->fd = open(fname, O_RDWR)) < 0)
 	{
-		fprintf(stderr, "new_PConnection: error opening port \"%s\"\n",
+		fprintf(stderr, _("%s: error opening port \"%s\"\n"),
+			"new_PConnection",
 			fname);
 		perror("open");
 		dlp_tini(pconn);
