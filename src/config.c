@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.21 2000-04-10 09:31:37 arensb Exp $
+ * $Id: config.c,v 1.22 2000-04-10 09:57:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -749,16 +749,6 @@ load_palm_config(struct Palm *palm)
 		default_pda = NULL;
 		for (cur = config.pda; cur != NULL; cur = cur->next)
 		{
-			if ((cur->flags & PDAFL_DEFAULT) != 0)
-			{
-				MISC_TRACE(3)
-					fprintf(stderr,
-						"Found a default PDA\n");
-
-				/* Mark this as the default pda_block */
-				default_pda = cur;
-			}
-
 			/* See if this pda_block has a serial number and if
 			 * so, whether it matches the one we read off of
 			 * the Palm.
@@ -771,22 +761,39 @@ load_palm_config(struct Palm *palm)
 			 */
 			if ((cur->snum != NULL) &&
 			    (strncasecmp(cur->snum, palm->serial, SNUM_MAX)
-			     == 0))
+			     != 0))
 			{
-				/* It matches. */
-				MISC_TRACE(3)
-				{
-					fprintf(stderr, "Found a match for "
-						"this PDA:\n");
-					fprintf(stderr, "\tS/N: [%s]\n",
-						cur->snum);
-					fprintf(stderr, "\tDirectory: [%s]\n",
-						cur->directory);
-				}
-
-				pda = cur;
-				break;
+				/* The serial number doesn't match */
+				continue;
 			}
+
+			MISC_TRACE(3)
+			{
+				fprintf(stderr, "Found a match for "
+					"this PDA:\n");
+				fprintf(stderr, "\tS/N: [%s]\n",
+					cur->snum);
+				fprintf(stderr, "\tDirectory: [%s]\n",
+					cur->directory);
+			}
+
+			if ((cur->flags & PDAFL_DEFAULT) != 0)
+			{
+				MISC_TRACE(3)
+					fprintf(stderr,
+						"Found a default PDA\n");
+
+				/* Mark this as the default pda_block */
+				default_pda = cur;
+				continue;
+			}
+
+			/* If we get this far, then the serial number
+			 * matches and this is not a default pda_block. So
+			 * this is the one we want to use.
+			 */
+			pda = cur;
+			break;
 		}
 
 		if (pda == NULL)
