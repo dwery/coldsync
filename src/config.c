@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.47 2000-12-08 06:30:47 arensb Exp $
+ * $Id: config.c,v 1.48 2000-12-11 09:09:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -610,6 +610,8 @@ set_debug_level(const char *str)
 		misc_trace = lvl;
 	else if (strncasecmp(str, "io", 2) == 0)
 		io_trace = lvl;
+	else if (strncasecmp(str, "net", 3) == 0)
+		net_trace = lvl;
 	else {
 		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
 	}
