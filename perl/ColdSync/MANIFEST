@@ -1,5 +1,6 @@
 ColdSync.pm
 ColdSync/SPC.pm
+ColdSync/PDB.pm
 ColdSync/SPC/VFS.pm
 ColdSync/SPC/ExpSlot.pm
 MANIFEST
