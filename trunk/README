@@ -102,16 +102,21 @@ to install them,
 
 COMPATIBILITY NOTES
 
-* ColdSync 1.1.2:
+* ColdSync 1.1.7:
 
 FreeBSD:
-	This package was developed under FreeBSD 3.x, and compiles
-	cleanly with no modification under 3.3-RELEASE.
+	This package was developed under FreeBSD 3.x/4.x, and compiles
+	cleanly with no modification under 3.3-RELEASE and
+	4.0-RELEASE.
 
-	On later versions of FreeBSD (4.0 and beyond), it's possible
+	On newer versions of FreeBSD (4.0 and beyond), it's possible
 	to communicate with the Handspring Visor using its USB
-	interface.  Configure a listen type of "usb" rather than
+	interface. Configure a listen type of "usb" rather than
 	"serial", and use device /dev/ugen0.
+
+	gcc 2.95.2 complains that:
+	.../src/GenericConduit.cc:2238: warning: mktemp() possibly used unsafely; consider using mkstemp()
+	This can be ignored.
 
 Redhat Linux 6.1:
 	(as of ColdSync v1.1.4)
