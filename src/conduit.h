@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.11 2000-07-01 20:00:18 arensb Exp $
+ * $Id: conduit.h,v 1.12 2000-08-07 00:42:20 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -63,7 +63,8 @@
 
 extern int run_Fetch_conduits(struct dlp_dbinfo *dbinfo);
 extern int run_Dump_conduits(struct dlp_dbinfo *dbinfo);
-extern int run_Sync_conduits(struct dlp_dbinfo *dbinfo);
+extern int run_Sync_conduits(struct dlp_dbinfo *dbinfo,
+			     struct PConnection *pconn);
 
 #endif	/* _conduit_h_ */
 
