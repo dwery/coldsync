@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.12 1999-11-02 03:22:56 arensb Exp $
+# $Id: Makefile.in,v 1.13 1999-11-10 06:44:00 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -18,7 +18,8 @@ DATE =		@DATE@
 RECURSIVE_TARGETS = \
 		all depend clean distclean spotless distdir install
 
-DISTFILES =	AUTHORS \
+DISTFILES =	README \
+		AUTHORS \
 		ChangeLog \
 		HACKING \
 		Makefile.in \
@@ -72,7 +73,8 @@ ${RECURSIVE_TARGETS}::
 
 snapshot:	distdir
 	date=`${DATE} "+%Y%m%d"`; \
-	GZIP="--best" ${TAR} chozf "${PACKAGE}-$${date}.tar.gz" ${DISTDIR}
+	GZIP="--best" ${TAR} chozf "${PACKAGE}-${VERSION}$${date}.tar.gz" \
+		${DISTDIR}
 	rm -rf ${DISTDIR}
 
 # Targets for various progressive levels of cleanliness. Each one is
