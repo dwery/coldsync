@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.5 2000-02-06 22:14:14 arensb Exp $
+# $Id: Makefile,v 2.6 2000-04-09 14:23:33 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -46,7 +46,7 @@ all::		${CXXPROG}
 depend::
 	${MKDEP} ${CPPFLAGS} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
-include ../Make.rules
+include ${TOP}/Make.rules
 
 install::	${CXXPROG}
 	${INSTALL_PROGRAM} ${CXXPROG} ${BINDIR}/${CXXPROG}
