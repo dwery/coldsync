@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.3 2000-05-25 12:09:06 arensb Exp $
+# $Id: todo-text,v 1.4 2000-09-21 15:26:43 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -31,7 +31,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.3 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.4 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -68,7 +68,7 @@ sub DoFetch
 	my $i;
 	for ($i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
 	{
-		$cat_name2index{$PDB->{appinfo}{categories}[$i]} = $i;
+		$cat_name2index{$PDB->{appinfo}{categories}[$i]{name}} = $i;
 	}
 
 	# Read and parse each file in turn
@@ -275,7 +275,8 @@ sub find_record
 
 	foreach $record (@{$PDB->{records}})
 	{
-		next unless $PDB->{appinfo}{categories}[$record->{category}]
+		next unless
+			$PDB->{appinfo}{categories}[$record->{category}]{name}
 			eq $category;
 		next unless $record->{description} eq $desc;
 
@@ -312,7 +313,7 @@ sub DoDump
 	for ($i = 0; $i < $#{$PDB->{appinfo}{categories}}; $i++)
 	{
 		# Ignore nonexistent categories
-		next if $PDB->{appinfo}{categories}[$i] eq "";
+		next if $PDB->{appinfo}{categories}[$i]{name} eq "";
 
 		# XXX - Ought to a) copy the file to a .bak file, and also
 		# b) overwrite the original file. (a) will allow us to
@@ -322,7 +323,7 @@ sub DoDump
 		# Find all of the records in this category, and dump them
 		# to a file.
 		&DumpCategory($PDB,
-			      $PDB->{appinfo}{categories}[$i],
+			      $PDB->{appinfo}{categories}[$i]{name},
 			      grep { $_->{category} == $i } @SORTED);
 	}
 
