@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.6 1999-09-04 21:05:07 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.7 1999-09-05 03:30:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -233,8 +233,9 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, "userinfo->usernamelen == %d\n",
 			userinfo->usernamelen);
 		fprintf(stderr, "userinfo->username == \"%s\"\n",
-			userinfo->username == NULL ?
-			"(null)" : userinfo->username);
+			((userinfo->usernamelen == 0) ||
+			 (userinfo->username == NULL) ?
+			 "(null)" : userinfo->username));
 	}
 
 	/* Fill in the header values */
