@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.6 1999-11-28 15:40:36 arensb Exp $
+# $Id: Makefile.in,v 1.7 1999-11-29 02:25:44 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -111,7 +111,6 @@ install:	lib${LIBNAME}.a
 	fi
 	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
 
-# XXX - Doesn't find <libintl.h>
 depend:
 	${MKDEP} ${CPPFLAGS} ${SRCS}
 
