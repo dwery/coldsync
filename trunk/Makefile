@@ -1,48 +1,41 @@
 CFLAGS +=	-g -Wall -ansi
+# PALM_ROOT =	/usr/local/pilot/m68k-palmos-coff/include
+# PALM_CPPFLAGS =	-I${PALM_ROOT}/PalmOS \
+# 		-I${PALM_ROOT}/PalmOS/System \
+# 		-I${PALM_ROOT}/PalmOS/UI \
+# 		-I${PALM_ROOT}/PalmOS/Hardware
+# CFLAGS +=	${PALM_CPPFLAGS}
 
-SLPOBJS =	slp.o palm_crc.o
-PADPOBJS =	padp.o
-CMPOBJS =	cmp.o
-DLPOBJS =	dlp.o dlp_cmd.o
+# SLPOBJS =	slp.o palm_crc.o
+# PADPOBJS =	padp.o
+# CMPOBJS =	cmp.o
+# DLPOBJS =	dlp.o dlp_cmd.o
+
+LIBSRCS =	slp.c \
+		padp.c \
+		cmp.c \
+		dlp.c dlp_cmd.c \
+		util.c \
+		PConnection.c
+LIBOBJS =	${LIBSRCS:R:S/$/.o/g}
 
 RM =		rm -f
 
-all:	libslp.a libpadp.a libcmp.a cmp.o foo
+# all:	libslp.a libpadp.a libcmp.a cmp.o foo
+all:	libpalm.a foo
 
-libslp.a:	${SLPOBJS}
-	${RM} libslp.a
-	ar cq ${.TARGET} `lorder ${SLPOBJS} | tsort -q`
+libpalm.a:	${LIBOBJS}
+	${RM} ${.TARGET}
+	ar cq ${.TARGET} `lorder ${LIBOBJS} | tsort -q`
 	ranlib ${.TARGET}
 
 clean::
-	${RM} ${SLPOBJS} libslp.a
+	${RM} ${LIBOBJS} libpalm.a
 
-libpadp.a:	libslp.a ${PADPOBJS}
-	${RM} libpadp.a
-	ar cq ${.TARGET} `lorder ${PADPOBJS} | tsort -q`
-	ranlib ${.TARGET}
-
-clean::
-	${RM} ${PADPOBJS} libpadp.a
-
-libcmp.a:	${CMPOBJS}
-	${RM} libcmp.a
-	ar cq ${.TARGET} `lorder ${CMPOBJS} | tsort -q`
-	ranlib ${.TARGET}
-
-clean::
-	${RM} ${CMPOBJS} libcmp.a
-
-libdlp.a:	${DLPOBJS}
-	${RM} libdlp.a
-	ar cq ${.TARGET} `lorder ${DLPOBJS} | tsort -q`
-	ranlib ${.TARGET}
-
-clean::
-	${RM} ${DLPOBJS} libdlp.a
-
-foo:	libslp.a libpadp.a libcmp.a libdlp.a foo.o
-	${CC} ${CFLAGS} -o ${.TARGET} foo.o -L. -ldlp -lcmp -lpadp -lslp
+#foo:	libslp.a libpadp.a libcmp.a libdlp.a foo.o
+#	${CC} ${CFLAGS} -o ${.TARGET} foo.o -L. -ldlp -lcmp -lpadp -lslp
+foo:	libpalm.a foo.o
+	${CC} ${CFLAGS} -o ${.TARGET} foo.o -L. -lpalm
 
 clean::
 	${RM} foo.o foo
