@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.58 2001-11-12 01:06:52 arensb Exp $
+ * $Id: coldsync.h,v 1.59 2001-11-12 05:50:04 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -119,7 +119,16 @@ typedef struct listen_block
 				 */
 	char *device;		/* Device to listen on */
 	long speed;
+	unsigned short flags;	/* Flags. See LISTENFL_*, below */
 } listen_block;
+
+#define LISTENFL_TRANSIENT	0x01	/* This device is transient: it
+					 * might not exist at any given
+					 * time (e.g., if it's on a devfs
+					 * filesystem), so an open() that
+					 * fails with ENOENT isn't an
+					 * error.
+					 */
 
 /* cond_header
  * A (name, value) pair that will be passed to a conduit.
