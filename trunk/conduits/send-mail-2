@@ -1,0 +1,259 @@
+#!/usr/bin/perl
+#
+# ColdSync Mail sync conduit
+#
+# For each Outbox message in the Palm database:
+#   - try to send
+#   - if sent, delete from Palm outbox
+#
+# $Id: send-mail-2,v 1.1 2003-06-28 14:30:24 azummo Exp $
+#
+use strict;
+
+use Text::Wrap;
+
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::PDB;
+use Palm::Mail;
+
+# Default values for headers
+%HEADERS = (
+	# XXX - This ought to be determined at configure-time
+	"Sendmail"	=> "/usr/sbin/sendmail",
+	"My-Address"	=> (getpwuid($>))[0],
+
+	"Outbox-name"	=> "Outbox",	# Name of category for outgoing mail
+	"Sent-name"    => "", # category for sent mail
+
+	"Wrap"		=> 74,
+	"Paragraph"	=> "",		# Paragraph indent
+	"Line-Indent"	=> "",		# Line indentation
+);
+
+my $VERSION = (qw($Revision: 1.1 $))[1];	# Conduit version
+
+#######################################################################
+# send a Palm MailDB record via sendmail or compatible MTA
+sub sendmail_record {
+	my $record = shift;
+
+	return unless defined $record->{'to'} or defined $record->{'cc'}
+			or defined $record->{'bcc'};
+
+	# print_header
+	# Print a valid mail header. Headers with empty values are ignored.
+	# Newlines are replaced with newline-whitespace, per RFC822.
+	sub print_header
+	{
+		my ($fh,$header_name, $header_content) = @_;
+
+		# empty header?
+		return if !defined($header_content) or $header_content eq "";
+
+		$header_content =~ s/\n(?!\s)/\n\t/mg;
+		print $fh "$header_name: $header_content\n";
+	}
+
+	# XXX: eMail also defines the from address in pref: mail/4
+	my $whoami = $HEADERS{"My-Address"};
+	$whoami = $record->{'from'}
+		if defined $record->{'from'} and $record->{'from'} ne "";
+
+	# Sendmail command-line arguments
+	my @sm_args = ("-t", "-i");	# -t: get addressee from the
+					# body of the message
+					# -i: ignore lines consisting of
+					# a single dot.
+
+	if ($record->{confirm_delivery})
+	{
+		push @sm_args, "-N", "success,failure";
+	}
+
+	# hey, isn't that what it's there for?
+	&dlp_AddSyncLogEntry("Sent '$record->{subject}' to $record->{to}\n");
+
+	open SENDMAIL, "| $HEADERS{Sendmail} @sm_args" or
+		die "401 Can't run $HEADERS{Sendmail}: $!\n";
+
+	# Print header fields so that they conform to RFC822 (a continuation
+	# line must start with a whitespace or tab character).
+	&print_header(*SENDMAIL,"From", $whoami);
+	&print_header(*SENDMAIL,"To", $record->{"to"});
+	&print_header(*SENDMAIL,"Cc", $record->{"cc"});
+	&print_header(*SENDMAIL,"Bcc", $record->{bcc});
+	&print_header(*SENDMAIL,"Reply-To", $record->{reply_to});
+	&print_header(*SENDMAIL,"X-Sent-To", $record->{send_to});
+	&print_header(*SENDMAIL,"X-Mailer",
+	    "$HEADERS{Daemon} $HEADERS{Version}/send-mail-2 conduit $VERSION");
+	&print_header(*SENDMAIL,"Subject", $record->{subject});
+
+	if ($record->{confirm_read})
+	{
+		&print_header(*SENDMAIL,"Disposition-Notification-To", $whoami);
+	}
+
+	my $body = $record->{body};
+
+	# Wrap the text if requested
+	$Text::Wrap::columns = $HEADERS{Wrap};
+	$body = wrap($HEADERS{"Paragraph"}, $HEADERS{"Line-Indent"},
+			$record->{body})
+		if $HEADERS{Wrap} > 0;
+
+	print SENDMAIL "\n", $body;
+	print SENDMAIL "\n" unless $body =~ /\n$/mo;	# make sure ends with newline
+
+	print SENDMAIL $PREFERENCES{mail}{3} if $record->{has_signature};
+
+	# only return success if the pipe doesn't return an error
+	close SENDMAIL or return 0;
+
+	return 1;
+}
+
+#######################################################################
+StartConduit("sync");
+
+# check this before we start messing with databases
+die "401 Can't run $HEADERS{Sendmail}\n" unless -x $HEADERS{Sendmail};
+
+# open what we're currently syncing
+my $db = ColdSync::PDB->Current("rw");
+die "501 Error opening database" unless defined $db;
+
+my $catno = $db->catno($HEADERS{"Outbox-name"});
+die "401 Can't find $HEADERS{'Outbox-name'} category" unless defined $catno;
+
+my $sentno;
+if ($HEADERS{"Sent-name"} ne "") {
+	$sentno = $db->catno($HEADERS{"Sent-name"});
+	die "401 Can't find $HEADERS{'Sent-name'} category" unless defined $sentno;
+	die "401 Sent-name and Outbox-name can't be the same!" if $catno == $sentno;
+}
+
+while (my $record = $db->nextRecInCategory($catno)) {
+	next if $record->{'attributes'}{'deleted'};
+	next if $record->{'attributes'}{'archived'};
+
+	unless (sendmail_record($record)) {
+		print "301 sendmail failed: $!";
+		next;
+	}
+
+	# Note that we won't get here if the send failed.
+	if (defined $sentno) {
+		# recategorize
+		$record->{category} = $sentno;
+		$db->writeRecord($record);
+	} else {
+		# just delete it
+		$db->deleteRecord($record);
+	}
+}
+
+EndConduit();
+
+__END__
+
+=head1 NAME
+
+send-mail-2 - ColdSync conduit to send Palm mail
+
+=head1 SYNOPSIS
+
+    conduit sync {
+        type: mail/DATA;
+        path: "<...>/send-mail-2";
+		  pref: mail/3;
+      arguments:
+        Sendmail:	/path/to/sendmail;
+        My-Address:	user@my.dom.ain;
+        Outbox-name:	Outbox;
+		  Sent-name: Sent;
+    }
+
+=head1 DESCRIPTION
+
+The C<send-mail-2> conduit reads the Palm Mail database, finds the
+outgoing messages in the specified outbox, and passes them on to
+the C<sendmail> program for further processing.
+
+Once each message has been successfully passed along to C<sendmail>,
+it is deleted or filed in another category.
+
+Most of the Palm Mail send-related preferences are supported.  The signature
+preference should just plain work.  In theory, confirm read and delivery
+are supported. In practice, confirmations are iffy on the modern Internet.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<signature>
+
+The signature is stored in preference C<mail/3>. Adding the appropriate
+C<pref> line will cause it to be added to all outgoing mail.
+
+=item C<Sendmail>
+
+Specifies the path to the C<sendmail> executable. The default is
+F</usr/sbin/sendmail>.
+
+=item C<My-Address>
+
+Specifies the return address to put on outgoing messages. If omitted,
+defaults to your username (or, more precisely, the username of the
+first user with your uid).
+
+If using Gable Watts' simplified mail application eMail with the sender
+address correctly configured in the Preferences, that address will be
+used instead (and My-Address left out). Other mail client apps that
+allow the user to specify the sender address on the Palm itself might
+also work correctly.
+
+=item C<Wrap>
+
+Specifies the column at which to wrap long lines. Defaults to 74. A
+value of 0 specifies that text should not be wrapped.
+
+=item C<Outbox-name>
+
+Specifies the category where outgoing messages are found.
+If omitted, the default F<Outbox> is used. For German use F<Ausgang>.
+
+=item C<Sent-name>
+
+Specifies the category where sent messages are filed.  If omitted,
+sent messages are just deleted.
+
+=head1 BUGS
+
+This conduit will only pull messages from the specified outbox category
+and send them.  It will not perform any other synching of the mail
+database. You'll want to ensure that a non-default C<[generic]> sync is
+done for the F<mail/DATA> database in order to sync other sections of
+the database.
+
+Some F<sendmail> implementations (Postfix) don't return a usable exit
+code if the message couldn't be sent due to local errors (i.e. mail
+subsystem not running). We can't detect this, so the conduit will assume
+all is well and delete the original from the Outbox. The lesson being to
+either use a correct sendmail or keep your mail server running. Filing
+sent messages under a different category will at least ensure they aren't
+lost before the next purge.
+
+=head1 AUTHOR
+
+Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
+
+sync and many other options by E<lt>christophe.beauregard@sympatico.caE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+sendmail(1)
+
+F<ColdSync Conduits>, in the ColdSync documentation.

@@ -1,0 +1,263 @@
+#!/usr/bin/perl -w
+
+# mbox-inbox - coldsync mbox format fetch conduit
+
+# $Id: mbox-inbox,v 1.1 2003-06-28 14:30:24 azummo Exp $
+
+use strict;
+
+use POSIX;
+use ColdSync;
+use Palm::Mail;
+use Fcntl qw(:flock);
+use Date::Parse;
+
+# read a message from an mbox stream... Yeah, I know, there are all kinds
+# of modules for this (Mail::Box, MailTools, etc). But they all bring
+# along _huge_ quantities of baggage, are slow, and are generally overkill.
+
+sub next_message {
+	my $fh = shift;
+	my $got_hdr = 0;
+	my $got_bod = 0;
+	my $message = {};
+	my $field = "";	# header continuations
+	my $cp;
+
+	while ($cp = tell($fh), my $line = <$fh>) {
+		chomp $line;
+		if ($line =~ /^From /o and not $got_hdr) {
+			$got_hdr = 1;
+		} elsif ($line =~ /^From /o and $got_hdr) {
+			# end of current message... seek back to the beginning of
+			# the current line and terminate the loop
+			seek($fh, $cp, 0);
+			last;
+		} elsif ($line eq "" and $got_hdr and not $got_bod) {
+			$got_bod = 1;
+		} elsif ($got_hdr and not $got_bod) {
+			# new field
+			if ($line =~ /^([^:\000-\040\177]+):\s*(.*)/o) {
+				$field = lc($1);
+				$message->{$field} = $2;
+			} else {
+				# folded header
+				$message->{$field} .= $line;
+			}
+		} else {
+			$message->{'body'} .= $line;
+			$message->{'body'} .= "\n";
+		}
+	}
+
+	if ($got_hdr) {
+		# turn the date field(s) into an epoch timestamp
+		$message->{'timestamp'} = str2time($message->{'date'},'GMT');
+
+		# XXX should try to pull a date from the Received: headers if
+		# the previous failed.
+
+		$message->{'timestamp'} ||= time();
+
+		return $message;
+	}
+	return undef;
+}
+
+# Default values for headers
+%HEADERS = (
+	'Mailbox' => "$ENV{HOME}/Mail/palm",
+	'Inbox-name' => 'Inbox',
+	'Truncate-after' => 4000,
+);
+
+my $VERSION = (qw($Revision: 1.1 $))[1];	# Conduit version
+
+StartConduit("fetch");
+
+# get remote sync prefs, if available
+if (defined $PREFERENCES{mail}{2}) {
+	my (
+		$syncType,
+		$retrieveHighPriority,
+		$messageContaing,
+		$reserved,
+		$maxLength
+	) = unpack("n C n C n", $PREFERENCES{mail}{2});
+
+	$HEADERS{'Truncate-after'} = $maxLength if $maxLength > 256;
+}
+
+# find the palm inbox
+my $catno;
+for ($catno = 0; $catno < 16; $catno++) {
+	last if $PDB->{'appinfo'}{'categories'}[$catno]{'name'}
+		eq $HEADERS{'Inbox-name'};
+}
+
+die "501 Palm inbox '$HEADERS{'Inbox-name'}' doesn't exist\n" if $catno >= 16;
+
+# open a mailbox
+open MBOX, "+< $HEADERS{'Mailbox'}" or die "501 $!";
+
+# we use two types of locking. That _should_ be adequate.
+flock(MBOX, LOCK_EX);
+
+my $dotlock = "$HEADERS{'Mailbox'}.lock.send-mail";
+my $lock = "$HEADERS{'Mailbox'}.lock";
+open DOTLOCK, "> $dotlock" or die "501 $!";
+unless (symlink($dotlock, $lock)) {
+	sleep 5;
+	unless (symlink($dotlock, $lock)) {
+		unlink $dotlock;
+		flock(MBOX, LOCK_UN);
+		die "501 Unable to get lock on mailbox";
+	}
+}
+
+# ensure that the locks go away when we do
+$SIG{__DIE__} = sub {
+	flock(MBOX, LOCK_UN);
+	close MBOX;
+	close DOTLOCK;
+	unlink $lock;
+	unlink $dotlock;
+};
+
+while (my $message = next_message(*MBOX)) {
+
+	# skip over deleted messages
+	next if $message->{'status'} =~ /d/;
+
+	my $record = $PDB->new_Record;
+
+	$record->{category} = $catno;
+	$record->{_seen} = 1;
+	$record->{attributes}{dirty} = 1;	# XXX: is this needed?
+
+	my ($second, $minute, $hour, $mday, $mon, $year, $wday, $yday)
+		= gmtime($message->{'timestamp'});
+	$record->{year} = $year - 20;
+	$record->{month} = $mon + 1;
+	$record->{day} = $mday;
+	$record->{hour} = $hour;
+	$record->{minute} = $minute;
+
+	$record->{is_read} = 0;
+	$record->{has_signature} = 0;
+	$record->{confirm_read} = 0;
+	$record->{confirm_delivery} = 0;
+	$record->{addressing} = 0;
+
+	$record->{priority} = 1;
+	if (exists $message->{'precedence'}) {
+		my $p = $message->{'precedence'};
+		$record->{priority} = 0 if $p =~ /bulk/io;
+		$record->{priority} = 2 if $p =~ /urgent/io;
+	}
+
+	$record->{subject} = $message->{'subject'};
+	$record->{from} = $message->{'from'};
+	$record->{to} = $message->{'to'};
+	$record->{cc} = $message->{'cc'};
+	$record->{bcc} = $message->{'bcc'};
+	$record->{replyTo} = $message->{'reply-to'};
+	$record->{sentTo} = $message->{'x-sent-to'};
+
+	# XXX: this could probably be a little nicer. Converting certain
+	# MIME types (i.e. html) to something more readable or selecting
+	# the most readable bits from a multi-part might be nice. But
+	# maybe that should be handled by whatever puts stuff in the mbox?
+	$record->{body} = substr $message->{'body'}, 0, $HEADERS{'Truncate-after'};
+
+	$PDB->append_Record($record);
+}
+
+# delete all messages in the mailbox by the simple expedient of chopping
+# the size back to zero bytes.
+truncate MBOX, 0;
+
+# unlock everything
+flock(MBOX, LOCK_UN);
+close MBOX;
+close DOTLOCK;
+unlink $lock;
+unlink $dotlock;
+
+EndConduit();
+
+__END__
+
+=head1 NAME
+
+mbox-inbox - ColdSync conduit to fetch from a mbox-format inbox to Palm
+Mail database
+
+=head1 SYNOPSIS
+
+    conduit fetch {
+        type: mail/DATA;
+        path: "<...>/mbox-inbox";
+		  pref: mail/2;
+      arguments:
+		  Mailbox: /path/to/mailbox;
+        Inbox-name:	Inbox;
+		  Truncate-after: 4000
+    }
+
+=head1 DESCRIPTION
+
+The C<mbox-inbox> conduit reads messages from a mailbox and copies them
+into the Palm mail database.
+
+The mailbox can be a primary mailbox (i.e. F</var/spool/username>),
+a subfolder in a maildir (F<~/Mail/palm>), a file resulting from, say,
+procmail filtering, or whatever. The author designed this particular
+conduit such that he could drag e-mails/documents to a "palm" folder.
+
+Messages copied to the Palm will be deleted after processing via the
+simple mechanism of truncating the mailbox file. The mailbox will
+be locked appropriately during the process.
+
+This conduit assumes that the incoming mail is process appropriately before
+it hits the mailbox. That is, things like MIME and HTML aren't
+handled properly (except for truncating). Furthermore, because the original
+messages are deleted but what goes to the Palm is truncated, there's a
+chance that important information buried in large documents will be lost.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<Mailbox>
+
+The filename of the mailbox that gets synched to the Palm. This needs to be
+readable, writable, and lockable. It's assumed that anything else accessing
+the mailbox will be well-behaved in terms of format and access locking.
+Most MTA's are, but with all the newfangled spam blockers out there...
+Network shares are probably iffy.
+
+=item C<Inbox-name>
+
+The category into which the messages are copied. The default F<Inbox> will
+be used if not specified.
+
+=item C<Truncate-after>
+
+Messages with bodies larger than this will be truncated. By default,
+this is 4000 bytes (the same as the Palm Mail app default).
+
+If the Palm mail sync preferences are available (mail/2), an attempt
+will be made to get the truncation value from there. This hasn't been
+well tested.
+
+=head1 AUTHOR
+
+Christophe Beauregard E<lt>christophe.beauregard@sympatico.caE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+F<ColdSync Conduits>, in the ColdSync documentation.
+

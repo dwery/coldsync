@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2003, Christophe Beauregard
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the coldsync README file.
+#
+# $Id: recat,v 1.1 2003-06-28 14:30:24 azummo Exp $
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::PDB;
+use Palm::Raw;
+
+%HEADERS = (
+	'From-category' => "Unfiled",
+	'To-category' => "Filed",
+);
+
+StartConduit("sync");
+
+my $db = ColdSync::PDB->Current("rw");
+die "501 failed to open database" unless defined $db;
+
+my $fromno = $db->catno($HEADERS{'From-category'});
+die "501 category $HEADERS{'From-category'} missing" unless defined $fromno;
+
+my $tono = $db->catno($HEADERS{'To-category'});
+die "501 category $HEADERS{'To-category'} missing" unless defined $tono;
+
+die "401 categories are the same" if $tono == $fromno;
+
+while (my $record = $db->nextRecInCategory($fromno)) {
+	$record->{category} = $tono;
+	$db->writeRecord($record);
+}
+
+EndConduit();
+
+__END__;
+
+=head1 name
+
+recat - Sync conduit to recategorize records
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: creator/type;
+		...
+		path: <...>/recat;
+	arguments:
+		From-category: "Unfiled";
+		To-category: "Filed";
+	}
+
+=head1 DESCRIPTION
+
+Moves all records in one category to another.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<From-category>
+
+Category from which items are moved.
+
+=item C<To-category>
+
+Category to which items are moved.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+ColdSync::PDB
+
+=cut
+#'
+

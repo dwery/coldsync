@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2003, Christophe Beauregard
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the coldsync README file.
+#
+# $Id: dump-dlpdbs,v 1.1 2003-06-28 14:30:24 azummo Exp $
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+use ColdSync::PDB;
+use Palm::Mail;
+use Palm::Address;
+use Palm::ToDo;
+
+StartConduit("sync");
+
+my $addrdb = ColdSync::PDB->Load("AddressDB", "r");
+if (defined $addrdb) {
+	print STDERR "Snarfing Addresses...\n";
+	my @records = $addrdb->records();
+	foreach my $record (@records) {
+		print STDERR "AddressDB has '$record->{fields}{name}'\n";
+	}
+} else {
+	print STDERR "Failed to open AddressDB\n";
+}
+$addrdb = undef;	# need to close it before opening another
+
+my $tododb = ColdSync::PDB->Load("ToDoDB", "r");
+if (defined $tododb) {
+	print STDERR "Snarfing Todos...\n";
+
+	for (my $i = 0; $i < 16; $i ++) {
+		while (my $record = $tododb->nextRecInCategory($i)) {
+			print STDERR "$i: $record->{description}\n";
+		}
+		$tododb->resetIndex();
+	}
+} else {
+	print STDERR "Failed to open AddressDB\n";
+}
+$tododb = undef;	# need to close it before opening another
+
+my $maildb = ColdSync::PDB->Load("MailDB", "r");
+if (defined $maildb) {
+	print STDERR "Snarfing Mail...\n";
+	my $delno = $maildb->catno("Deleted");
+	while (my $record = $maildb->nextRecInCategory($delno)) {
+		print STDERR "msg in deleted '$record->{subject}' from $record->{from}\n";
+	}
+} else {
+	print STDERR "Failed to open MailDB\n";
+}
+
+EndConduit();
+
+__END__;
+
+=head1 name
+
+dump-dlpdbs - Demo ColdSync::PDB
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: none;
+		...
+		path: <...>/dump-dlpdbs;
+	}
+
+=head1 DESCRIPTION
+
+=head1 BUGS
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
+
