@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.5 2000-11-20 05:23:32 arensb Exp $
+ * $Id: misc.c,v 2.6 2000-11-24 22:57:28 arensb Exp $
  */
 
 #include "config.h"
@@ -61,13 +61,8 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
  * mkfname() returns a pointer to its own storage, so a) the caller need
  * not free() it, and b) the caller should make a private copy of the
  * returned string.
- *
- * The 'volatile' return value is a somewhat pessimistic statement: it says
- * that I don't trust the compiler to realize that all sorts of different
- * functions are returning the very same pointer all over the place, so one
- * can't assume that what's at the other end of the pointer will stay put.
  */
-const volatile char *
+const char *
 mkfname(const char *first, ...)
 {
 	va_list ap;
@@ -121,13 +116,12 @@ mkfname(const char *first, ...)
  *
  * Returns a pointer to the resulting filename.
  */
-const volatile char *
+const char *
 mkpdbname(const char *dirname,
 	  const struct dlp_dbinfo *dbinfo,
 	  Bool add_suffix)
 {
-/*  	static char buf[MAXPATHLEN+1]; */
-	const volatile char *retval;
+	const char *retval;
 	static char namebuf[(DLPCMD_DBNAME_LEN * 3) + 1];
 				/* Buffer to hold the converted name (with
 				 * all of the weird characters escaped).
@@ -194,7 +188,7 @@ mkpdbname(const char *dirname,
  * This isn't a method in GenericConduit because it's generic enough that
  * other conduits might want to make use of it.
  */
-const volatile char *
+const char *
 mkbakfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(backupdir, dbinfo, True);
@@ -204,7 +198,7 @@ mkbakfname(const struct dlp_dbinfo *dbinfo)
  * Similar to mkbakfname(), but constructs a filename in the install
  * directory (~/.palm/install by default).
  */
-const volatile char *
+const char *
 mkinstfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(installdir, dbinfo, True);
@@ -214,7 +208,7 @@ mkinstfname(const struct dlp_dbinfo *dbinfo)
  * Similar to mkbakfname(), but constructs a filename in the archive
  * directory (~/.palm/archive by default).
  */
-const volatile char *
+const char *
 mkarchfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkpdbname(archivedir, dbinfo, False);

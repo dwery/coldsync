@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.20 2000-11-20 05:26:52 arensb Exp $
+ * $Id: backup.c,v 2.21 2000-11-24 22:55:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -31,7 +31,7 @@ backup(struct PConnection *pconn,
        const char *dirname)		/* Directory to back up to */
 {
 	int err;
-	const volatile char *bakfname;	/* Backup pathname */
+	const char *bakfname;		/* Backup pathname */
 	int bakfd;			/* Backup file descriptor */
 	struct pdb *pdb;		/* Database downloaded from Palm */
 	ubyte dbh;			/* Database handle (on Palm) */

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.16 2000-11-20 06:06:14 arensb Exp $
+ * $Id: archive.c,v 1.17 2000-11-24 22:55:37 arensb Exp $
  */
 
 #include "config.h"
@@ -49,7 +49,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 {
 	int err;
 	int fd;				/* File descriptor; will be returned */
-	const volatile char *archfname;		/* Name of the archive file */
+	const char *archfname;		/* Name of the archive file */
 	ubyte headerbuf[ARCH_HEADERLEN];	/* Archive header to write */
 	ubyte *wptr;			/* Pointer into buffers, for writing */
 
@@ -110,7 +110,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 {
 	int err;
 	int fd;				/* Return value: file descriptor */
-	const volatile char *archfname;		/* Name of the archive file */
+	const char *archfname;		/* Name of the archive file */
 
 	archfname = mkarchfname(dbinfo);
 				/* Construct the name of the archive file */
