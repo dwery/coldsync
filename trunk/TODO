@@ -1,3 +1,4 @@
+- Add documentation for 'cwd:' option in conduit{} block.
 - Create a manifest file when installing, to help package-management
   utilities. Preferably add a rule to create the manifest without
   installing.
@@ -361,4 +362,4 @@
 - The $VERSION stuff in the Perl modules doesn't handle branch
   versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
   "1.002_003_004", which might be desirable. Is it worth fixing this?
-	Will Perl 5.6 make this comment obsolet?
+	Will Perl 5.6 make this comment obsolete?
