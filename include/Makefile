@@ -1,10 +1,11 @@
-# $Id: Makefile,v 1.3 2000-11-10 03:36:04 arensb Exp $
+# $Id: Makefile,v 1.4 2001-06-27 03:19:10 arensb Exp $
 
 TOP =		..
 SUBDIR =	include
 SUBDIRS =	pconn
 
-HEADERS =	pdb.h
+HEADERS =	pdb.h \
+		palm.h
 DISTFILES =	Makefile \
 		${HEADERS}
 
