@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.5 2002-09-08 19:54:09 azummo Exp $
+ * $Id: palmconn.c,v 2.6 2002-11-02 12:51:18 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -111,7 +111,9 @@ palm_Connect( void )
 	if ((pconn = new_PConnection(listen->device,
 				     listen->listen_type,
 				     listen->protocol,
-				     PCONNFL_PROMPT |
+				     (listen->flags &
+				      LISTENFL_PROMPT ? PCONNFL_PROMPT :
+				      0) |
 				     (listen->flags &
 				      LISTENFL_TRANSIENT ? PCONNFL_TRANSIENT :
 				      0) |

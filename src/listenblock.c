@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: listenblock.c,v 2.3 2002-10-16 18:59:32 azummo Exp $
+ * $Id: listenblock.c,v 2.4 2002-11-02 12:51:18 azummo Exp $
  */
 
 #include "config.h"
@@ -137,7 +137,7 @@ new_listen_block()
 	retval->protocol	= PCONN_STACK_DEFAULT;
 	retval->device		= NULL;
 	retval->speed		= 0L;
-	retval->flags		= 0;
+	retval->flags		= LISTENFL_PROMPT;
 
 	return retval;
 }

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.70 2002-10-31 15:29:07 azummo Exp $
+ * $Id: coldsync.h,v 1.71 2002-11-02 12:51:18 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -137,6 +137,7 @@ typedef struct listen_block
 					 * fails with ENOENT isn't an
 					 * error.
 					 */
+#define LISTENFL_PROMPT		0x02	/* Prompt for the HotSync button */
 #define LISTENFL_NOCHANGESPEED	0x04	/* This device is a modem */
 
 /* cond_header
