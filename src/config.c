@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.106 2002-10-26 12:05:12 azummo Exp $
+ * $Id: config.c,v 1.107 2002-10-31 16:35:51 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -792,7 +792,15 @@ set_mode(const char *str)
 			global_opts.mode = mode_Backup;
 			return 0;
 
+		    case 'f':		/* Backup mode, alias (fetch) */
+			global_opts.mode = mode_Backup;
+			return 0;
+
 		    case 'r':		/* Restore mode */
+			global_opts.mode = mode_Restore;
+			return 0;
+
+		    case 'i':		/* Restore mode, alias (install)*/
 			global_opts.mode = mode_Restore;
 			return 0;
 
@@ -821,7 +829,17 @@ set_mode(const char *str)
 			global_opts.mode = mode_Backup;
 			return 0;
 		}
+		else if (strcmp(str,"fetch") == 0)
+		{
+			global_opts.mode = mode_Backup;
+			return 0;
+		}
 		else if (strcmp(str,"restore") == 0)
+		{
+			global_opts.mode = mode_Restore;
+			return 0;
+		}
+		else if (strcmp(str,"install") == 0)
 		{
 			global_opts.mode = mode_Restore;
 			return 0;
