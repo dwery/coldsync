@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.10 2002-08-31 19:26:03 azummo Exp $
+ * $Id: spalm.c,v 2.11 2002-09-07 17:05:16 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -209,16 +209,13 @@ fetch_sysinfo(struct Palm *palm)
 	/* Get system information about the Palm */
 	err = DlpReadSysInfo(palm_pconn(palm), &(palm->sysinfo_));
 
-#if 0
-	{
-		/* XXX - This message doesn't really belong here */
-		Error(_("Can't get system info."));
-		return -1;
-	}
-#endif
+	/* XXX - This message doesn't really belong here,
+	 * but I haven't found any other place for it.
+	 */
+	
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		Error(_("DlpReadSysInfo failed."));
+		Error(_("Can't get system info."));
 		print_latest_dlp_error(palm_pconn(palm));
 		return -1;
 	}
@@ -781,8 +778,8 @@ const udword palm_viewerid(struct Palm *palm)
 /* palm_lastsyncPC
  * Returns the ID of the last host that this Palm synced with, or 0 in case
  * of error.
- * XXX - 0 can also mean that the Palm has never synced, so the error value
- * should be something else.
+ * 0 can also mean that the Palm has never synced, so remember
+ * to use palm_ok() macro to check for this condition.
  */
 const udword
 palm_lastsyncPC(struct Palm *palm)
