@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.25 2000-06-18 07:08:12 arensb Exp $
+ * $Id: pdb.c,v 1.26 2000-09-17 01:09:05 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -241,9 +241,6 @@ pdb_Read(int fd)
 {
 	int err;
 	struct pdb *retval;
-	static ubyte useless_buf[2];	/* Buffer for the useless 2 bytes
-					 * after the record index.
-					 */
 
 	/* Create a new pdb to return */
 	if ((retval = new_pdb()) == NULL)
@@ -297,23 +294,11 @@ pdb_Read(int fd)
 		}
 	}
 
-	/* Skip the dummy two bytes */
-	if ((err = read(fd, useless_buf, 2)) != 2)
-	{
-		fprintf(stderr, _("Can't read the useless two bytes\n"));
-		perror("LoadDatabase: read");
-		free_pdb(retval);
-		return NULL;
-	}
-	/* Just a sanity check */
-	if ((useless_buf[0] != '\0') ||
-	    (useless_buf[1] != '\0'))
-	{
-		fprintf(stderr, _("The useless two bytes contain 0x%02x%02x "
-				  "instead of NULs. This is unexpected.\n"),
-			useless_buf[0],
-			useless_buf[1]);
-	}
+	/* In most PDBs, there are two NUL bytes here. They are allowed by
+	 * the spec, but not mandated, and some PDBs don't have them. We'll
+	 * ignore them for now, and have the appropriate pdb_Load*()
+	 * function lseek() to the proper position.
+	 */
 
 	/* Load the AppInfo block, if any */
 	if ((err = pdb_LoadAppBlock(fd, retval)) < 0)
@@ -1806,16 +1791,23 @@ pdb_LoadAppBlock(int fd,
 	}
 
 	/* Just out of paranoia, make sure we're at the correct offset in
-	 * the file.
+	 * the file. Since the two NULs may or may not have appeared in the
+	 * file, the only thing that it makes sense to check is whether
+	 * we've already passed the beginning of the AppInfo block, as
+	 * given by its offset in the header.
 	 */
 	offset = lseek(fd, 0L, SEEK_CUR);	/* Find out where we are */
 	if (offset != db->appinfo_offset)
 	{
-		/* Oops! We're in the wrong place */
-		fprintf(stderr, _("Warning: AppInfo block isn't where I "
-				  "thought it would be.\n"
-				  "Expected 0x%lx, but we're at 0x%lx\n"),
-			db->appinfo_offset, (long) offset);
+		if (offset > db->appinfo_offset)
+		{
+			/* Oops! We're in the wrong place */
+			fprintf(stderr, _("Warning: AppInfo block isn't where "
+					  "I thought it would be.\n"
+					  "Expected 0x%lx, but we're at "
+					  "0x%lx\n"),
+				db->appinfo_offset, (long) offset);
+		}
 
 		/* Try to recover */
 		offset = lseek(fd, db->appinfo_offset, SEEK_SET);
@@ -1908,16 +1900,23 @@ pdb_LoadSortBlock(int fd,
 	}
 
 	/* Just out of paranoia, make sure we're at the correct offset in
-	 * the file.
+	 * the file. Since the two NULs may or may not have appeared in the
+	 * file, the only thing that it makes sense to check is whether
+	 * we've already passed the beginning of the sort block, as given
+	 * by its offset in the header.
 	 */
 	offset = lseek(fd, 0L, SEEK_CUR);	/* Find out where we are */
 	if (offset != db->sortinfo_offset)
 	{
-		/* Oops! We're in the wrong place */
-		fprintf(stderr, _("Warning: sort block isn't where I "
-				  "thought it would be.\n"
-				  "Expected 0x%lx, but we're at 0x%lx\n"),
-			db->sortinfo_offset, (long) offset);
+		if (offset > db->sortinfo_offset)
+		{
+			/* Oops! We're in the wrong place */
+			fprintf(stderr, _("Warning: sort block isn't where I "
+					  "thought it would be.\n"
+					  "Expected 0x%lx, but we're at "
+					  "0x%lx\n"),
+				db->sortinfo_offset, (long) offset);
+		}
 
 		/* Try to recover */
 		offset = lseek(fd, db->sortinfo_offset, SEEK_SET);
@@ -1985,17 +1984,27 @@ pdb_LoadResources(int fd,
 				(char) (rsrc->type >> 8) & 0xff,
 				(char) rsrc->type & 0xff);
 
-		/* Out of paranoia, make sure we're in the right place */
+		/* Out of paranoia, make sure we're in the right place.
+		 * Since the two NULs may or may not have appeared in the
+		 * file, the only thing that it makes sense to check is
+		 * whether we've already passed the beginning of the
+		 * resource, as given by its offset in the resource index.
+		 */
 		offset = lseek(fd, 0L, SEEK_CUR);
 					/* Find out where we are now */
 		if (offset != rsrc->offset)
 		{
-			fprintf(stderr, _("Warning: resource %d isn't where "
-					  "I thought it would be.\n"
-					  "Expected 0x%lx, but we're at "
-					  "0x%lx\n"),
-				i,
-				rsrc->offset, (long) offset);
+			if (offset > rsrc->offset)
+			{
+				fprintf(stderr, _("Warning: resource %d isn't "
+						  "where I thought it would "
+						  "be.\n"
+						  "Expected 0x%lx, but we're "
+						  "at 0x%lx\n"),
+					i,
+					rsrc->offset, (long) offset);
+			}
+
 			/* Try to recover */
 			offset = lseek(fd, rsrc->offset, SEEK_SET);
 						/* Go to where this
@@ -2101,17 +2110,27 @@ pdb_LoadRecords(int fd,
 			fprintf(stderr, "Reading record %d (id 0x%08lx)\n",
 				i, rec->id);
 
-		/* Out of paranoia, make sure we're in the right place */
+		/* Out of paranoia, make sure we're in the right place.
+		 * Since the two NULs may or may not have appeared in the
+		 * file, the only thing that it makes sense to check is
+		 * whether we've already passed the beginning of the
+		 * record, as given by its offset in the record index.
+		 */
 		offset = lseek(fd, 0L, SEEK_CUR);
 					/* Find out where we are now */
 		if (offset != rec->offset)
 		{
-			fprintf(stderr, _("Warning: record %d isn't where I "
-					  "thought it would be.\n"
-					  "Expected 0x%lx, but we're at "
-					  "0x%lx\n"),
-				i,
-				rec->offset, (long) offset);
+			if (offset > rec->offset)
+			{
+				fprintf(stderr, _("Warning: record %d isn't "
+						  "where I thought it would "
+						  "be.\n"
+						  "Expected 0x%lx, but we're "
+						  "at 0x%lx\n"),
+					i,
+					rec->offset, (long) offset);
+			}
+
 			/* Try to recover */
 			offset = lseek(fd, rec->offset, SEEK_SET);
 						/* Go to where this record
