@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.50 2001-10-18 01:59:14 arensb Exp $
+ * $Id: parser.y,v 2.51 2001-10-18 03:50:18 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -47,11 +47,6 @@ static const char *conf_fname;		/* Name of config file. Used for
 					 * error-reporting.
 					 */
 static int num_errors = 0;		/* # of errors seen during parsing */
-static Bool warned_colon = False;	/* Has the user been warned about
-					 * missing colon in "type: cccc/tttt"?
-					 * XXX - This should go away when
-					 * colons become mandatory.
-					 */
 static listen_block *cur_listen;	/* Currently-open listen block. The
 					 * various listen_directive rules
 					 * will fill in the fields.
@@ -268,7 +263,7 @@ listen_directives:
 	;
 
 listen_directive:
-	DEVICE opt_colon
+	DEVICE colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -288,7 +283,7 @@ listen_directive:
 		cur_listen->device = $4;
 		$4 = NULL;
 	}
-	| SPEED opt_colon NUMBER semicolon
+	| SPEED colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: speed %ld\n", $3);
@@ -301,7 +296,7 @@ listen_directive:
 
 		cur_listen->speed = $3;
 	}
-	| PROTOCOL opt_colon protocol_stack semicolon
+	| PROTOCOL colon protocol_stack semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: protocol %d\n", (int) $3);
@@ -455,7 +450,7 @@ conduit_directive:
 	{
 		lex_expect(LEX_CTPAIR);
 	}
-	opt_colon creator_type semicolon
+	colon creator_type semicolon
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
@@ -490,7 +485,7 @@ conduit_directive:
 			return -1;
 		}
 	}
-	| PATH opt_colon
+	| PATH colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -895,7 +890,7 @@ pda_directives:
 	;
 
 pda_directive:
-	SNUM opt_colon
+	SNUM colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -981,7 +976,7 @@ pda_directive:
 			 */
 		}
 	}
-	| DIRECTORY opt_colon
+	| DIRECTORY colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -1002,7 +997,7 @@ pda_directive:
 		cur_pda->directory = $4;
 		$4 = NULL;
 	}
-	| USERNAME opt_colon
+	| USERNAME colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -1023,7 +1018,7 @@ pda_directive:
 		cur_pda->username = $4;
 		$4 = NULL;
 	}
-	| USERID opt_colon NUMBER semicolon
+	| USERID colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "UserID \"%ld\"\n", $3);
@@ -1037,7 +1032,7 @@ pda_directive:
 		cur_pda->userid_given = True;
 		cur_pda->userid = $3;
 	}
-	| FORWARD opt_colon
+	| FORWARD colon
 	{
 		lex_expect(LEX_BSTRING);
 	}
@@ -1105,24 +1100,6 @@ opt_string:	STRING
 	{
 		$$ = NULL;
 	}
-
- /* XXX - Added in 1.1.10, Sat May 20 14:21:43 2000. Make the colon
-  * mandatory at some point.
-  */
-opt_colon:	':'
-	|	/* Empty */
-	{
-		if (!warned_colon)
-		{
-			Warn(_("%s: %d: Missing ':'\n"
-			       "\tColons are now required after most "
-			       "directives.\n"
-			       "\t(This warning will only be shown once.)"),
-			     conf_fname, lineno);
-			warned_colon = True;
-		}
-	}
-	;
 
 colon:	':'
 	| error
