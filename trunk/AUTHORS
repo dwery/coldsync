@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.22 2002-07-13 19:30:54 arensb Exp $
+# $Id: AUTHORS,v 2.23 2003-05-24 18:07:53 azummo Exp $
 
 Authors and Contributors:
 
@@ -49,6 +49,9 @@ Bron Gondawna <brong@brong.net>: Modem support, command line config file
 	in daemon mode and wildcards in palms file.
 Miguel Angelo Rozsas <miguel@rozsas.xx.nom.br>: Portuguese (Brazilian)
 	translation.
+Christophe Beauregard <christophe.beauregard@sympatico.ca>: helped
+	with PCONNSTAT_UP bug fixing.
+
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
