@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.17 2001-08-22 06:41:24 arensb Exp $
+# $Id: Make.rules.in,v 1.18 2001-09-22 09:23:10 arensb Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -25,8 +25,7 @@ exec_prefix =	@exec_prefix@
 BINDIR =	@bindir@
 SBINDIR =	@sbindir@
 LIBEXECDIR =	@libexecdir@
-# XXX - This ought to be directly configurable
-CONDUITDIR =	${LIBEXECDIR}/coldsync
+CONDUITDIR =	@CONDUITDIR@
 DATADIR =	@datadir@
 LOCALEDIR =	${DATADIR}/locale
 SYSCONFDIR =	@sysconfdir@
