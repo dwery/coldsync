@@ -1,0 +1,138 @@
+#!/usr/bin/perl -w
+#
+#	Copyright (C) 2003, Alessandro Zummo.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: zire71-photo,v 1.1 2003-06-24 12:33:38 azummo Exp $
+
+use strict;
+
+use ColdSync;
+use ColdSync::SPC;
+
+use IO::File;
+
+use Palm::ZirePhoto;
+
+$| = 1;
+
+StartConduit('sync');
+
+	my $err;
+
+	my $path = $ColdSync::HEADERS{'photo-path'};
+
+	die "402 Undefined argument 'photo-path'"
+		unless defined $path;	
+
+	die "402 $path doesn't exists"
+		unless -d $path;	
+
+	# Open the database
+	my $dbh = dlp_OpenDB('PhotosDB-Foto', 0x40)
+		or die "402 Can't open database PhotosDB-Foto";
+
+	my @thumbs = ();
+	
+	while (my $raw = dlp_ReadNextModifiedRec($dbh))
+	{
+		my $thumb = Palm::ZirePhoto->ParseRecord(%{$raw});
+
+		my $name = $thumb->{'name'};
+		my $file = $path . "/thumb-$name";
+
+		print "101 Downloading thumbnail for $name\n";
+
+		# Save thumbnail
+		my $fh = new IO::File "> $file"
+			or die "402 Couldn't open $file";
+
+		$fh->print($thumb->{'thumb'});
+
+		$fh->close;
+
+		# Save the picture name, we'll need it later
+		push(@thumbs, $name);
+	}
+
+	$err = dlp_ResetSyncFlags($dbh);
+	$err = dlp_CleanUpDatabase($dbh);
+	$err = dlp_CloseDB($dbh);
+
+	foreach my $image (@thumbs)
+	{
+		print "101 Downloading $image\n";
+
+		my $dbh = dlp_OpenDB($image, 0x80)
+			or die "402 Can't open $image";
+
+		my $dbi = dlp_ReadOpenDBInfo($dbh)
+			or die "402 Can't get db info for $image";
+
+		my $file = $path . "/$image";
+
+		# Save image
+		my $fh = new IO::File "> $file" or
+			die "402 Couldn't open $file";
+
+		# Iterate through records	
+		for (my $i = 0; $i < $dbi->{'numrecords'}; $i++)
+		{
+			my $raw = dlp_ReadRecordByIndex($dbh, $i);
+
+			# Skip first 8 bytes
+			$raw = unpack("x8 a*", $raw->{'data'});
+
+			$fh->print($raw);
+		}
+
+		$fh->close;
+
+		$err = dlp_CloseDB($dbh);
+	}
+
+EndConduit();
+
+__END__
+
+=head1 NAME
+
+zire71-photo - ColdSync conduit to download photos from the Zire71
+
+=head1 SYNOPSIS
+
+    conduit dump {
+        type: none;
+        path: "<...>/zire71-photo";
+      arguments:
+        photo-path:	/path/to/my/photo/directory;
+    }
+
+=head1 DESCRIPTION
+
+The C<zire71-photo> conduit reads the photo index database, downloading
+the thumbnails and the photos you took with the embedded camera
+of the Zire71.
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item C<photo-path>
+
+Specifies the path of the downloaded photos and thumbnails (mandatory).
+
+=head1 BUGS
+
+Thumbnails and images are not deleted from the Palm once downloaded.
+
+=head1 AUTHOR
+
+Alessandro Zummo E<lt>azummo@towertech.itE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+F<ColdSync Conduits>, in the ColdSync documentation.
