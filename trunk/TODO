@@ -1,3 +1,18 @@
+- Add a SIGTERM handler, to catch Ctrl-C.
+- Add support for TCP wrappers. RTFM hosts_access().
+- FreeBSD bug: accept(2) man page doesn't say that you need to
+  #include <sys/socket.h> : sys/socket.h defines socklen_t, which is
+  used in that man page.
+- Bug: the <protocol>_tini() functions need to be more paranoid: check
+  stuff before free()ing, closing, etc.
+- Get rid of memset(x, 0, y) in favor of bzero(). The latter can be
+  implemented in terms of the former, but not the other way around.
+- Bug?: If the serial number matches (and is a real serial number),
+  but the username/userid doesn't, ColdSync proceeds to the next
+  entry. Arguably, this should be a definitive non-match.
+- There ought to be cmp_init() etc., jus as for the other protocols.
+- Mention ${prefix}/etc/coldsync.conf in the man page.
+- Document the "net" listen type.
 - Would it be worth writing a 'coldsyncd', which just hangs around,
   waiting for a UDP, serial, or USB connection?
 	Probably not. However, in inetd, it should be possible to have
@@ -71,29 +86,9 @@
   manages to do so?
 - Bug: Under FreeBSD, when both Visor and Rio 600 are plugged in,
   Coldsync doesn't find the Visor correctly.
-- Bug: interaction with HotSync:
-	HotSync gets cranky if you give it a Palm with a user ID
-  assigned by ColdSync. The Right Thing appears to be:
-	During sync, read user info from the Palm. If it doesn't match
-  what ColdSync expects (the username/userid given in .coldsyncrc, or
-  getpwuid(getuid()) if unspecified), complain and refuse to sync. At
-  the end of the sync, does _not_ set the user name or ID.
-	To set the username/userid, run ColdSync in Init mode.
 - Add default flag to listen blocks.
 - "-r <dir> -dsync:1" should print each database as it is uploaded.
   Ditto for "-d <dir> -dsync:1".
-- Ideally, you should be able to use Pilot VT100 and HotSync on the
-  same cradle, without having to change anything.
-  More realistically, though, it'll be necessary to write a ColdSync
-  daemon controller: some tool that'll allow you to turn off the
-  "listen for a HotSync connection" feature, and replace it with, say,
-  getty.
-  OTOH, it might be possible for the daemon to listen for certain
-  sequences. E.g., if it sees 0xbe, 0xef, 0xed in quick succession,
-  then it's a good bet that the Palm is trying to use SLP, from which
-  one can try to figure out what to do next (usually sync). Otherwise,
-  wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
-  daemon, or whatever.
 - KDE korganizer just uses vCalendar format for both events and todo
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
@@ -104,8 +99,6 @@
   <System/SystemMgr.h>
 - add_to_log() should probably also use printf() syntax, for
   convenience.
-- Add identd support?
-- PAM for security throughout?
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
 - Allow syslog for logging.
@@ -157,11 +150,8 @@
   is for information about whether to exit with the "-e" flag to be
   carried upwards through the parse tree.
 	Until this gets fixed, I don't want to use 'automake'.
-- Write a 'bool has_db_extension(char *fname)' function, for convenience.
 - Should all of the library .h files be lumped under #include
   <palm/foo.h> ?
-- Test parser with old lex and yacc. See if it's worth supporting
-  them, or whether it's easier to just require flex.
 - Add Makefile stuff for rerunning 'autoconf' when necessary. See node
   "Automatic Remaking" in "autoconf.info".
 - Add a "group" field to the listen and conduit blocks, of the form
@@ -190,9 +180,6 @@
 - With BSD make, always reruns 'ar' in the library directories. Why?
   According to 'make -dm', it seems to recognize the target as a
   library.
-- Open a Unix domain socket that a client can listen on. Send
-  conduits' messages to that socket. Define error codes like 22z =
-  progress, so that clients can monitor how things are going.
 - Should variables set in .coldsyncrc be propagated to the
   environment? Should this be done as soon as they're set, or when the
   conduit is run?
@@ -293,9 +280,6 @@
   database.
 	At the end of the local sync, if the dirty flag is still
   false, don't bother writing the database to disk.
-- Consider replacing the {put,get}_uword() etc. functions with htons()
-  and friends, since the order's the same, and the [hn]to[nh][sl]()
-  functions have most likely been optimized for the local machine.
 - libpdb and libpconn are useful in their own right. Turn them into
   standalone packages. At least libpdb.
 - Fix the libpdb error messages to say which database (preferably,
@@ -303,9 +287,6 @@
 - Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
   'rpcgen' looked like just the thing, but DLP packets are not a
   subset of XDR, so there are too many niggling problems.
-- To guard against the Bargle bug, perhaps can abort if the user ID is
-  0? But then need some way to initialize the Palm. Of course,
-  presumably a sysadmin needs this anyway.
 - Perhaps the job of communicating with the Palm can be done in a
   separate (Posix) thread? That way, that thread can deal more
   naturally and more single-mindedly with things (e.g., timeouts,
