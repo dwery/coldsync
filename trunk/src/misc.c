@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.12 2001-01-25 07:43:32 arensb Exp $
+ * $Id: misc.c,v 2.13 2001-01-28 22:41:04 arensb Exp $
  */
 
 #include "config.h"
@@ -50,6 +50,15 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
 				 * by (l)exists() and is_*(), below.
 				 */
 
+/* XXX - Warn(), Error(), and Perror() are very similar. They should be
+ * reimplemented as stubs that call some other, common function.
+ */
+
+/* Warn
+ * Print a warning message to either stderr or syslog, as appropriate.
+ * Takes printf()-like arguments.
+ * Returns a negative value if unsuccessful.
+ */
 int
 Warn(const char *format, ...)
 {
@@ -58,9 +67,11 @@ Warn(const char *format, ...)
 
 	va_start(ap, format);
 
-	/* XXX - Are there cases where we might want to print to both syslog
-	 * and stderr?
-	 */
+	fprintf(stderr, _("Warning: "));
+	err = vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	/* Log with syslog, if necessary */
 	if (global_opts.use_syslog)
 	{
 		/* It'd be nice to use vsyslog() here, but I'm pretty sure
@@ -71,15 +82,16 @@ Warn(const char *format, ...)
 		err = vsnprintf(msgbuf, sizeof(msgbuf),
 				format, ap);
 		syslog(LOG_WARNING, msgbuf);
-	} else {
-		fprintf(stderr, _("Warning: "));
-		err = vfprintf(stderr, format, ap);
-		fprintf(stderr, "\n");
 	}
 
 	return err;
 }
 
+/* Error
+ * Print an error message to either stderr or syslog, as appropriate.
+ * Takes printf()-like arguments.
+ * Returns a negative value if unsuccessful.
+ */
 int
 Error(const char *format, ...)
 {
@@ -88,9 +100,11 @@ Error(const char *format, ...)
 
 	va_start(ap, format);
 
-	/* XXX - Are there cases where we might want to print to both syslog
-	 * and stderr?
-	 */
+	fprintf(stderr, _("Error: "));
+	err = vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	/* Log with syslog, if necessary */
 	if (global_opts.use_syslog)
 	{
 		/* It'd be nice to use vsyslog() here, but I'm pretty sure
@@ -101,16 +115,33 @@ Error(const char *format, ...)
 		err = vsnprintf(msgbuf, sizeof(msgbuf),
 				format, ap);
 		syslog(LOG_ERR, msgbuf);
-	} else {
-		fprintf(stderr, _("Error: "));
-		err = vfprintf(stderr, format, ap);
-		fprintf(stderr, "\n");
 	}
 
 	return err;
 }
 
-/* XXX - Ditto Perror(), replacement for 'perror()' */
+/* Perror
+ * Prints 'str', a colon, and the error message that corresponds to 'errno'
+ * to either stderr or syslog, as appropriate.
+ */
+void
+Perror(const char *str)
+{
+	perror(str);
+
+	/* Log with syslog, if necessary */
+	if (global_opts.use_syslog)
+	{
+		/* It'd be nice to use vsyslog() here, but I'm pretty sure
+		 * it's not portable.
+		 */
+		char msgbuf[256];	/* Error messages shouldn't be long */
+
+		snprintf(msgbuf, sizeof(msgbuf), "%s: %s",
+			 str, strerror(errno));
+		syslog(LOG_ERR, msgbuf);
+	}
+}
 
 /* mkfname
  * Concatenate all of the arguments, and return a pointer to the resulting
