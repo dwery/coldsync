@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.15 2000-11-10 03:46:00 arensb Exp $
+ * $Id: install.c,v 2.16 2000-11-14 16:36:21 arensb Exp $
  */
 
 #include "config.h"
@@ -45,6 +45,215 @@
 #include "coldsync.h"
 #include "pdb.h"		/* For pdb_Read() */
 
+#if 0
+/* install_file
+ * Upload the database in 'fname', unmodified, to the Palm.
+ * Returns 0 if successful, or a negative value in case of error.
+ */
+int
+install_file(struct PConnection *pconn,
+	     struct Palm *palm,
+	     const char *fname,		/* Name of file to install */
+	     Bool deletep)		/* Flag: delete after installing? */
+{
+	int err;
+	int fd;			/* Database file descriptor */
+	struct pdb *pdb;	/* The database */
+	struct dlp_dbinfo *dbinfo;
+				/* Local information about the database */
+
+	/* Open the file, and load it as a Palm database */
+	if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
+	{
+		fprintf(stderr, _("%s: Can't open \"%s\"\n"),
+			"install_file",
+			fname);
+		return -1;
+	}
+
+	/* Read the database from the file */
+	pdb = pdb_Read(fd);
+	if (pdb == NULL)
+	{
+		fprintf(stderr,
+			_("%s: Can't load database \"%s\"\n"),
+			"install_file",
+			fname);
+		close(fd);
+		return -1;
+	}
+	close(fd);
+
+		/* See if we want to install this database */
+
+		/* See if the database already exists on the Palm */
+	dbinfo = find_dbentry(palm, pdb->name);
+	if ((dbinfo != NULL) && (!global_opts.force_install))
+	{
+		/* The database exists. Check its modification
+		 * number: if it's more recent than the version
+		 * currently installed on the Palm, delete the old
+		 * version and install the new one.
+			 */
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"Database \"%s\" already exists\n",
+				pdb->name);
+		SYNC_TRACE(5)
+			{
+				fprintf(stderr, "  Existing modnum:   %ld\n",
+					dbinfo->modnum);
+				fprintf(stderr, "  New file's modnum: %ld\n",
+					pdb->modnum);
+			}
+
+		if (pdb->modnum <= dbinfo->modnum)
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr, "This isn't a new version\n");
+			free_pdb(pdb);
+			return -1;
+		}
+	}
+	/* XXX - Before installing, make sure to check the
+		 * PDB_ATTR_OKNEWER flag: don't overwrite open databases
+		 * (typically "Graffiti Shortcuts") unless it's okay to do
+		 * so.
+		 */
+	SYNC_TRACE(5)
+		fprintf(stderr, "install_file: Uploading \"%s\"\n",
+			pdb->name);
+
+	add_to_log(_("Install "));
+	add_to_log(pdb->name);
+	add_to_log(" - ");
+	if (dbinfo != NULL)
+	{
+		/* Delete the existing database */
+		err = DlpDeleteDB(pconn, CARD0, pdb->name);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("%s: Error deleting \"%s\"\n"),
+				"install_file",
+				pdb->name);
+			add_to_log(_("Error\n"));
+			free_pdb(pdb);
+			return -1;
+		}
+	}
+
+	err = pdb_Upload(pconn, pdb);
+	if (err < 0)
+	{
+		fprintf(stderr,
+			_("%s: Error uploading \"%s\"\n"),
+			"install_file",
+			pdb->name);
+		add_to_log(_("Error\n"));
+		free_pdb(pdb);
+		return -1;
+	}
+
+	/* Add the newly-uploaded database to the list of databases
+		 * in 'palm'.
+		 */
+	SYNC_TRACE(4)
+		fprintf(stderr,
+			"install_file: see if this db exists\n");
+	if (find_dbentry(palm, pdb->name) == NULL)
+	{
+		/* It doesn't exist yet. Good */
+		SYNC_TRACE(4)
+			fprintf(stderr, "install_file: "
+				"appending db to palm->dbinfo\n");
+		append_dbentry(palm, pdb);	/* XXX - Error-
+						 * checking */
+	}
+
+	return 0;
+}
+#endif	/* 0 */
+
+/* NextInstallFile
+ * Read the next valid install database in the .palm/install directory and
+ * returns it's header info (only -- no data) in the struct dlp_dbinfo
+ * provided.  Returns a negative number when there are no more valid
+ * databases.
+ */
+int
+NextInstallFile(struct dlp_dbinfo *dbinfo)
+{
+	int err;
+	struct pdb pdb;          /* A scratch database */
+	static DIR *dir=NULL;
+	struct dirent *file;
+	char *lastdot;          /* Pointer to last dot in filename */
+	int fd;                 /* Database file descriptor */
+	
+	if(dir==NULL) 
+	{
+		if ((dir = opendir(installdir)) == NULL)
+		{
+			fprintf(stderr,
+				_("%s: Can't open install directory\n"),
+				"run_Install_conduits");
+			perror("opendir");
+			return -1;
+		}
+	}
+	
+	/* Check each file in the directory in turn */
+        while ((file = readdir(dir)) != NULL) {
+		static char fname[MAXPATHLEN+1];
+
+		/* XXX - Use is_database_name() */
+		/* Find the last dot in the filename, to see if the
+                 * file has a kosher extension (".pdb" or ".prc");
+                 */
+                lastdot = strrchr(file->d_name, '.');
+		
+                if (lastdot == NULL)
+                        /* No dot, so no extension. Ignore this */
+                        continue;
+		
+                if ((strcasecmp(lastdot, ".pdb") != 0) &&
+                    (strcasecmp(lastdot, ".prc") != 0))
+                        /* The file has an unknown extension. Ignore it */
+                        continue;
+
+		/* Construct the file's full pathname */
+                strncpy(fname, installdir, MAXPATHLEN);
+		strncat(fname, "/", MAXPATHLEN - strlen(fname));
+                strncat(fname, file->d_name, MAXPATHLEN - strlen(fname));
+
+		/* Open the file */
+                if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
+                {
+                        fprintf(stderr, _("%s: Can't open \"%s\"\n"),
+                                "run_Install_conduits",
+                                fname);
+                        continue;
+                }
+		
+		/* Load its header a Palm database */
+		if ((err = pdb_LoadHeader(fd, &pdb)) < 0)
+		{
+			fprintf(stderr, _("Can't load header\n"));
+			continue;
+		}
+		
+		/* Fill in the dbinfo from the pdb header information */
+		dbinfo_fill(dbinfo,&pdb);
+		return 0;  /* Success */
+	}
+
+	/* If we got here... no more valid files available */
+	closedir(dir);
+
+	return -1;
+}	
+
 /* InstallNewFiles
  * Go through the install directory. If there are any databases there
  * that don't exist on the Palm, install them.
@@ -56,6 +265,7 @@ InstallNewFiles(struct PConnection *pconn,
 		Bool deletep)		/* Flag: delete after installing? */
 {
 	int err;
+/*  	int i; */
 	DIR *dir;
 	struct dirent *file;
 
@@ -67,12 +277,12 @@ InstallNewFiles(struct PConnection *pconn,
 		fprintf(stderr, _("%s: Can't open install directory\n"),
 			"InstallNewFiles");
 		perror("opendir");
+		return -1;
 	}
 
 	/* Check each file in the directory in turn */
 	while ((file = readdir(dir)) != NULL)
 	{
-		char *lastdot;		/* Pointer to last dot in filename */
 		int fd;			/* Database file descriptor */
 		struct pdb *pdb;	/* The database */
 		static char fname[MAXPATHLEN+1];
@@ -89,19 +299,18 @@ InstallNewFiles(struct PConnection *pconn,
 					 * database
 					 */
 
-		/* Find the last dot in the filename, to see if the
-		 * file has a kosher extension (".pdb" or ".prc");
+		/* Make sure this file has the proper extension for a Palm
+		 * database of some sort. If not, ignore it.
 		 */
-		lastdot = strrchr(file->d_name, '.');
-
-		if (lastdot == NULL)
-			/* No dot, so no extension. Ignore this */
+		if (!is_database_name(file->d_name))
+		{
+			SYNC_TRACE(6)
+				fprintf(stderr,
+					"Ignoring \"%s\": not a valid "
+					"filename extension.\n",
+					file->d_name);
 			continue;
-
-		if ((strcasecmp(lastdot, ".pdb") != 0) &&
-		    (strcasecmp(lastdot, ".prc") != 0))
-			/* The file has an unknown extension. Ignore it */
-			continue;
+		}
 
 		/* XXX - Is it worth lstat()ing the file, to make sure it's
 		 * a file?
@@ -221,6 +430,7 @@ InstallNewFiles(struct PConnection *pconn,
 							 * checking */
 		}
 
+		/* XXX - This next comment is OBE */
 		/* XXX - After installing:
 		 * Ideally, instead of installing at all, we should find a
 		 * conduit for this database and tell it, "here's a new
