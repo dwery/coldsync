@@ -8,13 +8,12 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.4 1999-08-23 08:46:36 arensb Exp $
+ * $Id: util.c,v 1.5 1999-08-25 08:20:27 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
-#include "config.h"
 #include "util.h"
 #include "pdb.h"	/* For EPOCH_1904 */
 
