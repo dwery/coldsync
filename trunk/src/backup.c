@@ -7,15 +7,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.5 1999-09-09 05:50:44 arensb Exp $
+ * $Id: backup.c,v 2.6 1999-11-04 10:48:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
 #include <string.h>		/* For strncpy(), strncat() */
 #include <ctype.h>		/* For isprint() */
-/*  #include "PConnection.h" */
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+#include "pconn/pconn.h"
 #include "pdb.h"
 #include "coldsync.h"
 

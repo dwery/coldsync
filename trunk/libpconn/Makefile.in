@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.2 1999-11-02 03:38:21 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-11-04 10:44:02 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -49,15 +49,6 @@ OBJS =		dlp_cmd.o \
 		cmp.o \
 		PConnection.o \
 		${COMPATOBJS}
-
-# HEADERS =	dlp_cmd.h \
-# 		util.h \
-# 		dlp.h \
-# 		palm_errno.h \
-# 		padp.h \
-# 		slp.h \
-# 		cmp.h \
-# 		PConnection.h
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
