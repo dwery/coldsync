@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001-06-26 05:43:03 arensb Exp $
+# $Id: Makefile,v 1.12.2.1 2001-06-30 07:45:12 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -42,10 +42,10 @@ INPUTFILES =	\
 	${TOP}/src/lex.yy.c \
 	${TOP}/src/log.c \
 	${TOP}/src/misc.c \
+	${TOP}/src/palm.c \
 	${TOP}/src/parser.y \
 	${TOP}/src/pref.c \
 	${TOP}/src/restore.c \
-	${TOP}/src/spalm.c \
 	${TOP}/src/spc.c \
 	${TOP}/src/net_compat.c \
 	${TOP}/src/GenericConduit.cc

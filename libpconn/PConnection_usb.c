@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.24 2001-06-26 05:47:09 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.23 2001-05-06 06:00:49 arensb Exp $
  */
 
 #include "config.h"
@@ -42,7 +42,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
-#include "palm.h"
+#include "pconn/palm_types.h"
 #include "pconn/palm_errno.h"
 #include "pconn/cmp.h"			/* XXX - This ought to go away */
 

@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.9 2001-06-04 10:19:34 arensb Exp $
+# $Id: todo-text,v 1.7 2001-03-16 03:48:02 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -34,7 +34,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.9 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.7 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -538,10 +538,10 @@ preserved exactly across runs.
 
 =head1 SEE ALSO
 
-coldsync(8)
+coldsync(1)
 
 =cut
-#"
+#'
 
 # This is for Emacs's benefit:
 # Local Variables:	***

@@ -1,12 +1,12 @@
-/* spalm.c
+/* palm.c
  *
- * Functions pertaining to 'struct Palm's. See description in "spalm.h"
+ * Functions pertaining to 'struct Palm's. See description in "palm.h"
  *
  *	Copyright (C) 2000-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.2 2001-06-30 06:45:28 arensb Exp $
+ * $Id: palm.c,v 2.17.2.1 2001-06-30 07:09:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -20,9 +20,9 @@
 #  include <libintl.h>
 #endif	/* HAVE_LIBINTL_H */
 
-#include "spalm.h"
-#include "cs_error.h"
 #include "palm.h"
+#include "cs_error.h"
+#include "pconn/palm_types.h"
 
 /* Private helper functions: the fetch_*() functions do the actual work of
  * fetching data from the Palm. Other functions give access to specific

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2001-06-21 10:59-0400\n"
+"POT-Creation-Date: 2001-05-24 01:42-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Nicolas Bouthors <nicolas@bouthors.org>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -183,7 +183,7 @@ msgstr ""
 msgid "##### Unexpected packet type %d.\n"
 msgstr "##### Paquet inattendu de type %d.\n"
 
-#: ../libpdb/pdb.c:525
+#: ../libpdb/pdb.c:510
 #, c-format
 msgid "%s record 0x%08lx has length 0.\n"
 msgstr "Dans %s, l'enregistrement 0x%08lx a une longueur de 0.\n"
@@ -319,7 +319,7 @@ msgstr ""
 "%s: Je n'arrive pas à ajouter un nouvel enregistrement à la\n"
 "base de données: %d."
 
-#: ../src/backup.c:695
+#: ../src/backup.c:210
 #, c-format
 msgid "%s: Can't back up \"%s\"."
 msgstr "%s: Impossible de sauvegarder « %s »."
@@ -381,7 +381,7 @@ msgstr "%s: Je n'arrive pas à insérer l'enregistrement 0x%08lx."
 msgid "%s: Can't load \"%s\"."
 msgstr "%s: Impossible de charger « %s »."
 
-#: ../src/install.c:271 ../src/install.c:527
+#: ../src/install.c:79 ../src/install.c:335
 #, c-format
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Impossible de charger la base de données « %s »."
@@ -404,7 +404,7 @@ msgid "%s: Can't malloc copy of string."
 msgstr "%s: Impossible d'allouer une copie d'une chaîne."
 
 #: ../src/GenericConduit.cc:2446 ../src/archive.c:68 ../src/archive.c:127
-#: ../src/install.c:261 ../src/install.c:426 ../src/install.c:517
+#: ../src/install.c:69 ../src/install.c:234 ../src/install.c:325
 #: ../src/parser.y:1084
 #, c-format
 msgid "%s: Can't open \"%s\"."
@@ -432,7 +432,7 @@ msgstr "%s: Je n'arrive pas à ouvrir le port USB.\n"
 msgid "%s: Can't open directory \"%s\"."
 msgstr "%s: impossible d'ouvrir le répertoire « %s »."
 
-#: ../src/install.c:404 ../src/install.c:469
+#: ../src/install.c:212 ../src/install.c:277
 #, c-format
 msgid "%s: Can't open install directory."
 msgstr "%s: Impossible d'ouvrir le répertoire d'installation."
@@ -442,18 +442,18 @@ msgstr "%s: Impossible d'ouvrir le répertoire d'installation."
 msgid "%s: Can't read %s backup file."
 msgstr "%s: Impossible de lire le fichier de secours pour %s."
 
-#: ../src/backup.c:161
+#: ../libpdb/pdb.c:754
 #, c-format
 msgid "%s: Can't read AppInfo block for %s: %d.\n"
 msgstr "%s: Je n'arrive pas à lire le bloc AppInfo pour %s: %d.\n"
 
-#: ../src/backup.c:109
+#: ../libpdb/pdb.c:702
 #, c-format
 msgid "%s: Can't read database info: %d.\n"
 msgstr ""
 "%s: Je n'arrive pas à lire l'information sur une base de données: %d.\n"
 
-#: ../src/backup.c:198
+#: ../libpdb/pdb.c:791
 #, c-format
 msgid "%s: Can't read sort block for %s: %d.\n"
 msgstr "%s: Je n'arrive pas à lire le bloc de tri pour %s: %d.\n"
@@ -500,7 +500,7 @@ msgstr "%s: Impossible de mettre en place une fonction de gestion de signal."
 msgid "%s: Can't spawn conduit."
 msgstr "%s: Impossible de lancer un conduit."
 
-#: ../libpdb/pdb.c:571
+#: ../libpdb/pdb.c:556
 #, c-format
 msgid "%s: Can't write AppInfo block.\n"
 msgstr "%s: Je n'arrive pas à écrire le bloc AppInfo.\n"
@@ -516,28 +516,28 @@ msgstr "%s: Impossible d'écrire l'entête du fichier d'archive."
 msgid "%s: Can't write backup file."
 msgstr "%s: Impossible d'écrire le fichier de sauvegarde."
 
-#: ../libpdb/pdb.c:627
+#: ../libpdb/pdb.c:612
 #, c-format
 msgid "%s: Can't write record data.\n"
 msgstr "%s: Je n'arrive pas à écrire les données d'un enregistrement.\n"
 
-#: ../libpdb/pdb.c:541
+#: ../libpdb/pdb.c:526
 #, c-format
 msgid "%s: Can't write record index entry.\n"
 msgstr ""
 "%s: Je n'arrive pas à écrire un élément de l'index des enregistrements.\n"
 
-#: ../libpdb/pdb.c:608
+#: ../libpdb/pdb.c:593
 #, c-format
 msgid "%s: Can't write resource data.\n"
 msgstr "%s: Je n'arrive pas à écrire les données d'une resource.\n"
 
-#: ../libpdb/pdb.c:494
+#: ../libpdb/pdb.c:479
 #, c-format
 msgid "%s: Can't write resource index entry.\n"
 msgstr "%s: Je n'arrive pas à écrire un élément de l'index des resources.\n"
 
-#: ../libpdb/pdb.c:584
+#: ../libpdb/pdb.c:569
 #, c-format
 msgid "%s: Can't write sort block.\n"
 msgstr "%s: Je n'arrive pas à écrire le bloc de tri.\n"
@@ -547,7 +547,7 @@ msgstr "%s: Je n'arrive pas à écrire le bloc de tri.\n"
 msgid "%s: Can't write staging file \"%s\"."
 msgstr "%s: Impossible d'écrire le fichier intermédiaire « %s »."
 
-#: ../libpdb/pdb.c:559
+#: ../libpdb/pdb.c:544
 #, c-format
 msgid "%s: Can't write the two useless NULs.\n"
 msgstr "%s: Je n'arrive pas à écrire les deux octets inutiles.\n"
@@ -586,7 +586,7 @@ msgstr ""
 "%s: La base de données %s n'existe pas, et pourtant elle est ouverte.\n"
 "Qu'est-ce qui se passe?"
 
-#: ../src/install.c:336 ../src/install.c:584
+#: ../src/install.c:144 ../src/install.c:392
 #, c-format
 msgid "%s: Error deleting \"%s\"."
 msgstr "%s: Erreur lors de l'effaçage de « %s »."
@@ -626,7 +626,7 @@ msgstr "%s: Erreur en envoyant des données SPC."
 msgid "%s: Error sending dummy ACK. This is serious.\n"
 msgstr "%s: erreur en envoyant un ACK bidon. C'est sérieux.\n"
 
-#: ../src/install.c:357 ../src/install.c:613
+#: ../src/install.c:165 ../src/install.c:421
 #, c-format
 msgid "%s: Error uploading \"%s\"."
 msgstr "%s: Erreur lors de l'installation de « %s »."
@@ -675,12 +675,12 @@ msgstr "%s: Plus de mémoire."
 
 #: ../libpconn/dlp_cmd.c:1432 ../libpconn/dlp_cmd.c:1613
 #: ../libpconn/dlp_cmd.c:2483 ../libpconn/dlp_cmd.c:2801
-#: ../libpconn/dlp_cmd.c:3886 ../libpdb/pdb.c:930 ../libpdb/pdb.c:1001
-#: ../libpdb/pdb.c:1055 ../libpdb/pdb.c:1100 ../libpdb/pdb.c:1409
-#: ../libpdb/pdb.c:1522 ../libpdb/pdb.c:1631 ../libpdb/pdb.c:1787
-#: ../libpdb/pdb.c:1921 ../src/backup.c:135 ../src/backup.c:181
-#: ../src/backup.c:277 ../src/backup.c:321 ../src/backup.c:439
-#: ../src/backup.c:492
+#: ../libpconn/dlp_cmd.c:3886 ../libpdb/pdb.c:728 ../libpdb/pdb.c:774
+#: ../libpdb/pdb.c:1305 ../libpdb/pdb.c:1376 ../libpdb/pdb.c:1430
+#: ../libpdb/pdb.c:1475 ../libpdb/pdb.c:1779 ../libpdb/pdb.c:1892
+#: ../libpdb/pdb.c:2001 ../libpdb/pdb.c:2157 ../libpdb/pdb.c:2291
+#: ../libpdb/pdb.c:2368 ../libpdb/pdb.c:2412 ../libpdb/pdb.c:2531
+#: ../libpdb/pdb.c:2584
 #, c-format
 msgid "%s: Out of memory.\n"
 msgstr "%s: Plus de mémoire.\n"
@@ -708,31 +708,31 @@ msgid "%s: bad checksum: expected 0x%02x, got 0x%02x.\n"
 msgstr ""
 "%s: mauvais checksum: je m'attendais à 0x%02x, mais j'ai reçu 0x%02x.\n"
 
-#: ../libpdb/pdb.c:956 ../libpdb/pdb.c:1026
+#: ../libpdb/pdb.c:1331 ../libpdb/pdb.c:1401
 #, c-format
 msgid "%s: can't allocate data.\n"
 msgstr "%s: je ne peux pas allouer «data».\n"
 
-#: ../src/backup.c:55
+#: ../libpdb/pdb.c:648
 #, c-format
 msgid "%s: can't allocate pdb.\n"
 msgstr "%s: je n'arrive pas à allouer un pdb.\n"
 
-#: ../libpdb/pdb.c:1071
+#: ../libpdb/pdb.c:1446
 #, c-format
 msgid "%s: can't allocate record data.\n"
 msgstr ""
 "%s: je n'arrive pas à allouer la place pour les données\n"
 "pour un enregistrement.\n"
 
-#: ../libpdb/pdb.c:1115
+#: ../libpdb/pdb.c:1490
 #, c-format
 msgid "%s: can't allocate resource data.\n"
 msgstr ""
 "%s: je n'arrive pas à allouer la place pour les données\n"
 "d'une resource.\n"
 
-#: ../src/backup.c:543
+#: ../src/backup.c:58
 #, c-format
 msgid ""
 "%s: can't create new backup file %s.\n"
@@ -741,23 +741,23 @@ msgstr ""
 "%s: Impossible de créer le nouveau fichier de secours %s\n"
 "Peut-être qu'il existe déjà."
 
-#: ../src/backup.c:649
+#: ../src/backup.c:164
 #, c-format
 msgid "%s: can't write database \"%s\" to \"%s\"."
 msgstr "%s: impossible d'écrire la base de données « %s » a « %s »."
 
-#: ../libpdb/pdb.c:444
+#: ../libpdb/pdb.c:429
 #, c-format
 msgid "%s: can't write database header.\n"
 msgstr "%s: je n'arrive pas à écrire l'entête de la base de données.\n"
 
-#: ../libpdb/pdb.c:462
+#: ../libpdb/pdb.c:447
 #, c-format
 msgid "%s: can't write record list header.\n"
 msgstr ""
 "%s: je n'arrive pas à écrire l'entête de la liste des enregistrements.\n"
 
-#: ../libpdb/pdb.c:1421
+#: ../libpdb/pdb.c:1791
 #, c-format
 msgid "%s: error reading record index entry (%d bytes): %d.\n"
 msgstr ""
@@ -832,12 +832,12 @@ msgstr "*Annulé*\n"
 msgid "ACK Timeout. Attempting to resend.\n"
 msgstr "Timeout en attendant un ACK. J'essaie d'envoyer de nouveau.\n"
 
-#: ../src/backup.c:535
+#: ../src/backup.c:50
 #, c-format
 msgid "Backing up \"%s\""
 msgstr "Backup de « %s »."
 
-#: ../src/backup.c:531 ../src/coldsync.c:1379
+#: ../src/backup.c:43 ../src/coldsync.c:1379
 msgid "Backup "
 msgstr "Backup "
 
@@ -850,7 +850,7 @@ msgstr "Mauvais descripteur de fichier"
 msgid "CacheFromConduits() returned %d."
 msgstr "CacheFromConduits() a rendu le code de retour %d."
 
-#: ../src/backup.c:383
+#: ../libpdb/pdb.c:2475
 msgid "Can't allocate list of record IDs.\n"
 msgstr "Je ne peux pas allouer la liste des numéros d'enregistrements.\n"
 
@@ -901,22 +901,22 @@ msgstr "Impossible de copier une chaîne."
 msgid "Can't create \"%s\"."
 msgstr "Impossible de créer « %s »."
 
-#: ../src/config.c:1529
+#: ../src/config.c:1522
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'archive %s."
 
-#: ../src/config.c:1511
+#: ../src/config.c:1504
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Je n'arrive pas à créer le répertoire grenier %s."
 
-#: ../src/config.c:1493
+#: ../src/config.c:1486
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de backup %s."
 
-#: ../src/config.c:1475
+#: ../src/config.c:1468
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
@@ -925,12 +925,12 @@ msgstr "Je n'arrive pas à créer le répertoire de synchronisation de base %s."
 msgid "Can't create connection to forwarding host."
 msgstr "Je n'arrive pas à lire l'index des enregistrements."
 
-#: ../src/config.c:1547
+#: ../src/config.c:1540
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Je n'arrive pas à créer le répertoire d'installation %s."
 
-#: ../src/backup.c:217
+#: ../libpdb/pdb.c:810
 msgid "Can't download record or resource index.\n"
 msgstr ""
 "Je n'arrive pas à télécharger l'index d'enregistrements ou de resources.\n"
@@ -952,21 +952,21 @@ msgstr "Impossible de télécharger la liste des bases de données."
 msgid "Can't fetch preference 0x%08lx/%d."
 msgstr "Impossible de télécharger la préférence 0x%08lx/%d."
 
-#: ../libpdb/pdb.c:1875
+#: ../libpdb/pdb.c:2245
 #, c-format
 msgid "Can't find record %d.\n"
 msgstr "Je n'arrive pas à trouver l'enregistrement N°%d.\n"
 
-#: ../libpdb/pdb.c:1750
+#: ../libpdb/pdb.c:2120
 #, c-format
 msgid "Can't find resource %d.\n"
 msgstr "Je n'arrive pas à trouver la resource N°%d.\n"
 
-#: ../libpdb/pdb.c:1553
+#: ../libpdb/pdb.c:1923
 msgid "Can't find the AppInfo block!\n"
 msgstr "Je n'arrive pas à trouver le bloc AppInfo!\n"
 
-#: ../libpdb/pdb.c:1662
+#: ../libpdb/pdb.c:2032
 msgid "Can't find the sort block!\n"
 msgstr "Je n'arrive pas à trouver le bloc de tri!\n"
 
@@ -988,7 +988,7 @@ msgstr ""
 "Impossible d'obtenir le numéro du dernier PC avec lequel le Palm a\n"
 "synchronisé."
 
-#: ../src/spalm.c:447
+#: ../src/palm.c:447
 msgid "Can't get location of serial number."
 msgstr "Ne peux pas trouver l'endroit où se trouve le numéro de série."
 
@@ -996,7 +996,7 @@ msgstr "Ne peux pas trouver l'endroit où se trouve le numéro de série."
 msgid "Can't get preference item."
 msgstr "Impossible d'obtenir une préférence."
 
-#: ../src/spalm.c:220
+#: ../src/palm.c:220
 msgid "Can't get system info."
 msgstr "Impossible d'obtenir les informations sur le système."
 
@@ -1004,7 +1004,7 @@ msgstr "Impossible d'obtenir les informations sur le système."
 msgid "Can't get user ID from Palm."
 msgstr "Impossible d'obtenir le numéro de l'utilisateur."
 
-#: ../src/config.c:370 ../src/spalm.c:320
+#: ../src/config.c:370 ../src/palm.c:320
 msgid "Can't get user info."
 msgstr "Impossible d'obtenir les informations sur l'utilisateur."
 
@@ -1012,7 +1012,7 @@ msgstr "Impossible d'obtenir les informations sur l'utilisateur."
 msgid "Can't get user name from Palm."
 msgstr "Impossible d'obtenir le nom de l'utilisateur du Palm."
 
-#: ../src/config.c:1701
+#: ../src/config.c:1694
 msgid "Can't get user's full name."
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur."
 
@@ -1021,15 +1021,19 @@ msgstr "Impossible d'obtenir le nom complet de l'utilisateur."
 msgid "Can't install new files."
 msgstr "Impossible d'installer de nouveaux fichiers."
 
-#: ../src/coldsync.c:283 ../src/coldsync.c:2373
+#: ../src/coldsync.c:2373
+msgid "Can't load configuration"
+msgstr "Impossible de lire la configuration."
+
+#: ../src/coldsync.c:283
 msgid "Can't load configuration."
 msgstr "Impossible de lire la configuration."
 
-#: ../src/install.c:435
+#: ../src/install.c:243
 msgid "Can't load header."
 msgstr "Je n'arrive pas à lire l'entête."
 
-#: ../libpdb/pdb.c:288 ../libpdb/pdb.c:296
+#: ../libpdb/pdb.c:273 ../libpdb/pdb.c:281
 msgid "Can't load header.\n"
 msgstr "Je n'arrive pas à lire l'entête.\n"
 
@@ -1046,11 +1050,11 @@ msgstr "Impossible de trouver mon adresse."
 msgid "Can't open %s."
 msgstr "Impossible d'ouvrir %s."
 
-#: ../src/backup.c:577
+#: ../src/backup.c:92
 msgid "Can't open backup conduit."
 msgstr "Impossible d'ouvrir le conduit de copie."
 
-#: ../src/install.c:95
+#: ../libpdb/pdb.c:867
 #, c-format
 msgid "Can't open conduit for \"%s\": %d.\n"
 msgstr "Je n'arrive pas à ouvrir de conduit pour « %s »: %d.\n"
@@ -1060,7 +1064,7 @@ msgstr "Je n'arrive pas à ouvrir de conduit pour « %s »: %d.\n"
 msgid "Can't open connection."
 msgstr "Je n'arrive pas à ouvrir la connexion."
 
-#: ../src/backup.c:607
+#: ../src/backup.c:122
 #, c-format
 msgid "Can't open database \"%s\"."
 msgstr "Impossible d'ouvrir la base de données « %s »."
@@ -1083,11 +1087,11 @@ msgstr "Je n'arrive pas à lire l'index des enregistrements."
 msgid "Can't read %s."
 msgstr "Impossible de lire « %s »."
 
-#: ../libpdb/pdb.c:330
+#: ../libpdb/pdb.c:315
 msgid "Can't read AppInfo block.\n"
 msgstr "Je n'arrive pas à lire le bloc AppInfo.\n"
 
-#: ../src/spalm.c:296
+#: ../src/palm.c:296
 msgid "Can't read NetSync info."
 msgstr "Erreur lors de la lecture des informations sur NetSync."
 
@@ -1100,51 +1104,51 @@ msgstr "Impossible de lire le contenu du répertoire %s."
 msgid "Can't read length of serial number."
 msgstr "Impossible de lire la longueur du numéro de série."
 
-#: ../libpdb/pdb.c:1930
+#: ../libpdb/pdb.c:2300
 #, c-format
 msgid "Can't read record %d.\n"
 msgstr "Je n'arrive pas à lire l'enregistrement No. %d.\n"
 
-#: ../src/backup.c:453
+#: ../libpdb/pdb.c:2545
 #, c-format
 msgid "Can't read record %d: %d.\n"
 msgstr "Je n'arrive pas à lire l'enregistrement No. %d: %d.\n"
 
-#: ../src/backup.c:407
+#: ../libpdb/pdb.c:2499
 msgid "Can't read record ID list.\n"
 msgstr "Je n'arrive pas à lire la liste des numéros d'enregistrements.\n"
 
-#: ../libpdb/pdb.c:315
+#: ../libpdb/pdb.c:300
 msgid "Can't read record index.\n"
 msgstr "Je n'arrive pas à lire l'index des enregistrements.\n"
 
-#: ../libpdb/pdb.c:357
+#: ../libpdb/pdb.c:342
 msgid "Can't read records.\n"
 msgstr "Je n'arrive pas à lire les enregistrements.\n"
 
-#: ../libpdb/pdb.c:1796
+#: ../libpdb/pdb.c:2166
 #, c-format
 msgid "Can't read resource %d.\n"
 msgstr "Je n'arrive pas à lire la resource No. %d.\n"
 
-#: ../src/backup.c:290
+#: ../libpdb/pdb.c:2381
 #, c-format
 msgid "Can't read resource %d: %d.\n"
 msgstr "Je n'arrive pas à lire la resource No. %d: %d.\n"
 
-#: ../libpdb/pdb.c:307
+#: ../libpdb/pdb.c:292
 msgid "Can't read resource index.\n"
 msgstr "Je n'arrive pas à lire l'index des resources.\n"
 
-#: ../libpdb/pdb.c:349
+#: ../libpdb/pdb.c:334
 msgid "Can't read resources.\n"
 msgstr "Je n'arrive pas à lire les resources.\n"
 
-#: ../src/coldsync.c:1709 ../src/spalm.c:480
+#: ../src/coldsync.c:1709 ../src/palm.c:480
 msgid "Can't read serial number."
 msgstr "Impossible de lire le numéro de série."
 
-#: ../libpdb/pdb.c:338
+#: ../libpdb/pdb.c:323
 msgid "Can't read sort block.\n"
 msgstr "Je n'arrive pas à lire le bloc de tri.\n"
 
@@ -1153,7 +1157,7 @@ msgstr "Je n'arrive pas à lire le bloc de tri.\n"
 msgid "Can't reserve file descriptor %d."
 msgstr "impossible de réserver le descripteur de fichier %d."
 
-#: ../src/spalm.c:1002
+#: ../src/palm.c:1002
 msgid "Can't resize palm->dblist."
 msgstr "Impossible de changer la taille de palm->dblist."
 
@@ -1174,11 +1178,11 @@ msgid "Can't write user info."
 msgstr "Impossible d'écrire les informations sur l'utilisateur."
 
 #: ../src/GenericConduit.cc:253 ../src/GenericConduit.cc:517
-#: ../src/GenericConduit.cc:1006 ../src/backup.c:565 ../src/restore.c:203
+#: ../src/GenericConduit.cc:1006 ../src/backup.c:80 ../src/restore.c:203
 msgid "Cancelled\n"
 msgstr "Annulé\n"
 
-#: ../src/backup.c:561 ../src/coldsync.c:1345 ../src/coldsync.c:1393
+#: ../src/backup.c:76 ../src/coldsync.c:1345 ../src/coldsync.c:1393
 #: ../src/coldsync.c:1515 ../src/coldsync.c:1540 ../src/coldsync.c:1564
 #: ../src/conduit.c:1174 ../src/conduit.c:1232 ../src/restore.c:294
 msgid "Cancelled by Palm."
@@ -1235,7 +1239,7 @@ msgstr "Je n'ai pas pu envoyer une entête au conduit."
 msgid "Couldn't write sync log."
 msgstr "Erreur lors de l'écriture de l'historique."
 
-#: ../src/backup.c:415
+#: ../libpdb/pdb.c:2507
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
 msgstr ""
 "DlpReadRecordIDList() a lu 0 enregistrements. Qu'est-ce qui s'est passé?\n"
@@ -1271,10 +1275,10 @@ msgstr "Fin de fichier"
 #: ../src/GenericConduit.cc:1071 ../src/GenericConduit.cc:1111
 #: ../src/GenericConduit.cc:1212 ../src/GenericConduit.cc:1447
 #: ../src/GenericConduit.cc:1475 ../src/GenericConduit.cc:1501
-#: ../src/backup.c:548 ../src/backup.c:579 ../src/backup.c:610
-#: ../src/backup.c:636 ../src/backup.c:655 ../src/install.c:339
-#: ../src/install.c:360 ../src/install.c:587 ../src/install.c:616
-#: ../src/install.c:719 ../src/restore.c:213
+#: ../src/backup.c:63 ../src/backup.c:94 ../src/backup.c:125
+#: ../src/backup.c:151 ../src/backup.c:170 ../src/install.c:147
+#: ../src/install.c:168 ../src/install.c:395 ../src/install.c:424
+#: ../src/install.c:524 ../src/restore.c:213
 msgid "Error\n"
 msgstr "Erreur\n"
 
@@ -1299,12 +1303,12 @@ msgstr "Erreur %d lors de l'exécution des conduits pre-fetch."
 msgid "Error backing up \"%s\"."
 msgstr "Erreur lors du backup de « %s »."
 
-#: ../src/install.c:112
+#: ../libpdb/pdb.c:884
 #, c-format
 msgid "Error creating database \"%s\": %d.\n"
 msgstr "Erreur lors de la création de la base de données « %s »: %d.\n"
 
-#: ../src/install.c:737
+#: ../src/install.c:542
 #, c-format
 msgid "Error deleting \"%s\"."
 msgstr "Erreur en effaçant « %s »."
@@ -1327,7 +1331,7 @@ msgstr "Erreur lors de l'ouverture de la connexion CMP.\n"
 msgid "Error in system call or library function"
 msgstr "Erreur dans un appel de système ou une fonction dans une bibliothèque"
 
-#: ../src/install.c:700
+#: ../src/install.c:505
 #, c-format
 msgid "Error opening \"%s\"."
 msgstr "Erreur lors de l'ouverture de « %s »."
@@ -1369,16 +1373,16 @@ msgstr ""
 msgid "Error: only read %d bytes of NetSync packet header.\n"
 msgstr ""
 
-#: ../libpdb/pdb.c:280
+#: ../libpdb/pdb.c:265
 msgid "File isn't seekable.\n"
 msgstr "Ce fichier ne peut pas être positionné.\n"
 
-#: ../libpdb/pdb.c:1837
+#: ../libpdb/pdb.c:2207
 #, c-format
 msgid "Hey! I can't find the %dth record!\n"
 msgstr "Hé! Je n'arrive pas à trouver l'enregistrement No. %d!\n"
 
-#: ../libpdb/pdb.c:1706
+#: ../libpdb/pdb.c:2076
 #, c-format
 msgid "Hey! I can't find the %dth resource!\n"
 msgstr "Hé! Je n'arrive pas à trouver la resource No. %d!\n"
@@ -1397,7 +1401,7 @@ msgstr ""
 msgid "Inside run_DummyConduit.\n"
 msgstr ""
 
-#: ../src/install.c:318 ../src/install.c:575
+#: ../src/install.c:126 ../src/install.c:383
 msgid "Install "
 msgstr "Installation de "
 
@@ -1443,7 +1447,7 @@ msgstr "Argument manquant après l'option « %s »."
 msgid "Network sync forwarding failed."
 msgstr ""
 
-#: ../src/spalm.c:284
+#: ../src/palm.c:284
 msgid "No NetSync info.\n"
 msgstr "Pas d'informations sur NetSync.\n"
 
@@ -1480,8 +1484,8 @@ msgid "No such directory: \"%s\"."
 msgstr "Le répertoire « %s » n'existe pas."
 
 #: ../src/GenericConduit.cc:485 ../src/GenericConduit.cc:974
-#: ../src/GenericConduit.cc:1511 ../src/backup.c:665 ../src/install.c:698
-#: ../src/install.c:721 ../src/restore.c:217
+#: ../src/GenericConduit.cc:1511 ../src/backup.c:180 ../src/install.c:503
+#: ../src/install.c:526 ../src/restore.c:217
 msgid "OK\n"
 msgstr "OK\n"
 
@@ -1493,7 +1497,7 @@ msgstr "Plus de mémoire"
 msgid "Please press the HotSync button.\n"
 msgstr "Appuyez sur le bouton HotSync.\n"
 
-#: ../src/install.c:703
+#: ../src/install.c:508
 msgid "Problem\n"
 msgstr "Problème\n"
 
@@ -1638,7 +1642,7 @@ msgstr "Utilisateur ou numéro d'utilisateur « %s » inconnu"
 msgid "Unrecognized option: \"%s\"."
 msgstr "L'option « %s » n'est pas reconnue."
 
-#: ../src/install.c:79
+#: ../libpdb/pdb.c:851
 #, c-format
 msgid "Upload of \"%s\" cancelled by Palm.\n"
 msgstr "Installation de « %s » annulée par le Palm.\n"
@@ -1705,7 +1709,7 @@ msgstr ""
 msgid "Warning: "
 msgstr "Avertissement: "
 
-#: ../libpdb/pdb.c:1539
+#: ../libpdb/pdb.c:1909
 #, c-format
 msgid ""
 "Warning: AppInfo block isn't where I thought it would be.\n"
@@ -1714,7 +1718,7 @@ msgstr ""
 "Attention: Le bloc AppInfo n'est pas là où je m'y attendais.\n"
 "Je croyais qu'il serait à 0x%lx, mais nous sommes à 0x%lx.\n"
 
-#: ../src/spalm.c:457
+#: ../src/palm.c:457
 #, c-format
 msgid ""
 "Warning: ROM serial number is %d characters long. Please notify the\n"
@@ -1737,7 +1741,7 @@ msgstr ""
 msgid "Warning: no device on %s. Sleeping\n"
 msgstr ""
 
-#: ../libpdb/pdb.c:1859
+#: ../libpdb/pdb.c:2229
 #, c-format
 msgid ""
 "Warning: record %d isn't where I thought it would be.\n"
@@ -1746,7 +1750,7 @@ msgstr ""
 "Attention: l'enregistrement No. %d n'est pas là où je m'y attendais.\n"
 "Je croyais qu'il serait à 0x%lx, mais nous sommes à 0x%lx.\n"
 
-#: ../libpdb/pdb.c:1733
+#: ../libpdb/pdb.c:2103
 #, c-format
 msgid ""
 "Warning: resource %d isn't where I thought it would be.\n"
@@ -1755,7 +1759,7 @@ msgstr ""
 "Attention: la resource No. %d n'est pas là où je m'y attendais.\n"
 "Je croyais qu'elle serait à 0x%lx, mais nous sommes à 0x%lx.\n"
 
-#: ../libpdb/pdb.c:1648
+#: ../libpdb/pdb.c:2018
 #, c-format
 msgid ""
 "Warning: sort block isn't where I thought it would be.\n"
@@ -1769,7 +1773,7 @@ msgstr ""
 msgid "Write timeout. Attempting to resend.\n"
 msgstr "Timeout lors de l'écriture. J'essaie d'envoyer de nouveau.\n"
 
-#: ../src/spalm.c:559
+#: ../src/palm.c:559
 msgid ""
 "You have an old Palm, one that doesn't say how many\n"
 "databases it has. I can't cope with this."
@@ -1814,9 +1818,6 @@ msgstr "pdb_Download() a échoué."
 #: ../libpconn/PConnection_usb.c:164
 msgid "usb: trying to fill a non-empty buffer.\n"
 msgstr "usb: tentat de remplir un tampon qui n'est pas vide.\n"
-
-#~ msgid "Can't load configuration"
-#~ msgstr "Impossible de lire la configuration."
 
 #, fuzzy
 #~ msgid "Lost connection with Palm."

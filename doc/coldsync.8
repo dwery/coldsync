@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.43 2001-06-04 10:20:01 arensb Exp $
+.\" $Id: coldsync.8,v 1.42 2001-05-06 06:00:15 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -907,23 +907,25 @@ Many and hopefully self-explanatory.
 .Sh LIMITATIONS
 .Pp
 .Nm ColdSync
-does not detect the serial number on Handspring Visors (and some Palm
-PDAs). This is because the Visor does not appear to have a
-software-readable serial number. The pda block for a Visor should
-contain
+does not detect the serial number on Handspring Visors. This is
+because the Visor does not appear to have a software-readable serial
+number. The pda block for a Visor should contain
 .Bd -literal -offset indent
-	snum: "*Visor*";
+	snum: "";
 .Ed
+to explicitly say,
+.Dq This Palm does not have a serial number.
+If you omit the
+.Li snum
+line, the pda block will match any Palm device.
 .Pp
 Under Linux,
 .Nm ColdSync
 often spits out copious amounts of "Bad CRC" messages. This is due to
 Linux's flaky serial driver.
-.Nm ColdSync
-does not deal with categories. This is due to the way the AppInfo
-block (which contains the categories) is implemented. However,
-conduits can deal with categories.
 .Sh BUGS
+.Nm ColdSync
+does not deal with categories.
 .Pp
 In the
 .Pa .coldsyncrc
@@ -946,6 +948,9 @@ does not maintain backups of them.
 There is as yet no tool for manipulating archive files.
 .Pp
 All network addresses are assumed to be IPv4 addresses.
+.Pp
+It is not possible to reliably specify a conduit argument whose value
+begins with whitespace.
 .Pp
 It appears that syncing with a machine other than that with which you
 normally sync might cause a database to lose its category information.
