@@ -5,22 +5,22 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 1.1.4\n"
-"POT-Creation-Date: 2000-09-24 01:53-0400\n"
+"POT-Creation-Date: 2000-09-27 14:20-0400\n"
 "PO-Revision-Date: 2000-03-27 16:57+02:00\n"
-"Last-Translator: Christian Kirsch<ck@held.mind.de>\n"
+"Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
 "Language-Team:  de <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
 
 #: src/parser.y:290 src/parser.y:517 src/parser.y:944
-#, fuzzy, c-format
+#, c-format
 msgid "\tError near \"%s\"\n"
-msgstr "Fehler beim Öffnen von \"%s\"\n"
+msgstr "Fehler bei \"%s\"\n"
 
 #: src/parser.y:976
 msgid "\tMissing ':'\n"
-msgstr "\tFehlendes ':'\n"
+msgstr "\tFehlender ':'\n"
 
 #: src/parser.y:991
 msgid "\tMissing ';'\n"
@@ -28,27 +28,26 @@ msgstr "\tFehlendes ';'\n"
 
 #: src/parser.y:984
 msgid "\tMissing '{'\n"
-msgstr "\tFehlendes '{'\n"
+msgstr "\tFehlende '{'\n"
 
 #: src/parser.y:683
-#, fuzzy, c-format
+#, c-format
 msgid "\tMissing argument name near \": %s\".\n"
-msgstr "Fehlendes Argument nach \"%s\"\n"
+msgstr "Fehlendes Argument nach \": %s\".\n"
 
 #: src/parser.y:223
-#, fuzzy
 msgid "\tMissing listen block type\n"
-msgstr "Option \"%s\" nicht erkannt.\n"
+msgstr "\tFehlender Typ im 'listen' Abschnitt\n"
 
 #: src/parser.y:375
-#, fuzzy, c-format
+#, c-format
 msgid "\tUnrecognized conduit flavor \"%s\"\n"
-msgstr "Option \"%s\" nicht erkannt.\n"
+msgstr "\tUnbekannter Conduit Typ \"%s\"\n"
 
 #: src/parser.y:226
-#, fuzzy, c-format
+#, c-format
 msgid "\tUnrecognized listen type \"%s\"\n"
-msgstr "Option \"%s\" nicht erkannt.\n"
+msgstr "\tUnbekannter 'listen' Typ \"%s\"\n"
 
 #: src/coldsync.c:1661
 #, c-format
@@ -69,9 +68,7 @@ msgstr ""
 
 #: src/coldsync.c:1651
 msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
-msgstr ""
-"    WITH_EFENCE: Puffer-Überlauf löst Programmabsturz aus («segmentation "
-"violation»).\n"
+msgstr "    WITH_EFENCE: Puffer-Überläufe lösen Schutzverletzungen aus.\n"
 
 #: src/coldsync.c:1647
 msgid "    WITH_USB: USB support.\n"
@@ -197,7 +194,7 @@ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d\n"
 #: libpdb/pdb.c:501
 #, c-format
 msgid "%s record 0x%08lx has length 0\n"
-msgstr ""
+msgstr "%s Datensatz 0x%08lx hat Länge 0\n"
 
 #: src/coldsync.c:1633
 #, c-format
@@ -205,34 +202,34 @@ msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
 #: src/parser.y:547
-#, fuzzy, c-format
+#, c-format
 msgid "%s: %d: Bogus creator \"%s\"\n"
-msgstr "%s: Falscher Creator \"%s\", Zeile %d\n"
+msgstr "%s: %d: Falscher Creator \"%s\"\n"
 
 #: src/parser.y:571
-#, fuzzy, c-format
+#, c-format
 msgid "%s: %d: Bogus type \"%s\"\n"
-msgstr "%s: Falscher Typ \"%s\", Zeile %d\n"
+msgstr "%s: %d: Falscher Typ \"%s\"\n"
 
 #: src/parser.y:424
 #, c-format
 msgid "%s: %d: Can't add creator-type pair to list. This is very bad.\n"
-msgstr ""
+msgstr "%s: %d: Kann kein Erzeuger-Typ-Paar der Liste hinzufügen.\n"
 
 #: src/parser.y:484
 #, c-format
 msgid "%s: %d: Can't add preference to list. This is very bad.\n"
-msgstr ""
+msgstr "%s: %d: Kann keine Einstellungen der Liste hinzufügen.\n"
 
 #: src/parser.y:265
 #, c-format
 msgid "%s: %d: Warning: device already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Das Gerät ist schon definiert.\n"
 
 #: src/parser.y:886
 #, c-format
 msgid "%s: %d: Warning: directory already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Das Verzeichnis wird schon benutzt.\n"
 
 #: src/parser.y:862
 #, c-format
@@ -240,6 +237,8 @@ msgid ""
 "%s: %d: Warning: incorrect checksum\n"
 "for serial number \"%s-%c\". Should be \"%s-%c\"\n"
 msgstr ""
+"%s: %d: Warnung: Ignoriere Prüfsumme\n"
+"für Seriennummer \"%s-%c\". Sollte \"%s-%c\" sein\n"
 
 #: src/parser.y:961
 #, c-format
@@ -248,11 +247,14 @@ msgid ""
 "\tColons are now required after most directives.\n"
 "\t(This warning will only be shown once.)\n"
 msgstr ""
+"%s: %d: Warnung: Fehlender ':'\n"
+"\tDoppelpunkte sind nach den meisten Verzeichnissen erforderlich.\n"
+"\t(Diese Warnung wird nur einmal angezeigt.)\n"
 
 #: src/parser.y:441
 #, c-format
 msgid "%s: %d: Warning: path already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Das Verzeichnis wird schon benutzt.\n"
 
 #: src/parser.y:840
 #, c-format
@@ -260,26 +262,28 @@ msgid ""
 "%s: %d: Warning: serial number \"%s\" has no checksum.\n"
 "You may want to rewrite it as \"%s-%c\"\n"
 msgstr ""
+"%s: %d: Warnung: Seriennummer \"%s\" hat keine Prüfsumme.\n"
+"Es sollte \"%s-%c\" heißen.\n"
 
 #: src/parser.y:813
 #, c-format
 msgid "%s: %d: Warning: serial number already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Die Seriennummer erscheint mehrfach.\n"
 
 #: src/parser.y:281
 #, c-format
 msgid "%s: %d: Warning: speed already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Mehrfache Angabe der Geschwindigkeit.\n"
 
 #: src/parser.y:926
 #, c-format
 msgid "%s: %d: Warning: userid already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Mehrfache Angabe der Benutzerkennung.\n"
 
 #: src/parser.y:909
 #, c-format
 msgid "%s: %d: Warning: username already defined.\n"
-msgstr ""
+msgstr "%s: %d: Warnung: Mehrfache Angabe des Benutzernamens.\n"
 
 #: libpconn/dlp.c:144
 #, c-format
@@ -292,9 +296,9 @@ msgid "%s: Can't allocate PDA block\n"
 msgstr "%s: Kann keinen PDA block anlegen\n"
 
 #: src/parser.y:641
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Can't allocate conduit header\n"
-msgstr "%s: Kann keinen conduit_block anlegen!\n"
+msgstr "%s: Kann keinen Conduit-Kopf anlegen!\n"
 
 #: src/parser.y:304
 #, c-format
@@ -364,14 +368,14 @@ msgstr ""
 "%s: Kann Standardausgabe des Kindprozesses nicht auf line-buffered setzen.\n"
 
 #: lexer.l:137 lexer.l:150 lexer.l:268 lexer.l:346
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Can't make copy of string.\n"
-msgstr "Kann Zeichenkette nicht kopieren.\n"
+msgstr "%s: Kann Zeichenkette nicht kopieren.\n"
 
 #: lexer.l:296
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Can't malloc copy of string\n"
-msgstr "Kann Zeichenkette nicht kopieren.\n"
+msgstr "%s: Kann Zeichenkette nicht anlegen.\n"
 
 #: src/archive.c:126 src/install.c:118 src/parser.y:1018
 #, c-format
@@ -438,6 +442,7 @@ msgstr ""
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application\n"
 msgstr ""
+"%s: Kann %s nicht wiederherstellen: Ein anderes Programm hat es geöffnet\n"
 
 #: src/archive.c:137
 #, c-format
@@ -520,7 +525,7 @@ msgstr "%s: Konnte keinen Endpunkt für HotSync auf dem Visor finden.\n"
 #: src/restore.c:231
 #, c-format
 msgid "%s: Database %s doesn't exist, yet it is open. Huh?\n"
-msgstr ""
+msgstr "%s: Die Datenbank %s existiert nicht, ist aber geöffnet.\n"
 
 #: src/install.c:187
 #, c-format
@@ -530,7 +535,7 @@ msgstr "%s: Fehler beim Löschen von \"%s\"\n"
 #: src/GenericConduit.cc:1215 src/GenericConduit.cc:1246
 #, c-format
 msgid "%s: Error deleting record 0x%08lx: %d\n"
-msgstr ""
+msgstr "%s: Fehler beim Löschen des Satzes 0x%08lx: %d\n"
 
 #: src/coldsync.c:1187 src/coldsync.c:1252
 #, c-format
@@ -538,14 +543,14 @@ msgid "%s: Error in checking for \"%s\"\n"
 msgstr "%s: Fehler beim Prüfen auf \"%s\"\n"
 
 #: src/conduit.c:838
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Error reading SPC request.\n"
-msgstr "Fehler beim Aufräumen der Conduits.\n"
+msgstr "%s: Fehler beim Lesen der SPC Anfrage.\n"
 
 #: src/conduit.c:950
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Error sending SPC response data.\n"
-msgstr "Fehler beim Aufräumen der Conduits.\n"
+msgstr "%s: Fehler beim Senden der SPC Antwortsdaten.\n"
 
 #: src/install.c:200
 #, c-format
@@ -558,6 +563,9 @@ msgid ""
 "%s: Error: conduit handler is in an inconsistent state at\n"
 "%s, line %d. Please notify the maintainer.\n"
 msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: Error: conduit handler is in an inconsistent state at\n"
+"%s, line %d.\n"
 
 #: src/conduit.c:372
 #, c-format
@@ -565,6 +573,9 @@ msgid ""
 "%s: I just got file descriptor %d. There appears to be a file\n"
 "descriptor leak. Please notify the maintainer.\n"
 msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: I just got file descriptor %d. There appears to be a file\n"
+"descriptor leak.\n"
 
 #: libpconn/dlp_cmd.c:1409 libpconn/dlp_cmd.c:1590 libpconn/dlp_cmd.c:2450
 #: libpconn/dlp_cmd.c:2762 libpconn/dlp_cmd.c:3837 libpdb/pdb.c:718
@@ -579,7 +590,7 @@ msgstr "%s: Kein Speicher mehr.\n"
 #: src/conduit.c:381
 #, c-format
 msgid "%s: Too many file descriptors. Aborting.\n"
-msgstr ""
+msgstr "%s: Zu viele offene Dateien. Abbruch.\n"
 
 #: src/GenericConduit.cc:1450 src/GenericConduit.cc:1486
 #: src/GenericConduit.cc:1630 src/GenericConduit.cc:1954
@@ -598,7 +609,7 @@ msgstr "%s: Warnung: Unbekannter USB-Hersteller ID 0x%x\n"
 msgid ""
 "%s: Warning: no `type:' line seen\n"
 "\tin definition of \"%s\"\n"
-msgstr ""
+msgstr "%s: Warnung: Keine 'type:' Zeile in der Definition von \"%s\"\n"
 
 #: libpconn/slp.c:237
 #, c-format
@@ -660,9 +671,9 @@ msgid "%s: conduit exited unexpectedly\n"
 msgstr "%s: Conduit unerwartet beendet.\n"
 
 #: src/conduit.c:700
-#, fuzzy, c-format
+#, c-format
 msgid "%s: error in select()\n"
-msgstr "%s: Fehler beim Löschen von \"%s\"\n"
+msgstr "%s: Fehler in select()\n"
 
 #: libpconn/PConnection.c:107
 #, c-format
@@ -670,9 +681,9 @@ msgid "%s: error opening port \"%s\"\n"
 msgstr "%s: Fehler beim Öffnen von Port \"%s\"\n"
 
 #: src/conduit.c:768
-#, fuzzy, c-format
+#, c-format
 msgid "%s: error reading SPC request from conduit.\n"
-msgstr "Fehler beim Aufräumen der Conduits.\n"
+msgstr "%s: Fehler beim Lesen der SPC Anfrage vom Conduit.\n"
 
 #: libpdb/pdb.c:1687
 #, c-format
@@ -680,9 +691,9 @@ msgid "%s: error reading record index entry (%d bytes): %d\n"
 msgstr "%s: Fehler beim Lesen der Indexeintrags (%d Bytes): %d\n"
 
 #: src/conduit.c:916
-#, fuzzy, c-format
+#, c-format
 msgid "%s: error sending SPC response header.\n"
-msgstr "Fehler beim Aufräumen der Conduits.\n"
+msgstr "%s: Fehler beim Sender des SPC Antwortkopfes.\n"
 
 #: src/conduit.c:1453
 #, c-format
@@ -697,7 +708,7 @@ msgstr "%s: realloc gescheitert\n"
 #: src/conduit.c:715
 #, c-format
 msgid "%s: select() returned 0. I'm puzzled.\n"
-msgstr ""
+msgstr "%s: select() lieferte 0.\n"
 
 #: src/conduit.c:1577
 #, c-format
@@ -732,10 +743,13 @@ msgid ""
 "%s: unknown start state %d\n"
 "Please tell the maintainer to fix `lexer.l'.\n"
 msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"%s: unknown start state %d\n"
+"Fix 'lexer.l'.\n"
 
 #: src/coldsync.c:597
 msgid "*Cancelled*\n"
-msgstr ""
+msgstr "*Abgebrochen*\n"
 
 #: src/backup.c:42
 msgid "Backup "
@@ -746,9 +760,9 @@ msgid "Bad file descriptor"
 msgstr "Fehlerhafter Dateideskriptor"
 
 #: src/coldsync.c:395
-#, fuzzy, c-format
+#, c-format
 msgid "CacheFromConduits() returned %d\n"
-msgstr "GetMemInfo() lieferte %d zurück.\n"
+msgstr "CacheFromConduits() lieferte %d zurück.\n"
 
 #: libpdb/pdb.c:2368
 msgid "Can't allocate list of record IDs\n"
@@ -759,9 +773,8 @@ msgid "Can't allocate listen block.\n"
 msgstr "Kann «listen block» nicht anlegen.\n"
 
 #: src/config.c:437
-#, fuzzy
 msgid "Can't allocate new conduit block.\n"
-msgstr "%s: Kann keinen conduit_block anlegen!\n"
+msgstr "Kann keinen neuen conduit_block anlegen!\n"
 
 #: src/config.c:418
 msgid "Can't allocate new configuration.\n"
@@ -912,11 +925,11 @@ msgstr "Kann Sort-Blcok nicht lesen.\n"
 #: src/GenericConduit.cc:259 src/GenericConduit.cc:480
 #: src/GenericConduit.cc:918
 msgid "Cancelled\n"
-msgstr ""
+msgstr "Abgebrochen\n"
 
 #: src/coldsync.c:1637
 msgid "ColdSync homepage at http://www.ooblick.com/software/coldsync/\n"
-msgstr ""
+msgstr "ColdSync Seite bei http://www.ooblick.com/software/coldsync/\n"
 
 #: src/coldsync.c:1643
 msgid "Compile-type options:\n"
@@ -924,7 +937,7 @@ msgstr "Übersetzer-Optionen:\n"
 
 #: src/coldsync.c:609
 msgid "Conduit failed for unknown reason\n"
-msgstr ""
+msgstr "Das Conduit aus unbekannten Gründen fehl\n"
 
 #: libpdb/pdb.c:2400
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
@@ -1039,9 +1052,8 @@ msgid "Error uploading record 0x%08lx: %d\n"
 msgstr "Fehler beim Übertragen von Datensatz 0x%08lx: %d\n"
 
 #: src/conduit.c:608
-#, fuzzy
 msgid "Error while sending header to conduit.\n"
-msgstr "Fehler beim Aufräumen der Conduits.\n"
+msgstr "Fehler beim Senden des Kopfes zum Conduit.\n"
 
 #: src/coldsync.c:662
 msgid "Error writing sync log.\n"
@@ -1058,7 +1070,7 @@ msgstr ""
 
 #: src/coldsync.c:318
 msgid "Error: Can't get location of serial number\n"
-msgstr ""
+msgstr "Fehler: Kann die Position der Seriennummer nicht finden\n"
 
 #: src/restore.c:158
 #, c-format
@@ -1067,7 +1079,7 @@ msgstr "Fehler: Kann %s nicht öffnen.\n"
 
 #: src/coldsync.c:341
 msgid "Error: Can't read serial number\n"
-msgstr ""
+msgstr "Fehler: Kann die Seriennummer nicht lesen\n"
 
 #: src/config.c:366
 msgid "Error: Can't specify backup and restore at the same time.\n"
@@ -1078,22 +1090,15 @@ msgstr ""
 msgid "Error: can't open connection.\n"
 msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
 
-#: src/coldsync.c:166
-msgid "Error: can't reserve file descriptor 0\n"
-msgstr ""
-
-#: src/coldsync.c:171
-msgid "Error: can't reserve file descriptor 1\n"
-msgstr ""
-
-#: src/coldsync.c:176
-msgid "Error: can't reserve file descriptor 2\n"
-msgstr ""
+#: src/coldsync.c:166 src/coldsync.c:171 src/coldsync.c:176
+#, c-format
+msgid "Error: can't reserve file descriptor %d\n"
+msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
 
 #: src/conduit.c:1143 src/conduit.c:1187
 #, c-format
 msgid "Error: conduit %s is not a %s conduit\n"
-msgstr ""
+msgstr "Fehler: Conduit %s ist kein %s Conduit\n"
 
 #: src/coldsync.c:241
 msgid "Error: no port specified.\n"
@@ -1199,7 +1204,7 @@ msgstr "SLP: Fehlerhafte CRC. Erwartet 0x%04x, gefunden 0x%04x\n"
 
 #: src/coldsync.c:596
 msgid "Sync cancelled.\n"
-msgstr ""
+msgstr "Sync abgebrochen.\n"
 
 #: src/config.c:198
 msgid "This host doesn't appear to have an IP address.\n"
@@ -1238,7 +1243,7 @@ msgid "Unrecognized option: \"%s\"\n"
 msgstr "Option \"%s\" nicht erkannt.\n"
 
 #: src/coldsync.c:1609
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Usage: %s [options] -p port\n"
 "Options:\n"
@@ -1262,6 +1267,7 @@ msgstr ""
 "\t-f <datei>:\tKonfiguration von <datei> lesen.\n"
 "\t-b <dir>:\tDaten in Verzeichnis <dir> sichern..\n"
 "\t-r <dir>:\tDaten von Verzeichnis <dir> restaurieren.\n"
+"\t-I:\t\tInstallation neuer Datenbanken erzwingen.\n"
 "\t-S:\t\t\"Slow sync\" erzwingen.\n"
 "\t-F:\t\t\"Fast sync\" erzwingen..\n"
 "\t-R:\t\tDatenbanken im ROM prüfen..\n"
@@ -1284,6 +1290,8 @@ msgid ""
 "Warning: ROM serial number is %d characters long. Please notify the\n"
 "maintainer\n"
 msgstr ""
+"Bittem dem Entwickler des Programms melden:\n"
+"Warning: ROM serial number is %d characters long.\n"
 
 #: src/coldsync.c:818
 #, c-format
@@ -1291,6 +1299,8 @@ msgid ""
 "Warning: can't set the speed you requested (%ld bps).\n"
 "Using default (%ld bps)\n"
 msgstr ""
+"Warnung: Kann die gewünschte Geschwindigkeit %ld bps nicht setzen.\n"
+"Benutzte Standart (%ld bps)\n"
 
 #: src/config.c:464
 #, c-format
@@ -1343,7 +1353,7 @@ msgstr ""
 
 #: src/GenericConduit.cc:183
 msgid "[generic]: Aborting.\n"
-msgstr ""
+msgstr "[generic]: Abbruch.\n"
 
 #: libpconn/PConnection_usb.c:441
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
