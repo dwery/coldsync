@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.16 2000-11-04 08:06:59 arensb Exp $
+ * $Id: backup.c,v 2.17 2000-11-04 22:54:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -130,18 +130,19 @@ backup(struct PConnection *pconn,
  */
 int
 full_backup(struct PConnection *pconn,
-	    struct Palm *palm)
+	    struct Palm *palm,
+	    const char *backupdir)
 {
 	int err;
 	int i;
 
 	SYNC_TRACE(1)
 		fprintf(stderr, "Inside full_backup() -> \"%s\"\n",
-			global_opts.backupdir);
+			backupdir);
 
 	for (i = 0; i < palm->num_dbs; i++)
 	{
-		err = backup(pconn, &(palm->dblist[i]), global_opts.backupdir);
+		err = backup(pconn, &(palm->dblist[i]), backupdir);
 		if (err < 0)
 		{
 			fprintf(stderr, "%s: Error backing up \"%s\"\n",
