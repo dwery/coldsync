@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.58 2000-11-20 10:13:29 arensb Exp $
+ * $Id: coldsync.c,v 1.59 2000-11-24 04:51:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -498,6 +498,18 @@ run_mode_Standalone(int argc, char *argv[])
 					 * of the databases on the Palm, so
 					 * make sure we get them all.
 					 */
+			/* XXX - Off hand, it looks as if fetching the list
+			 * of databases takes a long time (several
+			 * seconds). One way to "fix" this would be to get
+			 * each database in turn, then run its conduits.
+			 * The problems with this are that a) it doesn't
+			 * make things faster in the long run, and b) it
+			 * screws up the sequence of events documented in
+			 * the man page.
+			 * If it were possible to set the display on the
+			 * Palm to not just say "Identifying", it might
+			 * make things _appear_ significantly faster.
+			 */
 	/* XXX - Error-checking */
 
 	MISC_TRACE(1)
@@ -1281,7 +1293,9 @@ run_mode_Init(int argc, char *argv[])
 		/* XXX - This section mostly duplicates UpdateUserInfo().
 		 * Is this a bad idea? Is UpdateUserInfo() broken?
 		 */
-		struct dlp_setuserinfo uinfo; 
+		struct dlp_setuserinfo uinfo;
+		char uidbuf[16];	/* Buffer for printed representation
+					 * of userid */
 
 		SYNC_TRACE(1)
 			fprintf(stderr, "Updating user info.\n");
@@ -1296,6 +1310,10 @@ run_mode_Init(int argc, char *argv[])
 
 		uinfo.userid = new_userid;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
+
+		add_to_log(_("Set user ID: "));
+		sprintf(uidbuf, "%lu\n", uinfo.userid);
+		add_to_log(uidbuf);
 
 		/* XXX - Set viewer ID? */
 
@@ -1325,9 +1343,13 @@ run_mode_Init(int argc, char *argv[])
 			fprintf(stderr, "Setting the username to [%s]\n",
 				(new_username == NULL ? "NULL" :
 				 new_username));
-		uinfo.usernamelen = strlen(new_username);
+		uinfo.usernamelen = strlen(new_username)+1;
 		uinfo.username = new_username;
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
+
+		add_to_log(_("Set username: "));
+		add_to_log(uinfo.username);
+		add_to_log("\n");
 
 		/* XXX - Update last sync PC */
 		/* XXX - Update last sync time */
