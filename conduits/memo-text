@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: memo-text,v 1.3 2000-05-30 17:27:36 arensb Exp $
+# $Id: memo-text,v 1.4 2001-02-18 06:50:39 arensb Exp $
 
 # XXX - Write pod.
 
@@ -55,7 +55,7 @@ use ColdSync;
 
 );
 
-my $VERSION = (qw( $Revision: 1.3 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.4 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -246,8 +246,8 @@ sub DoDump
 	print OUT "Categories:\n";
 	for ($i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
 	{
-		my $category = $PDB->{appinfo}{categories}[$i];
-		my $cat_id = $PDB->{appinfo}{uniqueIDs}[$i];
+		my $category = $PDB->{appinfo}{categories}[$i]{name};
+		my $cat_id = $PDB->{appinfo}{categories}[$i]{id};
 
 		next if $category eq "";
 		$category =~ s/,/\\,/g;		# Escape commas
@@ -264,7 +264,7 @@ sub DoDump
 		print OUT "Memo ";
 		print OUT "ID: ", $record->{id};
 		print OUT ", Category: ",
-			$PDB->{appinfo}{categories}[$record->{category}];
+			$PDB->{appinfo}{categories}[$record->{category}]{name};
 		print OUT ", Private" if $record->{attributes}{private};
 		print OUT "\n";
 
