@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.9 2000-12-16 20:27:37 arensb Exp $
+ * $Id: slp.c,v 1.10 2000-12-17 09:52:16 arensb Exp $
  */
 
 #include "config.h"
@@ -293,7 +293,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Read the body */
-	bzero(pconn->slp.inbuf, pconn->slp.inbuf_len);
+	bzero((void *) pconn->slp.inbuf, pconn->slp.inbuf_len);
 					/* Clear out the remains of the
 					 * last packet read.
 					 */

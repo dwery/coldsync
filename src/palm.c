@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.8 2000-12-16 20:27:41 arensb Exp $
+ * $Id: palm.c,v 2.9 2000-12-17 09:52:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,7 +57,7 @@ new_Palm(struct PConnection *pconn)
 	retval->have_sysinfo_ = False;
 	retval->have_userinfo_ = False;
 	retval->have_netsyncinfo_ = False;
-	bzero(&(retval->serial_), SNUM_MAX);
+	bzero((void *) &(retval->serial_), SNUM_MAX);
 	retval->serial_len_ = -1;
 	retval->num_cards_ = -1;
 	retval->cardinfo_ = NULL;

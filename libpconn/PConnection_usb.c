@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.15 2000-12-17 06:18:21 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.16 2000-12-17 09:52:10 arensb Exp $
  */
 
 #include "config.h"
@@ -293,7 +293,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 
 	u = pconn->io_private = malloc(sizeof(struct usb_data));
 
-	bzero(pconn->io_private, sizeof(struct usb_data));
+	bzero((void *) pconn->io_private, sizeof(struct usb_data));
 
 	/*
 	 *  Prompt for the Hot Sync button now, as the USB bus
@@ -434,7 +434,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	 *  change based on what other applications are running and perhaps
 	 *  on future hardware platforms.
 	 */
-	bzero(&ur, sizeof(ur));
+	bzero((void *) &ur, sizeof(ur));
 	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
 	ur.request.bRequest = usbRequestVendorGetConnectionInfo;
 	USETW(ur.request.wValue, 0);
@@ -443,7 +443,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	ur.data = (void *) &ci;
 	ur.flags = USBD_SHORT_XFER_OK;
 	ur.actlen = 0;
-	bzero((char *)&ci, sizeof(ci));
+	bzero((void *)&ci, sizeof(ci));
 	if (ioctl(usb_ep0, USB_DO_REQUEST, &ur) < 0) {
 		perror(_("ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"));
 		(void) close(usb_ep0);
@@ -497,7 +497,7 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		return -1;	  
 	}
 
-	bzero(&ur, sizeof(ur));
+	bzero((void *) &ur, sizeof(ur));
 	ur.request.bmRequestType = UT_READ_VENDOR_ENDPOINT;
 	ur.request.bRequest = usbRequestVendorGetBytesAvailable;
 	USETW(ur.request.wValue, 0);

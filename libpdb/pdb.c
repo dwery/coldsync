@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.30 2000-12-16 20:27:38 arensb Exp $
+ * $Id: pdb.c,v 1.31 2000-12-17 09:52:23 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -125,7 +125,7 @@ new_pdb()
 		return NULL;
 
 	/* Write zeros all over it, just for safety */
-	bzero(retval, sizeof(struct pdb));
+	bzero((void *) retval, sizeof(struct pdb));
 
 	return retval;
 }
@@ -1659,7 +1659,7 @@ pdb_LoadRsrcIndex(int fd,
 		    == NULL)
 			return -1;
 		/* Scribble zeros all over it, just in case */
-		bzero(rsrc, sizeof(struct pdb_resource));
+		bzero((void *) rsrc, sizeof(struct pdb_resource));
 
 		/* Read the next resource index entry */
 		if ((err = read(fd, inbuf, PDB_RESOURCEIX_LEN)) !=
@@ -1749,7 +1749,7 @@ pdb_LoadRecIndex(int fd,
 		}
 
 		/* Scribble zeros all over it, just in case */
-		bzero(rec, sizeof(struct pdb_record));
+		bzero((void *) rec, sizeof(struct pdb_record));
 
 		/* Read the next record index entry */
 		if ((err = read(fd, inbuf, PDB_RECORDIX_LEN)) !=
