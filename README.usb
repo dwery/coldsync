@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.4 2002-11-09 21:51:24 azummo Exp $
+$Id: README.usb,v 1.5 2004-06-04 22:45:56 christophe Exp $
 
 Linux
 =====
@@ -37,6 +37,48 @@ Linux
 		protocol: full;
 
 	in your listen serial block.
+
+Linux USB Hotplugging
+=====================
+
+The following two-step technique can be used with USB hotplugging
+(http://linux-hotplug.sourceforge.net/?selected=usb) to get coldsync to
+run on demand.
+
+Add the following listen block to coldsync.conf:
+
+	listen serial "hotplug" {
+		device: "$(PORT)";
+		protocol: net;
+	}
+
+Place the following script at /etc/hotplug/usb/visor:
+
+	#!/bin/bash
+	#
+	# /etc/hotplug/usb/visor
+	# launch coldsync when a PalmOS device is attached
+
+	if [ "${ACTION}" = "add" ] && [ -f "${DEVICE}" ]
+	then
+		# I don't want to hardcode the tty into this script (since,
+		# for one thing, I have more than one cradle), but the only way I
+		# can come up with to get a device is to scan the kernel log for
+		# the last assigned tty for our device path. Yuck.
+		SHORTDEV=`echo $DEVPATH | cut -f6 -d/`
+		PORT=`dmesg|grep "usb ${SHORTDEV}:"|grep 'now attached to' | \
+			tail -1 | grep -oe 'ttyUSB[0-9]*'`
+		export PORT="/dev/usb/${PORT}"
+
+		logger "visor: running coldsync on ${PORT}"
+
+		/bin/chmod 666 ${PORT}
+		/usr/local/bin/coldsync -md -v -n hotplug -l /var/log/coldsync.log
+	fi
+
+That's it. Should just work, but you might need to twiddle with device
+permissions, and of course this is sensitive to the formatting of the dmesg
+output (works for me with Fedora Core 2/Linux 2.6, YMMV).
 
 *BSD
 ====
