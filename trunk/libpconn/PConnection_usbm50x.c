@@ -1,7 +1,7 @@
 /*
  * PConnection_usbm50x.c - Koen Deforche <kdf@irule.be>
  *
- * $Id: PConnection_usbm50x.c,v 1.3 2001-07-26 07:03:30 arensb Exp $
+ * $Id: PConnection_usbm50x.c,v 1.4 2001-07-30 07:31:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -9,6 +9,10 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <errno.h>
+
+#if HAVE_LIBINTL_H
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
 #include "pconn/netsync.h"
@@ -40,53 +44,7 @@ usbm50x_accept(PConnection *pconn)
   /*
    * perform ritual packet exchange
    */
-  int err;
-  const ubyte *inbuf;
-  uword inlen;
-
-  /* Receive ritual response 1 */
-  inlen = ritual_resp1_size;
-  err = netsync_read_method(pconn, &inbuf, &inlen, 1);
-  IO_TRACE(5)
-    {
-      fprintf(stderr,
-	      "netsync_read(ritual resp 1) returned %d\n",
-	      err);
-      if (err > 0)
-	debug_dump(stderr, "<<<", inbuf, inlen);
-    }
-
-  /* Send ritual statement 2 */
-  err = netsync_write(pconn, ritual_stmt2, ritual_stmt2_size);
-  IO_TRACE(5)
-    fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
-	    err);
-
-  /* Receive ritual response 2 */
-  err = netsync_read(pconn, &inbuf, &inlen);
-  IO_TRACE(5)
-    {
-      fprintf(stderr, "netsync_read returned %d\n", err);
-      if (err > 0)
-	debug_dump(stderr, "<<<", inbuf, inlen);
-    }
-
-  /* Send ritual statement 3 */
-  err = netsync_write(pconn, ritual_stmt3, ritual_stmt3_size);
-  IO_TRACE(5)
-    fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
-	    err);
-
-  /* Receive ritual response 3 */
-  err = netsync_read(pconn, &inbuf, &inlen);
-  IO_TRACE(5)
-    {
-      fprintf(stderr, "netsync_read returned %d\n", err);
-      if (err > 0)
-	debug_dump(stderr, "<<<", inbuf, inlen);
-    }
-  
-  return 0;
+  return ritual_exch_server(pconn);
 }
 
 static int
@@ -138,12 +96,24 @@ usbm50x_drain(PConnection *p)
  * 'prompt': if set, prompt the user to press the HotSync button.
  */
 int
-pconn_usbm50x_open(PConnection *pconn, char *device, Bool prompt)
+pconn_usbm50x_open(PConnection *pconn,
+		   const char *device,
+		   const int protocol,
+		   const Bool prompt)
 {
 	struct termios term;
 
+	if (protocol == PCONN_STACK_DEFAULT)
+		pconn->protocol = PCONN_STACK_SIMPLE;
+	else
+		pconn->protocol = protocol;
+
 	/* Initialize the various protocols that the serial connection will
 	 * use.
+	 */
+	/* XXX - Normally, we'd check pconn->protocol and initialize the
+	 * appropriate stack. However, this module should go away soon, so
+	 * I'm not going to bother.
 	 */
 	/* Initialize the DLP part of the PConnection */
 	if (dlp_init(pconn) < 0)
@@ -186,7 +156,7 @@ pconn_usbm50x_open(PConnection *pconn, char *device, Bool prompt)
 	 */
 	while (1)
 	{
-	  	if ((pconn->fd = open(device, O_RDWR | O_BINARY))
+		if ((pconn->fd = open(device, O_RDWR | O_BINARY))
 			    >= 0)
 				break;	/* Okay. Break out of bogus loop */
 
@@ -194,15 +164,15 @@ pconn_usbm50x_open(PConnection *pconn, char *device, Bool prompt)
 			{
 			    case ENODEV:
 				fprintf(stderr,
-					"Warning: no device on %s. "
-					"Sleeping\n",
+					_("Warning: no device on %s. "
+					  "Sleeping\n"),
 					device);
 				sleep(5);
 				continue;
 
 			    default:
 				fprintf(stderr,
-					"Error: Can't open \"%s\".\n",
+					_("Error: Can't open \"%s\".\n"),
 					device);
 				perror("open");
 				dlp_tini(pconn);
@@ -224,7 +194,7 @@ pconn_usbm50x_open(PConnection *pconn, char *device, Bool prompt)
 	/* XXX - Error-checking */
 
 	if (prompt)
-		printf("Please press the HotSync button.\n");
+		printf(_("Please press the HotSync button.\n"));
 
 	return pconn->fd;
 }
