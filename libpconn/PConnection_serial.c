@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.2 2000-01-25 11:25:47 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.2.2.1 2000-02-03 04:17:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -114,7 +114,7 @@ serial_setspeed(struct PConnection *pconn, int speed)
 }
 
 int
-pconn_serial_open(struct PConnection *p, char *device)
+pconn_serial_open(struct PConnection *p, char *device, int prompt)
 {
 	struct termios term;
 
@@ -143,6 +143,10 @@ pconn_serial_open(struct PConnection *p, char *device)
 	cfmakeraw(&term);		/* Make it raw */
 	tcsetattr(p->fd, TCSANOW, &term);
 					/* Make it so */
+
+	if (prompt)
+		printf(_("Please press the HotSync button.\n"));
+
 	return p->fd;
 }
 

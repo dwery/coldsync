@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.4 2000-01-25 11:25:46 arensb Exp $
+ * $Id: PConnection.c,v 1.4.2.1 2000-02-03 04:16:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,11 +23,13 @@
 				 * file somewhere.
 				 */
 
-/* XXX - Might want to throw the MISC_TRACE stuff back in */
+int	io_trace = 0;
 
-extern int pconn_serial_open(struct PConnection *pconn, char *fname);
+extern int pconn_serial_open(struct PConnection *pconn, char *fname,
+			     int prompt_for_hotsync);
 #ifdef WITH_USB
-extern int pconn_usb_open(struct PConnection *pconn, char *fname);
+extern int pconn_usb_open(struct PConnection *pconn, char *fname,
+			  int prompt_for_hotsync);
 #endif
 
 /* new_PConnection
@@ -35,7 +37,7 @@ extern int pconn_usb_open(struct PConnection *pconn, char *fname);
  * new connection, or NULL in case of error.
  */
 struct PConnection *
-new_PConnection(char *fname, int listenType)
+new_PConnection(char *fname, int listenType, int promptHotSync)
 {
 	struct PConnection *pconn;	/* New connection */
 
@@ -73,14 +75,14 @@ new_PConnection(char *fname, int listenType)
 
 	switch (listenType) {
 	case LISTEN_SERIAL:
-		if (pconn_serial_open(pconn, fname) < 0) {
+		if (pconn_serial_open(pconn, fname, promptHotSync) < 0) {
 			break;
 		}
 		return pconn;
 
 #ifdef WITH_USB
 	case LISTEN_USB:
-		if (pconn_usb_open(pconn, fname) < 0) {
+		if (pconn_usb_open(pconn, fname, promptHotSync) < 0) {
 			break;
 		}
 		return pconn;
