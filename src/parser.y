@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.29 2000-07-06 04:04:52 arensb Exp $
+ * $Id: parser.y,v 2.30 2000-11-04 07:45:10 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -64,7 +64,7 @@ static conduit_block *cur_conduit;	/* Currently-open conduit block.
 					 * The various conduit_directive
 					 * rules will fill in the fields.
 					 */
-static struct config *file_config;	/* As the parser runs, it will fill
+static struct sync_config *file_config;	/* As the parser runs, it will fill
 					 * in values in this struct.
 					 */
 %}
@@ -1003,11 +1003,11 @@ yyerror(const char *msg)
 	return 1;
 }
 
-/* parse_config
+/* parse_config_file
  * Parse the given config file.
  */
-int parse_config(const char *fname,
-		 struct config *conf)
+int parse_config_file(const char *fname,
+		      struct sync_config *conf)
 {
 	FILE *infile;
 	int retval;
@@ -1016,7 +1016,7 @@ int parse_config(const char *fname,
 	if ((infile = fopen(fname, "r")) == NULL)
 	{
 		fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-			"parse_config", fname);
+			"parse_config_file", fname);
 		perror("fopen");
 		return -1;
 	}
