@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.20 2000-05-21 07:59:52 arensb Exp $
+ * $Id: conduit.c,v 1.21 2000-06-11 06:53:18 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -58,7 +58,7 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 
 static int run_conduits(struct dlp_dbinfo *dbinfo,
 			char *flavor,
-			conduit_block *queue);
+			unsigned short flavor_mask);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -272,7 +272,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	     char *flavor,		/* Dump flavor: will be sent to
 					 * conduit.
 					 */
-	     conduit_block *queue)
+	     unsigned short flavor_mask)
 {
 	int err;
 	conduit_block *conduit;
@@ -299,12 +299,25 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	found_conduit = False;
 
 	/* Walk the queue */
-	for (conduit = queue;
+	for (conduit = config.the_q;
 	     conduit != NULL;
 	     conduit = conduit->next)
 	{
 		SYNC_TRACE(3)
-			fprintf(stderr, "Trying conduit...\n");
+			fprintf(stderr, "Trying conduit %s...\n",
+				(conduit->path == NULL ? "(null)" :
+				 conduit->path));
+
+		/* See if the flavor matches */
+		if ((conduit->flavors & flavor_mask) == 0)
+		{
+			SYNC_TRACE(5)
+				fprintf(stderr, "  Flavor set 0x%02x doesn't "
+					"match 0x%x\n\t=>Not applicable.\n",
+					conduit->flavors,
+					flavor_mask);
+			continue;
+		}
 
 		/* See if the creator matches */
 		if ((conduit->dbcreator != 0) &&
@@ -424,7 +437,7 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "fetch", config.fetch_q);
+	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH);
 }
 
 /* run_Dump_conduits
@@ -453,7 +466,7 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "dump", config.dump_q);
+	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP);
 }
 
 /* spawn_conduit
