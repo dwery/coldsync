@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.8 1999-11-10 09:07:06 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.9 1999-11-12 09:52:35 arensb Exp $
  */
 #include "config.h"
 #include <iostream.h>
@@ -26,8 +26,6 @@ extern "C" {
 #include "pdb.h"
 #include "coldsync.h"
 #include "archive.h"
-
-extern int add_to_log(char *msg);
 }
 
 /* Convenience functions */
