@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000-05-30 17:27:23 arensb Exp $
+# $Id: Makefile,v 1.5 2000-07-18 15:59:42 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -36,7 +36,7 @@ manifypods:	${PERL_CONDUITS}
 # with "#!/usr/local/bin/perl5" and will install that.
 
 install::	${CONDUITS} manifypods
-	${MKDIR} ${CONDUITDIR}
+	${MKDIR} ${CONDUITDIR} ${MAN1DIR}
 	for i in ${PERL_CONDUITS}; do \
 		${SED} 's:#! *[^ 	]*\(.*\):#!${PERL}\1:' \
 			< $$i > $$i.inst; \
