@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.35 2000-07-31 08:59:37 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.36 2000-08-07 00:32:28 arensb Exp $
  */
 
 /* Note on I/O:
@@ -78,10 +78,9 @@ static inline bool PRIVATE(const struct pdb_record *r)
 int
 run_GenericConduit(
 	struct PConnection *pconn,
-	struct Palm *palm,
 	struct dlp_dbinfo *dbinfo)
 {
-	GenericConduit gc(pconn, palm, dbinfo);
+	GenericConduit gc(pconn, dbinfo);
 
 	return gc.run();
 }
@@ -91,10 +90,8 @@ run_GenericConduit(
  */
 GenericConduit::GenericConduit(
 	struct PConnection *pconn,
-	struct Palm *palm,
 	struct dlp_dbinfo *dbinfo) :
 	_pconn(pconn),
-	_palm(palm),
 	_dbinfo(dbinfo),
 	_localdb(0),
 	_remotedb(0),
