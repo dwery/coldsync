@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.83 2001-01-30 08:10:01 arensb Exp $
+ * $Id: coldsync.c,v 1.84 2001-01-30 16:59:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -549,7 +549,7 @@ run_mode_Standalone(int argc, char *argv[])
 				 * it and use it for suggesting a pda
 				 * block.
 				 */
-		print_pda_block(stdout, pda, palm);
+		print_pda_block(stderr, pda, palm);
 
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -576,7 +576,7 @@ run_mode_Standalone(int argc, char *argv[])
 				 * it and use it for suggesting a pda
 				 * block.
 				 */
-		print_pda_block(stdout, pda, palm);
+		print_pda_block(stderr, pda, palm);
 
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
@@ -1528,7 +1528,7 @@ run_mode_Init(int argc, char *argv[])
 "\n"
 "Your .coldsyncrc should contain something like the following:\n"
 "\n"));
-		print_pda_block(stdout, pda, palm);
+		print_pda_block(stderr, pda, palm);
 	} else {
 		/* Update the user information on the Palm */
 		/* XXX - This section mostly duplicates UpdateUserInfo().
