@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.5 1999-11-10 06:48:40 arensb Exp $
+ * $Id: parser.y,v 2.6 1999-11-13 00:19:57 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -183,7 +183,6 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			exit(1);
 		}
 		cur_conduit->flavor = $2;
-		$2 = NULL;		/* Just 'cos */
 
 		PARSE_TRACE(4)
 			fprintf(stderr, "Found start of conduit [");
