@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.1 2000-05-19 12:06:07 arensb Exp $
+# $Id: sample.coldsync.rc,v 1.2 2000-06-11 06:49:28 arensb Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -103,14 +103,7 @@ pda "Default for everything else" {
 # /home/arensb/Memos into a .pdb file; when run as a Dump conduit, it
 # converts the .pdb file back into text format in /home/arensb/Memos.
 
-conduit fetch {
-	path "/usr/local/libexec/conduits/memo-text";
-	type memo/DATA;
-    arguments:
-	File:	/home/arensb/Memos
-	Delete: no
-}
-conduit dump {
+conduit fetch, dump {
 	path "/usr/local/libexec/conduits/memo-text";
 	type memo/DATA;
     arguments:
