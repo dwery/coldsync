@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.12 1999-06-06 18:20:28 arensb Exp $
+dnl # $Id: configure.in,v 1.13 1999-06-24 02:44:05 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -12,7 +12,7 @@ dnl # XXX - Test to see whether cpp accepts macro definitions with
 dnl # "..." as argument.
 
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.2.1)
+AM_INIT_AUTOMAKE(coldsync, 0.3.0)
 AM_CONFIG_HEADER(config.h)
 
 dnl # Checks for programs.
