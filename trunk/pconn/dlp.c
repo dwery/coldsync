@@ -7,10 +7,11 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.3 1999-02-22 10:46:49 arensb Exp $
+ * $Id: dlp.c,v 1.4 1999-02-24 13:12:04 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For calloc() */
+#include <string.h>		/* For memcpy() et al. */
 #include "palm/palm_types.h"
 #include "palm_errno.h"
 #include "dlp.h"
