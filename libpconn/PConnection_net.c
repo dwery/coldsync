@@ -19,6 +19,37 @@
 #include "pconn/netsync.h"
 #include "pconn/util.h"
 
+/*
+ * Moved from netsync.h to here, since it only applies to real netsyncing,
+ * not to the Palm m50x USB cradle protocol.
+
+ * The machine with the cradle is the client. It talks to the server host,
+ * which will do the actual work of syncing.
+ *
+ * The client starts out by sending one or more wakeup packets to the
+ * server, on UDP port 14237. These packets are of the form
+ *	+------+------+------+------+
+ *	|    magic    | type |   ?  |
+ *	+------+------+------+------+
+ *	| hostid                    |
+ *	+------+------+------+------+
+ *	| netmask                   |
+ *	+------+------+------+------+
+ *	| NUL-terminated hostname...
+ *	+------+------+------+------+
+ *
+ * Where <magic> is the constant 0xfade, <type> appears to be the type of
+ * request (1 == wakeup packet, 2 == ACK). <hostid> and <netmask> are the
+ * IPv4 address and netmask of the host to sync with. <hostname> is the
+ * name of the host. HotSync appears to use the address as authoritative,
+ * and presumably sends the name along mainly for the server's benefit.
+ *
+ * The server then sends back a UDP datagram with the same information,
+ * except that <type> is set to 2. The client will send up to 3 wakeup
+ * requests before giving up. Once the server has acknowledged the wakeup
+ * packet (thereby accepting  * the connection), it listens on TCP port 14238. 
+ */
+
 /* XXX - This is just for debugging, I think */
 /* INET_NTOP
  * This is a hack, intended to support both those systems that have
@@ -44,104 +75,6 @@ static int net_acknowledge_wakeup(
 	struct sockaddr_in *cliaddr,
 	socklen_t *cliaddr_len);
 static int net_tcp_listen(PConnection *pconn);
-
-/* Ritual statements
- * These packets are sent back and forth during the initial handshaking
- * phase. I don't know what they mean. The sequence is:
- * client sends UDP wakeup packet
- * server sends UDP wakeup ACK
- * client sends ritual response 1
- * server sends ritual statement 2
- * client sends ritual response 2
- * server sends ritual statement 3
- * client sends ritual response 3
- *
- * The comments are mostly conjecture and speculation.
- */
-/* XXX - Could these be CMP 2.0? When answering this question, might want
- * to keep in mind the underlying protocol, the one with the (other) XIDs,
- * implemented by netsync_read() and netsync_write().
- */
-static ubyte ritual_resp1[] = {
-	0x90,				/* Command */
-	0x01,				/* argc */
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
-	0x00, 0x00, 0x00, 0x08,		/* Arg length */
-	/* Arg data */
-	0x00, 0x00, 0x00, 0x01,
-	0x80, 0x00, 0x00, 0x00,
-};
-
-static ubyte ritual_stmt2[] = {
-	0x12,				/* Command */
-	0x01,				/* argc */
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
-	0x00, 0x00, 0x00, 0x24,		/* Arg length */
-	/* Arg data */
-	0xff, 0xff, 0xff, 0xff,
-	0x3c, 0x00,			/* These are reversed in the
-					 * response */
-	0x3c, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0xc0, 0xa8, 0xa5, 0x1f,		/* 192.168.165.31 */
-	0x04, 0x27, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-};
-
-static ubyte ritual_resp2[] = {
-	0x92,				/* Command */
-	0x01,				/* argc */
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
-	0x00, 0x00, 0x00, 0x24,		/* Arg length */
-	/* Arg data */
-	0xff, 0xff, 0xff, 0xff,
-	0x00, 0x3c,
-	0x00, 0x3c,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x01,
-	0xc0, 0xa8, 0x84, 0x3c,		/* 192.168.132.60
-					 * Presumably, this is the IP
-					 * address (or hostid) of the
-					 * sender.
-					 */
-	0x04, 0x1c, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-};
-
-static ubyte ritual_stmt3[] = {
-	0x13,				/* Command */
-	0x01,				/* argc */
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
-	0x00, 0x00, 0x00, 0x20,		/* Arg length */
-	/* Arg data
-	 * This is very similar to ritual statement/response 2.
-	 */
-	0xff, 0xff, 0xff, 0xff,
-	0x00, 0x3c,
-	0x00, 0x3c,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x01,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
-};
-
-static ubyte ritual_resp3[] = {
-	0x93,				/* Command */
-	0x00,				/* argc? */
-	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00,
-};
 
 static int
 net_bind(PConnection *pconn,
@@ -460,7 +393,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 
 	/* Exchange ritual packets with server */
 	/* Send ritual response 1 */
-	err = netsync_write(pconn, ritual_resp1, sizeof(ritual_resp1));
+	err = netsync_write(pconn, ritual_resp1, ritual_resp1_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 1) returned %d\n",
@@ -479,7 +412,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	}
 
 	/* Send ritual response 2 */
-	err = netsync_write(pconn, ritual_resp1, sizeof(ritual_resp2));
+	err = netsync_write(pconn, ritual_resp1, ritual_resp2_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 2) returned %d\n",
@@ -498,7 +431,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	}
 
 	/* Send ritual response 3 */
-	err = netsync_write(pconn, ritual_resp1, sizeof(ritual_resp3));
+	err = netsync_write(pconn, ritual_resp1, ritual_resp3_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual resp 3) returned %d\n",
@@ -861,7 +794,7 @@ net_tcp_listen(PConnection *pconn)
 	}
 
 	/* Send ritual statement 2 */
-	err = netsync_write(pconn, ritual_stmt2, sizeof(ritual_stmt2));
+	err = netsync_write(pconn, ritual_stmt2, ritual_stmt2_size);
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
 			err);
@@ -876,7 +809,7 @@ net_tcp_listen(PConnection *pconn)
 	}
 
 	/* Send ritual statement 3 */
-	err = netsync_write(pconn, ritual_stmt3, sizeof(ritual_stmt3));
+	err = netsync_write(pconn, ritual_stmt3, ritual_stmt3_size);
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
 			err);
