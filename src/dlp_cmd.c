@@ -8,8 +8,9 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.3 1999-07-14 13:53:17 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.4 1999-08-23 09:03:51 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
 #include <stdlib.h>		/* For malloc() */
@@ -519,11 +520,13 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[2];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];
-				/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	ubyte act_count = 0;	/* # card info structs returned */
+
+	if (outbuf == NULL)
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> ReadStorageInfo(%d)\n", card);
@@ -880,10 +883,12 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[128];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		outbuf = malloc(128);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -970,11 +975,15 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* Fixed size: bad! Find out the
-					 * maximum size it can be. */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be, and allocate
+		 * accordingly.
+		 */
+		outbuf = malloc(1024);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -1143,9 +1152,11 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[128];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		outbuf = malloc(128);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> DeleteDB: card %d, name \"%s\"\n",
@@ -1319,9 +1330,12 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(1024);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteAppBlock\n");
@@ -1491,9 +1505,12 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(1024);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteSortBlock\n");
@@ -1901,10 +1918,16 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	ubyte *outbuf;			/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if ((outbuf = malloc(DLPARGLEN_WriteRecord_Rec + len)) == NULL)
+	{
+		fprintf(stderr,
+			"DlpWriteRecord: Can't allocate output buffer.\n");
+		return -1;
+	}
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -1930,9 +1953,9 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	/* Construct the argument */
 	wptr = outbuf;
 	put_ubyte(&wptr, handle);
-	put_ubyte(&wptr, flags);
-		/* XXX - Flags: the Palm header says that the high bit
-		 * (0x80) should always be set. make sure it is.
+	put_ubyte(&wptr, flags | 0x80);
+		/* The Palm header says that the high bit (0x80) should
+		 * always be set.
 		 */
 	put_udword(&wptr, id);
 	put_ubyte(&wptr, attributes);
@@ -1942,7 +1965,6 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 		 * Check these and clear the forbidden bits.
 		 */
 	put_ubyte(&wptr, category);
-	/* XXX - Potential buffer overflow. */
 	memcpy(wptr, data, len);
 	wptr += len;
 
@@ -1954,7 +1976,10 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
 
 	DLPC_TRACE(10)
 		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
@@ -1963,7 +1988,10 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord,
 			    &resp_header, &ret_argv);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
 
 	DLPC_TRACE(2)
 		fprintf(stderr,
@@ -1972,7 +2000,10 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 			resp_header.argc,
 			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
+	{
+		free(outbuf);
 		return resp_header.errno;
+	}
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1990,6 +2021,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 		}
 	}
 
+	free(outbuf);
 	return 0;		/* Success */
 }
 
@@ -2091,10 +2123,13 @@ DlpReadResourceByIndex(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -2198,10 +2233,13 @@ DlpReadResourceByType(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -2302,7 +2340,7 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	ubyte *outbuf;
+	ubyte *outbuf;			/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1)
@@ -2334,6 +2372,8 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 	put_uword(&wptr, id);
 	put_uword(&wptr, size);
 	/* XXX - Potential buffer overflow */
+if (((wptr-outbuf) + size) > DLPARGLEN_WriteResource_Rsrc + size)
+fprintf(stderr, "### Buffer overflow in DlpWriteResource!\n");
 	memcpy(wptr, data, size);
 	wptr += size;
 
@@ -2620,10 +2660,13 @@ DlpCallApplication(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -3633,9 +3676,12 @@ DlpWriteAppPreference(
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Find out how big this needs to be */
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteAppPreference: XXX\n");
@@ -3818,9 +3864,12 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte *outbuf = NULL;	/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+
+	if (outbuf == NULL)
+		/* XXX - Figure out how big this needs to be */
+		outbuf = malloc(2048);
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
