@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.120 2002-03-30 14:24:13 azummo Exp $
+ * $Id: coldsync.c,v 1.121 2002-03-30 14:30:18 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -598,7 +598,15 @@ palm_Connect( void )
 static void
 palm_Disconnect( struct Palm *palm, ubyte status )
 {
-	Disconnect( palm_pconn(palm), status );
+	int err;
+
+	/* Close the connection */
+
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if((err = Disconnect(palm_pconn(palm), status)) < 0)
+		Error(_("Couldn't disconnect."));
 }
 
 static void
@@ -1313,14 +1321,7 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	/* Finally, close the connection */
-	SYNC_TRACE(3)
-		fprintf(stderr, "Closing connection to Palm\n");
-
 	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
-
-	/* XXX - should pconn = NULL be put in palm_Disconnect ?
-	 * pconn = NULL;
-	 */
 
 	/* Run Dump conduits */
 	Verbose(1, _("Running Dump conduits"));
@@ -1479,9 +1480,6 @@ run_mode_Backup(int argc, char *argv[])
 	}
 
   done:
-	/* Finally, close the connection */
-	SYNC_TRACE(3)
-		fprintf(stderr, "Closing connection to Palm\n");
 
 	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
 	palm_Free(palm);
@@ -1494,51 +1492,11 @@ run_mode_Restore(int argc, char *argv[])
 {
 	int err;
 	int i;
-	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
-	listen_block *listen;
 
-	/* Get listen block */
-	if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
-	{
-		Error(_("No port specified."));
+
+	if( (palm = palm_Connect()) == NULL )
 		return -1;
-	}
-
-	SYNC_TRACE(2)
-		fprintf(stderr, "Opening device [%s]\n",
-			listen->device);
-
-	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(listen->device,
-				     listen->listen_type,
-				     listen->protocol,
-				     PCONNFL_PROMPT |
-				     (listen->flags &
-				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
-				      0)))
-	    == NULL)
-	{
-		Error(_("Can't open connection."));
-		return -1;
-	}
-	pconn->speed = listen->speed;
-
-	/* Connect to the Palm */
-	if ((err = Connect(pconn)) < 0)
-	{
-		Error(_("Can't connect to Palm."));
-		PConnClose(pconn);
-		return -1;
-	}
-
-	/* Allocate a new Palm description */
-	if ((palm = new_Palm(pconn)) == NULL)
-	{
-		Error(_("Can't allocate struct Palm."));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
 
 	/* Parse arguments: for each argument, if it's a file, upload that
 	 * file. If it's a directory, upload all databases in that
@@ -1549,7 +1507,7 @@ run_mode_Restore(int argc, char *argv[])
 		if (is_directory(argv[i]))
 		{
 			/* Restore all databases in argv[i] */
-			err = restore_dir(pconn, palm, argv[i]);
+			err = restore_dir(palm_pconn(palm), palm, argv[i]);
 			if (err < 0)
 			{
 				switch (cs_errno)
@@ -1560,19 +1518,20 @@ run_mode_Restore(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to "
 						"Palm."));
+					palm_Free(palm);
 					return -1;
 				    default:
 					Error(_("Can't restore "
 						"directory."));
 					break;
 				}
-				Disconnect(pconn,
-					   DLPCMD_SYNCEND_CANCEL);
+				palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
+				palm_Free(palm);
 				return -1;
 			}
 		} else {
 			/* Restore the file argv[i] */
-			err = restore_file(pconn, palm, argv[i]);
+			err = restore_file(palm_pconn(palm), palm, argv[i]);
 			if (err < 0)
 			{
 				switch (cs_errno)
@@ -1583,32 +1542,24 @@ run_mode_Restore(int argc, char *argv[])
 				    case CSE_NOCONN:
 					Error(_("Lost connection to "
 						"Palm."));
+					palm_Free(palm);
 					return -1;
 				    default:
 					Error(_("Can't restore "
 						"directory."));
 					break;
 				}
-				Disconnect(pconn,
-					   DLPCMD_SYNCEND_CANCEL);
+				palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
+				palm_Free(palm);
 				return -1;
 			}
 		}
 	}
 
   done:
-	/* Finally, close the connection */
-	SYNC_TRACE(3)
-		fprintf(stderr, "Closing connection to Palm\n");
 
-	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
-	{
-		Error(_("Couldn't disconnect."));
-		return -1;
-	}
-	pconn = NULL;
-
-	free_Palm(palm);
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL );
+	palm_Free(palm);
 
 	return 0;
 }
