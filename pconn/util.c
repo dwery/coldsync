@@ -8,13 +8,13 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.3 1999-02-24 13:05:28 arensb Exp $
+ * $Id: util.c,v 1.4 1999-03-11 03:13:38 arensb Exp $
  */
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
 #include "config.h"
 #include "util.h"
-#include "palm/pdb.h"	/* For EPOCH_1904 */
+#include "coldsync/pdb.h"	/* For EPOCH_1904 */	/* XXX - this shouldn't need to refer to <coldsync/ *> */
 
 INLINE ubyte
 peek_ubyte(const ubyte *buf)
