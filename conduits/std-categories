@@ -6,6 +6,13 @@ use ColdSync;
 use ColdSync::SPC;
 use Palm::StdAppInfo;
 
+# XXX - When you delete a category on the Palm, you get a category with an
+# empty name, the same ID as before, and "renamed" set to 0.
+# The way to distinguish between a) a category that was deleted on the
+# Palm, and b) a category that was added on the desktop is this:
+#	a) "renamed" is false; ID is < 128
+#	b) "renamed" is true; ID is >= 128
+
 StartConduit("sync");
 select STDERR;		# XXX - Just for debugging
 
@@ -27,119 +34,127 @@ my %Pappinfo;			# Parsed category information from AppInfo
 				# block
 
 $Pappinfo_raw = dlp_ReadAppBlock($dbh);
-#print "raw Palm AppInfo block:\n";	# XXX - Debugging
-#&hexdump("App", $Pappinfo_raw);	# XXX - Debugging
+				# Download the AppInfo block from the Palm
 &Palm::StdAppInfo::parse_StdAppInfo(\%Pappinfo, $Pappinfo_raw);
+				# Parse the AppInfo block into a set of
+				# categories.
 
 print "* Palm categories:\n";
 &dumphash(\%Pappinfo, "");	# XXX - Debugging
 print "* Desktop categories:\n";
 &dumphash($PDB->{appinfo}, "");	# XXX - Debugging
 
-# Use the Palm's categories as a base, and insert the categories from
-# the desktop.
-my $nextID = 256;		# We may need to add new categories and IDs
-				# temporarily. This gives the next category
-				# ID to be used. Category IDs are in the
-				# range 0-255, so starting at 256 ensures
-				# that there will be no conflict.
-my $i;
+## Use the Palm's categories as a base, and insert the categories from
+## the desktop.
+#my $nextID = 256;		# We may need to add new categories and IDs
+#				# temporarily. This gives the next category
+#				# ID to be used. Category IDs are in the
+#				# range 0-255, so starting at 256 ensures
+#				# that there will be no conflict.
+#my $i;
+#
+## Start by copying all of the Palm's categories to the working set.
+#my $Pcats  = $Pappinfo{categories};
+#my $DTcats = $PDB->{appinfo}{categories};
+#
+## XXX - Merge the working set with $PDB's categories
+#for ($i = 0; $i < Palm::StdAppInfo::numCategories; $i++)
+#{
+#	# Ignore unassigned categories
+#	next if !defined($Pcats->[$i]{name}) or
+#		($Pcats->[$i]{name} eq "");
+#
+#	# Compare this Palm category to the ones on the desktop
+#	# XXX - This whole comparison is currently O(n^2). It should be
+#	# possible to do better.
+#	# (Okay, technically, since both sets are bounded, this is O(1),
+#	# but still, it'd be nice to do better.)
+#	my $j;
+#
+#	for ($j = 0; $j < Palm::StdAppInfo::numCategories; $j++)
+#	{
+#		next if (!defined($DTcats->[$j]{name})) or
+#			($DTcats->[$i]{name} eq "");
+#		if ($Pcats->[$i]{name} eq $DTcats->[$j]{name})
+#		{
+#			# Found a category with the same name.
+#			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
+#			{
+#				# Name and ID match. This is the same
+#				# category.
+#				# XXX - What if $i != $j ?
+#			} else {
+#				# Name matches, ID doesn't. Since the user
+#				# most is interested in names, not IDs,
+#				# this is considered to be the same
+#				# category. Fix one of the IDs to match the
+#				# other.
+#				# XXX - What if $i != $j ?
+#				$DTcats->[$j]{id} = $Pcats->[$i]{id};
+#			}
+#
+#			# Clear the "renamed" flags in case they were set.
+#			$Pcats->[$i]{renamed} = 0;
+#			$DTcats->[$j]{renamed} = 0;
+#		} else {
+#			# The category name doesn't match. This could still
+#			# be the same category, if one of the copies has
+#			# the 'renamed' flag set, and they have the same ID.
+#			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
+#			{
+#				# Different name, same ID
+#				if ($Pcats->[$i]{renamed})
+#				{
+#					# Different name, same ID, and the
+#					# Palm category was renamed. Change
+#					# the name on the desktop.
+#					# XXX
+#				} elsif ($DTcats->[$j]{renamed})
+#				{
+#					# Different name, same ID, and the
+#					# desktop category was renamed.
+#					# Change the name on the Palm.
+#					# XXX
+#				} else {
+#					# Different name, same ID, but
+#					# neither category was renamed.
+#					# Change the ID on the desktop so
+#					# that it doesn't conflict.
+#					# XXX
+#				}
+#			} else {
+#				# Different name, different ID. These are
+#				# different categories. Nothing to do.
+#			}
+#		}
+#	}
+#}
+#
+## XXX - Find new categories on the desktop
+#
+## Recreate the AppInfo block with category names and IDs from the working
+## set.
+##  @{$Pappinfo{categories}} = ();
+##  @{$Pappinfo{uniqueIDs}} = ();
+##  for ($i = 0; $i <= $#work; $i++)
+##  {
+##  	push @{$Pappinfo{uniqueIDs}}, $work[$i]->[0];
+##  	push @{$Pappinfo{categories}}, $work[$i]->[1];
+##  }
+##  $Pappinfo{renamed} = 0;
 
-# Start by copying all of the Palm's categories to the working set.
-my $Pcats  = $Pappinfo{categories};
-my $DTcats = $PDB->{appinfo}{categories};
-
-# XXX - Merge the working set with $PDB's categories
-for ($i = 0; $i < Palm::StdAppInfo::numCategories; $i++)
+for (@{$Pappinfo{categories}})
 {
-	# Ignore unassigned categories
-	next if !defined($Pcats->[$i]{name}) or
-		($Pcats->[$i]{name} eq "");
-
-	# Compare this Palm category to the ones on the desktop
-	# XXX - This whole comparison is currently O(n^2). It should be
-	# possible to do better.
-	# (Okay, technically, since both sets are bounded, this is O(1),
-	# but still, it'd be nice to do better.)
-	my $j;
-
-	for ($j = 0; $j < Palm::StdAppInfo::numCategories; $j++)
-	{
-		next if (!defined($DTcats->[$j]{name})) or
-			($DTcats->[$i]{name} eq "");
-		if ($Pcats->[$i]{name} eq $DTcats->[$j]{name})
-		{
-			# Found a category with the same name.
-			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
-			{
-				# Name and ID match. This is the same
-				# category.
-				# XXX - What if $i != $j ?
-			} else {
-				# Name matches, ID doesn't. Since the user
-				# most is interested in names, not IDs,
-				# this is considered to be the same
-				# category. Fix one of the IDs to match the
-				# other.
-				# XXX - What if $i != $j ?
-				$DTcats->[$j]{id} = $Pcats->[$i]{id};
-			}
-
-			# Clear the "renamed" flags in case they were set.
-			$Pcats->[$i]{renamed} = 0;
-			$DTcats->[$j]{renamed} = 0;
-		} else {
-			# The category name doesn't match. This could still
-			# be the same category, if one of the copies has
-			# the 'renamed' flag set, and they have the same ID.
-			if ($Pcats->[$i]{id} == $DTcats->[$j]{id})
-			{
-				# Different name, same ID
-				if ($Pcats->[$i]{renamed})
-				{
-					# Different name, same ID, and the
-					# Palm category was renamed. Change
-					# the name on the desktop.
-					# XXX
-				} elsif ($DTcats->[$j]{renamed})
-				{
-					# Different name, same ID, and the
-					# desktop category was renamed.
-					# Change the name on the Palm.
-					# XXX
-				} else {
-					# Different name, same ID, but
-					# neither category was renamed.
-					# Change the ID on the desktop so
-					# that it doesn't conflict.
-					# XXX
-				}
-			} else {
-				# Different name, different ID. These are
-				# different categories. Nothing to do.
-			}
-		}
-	}
+	print "$_ -> $_->{renamed}\n";
+	$_->{renamed} = undef;
 }
 
-# XXX - Find new categories on the desktop
-
-# Recreate the AppInfo block with category names and IDs from the working
-# set.
-#  @{$Pappinfo{categories}} = ();
-#  @{$Pappinfo{uniqueIDs}} = ();
-#  for ($i = 0; $i <= $#work; $i++)
-#  {
-#  	push @{$Pappinfo{uniqueIDs}}, $work[$i]->[0];
-#  	push @{$Pappinfo{categories}}, $work[$i]->[1];
-#  }
-#  $Pappinfo{renamed} = 0;
-#  $Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
-&hexdump("New app", $Pappinfo_raw);
+$Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
+#&hexdump("New app", $Pappinfo_raw);
 
 # Upload the AppInfo block to the Palm.
 # XXX - Don't do this just yet
-#$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
+$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
 
 $err = &dlp_CloseDB($dbh);
 
