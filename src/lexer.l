@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.57 2002-12-30 18:15:03 arensb Exp $
+ * $Id: lexer.l,v 2.58 2003-06-26 20:56:27 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -195,6 +195,7 @@ QSTR		[^\\\$\"\n]
 "username"	{ KEYWORD(USERNAME);	}
 "Chosen"	{ KEYWORD(SAVED);	}
 "Heathen"	{ KEYWORD(UNSAVED);	}
+"use_card_serial" { KEYWORD(USE_CARD_SERIAL); }
 
  /* Boolean values */
 [Tt]"rue"	{ KEYWORD(TRUE);	}
@@ -395,7 +396,7 @@ QSTR		[^\\\$\"\n]
 
  /* Octal character: \0123 */
 <QSTRING>\\0{ODIGIT}{1,3} {
-	int char_value;
+	unsigned int char_value;
 	char buf[2];		/* Dummy buffer, for qstr_append() */
 
 	sscanf(yytext+2, "%3o", &char_value);
@@ -410,7 +411,7 @@ QSTR		[^\\\$\"\n]
   * convert entirely to wide characters internally first.
   */
 <QSTRING>\\x{XDIGIT}{2} {
-	int char_value;
+	unsigned int char_value;
 	char buf[2];		/* Dummy buffer, for qstr_append */
 
 	sscanf(yytext+2, "%2x", &char_value);
