@@ -1,0 +1,103 @@
+# Makefile.in
+# $Id: Makefile.in,v 1.1 1999-07-04 13:40:32 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	src
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+
+CC =		@CC@
+DEFS =		@DEFS@
+INCLUDES =	-I${top_srcdir}
+CFLAGS =	${DEFS} ${INCLUDES} @CFLAGS@
+# CPPFLAGS =	@CPPFLAGS@ ${INCLUDES}
+LDFLAGS =	@LDFLAGS@
+
+# Compatibility functions, included for systems that don't have them.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		PConnection.c \
+		util.c \
+		slp.c \
+		cmp.c \
+		padp.c \
+		dlp.c \
+		dlp_cmd.c \
+		palm_errno.c \
+		pdb.c \
+		coldsync.c \
+		archive.c \
+		backup.c \
+		upload.c \
+		config.c \
+		handledb.c \
+		log.c \
+		conduit.c \
+		GenericConduit.cc \
+		sync.c \
+		@COMPAT@
+
+OBJS =		PConnection.o \
+		util.o \
+		slp.o \
+		cmp.o \
+		padp.o \
+		dlp.o \
+		dlp_cmd.o \
+		palm_errno.o \
+		pdb.o \
+		coldsync.o \
+		archive.o \
+		backup.o \
+		upload.o \
+		config.o \
+		handledb.o \
+		log.o \
+		conduit.o \
+		GenericConduit.o \
+		sync.o \
+		@COMPATOBJS@
+
+HEADERS =	GenericConduit.hh \
+		PConnection.h \
+		archive.h \
+		cmp.h \
+		coldsync.h \
+		conduit.h \
+		dlp.h \
+		dlp_cmd.h \
+		palm_errno.h \
+		pdb.h \
+		slp.h \
+		util.h
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in \
+		cfmakeraw.c
+
+CLEAN =		coldsync ${OBJS} *.bak *~ core *.core
+DISTCLEAN =	Makefile
+SPOTLESS =
+
+all:	coldsync
+
+coldsync:	${OBJS}
+	${CXX} ${CFLAGS} ${OBJS} -o $@ ${LDFLAGS}
+
+distdir:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
