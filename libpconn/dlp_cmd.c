@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.38 2003-08-05 13:29:22 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.39 2003-08-15 09:51:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -32,7 +32,6 @@
 #endif	/* STDC_HEADERS */
 
 #include <stdlib.h>		/* For malloc() */
-#include <netinet/in.h>
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
