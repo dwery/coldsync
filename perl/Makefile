@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2000-11-10 03:36:24 arensb Exp $
+# $Id: Makefile,v 1.10 2002-03-10 01:41:53 arensb Exp $
 
 TOP =		..
 SUBDIR =	perl
@@ -17,12 +17,12 @@ RECURSIVE_TARGETS =	\
 		all depend clean distclean spotless distfiles-core distfiles \
 		install lint TAGS
 
-${RECURSIVE_TARGETS}::	ColdSync/Makefile
+#${RECURSIVE_TARGETS}::	ColdSync/Makefile
 
 include ${TOP}/Make.rules
 
-ColdSync/Makefile:	ColdSync/Makefile.PL
-	cd ColdSync && ${PERL} Makefile.PL
+#ColdSync/Makefile:	ColdSync/Makefile.PL
+#	cd ColdSync && ${PERL} Makefile.PL
 
 # This is for Emacs's benefit:
 # Local Variables:	***
