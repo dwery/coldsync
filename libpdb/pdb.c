@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.8 1999-11-29 02:53:07 arensb Exp $
+ * $Id: pdb.c,v 1.9 1999-12-02 09:15:36 arensb Exp $
  */
 
 #include "config.h"
@@ -1198,6 +1198,16 @@ new_Record(const ubyte attributes,
 	retval->id = id;
 
 	/* Allocate space to put the record data */
+	if (len == 0)
+	{
+		/* Special case: the record has no data (e.g., this is an
+		 * expunged record).
+		 */
+		retval->data_len = len;
+		retval->data = NULL;
+		return retval;
+	}
+
 	if ((retval->data = (ubyte *) malloc(len)) == NULL)
 	{
 		/* Couldn't allocate data portion of record */
