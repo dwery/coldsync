@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 1.1.2.5 2000-09-03 02:32:09 arensb Exp $
+ * $Id: pref.c,v 1.1.2.6 2000-09-03 03:12:27 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -259,7 +259,7 @@ DownloadPrefItem(struct PConnection *pconn,
 	}
 
 	/* Now we allocate the right amount of space */
-	if ((contents = calloc(sizeof *contents,contents_info->size)) == NULL)
+	if ((contents = calloc(contents_info->size, sizeof *contents)) == NULL)
 	{
 	    fprintf(stderr, _("%s: Out of memory.\n"),"DownloadPrefItem");
 	    free(contents_info);
@@ -315,8 +315,8 @@ FindPrefItem(const struct pref_desc *description,
 	 */
 	for (; list != NULL; list = list->next)
 	{
-		if ((description->creator == list->creator) &&
-		    (description->id == list->id))
+		if ((description->creator == list->description.creator) &&
+		    (description->id == list->description.id))
 			/* Found it */
 			return list;
 	}
