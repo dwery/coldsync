@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2001-12-09 19:30:00 arensb Exp $
+# $Id: Makefile,v 1.16 2001-12-09 22:45:26 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -89,16 +89,37 @@ include ${TOP}/Make.rules
 
 all::	${INFOFILES}
 
+# There are two parts to installing man pages:
+# The first part installs foo.3 as /usr/local/man/man3/foo.3
+# Then, the awk script looks for all .Nm lines before the first .Nd line,
+# and prints them. This gives us the list of all
+# functions/programs/whatever documented in that man page. Drop the first
+# one (since that's a real man file), and make symlinks for all of the
+# others.
 install::	coldsync.8 ${INFOFILES}
 	-${MKDIR} ${MAN3DIR}
 	@for i in ${MAN3FILES}; do \
 		echo "${INSTALL_MAN} $$i ${MAN3DIR}/$$i"; \
 		${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
+		set `awk '/^\.Nm/ { print $$2 } /^\.Nd/ {exit 0}' $$i`; \
+		echo "Synonyms for $$i are $$*"; \
+		shift; \
+		for j in "$$@"; do \
+			echo "ln -s -f $$i ${MAN3DIR}/$$j.3"; \
+			ln -s -f "$$i" "${MAN3DIR}/$$j.3"; \
+		done; \
 	done
 	-${MKDIR} ${MAN8DIR}
 	@for i in ${MAN8FILES}; do \
 		echo ${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
 		${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
+		set `awk '/^\.Nm/ { print $$2 } /^\.Nd/ {exit 0}' $$i`; \
+		echo "Synonyms for $$i are $$*"; \
+		shift; \
+		for j in "$$@"; do \
+			echo "ln -s -f $$i ${MAN8DIR}/$$j.8"; \
+			ln -s -f "$$i" "${MAN8DIR}/$$j.8"; \
+		done; \
 	done
 	-${MKDIR} ${SYSCONFDIR}
 	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
