@@ -168,7 +168,7 @@ net_accept(struct PConnection *p)
 	return 0;
 }
 
-int
+static int
 net_close(struct PConnection *p)
 {
 	/* Clean up the protocol stack elements */
@@ -238,7 +238,6 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 	/* Set the methods used by the network connection */
 	pconn->io_read = &net_read;
 	pconn->io_write = &net_write;
-fprintf(stderr, "set io_write to &net_write\n");
 	pconn->io_accept = &net_accept;
 	pconn->io_close = &net_close;
 	pconn->io_select = &net_select;
@@ -335,7 +334,7 @@ net_udp_listen(struct PConnection *pconn,
   retry:
 	cliaddr_len = sizeof(cliaddr);
 	len = recvfrom(pconn->fd, buf, sizeof(buf), 0,
-		       &cliaddr, &cliaddr_len);
+		       (struct sockaddr *) &cliaddr, &cliaddr_len);
 
 	fprintf(stderr, "recvfrom() returned %d\n", len);
 	if (len < 0)
@@ -415,7 +414,8 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 	pkt_len = wptr - outbuf;
 
 	fprintf(stderr, "Sending acknowledgment.\n");
-	err = sendto(pconn->fd, outbuf, pkt_len, 0, &cliaddr, cliaddr_len);
+	err = sendto(pconn->fd, outbuf, pkt_len, 0,
+		     (struct sockaddr *) &cliaddr, cliaddr_len);
 	if (err < 0)
 	{
 		perror("sendto");
