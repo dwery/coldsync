@@ -51,7 +51,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.2 1999-02-22 11:02:14 arensb Exp $
+ * $Id: padp.h,v 1.3 1999-03-11 03:15:11 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
@@ -75,9 +75,6 @@
 #define PADP_MAX_PACKET_LEN	1024	/* Max. length of a single
 					 * PADP packet (not including
 					 * the PADP header). */
-#define PADP_MAX_MESSAGE_LEN	64*1024	/* Max. length of a complete
-					 * PADP message (multiple
-					 * fragments. */
 #define PADP_MAX_RETRIES	10	/* # of times to try sending a
 					 * packet. */
 #define PADP_ACK_TIMEOUT	2	/* # seconds to wait for an ACK */
