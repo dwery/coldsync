@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.18 2000-03-14 06:17:32 arensb Exp $
+ * $Id: coldsync.h,v 1.19 2000-04-09 14:24:08 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -48,6 +48,14 @@ struct userinfo
 	char homedir[MAXPATHLEN];	/* Home directory */
 };
 
+#define SNUM_MAX	32		/* Max. length of serial number
+					 * information, including the
+					 * terminating NUL that we'll add.
+					 * AFAIK, all Palms have 12-digit
+					 * serial numbers, but hey, it
+					 * might change.
+					 */
+
 /* Palm
  * Information about the Palm being currently synced.
  */
@@ -57,6 +65,9 @@ struct Palm
 	struct dlp_userinfo userinfo;	/* User information */
 	struct dlp_netsyncinfo netsyncinfo;
 					/* NetSync information */
+
+	unsigned char serial[SNUM_MAX];	/* Serial number */
+	char serial_len;		/* Length of serial number */
 
 	/* Memory information */
 	int num_cards;			/* # memory cards */
