@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.35 2000-12-16 19:52:03 arensb Exp $
+ * $Id: parser.y,v 2.36 2000-12-24 09:47:39 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -100,6 +100,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %type <crea_type> creator_type
 %type <string> opt_name
 %type <integer> opt_pref_flag
+%type <string> opt_string
 
 /* Conduit flavors */
 %token SYNC
@@ -955,6 +956,51 @@ pda_directive:
 		cur_pda->userid_given = True;
 		cur_pda->userid = $3;
 	}
+	| FORWARD opt_colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	opt_string semicolon
+	{
+		/* Found a "forward:" directive.
+		 * forward: *;
+		 *	Forward to wherever the Palm says.
+		 * forward: hostname;
+		 *	Forward to <hostname>.
+		 * forward: hostname alias;
+		 *	Forward to <hostname> and use <alias> in the
+		 *	NetSync wakeup packet.
+		 */
+		PARSE_TRACE(4)
+			fprintf(stderr, "Forward \"%s\" \"%s\"\n",
+				$4, ($6 == NULL ? "(null)" : $6));
+		lex_expect(0);
+
+		cur_pda->forward = True;
+
+		/* Get the name of the host to forward to */
+		if (strcmp($4, "*") == 0)
+		{
+			/* forward: *;
+			 * means "forward to whatever the Palm says.
+			 */
+			cur_pda->forward_host = NULL;
+		} else {
+			cur_pda->forward_host = $4;
+			$4 = NULL;
+		}
+
+		/* Get the name to use in the connection */
+		if ($6 != NULL)
+		{
+			cur_pda->forward_name = $6;
+			$6 = NULL;
+		}
+	}
 	| DEFAULT semicolon
 	{
 		PARSE_TRACE(4)
@@ -973,6 +1019,12 @@ pda_directive:
 	}
 	';'
 	;
+
+opt_string:	STRING
+	|	/* Empty */
+	{
+		$$ = NULL;
+	}
 
  /* XXX - Added in 1.1.10, Sat May 20 14:21:43 2000. Make the colon
   * mandatory at some point.
