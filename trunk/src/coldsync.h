@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.42 2000-11-28 00:46:24 arensb Exp $
+ * $Id: coldsync.h,v 1.43 2000-12-08 06:30:16 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -283,9 +283,25 @@ extern char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 extern struct sync_config *sync_config;
 
 /* Function prototypes */
+/* coldsync.c */
+extern int dbinfo_fill(struct dlp_dbinfo *dbinfo,
+		       struct pdb *pdb);
+extern char snum_checksum(const char *snum, int len);
+extern int open_tempfile(char *name_template);
+
+/* config.c */
+extern int parse_args(int argc, char *argv[]);
+extern int load_config(void);
+extern void print_version(void);
+extern int get_hostid(udword *hostid);
+extern void print_pda_block(FILE *outfile,
+			    const pda_block *pda,
+			    struct Palm *palm);
+extern pda_block *find_pda_block(struct Palm *palm,
+				 const Bool check_user);
+extern int make_sync_dirs(const char *basedir);
 extern struct sync_config *new_sync_config(void);
 extern void free_sync_config(struct sync_config *config);
-extern int parse_config_file(const char *fname, struct sync_config *config);
 extern listen_block *new_listen_block(void);
 extern void free_listen_block(listen_block *l);
 extern conduit_block *new_conduit_block(void);
@@ -299,39 +315,37 @@ extern int append_pref_desc(conduit_block *cond,
 extern int append_crea_type(conduit_block *cond,
 			    const udword creator,
 			    const udword type);
-extern int Connect(struct PConnection *pconn);
-extern int Disconnect(struct PConnection *pconn, const ubyte status);
-extern int run_mode_Standalone(int argc, char *argv[]);
-extern int run_mode_Backup(int argc, char *argv[]);
-extern int run_mode_Restore(int argc, char *argv[]);
-extern int run_mode_Init(int argc, char *argv[]);
+
+/* backup.c */
 extern int backup(struct PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
 extern int full_backup(struct PConnection *pconn,
 		       struct Palm *palm,
 		       const char *backupdir);
+
+/* restore.c */
 extern int restore_file(struct PConnection *pconn,
 			struct Palm *palm,
 			const char *fname);
 extern int restore_dir(struct PConnection *pconn,
 		       struct Palm *palm,
 		       const char *dirname);
+
+/* install.c */
 extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
 extern int InstallNewFiles(struct PConnection *pconn,
 			   struct Palm *palm,
 			   char *newdir,
 			   Bool deletep);
-extern void usage(int argc, char *argv[]);
-extern void print_version(void);
-extern void print_pda_block(FILE *outfile,
-			    const pda_block *pda,
-			    struct Palm *palm);
-extern pda_block *find_pda_block(struct Palm *palm,
-				 const Bool check_user);
-extern int make_sync_dirs(const char *basedir);
-extern void set_debug_level(const char *str);
-extern int set_mode(const char *str);
+
+/* log.c */
+extern int add_to_log(const char *msg);
+
+/* parser.y */
+extern int parse_config_file(const char *fname, struct sync_config *config);
+
+/* misc.c */
 extern const char *mkfname(const char *first, ...);
 extern const char *mkpdbname(const char *dirname,
 			     const struct dlp_dbinfo *dbinfo,
@@ -345,13 +359,6 @@ extern const Bool lexists(const char *fname);
 extern const Bool is_file(const char *fname);
 extern const Bool is_directory(const char *fname);
 extern const Bool is_database_name(const char *fname);
-extern int dbinfo_fill(struct dlp_dbinfo *dbinfo,
-		       struct pdb *pdb);
-extern char snum_checksum(const char *snum, int len);
-extern int open_tempfile(char *name_template);
-extern int parse_args(int argc, char *argv[]);
-extern int load_config(void);
-extern int add_to_log(const char *msg);
 
 #endif	/* _coldsync_h_ */
 
