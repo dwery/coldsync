@@ -135,11 +135,8 @@ Redhat Linux 6.1:
 	This can be ignored.
 
 Solaris 2.6:
-	(as of v1.1.8)
+	(as of v1.2.0)
 	Compiles cleanly with gcc 2.8.1.
-
-	Doesn't compile with 'lex'. Compiles cleanly with 'flex',
-	though.
 
 	(as of ColdSync v1.1.4)
 	Compiles cleanly with gcc 2.8.1. Runs fine.
@@ -170,6 +167,10 @@ AIX 4.1:
 	thing happens when compiling "Hello, world").
 
 	I've only compiled it. I don't know whether it actually runs.
+
+If you have any updated information, please send it in to the
+maintainer (arensb@ooblick.com). My testing pool isn't as large as it
+once was.
 
 	       ----------------------------------------
 
