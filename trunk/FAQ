@@ -106,17 +106,28 @@ A: Preferences, such as your e-mail signature, your preferred time and date
    the last sync, and you can't have more than one copy of each one.
 
 Q: Does ColdSync work with the Handspring Visor?
-A: From several accounts, yes, at least under FreeBSD and Linux.
-	Under FreeBSD 4.x, use /dev/ugen0 as the device, and specify
-   "listen usb" in your .coldsyncrc . ColdSync should find the Visor on
-   its own.
+A: Yes.
+A: Under FreeBSD 4.x, use
+
+	listen usb {
+		device: /dev/ugen0;
+	}
+
+   in your .coldsyncrc . If you want to run ColdSync from usbd, use the
+   following /etc/usbd.conf entry:
+
+	device "Handspring Visor"
+	vendor 0x082d
+	product 0x0100
+	release 0x0100
+	attach "/usr/local/bin/coldsync -s -md -t usb ${DEVNAME}"
 
 	Linux users can follow the instructions at
    http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
    Then sync with /dev/ttyUSB1. In the .coldsyncrc, use "listen serial",
    since ColdSync won't be accessing the USB port directly.
-	(Thanks to alert reader Shawn Sorichetti <ssoriche@home.com> for
-   this information.)
+	(Thanks to alert readers Shawn Sorichetti <ssoriche@home.com> and
+   Gaspar Chilingarov <nm@web.am> for this information.)
 
 Q: Does ColdSync support syncing via the infrared port?
 A: Not directly, but yes.
