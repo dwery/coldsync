@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: pdb.c,v 1.2 1999-07-12 09:27:30 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>		/* For strncat() et al. */
+#include "coldsync.h"
 #include "palm_types.h"
 #include "util.h"
 #include "pdb.h"
@@ -411,7 +412,7 @@ pdb_Write(const struct pdb *db,
 		/* It's a record database */
 		struct pdb_record *rec;		/* Current record */
 
-		/* Go through the list of resources, writing each one */
+		/* Go through the list of records, writing each one */
 		for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
 		{
 			static ubyte recbuf[PDB_RECORDIX_LEN];
@@ -569,27 +570,32 @@ pdb_Download(struct PConnection *pconn,
 	retval->creator = dbinfo->creator;
 	retval->uniqueIDseed = 0L;	/* XXX - Should this be something
 					 * else? */
-fprintf(stderr, "pdb_Download:\n");
-fprintf(stderr, "\tname: \"%s\"\n", retval->name);
-fprintf(stderr, "\tattributes: 0x%04x\n", retval->attributes);
-fprintf(stderr, "\tversion: %d\n", retval->version);
-fprintf(stderr, "\tctime: %ld\n", retval->ctime);
-fprintf(stderr, "\tmtime: %ld\n", retval->mtime);
-fprintf(stderr, "\tbaktime: %ld\n", retval->baktime);
-fprintf(stderr, "\tmodnum: %ld\n", retval->modnum);
-fprintf(stderr, "\tappinfo_offset: %ld\n", retval->appinfo_offset);
-fprintf(stderr, "\tsortinfo_offset: %ld\n", retval->sortinfo_offset);
-fprintf(stderr, "\ttype: '%c%c%c%c'\n",
-	(char) ((retval->type >> 24) & 0xff),
-	(char) ((retval->type >> 16) & 0xff),
-	(char) ((retval->type >> 8) & 0xff),
-	(char) (retval->type & 0xff));
-fprintf(stderr, "\tcreator: '%c%c%c%c'\n",
-	(char) ((retval->creator >> 24) & 0xff),
-	(char) ((retval->creator >> 16) & 0xff),
-	(char) ((retval->creator >> 8) & 0xff),
-	(char) (retval->creator & 0xff));
-fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->uniqueIDseed);
+	SYNC_TRACE(4)
+	{
+		fprintf(stderr, "pdb_Download:\n");
+		fprintf(stderr, "\tname: \"%s\"\n", retval->name);
+		fprintf(stderr, "\tattributes: 0x%04x\n", retval->attributes);
+		fprintf(stderr, "\tversion: %d\n", retval->version);
+		fprintf(stderr, "\tctime: %ld\n", retval->ctime);
+		fprintf(stderr, "\tmtime: %ld\n", retval->mtime);
+		fprintf(stderr, "\tbaktime: %ld\n", retval->baktime);
+		fprintf(stderr, "\tmodnum: %ld\n", retval->modnum);
+		fprintf(stderr, "\tappinfo_offset: %ld\n",
+			retval->appinfo_offset);
+		fprintf(stderr, "\tsortinfo_offset: %ld\n",
+			retval->sortinfo_offset);
+		fprintf(stderr, "\ttype: '%c%c%c%c'\n",
+			(char) ((retval->type >> 24) & 0xff),
+			(char) ((retval->type >> 16) & 0xff),
+			(char) ((retval->type >> 8) & 0xff),
+			(char) (retval->type & 0xff));
+		fprintf(stderr, "\tcreator: '%c%c%c%c'\n",
+			(char) ((retval->creator >> 24) & 0xff),
+			(char) ((retval->creator >> 16) & 0xff),
+			(char) ((retval->creator >> 8) & 0xff),
+			(char) (retval->creator & 0xff));
+		fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->uniqueIDseed);
+	}
 
 	/* Get the database record/resource index header info */
 	/* Find out how many records/resources there are in this database */
@@ -604,8 +610,11 @@ fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->uniqueIDseed);
 	}
 	retval->next_reclistID = 0L;
 	retval->numrecs = opendbinfo.numrecs;
-fprintf(stderr, "\n\tnextID: %ld\n", retval->next_reclistID);
-fprintf(stderr, "\tlen: %d\n", retval->numrecs);
+	SYNC_TRACE(4)
+	{
+		fprintf(stderr, "\n\tnextID: %ld\n", retval->next_reclistID);
+		fprintf(stderr, "\tlen: %d\n", retval->numrecs);
+	}
 
 	/* Try to get the AppInfo block */
 	err = DlpReadAppBlock(pconn, dbh, 0, DLPC_APPBLOCK_TOEND,
@@ -627,14 +636,20 @@ fprintf(stderr, "\tlen: %d\n", retval->numrecs);
 		memcpy(retval->appinfo, rptr, appinfo_len);
 					/* Copy the AppInfo block */
 		retval->appinfo_len = appinfo_len;
-fprintf(stderr, "pdb_Download: got an AppInfo block\n");
-/*  debug_dump(stderr, "APP", retval->appinfo, retval->appinfo_len); */
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"pdb_Download: got an AppInfo block\n");
+		SYNC_TRACE(6)
+			debug_dump(stderr, "APP", retval->appinfo,
+				   retval->appinfo_len);
 		break;
 	    case DLPSTAT_NOTFOUND:
 		/* This database doesn't have an AppInfo block */
 		retval->appinfo_len = 0;
 		retval->appinfo = NULL;
-fprintf(stderr, "pdb_Download: this db doesn't have an AppInfo block\n");
+		SYNC_TRACE(5)
+			fprintf(stderr, "pdb_Download: this db doesn't have "
+				"an AppInfo block\n");
 		break;
 	    default:
 		fprintf(stderr, "*** Can't read AppInfo block for %s: %d\n",
@@ -683,7 +698,10 @@ fprintf(stderr, "pdb_Download: this db doesn't have an AppInfo block\n");
 		err = pdb_DownloadResources(pconn, dbh, retval);
 	else
 		err = pdb_DownloadRecords(pconn, dbh, retval);
-
+	SYNC_TRACE(7)
+		fprintf(stderr,
+			"After pdb_Download{Resources,Records}; err == %d\n",
+			err);
 	if (err < 0)
 	{
 		fprintf(stderr, "Can't download record or resource index\n");
@@ -1070,7 +1088,8 @@ struct pdb_resource *pdb_CopyResource(
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 	{
-		fprintf(stderr, "pdb_CopyResource: can't allocate resource data.\n");
+		fprintf(stderr,
+			"pdb_CopyResource: can't allocate resource data.\n");
 		free(retval);
 		return NULL;
 	}
@@ -1118,7 +1137,6 @@ pdb_LoadHeader(int fd,
 	static ubyte buf[PDB_HEADER_LEN];
 				/* Buffer to hold the file header */
 	const ubyte *rptr;	/* Pointer into buffers, for reading */
-/*  time_t t; */
 
 	/* Read the header */
 	if ((err = read(fd, buf, PDB_HEADER_LEN)) != PDB_HEADER_LEN)
@@ -1143,50 +1161,50 @@ pdb_LoadHeader(int fd,
 	db->creator = get_udword(&rptr);
 	db->uniqueIDseed = get_udword(&rptr);
 
-/* XXX - These printf() statements should be controlled by a
- * debugging flag.
- */
-#if 0
-printf("\tname: \"%s\"\n", db->name);
-printf("\tattributes: 0x%04x", db->attributes);
-if (db->attributes & PDB_ATTR_RESDB) printf(" RESDB");
-if (db->attributes & PDB_ATTR_RO) printf(" RO");
-if (db->attributes & PDB_ATTR_APPINFODIRTY)
-	 printf(" APPINFODIRTY");
-if (db->attributes & PDB_ATTR_BACKUP) printf(" BACKUP");
-if (db->attributes & PDB_ATTR_OKNEWER) printf(" OKNEWER");
-if (db->attributes & PDB_ATTR_RESET) printf(" RESET");
-if (db->attributes & PDB_ATTR_OPEN) printf(" OPEN");
-printf("\n");
-printf("\tversion: %u\n", db->version);
-t = db->ctime - EPOCH_1904;
-printf("\tctime: %lu %s", db->ctime,
-	ctime(&t));
-t = db->mtime - EPOCH_1904;
-printf("\tmtime: %lu %s", db->mtime,
-	ctime(&t));
-t = db->baktime - EPOCH_1904;
-printf("\tbaktime: %lu %s", db->baktime,
-	ctime(&t));
-printf("\tmodnum: %ld\n", db->modnum);
-printf("\tappinfo_offset: 0x%08lx\n",
-	db->appinfo_offset);
-printf("\tsortinfo_offset: 0x%08lx\n",
-	db->sortinfo_offset);
-printf("\ttype: '%c%c%c%c' (0x%08lx)\n",
-	(char) (db->type >> 24) & 0xff,
-	(char) (db->type >> 16) & 0xff,
-	(char) (db->type >> 8) & 0xff,
-	(char) db->type & 0xff,
-	db->type);
-printf("\tcreator: '%c%c%c%c' (0x%08lx)\n",
-	(char) (db->creator >> 24) & 0xff,
-	(char) (db->creator >> 16) & 0xff,
-	(char) (db->creator >> 8) & 0xff,
-	(char) db->creator & 0xff,
-	db->creator);
-printf("\tuniqueIDseed: %ld\n", db->uniqueIDseed);
-#endif	/* 0 */
+	SYNC_TRACE(5)
+	{
+		time_t t;
+
+		printf("\tname: \"%s\"\n", db->name);
+		printf("\tattributes: 0x%04x", db->attributes);
+		if (db->attributes & PDB_ATTR_RESDB) printf(" RESDB");
+		if (db->attributes & PDB_ATTR_RO) printf(" RO");
+		if (db->attributes & PDB_ATTR_APPINFODIRTY)
+			printf(" APPINFODIRTY");
+		if (db->attributes & PDB_ATTR_BACKUP) printf(" BACKUP");
+		if (db->attributes & PDB_ATTR_OKNEWER) printf(" OKNEWER");
+		if (db->attributes & PDB_ATTR_RESET) printf(" RESET");
+		if (db->attributes & PDB_ATTR_OPEN) printf(" OPEN");
+		printf("\n");
+		printf("\tversion: %u\n", db->version);
+		t = db->ctime - EPOCH_1904;
+		printf("\tctime: %lu %s", db->ctime,
+		       ctime(&t));
+		t = db->mtime - EPOCH_1904;
+		printf("\tmtime: %lu %s", db->mtime,
+		       ctime(&t));
+		t = db->baktime - EPOCH_1904;
+		printf("\tbaktime: %lu %s", db->baktime,
+		       ctime(&t));
+		printf("\tmodnum: %ld\n", db->modnum);
+		printf("\tappinfo_offset: 0x%08lx\n",
+		       db->appinfo_offset);
+		printf("\tsortinfo_offset: 0x%08lx\n",
+		       db->sortinfo_offset);
+		printf("\ttype: '%c%c%c%c' (0x%08lx)\n",
+		       (char) (db->type >> 24) & 0xff,
+		       (char) (db->type >> 16) & 0xff,
+		       (char) (db->type >> 8) & 0xff,
+		       (char) db->type & 0xff,
+		       db->type);
+		printf("\tcreator: '%c%c%c%c' (0x%08lx)\n",
+		       (char) (db->creator >> 24) & 0xff,
+		       (char) (db->creator >> 16) & 0xff,
+		       (char) (db->creator >> 8) & 0xff,
+		       (char) db->creator & 0xff,
+		       db->creator);
+		printf("\tuniqueIDseed: %ld\n", db->uniqueIDseed);
+	}
 
 	return 0;		/* Success */
 }
@@ -1215,11 +1233,11 @@ pdb_LoadRecListHeader(int fd,
 	db->next_reclistID = get_udword(&rptr);
 	db->numrecs = get_uword(&rptr);
 
-/* XXX - These printf() statements should be controlled by a
- * debugging flag.
- */
-/*  printf("\tnextID: %ld\n", db->next_reclistID); */
-/*  printf("\tlen: %u\n", db->numrecs); */
+	SYNC_TRACE(6)
+	{
+		printf("\tnextID: %ld\n", db->next_reclistID);
+		printf("\tlen: %u\n", db->numrecs);
+	}
 
 	return 0;
 }
@@ -1281,20 +1299,19 @@ pdb_LoadRsrcIndex(int fd,
 		rsrc->id = get_uword(&rptr);
 		rsrc->offset = get_udword(&rptr);
 
-/* XXX - These printf() statements should be controlled by a
- * debugging flag.
- */
-#if 0
-printf("\tResource %d: type '%c%c%c%c' (0x%08lx), id %u, offset 0x%04lx\n",
-       i,
-       (char) (rsrc->type >> 24) & 0xff,
-       (char) (rsrc->type >> 16) & 0xff,
-       (char) (rsrc->type >> 8) & 0xff,
-       (char) rsrc->type & 0xff,
-       rsrc->type,
-       rsrc->id,
-       rsrc->offset);
-#endif	/* 0 */ 
+		SYNC_TRACE(6)
+		{
+			printf("\tResource %d: type '%c%c%c%c' (0x%08lx), "
+			       "id %u, offset 0x%04lx\n",
+			       i,
+			       (char) (rsrc->type >> 24) & 0xff,
+			       (char) (rsrc->type >> 16) & 0xff,
+			       (char) (rsrc->type >> 8) & 0xff,
+			       (char) rsrc->type & 0xff,
+			       rsrc->type,
+			       rsrc->id,
+			       rsrc->offset);
+		}
 
 		/* Append the new resource to the list */
 		pdb_AppendResource(db, rsrc);
@@ -1375,16 +1392,13 @@ pdb_LoadRecIndex(int fd,
 			((udword) (get_ubyte(&rptr) << 8)) |
 			((udword) get_ubyte(&rptr));
 
-/* XXX - These printf() statements should be controlled by a
- * debugging flag.
- */
-#if 0
-printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, ID 0x%08lx\n",
-       i,
-       rec->offset,
-       rec->attributes,
-       rec->ID);
-#endif	/* 0 */
+		SYNC_TRACE(6)
+			printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, "
+			       "ID 0x%08lx\n",
+			       i,
+			       rec->offset,
+			       rec->attributes,
+			       rec->id);
 
 		/* Append the new record to the database */
 		pdb_AppendRecord(db, rec); 
@@ -1468,8 +1482,8 @@ pdb_LoadAppBlock(int fd,
 	{
 		/* Oops! We're in the wrong place */
 		fprintf(stderr, "Warning: AppInfo block isn't where I thought it would be.\n"
-			"expected 0x%lx, but we're at 0x%qx\n",
-			db->appinfo_offset, offset);
+			"Expected 0x%lx, but we're at 0x%lx\n",
+			db->appinfo_offset, (long) offset);
 
 		/* Try to recover */
 		offset = lseek(fd, db->appinfo_offset, SEEK_SET);
@@ -1489,7 +1503,8 @@ pdb_LoadAppBlock(int fd,
 		perror("pdb_LoadAppBlock: read");
 		return -1;
 	}
-/*  debug_dump(stdout, "<APP", db->appinfo, db->appinfo_len); */
+	SYNC_TRACE(6)
+		debug_dump(stdout, "<APP", db->appinfo, db->appinfo_len);
 
 	return 0; 
 }
@@ -1567,8 +1582,8 @@ pdb_LoadSortBlock(int fd,
 	{
 		/* Oops! We're in the wrong place */
 		fprintf(stderr, "Warning: sort block isn't where I thought it would be.\n"
-			"Expected 0x%lx, but we're at 0x%qx\n",
-			db->sortinfo_offset, offset);
+			"Expected 0x%lx, but we're at 0x%lx\n",
+			db->sortinfo_offset, (long) offset);
 
 		/* Try to recover */
 		offset = lseek(fd, db->sortinfo_offset, SEEK_SET);
@@ -1589,7 +1604,8 @@ pdb_LoadSortBlock(int fd,
 		perror("pdb_LoadSortBlock: read");
 		return -1;
 	}
-/*  debug_dump(stdout, "<SORT", db->sortinfo, db->sortinfo_len); */
+	SYNC_TRACE(6)
+		debug_dump(stdout, "<SORT", db->sortinfo, db->sortinfo_len); 
 
 	return 0; 
 }
@@ -1625,12 +1641,13 @@ pdb_LoadResources(int fd,
 			return -1;
 		}
 
-printf("Reading resource %d (type '%c%c%c%c')\n",
-       i,
-       (char) (rsrc->type >> 24) & 0xff,
-       (char) (rsrc->type >> 16) & 0xff,
-       (char) (rsrc->type >> 8) & 0xff,
-       (char) rsrc->type & 0xff);
+		SYNC_TRACE(5)
+			printf("Reading resource %d (type '%c%c%c%c')\n",
+			       i,
+			       (char) (rsrc->type >> 24) & 0xff,
+			       (char) (rsrc->type >> 16) & 0xff,
+			       (char) (rsrc->type >> 8) & 0xff,
+			       (char) rsrc->type & 0xff);
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
@@ -1638,9 +1655,9 @@ printf("Reading resource %d (type '%c%c%c%c')\n",
 		if (offset != rsrc->offset)
 		{
 			fprintf(stderr, "Warning: resource %d isn't where I thought it would be.\n"
-				"Expected 0x%lx, but we're at 0x%qx\n",
+				"Expected 0x%lx, but we're at 0x%lx\n",
 				i,
-				rsrc->offset, offset);
+				rsrc->offset, (long) offset);
 			/* Try to recover */
 			offset = lseek(fd, rsrc->offset, SEEK_SET);
 						/* Go to where this
@@ -1698,8 +1715,12 @@ printf("Reading resource %d (type '%c%c%c%c')\n",
 			perror("pdb_LoadResources: read");
 			return -1;
 		}
-/*  printf("Contents of resource %d:\n", i); */
-/*  debug_dump(stdout, "<RSRC", rsrc->data, rsrc->data_len); */
+		SYNC_TRACE(6)
+		{
+			printf("Contents of resource %d:\n", i);
+			debug_dump(stdout, "<RSRC", rsrc->data,
+				   rsrc->data_len);
+		}
 	}
 
 	return 0;		/* Success */
@@ -1736,7 +1757,8 @@ pdb_LoadRecords(int fd,
 			return -1;
 		}
 
-/*  printf("Reading record %d (id 0x%08lx)\n", i, rec->id); */
+		SYNC_TRACE(5)
+			printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
@@ -1744,9 +1766,9 @@ pdb_LoadRecords(int fd,
 		if (offset != rec->offset)
 		{
 			fprintf(stderr, "Warning: record %d isn't where I thought it would be.\n"
-				"Expected 0x%lx, but we're at 0x%qx\n",
+				"Expected 0x%lx, but we're at 0x%lx\n",
 				i,
-				rec->offset, offset);
+				rec->offset, (long) offset);
 			/* Try to recover */
 			offset = lseek(fd, rec->offset, SEEK_SET);
 						/* Go to where this record
@@ -1803,8 +1825,12 @@ pdb_LoadRecords(int fd,
 			perror("pdb_LoadRecords: read");
 			return -1;
 		}
-/*  printf("Contents of record %d:\n", i); */
-/*  debug_dump(stdout, "<REC", rec->data, rec->data_len); */
+
+		SYNC_TRACE(6)
+		{
+			printf("Contents of record %d:\n", i);
+			debug_dump(stdout, "<REC", rec->data, rec->data_len);
+		}
 	}
 
 	return 0;		/* Success */
@@ -1813,6 +1839,17 @@ pdb_LoadRecords(int fd,
 /* pdb_DownloadResources
  * Download a resource database's resources from the Palm, and put them in
  * 'db'.
+ * Occasionally, this will produce a file different from the one that
+ * 'pilot-xfer -b' does. With a blank xcopilot (i.e., delete the RAM and
+ * scratch files), do a backup with 'pilot-xfer -b'. Then delete the RAM
+ * and scratch files and do a backup with 'coldsync -b'. The file "Unsaved
+ * Preferences.prc" produced by ColdSync will have an additional resource,
+ * of type "psys" and ID 1; the Palm headers seem to indicate that this is
+ * a password. The file produced by 'pilot-xfer' doesn't have this
+ * resource.
+ * I'd like to think that this means that ColdSync is better than
+ * pilot-xfer, but it could just as easily be an off-by-one error or a
+ * different set of flags.
  */
 static int
 pdb_DownloadResources(struct PConnection *pconn,
@@ -1866,15 +1903,18 @@ pdb_DownloadResources(struct PConnection *pconn,
 			return -1;
 		}
 
-fprintf(stderr, "DLP resource data %d:\n", i);
-fprintf(stderr, "\ttype: '%c%c%c%c'\n",
-	(char) ((resinfo.type >> 24) & 0xff),
-	(char) ((resinfo.type >> 16) & 0xff),
-	(char) ((resinfo.type >> 8) & 0xff),
-	(char) (resinfo.type & 0xff));
-fprintf(stderr, "\tid: %d\n", resinfo.id);
-fprintf(stderr, "\tindex: %d\n", resinfo.index);
-fprintf(stderr, "\tsize: %d\n", resinfo.size);
+		SYNC_TRACE(5)
+		{
+			fprintf(stderr, "DLP resource data %d:\n", i);
+			fprintf(stderr, "\ttype: '%c%c%c%c'\n",
+				(char) ((resinfo.type >> 24) & 0xff),
+				(char) ((resinfo.type >> 16) & 0xff),
+				(char) ((resinfo.type >> 8) & 0xff),
+				(char) (resinfo.type & 0xff));
+			fprintf(stderr, "\tid: %d\n", resinfo.id);
+			fprintf(stderr, "\tindex: %d\n", resinfo.index);
+			fprintf(stderr, "\tsize: %d\n", resinfo.size);
+		}
 
 		/* Fill in the resource index data */
 		rsrc->type = resinfo.type;
@@ -1894,7 +1934,8 @@ fprintf(stderr, "\tsize: %d\n", resinfo.size);
 
 		/* Copy the resource data to 'rsrc' */
 		memcpy(rsrc->data, rptr, rsrc->data_len);
-/*  debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len); */
+		SYNC_TRACE(6)
+			debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
 
 		/* Append the resource to the database */
 		pdb_AppendResource(db, rsrc);
@@ -2006,12 +2047,16 @@ pdb_DownloadRecords(struct PConnection *pconn,
 			return -1;
 		}
 
-fprintf(stderr, "DLP record data %d:\n", i);
-fprintf(stderr, "\tid: 0x%08lx\n", recinfo.id);
-fprintf(stderr, "\tindex: %d\n", recinfo.index);
-fprintf(stderr, "\tsize: %d\n", recinfo.size);
-fprintf(stderr, "\tattributes: 0x%02x\n", recinfo.attributes);
-fprintf(stderr, "\tcategory: %d\n", recinfo.category); 
+		SYNC_TRACE(6)
+		{
+			fprintf(stderr, "DLP record data %d:\n", i);
+			fprintf(stderr, "\tid: 0x%08lx\n", recinfo.id);
+			fprintf(stderr, "\tindex: %d\n", recinfo.index);
+			fprintf(stderr, "\tsize: %d\n", recinfo.size);
+			fprintf(stderr, "\tattributes: 0x%02x\n",
+				recinfo.attributes);
+			fprintf(stderr, "\tcategory: %d\n", recinfo.category); 
+		}
 
 		/* Fill in the record index data */
 		rec->offset = 0L;	/* For now */
@@ -2032,7 +2077,8 @@ fprintf(stderr, "\tcategory: %d\n", recinfo.category);
 
 		/* Copy the record data to 'rec' */
 		memcpy(rec->data, rptr, rec->data_len);
-/*  debug_dump(stderr, "REC", rec->data, rec->data_len); */
+		SYNC_TRACE(6)
+			debug_dump(stderr, "REC", rec->data, rec->data_len);
 
 		/* Append the record to the database */
 		pdb_AppendRecord(db, rec);
