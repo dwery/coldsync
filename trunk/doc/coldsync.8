@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.41 2001-03-28 03:06:23 arensb Exp $
+.\" $Id: coldsync.8,v 1.42 2001-05-06 06:00:15 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -958,5 +958,9 @@ normally sync might cause a database to lose its category information.
 Under FreeBSD, if you have both a Visor and another device plugged
 into the USB port, ColdSync might not be able to find the Visor
 correctly.
+.Pp
+If a conduit block contains several
+.Li pref:
+lines, it will only be given one preference.
 .Pp
 Probably many others.
