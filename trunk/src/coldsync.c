@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.90 2001-03-29 05:36:25 arensb Exp $
+ * $Id: coldsync.c,v 1.91 2001-03-29 06:52:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -982,7 +982,7 @@ run_mode_Standalone(int argc, char *argv[])
 				break;
 
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm"));
+				Error(_("Lost connection to Palm."));
 				break;
 
 			    default:
@@ -2684,7 +2684,7 @@ run_mode_Daemon(int argc, char *argv[])
 				break;
 
 			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm"));
+				Error(_("Lost connection to Palm."));
 				break;
 
 			    default:
