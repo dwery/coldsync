@@ -6,27 +6,60 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.1 1999-10-18 09:15:56 arensb Exp $
+ * $Id: parser.y,v 2.2 1999-11-04 11:14:06 arensb Exp $
  */
+/* XXX - Variable assignments, manipulation, and lookup. */
+/* XXX - Error-checking */
 #include "config.h"
 #include <stdio.h>
+#include <stdlib.h>		/* For malloc(), free() */
+#include <string.h>		/* For strncpy() et al. */
+#include "parser.h"
 
-extern int yyerror(char *msg);
 extern int yylex(void);
+extern int yyparse(void);
+
+extern FILE *yyin;
+
+int yyerror(const char *msg);
+
+static listen_block *cur_listen;	/* Currently-open listen block. The
+					 * various listen_directive rules
+					 * will fill in the fields.
+					 */
+static conduit_block *cur_conduit;	/* Currently-open conduit block.
+					 * The various conduit_directive
+					 * rules will fill in the fields.
+					 */
+static struct config *file_config;	/* As the parser runs, it will fill
+					 * in values in this struct.
+					 */
 %}
 
 %token <integer>	NUMBER
 %token <string>		STRING
-%token ARGS
 %token CONDUIT
+%token DEVICE
 %token LISTEN
-%token PORT
+%token NAME
+%token PATH
 %token SERIAL
 %token SPEED
+%token TYPE
+
+/* Conduit flavors */
+%token SYNC
+%token FETCH
+%token DUMP
+%token INSTALL
+%token UNINSTALL
+
+%type <flavor> conduit_flavor
 
 %union {
 	int integer;
 	char *string;
+	conduit_flavor flavor;
 }
 
 %%
@@ -42,18 +75,55 @@ statements:	statements statement
 
 statement:
 	listen_stmt
-	| conduit_decl
+	{ fprintf(stderr, "Found a listen_stmt (statement)\n"); }
+	| conduit_stmt
+	{ fprintf(stderr, "Found a conduit_stmt\n"); }
 	| ';'	/* Effectively empty */
 	{ fprintf(stderr, "Found an empty statement\n"); }
 	;
 
 listen_stmt:
-	LISTEN STRING ';'
+	LISTEN SERIAL '{'
 	{
-		/* The string gives the port to listen on */
+		/* Create a new listen block. Subsequent rules that parse
+		 * substatements inside a 'listen' block will fill in
+		 * fields in this struct.
+		 */
+		/* XXX - Use new_listen_block() */
+		cur_listen = (listen_block *) malloc(sizeof(listen_block));
+			/* XXX - Error-checking */
+		cur_listen->next = NULL;
+		cur_listen->listen_type = LISTEN_SERIAL;
+		cur_listen->device = NULL;
+		cur_listen->speed = 0;
 	}
-	| LISTEN '{' listen_block '}'
-	{ fprintf(stderr, "Found listen+listen_block\n"); }
+	listen_block '}'
+	{
+		fprintf(stderr, "Found listen+listen_block:\n");
+		fprintf(stderr, "\tDevice: [%s]\n", cur_listen->device);
+		fprintf(stderr, "\tSpeed: [%d]\n", cur_listen->speed);
+
+		if (file_config->listen == NULL)
+		{
+			/* This is the first listen block */
+			file_config->listen = cur_listen;
+		} else {
+			/* This is not the first listen block. Append it to
+			 * the list.
+			 */
+			struct listen_block *last;
+
+			/* Move forward to the last listen block on the
+			 * list
+			 */
+			for (last = file_config->listen;
+			     last->next != NULL;
+			     last = last->next)
+				;
+			last->next = cur_listen;
+			cur_listen = NULL;
+		}
+	}
 	;
 
 listen_block:	listen_directives
@@ -64,33 +134,130 @@ listen_directives:
 	listen_directives listen_directive
 	{ fprintf(stderr, "Found a listen_directives\n"); }
 	|	/* Empty */
-	{ fprintf(stderr, "Found an empty listen_directives\n"); }
 	;
 
 listen_directive:
-	SERIAL ':' STRING ';'
+	DEVICE STRING ';'
 	{
-		fprintf(stderr, "Listen: serial [%s]\n", $2);
+		fprintf(stderr, "Listen: device [%s]\n", $2);
+		cur_listen->device = $2;
 	}
-	| SPEED ':' NUMBER ';'
+	| SPEED NUMBER ';'
 	{
 		fprintf(stderr, "Listen: speed %d\n", $2);
-	}
-	| PORT ':' NUMBER ';'
-	{
-		/* XXX - This isn't actually used. The idea is that
-		 * this can be used to specify a TCP port on which to
-		 * listen for a network connection.
-		 */
-		fprintf(stderr, "Listen: port %d]n", $2);
+		cur_listen->speed = $2;
 	}
 	;
 
-conduit_decl:	CONDUIT '{' conduit_block '}'
+conduit_stmt:	CONDUIT conduit_flavor '{'
+	{
+		/* XXX - Write new_conduit_block() and friends */
+		cur_conduit = (conduit_block *) malloc(sizeof(conduit_block));
+		if (cur_conduit == NULL)
+		{
+			fprintf(stderr, "Can't allocate conduit_block!\n");
+			/* XXX - Try to recover gracefully */
+			exit(1);
+		}
+			/* XXX - Error-checking */
+		cur_conduit->next = NULL;
+		cur_conduit->flavor = $2;
+		cur_conduit->dbtype = 0L;
+		cur_conduit->dbcreator = 0L;
+		cur_conduit->path = NULL;
+
+		fprintf(stderr, "Found start of conduit [");
+		switch ($2)
+		{
+		    case Sync:
+			fprintf(stderr, "Sync");
+			break;
+		    case Fetch:
+			fprintf(stderr, "Fetch");
+			break;
+		    case Dump:
+			fprintf(stderr, "Dump");
+			break;
+		    case Install:
+			fprintf(stderr, "Install");
+			break;
+		    case Uninstall:
+			fprintf(stderr, "Uninstall");
+			break;
+		    default:
+			fprintf(stderr, "Unknown conduit flavor!");
+			YYERROR;
+		}
+		fprintf(stderr, "]\n");
+	}
+	conduit_block '}'
+	{
+		/* Got a conduit block. Append it to the appropriate list. */
+		conduit_block **list;
+
+		switch (cur_conduit->flavor)
+		{
+		    case Sync:
+			list = &(file_config->sync_q);
+			break;
+		    case Fetch:
+			list = &(file_config->fetch_q);
+			break;
+		    case Dump:
+			list = &(file_config->dump_q);
+			break;
+		    case Install:
+			list = &(file_config->install_q);
+			break;
+		    case Uninstall:
+			list = &(file_config->uninstall_q);
+			break;
+		    default:
+			fprintf(stderr, "line %d: Unknown conduit flavor %d\n",
+				lineno, cur_conduit->flavor);
+			YYERROR;
+		}
+
+		if (*list == NULL)
+		{
+			/* First conduit on this list */
+			*list = cur_conduit;
+		} else {
+			/* Append conduit to the appropriate list */
+			conduit_block *last;
+
+			/* Go to the end of the list */
+			last = *list;
+			while (last->next != NULL)
+				last = last->next;
+
+			cur_conduit->next = NULL;
+			last->next = cur_conduit;
+			cur_conduit = NULL;
+		}
+	}
+	;
+
+conduit_flavor:
+	SYNC
+	{ fprintf(stderr, "Found a conduit_flavor: Sync\n");
+	  $$ = Sync; }
+	| FETCH
+	{ fprintf(stderr, "Found a conduit_flavor: Fetch\n");
+	  $$ = Fetch; }
+	| DUMP
+	{ fprintf(stderr, "Found a conduit_flavor: Dump\n");
+	  $$ = Dump; }
+	| INSTALL
+	{ fprintf(stderr, "Found a conduit_flavor: Install\n");
+	  $$ = Install; }
+	| UNINSTALL
+	{ fprintf(stderr, "Found a conduit_flavor: Uninstall\n");
+	  $$ = Uninstall; }
+	;
 
 conduit_block:
 	conduit_directives
-	| conduit_directives conduit_args
 	;
 
 conduit_directives:
@@ -99,18 +266,114 @@ conduit_directives:
 	;
 
 conduit_directive:
-	/* XXX - Empty */
-	;
+	TYPE STRING '/' STRING ';'
+	{
+		if (strcmp($2, "*") == 0)
+		{
+			/* Wildcard creator */
+			cur_conduit->dbcreator = 0L;
+		} else {
+			/* Stated type */
+			if (strlen($2) != 4)
+			{
+				fprintf(stderr,
+					"Bogus creator \"%s\", line %d\n",
+					$2, lineno);
+				free($2); $2 = NULL;
+				free($4); $4 = NULL;
+				YYERROR;
+			}
+			cur_conduit->dbcreator =
+				(($2[0]) << 24) |
+				(($2[1]) << 16) |
+				(($2[2]) << 8) |
+				($2[3]);
+		}
 
-conduit_args:		/* Extra arguments passed to a conduit */
-	ARGS ':' arglist
-	;
-
-arglist:	arglist arg
-	| /* Empty */
-	;
-
-arg:	/* Empty */
+		if (strcmp($4, "*") == 0)
+		{
+			/* Wildcard type */
+			cur_conduit->dbtype = 0L;
+		} else {
+			/* Stated type */
+			if (strlen($4) != 4)
+			{
+				fprintf(stderr, "Bogus type \"%s\", line %d\n",
+					$4, lineno);
+				cur_conduit->dbtype = 0L;
+				free($2); $2 = NULL;
+				free($4); $4 = NULL;
+				YYERROR;
+			}
+			cur_conduit->dbtype =
+				(($4[0]) << 24) |
+				(($4[1]) << 16) |
+				(($4[2]) << 8) |
+				($4[3]);
+		}
+		fprintf(stderr, "Conduit type: [%s]/[%s]\n",
+			$2, $4);
+		free($2); $2 = NULL;
+		free($4); $4 = NULL;
+	}
+	| NAME STRING ';'
+	| PATH STRING ';'
+	{
+		/* Path to the conduit program. If this is a relative
+		 * pathname, look for it in the path.
+		 * XXX - There should be a ConduitPath directive to specify
+		 * where to look for conduits.
+		 */
+		cur_conduit->path = $2;
+		$2 = NULL;
+		fprintf(stderr, "Conduit path: [%s]\n", cur_conduit->path);
+	}
 	;
 
 %%
+
+/* yyerror
+ * Print out an error message about the error that just occurred.
+ */
+int
+yyerror(const char *msg)
+{
+	fprintf(stderr, "Yacc error: \"%s\" at line %d\n", msg, lineno);
+	return 1;
+}
+
+/* parse_config
+ * Parse the given config file.
+ */
+int parse_config(const char *fname,
+		 struct config *conf)
+{
+	FILE *infile;
+	int retval;
+
+	if ((infile = fopen(fname, "r")) == NULL)
+	{
+		fprintf(stderr, "Can't open \"%s\"\n", fname);
+		perror("fopen");
+		return -1;
+	}
+
+	yyin = infile;
+	lineno = 1;
+	file_config = conf;
+	retval = yyparse();
+	fclose(infile);
+
+	/* XXX - Check the temporary variables (cur_listen) and free them
+	 * if necessary.
+	 */
+	/* XXX - free_listen_block() */
+
+	return -retval;
+}
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
