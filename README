@@ -1,7 +1,7 @@
 	This is ColdSync, a tool for synchronizing data between Palm
 devices and Unix workstations.
 
-	Copyright (C) 1999, 2000, Andrew Arensburger.
+	Copyright (C) 1999-2001, Andrew Arensburger.
 
 	The latest version of this package is available at
 	http://www.ooblick.com/software/coldsync/
@@ -33,6 +33,14 @@ QualComm PDQ, Handspring Visor and so forth), and a Unix workstation.
 as synchronize its data, which is sort of like a two-way rdist (see
 below). In future versions, it will be possible to do more interesting
 things with this data.
+
+* WHAT YOU'LL NEED
+
+	- A POSIX-compliant operating system, preferably some flavor
+	  of Unix
+	- An ANSI C compiler
+	- An ANSI C++ compiler
+	- Perl 5.005_03 or later (though earlier versions might work)
 
 * BUILDING AND INSTALLING COLDSYNC
 
@@ -105,7 +113,7 @@ is believed to work on all platforms with a Uniforum-compliant libintl
 
 COMPATIBILITY NOTES
 
-* ColdSync 1.6.6-20010130
+* ColdSync 2.1.1
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x/4.x, and compiles
