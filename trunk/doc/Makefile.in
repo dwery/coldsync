@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.5 1999-08-25 08:06:46 arensb Exp $
+# $Id: Makefile.in,v 1.6 1999-11-02 03:25:29 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -63,9 +63,17 @@ info:	${INFOFILES}
 dvi:	${DVIFILES}
 ps:	${PSFILES}
 
-depend:		# XXX
+depend:
 
 install::	coldsync.8
+	if test ! -d ${MANDIR}; then \
+		mkdir ${MANDIR}; \
+		chmod 755 ${MANDIR}; \
+	fi
+	if test ! -d ${MAN8DIR}; then \
+		mkdir ${MAN8DIR}; \
+		chmod 755 ${MAN8DIR}; \
+	fi
 	${INSTALL} ${INSTALLARGS} coldsync.8 ${MAN8DIR}
 
 distdir:	${DISTFILES}
@@ -80,3 +88,8 @@ distclean:
 	-rm -f ${CLEAN} ${DISTCLEAN}
 spotless:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+# Dependencies. Maintained manually 'cos I don't know of any tools
+# that'll do it for me.
+libpalm.dvi:	texinfo.tex version.texi
+pdb.dvi:	texinfo.tex version.texi
