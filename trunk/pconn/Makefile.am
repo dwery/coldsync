@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.2 1999-02-22 10:41:03 arensb Exp $
+# $Id: Makefile.am,v 1.3 1999-02-22 11:08:56 arensb Exp $
 #
 
 lib_LIBRARIES = libpconn.a
@@ -29,4 +29,4 @@ EXTRA_DIST = \
 	Makefile
 
 ## foo_SOURCES = foo.c $(libpalm_a_SOURCES)
-foo_LDADD = -L. -lpconn
+#foo_LDADD = -L. -lpconn
