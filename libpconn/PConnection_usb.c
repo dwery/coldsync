@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.7 2000-09-03 07:30:47 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.8 2000-10-20 20:22:50 arensb Exp $
  */
 
 #include "config.h"
@@ -260,7 +260,7 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 
 	/*
 	 *  We've got to loop trying to open the USB device since
-	 *  you'll get an ENXIO until the device has bee inserted
+	 *  you'll get an ENXIO until the device has been inserted
 	 *  on the USB bus.
 	 */
 
