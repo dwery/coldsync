@@ -4,11 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.1 1999-10-22 02:37:30 arensb Exp $
-
-# XXX - Explicitly write .c.o , .cc.o and executable targets:
-# different compilers have different default rules, and I don't want
-# to deal with them.
+# $Id: Makefile.in,v 1.2 1999-11-02 03:33:36 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -73,10 +69,12 @@ LDFLAGS =	@LDFLAGS@ ${LIBS}
 # throughout.
 all::	
 
-# XXX - Should make sure ${INCLUDEDIR} exists.
 install::	${HEADERS}
-	for i in ${HEADERS}; do
-		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/"$$i";
+	if test ! -d ${INCLUDEDIR}; then \
+		mkdir ${INCLUDEDIR}; \
+	fi
+	for i in ${HEADERS}; do \
+		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/"$$i"; \
 	done
 
 depend::
