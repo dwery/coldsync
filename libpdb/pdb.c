@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.18 2000-02-07 19:14:02 arensb Exp $
+ * $Id: pdb.c,v 1.19 2000-02-09 08:14:54 arensb Exp $
  */
 
 #include "config.h"
@@ -1048,16 +1048,6 @@ pdb_AppendRecord(struct pdb *db,
 	/* Check to see if the list is empty */
 	if (db->rec_index.rec == NULL)
 	{
-		if (db->numrecs != 0)	/* Sanity check */
-		{
-			fprintf(stderr, _("Error: \"%s\" is in an inconstent "
-					  "state: \n"
-					  "    rec_index.rec is NULL, but "
-					  "numrecs is %d\n"),
-				db->name, db->numrecs);
-			return -1;
-		}
-
 		db->rec_index.rec = newrec;
 		newrec->next = NULL;
 
@@ -1095,16 +1085,6 @@ pdb_AppendResource(struct pdb *db,
 	/* Check to see if the list is empty */
 	if (db->rec_index.rsrc == NULL)
 	{
-		if (db->numrecs != 0)	/* Sanity check */
-		{
-			fprintf(stderr, _("Error: \"%s\" is in an inconstent "
-					  "state: \n"
-					  "    rec_index.rsrc is NULL, but "
-					  "numrecs is %d\n"),
-				db->name, db->numrecs);
-			return -1;
-		}
-
 		db->rec_index.rsrc = newrsrc;
 		newrsrc->next = NULL;
 
