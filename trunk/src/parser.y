@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.4 1999-11-09 06:26:48 arensb Exp $
+ * $Id: parser.y,v 2.5 1999-11-10 06:48:40 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -122,6 +122,7 @@ listen_stmt:
 		{
 			/* This is the first listen block */
 			file_config->listen = cur_listen;
+			cur_listen = NULL;
 		} else {
 			/* This is not the first listen block. Append it to
 			 * the list.
