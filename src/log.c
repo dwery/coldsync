@@ -2,11 +2,12 @@
  *
  * Convenience functions for logging.
  *
- * $Id: log.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: log.c,v 1.2 1999-07-12 09:30:49 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
+#include "coldsync.h"
 
 extern char *log;
 extern int log_size;
@@ -33,7 +34,8 @@ extern int log_len;
 int
 add_to_log(char *msg)
 {
-fprintf(stderr, "add_to_log(\"%s\")\n", msg);
+	SYNC_TRACE(5)
+		fprintf(stderr, "add_to_log(\"%s\")\n", msg);
 	if (strlen(msg) + log_len >= log_size)
 	{
 		char *newlog;
@@ -60,6 +62,7 @@ fprintf(stderr, "add_to_log(\"%s\")\n", msg);
 		log_size = newsize;
 	}
 	strcat(log, msg);
-fprintf(stderr, "Now log is \"%s\"\n", log);
+	SYNC_TRACE(5)
+		fprintf(stderr, "Now log is \"%s\"\n", log);
 	return 0;
 }

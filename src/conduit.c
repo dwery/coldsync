@@ -3,7 +3,7 @@
  * Functions for dealing with conduits: looking them up, loading
  * libraries, invoking them, etc.
  *
- * $Id: conduit.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: conduit.c,v 1.2 1999-07-12 09:32:45 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -183,9 +183,12 @@ register_conduit(const char *name,
 		 * specify a database name, and they're not the same.
 		 * This is an error.
 		 */
-fprintf(stderr, "register_conduit: %s: Database name conflict: called with \"%s\", but spec says \"%s\"\n",
-	spec->name,
-	dbname, spec->dbname);
+		SYNC_TRACE(3)
+			fprintf(stderr, "register_conduit: %s: "
+				"Database name conflict: called with \"%s\", "
+				"but spec says \"%s\"\n",
+				spec->name,
+				dbname, spec->dbname);
 		return -1;
 	}
 
@@ -208,9 +211,12 @@ fprintf(stderr, "register_conduit: %s: Database name conflict: called with \"%s\
 		 * specify a database type, and they're not
 		 * the same. This is an error.
 		 */
-fprintf(stderr, "register_conduit: %s: Database type conflict: config says 0x%08lx, but spec says 0x%08lx\n",
-	spec->name,
-	dbtype, spec->dbtype);
+		SYNC_TRACE(3)
+			fprintf(stderr, "register_conduit: %s: "
+				"Database type conflict: config says 0x%08lx, "
+				"but spec says 0x%08lx\n",
+				spec->name,
+				dbtype, spec->dbtype);
 		return -1; 
 	}
 
@@ -229,9 +235,12 @@ fprintf(stderr, "register_conduit: %s: Database type conflict: config says 0x%08
 		 * specify a database creator, and they're not
 		 * the same. This is an error.
 		 */
-fprintf(stderr, "register_conduit: %s: Database creator conflict: config says 0x%08lx, but spec says 0x%08lx\n",
-	spec->name,
-	dbcreator, spec->dbcreator);
+		SYNC_TRACE(3)
+			fprintf(stderr, "register_conduit: %s: "
+				"Database creator conflict: config says "
+				"0x%08lx, but spec says 0x%08lx\n",
+				spec->name,
+				dbcreator, spec->dbcreator);
 		return -1;
 	}
 
@@ -245,11 +254,13 @@ fprintf(stderr, "register_conduit: %s: Database creator conflict: config says 0x
 	cond_list[cond_list_len].mandatory = mandatory;
 	cond_list[cond_list_len].conduit = spec;
 
-fprintf(stderr, "Registered conduit \"%s\" for database \"%s\", type 0x%08lx, creator 0x%08lx\n",
-	cond_list[cond_list_len].conduit->name,
-	cond_list[cond_list_len].conduit->dbname,
-	cond_list[cond_list_len].conduit->dbtype,
-	cond_list[cond_list_len].conduit->dbcreator);
+	SYNC_TRACE(2)
+		fprintf(stderr, "Registered conduit \"%s\" "
+			"for database \"%s\", type 0x%08lx, creator 0x%08lx\n",
+			cond_list[cond_list_len].conduit->name,
+			cond_list[cond_list_len].conduit->dbname,
+			cond_list[cond_list_len].conduit->dbtype,
+			cond_list[cond_list_len].conduit->dbcreator);
 
 	cond_list_len++;	/* XXX - Potential overflow */
 	return 0;

@@ -8,25 +8,16 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.2 1999-07-12 09:24:36 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
 #include <stdlib.h>		/* For malloc() */
+#include "coldsync.h"
 #include "dlp.h"
 #include "dlp_cmd.h"
 #include "util.h"
 #include "palm_errno.h"
-
-#define DLPC_DEBUG	1
-#ifdef DLPC_DEBUG
-int dlpc_debug = 0;
-
-#define DLPC_TRACE(level, format...)		\
-	if (dlpc_debug >= (level))		\
-		fprintf(stderr, "DLPC:" format)
-
-#endif	/* DLPC_DEBUG */
 
 /* dlpcmd_gettime
  * Just a convenience function for reading a Palm date from a data buffer.
@@ -74,7 +65,8 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadUserInfo\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadUserInfo\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadUserInfo;
@@ -85,7 +77,8 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;	/* Error */
 
-	DLPC_TRACE(10, "DlpReadUserInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadUserInfo: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadUserInfo,
@@ -93,10 +86,12 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;	/* Error */
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -123,41 +118,42 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			memcpy(userinfo->passwd, rptr, userinfo->passwdlen);
 			rptr += userinfo->passwdlen;
 
-			DLPC_TRACE(1, "Got user info: user 0x%08lx, "
-				   "viewer 0x%08lx, last PC 0x%08lx\n",
-				   userinfo->userid,
-				   userinfo->viewerid,
-				   userinfo->lastsyncPC);
-			DLPC_TRACE(1, "Last successful sync %02d:%02d:%02d, "
-				   "%d/%d/%d\n",
-				   userinfo->lastgoodsync.hour,
-				   userinfo->lastgoodsync.minute,
-				   userinfo->lastgoodsync.second,
-				   userinfo->lastgoodsync.day,
-				   userinfo->lastgoodsync.month,
-				   userinfo->lastgoodsync.year);
-			DLPC_TRACE(1, "Last sync attempt %02d:%02d:%02d, "
-				   "%d/%d/%d\n",
-				   userinfo->lastsync.hour,
-				   userinfo->lastsync.minute,
-				   userinfo->lastsync.second,
-				   userinfo->lastsync.day,
-				   userinfo->lastsync.month,
-				   userinfo->lastsync.year);
-			DLPC_TRACE(1, "User name: (%d bytes) \"%*s\"\n",
-				   userinfo->usernamelen,
-				   userinfo->usernamelen-1,
-				   userinfo->username);
-#if DLPC_DEBUG
-			if (dlpc_debug >= 1)
+			DLPC_TRACE(1)
 			{
+				fprintf(stderr, "Got user info: user 0x%08lx, "
+					"viewer 0x%08lx, last PC 0x%08lx\n",
+					userinfo->userid,
+					userinfo->viewerid,
+					userinfo->lastsyncPC);
+				fprintf(stderr,
+					"Last successful sync %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					userinfo->lastgoodsync.hour,
+					userinfo->lastgoodsync.minute,
+					userinfo->lastgoodsync.second,
+					userinfo->lastgoodsync.day,
+					userinfo->lastgoodsync.month,
+					userinfo->lastgoodsync.year);
+				fprintf(stderr,
+					"Last sync attempt %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					userinfo->lastsync.hour,
+					userinfo->lastsync.minute,
+					userinfo->lastsync.second,
+					userinfo->lastsync.day,
+					userinfo->lastsync.month,
+					userinfo->lastsync.year);
+				fprintf(stderr,
+					"User name: (%d bytes) \"%*s\"\n",
+					userinfo->usernamelen,
+					userinfo->usernamelen-1,
+					userinfo->username);
 				fprintf(stderr, "DLPC: Password (%d bytes):\n",
 					userinfo->passwdlen);
 				debug_dump(stderr, "DLPC:",
 					   userinfo->passwd,
 					   userinfo->passwdlen);
 			}
-#endif	/* DLPC_DEBUG */
 			break;
 
 		    default:	/* Unknown argument type */
@@ -185,15 +181,23 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		DLPCMD_USERNAME_LEN];	/* Buffer holding outgoing arg */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteUserInfo\n");
-/*
-fprintf(stderr, "userinfo->userid == %ld\n", userinfo->userid);
-fprintf(stderr, "userinfo->viewerid == %ld\n", userinfo->viewerid);
-fprintf(stderr, "userinfo->lastsyncPC == 0x%08lx\n", userinfo->lastsyncPC);
-fprintf(stderr, "userinfo->modflags == 0x%02x\n", userinfo->modflags);
-fprintf(stderr, "userinfo->usernamelen == %d\n", userinfo->usernamelen);
-fprintf(stderr, "userinfo->username == \"%s\"\n", userinfo->username);
-*/
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> WriteUserInfo\n");
+	DLPC_TRACE(3)
+	{
+		fprintf(stderr, "userinfo->userid == %ld\n",
+			userinfo->userid);
+		fprintf(stderr, "userinfo->viewerid == %ld\n",
+			userinfo->viewerid);
+		fprintf(stderr, "userinfo->lastsyncPC == 0x%08lx\n",
+			userinfo->lastsyncPC);
+		fprintf(stderr, "userinfo->modflags == 0x%02x\n",
+			userinfo->modflags);
+		fprintf(stderr, "userinfo->usernamelen == %d\n",
+			userinfo->usernamelen);
+		fprintf(stderr, "userinfo->username == \"%s\"\n",
+			userinfo->username);
+	}
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteUserInfo;
@@ -224,17 +228,20 @@ fprintf(stderr, "userinfo->username == \"%s\"\n", userinfo->username);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpWriteUserInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteUserInfo: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteUserInfo, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -267,7 +274,8 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadSysInfo\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadSysInfo\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadSysInfo;
@@ -283,10 +291,12 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -312,12 +322,15 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 			sysinfo->prodIDsize = get_ubyte(&rptr);
 			sysinfo->prodID = get_udword(&rptr);
 
-			DLPC_TRACE(1, "Got sysinfo: ROM version 0x%08lx, "
-				   "loc. 0x%08lx, pIDsize %d, pID 0x%08lx\n",
-				   sysinfo->rom_version,
-				   sysinfo->localization,
-				   sysinfo->prodIDsize,
-				   sysinfo->prodID);
+			DLPC_TRACE(1)
+				fprintf(stderr,
+					"Got sysinfo: ROM version 0x%08lx, "
+					"loc. 0x%08lx, pIDsize %d, "
+					"pID 0x%08lx\n",
+					sysinfo->rom_version,
+					sysinfo->localization,
+					sysinfo->prodIDsize,
+					sysinfo->prodID);
 			break;
 
 		    case DLPRET_ReadSysInfo_Ver:
@@ -328,12 +341,17 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 			    sysinfo->comp_ver_min = get_uword(&rptr);
 			    sysinfo->max_rec_size = get_udword(&rptr);
 
-			    DLPC_TRACE(1, "Got version sysinfo: DLP v%d.%d, compatibility v%d.%d, max record size 0x%08lx\n",
-				       sysinfo->dlp_ver_maj,
-				       sysinfo->dlp_ver_min,
-				       sysinfo->comp_ver_maj,
-				       sysinfo->comp_ver_min,
-				       sysinfo->max_rec_size);
+			    DLPC_TRACE(1)
+				    fprintf(stderr,
+					    "Got version sysinfo: "
+					    "DLP v%d.%d, "
+					    "compatibility v%d.%d, "
+					    "max record size 0x%08lx\n",
+					    sysinfo->dlp_ver_maj,
+					    sysinfo->dlp_ver_min,
+					    sysinfo->comp_ver_maj,
+					    sysinfo->comp_ver_min,
+					    sysinfo->max_rec_size);
 		    }
 			break;
 		    default:	/* Unknown argument type */
@@ -357,7 +375,8 @@ DlpGetSysDateTime(struct PConnection *pconn,
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> GetSysDateTime\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> GetSysDateTime\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_GetSysDateTime;
@@ -373,10 +392,12 @@ DlpGetSysDateTime(struct PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -388,13 +409,16 @@ DlpGetSysDateTime(struct PConnection *pconn,
 		{
 		    case DLPRET_GetSysDateTime_Time:
 			dlpcmd_gettime(&rptr, ptime);
-			DLPC_TRACE(1, "System time: %02d:%02d:%02d, %d/%d/%d\n",
-				   ptime->hour,
-				   ptime->minute,
-				   ptime->second,
-				   ptime->day,
-				   ptime->month,
-				   ptime->year);
+			DLPC_TRACE(1)
+				fprintf(stderr,
+					"System time: %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					ptime->hour,
+					ptime->minute,
+					ptime->second,
+					ptime->day,
+					ptime->month,
+					ptime->year);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpGetSysDateTime: Unknown argument type: 0x%02x\n",
@@ -420,13 +444,15 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 					/* Buffer holding outgoing arg */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> SetSysDateTime(%02d:%02d:%02d, %d/%d/%d)\n",
-		   ptime->hour,
-		   ptime->minute,
-		   ptime->second,
-		   ptime->day,
-		   ptime->month,
-		   ptime->year);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> SetSysDateTime(%02d:%02d:%02d, %d/%d/%d)\n",
+			ptime->hour,
+			ptime->minute,
+			ptime->second,
+			ptime->day,
+			ptime->month,
+			ptime->year);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_SetSysDateTime;
@@ -446,7 +472,8 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpSetSysDateTime: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpSetSysDateTime: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_SetSysDateTime,
@@ -454,10 +481,12 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -494,7 +523,8 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	ubyte act_count = 0;	/* # card info structs returned */
 
-	DLPC_TRACE(1, ">>> ReadStorageInfo(%d)\n", card);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadStorageInfo(%d)\n", card);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadStorageInfo;
@@ -515,7 +545,8 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadStorageInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadStorageInfo: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadStorageInfo,
@@ -523,10 +554,12 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -604,38 +637,41 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	}
 
 
-	DLPC_TRACE(6, "GetStorageInfo:\n");
-	DLPC_TRACE(6, "\tlastcard: %d\n", *last_card);
-	DLPC_TRACE(6, "\tmore: %d\n", *more);
-	DLPC_TRACE(6, "\tact_count: %d\n", act_count);
-	DLPC_TRACE(6, "\n");
+	DLPC_TRACE(6)
+	{
+		fprintf(stderr, "GetStorageInfo:\n");
+		fprintf(stderr, "\tlastcard: %d\n", *last_card);
+		fprintf(stderr, "\tmore: %d\n", *more);
+		fprintf(stderr, "\tact_count: %d\n", act_count);
+		fprintf(stderr, "\n");
 
-	DLPC_TRACE(6, "\ttotalsize == %d\n", cinfo->totalsize);
-	DLPC_TRACE(6, "\tcardno == %d\n", cinfo->cardno);
-	DLPC_TRACE(6, "\tcardversion == %d\n", cinfo->cardversion);
-	DLPC_TRACE(6, "\tctime == %02d:%02d:%02d, %d/%d/%d\n",
-		   cinfo->ctime.hour,
-		   cinfo->ctime.minute,
-		   cinfo->ctime.second,
-		   cinfo->ctime.day,
-		   cinfo->ctime.month,
-		   cinfo->ctime.year);
-	DLPC_TRACE(6, "\tROM: %ld, RAM: %ld, free RAM: %ld\n",
-		   cinfo->rom_size,
-		   cinfo->ram_size,
-		   cinfo->free_ram);
-	DLPC_TRACE(6, "\tcardname (%d): \"%*s\"\n",
-		   cinfo->cardname_size,
-		   cinfo->cardname_size,
-		   cinfo->cardname);
-	DLPC_TRACE(6, "\tmanufname (%d): \"%*s\"\n",
-		   cinfo->manufname_size,
-		   cinfo->manufname_size,
-		   cinfo->manufname);
-	DLPC_TRACE(6, "\n");
-	DLPC_TRACE(6, "\tROM dbs: %d\tRAM dbs: %d\n",
-		   cinfo->rom_dbs,
-		   cinfo->ram_dbs);
+		fprintf(stderr, "\ttotalsize == %d\n", cinfo->totalsize);
+		fprintf(stderr, "\tcardno == %d\n", cinfo->cardno);
+		fprintf(stderr, "\tcardversion == %d\n", cinfo->cardversion);
+		fprintf(stderr, "\tctime == %02d:%02d:%02d, %d/%d/%d\n",
+			cinfo->ctime.hour,
+			cinfo->ctime.minute,
+			cinfo->ctime.second,
+			cinfo->ctime.day,
+			cinfo->ctime.month,
+			cinfo->ctime.year);
+		fprintf(stderr, "\tROM: %ld, RAM: %ld, free RAM: %ld\n",
+			cinfo->rom_size,
+			cinfo->ram_size,
+			cinfo->free_ram);
+		fprintf(stderr, "\tcardname (%d): \"%*s\"\n",
+			cinfo->cardname_size,
+			cinfo->cardname_size,
+			cinfo->cardname);
+		fprintf(stderr, "\tmanufname (%d): \"%*s\"\n",
+			cinfo->manufname_size,
+			cinfo->manufname_size,
+			cinfo->manufname);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\tROM dbs: %d\tRAM dbs: %d\n",
+			cinfo->rom_dbs,
+			cinfo->ram_dbs);
+	}
 
 	return 0;
 }
@@ -661,8 +697,10 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */ 
 	ubyte *wptr;		/* Pointer into buffers (for writing) */ 
 
-	DLPC_TRACE(1, ">>> ReadDBList flags 0x%02x, card %d, start %d\n",
-		   iflags, card, start);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadDBList flags 0x%02x, card %d, start %d\n",
+			iflags, card, start);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadDBList;
@@ -684,17 +722,20 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadDBList: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadDBList: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadDBList, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -708,11 +749,13 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 			*last_index = get_uword(&rptr);
 			*oflags = get_ubyte(&rptr);
 			*num = get_ubyte(&rptr);
-			DLPC_TRACE(5, "List header: last %d, flags 0x%02x,"
-				   " count %d\n",
-				   *last_index,
-				   *oflags,
-				   *num);
+			DLPC_TRACE(5)
+				fprintf(stderr,
+					"List header: last %d, flags 0x%02x,"
+					" count %d\n",
+					*last_index,
+					*oflags,
+					*num);
 
 			/* Parse the info for this database */
 			/* XXX - There might be multiple 'dlp_dbinfo'
@@ -739,8 +782,8 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 			       dbs->size - DLPCMD_DBNAME_LEN);
 			rptr += dbs->size - DLPCMD_DBNAME_LEN;
 
-#ifdef DLPC_DEBUG
-			if (dlpc_debug >= 5)
+
+			DLPC_TRACE(5)
 			{
 				fprintf(stderr, "Database info:\n");
 				fprintf(stderr, "\tsize %d, misc flags 0x%02x,"
@@ -808,7 +851,6 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 				fprintf(stderr, "\tName: \"%s\"\n",
 					dbs->name);
 			}
-#endif	/* DLPC_DEBUG */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadDBList: Unknown argument type: 0x%02x\n",
@@ -841,8 +883,10 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> OpenDB: card %d, name \"%s\", mode 0x%02x\n",
-		   card, name, mode);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> OpenDB: card %d, name \"%s\", mode 0x%02x\n",
+			card, name, mode);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_OpenDB;
@@ -866,17 +910,20 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpOpenDB: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpOpenDB: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_OpenDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -889,7 +936,10 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 		    case DLPRET_OpenDB_DB:
 			*handle = get_ubyte(&rptr);
 
-			DLPC_TRACE(3, "Database handle: %d\n", *handle);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Database handle: %d\n",
+					*handle);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpOpenDB: Unknown argument type: 0x%02x\n",
@@ -924,13 +974,16 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> CreateDB: creator 0x%08lx, type 0x%08lx, card %d, flags 0x%02x, version %d, name \"%s\"\n",
-		   newdb->creator,
-		   newdb->type,
-		   newdb->card,
-		   newdb->flags,
-		   newdb->version,
-		   newdb->name);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> CreateDB: creator 0x%08lx, type 0x%08lx, "
+			"card %d, flags 0x%02x, version %d, name \"%s\"\n",
+			newdb->creator,
+			newdb->type,
+			newdb->card,
+			newdb->flags,
+			newdb->version,
+			newdb->name);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_CreateDB;
@@ -958,17 +1011,20 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpCreateDB: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpCreateDB: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_CreateDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -981,7 +1037,9 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 		    case DLPRET_CreateDB_DB:
 			*handle = get_ubyte(&rptr);
 
-			DLPC_TRACE(3, "Database handle: %d\n", *handle);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Database handle: %d\n", *handle);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpCreateDB: Unknown argument type: 0x%02x\n",
@@ -1008,7 +1066,8 @@ DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> CloseDB(%d)\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> CloseDB(%d)\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_CloseDB;
@@ -1036,17 +1095,20 @@ DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpCloseDB: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpCloseDB: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_CloseDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1083,8 +1145,9 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 					/* XXX - Fixed size: bad! */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> DeleteDB: card %d, name \"%s\"\n",
-		   card, name);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> DeleteDB: card %d, name \"%s\"\n",
+			card, name);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_DeleteDB;
@@ -1109,17 +1172,20 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpDeleteDB: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpDeleteDB: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_DeleteDB, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1161,7 +1227,8 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadAppBlock\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadAppBlock\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadAppBlock;
@@ -1184,7 +1251,8 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadAppBlock: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadAppBlock: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadAppBlock,
@@ -1192,10 +1260,12 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1212,9 +1282,13 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 			*data = rptr;
 			rptr += *size;
 
-			DLPC_TRACE(3, "block size: %d (0x%04x)\n", *size,
-				   *size);
-/*  			debug_dump(stderr, "APP: ", *data, *size); */
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"block size: %d (0x%04x)\n",
+					*size,
+					*size);
+			DLPC_TRACE(10)
+				debug_dump(stderr, "APP: ", *data, *size);
 
 			break;
 		    default:	/* Unknown argument type */
@@ -1247,7 +1321,8 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
 					/* XXX - Fixed size: bad */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteAppBlock\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> WriteAppBlock\n");
 
 if (DLPARGLEN_WriteAppBlock_Block + len > 1024)
 {
@@ -1277,15 +1352,19 @@ return -1;
 		return err;
 
 	/* Get a response */
-	DLPC_TRACE(10, "DlpWriteAppBlock: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpWriteAppBlock: waiting for response\n");
 	err = dlp_recv_resp(pconn, DLPCMD_WriteAppBlock, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1328,7 +1407,8 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadSortBlock\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadSortBlock\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadSortBlock;
@@ -1352,16 +1432,19 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 		return err;
 
 	/* Get a response */
-	DLPC_TRACE(10, "DlpReadSortBlock: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadSortBlock: waiting for response\n");
 	err = dlp_recv_resp(pconn, DLPCMD_ReadSortBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1410,7 +1493,8 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* Connection to Palm */
 					/* XXX - Fixed size: bad */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteSortBlock\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> WriteSortBlock\n");
 if (DLPARGLEN_WriteSortBlock_Block + len > 1024)
 {
 fprintf(stderr, "##### I can't send this sort block: it's too big\n");
@@ -1440,16 +1524,19 @@ return -1;
 		return err;
 
 	/* Get a response */
-	DLPC_TRACE(10, "DlpWriteSortBlock: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteSortBlock: waiting for response\n");
 	err = dlp_recv_resp(pconn, DLPCMD_WriteSortBlock,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1489,7 +1576,8 @@ DlpReadNextModifiedRec(
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadNextModifiedRec: db %d\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadNextModifiedRec: db %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadNextModifiedRec;
@@ -1505,7 +1593,9 @@ DlpReadNextModifiedRec(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadNextModifiedRec: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadNextModifiedRec: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRec,
@@ -1513,10 +1603,12 @@ DlpReadNextModifiedRec(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1534,20 +1626,24 @@ DlpReadNextModifiedRec(
 			recinfo->category = get_ubyte(&rptr);
 			*data = rptr;
 
-			DLPC_TRACE(6, "Read a record (by ID):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
-			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   recinfo->attributes);
-			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   recinfo->category);
-#ifdef DLPC_DEBUG
-			if (dlpc_debug >= 10)
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr, "Read a record (by ID):\n");
+				fprintf(stderr, "\tID == 0x%08lx\n",
+					recinfo->id);
+				fprintf(stderr, "\tindex == 0x%04x\n",
+					recinfo->index);
+				fprintf(stderr, "\tsize == 0x%04x\n",
+					recinfo->size);
+				fprintf(stderr, "\tattributes == 0x%02x\n",
+					recinfo->attributes);
+				fprintf(stderr, "\tcategory == 0x%02x\n",
+					recinfo->category);
+			}
+			DLPC_TRACE(10)
 				debug_dump(stderr, "REC",
 					   *data,
 					   recinfo->size);
-#endif	/* DLPC_DEBUG */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadNextModifiedRec: Unknown argument type: 0x%02x\n",
@@ -1581,9 +1677,11 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecord ByID: handle %d, recid %ld, offset %d, "
-		   "len %d\n",
-		   handle, id, offset, len);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadRecord ByID: handle %d, recid %ld, "
+			"offset %d, len %d\n",
+			handle, id, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecord;
@@ -1607,17 +1705,20 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadRecordByID: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadRecordByID: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1635,19 +1736,25 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 			recinfo->category = get_ubyte(&rptr);
 			*data = rptr;
 
-			DLPC_TRACE(6, "Read a record (by ID):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
-			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   recinfo->attributes);
-			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   recinfo->category);
-#ifdef DLPC_DEBUG
-			DLPC_TRACE(10, "\tdata:\n");
-			if (dlpc_debug >= 10)
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr, "Read a record (by ID):\n");
+				fprintf(stderr, "\tID == 0x%08lx\n",
+					recinfo->id);
+				fprintf(stderr, "\tindex == 0x%04x\n",
+					recinfo->index);
+				fprintf(stderr, "\tsize == 0x%04x\n",
+					recinfo->size);
+				fprintf(stderr, "\tattributes == 0x%02x\n",
+					recinfo->attributes);
+				fprintf(stderr, "\tcategory == 0x%02x\n",
+					recinfo->category);
+			}
+			DLPC_TRACE(10)
+			{
+				fprintf(stderr, "\tdata:\n");
 				debug_dump(stderr, "RR", *data, recinfo->size);
-#endif	/* DLPC_DEBUG */
+			}
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadRecordByID: Unknown argument type: 0x%02x\n",
@@ -1688,9 +1795,11 @@ DlpReadRecordByIndex(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecord ByIndex: handle %d, index %d\n",
-		   handle,
-		   index);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadRecord ByIndex: handle %d, index %d\n",
+			handle,
+			index);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecord;
@@ -1714,17 +1823,21 @@ DlpReadRecordByIndex(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadRecordByIndex: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadRecordByIndex: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1741,14 +1854,20 @@ DlpReadRecordByIndex(
 			recinfo->attributes = get_ubyte(&rptr);
 			recinfo->category = get_ubyte(&rptr);
 
-			DLPC_TRACE(6, "Read a record (by index):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
-			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   recinfo->attributes);
-			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   recinfo->category);
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr, "Read a record (by index):\n");
+				fprintf(stderr, "\tID == 0x%08lx\n",
+					recinfo->id);
+				fprintf(stderr, "\tindex == 0x%04x\n",
+					recinfo->index);
+				fprintf(stderr, "\tsize == 0x%04x\n",
+					recinfo->size);
+				fprintf(stderr, "\tattributes == 0x%02x\n",
+					recinfo->attributes);
+				fprintf(stderr, "\tcategory == 0x%02x\n",
+					recinfo->category);
+			}
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadRecordByIndex: Unknown argument type: 0x%02x\n",
@@ -1785,20 +1904,22 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteRecord: handle %d, flags 0x%02x, "
-		   "recid 0x%08lx, attr 0x%02x, category %d, len %ld\n",
-		   handle,
-		   flags,
-		   id,
-		   attributes,
-		   category,
-		   len);
-	DLPC_TRACE(10, "Raw record data (%ld == 0x%04lx bytes):\n",
-		   len, len);
-#ifdef DLPC_DEBUG
-	if (dlpc_debug >= 10)
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> WriteRecord: handle %d, flags 0x%02x, "
+			"recid 0x%08lx, attr 0x%02x, category %d, len %ld\n",
+			handle,
+			flags,
+			id,
+			attributes,
+			category,
+			len);
+	DLPC_TRACE(10)
+	{
+		fprintf(stderr, "Raw record data (%ld == 0x%04lx bytes):\n",
+			len, len);
 		debug_dump(stderr, "WR", data, len);
-#endif	/* DLPC_DEBUG */
+	}
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteRecord;
@@ -1833,7 +1954,8 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpWriteRecord: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord,
@@ -1841,10 +1963,12 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1890,9 +2014,11 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 						/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> DeleteRecord: handle %d, flags 0x%02x, "
-		   "recid 0x%08lx\n",
-		   handle, flags, recid);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> DeleteRecord: handle %d, flags 0x%02x, "
+			"recid 0x%08lx\n",
+			handle, flags, recid);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_DeleteRecord;
@@ -1914,17 +2040,20 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpDeleteRecord: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpDeleteRecord: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_DeleteRecord, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -1965,9 +2094,11 @@ DlpReadResourceByIndex(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadResourceByIndex: handle %d, index %d, "
-		   "offset %d, len %d\n",
-		   handle, index, offset, len);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadResourceByIndex: handle %d, index %d, "
+			"offset %d, len %d\n",
+			handle, index, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadResource;
@@ -1991,17 +2122,21 @@ DlpReadResourceByIndex(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadResourceByIndex: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadResourceByIndex: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2021,16 +2156,18 @@ DlpReadResourceByIndex(
 /*  			rptr += value->size; */
 *data = rptr;
 
-			DLPC_TRACE(3, "Resource: type '%c%c%c%c' (0x%08lx), "
-				   "id %d, index %d, size %d\n",
-				   (char) (value->type >> 24) & 0xff,
-				   (char) (value->type >> 16) & 0xff,
-				   (char) (value->type >> 8) & 0xff,
-				   (char) value->type & 0xff,
-				   value->type,
-				   value->id,
-				   value->index,
-				   value->size);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Resource: type '%c%c%c%c' (0x%08lx), "
+					"id %d, index %d, size %d\n",
+					(char) (value->type >> 24) & 0xff,
+					(char) (value->type >> 16) & 0xff,
+					(char) (value->type >> 8) & 0xff,
+					(char) value->type & 0xff,
+					value->type,
+					value->id,
+					value->index,
+					value->size);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadResourceByIndex: Unknown argument type: 0x%02x\n",
@@ -2064,9 +2201,11 @@ DlpReadResourceByType(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadResourceByType: handle %d, type %ld, id %d, "
-		   "offset %d, len %d\n",
-		   handle, type, id, offset, len);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadResourceByType: handle %d, type %ld, id %d, "
+			"offset %d, len %d\n",
+			handle, type, id, offset, len);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadResource;
@@ -2091,17 +2230,21 @@ DlpReadResourceByType(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadResourceByType: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadResourceByType: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadResource, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2120,16 +2263,18 @@ DlpReadResourceByType(
 			memcpy(data, rptr, value->size);
 			rptr += value->size;
 
-			DLPC_TRACE(3, "Resource: type '%c%c%c%c' (0x%08lx), "
-				   "id %d, index %d, size %d\n",
-				   (char) (value->type >> 24) & 0xff,
-				   (char) (value->type >> 16) & 0xff,
-				   (char) (value->type >> 8) & 0xff,
-				   (char) value->type & 0xff,
-				   value->type,
-				   value->id,
-				   value->index,
-				   value->size);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Resource: type '%c%c%c%c' (0x%08lx), "
+					"id %d, index %d, size %d\n",
+					(char) (value->type >> 24) & 0xff,
+					(char) (value->type >> 16) & 0xff,
+					(char) (value->type >> 8) & 0xff,
+					(char) value->type & 0xff,
+					value->type,
+					value->id,
+					value->index,
+					value->size);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadResourceByType: Unknown argument type: 0x%02x\n",
@@ -2158,14 +2303,16 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 	ubyte *outbuf;
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, "WriteResource: type '%c%c%c%c' (0x%08lx), id %d, "
-		   "size %d\n",
-		   (char) (type >> 24) & 0xff,
-		   (char) (type >> 16) & 0xff,
-		   (char) (type >> 8) & 0xff,
-		   (char) type & 0xff,
-		   type,
-		   id, size);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			"WriteResource: type '%c%c%c%c' (0x%08lx), id %d, "
+			"size %d\n",
+			(char) (type >> 24) & 0xff,
+			(char) (type >> 16) & 0xff,
+			(char) (type >> 8) & 0xff,
+			(char) type & 0xff,
+			type,
+			id, size);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteResource;
@@ -2201,7 +2348,8 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 		return err;
 	}
 
-	DLPC_TRACE(10, "DlpWriteResource: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteResource: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteResource,
@@ -2212,10 +2360,12 @@ DlpWriteResource(struct PConnection *pconn,	/* Connection to Palm */
 		return err;
 	}
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 	{
 		free(outbuf);
@@ -2255,15 +2405,17 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
 					/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> DeleteResource: handle %d, flags 0x%02x, "
-		   "type '%c%c%c%c' (0x%08lx), id %d\n",
-		   handle, flags,
-		   (char) (type >> 24) & 0xff,
-		   (char) (type >> 16) & 0xff,
-		   (char) (type >> 8) & 0xff,
-		   (char) type & 0xff,
-		   type,
-		   id);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> DeleteResource: handle %d, flags 0x%02x, "
+			"type '%c%c%c%c' (0x%08lx), id %d\n",
+			handle, flags,
+			(char) (type >> 24) & 0xff,
+			(char) (type >> 16) & 0xff,
+			(char) (type >> 8) & 0xff,
+			(char) type & 0xff,
+			type,
+			id);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_DeleteResource;
@@ -2286,7 +2438,8 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpDeleteResource: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpDeleteResource: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_DeleteResource,
@@ -2294,10 +2447,12 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2332,7 +2487,8 @@ DlpCleanUpDatabase(
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> CleanUpDatabase: handle %d\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> CleanUpDatabase: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_CleanUpDatabase;
@@ -2348,17 +2504,20 @@ DlpCleanUpDatabase(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpCleanUpDatabase: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpCleanUpDatabase: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_CleanUpDatabase, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2391,7 +2550,8 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> ResetSyncFlags: handle %d\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ResetSyncFlags: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ResetSyncFlags;
@@ -2407,7 +2567,8 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpResetSyncFlags: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpResetSyncFlags: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ResetSyncFlags,
@@ -2415,10 +2576,12 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2460,22 +2623,24 @@ DlpCallApplication(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> CallApplication: ver 0x%08lx, creator '%c%c%c%c' "
-		   "(0x%08lx), action %d, type '%c%c%c%c' (0x%08lx), "
-		   "paramsize %ld\n",
-		   version,
-		   (char) (appcall->creator >> 24) & 0xff,
-		   (char) (appcall->creator >> 16) & 0xff,
-		   (char) (appcall->creator >> 8) & 0xff,
-		   (char) appcall->creator & 0xff,
-		   appcall->creator,
-		   appcall->action,
-		   (char) (appcall->type >> 24) & 0xff,
-		   (char) (appcall->type >> 16) & 0xff,
-		   (char) (appcall->type >> 8) & 0xff,
-		   (char) appcall->type & 0xff,
-		   appcall->type,
-		   paramsize);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> CallApplication: ver 0x%08lx, creator '%c%c%c%c' "
+			"(0x%08lx), action %d, type '%c%c%c%c' (0x%08lx), "
+			"paramsize %ld\n",
+			version,
+			(char) (appcall->creator >> 24) & 0xff,
+			(char) (appcall->creator >> 16) & 0xff,
+			(char) (appcall->creator >> 8) & 0xff,
+			(char) appcall->creator & 0xff,
+			appcall->creator,
+			appcall->action,
+			(char) (appcall->type >> 24) & 0xff,
+			(char) (appcall->type >> 16) & 0xff,
+			(char) (appcall->type >> 8) & 0xff,
+			(char) appcall->type & 0xff,
+			appcall->type,
+			paramsize);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_CallApplication;
@@ -2519,7 +2684,8 @@ DlpCallApplication(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpCallApplication: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpCallApplication: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_CallApplication,
@@ -2527,10 +2693,12 @@ DlpCallApplication(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2584,7 +2752,8 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	const struct dlp_arg *ret_argv;		/* Response argument list */
 
-	DLPC_TRACE(1, ">>> ResetSystem\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ResetSystem\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ResetSystem;
@@ -2595,17 +2764,21 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpResetSystem: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpResetSystem: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ResetSystem, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ResetSystem,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2643,7 +2816,8 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> AddSyncLogEntry \"%s\"\n", msg);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> AddSyncLogEntry \"%s\"\n", msg);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_AddSyncLogEntry;
@@ -2659,17 +2833,20 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpAddSyncLogEntry: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpAddSyncLogEntry: waiting for response\n");
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_AddSyncLogEntry,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2705,7 +2882,8 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadOpenDBInfo(%d)\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadOpenDBInfo(%d)\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadOpenDBInfo;
@@ -2722,16 +2900,19 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
 		return err;
 
 	/* Get a response */
-	DLPC_TRACE(10, "DlpReadOpenDBInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadOpenDBInfo: waiting for response\n");
 	err = dlp_recv_resp(pconn, DLPCMD_ReadOpenDBInfo,
 			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2770,8 +2951,10 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 					/* Output buffer */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> MoveCategory: handle %d, from %d, to %d\n",
-		   handle, from, to);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> MoveCategory: handle %d, from %d, to %d\n",
+			handle, from, to);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_MoveCategory;
@@ -2794,7 +2977,8 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpMoveCategory: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpMoveCategory: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_MoveCategory,
@@ -2802,10 +2986,12 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2836,7 +3022,8 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	const struct dlp_arg *ret_argv;		/* Response argument list */
 
-	DLPC_TRACE(1, ">>> OpenConduit:\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> OpenConduit:\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_OpenConduit;
@@ -2847,7 +3034,8 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpOpenConduit: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpOpenConduit: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_OpenConduit,
@@ -2855,10 +3043,12 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2891,7 +3081,8 @@ DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
 	static ubyte status_buf[2];	/* Buffer for the status word */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> EndOfSync status %d\n", status);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> EndOfSync status %d\n", status);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_EndOfSync;
@@ -2912,15 +3103,18 @@ DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
 		return err;
 
 	/* Get a response */
-	DLPC_TRACE(10, "DlpEndOfSync: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpEndOfSync: waiting for response\n");
 	err = dlp_recv_resp(pconn, DLPCMD_EndOfSync, &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -2954,7 +3148,8 @@ DlpResetRecordIndex(
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 
-	DLPC_TRACE(1, ">>> ResetRecordIndex: handle %d\n", handle);
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ResetRecordIndex: handle %d\n", handle);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ResetRecordIndex;
@@ -2970,7 +3165,8 @@ DlpResetRecordIndex(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpResetRecordIndex: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpResetRecordIndex: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ResetRecordIndex,
@@ -2978,10 +3174,12 @@ DlpResetRecordIndex(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3025,12 +3223,14 @@ DlpReadRecordIDList(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecordIDList: handle %d, flags 0x%02x, "
-		   "start %d, max %d\n",
-		   handle,
-		   flags,
-		   start,
-		   max);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadRecordIDList: handle %d, flags 0x%02x, "
+			"start %d, max %d\n",
+			handle,
+			flags,
+			start,
+			max);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecordIDList;
@@ -3053,7 +3253,8 @@ DlpReadRecordIDList(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadRecordIDList: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadRecordIDList: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadRecordIDList,
@@ -3061,10 +3262,12 @@ DlpReadRecordIDList(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3113,8 +3316,10 @@ DlpReadNextRecInCategory(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadNextRecInCategory: handle %d, category %d\n",
-		   handle, category);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadNextRecInCategory: handle %d, category %d\n",
+			handle, category);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadNextRecInCategory;
@@ -3135,7 +3340,9 @@ DlpReadNextRecInCategory(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadNextRecInCategory: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadNextRecInCategory: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadNextRecInCategory,
@@ -3143,10 +3350,12 @@ DlpReadNextRecInCategory(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3164,15 +3373,22 @@ DlpReadNextRecInCategory(
 			record->category = get_ubyte(&rptr);
 			record->data = rptr;
 
-			DLPC_TRACE(6, "Read record in category %d:\n",
-				   category);
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", record->recid);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", record->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", record->size);
-			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   record->attributes);
-			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   record->category);
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr,
+					"Read record in category %d:\n",
+					category);
+				fprintf(stderr, "\tID == 0x%08lx\n",
+					record->recid);
+				fprintf(stderr, "\tindex == 0x%04x\n",
+					record->index);
+				fprintf(stderr, "\tsize == 0x%04x\n",
+					record->size);
+				fprintf(stderr, "\tattributes == 0x%02x\n",
+					record->attributes);
+				fprintf(stderr, "\tcategory == 0x%02x\n",
+					record->category);
+			}
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadNextRecInCategory: Unknown argument type: 0x%02x\n",
@@ -3207,9 +3423,11 @@ DlpReadNextModifiedRecInCategory(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadNextModifiedRecInCategory: handle %d, "
-		   "category %d\n",
-		   handle, category);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadNextModifiedRecInCategory: handle %d, "
+			"category %d\n",
+			handle, category);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadNextModifiedRecInCategory;
@@ -3230,8 +3448,10 @@ DlpReadNextModifiedRecInCategory(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadNextModifiedRecInCategory: waiting for "
-		   "response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadNextModifiedRecInCategory: waiting for "
+			"response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadNextModifiedRecInCategory,
@@ -3239,10 +3459,12 @@ DlpReadNextModifiedRecInCategory(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3260,15 +3482,22 @@ DlpReadNextModifiedRecInCategory(
 			record->category = get_ubyte(&rptr);
 			record->data = rptr;
 
-			DLPC_TRACE(6, "Read record in category %d:\n",
-				   category);
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", record->recid);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", record->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", record->size);
-			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   record->attributes);
-			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   record->category);
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr,
+					"Read record in category %d:\n",
+					category);
+				fprintf(stderr, "\tID == 0x%08lx\n",
+					record->recid);
+				fprintf(stderr, "\tindex == 0x%04x\n",
+					record->index);
+				fprintf(stderr, "\tsize == 0x%04x\n",
+					record->size);
+				fprintf(stderr, "\tattributes == 0x%02x\n",
+					record->attributes);
+				fprintf(stderr, "\tcategory == 0x%02x\n",
+					record->category);
+			}
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadNextModifiedRecInCategory: Unknown argument type: 0x%02x\n",
@@ -3302,14 +3531,16 @@ DlpReadAppPreference(
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadAppPreference: creator '%c%c%c%c' (0x%08lx), "
-		   "id %d, len %d, flags 0x%02x\n",
-		   (char) (creator >> 24) & 0xff,
-		   (char) (creator >> 16) & 0xff,
-		   (char) (creator >> 8) & 0xff,
-		   (char) creator & 0xff,
-		   creator,
-		   id, len, flags);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadAppPreference: creator '%c%c%c%c' (0x%08lx), "
+			"id %d, len %d, flags 0x%02x\n",
+			(char) (creator >> 24) & 0xff,
+			(char) (creator >> 16) & 0xff,
+			(char) (creator >> 8) & 0xff,
+			(char) creator & 0xff,
+			creator,
+			id, len, flags);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadAppPreference;
@@ -3333,7 +3564,9 @@ DlpReadAppPreference(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadAppPreference: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr,
+			"DlpReadAppPreference: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadAppPreference,
@@ -3341,10 +3574,12 @@ DlpReadAppPreference(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3362,9 +3597,11 @@ DlpReadAppPreference(
 			memcpy(data, rptr, pref->len);
 			rptr += pref->len;
 
-			DLPC_TRACE(3, "Read an app. preference: version %d, "
-				   "size %d, len %d\n",
-				   pref->version, pref->size, pref->len);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Read an app. preference: version %d, "
+					"size %d, len %d\n",
+					pref->version, pref->size, pref->len);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadAppPreference: Unknown argument type: 0x%02x\n",
@@ -3398,7 +3635,8 @@ DlpWriteAppPreference(
 					/* XXX - Fixed size: bad! */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteAppPreference: XXX\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> WriteAppPreference: XXX\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteAppPreference;
@@ -3426,7 +3664,8 @@ DlpWriteAppPreference(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpWriteRecord: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteAppPreference,
@@ -3434,10 +3673,12 @@ DlpWriteAppPreference(
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3473,7 +3714,8 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	DLPC_TRACE(1, ">>> ReadNetSyncInfo\n");
+	DLPC_TRACE(1)
+		fprintf(stderr, ">>> ReadNetSyncInfo\n");
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadNetSyncInfo;
@@ -3484,7 +3726,8 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadNetSyncInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadNetSyncInfo,
@@ -3492,10 +3735,12 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3528,18 +3773,21 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 			       netsyncinfo->hostnetmasksize);
 			rptr += netsyncinfo->hostnetmasksize;
 
-			DLPC_TRACE(6, "NetSync info:\n");
-			DLPC_TRACE(6, "\tLAN sync: %d\n",
-				   netsyncinfo->lansync_on);
-			DLPC_TRACE(6, "\thostname: (%d) \"%s\"\n",
-				   netsyncinfo->hostnamesize,
-				   netsyncinfo->hostname);
-			DLPC_TRACE(6, "\taddress: (%d) \"%s\"\n",
-				   netsyncinfo->hostaddrsize,
-				   netsyncinfo->hostaddr);
-			DLPC_TRACE(6, "\tnetmask: (%d) \"%s\"\n",
-				   netsyncinfo->hostnetmasksize,
-				   netsyncinfo->hostnetmask);
+			DLPC_TRACE(6)
+			{
+				fprintf(stderr, "NetSync info:\n");
+				fprintf(stderr, "\tLAN sync: %d\n",
+					netsyncinfo->lansync_on);
+				fprintf(stderr, "\thostname: (%d) \"%s\"\n",
+					netsyncinfo->hostnamesize,
+					netsyncinfo->hostname);
+				fprintf(stderr, "\taddress: (%d) \"%s\"\n",
+					netsyncinfo->hostaddrsize,
+					netsyncinfo->hostaddr);
+				fprintf(stderr, "\tnetmask: (%d) \"%s\"\n",
+					netsyncinfo->hostnetmasksize,
+					netsyncinfo->hostnetmask);
+			}
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadNetSyncInfo: Unknown argument type: 0x%02x\n",
@@ -3572,16 +3820,18 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 					/* XXX - Fixed size: bad! */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> WriteNetSyncInfo: mod 0x%02x, LAN %d, name (%d) "
-		   "\"%s\", addr (%d) \"%s\", mask (%d) \"%s\"\n",
-		   netsyncinfo->modflags,
-		   netsyncinfo->netsyncinfo.lansync_on,
-		   netsyncinfo->netsyncinfo.hostnamesize,
-		   netsyncinfo->netsyncinfo.hostname,
-		   netsyncinfo->netsyncinfo.hostaddrsize,
-		   netsyncinfo->netsyncinfo.hostaddr,
-		   netsyncinfo->netsyncinfo.hostnetmasksize,
-		   netsyncinfo->netsyncinfo.hostnetmask);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> WriteNetSyncInfo: mod 0x%02x, LAN %d, name (%d) "
+			"\"%s\", addr (%d) \"%s\", mask (%d) \"%s\"\n",
+			netsyncinfo->modflags,
+			netsyncinfo->netsyncinfo.lansync_on,
+			netsyncinfo->netsyncinfo.hostnamesize,
+			netsyncinfo->netsyncinfo.hostname,
+			netsyncinfo->netsyncinfo.hostaddrsize,
+			netsyncinfo->netsyncinfo.hostaddr,
+			netsyncinfo->netsyncinfo.hostnetmasksize,
+			netsyncinfo->netsyncinfo.hostnetmask);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteNetSyncInfo;
@@ -3620,7 +3870,8 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpWriteNetSyncInfo: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpWriteNetSyncInfo: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteNetSyncInfo,
@@ -3628,10 +3879,12 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3671,13 +3924,16 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadFeature: creator '%c%c%c%c' (0x%08lx), number %d\n",
-		   (char) (creator >> 24) & 0xff,
-		   (char) (creator >> 16) & 0xff,
-		   (char) (creator >> 8) & 0xff,
-		   (char) creator & 0xff,
-		   creator,
-		   featurenum);
+	DLPC_TRACE(1)
+		fprintf(stderr,
+			">>> ReadFeature: creator '%c%c%c%c' (0x%08lx), "
+			"number %d\n",
+			(char) (creator >> 24) & 0xff,
+			(char) (creator >> 16) & 0xff,
+			(char) (creator >> 8) & 0xff,
+			(char) creator & 0xff,
+			creator,
+			featurenum);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadFeature;
@@ -3698,7 +3954,8 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(10, "DlpReadFeature: waiting for response\n");
+	DLPC_TRACE(10)
+		fprintf(stderr, "DlpReadFeature: waiting for response\n");
 
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_ReadFeature,
@@ -3706,10 +3963,12 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 	if (err < 0)
 		return err;
 
-	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
-		   resp_header.id,
-		   resp_header.argc,
-		   resp_header.errno);
+	DLPC_TRACE(2)
+		fprintf(stderr,
+			"Got response, id 0x%02x, args %d, status %d\n",
+			resp_header.id,
+			resp_header.argc,
+			resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
 		return resp_header.errno;
 
@@ -3722,8 +3981,10 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 		    case DLPRET_ReadFeature_Feature:
 			*value = get_udword(&rptr);
 
-			DLPC_TRACE(3, "Read feature: 0x%08lx (%ld)\n",
-				   *value, *value);
+			DLPC_TRACE(3)
+				fprintf(stderr,
+					"Read feature: 0x%08lx (%ld)\n",
+					*value, *value);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadFeature: Unknown argument type: 0x%02x\n",

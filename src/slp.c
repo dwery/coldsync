@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: slp.c,v 1.2 1999-07-12 09:28:07 arensb Exp $
  */
 
 #include <stdio.h>
@@ -11,20 +11,11 @@
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
 #include <string.h>	/* For memset() */
+#include "coldsync.h"
 #include "palm_errno.h"
 #include "slp.h"
 #include "util.h"
 #include "PConnection.h"
-
-#define SLP_DEBUG	1
-#ifdef SLP_DEBUG
-int slp_debug = 0;
-
-#define SLP_TRACE(level, format...)		\
-	if (slp_debug >= (level))		\
-		fprintf(stderr, "SLP:" format)
-
-#endif	/* SLP_DEBUG */
 
 /* slp_preamble
  * This is the preamble of every SLP packet.
@@ -152,18 +143,21 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 		}
 		if (err == 0)
 		{
-			SLP_TRACE(10, "EOF in preamble\n");
+			SLP_TRACE(5)
+				fprintf(stderr, "EOF in preamble\n");
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		if (pconn->slp.header_inbuf[i] != slp_preamble[i])
 		{
-			SLP_TRACE(5, "Got bogus character 0x%02x\n",
-				  pconn->slp.header_inbuf[i]);
+			SLP_TRACE(5)
+				fprintf(stderr, "Got bogus character 0x%02x\n",
+					pconn->slp.header_inbuf[i]);
 			goto redo;
 		}
 	}
-	SLP_TRACE(10, "Got a preamble\n");
+	SLP_TRACE(6)
+		fprintf(stderr, "Got a preamble\n");
 
 	/* Read the header */
 	want = SLP_HEADER_LEN;
@@ -179,17 +173,16 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 		}
 		if (err == 0)
 		{
-			SLP_TRACE(10, "EOF in header\n");
+			SLP_TRACE(5)
+				fprintf(stderr, "EOF in header\n");
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
 	}
 
-#if SLP_DEBUG
-	if (slp_debug >= 10)
+	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(h) <<<", pconn->slp.header_inbuf, got);
-#endif	/* SLP_DEBUG */
 
 	/* Parse the header */
 	rptr = pconn->slp.header_inbuf+SLP_PREAMBLE_LEN;
@@ -199,13 +192,16 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	header.size	= get_uword(&rptr);
 	header.xid	= get_ubyte(&rptr);
 	header.checksum	= get_ubyte(&rptr);
-	SLP_TRACE(5, "Got a header: %d->%d, type %d, size %d, xid 0x%02x, sum 0x%02x\n",
-		  header.src,
-		  header.dest,
-		  header.type,
-		  header.size,
-		  header.xid,
-		  header.checksum);
+	SLP_TRACE(5)
+		fprintf(stderr,
+			"Got a header: %d->%d, "
+			"type %d, size %d, xid 0x%02x, sum 0x%02x\n",
+			header.src,
+			header.dest,
+			header.type,
+			header.size,
+			header.xid,
+			header.checksum);
 
 	/* Put the remote address implied by the packet in the PConnection,
 	 * so we know whom to reply to.
@@ -228,7 +224,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 			checksum, header.checksum);
 		goto redo;		/* Drop the packet on the floor */
 	}
-	SLP_TRACE(10, "Good checksum\n");
+	SLP_TRACE(6)
+		fprintf(stderr, "Good checksum\n");
 
 	/* See if we should ignore this packet */
 	ignore = True;
@@ -236,9 +233,11 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	    (header.dest == pconn->slp.local_addr.port))
 		ignore = False;
 	if (ignore)
-		SLP_TRACE(6, "Ignoring packet\n");
+		SLP_TRACE(6)
+			fprintf(stderr, "Ignoring packet\n");
 	else
-		SLP_TRACE(6, "Not ignoring packet\n");
+		SLP_TRACE(6)
+			fprintf(stderr, "Not ignoring packet\n");
 
 	/* Before reading the body of the packet, see if the input buffer
 	 * in the PConnection is big enough to hold it. If not, resize it.
@@ -283,17 +282,16 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 		}
 		if (err == 0)
 		{
-			SLP_TRACE(10, "EOF in body\n");
+			SLP_TRACE(5)
+				fprintf(stderr, "EOF in body\n");
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
 	}
-#if SLP_DEBUG
 	/* Dump the body, for debugging */
-	if (slp_debug >= 10)
+	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(b) <<<", pconn->slp.inbuf, got);
-#endif	/* SLP_DEBUG */
 
 	/* Read the CRC */
 	want = SLP_CRC_LEN;
@@ -309,17 +307,18 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 		}
 		if (err == 0)
 		{
-			SLP_TRACE(10, "EOF in CRC\n");
+			SLP_TRACE(5)
+				fprintf(stderr, "EOF in CRC\n");
 			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
 	}
-#if SLP_DEBUG
-	if (slp_debug >= 10)
-		debug_dump(stderr, "SLP(c) <<<", pconn->slp.crc_inbuf, SLP_CRC_LEN);
-#endif	/* SLP_DEBUG */
-	SLP_TRACE(10, "Got CRC\n");
+	SLP_TRACE(6)
+		debug_dump(stderr, "SLP(c) <<<", pconn->slp.crc_inbuf,
+			   SLP_CRC_LEN);
+	SLP_TRACE(5)
+		fprintf(stderr, "Got CRC\n");
 
 	/* If this packet is being ignored, just go back up to the top
 	 * and listen for the next packet.
@@ -346,7 +345,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 			my_crc, peek_uword(rptr));
 		goto redo;
 	}
-	SLP_TRACE(6, "Good CRC\n");
+	SLP_TRACE(6)
+		fprintf(stderr, "Good CRC\n");
 
 	pconn->slp.last_xid = header.xid;
 				/* Set the transaction ID so the next
@@ -381,7 +381,8 @@ slp_write(struct PConnection *pconn,
 	uword crc;		/* Computed CRC of the packet */
 
 	palm_errno = PALMERR_NOERR;
-SLP_TRACE(5, "slp_write(x, x, %d)\n", len);
+	SLP_TRACE(5)
+		fprintf(stderr, "slp_write(x, x, %d)\n", len);
 
 	/* Build a packet header in 'header_buf' */
 	wptr = header_buf;
@@ -426,10 +427,8 @@ SLP_TRACE(5, "slp_write(x, x, %d)\n", len);
 		}
 		sent += err;
 	}
-#if SLP_DEBUG
-	if (slp_debug >= 10)
+	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(h) >>>", header_buf, SLP_HEADER_LEN);
-#endif	/* SLP_DEBUG */
 
 	/* Send the body */
 	want = len;
@@ -445,10 +444,8 @@ SLP_TRACE(5, "slp_write(x, x, %d)\n", len);
 		}
 		sent += err;
 	}
-#if SLP_DEBUG
-	if (slp_debug >= 10)
+	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(b) >>>", buf, len);
-#endif	/* SLP_DEBUG */
 
 	/* Send the CRC */
 	want = SLP_CRC_LEN;
@@ -464,10 +461,8 @@ SLP_TRACE(5, "slp_write(x, x, %d)\n", len);
 		}
 		sent += err;
 	}
-#if SLP_DEBUG
-	if (slp_debug >= 10)
+	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(c) >>>", crc_buf, SLP_CRC_LEN);
-#endif	/* SLP_DEBUG */
 
 	return len;		/* Success */
 }

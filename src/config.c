@@ -9,7 +9,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: config.c,v 1.2 1999-07-12 09:32:23 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
@@ -52,7 +52,7 @@ int
 load_config()
 {
 	int err;
-int i;
+	int i;
 	static char hostname[MAXHOSTNAMELEN+1];	/* Buffer to hold this
 						 * host's name. */
 	struct hostent *myaddr;
@@ -66,7 +66,8 @@ int i;
 		perror("gethostname");
 		return -1;
 	}
-fprintf(stderr, "My name is \"%s\"\n", hostname);
+	MISC_TRACE(2)
+		fprintf(stderr, "My name is \"%s\"\n", hostname);
 
 	/* Look up the hostname */
 	if ((myaddr = gethostbyname(hostname)) == NULL)
@@ -75,14 +76,19 @@ fprintf(stderr, "My name is \"%s\"\n", hostname);
 		perror("gethostbyname");
 		return -1;
 	}
-fprintf(stderr, "My canonical name is \"%s\"\n", myaddr->h_name);
-fprintf(stderr, "My aliases are:\n");
-for (i = 0; myaddr->h_aliases[i] != NULL; i++)
-{
-	fprintf(stderr, "    %d: \"%s\"\n", i,
-		myaddr->h_aliases[i]);
-}
-fprintf(stderr, "My address type is %d\n", myaddr->h_addrtype);
+	MISC_TRACE(2)
+	{
+		fprintf(stderr, "My canonical name is \"%s\"\n",
+			myaddr->h_name);
+		fprintf(stderr, "My aliases are:\n");
+		for (i = 0; myaddr->h_aliases[i] != NULL; i++)
+		{
+			fprintf(stderr, "    %d: \"%s\"\n", i,
+				myaddr->h_aliases[i]);
+		}
+		fprintf(stderr, "My address type is %d\n", myaddr->h_addrtype);
+	}
+
 	/* XXX - There should probably be functions to deal with other
 	 * address types (e.g., IPv6). Maybe just hash them down to 4
 	 * bytes. Hm... actually, that might work for all address types, so
@@ -93,14 +99,20 @@ fprintf(stderr, "My address type is %d\n", myaddr->h_addrtype);
 		fprintf(stderr, "Hey! This isn't an AF_INET address!\n");
 		return -1;
 	} 
-fprintf(stderr, "My address length is %d\n", myaddr->h_length);
-fprintf(stderr, "My addresses are:\n");
-for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
-{
-	fprintf(stderr, "    Address %d:\n", i);
-	debug_dump(stderr, "ADDR",
-		   (const ubyte *) myaddr->h_addr_list[i], myaddr->h_length);
-}
+
+	MISC_TRACE(2)
+	{
+		fprintf(stderr, "My address length is %d\n", myaddr->h_length);
+		fprintf(stderr, "My addresses are:\n");
+		for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
+		{
+			fprintf(stderr, "    Address %d:\n", i);
+			debug_dump(stderr, "ADDR",
+				   (const ubyte *) myaddr->h_addr_list[i],
+				   myaddr->h_length);
+		}
+	}
+
 	/* Make sure there's at least one address */
 	if (myaddr->h_addr_list[0] == NULL)
 	{
@@ -113,7 +125,8 @@ for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
 		(((udword) myaddr->h_addr_list[0][1] & 0xff) << 16) |
 		(((udword) myaddr->h_addr_list[0][2] & 0xff) << 8) |
 		((udword) myaddr->h_addr_list[0][3] & 0xff);
-fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
+	MISC_TRACE(2)
+		fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
 
 	return 0;
 }
@@ -147,7 +160,8 @@ load_palm_config(struct Palm *palm)
 		perror("load_palm_config: getuid");
 		return -1;
 	}
-fprintf(stderr, "UID: %u\n", uid);
+	MISC_TRACE(2)
+		fprintf(stderr, "UID: %u\n", uid);
 
 	/* Get the user's password file info */
 	if ((pwent = getpwuid(uid)) == NULL)
@@ -155,11 +169,14 @@ fprintf(stderr, "UID: %u\n", uid);
 		perror("load_palm_config: getpwuid");
 		return -1;
 	}
-fprintf(stderr, "pwent:\n");
-fprintf(stderr, "\tpw_name: \"%s\"\n", pwent->pw_name);
-fprintf(stderr, "\tpw_uid: %u\n", pwent->pw_uid);
-fprintf(stderr, "\tpw_gecos: \"%s\"\n", pwent->pw_gecos);
-fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
+	MISC_TRACE(2)
+	{
+		fprintf(stderr, "pwent:\n");
+		fprintf(stderr, "\tpw_name: \"%s\"\n", pwent->pw_name);
+		fprintf(stderr, "\tpw_uid: %u\n", pwent->pw_uid);
+		fprintf(stderr, "\tpw_gecos: \"%s\"\n", pwent->pw_gecos);
+		fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
+	}
 
 	user_uid = pwent->pw_uid;	/* Get the user's UID */
  
@@ -169,7 +186,8 @@ fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
 		fprintf(stderr, "Can't get user's full name\n");
 		return -1;
 	}
-fprintf(stderr, "Full name: \"%s\"\n", user_fullname);
+	MISC_TRACE(2)
+		fprintf(stderr, "Full name: \"%s\"\n", user_fullname);
 
 	/* Make sure the various directories (~/.palm/...) exist, and create
 	 * them if necessary.
@@ -292,6 +310,9 @@ get_fullname(char *buf,
 			goto done;
 		    case '&':
 			/* Expand '&' */
+			/* XXX - egcs whines about "ANSI C forbids
+			 * braced-groups within expressions".
+			 */
 			buf[bufi] = toupper(pwent->pw_name[0]);
 			bufi++;
 			for (namei = 1; pwent->pw_name[namei] != '\0';
