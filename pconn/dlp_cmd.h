@@ -2,7 +2,7 @@
  *
  * Definitions and types for the DLP convenience functions.
  *
- * $Id: dlp_cmd.h,v 1.9 1999-05-31 20:50:16 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.10 1999-07-04 02:55:02 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -55,7 +55,7 @@
 #define DLPCMD_EndOfSync		0x2f	/* Terminate the sync */
 #define DLPCMD_ResetRecordIndex		0x30	/* Reset "modified" index */
 #define DLPCMD_ReadRecordIDList		0x31	/* Get list of record IDs */
-/* 1.1 functions */
+/* DLP 1.1 functions */
 #define DLPCMD_ReadNextRecInCategory	0x32	/* Next record in category */
 #define DLPCMD_ReadNextModifiedRecInCategory	0x33
 						/* Next modified record in
@@ -66,7 +66,7 @@
 #define DLPCMD_WriteNetSyncInfo		0x37	/* Write NetSync info */
 #define DLPCMD_ReadFeature		0x38	/* Read a feature */
 
-/* 1.2 functions (PalmOS v3.0) */
+/* DLP 1.2 functions (PalmOS v3.0) */
 #define DLPCMD_FindDB			0x39
 #define DLPCMD_SetDBInfo		0x3a
 
@@ -192,7 +192,7 @@ struct dlp_setuserinfo
 /** ReadSysInfo **/
 #define DLPRET_ReadSysInfo_Info		DLPRET_BASE
 #define DLPRETLEN_ReadSysInfo_Info	14
-/* XXX */
+
 #define DLPRET_ReadSysInfo_Ver		DLPRET_BASE+1	/* v1.2 extension */
 #define DLPRETLEN_ReadSysInfo_Ver	12
 
@@ -210,7 +210,7 @@ struct dlp_setuserinfo
 
 /* XXX - Sizes. Get a clue */
 #define DLPRET_ReadStorageInfo_Info	DLPRET_BASE
-#define DLPRET_ReadStorageInfo_Ext	DLPRET_BASE+1
+#define DLPRET_ReadStorageInfo_Ext	DLPRET_BASE+1	/* v1.1 */
 
 /** ReadDBList **/
 #define DLPARG_ReadDBList_Req		DLPARG_BASE
@@ -222,7 +222,7 @@ struct dlp_setuserinfo
 /* Flags for ReadDBList */
 #define DLPCMD_READDBLFLAG_RAM		0x80
 #define DLPCMD_READDBLFLAG_ROM		0x40
-#define DLPCMD_READDBLFLAG_MULT		0x20	/* v1.2 */
+#define DLPCMD_READDBLFLAG_MULT		0x20		/* v1.2 */
 
 #define DLPRET_READDBLFLAG_MORE		0x80
 
@@ -472,6 +472,21 @@ struct dlp_sysinfo
 		 * variable-sized field. Perhaps this should be supported,
 		 * for compatibility with older devices.
 		 */
+
+	/* DLP 1.2 fields. Not all Palms will return these, in which case
+	 * they will be set to 0.
+	 */
+	uword dlp_ver_maj;	/* Palm's DLP major version */
+	uword dlp_ver_min;	/* Palm's DLP minor version */
+	uword comp_ver_maj;	/* Palm's product compatibility major
+				 * version */
+	uword comp_ver_min;	/* Palm's product compatibility minor
+				 * version */
+	udword max_rec_size;	/* Max. size of record that can be
+				 * allocated on Palm, assuming sufficient
+				 * memory. 0xffffffff == all available
+				 * memory.
+				 */
 };
 
 #define DLPCMD_MEMCARD_LEN	32	/* Max. length of card and
