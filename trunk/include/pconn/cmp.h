@@ -1,6 +1,6 @@
 /* cmp.h
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -41,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.5 2000-12-24 21:24:23 arensb Exp $
+ * $Id: cmp.h,v 1.6 2001-01-09 16:32:11 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_

@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.12 2000-09-17 21:19:10 arensb Exp $
+@c $Id: conduits.texi,v 1.13 2001-01-09 16:27:32 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -18,7 +18,7 @@
 This file documents ColdSync's conduits: what they do and how to write
 them.
 
-Copyright @copyright{} 2000 Andrew Arensburger.
+Copyright @copyright{} 2000-2001 Andrew Arensburger.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice

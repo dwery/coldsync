@@ -1,12 +1,11 @@
 /* util.h
- *
  * Misc. useful stuff.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.3 2000-08-29 14:09:43 arensb Exp $
+ * $Id: util.h,v 1.4 2001-01-09 16:37:06 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
