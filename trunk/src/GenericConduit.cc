@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.7 1999-11-04 10:47:32 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.8 1999-11-10 09:07:06 arensb Exp $
  */
 #include "config.h"
 #include <iostream.h>
@@ -962,9 +962,103 @@ GenericConduit::FastSync()
 		return -1;
 	}
 
-	/* XXX - Go through the local database and cope with new,
-	 * modified, and deleted records.
+	/* Look up each record in the local database. If it's dirty,
+	 * deleted, or whatever, deal with it.
 	 */
+	SYNC_TRACE(3)
+		cerr << "Checking local database entries." << endl;
+
+	struct pdb_record *nextrec;	// Next record in list
+
+	for (localrec = _localdb->rec_index.rec, nextrec = 0;
+	     localrec != 0;
+	     localrec = nextrec)
+	{
+		/* 'localrec' might get deleted, so we need to make a note
+		 * of the next record in the list now.
+		 */
+		nextrec = localrec->next;
+
+		/* Deal with the various possibilities. */
+
+		if (DELETED(localrec) &&
+		    (ARCHIVE(localrec) || !EXPUNGED(localrec)))
+		{
+			/* The local record was deleted, and needs to be
+			 * archived.
+			 */
+			localrec->attributes &=
+				~(PDB_REC_EXPUNGED |
+				  PDB_REC_DIRTY |
+				  PDB_REC_DELETED |
+				  PDB_REC_ARCHIVE);
+
+			// Archive this record
+			SYNC_TRACE(5)
+				cerr << "Archiving this record" << endl;
+			this->archive_record(localrec);
+		} else if (EXPUNGED(localrec))
+		{
+			/* The local record has been completely deleted */
+			SYNC_TRACE(5)
+				cerr << "Deleting this record" << endl;
+			pdb_DeleteRecordByID(_localdb, localrec->id);
+		} else if (DIRTY(localrec))
+		{
+			udword newID;	// ID of uploaded record
+
+			/* This record is merely new. Clear any dirty flags
+			 * it might have, and upload it to the Palm.
+			 */
+			localrec->attributes &=
+				~(PDB_REC_EXPUNGED |
+				  PDB_REC_DIRTY |
+				  PDB_REC_DELETED |
+				  PDB_REC_ARCHIVE);
+
+			SYNC_TRACE(6)
+				cerr << "> Sending local record to Palm"
+				     << endl;
+			err = DlpWriteRecord(_pconn, dbh, 0x80,
+					     localrec->id,
+					     /* XXX - The category is the
+					      * bottom 4 bits of the
+					      * attributes. Fix this
+					      * throughout.
+					      */
+					     localrec->attributes & 0xf0,
+					     localrec->attributes & 0x0f,
+					     localrec->data_len,
+					     localrec->data,
+					     &newID);
+			if (err != DLPSTAT_NOERR)
+			{
+				cerr << "Error uploading record "
+				     << hex << setw(8) << setfill('0')
+				     << localrec->id
+				     << ": " << err << endl;
+				return -1;
+			}
+
+			/* The record was assigned a (possibly new) unique
+			 * ID when it was uploaded. Make sure the local
+			 * database reflects this.
+			 */
+			localrec->id = newID;
+			SYNC_TRACE(7)
+				cerr << "newID == "
+				     << hex << setw(8) << setfill('0')
+				     << newID << endl;
+		} else {
+			/* This record is clean, but isn't in the list of
+			 * records that we downloaded from the Palm. Hence,
+			 * its corresponding version on the Palm is also
+			 * clean.
+			 */
+			SYNC_TRACE(5)
+				cerr << "This record is clean" << endl;
+		}
+	}
 
 	/* Write the local database to the backup file */
 	err = this->write_backup(_localdb);
