@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.52 2002-04-27 17:25:48 azummo Exp $
+ * $Id: conduit.c,v 2.53 2002-05-03 15:12:03 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1523,6 +1523,8 @@ find_in_path(const char *conduit)
 	return NULL;
 }
 
+/* XXX - This should return an error code, since it can fail.
+ */
 static void
 mychdir( const char *d )
 {
