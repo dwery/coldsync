@@ -1,9 +1,9 @@
 # ColdSync.pm
 # A module to simplify writing ColdSync conduits.
 #
-# $Id: ColdSync.pm,v 1.5 2000-07-31 08:59:02 arensb Exp $
+# $Id: ColdSync.pm,v 1.6 2000-08-07 01:36:08 arensb Exp $
 package ColdSync;
-($VERSION) = '$Revision: 1.5 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.6 $ ' =~ /\$Revision:\s+([^\s]+)/;
 
 =head1 NAME
 
@@ -28,6 +28,7 @@ Multi-flavor conduits:
     ConduitMain(
         "dump"	=> \&doDump,
         "fetch"	=> \&doFetch,
+        "sync"	=> \&doSync,
         );
 
     sub doDump...
@@ -40,8 +41,8 @@ conduits. This manual page does not describe conduits or how they
 work; for this, the reader is referred to I<ColdSync Conduits:
 Specification and Hacker's Guide>.
 
-The functions in this module support both Fetch and Dump conduits, and
-perform a certain amount of sanity-checking on the conduit's input.
+The functions in this module support both Fetch, Dump, and Sync conduits,
+and perform a certain amount of sanity-checking on the conduit's input.
 
 =cut
 #'
@@ -87,6 +88,7 @@ $FLAVOR = undef;		# Flavor with which this conduit was invoked
 %MANDATORY_HEADERS = (
 	"fetch"	=> [ qw( Daemon Version OutputDB ) ],
 	"dump"	=> [ qw( Daemon Version InputDB ) ],
+	"sync"	=> [ qw( Daemon Version InputDB OutputDB ) ],
 );
 
 # Warn
@@ -222,7 +224,6 @@ sub ParseArgs
 	} elsif (lc($ARGV[1]) eq "dump")
 	{
 		$FLAVOR = "dump";
-# XXX - Not finished yet
 	} elsif (lc($ARGV[1]) eq "sync")
 	{
 		$FLAVOR = "sync";
@@ -274,8 +275,8 @@ sub ReadHeaders
 
 =item StartConduit(I<flavor>)
 
-Initializes a single-flavor conduit. Its argument is a string
-specifying the flavor of the conduit, either C<"fetch"> or C<"dump">.
+Initializes a single-flavor conduit. Its argument is a string specifying
+the flavor of the conduit, either C<"fetch">, C<"dump">, or C<"sync">.
 
 StartConduit() reads and checks the conduit's command line arguments,
 reads the headers given on STDIN, and makes sure that all of the
@@ -315,8 +316,8 @@ sub StartConduit
 
 =item EndConduit()
 
-Cleans up after a single-flavor conduit. For Fetch conduits, writes
-$PDB to the file given by $HEADERS{OutputDB}. If everything went
+Cleans up after a single-flavor conduit. For Fetch and Sync conduits,
+writes $PDB to the file given by $HEADERS{OutputDB}. If everything went
 well, exits with status 0.
 
 Dump conduits are not expected to write a Palm database, so
@@ -329,7 +330,7 @@ database must do so explicitly.
 sub EndConduit
 {
 	# Do the necessary per-flavor cleanup
-	if ($FLAVOR eq "fetch")
+	if (($FLAVOR eq "fetch") or ($FLAVOR eq "sync"))
 	{
 		# XXX - Barf if $PDB undefined
 		$PDB->Write($HEADERS{OutputDB}) or
@@ -411,11 +412,6 @@ sub ConduitMain
 	{
 		$PDB->Load($HEADERS{InputDB}) or
 			die "404 Can't read input database \"$HEADERS{InputDB}\"";
-	}
-
-	if (($flavor eq "dump") && (!defined($HEADERS{InputDB})))
-	{
-		die "405 Missing InputDB header.\n";
 	}
 
 	# Call the appropriate handler. Note that $handler has to be
