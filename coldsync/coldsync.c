@@ -1,10 +1,9 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.9 1999-06-27 05:56:54 arensb Exp $
+ * $Id: coldsync.c,v 1.10 1999-07-04 02:39:58 arensb Exp $
  */
 #include <stdio.h>
-#include <fcntl.h>		/* For open() */
-#include <stdlib.h>		/* For malloc() */
+#include <stdlib.h>		/* For malloc(), atoi() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
@@ -12,6 +11,7 @@
 #include <dirent.h>		/* For opendir(), readdir(), closedir() */
 #include <string.h>		/* For strrchr() */
 #include <unistd.h>		/* For sleep() */
+#include <ctype.h>		/* For isalpha() and friends */
 #include "config.h"
 #include "pconn/palm_errno.h"
 #include <pconn/PConnection.h>
@@ -22,9 +22,10 @@
 #include "pdb.h"
 #include "conduit.h"
 
-/* XXX - This should be defined elsewhere (e.g., in a config file). The
- * reason there are two macros here is that under Solaris, B19200 != 19200
- * for whatever reason. There should be a table that maps one to the other.
+/* XXX - This should be defined elsewhere (e.g., in a config file)
+ * (Actually, it should be determined dynamically: try to figure out how
+ * fast the serial port can go). The reason there are two macros here is
+ * that under Solaris, B19200 != 19200 for whatever reason.
  */
 #define SYNC_RATE		57600
 #define BSYNC_RATE		B57600
@@ -35,18 +36,92 @@ extern int dlp_debug;
 extern int dlpc_debug;
 extern int sync_debug;
 
-extern int load_config(int argc, char *argv[]);
+extern int load_config();
 extern int load_palm_config(struct Palm *palm);
 /*  int listlocalfiles(struct PConnection *pconn); */
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
+int parse_args(int argc, char *argv[]);
+void usage(int argc, char *argv[]);
+void print_version(void);
+
+/* speeds
+ * This table provides a list of speeds at which the serial port might be
+ * able to communicate.
+ * Its structure seems a bit silly, and it is, but only because there are
+ * OSes out there that define the B<speed> constants to have values other
+ * than their corresponding numeric values.
+ */
+static struct {
+	udword bps;		/* Speed in bits per second, as used by the
+				 * CMP layer.
+				 */
+	speed_t tcspeed;	/* Value to pass to cfset[io]speed() to set
+				 * the speed to 'bps'.
+				 */
+} speeds[] = {
+#ifdef B230400
+	{ 230400,	B230400 },
+#endif	/* B230400 */
+#ifdef B115200
+	{ 115200,	B115200 },
+#endif	/* B115200 */
+#ifdef B76800
+	{ 76800,	B76800 },
+#endif	/* B76800 */
+#ifdef B57600
+	{ 57600,	B57600 },
+#endif	/* B57600 */
+#ifdef B38400
+	{ 38400,	B38400 },
+#endif	/* B38400 */
+#ifdef B28800
+	{ 28800,	B28800 },
+#endif	/* B28800 */
+#ifdef B14400
+	{ 14400,	B14400 },
+#endif	/* B14400 */
+#ifdef B9600
+	{  9600,	 B9600 },
+#endif	/* B9600 */
+#ifdef B7200
+	{  7200,	 B7200 },
+#endif	/* B7200 */
+#ifdef B4800
+	{  4800,	 B4800 },
+#endif	/* B4800 */
+#ifdef B2400
+	{  2400,	 B2400 },
+#endif	/* B2400 */
+#ifdef B1200
+	{  1200,	 B1200 },
+#endif	/* B1200 */
+};
+#define num_speeds	sizeof(speeds) / sizeof(speeds[0])
 
 struct Palm palm;
 int need_slow_sync;
+char *log = NULL;
+int log_size = 0;
+int log_len = 0;
+
+struct cmd_opts global_opts;	/* Command-ine options */
 
 /* XXX - Command-line options:
  * -u <user>:	run as <user>
+ * -b <dir>:	perform a full backup to <dir>
+ * -r <dir>:	perform a full restore from <dir>
+ * -c:		With -b: remove any files in backup dir that aren't on Palm.
+ *		With -r: remove any files on Palm that aren't in backup dir.
+ * -s:		force slow sync
+ * -i <file>:	upload (install) <file>
+ * -D <level>:	set debugging to <level>. Probably want to do something
+ *		like sendmail, and allow user to specify debugging level
+ *		for various facilities.
+ * -h:		print help message.
+ * -p:		print PID to stdout, like 'amd'. Or maybe just do this by
+ *		default when running in daemon mode.
  */
 
 int
@@ -57,14 +132,33 @@ main(int argc, char *argv[])
 	int i;
 
 	/* Parse arguments */
-	if (argc != 2)
-	{
-		fprintf(stderr, "Usage: %s device\n", argv[0]);
+	if (parse_args(argc, argv) < 0)
 		exit(1);
-	}
+
+fprintf(stderr, "Options:\n");
+fprintf(stderr, "do_backup: %s\n",
+	global_opts.do_backup ? "True" : "False");
+fprintf(stderr, "backupdir: \"%s\"\n",
+	global_opts.backupdir);
+fprintf(stderr, "do_restore: %s\n",
+	global_opts.do_restore ? "True" : "False");
+fprintf(stderr, "restoredir: \"%s\"\n",
+	global_opts.restoredir);
+fprintf(stderr, "do_clean: %s\n",
+	global_opts.do_clean ? "True" : "False");
+fprintf(stderr, "force_slow: %s\n",
+	global_opts.force_slow ? "True" : "False");
+fprintf(stderr, "force_fast: %s\n",
+	global_opts.force_fast ? "True" : "False");
+fprintf(stderr, "port: \"%s\"\n",
+	global_opts.port);
+fprintf(stderr, "username: \"%s\"\n",
+	global_opts.username);
+fprintf(stderr, "username: %d\n",
+	global_opts.uid);
 
 	/* Read config files */
-	if ((err = load_config(argc, argv)) < 0)
+	if ((err = load_config()) < 0)
 	{
 		/* XXX - Clean up? */
 		exit(1);
@@ -78,7 +172,7 @@ main(int argc, char *argv[])
 	/* XXX - Figure out fastest speed at which each serial port will
 	 * run
 	 */
-	if ((pconn = new_PConnection(argv[1])) == NULL)
+	if ((pconn = new_PConnection(global_opts.port)) == NULL)
 	{
 		fprintf(stderr, "Error: can't open connection.\n");
 		/* XXX - Clean up */
@@ -86,7 +180,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Connect to the Palm */
-	if ((err = Connect(pconn, argv[1])) < 0)
+	if ((err = Connect(pconn, global_opts.port)) < 0)
 	{
 		fprintf(stderr, "Can't connect to Palm\n");
 		/* XXX - Clean up */
@@ -142,7 +236,7 @@ main(int argc, char *argv[])
 
 	/* XXX - It should be possible to force a slow sync */
 	/* XXX - The desktop needs to keep track of other hosts that it has
-	 * synced with, possibly on a per-database basis.
+	 * synced with, preferably on a per-database basis.
 	 * Scenario: I sync with the machine at home, whose hostID is 1.
 	 * While I'm driving in to work, the machine at home talks to the
 	 * machine at work, whose hostID is 2. I come in to work and sync
@@ -154,12 +248,6 @@ main(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	/* XXX - Get list of local files: if there are any that aren't on
-	 * the Palm, it probably means that they existed once, but were
-	 * deleted on the Palm. Assuming that the user knew what he was
-	 * doing, these databases should be deleted. However, just in case,
-	 * they should be save to an "attic" directory.
-	 */
 /*  listlocalfiles(pconn); */
 
 	/* Get a list of all databases on the Palm */
@@ -215,6 +303,13 @@ main(int argc, char *argv[])
 		       palm.dblist[i].baktime.year);
 	}
 
+	/* XXX - Get list of local files: if there are any that aren't on
+	 * the Palm, it probably means that they existed once, but were
+	 * deleted on the Palm. Assuming that the user knew what he was
+	 * doing, these databases should be deleted. However, just in case,
+	 * they should be save to an "attic" directory.
+	 */
+
 	/* XXX - Figure out which conduits exist for each of the existing
 	 * databases; if there are multiple conduits for a given database,
 	 * figure out which one to use; if it can be "primed", do so.
@@ -223,6 +318,15 @@ main(int argc, char *argv[])
 	/* XXX - If it's configured to install new databases first, install
 	 * new databases now.
 	 */
+#if 0
+	err = InstallNewFiles(pconn, &palm);
+	if (err < 0)
+	{
+		fprintf(stderr, "Error installing new files.\n");
+		/* XXX - Clean up */
+		exit(1);
+	}
+#endif	/* 0 */
 
 	/* Synchronize the databases */
 sync_debug = 10;
@@ -232,7 +336,7 @@ sync_debug = 10;
 		if (err < 0)
 		{
 fprintf(stderr, "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n");
-			/* XXX - Ought to try to send abort packet to Palm */
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			/* XXX - Error-handling */
 			exit(1);
 		}
@@ -250,6 +354,16 @@ fprintf(stderr, "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n");
 		fprintf(stderr, "Error writing user info\n");
 		/* XXX - Clean up */
 		exit(1);
+	}
+
+	if (log != NULL)
+	{
+		if ((err = DlpAddSyncLogEntry(pconn, log)) < 0)
+		{
+			fprintf(stderr, "Error writing sync log.\n");
+			/* XXX - Clean up */
+			exit(1);
+		}
 	}
 
 	/* Finally, close the connection */
@@ -321,11 +435,38 @@ Connect(struct PConnection *pconn,
 
 	/* Change the speed */
 	/* XXX - This probably goes in Pconn_accept() or something */
-	tcgetattr(pconn->fd, &term);
-	cfsetspeed(&term, BSYNC_RATE);
-	tcsetattr(pconn->fd, TCSANOW, &term);
+	err = tcgetattr(pconn->fd, &term);
+	if (err < 0)
+	{
+		perror("tcgetattr");
+		return -1;
+	}
+	err = cfsetispeed(&term, BSYNC_RATE);
+	if (err < 0)
+	{
+		perror("cfsetispeed");
+		return -1;
+	}
+	err = cfsetospeed(&term, BSYNC_RATE);
+	if (err < 0)
+	{
+		perror("cfsetospeed");
+		return -1;
+	}
+				/* XXX - Instead of syncing at a constant
+				 * speed, should figure out the fastest
+				 * speed that the serial port will support.
+				 */
+	err = tcsetattr(pconn->fd, TCSANOW, &term);
+	if (err < 0)
+	{
+		perror("tcsetattr");
+		return -1;
+	}
 	sleep(1);		/* XXX - Why is this necessary? (under
-				 * FreeBSD 3.0).
+				 * FreeBSD 3.x). Actually, various sensible
+				 * things work without the sleep(), but not
+				 * with xcopilot (pseudo-ttys).
 				 */
 
 	return 0;
@@ -374,13 +515,14 @@ GetMemInfo(struct PConnection *pconn,
 	 * cards to be read, but it's always one on every Palm I've tried
 	 * this on.
 	 */
-	if ((err = DlpReadStorageInfo(pconn, 0, &last_card, &more,
+	if ((err = DlpReadStorageInfo(pconn, CARD0, &last_card, &more,
 				      palm->cardinfo)) < 0)
 		return -1;
 
 	palm->num_cards = 1;	/* XXX - Hard-wired, for the reasons above */
 
-/*
+/* XXX - Make this conditional upon sync_debug */
+
 fprintf(stderr, "===== Got memory info:\n");
 fprintf(stderr, "\tTotal size:\t%d\n", palm->cardinfo[0].totalsize);
 fprintf(stderr, "\tCard number:\t%d\n", palm->cardinfo[0].cardno);
@@ -409,7 +551,6 @@ fprintf(stderr, "\tCard name (%d) \"%s\"\n",
 fprintf(stderr, "\tManufacturer name (%d) \"%s\"\n",
 	palm->cardinfo[0].manufname_size,
 	palm->cardinfo[0].manufname);
-*/
 
 /* XXX - Check DLP version */
 /*  fprintf(stderr, "\tROM databases: %d\n", palm->cardinfo[0].rom_dbs); */
@@ -463,6 +604,9 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		    == NULL)
 			return -1;
 
+		/* XXX - If the Palm uses DLP >= 1.2, get multiple
+		 * databases at once.
+		 */
 		iflags = DLPCMD_READDBLFLAG_RAM
 #if CHECK_ROM_DBS
 			| DLPCMD_READDBLFLAG_ROM
@@ -474,7 +618,11 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 
 		/* Collect each database in turn. */
 		/* XXX - Should handle older devices that don't return the
-		 * number of databases.
+		 * number of databases. The easiest thing to do in this
+		 * case is probably to resize palm->dblist dynamically
+		 * (realloc()) as necessary. In this case, preallocating
+		 * its size above becomes just an optimization for the
+		 * special case where DLP >= 1.1.
 		 */
 		for (i = 0; i < palm->num_dbs; i++)
 		{
@@ -564,6 +712,7 @@ GetPalmInfo(struct PConnection *pconn,
 	int err;
 
 	/* Get system information about the Palm */
+dlpc_debug = 5;
 	if ((err = DlpReadSysInfo(pconn, &(palm->sysinfo))) < 0)
 	{
 		fprintf(stderr, "Can't get system info\n");
@@ -639,6 +788,7 @@ if (palm->userinfo.lastsync.year == 0)
 printf("\tUser name length: %d\n", palm->userinfo.usernamelen);
 printf("\tUser name: \"%s\"\n", palm->userinfo.username);
 printf("\tPassword: <%d bytes>\n", palm->userinfo.passwdlen);
+debug_dump(stdout, "PASS", palm->userinfo.passwd, palm->userinfo.passwdlen);
 
 	return 0;
 }
@@ -717,6 +867,243 @@ fprintf(stderr, "User name length == %d\n", userinfo.usernamelen);
 	}
 
 	return 0;		/* Success */
+}
+
+/* find_max_speed
+ * Find the maximum speed at which the serial port (pconn->fd) is able to
+ * talk. Returns an index into the 'speeds' array, or -1 in case of error.
+ * XXX - Okay, now where does this get called? The logical place is right
+ * after the open() in new_PConnection(). But the result from this function
+ * is used in this file, when setting the speed for the main part of the
+ * sync.
+ */
+int
+find_max_speed(struct PConnection *pconn)
+{
+	int i;
+	struct termios term;
+
+	tcgetattr(pconn->fd, &term);
+	/* XXX - Error-checking */
+
+	/* Step through the array of speeds, one at a time. Stop as soon as
+	 * we find a speed that works, since the 'speeds' array is sorted
+	 * in order of decreasing desirability (i.e., decreasing speed).
+	 */
+	for (i = 0; i < num_speeds; i++)
+	{
+/*  fprintf(stderr, "Trying %ld bps\n", speeds[i].bps); */
+		if (cfsetispeed(&term, speeds[i].tcspeed) == 0 &&
+		    cfsetospeed(&term, speeds[i].tcspeed) == 0 &&
+		    tcsetattr(pconn->fd, TCSANOW, &term) == 0)
+			return i;
+/*  fprintf(stderr, "Nope\n"); */
+	}
+
+/*  fprintf(stderr, "Couldn't find a suitable speed.\n"); */
+	return -1;
+}
+
+/* parse_args
+ * Parse command-line arguments, and fill in the appropriate slots in
+ * 'global_opts'.
+ */
+int
+parse_args(int argc, char *argv[])
+{
+	int arg;	/* Index of current argument */
+	char *nextarg;	/* Pointer to next argument: options can be
+			 * specified either as "-udaemon" or "-u daemon";
+			 * 'nextarg' points to the beginning of "daemon".
+			 */
+
+	/* Initialize the options to sane values */
+	global_opts.do_backup = False;
+	global_opts.backupdir = NULL;
+	global_opts.do_restore = False;
+	global_opts.restoredir = NULL;
+	global_opts.do_clean = False;
+	global_opts.force_slow = False;
+	global_opts.force_fast = False;
+	global_opts.port = NULL;
+	global_opts.username = NULL;
+	global_opts.uid = (uid_t) 0;
+
+	/* Iterate over each command-line argument */
+	for (arg = 1; arg < argc; arg++)
+	{
+		if (argv[arg][0] != '-')
+		{
+			/* This argument doesn't begin with a dash. It must
+			 * be the serial port device.
+			 */
+			if (arg != argc-1)
+			{
+				/* Bad arguments */
+				usage(argc, argv);
+				return -1;
+			}
+
+			/* Got a serial device name */
+			global_opts.port = argv[arg];
+			continue;
+		}
+
+		switch (argv[arg][1])
+		{
+		    case 'u':	/* -u <username|uid>: specify user as which
+				 * coldsync is to run.
+				 */
+			if (argv[arg][2] == '\0')
+			{
+				/* Option given as "-u foo" */
+				if (arg >= argc-1)
+				{
+					/* Oops! No next argument */
+					usage(argc, argv);
+					return -1;
+				}
+				nextarg = argv[arg+1];
+
+				arg++;	/* Skip this argument in the loop */
+			} else
+				/* Option given as "-ufoo" */
+				nextarg = argv[arg]+2;
+
+			if (isalpha(nextarg[0]))
+				/* User name */
+				global_opts.username = nextarg;
+			else if (isdigit(nextarg[0]) ||
+				 nextarg[0] == '-')
+				/* UID */
+				global_opts.uid =
+					(uid_t) atoi(nextarg);
+			break;
+
+		    case 'b':	/* -b <dir>: do a full backup to <dir> */
+			if (argv[arg][2] == '\0')
+			{
+				/* Option given as "-b foo" */
+				if (arg >= argc-1)
+				{
+					/* Oops! No next argument */
+					usage(argc, argv);
+					return -1;
+				}
+				nextarg = argv[arg+1];
+
+				arg++;	/* Skip this argument in the loop */
+			} else
+				/* Option given as "-bfoo" */
+				nextarg = argv[arg]+2;
+
+			global_opts.do_backup = True;
+			global_opts.backupdir = nextarg;
+
+			break;
+
+		    case 'r':	/* -r <dir>: do a restore from <dir> */
+			if (argv[arg][2] == '\0')
+			{
+				/* Option given as "-u foo" */
+				if (arg >= argc-1)
+				{
+					/* Oops! No next argument */
+					usage(argc, argv);
+					return -1;
+				}
+				nextarg = argv[arg+1];
+
+				arg++;	/* Skip this argument in the loop */
+			} else
+				/* Option given as "-ufoo" */
+				nextarg = argv[arg]+2;
+
+			global_opts.do_restore = True;
+			global_opts.restoredir = nextarg;
+
+			break;
+
+		    case 'c':	/* -c: Clean: remove all files/databases
+				 * before doing backup or restore.
+				 */
+			global_opts.do_clean = True;
+			break;
+
+		    case 's':	/* -s: Force slow sync */
+			global_opts.force_slow = True;
+			break;
+
+		    case 'f':	/* -f: Force fast sync */
+			global_opts.force_fast = True;
+			break;
+
+		    case 'h':	/* -h: Print help message and exit */
+			usage(argc, argv);
+			return -1;	/* Probably bogus, but what the hell */
+
+		    case 'v':	/* -v: Print version and exit */
+			print_version();
+			return -1;	/* Probably bogus, but what the hell */
+
+		    default:	/* Unknown option */
+			fprintf(stderr, "Error: unknown option: %s\n",
+				argv[arg]);
+			usage(argc,argv);
+			return -1;
+		}
+	}
+
+	/* General sanity checking */
+
+	if (global_opts.force_slow &&
+	    global_opts.force_fast)
+	{
+		fprintf(stderr, "Error: can't force slow and fast sync at the same time.\n");
+		usage(argc, argv);
+		return -1;
+	}
+
+	if (global_opts.port == NULL)
+	{
+		fprintf(stderr, "Error: no port specified.\n");
+		usage(argc, argv);
+		return -1;
+	}
+
+	return 0;		/* Success */
+}
+
+/* usage
+ * Print out a usage string.
+ */
+void
+usage(int argc, char *argv[])
+{
+	printf("Usage: %s [options] port\n"
+	       "Options:\n"
+	       "\t-u <user|uid>:\tRun under the given UID.\n"
+	       "\t-b <dir>:\tPerform a backup to <dir>.\n"
+	       "\t-r <dir>:\tRestore from <dir>.\n"
+	       "\t-c:\t\tClean: with -b or -r, remove extraneous files.\n"
+	       "\t-s:\t\tForce slow sync.\n"
+	       "\t-f:\t\tForce fast sync.\n"
+	       "\t-h:\t\tPrint this help message and exit.\n"
+	       "\t-v:\t\tPrint version and exit.\n"
+	       ,
+	       argv[0]);
+}
+
+/* print_version
+ * Print out the version of ColdSync.
+ */
+void
+print_version(void)
+{
+	printf("%s version %s\n",
+	       /* These two strings are defined in "config.h" */
+	       PACKAGE,
+	       VERSION);
 }
 
 /* This is for Emacs's benefit:
