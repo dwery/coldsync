@@ -1,0 +1,286 @@
+Changes in 1.6.6:
+
+	- Feature: Added -z option.
+
+	- Bug fix: ColdSync dumped core unless there was at least one
+	  pda block in .coldsyncrc .
+
+Changes in 1.6.5:
+
+	- No user-visible changes.
+
+Changes in 1.6.4:
+
+	- Bug fix: Fixed a case in which zero-length records got
+	  created.
+
+	- Bug fix: ColdSync aborts a network sync if it cannot
+	  establish a connection to the remote host.
+
+Changes in 1.6.3:
+
+	- Feature: ColdSync can now forward a sync to another host on
+	  the network.
+
+	- "-t net" runtime option selects listening on network.
+
+	- Installation: Now detects whether or not to enable USB
+	  support.
+
+	- Installation, I18n: 'make install' intalls message catalogs.
+
+	- More descriptive error messages.
+
+Changes in 1.6.2:
+
+	- No user-visible changes.
+
+Changes in 1.6.1:
+
+	- No user-visible changes.
+
+Changes in 1.6.0:
+
+	- Bug fix: Under FreeBSD, dumped core in USB mode if it found
+	  the wrong USB device.
+
+	- Feature: ColdSync can now accept network sync requests from
+	  HotSync.
+
+Changes in 1.5.5:
+
+	- Bug fix: If a file couldn't be uploaded to the Palm, this
+	  didn't get logged properly.
+
+	- Bug fix: The last database on the Palm never got synced or
+	  backed up.
+
+	- Feature: Setting the connection speed to 0 (or omitting it)
+	  in .coldsyncrc makes ColdSync go with whatever speed the
+	  Palm suggests.
+
+	- Bug fix: ColdSync didn't properly detect whether it needed
+	  to perform a slow or a fast sync.
+
+Changes in 1.5.4:
+
+	- Feature: If the Palm hasn't been properly initialized,
+	  ColdSync now suggests a pda{} block to add to .coldsyncrc .
+
+	- Feature: More robust in the face of noisy serial lines and
+	  such.
+
+	- Bug fix: Timeouts weren't properly implemented under some
+	  OSes, so communications with the Palm didn't work quite
+	  right.
+
+	- Bug fix: username didn't get properly written on Palm.
+
+Changes in 1.5.3:
+
+	- Feature: Added Init mode.
+
+	- Bug fix: Usage string (for 'coldsync -h') is now up to date.
+
+Changes in 1.5.2:
+
+	- Performance: Information about the Palm is retrieved only
+	  when it's needed, so ColdSync should (seem to) run faster.
+
+Changes in 1.5.1:
+
+	- Feature: ColdSync now reads ${prefix}/etc/coldsync.conf
+	  before reading user's .coldsyncrc .
+
+	- Feature: Added Install conduits.
+
+Changes in 1.5.0:
+
+	- Introduced run modes ("-ms", "-mb", "-mr"). "-b" and "-r"
+	  options are still supported, but deprecated.
+
+Changes in 1.4.6:
+
+	- Bug fix: the shipped conduits wouldn't run.
+
+	- Feature: the 'send-mail' conduit allows you to specify the
+	  name of the Outbox category, for people with non-English
+	  Palms.
+
+	- I18n: updated German translation.
+
+Changes in 1.4.5:
+
+	- Bug fix: If the user specified an invalid command-line
+	  option, ColdSync would print an incorrect error message.
+
+Changes in 1.4.4:
+
+	- Bug fixes: miscellaneous bug fixes and stability
+	  enhancements.
+
+	- Portability: ColdSync might compile and run under Windows NT
+	  with cygwin.
+
+	- Bug fix: Certain well-formed PDBs (e.g., the Noah Lite
+	  dictionaries) used to be rejected as invalid.
+
+Changes in 1.4.3:
+
+	- Feature: The .coldsyncrc file can now specify a conduit with
+	  path "[generic]" to run the built-in generic conduit. The
+	  defaults haven't changed, but now you can specify other Sync
+	  conduits, and the order in which they will run.
+
+Changes in 1.4.2:
+
+	- Added documentation for "preference:" feature.
+
+Changes in 1.4.1:
+
+	- Portability: Now stands a chance of compiling and running
+	  properly under Windows.
+
+	- Portability: Got rid of some warnings under Linux.
+
+Changes in 1.4.0:
+
+	- Feature: Preferences. Conduits can now receive preferences
+	  from the Palm.
+
+Changes in 1.3.0:
+
+	- Feature: Support for Sync conduits, which run while ColdSync
+	  is connected to the Palm, and which allow interaction with
+	  the Palm. (This is still very unfinished, though.)
+
+	- The description of PDB format has been removed from the
+	  distribution, since Palm now documents this quite adequately
+	  and authoritatively:
+	  http://www.palmos.com/dev/tech/docs/fileformats.zip
+
+Changes in 1.2.8:
+
+	- No user-visible changes.
+
+Changes in 1.2.7:
+
+	- Feature: a conduit block may now contain several "type:"
+	  lines.
+
+Changes in 1.2.6:
+
+	- No user-visible changes.
+
+Changes in 1.2.5:
+
+	- Bug fix: if stdin, stdout, or stderr were closed when
+	  ColdSync was run, dump conduits misbehaved. Fixed.
+
+Changes in 1.2.4:
+
+	- Bug fix: if a record's category changes on the Palm, it
+	  changes on the desktop as well.
+
+	- Bug fix: generic conduit archived the wrong record
+	  sometimes.
+
+Changes in 1.2.3:
+
+	- None that users care about.
+	  (For the curious: conduit blocks now accept "preference:"
+	  directives. But these aren't used anywhere yet.)
+
+Changes in 1.2.2:
+
+	- Feature: Conduit blocks now take a comma-separated list of
+	  flavors.
+
+Changes in 1.2.1:
+
+	- Feature: You can now set the username and user ID on the
+	  Palm.
+
+Changes in 1.2.0:
+
+	- Better support for i18n under Linux.
+
+	- 'lex' is no longer supported. You need 'flex'.
+
+	- Syntax: colons are now required after most directives in
+	  .coldsyncrc . Currently, missing colons will cause a
+	  warning. They will become mandatory in a future release.
+
+	- Better reporting of errors in .coldsyncrc .
+
+Changes in 1.1.10:
+
+	- The distribution includes a sample .coldsyncrc .
+
+	- Installation: You can now build ColdSync with one path
+	  prefix and install it with another.
+
+	- Bug fix: No longer causes the Palm to reset when syncing
+	  certain databases.
+
+	- Bug fix: If the type and creator were in double quotes, they
+	  didn't get set correctly. Fixed.
+
+Changes in 1.1.9:
+
+	- Feature: if the "path" directive in a conduit block is
+	  omitted, it is equivalent to a "do nothing" conduit. This
+	  can be useful in conjunction with the "default" and "final"
+	  options.
+	- Future feature: PDAs can have a symbolic name.
+	- Feature: conduits now take user-supplied configuration
+	  arguments.
+	- Feature: it is now possible to compile ColdSync with one
+	  value of "prefix" and install it with another.
+	- Added FAQ.
+	- Several conduits added to the distribution.
+	- Feature: ColdSync now tries to abort cleanly if the user
+	  cancels the sync on the Palm.
+	- Bug fix: All records in certain categories would
+	  occasionally be seen as "deleted and archived".
+
+Changes in 1.1.8:
+	- Feature: ColdSync now reads the serial number from the
+	  Palm's ROM, if possible. Users can specify "pda { }" blocks
+	  in .coldsyncrc, and specify where the backup for a given PDA
+	  should go.
+
+Changes in 1.1.7:
+	- Bug fix: log didn't get initialized properly.
+	- Bug fix: deleting a record on the Palm could cause a
+	  segmentation fault.
+	- Now possible to force a new database to be installed, even
+	  if it's older than the version currently installed on the
+	  Palm.
+	- Conduit declarations can have the "default" keyword.
+
+Changes in 1.1.6:
+	- Bug fix: wouldn't compile.
+
+Changes in 1.1.5:
+	- I18N: Added German and French translations.
+	- Can now force installing new databases, even if this would
+	  overwrite existing ones.
+	- Bug fix: Locally-deleted records didn't get deleted on the
+	  Palm.
+
+Changes in 1.1.4:
+	- Bug fix: a sanity check had gone horribly wrong.
+
+Changes in 1.1.3:
+	- Bug fix: ColdSync wouldn't recognize the second and
+	  subsequent conduits of the same flavor.
+	- Improved tutorial.
+	- Weird characters in database names handled properly.
+	- Improved Perl conduit API.
+	- Can specify connection type (serial, USB, ...) on the
+	  command line.
+	- I18N: messages can now be printed in the user's native
+	  language.
+	- "final" conduit implemented.
+	- No longer have to quote creator/type pairs in .coldsyncrc.

@@ -1,0 +1,82 @@
+.\" DlpReadAppBlock.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadAppBlock.3,v 1.1 2001-09-05 07:29:13 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadAppBlock 3
+.Sh NAME
+.Nm DlpReadAppBlock ,
+.Nm DlpWriteAppBlock ,
+.Nm DlpReadSortBlock ,
+.Nm DlpWriteSortBlock
+.Nd manipulate special blocks in Palm databases
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadAppBlock "PConnection *pconn" "const ubyte handle" "const uword offset" "const uword len" "uword *size" "const ubyte **data"
+.Ft int
+.Fn DlpWriteAppBlock "PConnection *pconn" "const ubyte handle" "const uword len" "const ubyte *data"
+.Ft int
+.Fn DlpReadSortBlock "PConnection *pconn" "const ubyte handle" "const uword offset" "const uword len" "uword *size" "const ubyte **data"
+.Ft int
+.Fn DlpWriteSortBlock "PConnection *pconn" "const ubyte handle" "const uword len" "const ubyte *data"
+.Sh DESCRIPTION
+.Nm DlpReadAppBlock
+reads the AppInfo block of a database on the Palm. The database must
+already be open for reading.
+.Pp
+.Fa handle
+is the database handle given by
+.Nm DlpOpenDB .
+.Pp
+.Fa offset
+indicates the offset at which to start reading. This should be 0 to
+read from the beginning of the AppInfo block.
+.Pp
+.Fa len
+indicates the maximum number of bytes to read.
+.Pp
+.Fa size
+is filled in with the number of bytes actually read.
+.Pp
+.Fa data
+is filled in with a pointer to a buffer containing the data read. This
+buffer is volatile, so the data should be copied before the next DLP
+function call.
+.Pp
+.Nm DlpWriteAppBlock
+writes a database's AppInfo block. If the database already had an
+AppInfo block, it is erased.
+.Pp
+.Fa handle
+is the database handle given by
+.Nm DlpOpenDB .
+.Pp
+.Fa len
+specifies the length of the new AppInfo block.
+.Pp
+.Fa data
+is a pointer to the new AppInfo block.
+.Pp
+.Nm DlpReadSortBlock
+and
+.Nm DlpWriteSortBlock
+are similar to
+.Nm DlpReadAppBlock
+and
+.Nm DlpWriteAppBlock ,
+but affect the database's sort block instead of its AppInfo block.
+.Sh RETURN VALUE
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr DlpOpenDB .

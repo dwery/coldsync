@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2001, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: copy-appinfo,v 3.4 2001-07-30 07:04:33 arensb Exp $
+
+# This conduit simply copies the AppInfo block from the database on the
+# Palm to the desktop.
+
+# XXX - Make this work (or make sure it works) with databases that don't
+# have an AppInfo block.
+
+# XXX - Perhaps make this do nothing (but gracefully) with PRCs?
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+use Palm::Raw;
+
+StartConduit("sync");
+
+use vars qw( $err $dbinfo $dbh $Pappinfo );
+
+select STDERR;		# XXX - Just for debugging
+
+# Find out which database we're dealing with
+$dbinfo = spc_get_dbinfo;
+die "401 Error reading database info" if !defined($dbinfo);
+
+# Open the database
+($dbh = &dlp_OpenDB($dbinfo->{name}, 0x80))
+	or die "402 Can't open database";
+
+# Get the category list from the Palm
+$Pappinfo = dlp_ReadAppBlock($dbh);
+				# Download the AppInfo block from the Palm
+#print STDERR "$0: read AppInfo block [$Pappinfo]\n";
+
+# Copy the Palm's AppInfo block to the desktop PDB
+$PDB->{appinfo} = $Pappinfo;
+
+$err = &dlp_CloseDB($dbh);
+# XXX - Error-checking
+
+EndConduit;
+
+__END__
+
+=head1 NAME
+
+copy-appinfo - ColdSync conduit to copy the AppInfo block (categories)
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: addr/DATA;
+		type: memo/DATA;
+		type: todo/DATA;
+		...
+		path: <...>/copy-appinfo;
+	}
+
+	conduit sync {
+		type: addr/DATA;
+		type: memo/DATA;
+		type: todo/DATA;
+		...
+		path: [generic];
+	}
+
+(the "[generic]" block is so that the databases in question will be synced
+the normal way, in addition to having their AppInfo blocks copied.)
+
+=head1 DESCRIPTION
+
+The C<copy-appinfo> conduit copies the AppInfo block (which contains
+information about categories and certain other application-specific data)
+from the Palm to the desktop.
+
+Since ColdSync's generic conduit does not touch the AppInfo block at all,
+you need to use C<copy-appinfo> or something like it to keep category data
+in sync.
+
+Note that this conduit only implements Palm-overwrites-desktop. If you
+modify any categories in the desktop copy of a database, those changes will
+be lost.
+
+=head1 BUGS
+
+None known.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

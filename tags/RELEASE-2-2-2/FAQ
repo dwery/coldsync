@@ -1,0 +1,167 @@
+Q: My Palm got reset, and when I synched with ColdSync, all my stuff got
+   deleted! Help!
+A: First of all, don't panic. This is the so-called Bargle Bug.
+	1) Make a backup of your .palm directory:
+		cp -rp .palm .palm.backup
+   This isn't required, but is prudent in case you mess up your .palm
+   directory.
+	2) Make a restore directory, say
+		mkdir /tmp/restore
+	3) Copy your applications (.prc files) to the restore directory.
+   They should be in ~/.palm/backup/Attic .
+	4) All of the contents of your record databases (.pdb files) should
+   be in the archive files in ~/.palm/archive . These files are in archive
+   format, not .pdb format. Convert them to .pdb format using the
+   `archive2pdb' tool, available at
+	http://www.ooblick.com/software/coldsync/archive2pdb
+   Note that `archive2pdb' is very rough and unfinished, which is why it
+   isn't part of the standard distribution. It will copy all of the records
+   in the archive file to the .pdb file, including all of the stuff that
+   you deleted months ago, which means that you'll have to delete it all
+   over again.
+	5) Restore your .pdb and .prc files to the Palm:
+		coldsync -r /tmp/restore
+	6) Clean up. Delete (on the Palm) all of the old stuff that you
+   didn't mean to re-upload. All of your application categories will have
+   been lost as well, so you'll need to recreate them again.
+
+Q: Are these *really* frequently-asked questions?
+A: No. ColdSync really doesn't have enough of a following for any questions
+   to have been asked often enough to become tedious. But if I had called
+   this the "AQ", people wouldn't find it.
+
+Q: Have all of these questions really been asked?
+A: No. Some of the questions in this list have been added to prevent their
+   being asked. But if I had called this the "Q", people wouldn't find it.
+
+Q: Is ColdSync better than pilot-link?
+A: Well, *I* think so, otherwise I wouldn't have written it.
+	Seriously: technically, pilot-link is mainly a library of
+   functions for talking to Palm devices. ColdSync includes such a library
+   as well. I think that the ColdSync library is better-written, in the
+   sense of being more readable (and hence more easily maintained), better
+   documented, and more robust.
+	The ColdSync library is not compatible with pilot-link, nor was it
+   ever intended to be. At the same time, they are designed for similar
+   purposes, and so share some similarities. It should be possible to port
+   an application like KPilot to the ColdSync library without superhuman
+   effort.
+
+	ColdSync the application... that's a matter of taste. Most of the
+   syncing applications out there seem to be clones of existing
+   Windows-based applications; they require you to be logged in, and to
+   have X running.
+	That wasn't what I wanted. I wanted something more Unix-y. When it
+   grows up, ColdSync will be a daemon started at boot time that you'll
+   never need to interact with directly.
+	If that's not what you're looking for, well, there are plenty of
+   other applications out there. Take your pick or write your own.
+
+Q: Does ColdSync do X?
+A: Depends on the value of X.
+
+Q: Why doesn't ColdSync do X?
+A: Depending on the value of X, there are three possible answers:
+	1) I haven't had time to add it yet, and nobody's volunteered.
+	2) I've considered it and rejected it.
+	3) I haven't thought of it.
+
+Q: I've set "speed 9600;" and now all I get is timeouts.
+A: This is a known, if not understood problem.
+	The immediate problem is that the Palm isn't transmitting at the
+   speed that ColdSync expects. Why this is so I don't know, since ColdSync
+   is supposed to dictate connection speed to the Palm.
+	Under PalmOS 3.3, you can set the connection speed under
+   HotSync -> Connection Setup -> Direct Serial -> Edit -> Details -> Speed
+	Under earlier versions, you can play with
+   HotSync -> Modem Setup -> Speed
+
+Q: Why the Artistic license? Why not the GPL?
+A: Philosophical answer: because I want ColdSync to be
+   freely-distributable, without the limitations that the GPL imposes. I
+   believe that all software, free or otherwise, should stand or fall on
+   its own merits, and not because it matches someone's agenda.
+	Real answer: because I don't really care that much. What I'd really
+   like to say is "Do what you like with this. Just give credit where
+   credit is due." ColdSync is not commercial because, quite frankly, I
+   have neither the time nor the inclination to run a business.
+	I also wanted to use a "canned" license, one that many eyeballs
+   have debugged. The Artistic license was closest to what I was looking
+   for.
+
+Q: I added a new ToDo/Memo/whatever category on the Palm, and it hasn't
+   shown up on the desktop.
+A: Yup. This is an unsolved problem.
+	Categories are stored in a database's AppInfo block. The AppInfo
+   block can't be synced the same way as the data records. The Palm doesn't
+   report when the AppInfo block has changed, the way it does for data
+   records. There doesn't seem to be a good way to synchronize the AppInfo
+   block without risking losing information.
+
+Q: Why doesn't ColdSync synchronize my preferences?
+A: Preferences, such as your e-mail signature, your preferred time and date
+   format, and so on, are kept in .prc files. .prc files do not lend
+   themselves to syncing, for many of the same reasons as the AppInfo
+   block: they don't have flags indicating whether they've changed since
+   the last sync, and you can't have more than one copy of each one.
+
+Q: Does ColdSync work with the Handspring Visor?
+A: Yes.
+   Under FreeBSD 4.x, use
+
+	listen usb {
+		device: /dev/ugen0;
+	}
+
+   in your .coldsyncrc . If you want to run ColdSync from usbd, use the
+   following /etc/usbd.conf entry:
+
+	device "Handspring Visor"
+	vendor 0x082d
+	product 0x0100
+	release 0x0100
+	attach "/usr/local/bin/coldsync -s -md -t usb ${DEVNAME}"
+
+	Linux users can follow the instructions at
+   http://usbvisor.sourceforge.net/Handspring-Visor-mini-HOWTO
+   Then sync with /dev/ttyUSB1. In the .coldsyncrc, use "listen serial",
+   since ColdSync won't be accessing the USB port directly.
+	(Thanks to alert readers Shawn Sorichetti <ssoriche@home.com> and
+   Gaspar Chilingarov <nm@web.am> for this information.)
+
+Q: Does ColdSync work with the Sony Clie?
+A: Yes. See http://kreucher.user.msu.edu/clie/
+
+Q: Does ColdSync support syncing via the infrared port?
+A: Not directly, but yes.
+	You need to install an IrCOMM handler, which will make your IR port
+   behave like an RS-232 serial port. As far as I know, the only OS with a
+   working IrCOMM implementation is Linux.
+	Several people have reported being able to sync over IR, though I
+   have so far been unable to duplicate their success. You should probably
+   start with the IR-HOWTO that comes with the Redhat distribution.
+
+Q: ColdSync doesn't detect my Visor's serial number correctly.
+A: As far as I've been able to determine, the Handspring Visor does not
+   allow one to get at the serial number in software.
+	The Visor appears to support reading ROM tokens, which is the way
+   one reads the serial number in software. It even appears to have an
+   "snum" ROM token. However, the contents of this token are not a
+   12-character string, but a set of 12 0xff bytes.
+
+Q: How can I find out the user name and user ID on my Palm, in order to set
+   up my .coldsyncrc correctly?
+A: Two ways: the simplest is to run
+	coldsync -mI
+   If the username and userid don't match what's in your .coldsyncrc, it
+   will suggest a palm{} block to add to your .coldsyncrc.
+
+	A more direct way, however, is to write
+	<Shortcut> . 4
+   on your Palm. The username and userid will be displayed on the screen.
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# mode: auto-fill	***
+# fill-column:	75	***
+# End:			***

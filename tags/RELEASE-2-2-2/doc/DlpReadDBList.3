@@ -1,0 +1,64 @@
+.\" DlpReadDBList.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpReadDBList.3,v 1.1 2001-09-05 07:29:16 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadDBList 3
+.Sh NAME
+.Nm DlpReadDBList
+.Nd get information about databases on a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpReadDBList "PConnection *pconn" "const ubyte iflags" "const int card" "const uword start" "uword *last_index" "ubyte *oflags" "ubyte *num" "struct dlp_dbinfo *dbs"
+.Sh DESCRIPTION
+.Nm
+reads information about databases on the Palm.
+.Pp
+.Fa card
+specifies the number of the memory card on which to look. Card numbers
+begin at 0.
+.Pp
+.Fa iflags
+specifies which databases to retrieve. It is the bitwise-or of one or
+more of the following:
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPCMD_READDBLFLAG_RAM
+RAM databases
+.It Dv DLPCMD_READDBLFLAG_ROM
+ROM (read-only) databases
+.It Dv DLPCMD_READDBLFLAG_MULT
+Return multiple database entries (available as of DLP v1.2).
+.El
+.Pp
+.Fa start
+specifies the number of the first database to read.
+.Pp
+.Fa last_index
+is filled in with the index of the last database read.
+.Pp
+.Fa oflags
+is filled in with output flags. The only one defined is
+.Bl -tag -width "LIS" -compact -offset indent
+.It Dv DLPRET_READDBLFLAG_MORE
+There are more databases after these.
+.El
+.Pp
+.Fa dbs
+is filled in with descriptions of the databases.
+.Sh RETURN VALUE
+.Sh SEE ALSO
+.Xr libpconn 3 .
+.Sh BUGS
+.Dv DLPCMD_READDBLFLAG_MULT
+doesn't work.
