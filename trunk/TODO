@@ -53,7 +53,6 @@
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
 - Write a utility to just dump the contents of a pdb file.
-- Test with xcopilot (and real Palm) under Linux and other OSes.
 - Test under Purify.
 - Installing new databases: if the database to be installed already
   exists on the Palm, check the modification numbers: if the one on
@@ -146,8 +145,6 @@
   bother downloading the database from the Palm.
 - Add convenience functions for the various RPC calls, or at least the
   more useful ones. See SysTraps.h for list of traps.
-- Get rid of the variable-argument trace macros. 'egcs' complains
-  about them.
 - For files that include <string.h>, fix them according to the
   'autoconf' documentation:
 	#if STDC_HEADERS
@@ -198,11 +195,8 @@
   or whatever the largest type is, to shut compilers up.
 - Under Solaris 2.5, need:
 	env LIBS="-lbind -lsocket -lnsl" ./configure
-- Under DU 4.0, 'make' doesn't appear to know how to build .cc->.o
-- AIX 4.1 uses some weird-ass shit instead of FD_SETs, for select().
-  Need to work around that.
-- AIX 4.1: str(n)casecmp is in <strings.h>, not <string.h>. Need to
-  include both.
+- Under DU 4.0 (and a few others), 'make' doesn't appear to know how
+  to build .cc->.o
 - AIX 4.1: linker complains about:
 	ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
 	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
@@ -210,3 +204,13 @@
 	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
   This appears to be something in GenericConduit.cc, but I haven't
   been able to find anything more.
+- It might be possible to save time by not syncing databases whose
+  modnum hasn't changed. This is tricky, though: need to figure out
+  the expected modnum at the next sync (probably sufficient to just
+  record the current modnum). Also, if the local and remote databases
+  get modified the same number of times in different ways, nothing
+  will be synced.
+- Include "config.h" before the various system files. Fix throughout.
+- 'install' target.
+- BSD port.
+- Maybe add (optional) support for long arguments with libgnugetopt?
