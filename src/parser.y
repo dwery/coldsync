@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.61 2002-03-28 23:14:27 azummo Exp $
+ * $Id: parser.y,v 2.62 2002-04-02 15:29:49 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -130,7 +130,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %%
 file:	statements
 	{ PARSE_TRACE(1)
-		  fprintf(stderr, "Found a file\n");
+		  fprintf(stderr, "Found a configuration file\n");
 	}
 	;
 
@@ -501,11 +501,15 @@ conduit_directive:
 				(char) (($4.type >> 16) & 0xff),
 				(char) (($4.type >>  8) & 0xff),
 				(char) ($4.type & 0xff));
+
+			fprintf(stderr, "Conduit flags: 0x%02x\n",
+				$4.flags);
 		}
 
 		lex_expect(LEX_NONE);
 
-		if ((err = append_crea_type(cur_conduit, $4.creator, $4.type))
+		if ((err = append_crea_type(cur_conduit, $4.creator,
+						$4.type, $4.flags))
 		    < 0)
 		{
 			Error(_("%s: %d: Can't add creator-type pair to "

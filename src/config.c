@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.94 2002-03-30 18:01:59 azummo Exp $
+ * $Id: config.c,v 1.95 2002-04-02 15:29:49 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -329,7 +329,7 @@ load_config(const Bool read_user_config)
 
 		/* Initialize the fallback conduit. */
 		fallback->flavors = FLAVORFL_SYNC;	/* Sync flavor */
-		append_crea_type(fallback, 0x0000, 0x0000);
+		append_crea_type(fallback, 0x0000, 0x0000, 0x00);
 					/* Handles all creators and types */
 		fallback->flags |= CONDFL_DEFAULT;
 					/* This is a default conduit */
@@ -595,10 +595,11 @@ load_config(const Bool read_user_config)
 			{
 				register udword crea = c->ctypes[i].creator;
 				register udword type = c->ctypes[i].type;
+				register unsigned char flags = c->ctypes[i].flags;
 
 				fprintf(stderr,
 					"\t  [%c%c%c%c/%c%c%c%c] "
-					"(0x%08lx/0x%08lx)\n",
+					"(0x%08lx/0x%08lx) (flags: %02x)\n",
 					(char) ((crea >> 24) & 0xff),
 					(char) ((crea >> 16) & 0xff),
 					(char) ((crea >> 8) & 0xff),
@@ -608,7 +609,8 @@ load_config(const Bool read_user_config)
 					(char) ((type >> 8) & 0xff),
 					(char) (type & 0xff),
 					crea,
-					type);
+					type,
+					flags);
 			}
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
 			if ((c->flags & CONDFL_DEFAULT) != 0)
@@ -1575,6 +1577,9 @@ find_listen_block(char *name)
 
 		MISC_TRACE(2)
 		        fprintf(stderr, " failed.\n");
+
+		Error(_("Couldn't find the requested listen block: \"%s\""), name);
+		return NULL;
 	}
 
 	/* Fall back */
@@ -2087,7 +2092,8 @@ append_pref_desc(conduit_block *cond,	/* Conduit block to add to */
 int
 append_crea_type(conduit_block *cond,	/* Conduit block to add to */
 		 const udword creator,	/* Database creator */
-		 const udword type)	/* Database type */
+		 const udword type,	/* Database type */
+		 const unsigned char flags)
 {
 	/* Is this the first creator/type pair being added? */
 	if (cond->ctypes == NULL)
@@ -2136,6 +2142,7 @@ append_crea_type(conduit_block *cond,	/* Conduit block to add to */
 	 */
 	cond->ctypes[cond->num_ctypes].creator = creator;
 	cond->ctypes[cond->num_ctypes].type = type;
+	cond->ctypes[cond->num_ctypes].flags = flags;
 	cond->num_ctypes++;
 
 	return 0;		/* Success */

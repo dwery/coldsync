@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.11 2001-10-30 15:44:50 arensb Exp $
+ * $Id: spc.c,v 2.12 2002-04-02 15:29:49 azummo Exp $
  */
 
 #include "config.h"
@@ -84,13 +84,26 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 		return 0;
 
 	    case SPCOP_DBINFO:		/* Return information about database */
-		if ((*outbuf = (unsigned char *)
-		     malloc(DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN))
-		    == NULL)
-			return SPCERR_NOMEM;
-		header->len = DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN;
-		pack_dbinfo(dbinfo, *outbuf);
-		header->status = SPCERR_OK;
+		if (dbinfo)
+		{
+			if ((*outbuf = (unsigned char *)
+			     malloc(DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN))
+			    == NULL)
+				return SPCERR_NOMEM;
+			header->len = DLPCMD_DBINFO_LEN + DLPCMD_DBNAME_LEN;
+			pack_dbinfo(dbinfo, *outbuf);
+			header->status = SPCERR_OK;
+		}
+		else
+		{
+			header->status = SPCERR_BADOP;
+			header->len = 0L;
+			*outbuf = NULL;	/* No return data */
+			return 0;	/* Return success, because spc_send()
+					 * successfully processed a malformed
+					 * request.
+					 */
+		}
 		break;
 
 	    case SPCOP_DLPC:		/* Send DLP command to Palm */

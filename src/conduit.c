@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.49 2002-03-30 15:44:14 azummo Exp $
+ * $Id: conduit.c,v 2.50 2002-04-02 15:29:49 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -89,7 +89,8 @@ static RETSIGTYPE sigchld_handler(int sig);
 static INLINE Bool crea_type_matches(
 	const conduit_block *cond,
 	const udword creator,
-	const udword type);
+	const udword type,
+	const unsigned char flags);
 
 typedef int (*ConduitFunc)(PConnection *pconn,
 			   const struct dlp_dbinfo *dbinfo,
@@ -440,14 +441,6 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	/* Initialize the standard header values */
 	block_sigchld(&sigmask);	/* Don't disturb me now */
 
-	/* Construct the input filename to pass to the conduit. For install
-	 * conduits, this file is in ~/.palm/install/; for all other
-	 * flavors, it is in ~/.palm/backup/.
-	 */
-	bakfname = (flavor_mask & FLAVORFL_INSTALL) ?
-		mkinstfname(dbinfo) :
-		mkbakfname(dbinfo);
-
 	/* Turn the array of system headers into a linked list. */
 	for (i = 0; i < MAX_SYS_HEADERS-1; i++)
 		headers[i].next = &(headers[i+1]);
@@ -461,17 +454,28 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	headers[last_header].name = "Version";
 	headers[last_header].value = VERSION;
 
-	++last_header;
-	headers[last_header].name = "InputDB";
-	headers[last_header].value = (char *) bakfname;
-				/* The cast is just to stop the compiler
-				 * from complaining. */
+	if (dbinfo)
+	{
+		/* Construct the input filename to pass to the conduit. For install
+		 * conduits, this file is in ~/.palm/install/; for all other
+		 * flavors, it is in ~/.palm/backup/.
+		 */
+		bakfname = (flavor_mask & FLAVORFL_INSTALL) ?
+			mkinstfname(dbinfo) :
+			mkbakfname(dbinfo);
 
-	++last_header;
-	headers[last_header].name = "OutputDB";
-	headers[last_header].value = (char *) bakfname;
-				/* The cast is just to stop the compiler
-				 * from complaining. */
+		++last_header;
+		headers[last_header].name = "InputDB";
+		headers[last_header].value = (char *) bakfname;
+					/* The cast is just to stop the compiler
+					 * from complaining. */
+
+		++last_header;
+		headers[last_header].name = "OutputDB";
+		headers[last_header].value = (char *) bakfname;
+					/* The cast is just to stop the compiler
+					 * from complaining. */
+	}
 
 	/* Then we add the preference items as headers */
 	for (i = 0; i < conduit->num_prefs; i++)
@@ -1099,8 +1103,28 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 					 */
 	struct ConduitDef *builtin;
 
+	udword creator, type;		/* DB creator, type and flags */
+	unsigned char flags;
+
+
+
 	def_conduit = NULL;		/* No default conduit yet */
 	found_conduit = False;
+
+
+	/* If dbinfo == NULL, we must execute "type: none" conduits. */ 
+	if (dbinfo)
+	{
+		creator = dbinfo->creator;
+		type = dbinfo->type;
+		flags = 0L;
+	}
+	else
+	{
+		creator = type = 0L;
+		flags = CREATYPEFL_ISNONE;
+	}
+	
 
 	/* Walk the queue */
 	for (conduit = sync_config->conduits;
@@ -1125,8 +1149,9 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 
 		/* See if any of the creator/type pairs match */
 		if (!crea_type_matches(conduit,
-				       dbinfo->creator,
-				       dbinfo->type))
+				       creator,
+				       type,
+				       flags))
 		{
 			SYNC_TRACE(5)
 				fprintf(stderr,
@@ -1209,10 +1234,11 @@ run_conduits(const struct dlp_dbinfo *dbinfo,
 		}
 	}
 
-	if ((!found_conduit) && (def_conduit != NULL))
+	if ((!found_conduit) && (def_conduit != NULL) && (dbinfo != NULL))
 	{
 		/* No matching conduit was found, but there's a default.
-		 * Run it now.
+		 * Run it now. The default conduit is run only on "real"
+		 * (i.e. no "none") databases.
 		 */
 		SYNC_TRACE(4)
 			fprintf(stderr, "Running default conduit\n");
@@ -1271,7 +1297,7 @@ run_Fetch_conduits(const struct dlp_dbinfo *dbinfo)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
-			dbinfo->name);
+			dbinfo != NULL ? dbinfo->name : "(none)");
 
 	/* Note: If there are any open file descriptors that the conduit
 	 * shouldn't have access to (other than stdin and stdout, which are
@@ -1298,7 +1324,7 @@ run_Dump_conduits(const struct dlp_dbinfo *dbinfo)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
-			dbinfo->name);
+			dbinfo != NULL ? dbinfo->name : "(none)");
 
 	/* Note: If there are any open file descriptors that the conduit
 	 * shouldn't have access to (other than stdin and stdout, which are
@@ -1320,7 +1346,7 @@ run_Sync_conduits(const struct dlp_dbinfo *dbinfo,
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running sync conduits for \"%s\".\n",
-			dbinfo->name);
+			dbinfo != NULL ? dbinfo->name : "(none)");
 
 	/* Note: If there are any open file descriptors that the conduit
 	 * shouldn't have access to (other than stdin and stdout, which are
@@ -1340,9 +1366,8 @@ int
 run_Install_conduits(struct dlp_dbinfo *dbinfo)
 {
 	SYNC_TRACE(1)
-		fprintf(stderr, 
-			"Running install conduits for \"%s\".\n",
-			dbinfo->name);
+		fprintf(stderr, "Running install conduits for \"%s\".\n",
+			dbinfo != NULL ? dbinfo->name : "(none)");
 
 	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
 }
@@ -2150,7 +2175,8 @@ sigchld_handler(int sig)
 static INLINE Bool
 crea_type_matches(const conduit_block *cond,
 		  const udword creator,
-		  const udword type)
+		  const udword type,
+		  const unsigned char flags)
 {
 	int i;
 	Bool retval;
@@ -2163,7 +2189,8 @@ crea_type_matches(const conduit_block *cond,
 		fprintf(stderr, "crea_type_matches: "
 			"conduit \"%s\",\n"
 			"\tcreator: [%c%c%c%c] (0x%08lx) / "
-			"type: [%c%c%c%c] (0x%08lx)\n",
+			"type: [%c%c%c%c] (0x%08lx)\n"
+			"\tflags: 0x%02lx\n",
 
 			cond->path,
 
@@ -2177,7 +2204,8 @@ crea_type_matches(const conduit_block *cond,
 			(char) ((type >>16) & 0xff),
 			(char) ((type >> 8) & 0xff),
 			(char) (type & 0xff),
-			type);
+			type,
+			flags);
 
 	/* Iterate over the array of creator/type pairs defined in the
 	 * conduit_block.
@@ -2190,7 +2218,7 @@ crea_type_matches(const conduit_block *cond,
 		 */
 		SYNC_TRACE(7)
 			fprintf(stderr, "crea_type_matches: Comparing "
-				"[%c%c%c%c/%c%c%c%c] (0x%08lx/0x%08lx)\n",
+				"[%c%c%c%c/%c%c%c%c] (0x%08lx/0x%08lx) (flags: %02x)\n",
 
 				(char) ((cond->ctypes[i].creator >>24) & 0xff),
 				(char) ((cond->ctypes[i].creator >>16) & 0xff),
@@ -2203,7 +2231,11 @@ crea_type_matches(const conduit_block *cond,
 				(char) (cond->ctypes[i].type & 0xff),
 
 				cond->ctypes[i].creator,
-				cond->ctypes[i].type);
+				cond->ctypes[i].type,
+				cond->ctypes[i].flags);
+
+		if(cond->ctypes[i].flags != flags)
+			continue;
 
 		if (((cond->ctypes[i].creator == creator) ||
 		     (cond->ctypes[i].creator == 0L)) &&
