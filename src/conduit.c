@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.25 2000-07-01 19:56:45 arensb Exp $
+ * $Id: conduit.c,v 1.26 2000-07-02 23:38:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -17,6 +17,7 @@
 #include <sys/wait.h>			/* For waitpid() */
 #include <unistd.h>			/* For select() */
 #include <signal.h>			/* For signal() */
+#include <setjmp.h>			/* For sigsetjmp()/siglongjmp() */
 #include <errno.h>			/* For errno. Duh */
 #include <ctype.h>			/* For isdigit() and friends */
 
@@ -92,6 +93,16 @@ static pid_t conduit_pid = -1;		/* The PID of the currently-running
 static int conduit_status = 0;		/* Last known status of the
 					 * conduit, as set by waitpid().
 					 */
+static sigjmp_buf chld_jmpbuf;		/* Saved state for sigsetjmp() */
+static volatile sig_atomic_t canjump = 0;
+					/* Essentially a Bool: true iff the
+					 * SIGCHLD handler can safely call
+					 * longjmp() [*]
+					 */
+	/* [*] See Stevens, Richard W., "Advanced Programming in the UNIX
+	 * Environment", Addison-Wesley, 1993, section 10.15, "sigsetjmp
+	 * and siglongjmp Functions".
+	 */
 
 /* The following two variables are for setvbuf's benefit, for when we make
  * the conduit's stdin and stdout be line-buffered.
@@ -115,14 +126,18 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	int err;
 	static char * argv[4];	/* Conduit's argv */
 	pid_t pid;		/* Conduit's PID */
-	FILE *fromchild;	/* File handle to child's stdout */
-	FILE *tochild;		/* File handle to child's stdin */
+	FILE *fromchild = NULL;	/* File handle to child's stdout */
+	FILE *tochild = NULL;	/* File handle to child's stdin */
 	const char *bakfname;	/* Path to backup file */
-	int laststatus;		/* The last status code printed by the
+	volatile int laststatus = 501;
+				/* The last status code printed by the
 				 * child. This is used as its exit status.
+				 * Defaults to 501, since that's a sane
+				 * return status if the conduit doesn't run
+				 * at all (e.g., it isn't executable).
 				 */
 	struct cond_header *hdr;	/* User-supplied header */
-
+	sighandler old_sigchld;		/* Previous SIGCHLD handler */
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -134,6 +149,34 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		 * useful for defining a do-nothing default.
 		 */
 		return 201;		/* Success (trivially) */
+
+	/* Set handler for SIGCHLD, so that we can keep track of what
+	 * happens to conduit child processes.
+	 */
+	old_sigchld = signal(SIGCHLD, sigchld_handler);
+	if (old_sigchld == SIG_ERR)
+	{
+		fprintf(stderr, _("%s: Can't set signal handler\n"),
+			"run_conduits");
+		perror("signal");
+		return -1;
+	}
+
+	/* When the child exits, sigchld_handler() will longjmp() back to
+	 * here. This way, none of the other code has to worry about
+	 * whether the conduit is still running.
+	 */
+	if ((err = sigsetjmp(chld_jmpbuf, 1)) != 0)
+	{
+		SYNC_TRACE(4)
+			fprintf(stderr, "Returned from sigsetjmp(): %d\n",
+				err);
+		goto abort;
+	}
+
+	canjump = 1;		/* Tell the SIGCHLD signal handler that it
+				 * can call siglongjmp().
+				 */
 
 	argv[0] = conduit->path;	/* Path to conduit */
 	argv[1] = "conduit";		/* Mandatory argument */
@@ -150,13 +193,8 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 			"run_conduits");
 
 		/* Let's hope that this isn't a fatal problem */
-		return -1;
+		goto abort;
 	}
-
-	laststatus = -1;	/* Child hasn't sent anything yet. If it
-				 * exits before printing a status code,
-				 * that'll be an error.
-				 */
 
 	/* Feed the various parameters to the child via 'tochild'. */
 
@@ -214,7 +252,14 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		/* XXX - Error-checking */
 	fflush(tochild);
 
-	while ((err = cond_readstatus(fromchild)) > 0)
+  abort:
+	/* Read from the child's stdout. The important thing to note here
+	 * is that at this point, the child may or may not be running
+	 * (courtesy of the 'abort:' label). And if the child exited
+	 * quickly enough, even 'fromchild' might not be set yet.
+	 */
+	while ((fromchild != NULL) &&
+	       (err = cond_readstatus(fromchild)) > 0)
 	{
 		SYNC_TRACE(2)
 			fprintf(stderr,
@@ -227,11 +272,24 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		laststatus = err;
 	}
 
+	/* Restore previous SIGCHLD handler */
+	signal(SIGCHLD, old_sigchld);
 
 	SYNC_TRACE(4)
-		fprintf(stderr, "Closing child's file descriptors\n");
-	fclose(tochild);
-	fclose(fromchild);
+		fprintf(stderr, "Closing child's file descriptors.\n");
+	if (tochild != NULL)
+	{
+		SYNC_TRACE(7)
+			fprintf(stderr, "- Closing fd %d\n", fileno(tochild));
+		fclose(tochild);
+	}
+	if (fromchild != NULL)
+	{
+		SYNC_TRACE(7)
+			fprintf(stderr, "- Closing fd %d\n",
+				fileno(fromchild));
+		fclose(fromchild);
+	}
 
 	return laststatus;
 }
@@ -252,24 +310,11 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 {
 	int err;
 	conduit_block *conduit;
-	sighandler old_sigchld;		/* Previous SIGCHLD handler */
 	conduit_block *def_conduit;	/* Default conduit */
 	Bool found_conduit;		/* Set to true if a "real" (not
 					 * just a default) matching conduit
 					 * was found.
 					 */
-
-	/* Set handler for SIGCHLD, so that we can keep track of what
-	 * happens to conduit child processes.
-	 */
-	old_sigchld = signal(SIGCHLD, sigchld_handler);
-	if (old_sigchld == SIG_ERR)
-	{
-		fprintf(stderr, _("%s: Can't set signal handler\n"),
-			"run_conduits");
-		perror("signal");
-		return -1;
-	}
 
 	def_conduit = NULL;		/* No default conduit yet */
 	found_conduit = False;
@@ -387,9 +432,6 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		err = run_conduit(dbinfo, flavor, def_conduit);
 	}
 
-	/* Restore previous SIGCHLD handler */
-	signal(SIGCHLD, old_sigchld);
-
 	return 0;
 }
 
@@ -503,9 +545,6 @@ spawn_conduit(
 	int outpipe[2];		/* Pipe for child's stdout */
 	FILE *fh;		/* Temporary file handle */
 
-	/* XXX - Potential file descriptor leak: need to close these when
-	 * the child exits.
-	 */
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
 	if ((err = pipe(inpipe)) < 0)
@@ -682,34 +721,24 @@ cond_sendline(const char *data,	/* Data to send */
 
 		if (err < 0)
 		{
-			if (errno != EINTR)
-			{
-				/* Something happened other than select()
-				 * being interrupted by a signal. What the
-				 * hell happened?
+			if (errno == EINTR)
+				/* select() was interrupted by a signal.
+				 * Either the conduit is dead, in which
+				 * case it's not our problem, or ColdSync
+				 * received some other signal, which also
+				 * isn't our problem.
 				 */
-				fprintf(stderr,
-					_("%s: select() returned an "
-					  "unexpected error. This should "
-					  "never happen\n"),
-					"cond_sendline");
-				perror("select");
-				return -1;
-			}
-
-			/* select() was interrupted.
-			 * NB: 'conduit_pid' is set by sigchld_handler().
-			 */
-			if (conduit_pid > 0)
-			{
-				SYNC_TRACE(5)
-					fprintf(stderr,
-						"cond_sendline: select() just "
-						"got spooked, is all.\n");
 				continue;
-			}
 
-			goto abort;
+			/* Something happened other than select() being
+			 * interrupted by a signal. What the hell happened?
+			 */
+			fprintf(stderr,
+				_("%s: select() returned an unexpected error. "
+				  "This should never happen\n"),
+				"cond_sendline");
+			perror("select");
+			return -1;
 		}
 
 		/* This should only ever happen if select() times out. */
@@ -723,6 +752,15 @@ cond_sendline(const char *data,	/* Data to send */
 		}
 
 		/* See if the child has printed something. */
+		/* XXX - This is fairly bogus: this function shouldn't be
+		 * concerned with what the conduit might write. Things
+		 * should be rearranged so that cond_sendline() doesn't
+		 * have to worry about this.
+		 * At the same time, if the child writes some large amount
+		 * of data while we're trying to write some large amount of
+		 * data back to it, this can cause constipation. Do
+		 * something intelligent.
+		 */
 		if (FD_ISSET(fromchild_fd, &infds))
 		{
 			/* XXX - Call cond_readstatus() and let it parse
@@ -749,17 +787,6 @@ if (err <= 0)
 
 			continue;	/* Try select()ing again */
 		}
-
-		/* The conduit may have terminated (either normally or
-		 * abnormally), in which case we probably just got the
-		 * error message that it printed with its dying breath (see
-		 * above).
-		 * In any case, this is a bad thing, since we still had
-		 * things to tell it.
-		 * NB: 'conduit_pid' is set by sigchld_handler().
-		 */
-		if (conduit_pid <= 0)
-			goto abort;
 
 		/* See if the conduit is ready to read input */
 		if (FD_ISSET(tochild_fd, &outfds))
@@ -810,32 +837,6 @@ if (err <= 0)
 			  "notify the maintainer.\n"),
 			"cond_sendline");
 	}
-
-  abort:
-	/* The conduit is dead. This is bad, since we still
-	 * had things to say to it.
-	 */
-	fprintf(stderr, _("%s: conduit exited unexpectedly\n"),
-		"cond_sendline");
-
-	SYNC_TRACE(2)
-	{
-		if (WIFEXITED(conduit_status))
-			fprintf(stderr, "Conduit exited with status %d%s\n",
-				WEXITSTATUS(conduit_status),
-				(WCOREDUMP(conduit_status) ?
-				 " (core dumped)" : ""));
-		else if (WIFSIGNALED(conduit_status))
-			fprintf(stderr, "Conduit killed by signal %d%s\n",
-				WTERMSIG(conduit_status),
-				(WCOREDUMP(conduit_status) ?
-				 " (core dumped)" : ""));
-		else
-			fprintf(stderr, "I have no idea "
-				"how this happened\n");
-	}
-
-	return -1;
 }
 
 /* cond_sendheader
@@ -917,6 +918,9 @@ cond_readline(char *buf,	/* Buffer to read into */
 	fd_set infds;		/* File descriptors we'll read from */
 	int fromchild_fd;	/* File descriptor corresponding to
 				 * 'fromchild' */
+
+	if (fromchild == NULL)	/* Sanity check */
+		return -1;
 
 	fromchild_fd = fileno(fromchild);
 
@@ -1074,6 +1078,9 @@ cond_readline(char *buf,	/* Buffer to read into */
 	SYNC_TRACE(2)
 	{
 		if (WIFEXITED(conduit_status))
+			/* XXX - If conduit_status != 0, this fact ought to
+			 * be reported to the user.
+			 */
 			fprintf(stderr, "Conduit exited with status %d%s\n",
 				WEXITSTATUS(conduit_status),
 				(WCOREDUMP(conduit_status) ?
@@ -1200,6 +1207,14 @@ sigchld_handler(int sig)
 	MISC_TRACE(4)
 		fprintf(stderr, "Got a SIGCHLD\n");
 
+	if (canjump != 1)
+	{
+		/* Unexpected signal. Ignore it */
+		SYNC_TRACE(5)
+			fprintf(stderr, "Unexpected signal. Ignoring.\n");
+		return;
+	}
+
 	if (conduit_pid <= 0)
 	{
 		/* Got a SIGCHLD, but there's no conduit currently running.
@@ -1228,7 +1243,11 @@ sigchld_handler(int sig)
 		perror("waitpid");
 
 		conduit_pid = -1;
-		return;
+
+		SYNC_TRACE(4)
+			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
+		siglongjmp(chld_jmpbuf, 1);
+		/*return;*/
 	}
 
 	/* Find out whether the conduit process is still running */
@@ -1255,10 +1274,16 @@ sigchld_handler(int sig)
 		}
 
 		conduit_pid = -1;
-		return;
+
+		SYNC_TRACE(4)
+			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
+		siglongjmp(chld_jmpbuf, 1);
+		/*return;*/
 	}
 	MISC_TRACE(5)
 		fprintf(stderr, "Conduit is still running.\n");
+
+	return;		/* Nothing to do */
 }
 
 /* This is for Emacs's benefit:
