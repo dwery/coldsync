@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.49 2000-09-17 21:23:22 arensb Exp $
+ * $Id: coldsync.c,v 1.50 2000-09-17 22:07:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -348,7 +348,7 @@ main(int argc, char *argv[])
 
 		/* Calculate the checksum for the serial number */
 		checksum = snum_checksum(palm.serial, palm.serial_len);
-		SYNC_TRACE(1)
+		SYNC_TRACE(2)
 			fprintf(stderr, "Serial number is \"%s-%c\"\n",
 				palm.serial, checksum);
 	}
