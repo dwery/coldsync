@@ -1,3 +1,5 @@
+- Should all of the Dlp*() functions return type dlp_stat_t instead of
+  int?
 - For man pages that cover several functions, write short ".so
   somefunc.3" man pages for the secondary ones.
 - Use enums instead of #defined values, so that compiler can warn
