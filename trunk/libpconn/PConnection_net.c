@@ -8,6 +8,8 @@
 #include <arpa/inet.h>		/* For inet_pton() */
 #include <netdb.h>		/* For getservbyname() */
 #include <string.h>		/* For bzero() */
+#include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
+#include <resolv.h>		/* For inet_ntop() under Solaris */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -28,10 +30,6 @@ static int net_acknowledge_wakeup(
 	struct sockaddr_in *cliaddr,
 	socklen_t *cliaddr_len);
 static int net_tcp_listen(PConnection *pconn);
-
-/* XXX - These variables are global *ONLY* for testing */
-/*  static socklen_t cliaddr_len; */
-/*  static socklen_t cliaddr_tcp_len; */
 
 /* Ritual statements
  * These packets are sent back and forth during the initial handshaking
@@ -417,9 +415,17 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 					  namebuf, 128),
 				ntohs(servaddr.sin_port));
 		}
+
 		err = connect(pconn->fd,
-			      (const struct sockaddr *) &servaddr,
+			      (struct sockaddr *) &servaddr,
 			      servaddr_len);
+			/* Normally, the second argument ought to be cast
+			 * to (const struct sockaddr *), but Solaris
+			 * expects a (struct sockaddr *), so it complains.
+			 * You can #define _XPG4_2 to get a 'const'
+			 * prototype, but that introduces all sorts of
+			 * other problems.
+			 */
 		if (err < 0)
 		{
 			perror("connect");
