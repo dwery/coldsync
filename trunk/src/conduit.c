@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.26 2000-07-02 23:38:33 arensb Exp $
+ * $Id: conduit.c,v 1.27 2000-07-03 07:46:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -65,15 +65,6 @@ static pid_t spawn_conduit(const char *path,
 			   FILE **tochild,
 			   FILE **fromchild,
 			   const fd_set *openfds);
-static int cond_sendline(const char *data,
-			 int len,
-			 FILE *tochild,
-			 FILE *fromchild);
-static int cond_sendheader(const char *field,
-			   const char *data,
-			   int len,
-			   FILE *tochild,
-			   FILE *fromchild);
 static int cond_readline(char *buf,
 			 int len,
 			 FILE *fromchild);
@@ -87,7 +78,7 @@ static RETSIGTYPE sigchld_handler(int sig);
  * one of each. When and if it becomes possible to spawn multiple children
  * at a time, this will need to be updated.
  */
-static pid_t conduit_pid = -1;		/* The PID of the currently-running
+static volatile pid_t conduit_pid = -1;	/* The PID of the currently-running
 					 * conduit.
 					 */
 static int conduit_status = 0;		/* Last known status of the
@@ -124,6 +115,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	    conduit_block *conduit)
 {
 	int err;
+	int i;
 	static char * argv[4];	/* Conduit's argv */
 	pid_t pid;		/* Conduit's PID */
 	FILE *fromchild = NULL;	/* File handle to child's stdout */
@@ -138,6 +130,16 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 				 */
 	struct cond_header *hdr;	/* User-supplied header */
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
+	struct {		/* Array of standard headers */
+		char *name;
+		const char *value;
+	} headers[] = {
+		{ "Daemon",	PACKAGE },
+		{ "Version",	VERSION },
+		{ "InputDB",	NULL },
+		{ "OutputDB",	NULL },
+	};
+	int num_headers = sizeof(headers) / sizeof(headers[0]);
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -171,6 +173,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(4)
 			fprintf(stderr, "Returned from sigsetjmp(): %d\n",
 				err);
+		canjump = 0;
 		goto abort;
 	}
 
@@ -198,65 +201,44 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 
 	/* Feed the various parameters to the child via 'tochild'. */
 
-	/* Daemon: the name of the ColdSync daemon. Under the terms of the
-	 * Artistic license, you can come up with your own version of
-	 * ColdSync, but you have to call it something else. The "Daemon"
-	 * header is there in case it matters.
-	 */
-	cond_sendheader("Daemon",
-			PACKAGE, strlen(PACKAGE),
-			tochild, fromchild);
-		/* XXX - Error-checking */
-
-	/* Version: version of the program given by "Daemon" */
-	cond_sendheader("Version",
-			VERSION, strlen(VERSION),
-			tochild, fromchild);
-		/* XXX - Error-checking */
-
-	/* InputDB: location of existing database */
-	/* XXX - This is only applicable for certain flavors of conduit
-	 * (dump, sync). Deal with this.
-	 */
+	/* Initialize the values that weren't initialized above */
 	bakfname = mkbakfname(dbinfo);
-	cond_sendheader("InputDB",
-			bakfname, strlen(bakfname),
-			tochild, fromchild);
-		/* XXX - Error-checking */
+	headers[2].value = bakfname;
+	headers[3].value = bakfname;
 
-	/* OutputDB: Location of database to dump to */
-	/* XXX - This is only applicable for certain flavors of conduit
-	 * (fetch, sync). Deal with this.
-	 */
-	cond_sendheader("OutputDB",
-			bakfname, strlen(bakfname),
-			tochild, fromchild);
-		/* XXX - Error-checking */
-
-	/* XXX - "PalmOS": Version of PalmOS running on the Palm (For Sync
-	 * conduit only)
-	 */
-	/* XXX - Other header lines */
+	for (i = 0; i < num_headers; i++)
+	{
+		SYNC_TRACE(4)
+			fprintf(stderr, ">>> %s: %s\n",
+				headers[i].name,
+				headers[i].value);
+		fprintf(tochild, "%s: %s\n",
+			headers[i].name,
+			headers[i].value);
+	}
 
 	/* User-supplied header lines */
 	for (hdr = conduit->headers; hdr != NULL; hdr = hdr->next)
 	{
-		cond_sendheader(hdr->name,
-				hdr->value, strlen(hdr->value),
-				tochild, fromchild);
-		/* XXX - Error-checking */
+		SYNC_TRACE(4)
+			fprintf(stderr, ">>> %s: %s\n",
+				hdr->name,
+				hdr->value);
+		fprintf(tochild, "%s: %s\n",
+			hdr->name,
+			hdr->value);
 	}
 
 	/* Send an empty line to the child (end of input) */
-	cond_sendline("\n", 1, tochild, fromchild);
+	fprintf(tochild, "\n");
 		/* XXX - Error-checking */
 	fflush(tochild);
 
-  abort:
-	/* Read from the child's stdout. The important thing to note here
-	 * is that at this point, the child may or may not be running
-	 * (courtesy of the 'abort:' label). And if the child exited
-	 * quickly enough, even 'fromchild' might not be set yet.
+	/* Read from the child's stdout.
+	 */
+	/* XXX - This should really select() 'fromchild' and the SPC file
+	 * descriptor (for Sync conduits). This time around, the select()
+	 * should block on input.
 	 */
 	while ((fromchild != NULL) &&
 	       (err = cond_readstatus(fromchild)) > 0)
@@ -272,6 +254,50 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		laststatus = err;
 	}
 
+  abort:
+	/* The conduit has exited */
+
+	/* See if there is anything pending on 'fromchild' */
+	while (1)
+	{
+		fd_set infds;
+		struct timeval timeout;
+		int fromchild_fd;	/* 'fromchild' as a file descriptor */
+
+		fromchild_fd = fileno(fromchild);
+		FD_ZERO(&infds);
+		FD_SET(fromchild_fd, &infds);
+
+		/* Don't wait for anything. Just poll the file descriptor */
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+
+		SYNC_TRACE(5)
+			fprintf(stderr, "run_conduit: flushing 'fromchild'\n");
+		err = select(fromchild_fd+1,
+			     &infds, NULL, NULL,
+			     &timeout);
+
+		if (err < 0)
+		{
+			/* An error occurred. I don't think we care */
+			SYNC_TRACE(5)
+				perror("select");
+			break;
+		}
+
+		if (err == 0)
+			/* Nothing was printed to 'fromchild' */
+			break;
+
+		/* If we get here, then something was printed to 'fromchild' */
+		err = cond_readstatus(fromchild);
+		if (err > 0)
+			laststatus = err;
+		else
+			break;
+	}
+
 	/* Restore previous SIGCHLD handler */
 	signal(SIGCHLD, old_sigchld);
 
@@ -281,6 +307,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	{
 		SYNC_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n", fileno(tochild));
+		fpurge(tochild);
 		fclose(tochild);
 	}
 	if (fromchild != NULL)
@@ -288,6 +315,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n",
 				fileno(fromchild));
+		fpurge(fromchild);
 		fclose(fromchild);
 	}
 
@@ -544,6 +572,8 @@ spawn_conduit(
 	int inpipe[2];		/* Pipe for child's stdin */
 	int outpipe[2];		/* Pipe for child's stdout */
 	FILE *fh;		/* Temporary file handle */
+	sigset_t sigmask;	/* Mask of signals to block */
+	sigset_t old_sigmask;	/* Old signal mask */
 
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
@@ -608,6 +638,16 @@ spawn_conduit(
 	}
 	*fromchild = fh;
 
+	/* Here begins the critical section. The conduit might die
+	 * immediately (e.g., the file doesn't exist, or isn't executable,
+	 * or dumps core immediately). However, we don't want to get a
+	 * SIGCHLD before spawn_conduit() has finished cleaning up from the
+	 * fork(). Hence, we block SIGCHLD until we're done.
+	 */
+	sigemptyset(&sigmask);
+	sigaddset(&sigmask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &sigmask, &old_sigmask);
+
 	if ((conduit_pid = fork()) < 0)
 	{
 		perror("fork");
@@ -615,10 +655,17 @@ spawn_conduit(
 	} else if (conduit_pid != 0)
 	{
 		/* This is the parent */
+		SYNC_TRACE(5)
+			fprintf(stderr, "Conduit PID == %d\n", conduit_pid);
 
 		/* Close the unused ends of the pipes */
 		close(inpipe[0]);
 		close(outpipe[1]);
+
+		/* Here ends the critical section of the parent. Unblock
+		 * SIGCHLD.
+		 */
+		sigprocmask(SIG_SETMASK, &old_sigmask, NULL);
 
 		return conduit_pid;
 	}
@@ -649,6 +696,9 @@ spawn_conduit(
 	}
 	close(outpipe[1]);
 
+	/* Unblock SIGCHLD in the child as well. */
+	sigprocmask(SIG_SETMASK, &old_sigmask, NULL);
+
 	err = execvp(path, argv);
 
 	/* If we ever get to this point, then something went wrong */
@@ -656,241 +706,9 @@ spawn_conduit(
 		"spawn_conduit",
 		path, err);
 	perror("execvp");
-	return -1;		/* If we get this far, then something
+	exit(1);		/* If we get this far, then something
 				 * went wrong.
 				 */
-}
-
-/* cond_sendline
- * Send a string to a child. 'data' is the buffer of data to send, and
- * 'len' is the length of the data, in bytes. The data is not touched in
- * any way.
- * Returns 0 if successful, or a negative value in case of error.
- */
-static int
-cond_sendline(const char *data,	/* Data to send */
-	      int len,		/* Length of data to send */
-	      FILE *tochild,	/* File descriptor to child's stdin */
-	      FILE *fromchild)	/* File descriptor to child's stdout */
-{
-	int err;
-	fd_set infds;		/* File descriptors we'll read from */
-	fd_set outfds;		/* File descriptors we'll write to */
-	int max_fd;		/* Highest-numbered file descriptor,
-				 * for select().
-				 */
-	int tochild_fd;		/* File descriptor corresponding to
-				 * 'tochild' */
-	int fromchild_fd;	/* File descriptor corresponding to
-				 * 'fromchild' */
-
-	/* Get highest file descriptor number */
-	tochild_fd = fileno(tochild);
-	fromchild_fd = fileno(fromchild);
-	max_fd = (fromchild_fd > tochild_fd) ? fromchild_fd : tochild_fd;
-
-	while (1)
-	{
-		/* Set up the file descriptors to listen on */
-		FD_ZERO(&infds);
-		FD_SET(fromchild_fd, &infds);
-		FD_ZERO(&outfds);
-		FD_SET(tochild_fd, &outfds);
-
-		SYNC_TRACE(5)
-			fprintf(stderr, "cond_sendline: About to select()\n");
-
-		err = select(max_fd+1, &infds, &outfds, NULL, NULL);
-
-		SYNC_TRACE(5)
-			fprintf(stderr,
-				"cond_sendline: select() returned %d\n",
-				err);
-
-		/* Several things may have happened at this point: err < 0:
-		 * means that select() was interrupted (maybe by SIGCHLD,
-		 * maybe not); the conduit may or may not still be running,
-		 * and it may or may not have printed anything.
-		 *
-		 * err == 0: This should never happen.
-		 *
-		 * err > 0: there are 'err' ready file descriptors. From
-		 * experimenting, it looks as if the conduit may or may not
-		 * be running. It may have exited before the select().
-		 */
-
-		if (err < 0)
-		{
-			if (errno == EINTR)
-				/* select() was interrupted by a signal.
-				 * Either the conduit is dead, in which
-				 * case it's not our problem, or ColdSync
-				 * received some other signal, which also
-				 * isn't our problem.
-				 */
-				continue;
-
-			/* Something happened other than select() being
-			 * interrupted by a signal. What the hell happened?
-			 */
-			fprintf(stderr,
-				_("%s: select() returned an unexpected error. "
-				  "This should never happen\n"),
-				"cond_sendline");
-			perror("select");
-			return -1;
-		}
-
-		/* This should only ever happen if select() times out. */
-		if (err == 0)
-		{
-			fprintf(stderr, _("%s: select() returned 0. This "
-					  "should never happen. Please "
-					  "notify the maintainer.\n"),
-				"cond_sendline");
-			return -1;
-		}
-
-		/* See if the child has printed something. */
-		/* XXX - This is fairly bogus: this function shouldn't be
-		 * concerned with what the conduit might write. Things
-		 * should be rearranged so that cond_sendline() doesn't
-		 * have to worry about this.
-		 * At the same time, if the child writes some large amount
-		 * of data while we're trying to write some large amount of
-		 * data back to it, this can cause constipation. Do
-		 * something intelligent.
-		 */
-		if (FD_ISSET(fromchild_fd, &infds))
-		{
-			/* XXX - Call cond_readstatus() and let it parse
-			 * the line.
-			 */
-			static char buf[1024];
-			/* XXX - Read what the child has to say, and do
-			 * something intelligent about it.
-			 */
-err = read(fromchild_fd, buf, 1024);
-SYNC_TRACE(5)
-{
-fprintf(stderr, "<<< \"%s\"\n", buf);
-}
-
-/* XXX */
-if (err <= 0)
-{
-	fprintf(stderr, "read() returned %d\n", err);
-	if (err < 0)
-		perror("read");
-	return -1;
-}
-
-			continue;	/* Try select()ing again */
-		}
-
-		/* See if the conduit is ready to read input */
-		if (FD_ISSET(tochild_fd, &outfds))
-		{
-			/* XXX - Grrr... apparently, these two trace
-			 * statements introduce a heisenbug: if the conduit
-			 * exits quickly enough, then the delay introduced
-			 * by these two trace statements is long enough
-			 * that 'tochild_fd' has closed, and writing to it
-			 * causes a segfault.
-			 */
-			SYNC_TRACE(6)
-				fprintf(stderr, "cond_sendline: Conduit is "
-					"ready to read\n");
-			SYNC_TRACE(5)
-				fprintf(stderr, ">>> [%s]\n", data);
-
-			err = write(tochild_fd, data, len);
-			if (err < 0)
-			{
-				fprintf(stderr, _("%s: write() failed\n"),
-					"cond_sendline");
-				perror("write");
-				return -1;
-			}
-
-			if (err < len)
-			{
-				/* write() didn't write as much as we
-				 * thought it would. Loop back to the top
-				 * and wait for 'tochild_fd' to become
-				 * writable again.
-				 */
-				data += err;
-				len -= err;
-				continue;
-			}
-
-			return 0;		/* Success */
-		}
-
-		/* I don't know how you'd ever get here */
-		fprintf(stderr,
-			_("%s: Conduit is running happily, but hasn't printed "
-			  "anything, and \n"
-			  "isn't ready to read. And yet, I was notified. This "
-			  "is a bug. Please\n"
-			  "notify the maintainer.\n"),
-			"cond_sendline");
-	}
-}
-
-/* cond_sendheader
- * Send a formatted header line to the conduit. This consists of 'field',
- * ": ", and 'data'. Thus, if 'field' is "Foo" and 'data' is 'bar baz',
- * cond_sendheader() will send the line "Foo: bar baz\n" to the conduit. It
- * also ensures that the field name is not longer than COND_MAXHFIELDLEN
- * and that the entire line is not longer than COND_MAXLINELEN.
- * XXX - What should it do if the line is longer? Should there be a
- * continuation mechanism? For now, just truncate the line.
- */
-static int
-cond_sendheader(const char *field,	/* Header field to send */
-		const char *data,	/* Header data to send */
-		int len,		/* Length of 'data' */
-		FILE *tochild,		/* File descriptor to child's stdout */
-		FILE *fromchild)	/* File descriptor to child's stdin */
-{
-	static char outbuf[COND_MAXLINELEN+1];	/* Output buffer */
-	int fieldnamelen;			/* Length of 'field' */
-
-	SYNC_TRACE(6)
-		fprintf(stderr, "Sending conduit header:\n  [%s]->[%s]\n",
-			field, data);
-
-	/* The field label is assumed to be a plain string */
-	fieldnamelen = strlen(field);
-	if (fieldnamelen > COND_MAXHFIELDLEN)
-	{
-		fprintf(stderr, _("%s: header cannot be longer than %d "
-				  "characters long\n"),
-			"cond_sendheader", COND_MAXHFIELDLEN);
-		return -1;
-	}
-
-	/* XXX - Scan 'field' to make sure it only contains alphanumerics,
-	 * dashes, and underscores.
-	 */
-
-	/* Construct the output string in 'outbuf' */
-	strncpy(outbuf, field, fieldnamelen);
-	strncpy(outbuf + fieldnamelen, ": ", 2);
-	if (len > (COND_MAXLINELEN - (fieldnamelen + 2)))
-		len = COND_MAXLINELEN - (fieldnamelen + 2);
-	strncpy(outbuf + fieldnamelen + 2, data, len);
-	strncpy(outbuf + fieldnamelen + 2 + len, "\n", 1);
-	outbuf[fieldnamelen + 2 + len + 1] = '\0';
-		/* XXX - Check for buffer overflow in this last line */
-
-	/* And just forward the formatted string to cond_sendline() */
-	return cond_sendline(outbuf,
-			     fieldnamelen + 2 + len + 1,
-			     tochild,
-			     fromchild);
 }
 
 /* cond_readline
@@ -1226,8 +1044,8 @@ sigchld_handler(int sig)
 		 */
 		MISC_TRACE(5)
 			fprintf(stderr,
-				"Got a SIGCHLD, but I have no children. "
-				"Ignoring.\n");
+				"Got a SIGCHLD, but conduit_pid == %d. "
+				"Ignoring.\n", conduit_pid);
 		return;
 	}
 
@@ -1247,7 +1065,6 @@ sigchld_handler(int sig)
 		SYNC_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
 		siglongjmp(chld_jmpbuf, 1);
-		/*return;*/
 	}
 
 	/* Find out whether the conduit process is still running */
@@ -1278,7 +1095,6 @@ sigchld_handler(int sig)
 		SYNC_TRACE(4)
 			fprintf(stderr, "siglongjmp(1)ing out of SIGCHLD.\n");
 		siglongjmp(chld_jmpbuf, 1);
-		/*return;*/
 	}
 	MISC_TRACE(5)
 		fprintf(stderr, "Conduit is still running.\n");
