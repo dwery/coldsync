@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.35 2001-09-07 10:38:49 arensb Exp $
+ * $Id: lexer.l,v 2.36 2001-10-12 02:22:15 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -16,6 +16,7 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "parser.h"
+#include "symboltable.h"
 #include "y.tab.h"
 
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
@@ -154,6 +155,7 @@ ID		[-a-zA-Z_0-9]
 "directory"	{ KEYWORD(DIRECTORY);	}
 "forward"	{ KEYWORD(FORWARD);	}
 "listen"	{ KEYWORD(LISTEN);	}
+"options"	{ KEYWORD(OPTIONS);	}
 "path"		{ KEYWORD(PATH);	}
 "pda"		{ KEYWORD(PDA);		}
 "palm"		{ KEYWORD(PDA);		/* Synonym */	}

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.74 2001-09-29 07:46:13 arensb Exp $
+ * $Id: config.c,v 1.75 2001-10-12 02:22:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -50,6 +50,7 @@ struct rtentry;
 #include "coldsync.h"
 #include "pconn/pconn.h"
 #include "parser.h"		/* For config file parser stuff */
+#include "symboltable.h"
 #include "cs_error.h"
 
 #ifndef MAXHOSTNAMELEN
@@ -195,6 +196,13 @@ parse_args(int argc, char *argv[])
 				 * <file>.
 				 */
 			global_opts.log_fname = optarg;
+ 			put_symbol("LOGFILE", strdup(optarg));
+				/* XXX - Now would also be a good time to
+				 * set 'final' on the LOGFILE symbol: if it
+				 * was specified on the command line, that
+				 * overrides any value given in the
+				 * environment or config file(s).
+				 */
 			break;
 
 		    case 'm':	/* -m <mode>: Run in the given mode */

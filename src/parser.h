@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.10 2001-09-07 10:38:06 arensb Exp $
+ * $Id: parser.h,v 2.11 2001-10-12 02:22:29 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -39,6 +39,7 @@ extern int parse_trace;		/* Debugging level for config file parser */
 extern int lineno;		/* Line number */
 
 extern void lex_expect(const lex_state_t state);
+extern void lex_tini(void);	/* Lexer cleanup */
 
 #endif	/* _parser_h_ */
 
