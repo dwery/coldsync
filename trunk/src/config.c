@@ -2,6 +2,10 @@
  *
  * Functions dealing with loading the configuration.
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * XXX - This is all rather rough and unfinished, mainly because I'm
  * not entirely sure how to do things. For now, I'm (sorta) assuming
  * one user, one Palm, one machine, but this is definitely going to
@@ -9,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.4 1999-08-01 08:04:08 arensb Exp $
+ * $Id: config.c,v 1.5 1999-09-04 21:00:11 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -44,6 +48,7 @@ uid_t user_uid;
 char user_fullname[DLPCMD_USERNAME_LEN];
 char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
+char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
 char archivedir[MAXPATHLEN+1];	/* ~/.palm/archive pathname */
 char installdir[MAXPATHLEN+1];	/* ~/.palm/install pathname */
 
@@ -166,7 +171,7 @@ load_palm_config(struct Palm *palm)
 		return -1;
 	}
 	MISC_TRACE(2)
-		fprintf(stderr, "UID: %u\n", uid);
+		fprintf(stderr, "UID: %lu\n", (unsigned long) uid);
 
 	/* Get the user's password file info */
 	if ((pwent = getpwuid(uid)) == NULL)
@@ -178,7 +183,8 @@ load_palm_config(struct Palm *palm)
 	{
 		fprintf(stderr, "pwent:\n");
 		fprintf(stderr, "\tpw_name: \"%s\"\n", pwent->pw_name);
-		fprintf(stderr, "\tpw_uid: %u\n", pwent->pw_uid);
+		fprintf(stderr, "\tpw_uid: %lu\n",
+			(unsigned long) pwent->pw_uid);
 		fprintf(stderr, "\tpw_gecos: \"%s\"\n", pwent->pw_gecos);
 		fprintf(stderr, "\tpw_dir: \"%s\"\n", pwent->pw_dir);
 	}
@@ -253,6 +259,22 @@ load_palm_config(struct Palm *palm)
 		}
 	}
 
+	/* ~/.palm/backup/Attic */
+	strncpy(atticdir, backupdir, MAXPATHLEN);
+	strncat(atticdir, "/Attic", MAXPATHLEN - strlen(backupdir));
+
+	if (stat(atticdir, &statbuf) < 0)
+	{
+		/* ~/.palm/backup/Attic doesn't exist. Create it */
+		/* XXX - The directory mode ought to be configurable */
+		if ((err = mkdir(atticdir, 0700)) < 0)
+		{
+			/* Can't create the directory */
+			perror("load_palm_config: mkdir(~/.palm/backup/Attic)\n");
+			return -1;
+		}
+	}
+
 	/* ~/.palm/archive */
 	strncpy(archivedir, palmdir, MAXPATHLEN);
 	strncat(archivedir, "/archive", MAXPATHLEN - strlen(palmdir));
@@ -315,13 +337,18 @@ get_fullname(char *buf,
 			goto done;
 		    case '&':
 			/* Expand '&' */
+/* XXX - Is there a more specific test for egcs? */
+#ifdef _GNUC_
+#warning "You can ignore the warning about"
+#warning "\"ANSI C forbids braced-groups within expressions\""
+#endif	/* _GNUC_ */
 			/* XXX - egcs whines about "ANSI C forbids
 			 * braced-groups within expressions", but there
 			 * doesn't seem to be anything I can do about it,
 			 * since it's the __tobody macro inside <ctype.h>
 			 * that's broken in this way.
 			 */
-			buf[bufi] = toupper(pwent->pw_name[0]);
+			buf[bufi] = toupper((int) pwent->pw_name[0]);
 			bufi++;
 			for (namei = 1; pwent->pw_name[namei] != '\0';
 			     bufi++, namei++)
