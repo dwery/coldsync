@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.39 2001-11-10 03:02:51 arensb Exp $
+ * $Id: lexer.l,v 2.40 2001-11-12 01:08:52 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -187,6 +187,12 @@ QSTR		[^\\\$\"\n]
 "username"	{ KEYWORD(USERNAME);	}
 "Chosen"	{ KEYWORD(SAVED);	}
 "Heathen"	{ KEYWORD(UNSAVED);	}
+
+ /* Boolean values */
+[Tt]"rue"	{ KEYWORD(TRUE);	}
+[Yy]"es"	{ KEYWORD(TRUE);	/* Synonym */	}
+[Ff]"alse"	{ KEYWORD(FALSE);	}
+[Nn]"o"		{ KEYWORD(FALSE);	/* Synonym */	}
 
  /* Hardware protocols */
 "net"		{ KEYWORD(NET);	}
