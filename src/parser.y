@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.27 2000-06-11 18:49:53 arensb Exp $
+ * $Id: parser.y,v 2.28 2000-06-15 07:34:40 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -84,9 +84,12 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token LISTEN
 %token PATH
 %token PDA
+%token PREFERENCE
+%token SAVED
 %token SPEED
 %token SNUM
 %token TYPE
+%token UNSAVED
 
 %token SERIAL
 %token USB
@@ -94,6 +97,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %type <commtype> comm_type
 %type <crea_type> creator_type
 %type <string> opt_name
+%type <integer> opt_pref_flag
 
 /* Conduit flavors */
 %token SYNC
@@ -444,8 +448,45 @@ conduit_directive:
 			fprintf(stderr, "Conduit path: [%s]\n",
 				cur_conduit->path);
 	}
+	| PREFERENCE colon
+	{
+		lex_expect(LEX_ID4);
+	}
+	opt_pref_flag STRING
+	{
+		lex_expect(0);
+	}
+	'/' NUMBER semicolon
+	{
+		udword creator;
+		int err;
+
+		PARSE_TRACE(4)
+			fprintf(stderr, "Preference: [%s]/%ld\n",
+				$5, $8);
+
+		creator =
+			(($5[0]) << 24) |
+			(($5[1]) << 16) |
+			(($5[2]) << 8) |
+			($5[3]);
+		if ((err = append_pref_desc(cur_conduit, creator, $8, $4)) < 0)
+		{
+			fprintf(stderr,
+				_("%s: %d: Can't add preference to list. "
+				  "This is very bad.\n"),
+				conf_fname, lineno);
+			free($5); $5 = NULL;
+			return -1;
+		}
+
+		free($5);
+		$5 = NULL;
+	}
 	| DEFAULT semicolon
 	{
+		lex_expect(0);
+
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a default conduit\n");
 
@@ -471,6 +512,16 @@ conduit_directive:
 		yyclearin;
 	}
 	';'
+	;
+
+/* opt_pref_flags: optional `preference' statement modifier.
+ */
+opt_pref_flag:	SAVED
+	{ $$ = PREFDFL_SAVED; }
+	| UNSAVED
+	{ $$ = PREFDFL_UNSAVED; }
+	|	/* Empty */
+	{ $$ = 0; }
 	;
 
 creator_type:	STRING '/' STRING
