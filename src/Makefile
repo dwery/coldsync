@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.23 2002-01-23 15:53:18 arensb Exp $
+# $Id: Makefile,v 2.24 2002-03-10 23:34:12 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -52,7 +52,8 @@ EXTRA_LIBS =	${LIBPDB} ${LIBPCONN} ${LIBYACC} ${LIBLEX}
 CLEAN =		${CXXPROG} ${OBJS} \
 		*.ln *.bak *~ core *.core .depend \
 		lex.yy.c y.tab.c y.tab.h y.output \
-		parser.tab.c parser.tab.h parser.output
+		parser.tab.c parser.tab.h parser.output \
+		coldnamed.o coldnamed
 
 DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
@@ -79,7 +80,7 @@ install::	${CXXPROG}
 # best to move coldnamed into its own directory, with a separate Makefile.
 # Or perhaps fix LDFLAGS and friends to support multiple programs.
 coldnamed:	coldnamed.o
-	${CC} ${CFLAGS} coldnamed.o -o $@
+	${CC} ${CFLAGS} coldnamed.o -o $@ ${LDFLAGS}
 
 # Additional dependencies, maintained by hand 'cos I don't know how
 # else to do it
