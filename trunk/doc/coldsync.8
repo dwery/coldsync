@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.53 2002-07-04 21:03:26 azummo Exp $
+.\" $Id: coldsync.8,v 1.54 2002-07-04 21:23:11 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -388,7 +388,7 @@ listen net {
 
 listen serial {
 	device: stdin;
-	modem;
+	nochangespeed;
 }
 .Ed
 .Pp
@@ -415,7 +415,7 @@ starts, but will be created later on, when the Palm connects to the
 workstation. Use this if you are using devfs.
 .Pp
 The
-.Li modem
+.Li nochangespeed
 directive indicates that the device is a modem, so
 .Nm ColdSync
 will not attempt to change the line speed and break the connection.

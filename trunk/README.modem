@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with a dialup modem
 
-$Id: README.modem,v 1.1 2002-07-04 21:11:56 azummo Exp $
+$Id: README.modem,v 1.2 2002-07-04 21:23:11 azummo Exp $
 
 INTRODUCTION:
 =============
@@ -80,7 +80,7 @@ custom config files.
 /home/palmuser/etc/modem.conf:
 listen serial {
     device: stdin;
-    modem;
+    nochangespeed;
 }
 -----------------------------
 

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.138 2002-07-04 21:03:27 azummo Exp $
+ * $Id: coldsync.c,v 1.139 2002-07-04 21:23:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -541,7 +541,7 @@ palm_Connect( void )
 				      LISTENFL_TRANSIENT ? PCONNFL_TRANSIENT :
 				      0) |
 				     (listen->flags &
-				      LISTENFL_MODEM ? PCONNFL_MODEM :
+				      LISTENFL_NOCHANGESPEED ? PCONNFL_NOCHANGESPEED :
 				      0)
 		     ))
 	    == NULL)
