@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.10 2001-03-29 05:34:39 arensb Exp $
+ * $Id: cmp.c,v 1.11 2001-03-30 06:27:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -152,12 +152,16 @@ cmp_accept(PConnection *pconn, udword bps)
 	cmpp.type = CMP_TYPE_INIT;
 	cmpp.ver_major = CMP_VER_MAJOR;
 	cmpp.ver_minor = CMP_VER_MINOR;
-	if ((bps != 0) && (cmpp.rate != bps))
-	{
-		/* Caller has requested a specific rate */
+	if (bps != 0)
 		cmpp.rate = bps;
-		cmpp.flags = CMP_IFLAG_CHANGERATE;
-	}
+	cmpp.flags = CMP_IFLAG_CHANGERATE;
+		/* At this point, the protocol allows us to leave the
+		 * CMP_IFLAG_CHANGERATE flag at 0, to indicate that the
+		 * main sync should continue at whatever rate we're
+		 * currently at (9600 bps). In practice, however, nobody's
+		 * going to want to sync at 9600 bps, so always set the
+		 * flag.
+		 */
 
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Sending INIT packet\n");
