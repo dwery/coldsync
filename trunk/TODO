@@ -300,3 +300,6 @@
   naturally and more single-mindedly with things (e.g., timeouts,
   unexpected data packets, etc.). In particular, it would be able to
   send tickle packets at appropriate intervals.
+- ColdSync.pm should open SPC file handle as appropriate.
+- GenericConduit->_palm doesn't seem to be used. Get rid of it if
+  possible.
