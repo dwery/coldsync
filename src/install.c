@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.4 1999-11-09 06:37:02 arensb Exp $
+ * $Id: install.c,v 2.5 1999-11-11 07:48:05 arensb Exp $
  */
 
 #include "config.h"
@@ -51,13 +51,6 @@
 /* InstallNewFiles
  * Go through the install directory. If there are any databases there
  * that don't exist on the Palm, install them.
- */
-/* XXX - Add an argument to say whether or not to delete each file after
- * consideration. Actually, it'd probably be best not to use rename() for
- * this: we need to pdb_Read() the file in any case; so we should be able
- * to feed this 'struct pdb' to FirstSync() or something, tell it to do
- * something sane with it (in particular, save a copy in 'backupdir'), and
- * then delete the copy in 'installdir'.
  */
 /* XXX It ought to be possible to force an upload of a database. But this
  * should probably be done on a per-database basis.
@@ -185,6 +178,9 @@ InstallNewFiles(struct PConnection *pconn,
 			fprintf(stderr, "InstallNewFiles: Uploading \"%s\"\n",
 				pdb->name);
 
+		add_to_log("Install ");
+		add_to_log(pdb->name);
+		add_to_log(" - ");
 		if (dbinfo != NULL)
 		{
 			/* Delete the existing database */
@@ -194,6 +190,7 @@ InstallNewFiles(struct PConnection *pconn,
 				fprintf(stderr,
 					"InstallNewFiles: Error deleting \"%s\"\n",
 					pdb->name);
+				add_to_log("Error\n");
 				free_pdb(pdb);
 				continue;
 			}
@@ -205,6 +202,9 @@ InstallNewFiles(struct PConnection *pconn,
 			fprintf(stderr,
 				"InstallNewFiles: Error uploading \"%s\"\n",
 				pdb->name);
+			add_to_log("Error\n");
+			free_pdb(pdb);
+			continue;
 		}
 
 		/* Add the newly-uploaded database to the list of databases
@@ -232,11 +232,6 @@ InstallNewFiles(struct PConnection *pconn,
 		 * downloading the database immediately after uploading it.
 		 * This saves user time.
 		 */
-		/* XXX - Don't forget to add the new file to palm->dblist
-		 * (and update palm->num_dbs) so that the newly-installed
-		 * file doesn't immediately get moved to the attic.
-		 */
-		/* XXX - Add a message to the sync log */
 
 		/* Check to see whether this file exists in the backup
 		 * directory. If it does, then let the conduit deal with
@@ -271,6 +266,7 @@ InstallNewFiles(struct PConnection *pconn,
 				fprintf(stderr, "Error opening \"%s\"\n",
 					bakfname);
 				perror("open");
+				add_to_log("Problem\n");
 				err = -1;	/* XXX */
 			}
 			SYNC_TRACE(5)
@@ -285,6 +281,10 @@ InstallNewFiles(struct PConnection *pconn,
 				fprintf(stderr, "Writing \"%s\"\n",
 					bakfname);
 			err = pdb_Write(pdb, outfd);
+			if (err < 0)
+				add_to_log("Error\n");
+			else
+				add_to_log("OK\n");
 		}
 
 		/* Delete the newly-uploaded file, if appropriate */
