@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.93 2001-04-15 05:20:02 arensb Exp $
+ * $Id: coldsync.c,v 1.94 2001-04-15 05:37:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -845,19 +845,25 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	if (hostid == p_lastsyncPC)
-	{
 		/* We synced with this same machine last time, so we can do
 		 * a fast sync this time.
 		 */
-		Verbose(1, _("Doing a fast sync."));
 		need_slow_sync = 0;
-	} else {
+	else
 		/* The Palm synced with some other machine, the last time
 		 * it synced. We need to do a slow sync.
 		 */
-		Verbose(1, _("Doing a slow sync."));
 		need_slow_sync = 1;
-	}
+
+	/* Print verbose message here so it only gets printed once */
+	if (global_opts.force_slow)
+		Verbose(1, _("Doing a slow sync."));
+	else if (global_opts.force_fast)
+		Verbose(1, _("Doing a fast sync."));
+	else if (need_slow_sync)
+		Verbose(1, _("Doing a slow sync."));
+	else
+		Verbose(1, _("Doing a fast sync."));
 
 	/* XXX - The desktop needs to keep track of other hosts that it has
 	 * synced with, preferably on a per-database basis.
