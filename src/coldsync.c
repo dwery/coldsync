@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.113 2001-12-09 19:51:09 arensb Exp $
+ * $Id: coldsync.c,v 1.114 2002-01-23 15:54:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -619,7 +619,8 @@ run_mode_Standalone(int argc, char *argv[])
 
 	time(&now);
 	Verbose(1, _("Sync for %s at %s"),
-		(pda->name == NULL ? "unnamed PDA" : pda->name),
+		((pda == NULL || pda->name == NULL) ?
+		 "unnamed PDA" : pda->name),
 		ctime(&now));
 
 	/* See if the userid matches. */

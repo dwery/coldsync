@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.84 2001-12-09 19:51:22 arensb Exp $
+ * $Id: config.c,v 1.85 2002-01-23 15:54:15 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1435,10 +1435,11 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 		 * This does mean that you shouldn't have more than one
 		 * pda_block with an empty string.
 		 */
-		/* XXX - Bug: I've gotten a core dump here, where p_snum ==
-		 * NULL.
+		/* XXX - p_snum has been known to be NULL. Why? Does it
+		 * happen when the Palm has a password set and we haven't
+		 * sent the appropriate magic to the Palm?
 		 */
-		if ((cur->snum != NULL) &&
+		if ((cur->snum != NULL) && (p_snum != NULL) &&
 		    (strncasecmp(cur->snum, p_snum, SNUM_MAX)
 		     != 0))
 		{
