@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.82 2000-07-18 16:01:35 arensb Exp $
+dnl # $Id: configure.in,v 1.83 2000-07-31 08:55:55 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -322,6 +322,7 @@ AC_CHECK_FUNCS(getopt \
 	strchr \
 	strncpy \
 	cfmakeraw \
+	socketpair \
 	strcasecmp \
 	strncasecmp \
 	sysconf
@@ -345,14 +346,38 @@ AC_ARG_WITH(usb,dnl
 # Print error messages for various required bits that couldn't be found.
 if test -z "$ac_cv_func_getopt" -o x"$ac_cv_func_getopt" = x"no" ; then
 	AC_MSG_WARN([
-	The getopt() function not be found. This package
+	The getopt() function could not be found. This package
 	may not compile properly])
 	EXIT_STATUS=1
 fi
 
 if test -z "$ac_cv_func_select" -o x"$ac_cv_func_select" = x"no" ; then
 	AC_MSG_WARN([
-	The select() function not be found. This package
+	The select() function could not be found. This package
+	may not compile properly])
+	EXIT_STATUS=1
+fi
+
+if test -z "$ac_cv_func_rename" -o x"$ac_cv_func_rename" = x"no" ; then
+	AC_MSG_WARN([
+	The rename() function could not be found. This package
+	may not compile properly])
+	EXIT_STATUS=1
+fi
+
+if test -z "$ac_cv_func_strncpy" -o x"$ac_cv_func_strncpy" = x"no" ; then
+	AC_MSG_WARN([
+	The strncpy() function could not be found. This package
+	may not compile properly])
+	EXIT_STATUS=1
+fi
+
+# XXX - If this machine doesn't have socketpair(), would it be worth
+# checking to see if it has bidirectional pipe()s? See Stevens for a
+# test program.
+if test -z "$ac_cv_func_socketpair" -o x"$ac_cv_func_socketpair" = x"no"; then
+	AC_MSG_WARN([
+	The socketpair() function could not be found. This package
 	may not compile properly])
 	EXIT_STATUS=1
 fi
