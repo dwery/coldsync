@@ -51,7 +51,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: padp.h,v 1.2 1999-02-22 11:02:14 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
@@ -109,9 +109,8 @@ struct PConnection;		/* Forward declaration */
 extern int padp_init(struct PConnection *pconn);
 extern int padp_tini(struct PConnection *pconn);
 
-/*  extern int padp_read(int fd, ubyte *buf, uword len); */
-extern int padp_read(int fd, const ubyte **buf, uword *len);
-extern int padp_write(int fd, ubyte *buf, uword len);
-extern int padp_unget(int fd);	/* XXX - Is this desirable? */
+extern int padp_read(struct PConnection *pconn, const ubyte **buf, uword *len);
+extern int padp_write(struct PConnection *pconn, ubyte *buf, uword len);
+extern int padp_unget(struct PConnection *pconn);	/* XXX - Is this desirable? */
 
 #endif	/* _padp_h_ */
