@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.3 2000-07-06 04:03:37 arensb Exp $
+ * $Id: conduit.c,v 2.4 2000-07-13 03:05:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -86,6 +86,39 @@ static volatile sig_atomic_t canjump = 0;
 	 * Environment", Addison-Wesley, 1993, section 10.15, "sigsetjmp
 	 * and siglongjmp Functions".
 	 */
+
+/* block_sigchld
+ * Just a convenience function. This blocks SIGCHLD so that the current
+ * process doesn't get interrupted by a signal at the wrong moment.
+ *
+ * The 'sigmask' argument gets filled in with a cookie that will later be
+ * passed to unblock_sigchld() to unblock the signal.
+ */
+static INLINE void
+block_sigchld(sigset_t *sigmask)
+{
+	sigset_t new_sigmask;
+
+	SYNC_TRACE(7)
+		fprintf(stderr, "Blocking SIGCHLD.\n");
+	sigemptyset(&new_sigmask);
+	sigaddset(&new_sigmask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, sigmask, &new_sigmask);
+}
+
+/* unblock_sigchld
+ * Just a convenience function. Unblocks SIGCHLD by restoring the process's
+ * signal mask to what it was before block_sigchld() was called.
+ * The 'old_sigmask' argument is the cookie that was filled in by
+ * block_sigchld().
+ */
+static INLINE void
+unblock_sigchld(const sigset_t *old_sigmask)
+{
+	SYNC_TRACE(7)
+		fprintf(stderr, "Unblocking SIGCHLD.\n");
+	sigprocmask(SIG_SETMASK, old_sigmask, NULL);
+}
 
 /* The following two variables are for setvbuf's benefit, for when we make
  * the conduit's stdin and stdout be line-buffered.
@@ -530,8 +563,8 @@ spawn_conduit(
 	int inpipe[2];		/* Pipe for child's stdin */
 	int outpipe[2];		/* Pipe for child's stdout */
 	FILE *fh;		/* Temporary file handle */
-	sigset_t sigmask;	/* Mask of signals to block */
-	sigset_t old_sigmask;	/* Old signal mask */
+	sigset_t sigmask;	/* Mask of signals to block. Used by
+				 * {,un}block_sigchld() */
 
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
@@ -602,9 +635,7 @@ spawn_conduit(
 	 * SIGCHLD before spawn_conduit() has finished cleaning up from the
 	 * fork(). Hence, we block SIGCHLD until we're done.
 	 */
-	sigemptyset(&sigmask);
-	sigaddset(&sigmask, SIGCHLD);
-	sigprocmask(SIG_BLOCK, &sigmask, &old_sigmask);
+	block_sigchld(&sigmask);
 
 	if ((conduit_pid = fork()) < 0)
 	{
@@ -623,7 +654,7 @@ spawn_conduit(
 		/* Here ends the critical section of the parent. Unblock
 		 * SIGCHLD.
 		 */
-		sigprocmask(SIG_SETMASK, &old_sigmask, NULL);
+		unblock_sigchld(&sigmask);
 
 		return conduit_pid;
 	}
@@ -655,7 +686,7 @@ spawn_conduit(
 	close(outpipe[1]);
 
 	/* Unblock SIGCHLD in the child as well. */
-	sigprocmask(SIG_SETMASK, &old_sigmask, NULL);
+	unblock_sigchld(&sigmask);
 
 	err = execvp(path, argv);
 
