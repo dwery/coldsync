@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.15 2001-03-30 06:29:35 arensb Exp $
+ * $Id: slp.c,v 1.16 2001-04-01 07:55:26 arensb Exp $
  */
 
 #include "config.h"
@@ -511,8 +511,6 @@ slp_write(PConnection *pconn,
 		}
 		sent += err;
 	}
-	/* XXX - Would tcdrain() be a good idea here? */
-
 	SLP_TRACE(6)
 		debug_dump(stderr, "SLP(c) >>>", crc_buf, SLP_CRC_LEN);
 
