@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.18 2001-07-09 10:36:00 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.19 2001-07-09 10:56:58 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -401,7 +401,7 @@ struct dlp_createdbreq
 /* CloseDB flags for PalmOS v3.0 (not supported yet) */
 #define DLPCMD_CLOSEFL_UPBACKUP	0x80	/* Update backup time */
 #define DLPCMD_CLOSEFL_UPMOD	0x40	/* Update modification time */
-#define DLPCMD_CLOSEFL_ALL	(DLPCMD_CLOSEFL_UPBACKUP |
+#define DLPCMD_CLOSEFL_ALL	(DLPCMD_CLOSEFL_UPBACKUP | \
 				 DLPCMD_CLOSEFL_UPMOD)
 
 /** DeleteDB **/
