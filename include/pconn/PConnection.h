@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.26 2001-11-12 01:00:41 arensb Exp $
+ * $Id: PConnection.h,v 1.27 2002-04-27 13:36:06 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -116,6 +116,8 @@ typedef struct PConnection
 				 * protocols.
 				 */
 
+	int whosonfirst;	/* If 1 the connection has been locally initiated */
+
 	/* Protocol-dependent parts */
 
 	/* Desktop Link Protocol (DLP) */
@@ -158,6 +160,7 @@ typedef struct PConnection
 				 * violates encapsulation, but I can't
 				 * think of a better way to do it.
 				 */
+		ubyte last_xid;
 		int read_timeout;
 				/* How long to wait (in 1/10ths of a
 				 * second) for a PADP packet to come in.
