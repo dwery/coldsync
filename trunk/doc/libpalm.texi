@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.2 1999-02-04 09:20:21 arensb Exp $
-@c $Version$
+@c $Id: libpalm.texi,v 1.3 1999-02-04 09:21:38 arensb Exp $
+@c $Revision: 1.3 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
