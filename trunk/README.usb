@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.2 2002-09-10 18:26:59 azummo Exp $
+$Id: README.usb,v 1.3 2002-11-02 13:14:48 azummo Exp $
 
 Linux
 =====
@@ -13,22 +13,24 @@ Linux
 	The correct way to use it with coldsync is with a
 	proper listen serial block, just like this one:
 
-	listen serial "m505" {
-		protocol: simple;
+	listen serial "linux-usb" {
+		protocol: net;
 		device: /dev/ttyUSB1;
 	}
 
 	or this one, if you use devfs:
 
-	listen serial "m505" {
-		protocol: simple;
+	listen serial "linux-usb-devfs" {
+		protocol: net;
 		device: /dev/usb/tts/1;
 		transient;
 	}
 
-	The "simple" works fine for the m500/m505, while 
-	you will need the "net" protocol for the m515/m130
-	(untested with the m130). 
+	You can then select the right one with
+
+		coldsync --listen linux-usb
+	or
+		coldsync --listen linux-usb-devfs
 
 *BSD
 ====
