@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.7 2001-12-09 22:44:21 arensb Exp $
+ * $Id: palm_errno.c,v 1.8 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 
@@ -18,7 +18,7 @@
 
 #include <pconn/palm_errno.h>
 
-palmerr_t palm_errno;				/* Current error code */
+palmerrno_t palm_errno;				/* Current error code */
 
 /* palm_strerror
  * Given an error code, return the error message corresponding to that
@@ -28,7 +28,7 @@ palmerr_t palm_errno;				/* Current error code */
  * itself, instead of forcing the calling function to do so.
  */
 const char *
-palm_strerror(const palmerr_t errno)
+palm_strerror(const palmerrno_t errno)
 {
 	/* This is implemented as a switch statement and not as an array
 	 * lookup in order to allow the compiler to make sure that all

@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.21 2001-09-07 23:50:07 arensb Exp $
+ * $Id: padp.c,v 1.22 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -122,7 +122,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	struct timeval timeout;	/* Read timeout, for select() */
 
-	palm_errno = PALMERR_NOERR;
+	pconn->palm_errno = PALMERR_NOERR;
 
   retry:		/* It can take several attempts to read a packet,
 			 * if the Palm sends tickles.
@@ -134,14 +134,13 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 	timeout.tv_sec = pconn->padp.read_timeout;
 	timeout.tv_usec = 0L;		/* Set the timeout */
 
-	err = (*pconn->io_select)(pconn, forReading, &timeout);
+	err = PConn_select(pconn, forReading, &timeout);
 					/* Wait for 'pconn->fd' to become
 					 * readable, or time out.
 					 */
 	if (err == 0)
 	{
 		/* select() timed out */
-		palm_errno = PALMERR_TIMEOUT;
 		return -1;
 	}
 
@@ -154,11 +153,12 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		return -1;		/* End of file: no data read */
 	}
 	if (err < 0)
-		/* XXX - Check to see if palm_errno == PALMERR_NOMEM.
+		/* XXX - Check to see if pconn->palm_errno == PALMERR_NOMEM.
 		 * If so, then send an ACK with the PADP_FLAG_ERRNOMEM
 		 * flag set.
 		 */
 		return err;		/* Error */
+
 	/* XXX - At this point, we should check the packet to make
 	 * sure it's a valid PADP packet, but I'm not sure what to do
 	 * if it's not ("Never test for an error condition you don't
@@ -205,7 +205,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 		 */
 		goto retry;
 	    case PADP_FRAGTYPE_ABORT:
-		palm_errno = PALMERR_ABORT;
+		pconn->palm_errno = PALMERR_ABORT;
 		return -1;
 
 	    case PADP_FRAGTYPE_NAK:
@@ -292,7 +292,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 					fprintf(stderr,
 						"MP: Can't allocate new "
 						"MP buffer\n");
-				palm_errno = PALMERR_NOMEM;
+				pconn->palm_errno = PALMERR_NOMEM;
 				/* XXX - Should return an ACK to the Palm
 				 * that says we're out of memory.
 				 */
@@ -312,7 +312,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 					fprintf(stderr,
 						"MP: Can't resize existing "
 						"MP buffer\n");
-				palm_errno = PALMERR_NOMEM;
+				pconn->palm_errno = PALMERR_NOMEM;
 				return -1;
 			}
 			pconn->padp.inbuf = eptr;
@@ -374,14 +374,12 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 			timeout.tv_sec = pconn->padp.read_timeout / 10;
 			timeout.tv_usec = 0L;		/* Set the timeout */
 
-			err = (*pconn->io_select)(pconn, forReading, &timeout);
+			err = PConn_select(pconn, forReading, &timeout);
 					/* Wait for 'pconn->fd' to become
 					 * readable, or time out.
 					 */
 			if (err == 0)
 			{
-				/* select() timed out */
-				palm_errno = PALMERR_TIMEOUT;
 				return -1;
 			}
 
@@ -391,7 +389,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				return 0;	/* End of file: no data
 						 * read */
 			if (err < 0)
-				/* XXX - Check to see if palm_errno ==
+				/* XXX - Check to see if pconn->palm_errno ==
 				 * PALMERR_NOMEM. If so, then send an ACK
 				 * with the PADP_FLAG_ERRNOMEM flag set.
 				 */
@@ -453,7 +451,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				 */
 				goto mpretry;
 			    case PADP_FRAGTYPE_ABORT:
-				palm_errno = PALMERR_ABORT;
+				pconn->palm_errno = PALMERR_ABORT;
 				return -1;
 			    default:
 				/* XXX */
@@ -470,7 +468,7 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 				fprintf(stderr,
 					_("##### I wasn't expecting a new "
 					  "fragment. I'm confused!\n"));
-				/* palm_errno = XXX */
+				/* pconn->palm_errno = XXX */
 				return -1;
 			}
 			PADP_TRACE(7)
@@ -572,7 +570,7 @@ padp_write(PConnection *pconn,
 	struct timeval timeout;	/* Timeout length, for select() */
 	uword offset;		/* Current offset */
 
-	palm_errno = PALMERR_NOERR;
+	pconn->palm_errno = PALMERR_NOERR;
 
 	bump_xid(pconn);	/* Pick a new transmission ID */
 
@@ -639,7 +637,7 @@ padp_write(PConnection *pconn,
 			timeout.tv_sec = PADP_ACK_TIMEOUT;
 			timeout.tv_usec = 0L;
 
-			err = (*pconn->io_select)(pconn, forWriting, &timeout);
+			err = PConn_select(pconn, forWriting, &timeout);
 			if (err == 0)
 			{
 				/* select() timed out */
@@ -668,7 +666,7 @@ padp_write(PConnection *pconn,
 			timeout.tv_sec = PADP_ACK_TIMEOUT;
 			timeout.tv_usec = 0L;
 
-			err = (*pconn->io_select)(pconn, forReading, &timeout);
+			err = PConn_select(pconn, forReading, &timeout);
 			if (err == 0)
 			{
 				/* select() timed out */
@@ -681,7 +679,7 @@ padp_write(PConnection *pconn,
 			if (err == 0)
 			{
 				/* End of file */
-				palm_errno = PALMERR_EOF;
+				pconn->palm_errno = PALMERR_EOF;
 				return -1;
 			}
 			if (err < 0)
@@ -777,7 +775,7 @@ padp_write(PConnection *pconn,
 				 */
 				goto mpretry;
 			    case PADP_FRAGTYPE_ABORT:
-				palm_errno = PALMERR_ABORT;
+				pconn->palm_errno = PALMERR_ABORT;
 				return -1;
 
 			    case PADP_FRAGTYPE_NAK:
@@ -802,7 +800,7 @@ padp_write(PConnection *pconn,
 				fprintf(stderr, _("##### Expected XID 0x%02x, "
 					"got 0x%02x.\n"),
 					pconn->padp.xid, pconn->slp.last_xid);
-				palm_errno = PALMERR_ACKXID;
+				pconn->palm_errno = PALMERR_ACKXID;
 				return -1;
 			}
 			PADP_TRACE(5)
@@ -827,7 +825,8 @@ padp_write(PConnection *pconn,
 				fprintf(stderr,
 					"PADP: Reached retry limit. "
 					"Abandoning.\n");
-			palm_errno = PALMERR_TIMEOUT;
+			PConn_set_palmerrno(pconn, PALMERR_TIMEOUT);
+			PConn_set_status(pconn, PCONNSTAT_LOST);
 			return -1;
 		}
 		PADP_TRACE(7)

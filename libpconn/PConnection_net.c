@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.25 2002-04-27 17:17:35 azummo Exp $
+ * $Id: PConnection_net.c,v 1.26 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -216,6 +216,7 @@ net_connect_udp(PConnection *pconn, const void *addr, const int addrlen)
 	/* XXX - Doesn't work with broadcast addresses: need to
 	 * setsockopt(SO_BROADCAST) first.
 	 */
+
 	IO_TRACE(3)
 		fprintf(stderr, "Sending wakeup.\n");
 	err = sendto(pconn->fd, (const char *) outbuf, pkt_len, 0,
@@ -423,7 +424,7 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 
 		err = connect(pconn->fd,
 			      (struct sockaddr *) &servaddr,
-			      sizeof(struct sockaddr));
+			      sizeof(servaddr));
 			/* Normally, the second argument ought to be cast
 			 * to (const struct sockaddr *), but Solaris
 			 * expects a (struct sockaddr *), so it complains.
@@ -454,6 +455,8 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	err = ritual_exch_client(pconn);
 	if (err < 0)
 		return -1;
+
+	fprintf(stderr, "ritual exchange ok\n");
 
 	return 0;
 }

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.21 2001-11-05 00:26:57 arensb Exp $
+ * $Id: slp.c,v 1.22 2002-04-27 18:36:31 azummo Exp $
  */
 
 #include "config.h"
@@ -105,7 +105,7 @@ slp_tini(PConnection *pconn)
 int
 slp_bind(PConnection *pconn, const struct slp_addr *addr)
 {
-	palm_errno = PALMERR_NOERR;
+	PConn_set_palmerrno(pconn, PALMERR_NOERR);
 
 	/* Copy 'addr' to the "SLP local address" portion of the
 	 * PConnection */
@@ -143,7 +143,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	Bool ignore;		/* Are we ignoring this packet? */
 	uword my_crc;		/* Computed CRC for the packet */
 
-	palm_errno = PALMERR_NOERR;
+	PConn_set_palmerrno(pconn, PALMERR_NOERR);
 
   redo:			/* I hope I may be forgiven for using gotos,
 			 * but SLP's only response to errors of any
@@ -154,26 +154,26 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	/* Read the preamble. */
 	for (i = 0; i < sizeof(slp_preamble); i++)
 	{
-		err = (*pconn->io_read)(pconn, pconn->slp.header_inbuf+i, 1);
+		err = PConn_read(pconn, pconn->slp.header_inbuf+i, 1);
 		if (err < 0)
 		{
 			perror("slp_read: read");
-			palm_errno = PALMERR_SYSTEM;
 			return err;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in preamble\n");
+
 			/* XXX - At this point, it would be nice to close
 			 * the file descriptor pconn->fd to prevent others
 			 * from writing to it, but that involves a whole
 			 * lot of other changes, and doesn't really seem
 			 * worth it.
 			 */
-			palm_errno = PALMERR_EOF;
 			return 0;
 		}
+
 		if (pconn->slp.header_inbuf[i] != slp_preamble[i])
 		{
 			SLP_TRACE(5)
@@ -190,19 +190,17 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	got = SLP_PREAMBLE_LEN;
 	while (want > got)
 	{
-		err = (*pconn->io_read)(pconn,
+		err = PConn_read(pconn,
 					pconn->slp.header_inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read");
-			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in header\n");
-			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
@@ -291,7 +289,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 		if (eptr == NULL)
 		{
 			/* Reallocation failed */
-			palm_errno = PALMERR_NOMEM;
+			PConn_set_palmerrno(pconn, PALMERR_NOMEM);
 			return -1;
 		}
 		pconn->slp.inbuf = eptr;	/* Set the new buffer */
@@ -308,18 +306,16 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = (*pconn->io_read)(pconn, pconn->slp.inbuf+got, want-got);
+		err = PConn_read(pconn, pconn->slp.inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read2");
-			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in body\n");
-			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 
@@ -343,19 +339,17 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = (*pconn->io_read)(pconn,
+		err = PConn_read(pconn,
 					pconn->slp.crc_inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read");
-			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(5)
 				fprintf(stderr, "EOF in CRC\n");
-			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
@@ -423,7 +417,7 @@ slp_write(PConnection *pconn,
 	ubyte checksum;		/* Header checksum */
 	uword crc;		/* Computed CRC of the packet */
 
-	palm_errno = PALMERR_NOERR;
+	PConn_set_palmerrno(pconn, PALMERR_NOERR);
 	SLP_TRACE(5)
 		fprintf(stderr, "slp_write(x, x, %d)\n", len);
 
@@ -449,7 +443,7 @@ slp_write(PConnection *pconn,
 		if (eptr == NULL)
 		{
 			/* Reallocation failed */
-			palm_errno = PALMERR_NOMEM;
+			PConn_set_palmerrno(pconn, PALMERR_NOMEM);
 			return -1;
 		}
 		pconn->slp.outbuf = eptr;	/* Set the new buffer */
@@ -493,12 +487,11 @@ slp_write(PConnection *pconn,
 	sent = 0;
 	while (sent < want)
 	{
-		err = (*pconn->io_write)(pconn, pconn->slp.outbuf+sent,
+		err = PConn_write(pconn, pconn->slp.outbuf+sent,
 					 want-sent);
 		if (err < 0)
 		{
 			perror("slp_write: write");
-			palm_errno = PALMERR_SYSTEM;
 			/* XXX - At this point, it would be nice to close
 			 * the file descriptor pconn->fd to prevent others
 			 * from writing to it, but that involves a whole

@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.4 2002-03-09 05:43:19 arensb Exp $
+ * $Id: spc_client.c,v 1.5 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -122,7 +122,7 @@ spc_dlp_read(PConnection *pconn,	/* Connection to Palm */
 	struct spc_hdr header;
 	int err;
 	
-	err = (*pconn->io_read)(pconn, spc_header, SPC_HEADER_LEN);
+	err = PConn_read(pconn, spc_header, SPC_HEADER_LEN);
 	if (err < 0)
 	{
 		fprintf(stderr, _("%s: Error reading SPC respnse header "
@@ -154,7 +154,7 @@ spc_dlp_read(PConnection *pconn,	/* Connection to Palm */
 			/* XXX - Error-checking */
 		}
 		
-		err = (*pconn->io_read)(pconn, pconn->net.inbuf, header.len);
+		err = PConn_read(pconn, pconn->net.inbuf, header.len);
 		if (err < 0)
 		{
 			fprintf(stderr, _("%s: Error reading SPC respnse data "
@@ -181,7 +181,7 @@ spc_dlp_write(PConnection *pconn,
 	*((unsigned short *) (spc_header+2)) = htons(0);
 	*((unsigned long *) (spc_header+4)) = htonl(len);
 
-	err = (*pconn->io_write)(pconn, spc_header, SPC_HEADER_LEN);
+	err = PConn_write(pconn, spc_header, SPC_HEADER_LEN);
 	if (err != SPC_HEADER_LEN)
 	{
 		fprintf(stderr,
@@ -191,7 +191,7 @@ spc_dlp_write(PConnection *pconn,
 		return -1;
 	}
 	
-	err = (*pconn->io_write)(pconn, buf, len);
+	err = PConn_write(pconn, buf, len);
 	if (err < 0)
 	{
 		fprintf(stderr, _("%s: Error sending SPC/DLPC "
@@ -308,7 +308,7 @@ spc_get_dbinfo(PConnection *pconn, struct dlp_dbinfo *info)
 	*((unsigned short *) (spc_header+2)) = htons(0);
 	*((unsigned long *) (spc_header+4)) = htonl(0);
 	
-	err = (*pconn->io_write)(pconn, spc_header, SPC_HEADER_LEN);
+	err = PConn_write(pconn, spc_header, SPC_HEADER_LEN);
 	if (err != SPC_HEADER_LEN)
 	{
 		fprintf(stderr,
@@ -318,7 +318,7 @@ spc_get_dbinfo(PConnection *pconn, struct dlp_dbinfo *info)
 		return -1;
 	}
 	
-	err = (*pconn->io_read)(pconn, spc_header, SPC_HEADER_LEN);
+	err = PConn_read(pconn, spc_header, SPC_HEADER_LEN);
 	if (err < 0)
 	{
 		fprintf(stderr, _("%s: Error reading SPC respnse header "
@@ -345,12 +345,12 @@ spc_get_dbinfo(PConnection *pconn, struct dlp_dbinfo *info)
 		
 		return -1;
 	}
-	err = (*pconn->io_read)(pconn, info_buf, header.len);
+	err = PConn_read(pconn, info_buf, header.len);
 	if (err < 0)
 	{
 		fprintf(stderr, _("%s: Error reading SPC respnse data "
 				  "from coldsync."), "spc_get_dbinfo");
-		return -1;
+		return err;
 	}
 	unpack_dbinfo(info, info_buf);
 	

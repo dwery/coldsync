@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.30 2002-01-23 15:52:07 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.31 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2529,7 +2529,7 @@ DlpCallApplication(
 			break;
 		    default:	/* Unknown argument type */
 /* XXX - Do this everywhere: */
-/*  		palm_errno = PALMERR_BADRESID; */
+/*  		pconn->palm_errno = PALMERR_BADRESID; */
 			fprintf(stderr, _("##### %s: Unknown argument type: "
 					  "0x%02x.\n"),
 				"DlpCallApplication",
