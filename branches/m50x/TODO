@@ -1,3 +1,7 @@
+- netsync_read()/netsync_write() appear to be used only for sending
+  ritual packets back and forth.
+- netsync_read() should use (*io_read), just as netsync_write usees
+  (*io_write).
 - Consider allowing database-at-a-time syncing.
   Databases (or files?) named on the command line.
 - Consider "none" database type, to specify conduits to run without an
