@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.57 2001-09-08 01:13:37 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.58 2001-10-06 21:45:26 arensb Exp $
  */
 
 /* Note on I/O:
@@ -140,7 +140,6 @@ GenericConduit::run()
 			fprintf(stderr, "\"%s\" is a ROM database. "
 				"ignoring it\n",
 				_dbinfo->name);
-		add_to_log(_("ROM\n")); 
 		return 0; 
 	}
 	SYNC_TRACE(4)
@@ -238,9 +237,6 @@ GenericConduit::FirstSync()
 	/* Tell the Palm we're beginning a new sync. */
 	ubyte dbh;		// Database handle
 
-	add_to_log(_dbinfo->name);
-	add_to_log(_(" (1st) - "));
-
 	err = DlpOpenConduit(_pconn);
 	switch (static_cast<dlp_stat_t>(err))
 	{
@@ -250,7 +246,8 @@ GenericConduit::FirstSync()
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
 				"by user\n");
-		add_to_log(_("Cancelled\n"));
+		va_add_to_log(_pconn, "%s %s - %s\n",
+			      _dbinfo->name, _("(1st)"), _("Cancelled"));
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
@@ -302,7 +299,8 @@ GenericConduit::FirstSync()
 		      "GenericConduit::FirstSync",
 		      _dbinfo->name,
 		      err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s %s - %s\n",
+			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
@@ -321,7 +319,8 @@ GenericConduit::FirstSync()
 		      "GenericConduit::FirstSync",
 		      _dbinfo->name,
 		      err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s %s - %s\n",
+			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
 	}
 
@@ -340,7 +339,8 @@ GenericConduit::FirstSync()
 
 		Error(_("pdb_Download() failed."));
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s %s - %s\n",
+			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
 	}
 
@@ -419,7 +419,8 @@ GenericConduit::FirstSync()
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s %s - %s\n",
+			      _dbinfo->name, _("(1st)"), _("Error"));
 		return -1;
 	}
 
@@ -447,7 +448,8 @@ GenericConduit::FirstSync()
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+			va_add_to_log(_pconn, "%s %s - %s\n",
+				      _dbinfo->name, _("(1st)"), _("Error"));
 			return -1;
 		}
 	}
@@ -473,7 +475,10 @@ GenericConduit::FirstSync()
 				break;
 			    default:
 				err = DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				va_add_to_log(_pconn, "%s %s - %s\n",
+					      _dbinfo->name,
+					      _("(1st)"),
+					      _("Error"));
 				break;
 			}
 			return -1;
@@ -483,7 +488,8 @@ GenericConduit::FirstSync()
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log(_("OK\n"));
+	va_add_to_log(_pconn, "%s %s - %s\n",
+		      _dbinfo->name, _("(1st)"), _("OK"));
 	return 0; 
 }
 
@@ -500,9 +506,6 @@ GenericConduit::SlowSync()
 	ubyte dbh;			// Database handle
 	struct pdb_record *localrec;	// Record in local database
 
-	add_to_log(_dbinfo->name);
-	add_to_log(" - ");
-
 	SYNC_TRACE(3)
 		fprintf(stderr, "*** Phase 1:\n");
 	/* Phase 1: grab the entire database from the Palm */
@@ -515,7 +518,8 @@ GenericConduit::SlowSync()
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
 				"by user\n");
-		add_to_log(_("Cancelled\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Cancelled"));
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
@@ -564,7 +568,8 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
@@ -582,7 +587,8 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::SlowSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -602,7 +608,8 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't download \"%s\"."),
 		      "GenericConduit", _dbinfo->name);
 		DlpCloseDB(_pconn, dbh);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -711,7 +718,9 @@ GenericConduit::SlowSync()
 				if (newrec == 0)
 				{
 					Error(_("Can't copy a new record."));
-					add_to_log(_("Error\n"));
+					va_add_to_log(_pconn, "%s - %s\n",
+						      _dbinfo->name,
+						      _("Error"));
 					return -1;
 				}
 
@@ -773,7 +782,8 @@ GenericConduit::SlowSync()
 			{
 				SYNC_TRACE(6)
 					fprintf(stderr,
-						"Setting remote dirty flag.\n");
+						"Setting remote dirty "
+						"flag.\n");
 				remoterec->flags |= PDB_REC_DIRTY;
 			}
 		}
@@ -915,7 +925,8 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit::SlowSync");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -937,7 +948,8 @@ GenericConduit::SlowSync()
 		Error(_("%s: Can't clean up database: %d."),
 		      "GenericConduit", err);
 		err = DlpCloseDB(_pconn, dbh);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -962,7 +974,8 @@ GenericConduit::SlowSync()
 				break;
 			    default:
 				err = DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				va_add_to_log(_pconn, "%s - %s\n",
+					      _dbinfo->name, _("Error"));
 				break;
 			}
 			return -1;
@@ -972,7 +985,8 @@ GenericConduit::SlowSync()
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log(_("OK\n"));
+	va_add_to_log(_pconn, "%s - %s\n",
+		      _dbinfo->name, _("OK"));
 	return 0;
 }
 
@@ -992,9 +1006,6 @@ GenericConduit::FastSync()
 	struct pdb_record *remoterec;	// Record in remote database
 	struct pdb_record *localrec;	// Record in local database
 
-	add_to_log(_dbinfo->name);
-	add_to_log(" - ");
-
 	err = DlpOpenConduit(_pconn);
 	switch (static_cast<dlp_stat_t>(err))
 	{
@@ -1004,7 +1015,8 @@ GenericConduit::FastSync()
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
 				"by user\n");
-		add_to_log(_("Cancelled\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Cancelled"));
 		cs_errno = CSE_CANCEL;
 		return -1;
 	    default:
@@ -1051,7 +1063,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync
@@ -1069,7 +1082,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't open \"%s\": %d."),
 		      "GenericConduit::FastSync",
 		      _dbinfo->name, err);
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -1109,7 +1123,8 @@ GenericConduit::FastSync()
 			this->close_archive();
 
 			DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+			va_add_to_log(_pconn, "%s - %s\n",
+				      _dbinfo->name, _("Error"));
 			return -1;
 		}
 		SYNC_TRACE(5)
@@ -1210,7 +1225,8 @@ GenericConduit::FastSync()
 				pdb_FreeRecord(remoterec);
 				remoterec = NULL;
 				DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				va_add_to_log(_pconn, "%s - %s\n",
+					      _dbinfo->name, _("Error"));
 				return -1;
 			}
 
@@ -1445,7 +1461,8 @@ GenericConduit::FastSync()
 		Error(_("%s: Can't write backup file."),
 		      "GenericConduit::FastSync");
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
-		add_to_log(_("Error\n"));
+		va_add_to_log(_pconn, "%s - %s\n",
+			      _dbinfo->name, _("Error"));
 		return -1;
 	}
 
@@ -1473,7 +1490,8 @@ GenericConduit::FastSync()
 			Error(_("%s: Can't clean up database: %d."),
 			      "GenericConduit", err);
 			err = DlpCloseDB(_pconn, dbh);
-			add_to_log(_("Error\n"));
+			va_add_to_log(_pconn, "%s - %s\n",
+				      _dbinfo->name, _("Error"));
 			return -1;
 		}
 	}
@@ -1499,7 +1517,8 @@ GenericConduit::FastSync()
 				break;
 			    default:
 				err = DlpCloseDB(_pconn, dbh);
-				add_to_log(_("Error\n"));
+				va_add_to_log(_pconn, "%s - %s\n",
+					      _dbinfo->name, _("Error"));
 				break;
 			}
 			return -1;
@@ -1509,7 +1528,7 @@ GenericConduit::FastSync()
 	/* Clean up */
 	err = DlpCloseDB(_pconn, dbh);	// Close the database
 
-	add_to_log(_("OK\n"));
+	va_add_to_log(_pconn, "%s - %s\n", _dbinfo->name, _("OK"));
 	return 0;		// Success
 }
 
