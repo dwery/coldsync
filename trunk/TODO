@@ -1,3 +1,6 @@
+- Create a manifest file when installing, to help package-management
+  utilities. Preferably add a rule to create the manifest without
+  installing.
 - Bug: when run from /etc/ttys, the Palm might suggest a speed that
   the serial port can't handle. But ColdSync doesn't notice this in
   time to send back a reasonable speed.
@@ -7,7 +10,6 @@
 - Devfs: At configure-time, check for the existence of /dev/.devfsd.
   This is created by Linux's devfs daemon. If it exists, assume
   HAVE_DEVFS.
-	In libpconn/PConnection_serial.c, when opening the device, if 
 - The Linux USB-to-serial driver appears to be flaky: I've seen it
   drop 3k characters at one point.
 	When this happens, the symptom is that ColdSync hangs until
@@ -161,12 +163,8 @@
 - There ought to be cmp_init() etc., just as for the other protocols.
 - Better description of ${prefix}/etc/coldsync.conf in the man page.
 - Add support for CMP 2.0 (once I find a CMP 2.0 Palm)
-- It should be possible to set the hostid in a config file. If it's
-  set in /etc/coldsync.conf, then obviously it shouldn't be possible
-  to override it in ~/.coldsyncrc .
-- It would be nice if add_to_log() took printf()-like arguments.
-	Reimplement this with snprintf(), now that it's always
-  available.
+- If hostid was set in /etc/coldsync.conf, it shouldn't be possible to
+  override it in ~/.coldsyncrc.
 - Persistent "Bad CRC" problems under Linux:
 	As far as I can tell, the Linux serial driver is buggy, and
   drops characters. 'pilot-link' also sees bad CRCs; it just doesn't
