@@ -34,6 +34,11 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
+/* Define if your OS distinguishes between text and binary files, _and_
+ * your compiler defines O_BINARY (for use with open()).
+ */
+#undef HAVE_O_BINARY
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #undef TIME_WITH_SYS_TIME
 
@@ -115,6 +120,12 @@
 /* Define if you have the <sys/types.h> header file.  */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if you have the <sys/param.h> header file.  */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you have the <netinet/in.h> header file.  */
+#undef HAVE_NETINET_IN_H
+
 /* Define if you have the GNU gettext package */
 #undef HAVE_LIBINTL
 
@@ -177,6 +188,17 @@
 #    define N_(str)	str
 #  endif	/* gettext_noop */
 #endif	/* HAVE_GETTEXT */
+
+/* MS Windows distinguishes between text and binary files. Cygwin's gcc
+ * (and possibly others) defines O_BINARY as a flag to open() to indicate
+ * that open() should open the file in binary mode.
+ */
+#if !HAVE_O_BINARY
+#  define O_BINARY	0	/* 0 so that when or-ed with other flags,
+				 * doesn't change anything on OSes that
+				 * don't have O_BINARY.
+				 */
+#endif	/* HAVE_O_BINARY */
 
 #if __GNUC__
 
