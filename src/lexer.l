@@ -6,14 +6,29 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.1 1999-10-23 04:45:03 arensb Exp $
+ * $Id: lexer.l,v 2.2 1999-11-04 11:17:47 arensb Exp $
  */
 #include "config.h"
 #include <string.h>
 #include "parser.h"
 #include "y.tab.h"
 
-char mystring[2048];	/* XXX - For testing only */
+#define YY_NO_UNPUT	/* We never yyunput() anything, so this keeps
+			 * the compiler from complaining.
+			 */
+#undef YY_USES_REJECT	/* This makes the compiler shut up */
+#undef YY_NEED_STRLEN	/* This makes the compiler shut up */
+			/* XXX - This might need to be taken out when
+			 * strings are better developed: this
+			 * basically says that the lexer isn't using
+			 * yymore() or yyless(); these might be useful
+			 * with strings.
+			 */
+#ifdef ECHO
+#undef ECHO		/* <termios.h> also defines ECHO */
+#endif	/* ECHO */
+
+int lineno;
 %}
 
  /* Decimal digit */
@@ -23,24 +38,46 @@ ODIGIT		[0-7]
 /* Hex digit */
 XDIGIT		[0-9a-fA-F]
  /* Whitespace */
-WS		[ \t\f\r\n]
+WS		[ \t\f\r]
 
 %%
 
+%{
+#ifdef YY_FLEX_LEX_COMPAT
+	/* This is just to trick the compiler into thinking that this
+	 * is used, so it'll shut up.
+	 */
+	if (0) goto find_rule;
+#endif	/* YY_FLEX_LEX_COMPAT */
+%}
+
  /* Ignore comments */
-#.*\n		;
+#.*		;
 
  /* Ignore whitespace */
 {WS}+		;
 
+ /* Ignore newlines, except to bump the line counter */
+\n		{ lineno++; }
+
  /* Keywords */
 "conduit"	{ return CONDUIT; }
+"device"	{ return DEVICE; }
 "listen"	{ return LISTEN; }
 "name"		{ return NAME; }
 "path"		{ return PATH; }
 "serial"	{ return SERIAL; }
 "speed"		{ return SPEED; }
 "type"		{ return TYPE; }
+
+ /* Conduit flavors */
+"sync"		{ return SYNC; }
+"fetch"		{ return FETCH; }
+"pre-fetch"	{ return FETCH; /* Synonym */}
+"dump"		{ return DUMP; }
+"post-dump"	{ return DUMP; /* Synonym */}
+"install" 	{ return INSTALL; }
+"uninstall" 	{ return UNINSTALL; }
 
  /* XXX - This should be capable of handling strings longer than
   * YYLMAX. The obvious way to do this is to implement a "string"
@@ -58,11 +95,14 @@ WS		[ \t\f\r\n]
   * so forth.
   */
 \"([^\"]|\\\")*\"	{
-	strncpy(mystring, yytext+1, yyleng-2);
-	mystring[yyleng-2] = '\0';
-	yylval.string = mystring;
-	fprintf(stderr, "<<<string: [%s] (%d) {%d}\n",
-		yytext, yyleng, strlen(yytext));
+	if ((yylval.string = malloc(yyleng-1)) == NULL)
+	{
+		fprintf(stderr, "Can't malloc copy of string\n");
+		return -1;
+	}
+	strncpy(yylval.string, yytext+1, yyleng-2);
+	/*fprintf(stderr, "<<<string: [%s]\n",
+		yylval.string);*/
 	return STRING; 
 	}
 
