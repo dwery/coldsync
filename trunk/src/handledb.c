@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.19 2000-08-07 00:33:38 arensb Exp $
+ * $Id: handledb.c,v 1.20 2000-09-08 15:48:40 arensb Exp $
  */
 
 #include "config.h"
@@ -41,64 +41,6 @@
 
 extern int run_GenericConduit(struct PConnection *pconn,
 			      struct dlp_dbinfo *db);
-
-/* HandleDB
- * Sync database number 'dbnum' with the desktop.
- */
-int
-HandleDB(struct PConnection *pconn,
-	 struct Palm *palm,
-	 const int dbnum)
-{
-	int err;
-	struct dlp_dbinfo *dbinfo;	/* Info about the database we're
-					 * trying to handle. */
-
-	dbinfo = &(palm->dblist[dbnum]);	/* Convenience pointer */
-
-	SYNC_TRACE(1)
-		fprintf(stderr, "Syncing %s\n",
-			dbinfo->name);
-
-	if (DBINFO_ISRSRC(dbinfo))
-	{
-		struct stat statbuf;	/* For stat(), to see if the backup
-					 * file exists.
-					 */
-		const char *bakfname;
-
-		/* See if the backup file exists */
-		bakfname = mkbakfname(dbinfo);
-		err = lstat(bakfname, &statbuf);
-		if ((err < 0) && (errno == ENOENT))
-		{
-			SYNC_TRACE(2)
-				fprintf(stderr, "%s doesn't exist. Doing a "
-					"backup\n",
-					bakfname);
-			err = backup(pconn, dbinfo, backupdir);
-			/* XXX - Error-checking */
-			MISC_TRACE(2)
-				fprintf(stderr, "backup() returned %d\n", err);
-		}
-
-		SYNC_TRACE(2)
-			fprintf(stderr,
-				"HandleDB: \"%s\": I don't deal with "
-				"resource databases (yet).\n",
-			dbinfo->name);
-		return 0;
-	}
-
-	/* XXX - This should walk through the list of 'Sync'-flavored
-	 * conduits. If the path matches /^<.*>$/, then that refers to a
-	 * built-in conduit. If none was found, use run_GenericConduit().
-	 */
-	err = run_GenericConduit(pconn, dbinfo);
-	SYNC_TRACE(3)
-		fprintf(stderr, "GenericConduit returned %d\n", err);
-	return err;
-}
 
 /* mkfname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
