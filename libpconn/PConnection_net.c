@@ -15,20 +15,21 @@
 #include "pconn/netsync.h"
 #include "pconn/util.h"
 
-static int net_udp_listen(struct PConnection *pconn,
-			  struct netsync_wakeup *wakeup_pkt);
-static int net_acknowledge_wakeup(struct PConnection *pconn,
-				  struct netsync_wakeup *wakeup_pkt);
+static int net_udp_listen(
+	struct PConnection *pconn,
+	struct netsync_wakeup *wakeup_pkt,
+	struct sockaddr_in *cliaddr,
+	socklen_t *cliaddr_len);
+static int net_acknowledge_wakeup(
+	struct PConnection *pconn,
+	struct netsync_wakeup *wakeup_pkt,
+	struct sockaddr_in *cliaddr,
+	socklen_t *cliaddr_len);
 static int net_tcp_listen(struct PConnection *pconn);
 
 /* XXX - These variables are global *ONLY* for testing */
-/*  int sockfd; */
-static struct sockaddr_in cliaddr;
-static socklen_t cliaddr_len;
-static struct sockaddr_in cliaddr_tcp;
-static socklen_t cliaddr_tcp_len;
-int data_sock;		/* Client on which to send/receive data */
-/*  static ubyte seqno; */		/* Sequence number */
+/*  static socklen_t cliaddr_len; */
+/*  static socklen_t cliaddr_tcp_len; */
 
 /* Ritual statements
  * These packets are sent back and forth during the initial handshaking
@@ -42,6 +43,10 @@ int data_sock;		/* Client on which to send/receive data */
  * client sends ritual response 3
  *
  * The comments are mostly conjecture and speculation.
+ */
+/* XXX - Could these be CMP 2.0? When answering this question, might want
+ * to keep in mind the underlying protocol, the one with the (other) XIDs,
+ * implemented by netsync_read() and netsync_write().
  */
 /* XXX - The ritual responses are commented out for now to shut the
  * compiler up. They'll be restored when we're able to initiate a
@@ -150,16 +155,16 @@ static int
 net_accept(struct PConnection *p)
 {
 	struct netsync_wakeup wakeup_pkt;
+	struct sockaddr_in cliaddr;	/* Client's address */
+	socklen_t cliaddr_len;		/* Length of client's address */
 
-	/* XXX - This function should accept the wakeup packet from the
-	 * client, respond to it, replace the current pconn->fd with a TCP
-	 * socket, exchange ritual packets with the client, and finally
-	 * return.
-	 */
-	net_udp_listen(p, &wakeup_pkt);
+	cliaddr_len = sizeof(cliaddr);
+	net_udp_listen(p, &wakeup_pkt,
+		       &cliaddr, &cliaddr_len);
 	/* XXX - Error-checking */
 
-	net_acknowledge_wakeup(p, &wakeup_pkt);
+	net_acknowledge_wakeup(p, &wakeup_pkt,
+			       &cliaddr, &cliaddr_len);
 	/* XXX - Error-checking */
 
 	net_tcp_listen(p);
@@ -289,52 +294,19 @@ pconn_net_open(struct PConnection *pconn, char *device, int prompt)
 /* XXX - Highly experimental function. */
 static int
 net_udp_listen(struct PConnection *pconn,
-	       struct netsync_wakeup *wakeup_pkt)
+	       struct netsync_wakeup *wakeup_pkt,
+	       struct sockaddr_in *cliaddr,
+	       socklen_t *cliaddr_len)
 {
-/*  	int err; */
 	int len;
-/*  	int sockfd; */
 	ubyte buf[1024];
 	const ubyte *rptr;		/* Pointer into buffer, for reading */
-/*  	struct sockaddr_in servaddr; */
-/*  	struct sockaddr_in cliaddr; */
-/*  	socklen_t cliaddr_len; */
-
-#if 0
-	fprintf(stderr, "Calling socket().\n");
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sockfd < 0)
-	{
-		perror("socket");
-		return -1;
-	}
-
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-				/* XXX - Does this mean it accepts from any
-				 * host?
-				 */
-	servaddr.sin_port = htons(NETSYNC_WAKEUP_PORT);
-				/* XXX - Ought to look this up in
-				 * /etc/services, and default to
-				 * NETSYNC_WAKEUP_PORT if not found.
-				 */
-
-	fprintf(stderr, "bind()ing to %d\n", ntohs(servaddr.sin_port));
-	err = bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-	if (err < 0)
-	{
-		perror("bind");
-		return -1;
-	}
-#endif	/* 0 */
 
 	/* Receive a datagram from a client */
   retry:
-	cliaddr_len = sizeof(cliaddr);
 	len = recvfrom(pconn->fd, buf, sizeof(buf), 0,
-		       (struct sockaddr *) &cliaddr, &cliaddr_len);
+		       (struct sockaddr *) cliaddr,
+		       cliaddr_len);
 
 	fprintf(stderr, "recvfrom() returned %d\n", len);
 	if (len < 0)
@@ -344,13 +316,13 @@ net_udp_listen(struct PConnection *pconn,
 	} else {
 		fprintf(stderr,
 			"Got datagram from host 0x%08lx (%d.%d.%d.%d), port %d, length %d\n",
-			(unsigned long) cliaddr.sin_addr.s_addr,
-			(int)  (cliaddr.sin_addr.s_addr        & 0xff),
-			(int) ((cliaddr.sin_addr.s_addr >>  8) & 0xff),
-			(int) ((cliaddr.sin_addr.s_addr >> 16) & 0xff),
-			(int) ((cliaddr.sin_addr.s_addr >> 24) & 0xff),
-			cliaddr.sin_port,
-			cliaddr_len);
+			(unsigned long) cliaddr->sin_addr.s_addr,
+			(int)  (cliaddr->sin_addr.s_addr	& 0xff),
+			(int) ((cliaddr->sin_addr.s_addr >>  8) & 0xff),
+			(int) ((cliaddr->sin_addr.s_addr >> 16) & 0xff),
+			(int) ((cliaddr->sin_addr.s_addr >> 24) & 0xff),
+			cliaddr->sin_port,
+			*cliaddr_len);
 		debug_dump(stderr, "UDP", buf, len);
 	}
 
@@ -392,7 +364,9 @@ net_udp_listen(struct PConnection *pconn,
 
 static int
 net_acknowledge_wakeup(struct PConnection *pconn,
-		       struct netsync_wakeup *wakeup_pkt)
+		       struct netsync_wakeup *wakeup_pkt,
+		       struct sockaddr_in *cliaddr,
+		       socklen_t *cliaddr_len)
 {
 	int err;
 	ubyte outbuf[1024];
@@ -415,7 +389,8 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 
 	fprintf(stderr, "Sending acknowledgment.\n");
 	err = sendto(pconn->fd, outbuf, pkt_len, 0,
-		     (struct sockaddr *) &cliaddr, cliaddr_len);
+		     (struct sockaddr *) cliaddr,
+		     *cliaddr_len);
 	if (err < 0)
 	{
 		perror("sendto");
@@ -431,30 +406,18 @@ net_acknowledge_wakeup(struct PConnection *pconn,
 	return 0;
 }
 
-/* XXX - This should be net_accept() */
 static int
 net_tcp_listen(struct PConnection *pconn)
 {
 	int err;
-	struct sockaddr_in servaddr;
-#if 0
-	ubyte outbuf_userinfo[] = {
-		DLPCMD_ReadUserInfo,	/* Command */
-		0x00,			/* argc */
-	};
-	ubyte outbuf_end[] = {
-		DLPCMD_EndOfSync,	/* Command */
-		0x01,			/* argc */
-		/* arg 0 */
-		0x00, 0x00, 0x00, 0x00,	/* ? */
-		0x00, 0x00, 0x00, 0x20,	/* arg ID */
-		0x00, 0x00, 0x00, 0x01,	/* arg 0 length */
-		0x00,			/* arg 0 data: 0 = OK */
-		0x00,			/* Padding? */
-	};
-#endif	/* 0 */
+	struct sockaddr_in servaddr;	/* Local host's (server's) address */
+	struct sockaddr_in cliaddr;	/* Client's address */
+	socklen_t cliaddr_len;		/* Length of client's address */
 	const ubyte *inbuf;
 	uword inlen;
+	int data_sock;			/* Data socket (TCP). Will replace
+					 * the UDP socket pconn->fd.
+					 */
 
 	fprintf(stderr, "Inside net_tcp_listen()\n");
 
@@ -494,22 +457,29 @@ net_tcp_listen(struct PConnection *pconn)
 	}
 
 	fprintf(stderr, "accepting\n");
-	cliaddr_tcp_len = sizeof(cliaddr_tcp);
-	data_sock = accept(pconn->fd, (struct sockaddr *) &cliaddr_tcp,
-			   &cliaddr_tcp_len);
+	cliaddr_len = sizeof(cliaddr);
+	data_sock = accept(pconn->fd, (struct sockaddr *) &cliaddr,
+			   &cliaddr_len);
 	if (data_sock < 0)
 	{
 		perror("accept");
 		return -1;
 	}
 	fprintf(stderr,
-		"Accepted TCP connection from 0x%08lx (%d.%d.%d.%d), port %d\n",
-		(unsigned long) cliaddr_tcp.sin_addr.s_addr,
-		(int)  (cliaddr_tcp.sin_addr.s_addr        & 0xff),
-		(int) ((cliaddr_tcp.sin_addr.s_addr >>  8) & 0xff),
-		(int) ((cliaddr_tcp.sin_addr.s_addr >> 16) & 0xff),
-		(int) ((cliaddr_tcp.sin_addr.s_addr >> 24) & 0xff),
-		cliaddr_tcp.sin_port);
+		"Accepted TCP connection from 0x%08lx (%d.%d.%d.%d), "
+		"port %d\n",
+		(unsigned long) cliaddr.sin_addr.s_addr,
+		(int)  (cliaddr.sin_addr.s_addr        & 0xff),
+		(int) ((cliaddr.sin_addr.s_addr >>  8) & 0xff),
+		(int) ((cliaddr.sin_addr.s_addr >> 16) & 0xff),
+		(int) ((cliaddr.sin_addr.s_addr >> 24) & 0xff),
+		cliaddr.sin_port);
+
+	/* We've accepted a TCP connection, so we don't need the UDP socket
+	 * anymore. Replace the UDP socket with the TCP one.
+	 */
+	close(pconn->fd);
+	pconn->fd = data_sock;
 
 	/* Receive ritual response 1 */
 	err = netsync_read(NULL, &inbuf, &inlen);
@@ -535,24 +505,6 @@ net_tcp_listen(struct PConnection *pconn)
 	err = netsync_read(NULL, &inbuf, &inlen);
 	fprintf(stderr, "netsync_read returned %d\n", err);
 	debug_dump(stderr, "<<<", inbuf, inlen);
-
-#if 0
-	/* Send a DLP request */
-	err = netsync_write(NULL, outbuf_userinfo,
-			    sizeof(outbuf_userinfo));
-
-	err = netsync_read(NULL, &inbuf, &inlen);
-	fprintf(stderr, "netsync_read returned %d\n", err);
-	debug_dump(stderr, "<<<", inbuf, inlen);
-
-	/* Send a DLP SyncEnd request */
-	err = netsync_write(NULL, outbuf_end,
-			    sizeof(outbuf_end)/sizeof(outbuf_end[0]));
-
-	err = netsync_read(NULL, &inbuf, &inlen);
-	fprintf(stderr, "netsync_read returned %d\n", err);
-	debug_dump(stderr, "<<<", inbuf, inlen);
-#endif	/* 0 */
 
 	return 0;
 }
