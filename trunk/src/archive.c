@@ -1,6 +1,6 @@
 /* archive.c
  *
- * $Id: archive.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: archive.c,v 1.2 1999-07-12 09:13:52 arensb Exp $
  */
 
 #include <stdio.h>
@@ -53,7 +53,7 @@ arch_create(char *fname,
 			return -1;
 		}
 
-		memcpy(fnamebuf, home, MAXPATHLEN-1);
+		strncpy(fnamebuf, home, MAXPATHLEN-1);
 		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
 		len = strlen(fnamebuf);
 
@@ -126,6 +126,7 @@ arch_open(char *fname,
 		/* 'fname' is a relative pathname; take it to be
 		 * relative to ~/.palm/archive; construct that.
 		 */
+		/* XXX - This should use 'archivedir' from coldsync.h */
 
 		char *home;	/* User's home directory */
 		int len;	/* Length of filename so far */
@@ -137,7 +138,7 @@ arch_open(char *fname,
 			return -1;
 		}
 
-		memcpy(fnamebuf, home, MAXPATHLEN-1);
+		strncpy(fnamebuf, home, MAXPATHLEN-1);
 		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
 		len = strlen(fnamebuf);
 
