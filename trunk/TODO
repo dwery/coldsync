@@ -48,3 +48,10 @@
 - Add functions InitPalmLog(), AddToPalmLog(char *), WritePalmLog(),
   to make logging work more or less the way you expect.
 - Make the *_TRACE stuff go to a separate debugging log file.
+- It should be possible to sync two Palms with each other if you have
+  two cradles, or over the net.
+- Add identd support?
+- PAM for security throughout?
+- Figure out a sane source directory organization and stick to it. I'm
+  not going to worry about it too much in this alpha stage, though.
+- Screw the socket idea. Just come up with a good abstraction.
