@@ -1,8 +1,9 @@
-# $Id: Makefile,v 2.22 2001-10-12 02:19:26 arensb Exp $
+# $Id: Makefile,v 2.23 2002-01-23 15:53:18 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
 
+CPROG =		coldnamed
 CXXPROG =	coldsync
 
 C_SRCS =	coldsync.c \
@@ -57,7 +58,7 @@ DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
 		lexer.l parser.y
 
-all::		${CXXPROG}
+all::		${CXXPROG} ${CPROG}
 
 depend::	lex.yy.c
 depend::
@@ -73,6 +74,12 @@ install::	${CXXPROG}
 #	@for i in ${DISTFILES}; do \
 #		echo "${SUBDIR}/$$i"; \
 #	done
+
+# XXX - Experimental. This doesn't play well with ${LDFLAGS}, so probably
+# best to move coldnamed into its own directory, with a separate Makefile.
+# Or perhaps fix LDFLAGS and friends to support multiple programs.
+coldnamed:	coldnamed.o
+	${CC} ${CFLAGS} coldnamed.o -o $@
 
 # Additional dependencies, maintained by hand 'cos I don't know how
 # else to do it
