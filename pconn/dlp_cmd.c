@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.5 1999-03-11 03:24:19 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.6 1999-03-16 11:01:06 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -451,7 +451,6 @@ DlpReadStorageInfo(struct PConnection *pconn,
 		   const ubyte card,
 		   ubyte *last_card,
 		   ubyte *more,
-		   /* ubyte *act_count*/
 		   struct dlp_cardinfo *cinfo)
 {
 	int i;
@@ -461,6 +460,7 @@ DlpReadStorageInfo(struct PConnection *pconn,
 	struct dlp_arg argv[2];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	static ubyte outbuf[2048];
+				/* XXX - Fixed size: bad! */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	ubyte act_count;	/* # card info structs returned */
@@ -1634,19 +1634,23 @@ DlpReadRecordByID(struct PConnection *pconn,	/* File descriptor */
 	return 0;		/* Success */
 }
 
-/* XXX - Contrary to what one might believe, this appears to only return
- * the response header (not the data, as DlpReadRecordByID does).
- * Presumably, PalmOS really, really likes dealing with record IDs, and not
- * indices. Hence, you're supposed to use this function to get the ID of
- * the record you want to read, but call DlpReadRecordByID to actually read
- * it.
+/* DlpReadRecordByIndex
+ * Read the 'index'th record in the database whose handle is 'handle'.
+ * Contrary to what one might believe, this only returns the response
+ * header (not the data, as DlpReadRecordByID does). Presumably, PalmOS
+ * really, really likes dealing with record IDs, and not indices. Hence,
+ * you're supposed to use this function to get the ID of the record you
+ * want to read, but call DlpReadRecordByID to actually read it.
+ * Also, the returned recinfo->index value is the size of the record.
+ * XXX - Is there some deep significance to this?
  */
 int
-DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
-		     const struct dlp_readrecreq_byindex *req,
-				/* Read request arguments */
-		     struct dlp_readrecret *record)
-				/* Record will be put here */
+DlpReadRecordByIndex(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
+	const uword index,		/* Record index */
+	struct dlp_recinfo *recinfo)
+				/* Record info will be put here */
 {
 	int i;
 	int err;
@@ -1654,16 +1658,14 @@ DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[1024];	/* Output buffer */
-					/* XXX - Fixed size: bad! */
+	static ubyte outbuf[DLPARGLEN_ReadRecord_ByIndex];
+					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	DLPC_TRACE(1, ">>> ReadRecord ByIndex: dbid %d, index %d, offset %d, len %d\n",
-		   req->dbid,
-		   req->index,
-		   req->offset,
-		   req->len);
+	DLPC_TRACE(1, ">>> ReadRecord ByIndex: dbid %d, index %d\n",
+		   handle,
+		   index);
 
 	/* Fill in the header values */
 	header.id = DLPCMD_ReadRecord;
@@ -1671,11 +1673,11 @@ DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, req->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Padding */
-	put_udword(&wptr, req->index);
-	put_uword(&wptr, req->offset);
-	put_uword(&wptr, req->len);
+	put_udword(&wptr, index);
+	put_uword(&wptr, 0);		/* offset - unused */
+	put_uword(&wptr, 0);		/* len - unused */
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadRecord_ByIndex;
@@ -1708,21 +1710,20 @@ DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadRecord_Rec:
-			record->recid = get_udword(&rptr);
-			record->index = get_uword(&rptr);
-			record->size = get_uword(&rptr);
-			record->attributes = get_ubyte(&rptr);
-			record->category = get_ubyte(&rptr);
-			record->data = rptr;
+			recinfo->id = get_udword(&rptr);
+			recinfo->index = get_udword(&rptr);
+			recinfo->size = get_udword(&rptr);
+			recinfo->attributes = get_ubyte(&rptr);
+			recinfo->category = get_ubyte(&rptr);
 
-			DLPC_TRACE(6, "Read a record (by ID):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", record->recid);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", record->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", record->size);
+			DLPC_TRACE(6, "Read a record (by index):\n");
+			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
+			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
+			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
 			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   record->attributes);
+				   recinfo->attributes);
 			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   record->category);
+				   recinfo->category);
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1736,16 +1737,14 @@ DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
 
 /* DlpWriteRecord
  * Write a record.
- * XXX - The Palm seems rather picky about this: apparently, you can't just
- * use any old string as the data, or else DlpWriteRecord() will return
- * "invalid parameter". I've been able to successfully write a record read
- * from another database, but not create a new one myself.
  */
 int
 DlpWriteRecord(struct PConnection *pconn,	/* Connection */
 	       const ubyte handle,	/* Database handle */
-	       const struct dlp_writerec *rec,
-					/* Record descriptor */
+	       const ubyte flags,
+	       const udword id,
+	       const ubyte attributes,
+	       const ubyte category,
 	       const udword len,	/* Length of record data */
 	       const ubyte *data,	/* Record data */
 	       udword *recid)		/* Record ID returned here */
@@ -1763,11 +1762,11 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection */
 
 	DLPC_TRACE(1, ">>> WriteRecord: dbid %d, flags 0x%02x, "
 		   "recid 0x%08lx, attr 0x%02x, category %d, len %ld\n",
-		   handle/*rec->dbid*/,
-		   rec->flags,
-		   rec->recid,
-		   rec->attributes,
-		   rec->category,
+		   handle,
+		   flags,
+		   id,
+		   attributes,
+		   category,
 		   len);
 	DLPC_TRACE(10, "Raw record data (%ld == 0x%04lx bytes):\n",
 		   len, len);
@@ -1783,14 +1782,19 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection */
 	/* Construct the argument */
 	wptr = outbuf;
 	put_ubyte(&wptr, handle);
-	put_ubyte(&wptr, rec->flags);
-	put_udword(&wptr, rec->recid);
-	put_ubyte(&wptr, rec->attributes);
-		/* XXX - According to Palm's documentation, only certain
-		 * flags are allowed here, and they vary by DLP version.
+	put_ubyte(&wptr, flags);
+		/* XXX - Flags: the Palm header says that the high bit
+		 * (0x80) should always be set. make sure it is.
 		 */
-	put_ubyte(&wptr, rec->category);
-	/* XXX - Potential buffer overflow. Check this */
+	put_udword(&wptr, id);
+	put_ubyte(&wptr, attributes);
+		/* XXX - Attributes: under early versions of the protocol,
+		 * only the "secret" attribute is allowed. As of 1.1,
+		 * "deleted", "archived" and "dirty" are also allowed.
+		 * Check these and clear the forbidden bits.
+		 */
+	put_ubyte(&wptr, category);
+	/* XXX - Potential buffer overflow. */
 	memcpy(wptr, data, len);
 	wptr += len;
 
@@ -1846,7 +1850,7 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection */
  * DeleteAllRecords, and DeleteRecordsByCategory.
  */
 int
-DlpDeleteRecord(struct PConnection *pconn,			/* File descriptor */
+DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 		const ubyte dbid,	/* Database ID (handle) */
 		const ubyte flags,	/* Flags */
 		const udword recid)	/* Unique record ID */
@@ -2130,12 +2134,9 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-/*	static ubyte outbuf[2048];*/	/* Output buffer */
-					/* XXX - Fixed size: bad! */
-ubyte *outbuf;
+	ubyte *outbuf;
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-fprintf(stderr, "DlpWriteResource: fd == %d\n", pconn->fd);
 	DLPC_TRACE(1, "WriteResource: type '%c%c%c%c' (0x%08lx), id %d, "
 		   "size %d\n",
 		   (char) (type >> 24) & 0xff,
@@ -2150,11 +2151,12 @@ fprintf(stderr, "DlpWriteResource: fd == %d\n", pconn->fd);
 	header.argc = 1;
 
 	/* Construct the argument */
-if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteResource_Rsrc+size)) == NULL)
-{
-fprintf(stderr, "Out of memory\n");
-return -1;
-}
+	if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteResource_Rsrc+size))
+	    == NULL)
+	{
+		fprintf(stderr, "Out of memory\n");
+		return -1;
+	}
 	wptr = outbuf;
 	put_ubyte(&wptr, dbid);
 	put_ubyte(&wptr, 0);		/* Padding */
@@ -2164,8 +2166,6 @@ return -1;
 	/* XXX - Potential buffer overflow */
 	memcpy(wptr, data, size);
 	wptr += size;
-fprintf(stderr, "DlpWriteResource 2: fd == %d\n", pconn->fd);
-fprintf(stderr, "DlpWriteResource: writing %d bytes\n", wptr-outbuf);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteResource_Rsrc;
@@ -2173,9 +2173,7 @@ fprintf(stderr, "DlpWriteResource: writing %d bytes\n", wptr-outbuf);
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-fprintf(stderr, "DlpWriteResource 3: fd == %d\n", pconn->fd);
 	err = dlp_send_req(pconn, &header, argv);
-fprintf(stderr, "DlpWriteResource 4: fd == %d\n", pconn->fd);
 	if (err < 0)
 	{
 		free(outbuf);
@@ -2187,7 +2185,6 @@ fprintf(stderr, "DlpWriteResource 4: fd == %d\n", pconn->fd);
 	/* Get a response */
 	err = dlp_recv_resp(pconn, DLPCMD_WriteResource,
 			    &resp_header, &ret_argv);
-fprintf(stderr, "DlpWriteResource: dlp_recv_resp() returned %d\n", err);
 	if (err < 0)
 	{
 		free(outbuf);
@@ -2216,12 +2213,12 @@ fprintf(stderr, "DlpWriteResource: dlp_recv_resp() returned %d\n", err);
 		}
 	}
 
-free(outbuf);
+	free(outbuf);
 	return 0;		/* Success */
 }
 
 int
-DlpDeleteResource(struct PConnection *pconn,		/* File descriptor */
+DlpDeleteResource(struct PConnection *pconn,	/* Connection */
 		  const ubyte dbid,	/* Database ID (handle) */
 		  const ubyte flags,	/* Request flags */
 		  const udword type,	/* Resource type */
@@ -2302,9 +2299,9 @@ DlpDeleteResource(struct PConnection *pconn,		/* File descriptor */
  * Delete any records that were marked as archived or deleted in the record
  * database.
  */
-int DlpCleanUpDatabase(struct PConnection *pconn,		/* File descriptor */
-		       const ubyte dbid)
-					/* Database ID (handle) */
+int DlpCleanUpDatabase(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte dbid)		/* Database handle */
 {
 	int i;
 	int err;
@@ -2420,17 +2417,15 @@ int DlpResetSyncFlags(struct PConnection *pconn,		/* File descriptor */
 
 /* XXX - The API probably could use some work */
 int
-DlpCallApplication(struct PConnection *pconn,		/* File descriptor */
-		   const udword version,
-					/* OS version, used for determining
+DlpCallApplication(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const udword version,		/* OS version, used for determining
 					 * how to phrase the DLP call. */
-		   const struct dlp_appcall *appcall,
+	const struct dlp_appcall *appcall,
 					/* Which application to call */
-		   const udword paramsize,
-					/* Size of the parameter */
-		   const ubyte *param,	/* The parameter data */
-		   struct dlp_appresult *result)
-					/* Application result */
+	const udword paramsize,		/* Size of the parameter */
+	const ubyte *param,		/* The parameter data */
+	struct dlp_appresult *result)	/* Application result */
 {
 	int i;
 	int err;
@@ -2675,10 +2670,10 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* File descriptor */
  * Read information about an open database.
  */
 int
-DlpReadOpenDBInfo(struct PConnection *pconn,	/* File descriptor */
-		  ubyte handle,	/* Database handle */
+DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
+		  ubyte handle,			/* Database handle */
 		  struct dlp_opendbinfo *dbinfo)
-				/* Info about database */
+						/* Info about database */
 {
 	int i;
 	int err;
@@ -2738,8 +2733,8 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* File descriptor */
 }
 
 int
-DlpMoveCategory(struct PConnection *pconn,			/* File descriptor */
-		const ubyte handle,	/* Database ID (handle) */
+DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
+		const ubyte handle,	/* Database handle */
 		const ubyte from,	/* ID of source category */
 		const ubyte to)		/* ID of destination category */
 {
@@ -2780,7 +2775,8 @@ DlpMoveCategory(struct PConnection *pconn,			/* File descriptor */
 	DLPC_TRACE(10, "DlpMoveCategory: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_MoveCategory, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_MoveCategory,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2809,7 +2805,7 @@ DlpMoveCategory(struct PConnection *pconn,			/* File descriptor */
 /* DlpOpenConduit
  * Sent before each conduit is opened by the desktop.
  */
-int DlpOpenConduit(struct PConnection *pconn)		/* File descriptor */
+int DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 {
 	int i;
 	int err;
@@ -2831,7 +2827,8 @@ int DlpOpenConduit(struct PConnection *pconn)		/* File descriptor */
 	DLPC_TRACE(10, "DlpOpenConduit: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_OpenConduit, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_OpenConduit,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2922,9 +2919,9 @@ DlpEndOfSync(struct PConnection *pconn,		/* File descriptor */
 /* DlpResetRecordIndex
  * Reset the "next modified record" index to the beginning.
  */
-int DlpResetRecordIndex(struct PConnection *pconn,		/* File descriptor */
-			const ubyte dbid)
-					/* Database ID (handle) */
+int DlpResetRecordIndex(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte dbid)		/* Database handle */
 {
 	int i;
 	int err;
@@ -2984,13 +2981,14 @@ int DlpResetRecordIndex(struct PConnection *pconn,		/* File descriptor */
  * 'handle'.
  */
 int
-DlpReadRecordIDList(struct PConnection *pconn,		/* File descriptor */
-		    const ubyte handle,	/* Database handle */
-		    const ubyte flags,
-		    const uword start,
-		    const uword max,	/* Max # entries to read */
-		    uword *numread,	/* How many entries were read */
-		    udword recids[])	/* IDs are returned here */
+DlpReadRecordIDList(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
+	const ubyte flags,
+	const uword start,
+	const uword max,		/* Max # entries to read */
+	uword *numread,			/* How many entries were read */
+	udword recids[])		/* IDs are returned here */
 {
 	int i;
 	int err;
@@ -3075,7 +3073,7 @@ DlpReadRecordIDList(struct PConnection *pconn,		/* File descriptor */
  */
 int
 DlpReadNextRecInCategory(
-	struct PConnection *pconn,				/* File descriptor */
+	struct PConnection *pconn,	/* Connection to Palm */
 	const ubyte handle,		/* Database ID (handle) */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
@@ -3169,8 +3167,8 @@ DlpReadNextRecInCategory(
  */
 int
 DlpReadNextModifiedRecInCategory(
-	struct PConnection *pconn,				/* File descriptor */
-	const ubyte handle,		/* Database ID (handle) */
+	struct PConnection *pconn,	/* Connection to Palm */
+	const ubyte handle,		/* Database handle */
 	const ubyte category,		/* Category ID */
 	struct dlp_readrecret *record)	/* The record will be returned here */
 {
@@ -3260,14 +3258,14 @@ DlpReadNextModifiedRecInCategory(
 
 /* XXX - This is untested: I don't know what values to feed it */
 int
-DlpReadAppPreference(struct PConnection *pconn,		/* File descriptor */
-		     const udword creator,
-					/* Application creator */
-		     const uword id,	/* Preference ID */
-		     const uword len,	/* Max # bytes to return */
-		     const ubyte flags,
-		     struct dlp_apppref *pref,
-		     ubyte *data)
+DlpReadAppPreference(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const udword creator,		/* Application creator */
+	const uword id,			/* Preference ID */
+	const uword len,		/* Max # bytes to return */
+	const ubyte flags,
+	struct dlp_apppref *pref,
+	ubyte *data)
 {
 	int i;
 	int err;
@@ -3358,14 +3356,13 @@ DlpReadAppPreference(struct PConnection *pconn,		/* File descriptor */
  * XXX - Test this.
  */
 int
-DlpWriteAppPreference(struct PConnection *pconn,		/* File descriptor */
-		      const udword creator,
-					/* Application creator */
-		      const uword id,	/* Preference ID */
-		      const ubyte flags,/* Flags */
-		      const struct dlp_apppref *pref,
-					/* Preference descriptor */
-		      const ubyte *data)/* Preference data */
+DlpWriteAppPreference(
+	struct PConnection *pconn,	/* Connection to Palm */
+	const udword creator,		/* Application creator */
+	const uword id,			/* Preference ID */
+	const ubyte flags,		/* Flags */
+	const struct dlp_apppref *pref,	/* Preference descriptor */
+	const ubyte *data)		/* Preference data */
 {
 	int i;
 	int err;
@@ -3634,7 +3631,7 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* File descriptor */
  * XXX - Check to make sure the Palm understands v1.1 of the protocol.
  */
 int
-DlpReadFeature(struct PConnection *pconn,			/* File descriptor */
+DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 	       const udword creator,	/* Feature creator */
 	       const word featurenum,	/* Number of feature to read */
 	       udword *value)		/* Value of feature returned here */
@@ -3680,7 +3677,8 @@ DlpReadFeature(struct PConnection *pconn,			/* File descriptor */
 	DLPC_TRACE(10, "DlpReadFeature: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadFeature, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadFeature,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
