@@ -1,4 +1,5 @@
 - Add documentation for 'cwd:' option in conduit{} block.
+- Man page for coldnamed(8).
 - Create a manifest file when installing, to help package-management
   utilities. Preferably add a rule to create the manifest without
   installing.
