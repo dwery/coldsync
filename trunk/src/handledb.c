@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.6 1999-11-04 10:52:56 arensb Exp $
+ * $Id: handledb.c,v 1.7 1999-11-10 09:07:30 arensb Exp $
  */
 
 #include "config.h"
@@ -51,6 +51,10 @@ HandleDB(struct PConnection *pconn,
 
 	/* See if there's a conduit for this database. If so, invoke it and
 	 * let it do all the work.
+	 */
+	/* XXX - This should walk through the list of 'Sync'-flavored
+	 * conduits. If the path matches /^<.*>$/, then that refers to a
+	 * built-in conduit.
 	 */
 	if ((conduit = find_conduit(dbinfo)) != NULL)
 	{
