@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.47 2001-10-18 02:46:44 arensb Exp $
+.\" $Id: coldsync.8,v 1.48 2001-11-05 00:26:04 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -784,7 +784,7 @@ whether the generic conduit should be run at all.
 directives are of the form
 .Bd -literal -offset indent
 option {
-	CONDUITDIR: "$(CONDUITDIR):$(HOME)/.palm/conduits";
+	CONDUIT_PATH: "$(CONDUITDIR):$(HOME)/.palm/conduits";
 	key:  "this is the value";
 }
 .Ed
@@ -793,7 +793,41 @@ configuration file.  In fact, if you do not set an option before you use it,
 coldsync will try to use your environment variables to set it.
 Options may only be used inside quoted strings.
 .Pp
-The most useful option is $(CONDUITDIR), which is the search path for conduits.
+Two useful options are
+.Dv $(CONDUITDIR)
+and
+.Dv $(CONDUIT_PATH) .
+.Dv $(CONDUITDIR)
+is the system-wide conduit directory. It defaults to the directory to
+which the standard conduits were installed when ColdSync was
+installed.
+.Pp
+.Dv $(CONDUIT_PATH)
+is a colon-separated path in which
+.Nm coldsync
+will look for conduits. If any element is empty, it will look in
+.Dq the usual places ,
+which currently defaults to
+.Dv $(CONDUITDIR) .
+Thus, if you set
+.Dv $(CONDUIT_PATH)
+to
+.Li /foo::/bar ,
+.Nm coldsync
+will look for conduits in
+.Pa /foo ,
+then in
+.Dv $(CONDUITDIR) ,
+and finally in
+.Pa /bar .
+If you set it it to
+.Li /foo:
+then the last component is empty, so
+.Nm coldsync
+will first look in
+.Pa /foo ,
+and then in
+.Dq the usual places .
 .Ss Quoting
 Values on the right side of a colon may be enclosed in double quotes.
 That is you can write either
