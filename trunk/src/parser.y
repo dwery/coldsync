@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.16 2000-05-07 23:01:30 arensb Exp $
+ * $Id: parser.y,v 2.17 2000-05-19 12:15:09 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -32,6 +32,7 @@ extern FILE *yyin;
 
 int yyerror(const char *msg);
 
+static int num_errors = 0;		/* # of errors seen during parsing */
 static listen_block *cur_listen;	/* Currently-open listen block. The
 					 * various listen_directive rules
 					 * will fill in the fields.
@@ -130,7 +131,7 @@ statement:
 	;
 
 listen_stmt:
-	LISTEN comm_type  '{'
+	LISTEN comm_type open_brace
 	{
 		/* Create a new listen block. Subsequent rules that parse
 		 * substatements inside a 'listen' block will fill in
@@ -196,6 +197,16 @@ comm_type:
 			fprintf(stderr, "Found commtype: USB\n");
 		$$ = LISTEN_USB;
 	}
+	| WORD error
+	{
+		num_errors++;
+		fprintf(stderr, _("Unrecognized listen type at line %d\n"),
+			lineno);
+		fprintf(stderr, "Word is \"%s\"\n", $1);
+		free($1);	$1 = NULL;
+		yyerrok;
+		lex_expect(0);
+	}
 	;
 
 
@@ -214,14 +225,14 @@ listen_directives:
 	;
 
 listen_directive:
-	DEVICE STRING ';'
+	DEVICE STRING semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: device [%s]\n", $2);
 
 		cur_listen->device = $2;
 	}
-	| SPEED NUMBER ';'
+	| SPEED NUMBER semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Listen: speed %d\n", $2);
@@ -271,6 +282,7 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		    default:
 			fprintf(stderr, _("Unknown conduit flavor: %d"),
 				cur_conduit->flavor);
+			num_errors++;
 			YYERROR;
 		}
 		PARSE_TRACE(4)
@@ -303,6 +315,7 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 					  "flavor %d\n"),
 				"yyparse",
 				lineno, cur_conduit->flavor);
+			num_errors++;
 			YYERROR;
 		}
 
@@ -378,7 +391,7 @@ conduit_directive:
 	 * type, for consistency with the user-supplied headers. For now,
 	 * make this colon optional and complain if it's missing.
 	 */
-	TYPE creator_type ';'
+	TYPE creator_type semicolon
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
@@ -402,8 +415,8 @@ conduit_directive:
 		cur_conduit->dbtype = $2.type;
 	}
 	/* XXX - These ought to take a colon, just like the "type". */
-	| NAME STRING ';'	/* XXX - Is this used? */
-	| PATH STRING ';'
+	| NAME STRING semicolon	/* XXX - Is this used? */
+	| PATH STRING semicolon
 	{
 		/* Path to the conduit program. If this is a relative
 		 * pathname, look for it in the path.
@@ -417,7 +430,7 @@ conduit_directive:
 			fprintf(stderr, "Conduit path: [%s]\n",
 				cur_conduit->path);
 	}
-	| DEFAULT ';'
+	| DEFAULT semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a default conduit\n");
@@ -425,7 +438,7 @@ conduit_directive:
 		/* Mark this conduit as being a fall-back default */
 		cur_conduit->flags |= CONDFL_DEFAULT;
 	}
-	| FINAL ';'
+	| FINAL semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a final conduit\n");
@@ -455,6 +468,7 @@ creator_type:	STRING '/' STRING
 					$1, lineno);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
+				num_errors++;
 				YYERROR;
 			}
 			$$.creator =
@@ -480,6 +494,7 @@ creator_type:	STRING '/' STRING
 					$3, lineno);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
+				num_errors++;
 				YYERROR;
 			}
 			$$.type =
@@ -501,7 +516,7 @@ creator_type:	STRING '/' STRING
 /* Optional list of user-supplied headers */
 opt_header_list:	ARGUMENTS ':'
 	{
-		start_header = True;
+		lex_expect(LEX_HEADER);
 	}
 	header_list
 	|	/* Empty */
@@ -514,7 +529,7 @@ opt_header_list:	ARGUMENTS ':'
  * to make heavy use of lex states for this, though.
  *	It should be possible to double-quote the rhs string.
  */
-header_list:	header_list HEADER_PAIR ';'
+header_list:	header_list HEADER_PAIR semicolon
 	{
 		struct cond_header *new_hdr;
 
@@ -670,7 +685,7 @@ pda_directives:
 	;
 
 pda_directive:
-	SNUM STRING ';'
+	SNUM STRING semicolon
 	{
 		/* Serial number from ROM */
 		char *csum_ptr;		/* Pointer to checksum character */
@@ -728,7 +743,7 @@ pda_directive:
 			}
 		}
 	}
-	| DIRECTORY STRING ';'
+	| DIRECTORY STRING semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "Directory \"%s\"\n", $2);
@@ -736,7 +751,7 @@ pda_directive:
 		cur_pda->directory = $2;
 		$2 = NULL;
 	}
-	| DEFAULT ';'
+	| DEFAULT semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a default PDA\n");
@@ -745,6 +760,24 @@ pda_directive:
 		cur_pda->flags |= PDAFL_DEFAULT;	/* XXX - Test this */
 	}
 	;
+
+open_brace:	'{'
+	| error
+	{
+		num_errors++;
+		fprintf(stderr, _("Warning: Missing '{' at line %d\n"),
+			lineno);
+		yyerrok;
+	}
+
+semicolon:	';'
+	| error
+	{
+		num_errors++;
+		fprintf(stderr, _("Warning: Missing ';' at line %d\n"),
+			lineno);
+		yyerrok;
+	}
 
 %%
 
@@ -778,6 +811,7 @@ int parse_config(const char *fname,
 	yyin = infile;
 	lineno = 1;
 	file_config = conf;
+	num_errors = 0;
 	retval = yyparse();
 	fclose(infile);
 
@@ -788,7 +822,12 @@ int parse_config(const char *fname,
 	if (cur_conduit != NULL)
 		free_conduit_block(cur_conduit);
 
-	return -retval;
+	if (retval > 0)
+		return -retval;
+	else if (num_errors > 0)
+		return -1;
+	else
+		return 0;
 }
 
 /* This is for Emacs's benefit:
