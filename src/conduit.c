@@ -7,7 +7,13 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.6 1999-11-09 04:10:18 arensb Exp $
+ * $Id: conduit.c,v 1.7 1999-11-10 09:07:20 arensb Exp $
+ */
+/* XXX - At some point, the API for built-in conduits should become much
+ * simpler. A lot of the crap in this file will disappear, since it's
+ * intended to handle an obsolete conduit model. Presumably, there'll just
+ * be a single table that maps an internal conduit name (e.g., "<Generic>")
+ * to the function that implements it.
  */
 #include "config.h"
 #include <stdio.h>
