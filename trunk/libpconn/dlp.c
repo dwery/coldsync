@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.13 2001-06-26 05:47:26 arensb Exp $
+ * $Id: dlp.c,v 1.14 2001-12-09 22:41:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -93,9 +93,9 @@ dlp_tini(PConnection *pconn)
  */
 int
 dlp_send_req(PConnection *pconn,	/* Connection to Palm */
-	     struct dlp_req_header *header,
+	     const struct dlp_req_header *header,
 	     				/* Request header */
-	     struct dlp_arg argv[])	/* Array of request arguments */
+	     const struct dlp_arg argv[])	/* Array of request arguments */
 {
 	int i;
 	int err;
@@ -354,6 +354,79 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 
 	*argv = pconn->dlp.argv;
 	return 0;
+}
+
+/* dlp_dlpc_req
+ * Send a DLP command, and receive a response. If there's a timeout waiting
+ * for data, resends the request, up to 5 times.
+ * This function is mainly for Linux, where the USB-to-serial thingy (or
+ * maybe the serial driver) appears to drop data (I've seen it drop 3Kb).
+ *
+ * Returns 0 if successful. In case of error, returns a negative value;
+ * 'palm_errno' is set to indicate the error.
+ */
+int
+dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
+	     const struct dlp_req_header *header,
+						/* Request header */
+	     const struct dlp_arg argv[],	/* Argument list */
+	     struct dlp_resp_header *resp_header,
+						/* Response header */
+	     const struct dlp_arg **ret_argv)	/* Response argument list */
+{
+	int err;
+	int trycount;		/* # times to try sending the request */
+
+	for (trycount = 0; trycount < 5; trycount++)
+	{
+		/* Send the DLP request */
+		DLP_TRACE(2)
+			fprintf(stderr,
+				"dlp_dlpc_req: sending request 0x%02x\n",
+				header->id);
+		err = dlp_send_req(pconn, header, argv);
+		if (err < 0)
+		{
+			if (palm_errno == PALMERR_TIMEOUT2)
+				/* Try resending the request */
+				continue;
+			return err;		/* Some other error */
+		}
+
+		DLP_TRACE(5)
+			fprintf(stderr,
+				"dlp_dlpc_req: waiting for response\n");
+
+		/* Get a response */
+		err = dlp_recv_resp(pconn, header->id,
+				    resp_header, ret_argv);
+		if (err < 0)
+		{
+			if (palm_errno == PALMERR_TIMEOUT2)
+				/* Try resending the request */
+				continue;
+			DLP_TRACE(2)
+				fprintf(stderr, "dlp_dlpc_req: "
+					"dlp_recv_resp set palm_errno == %d\n",
+					palm_errno);
+			return err;		/* Some other error */
+		}
+
+		DLP_TRACE(2)
+			fprintf(stderr,
+				"Got response, id 0x%02x, args %d, "
+				"status %d\n",
+				resp_header->id,
+				resp_header->argc,
+				resp_header->error);
+
+		return 0;		/* Success */
+	}
+
+	DLP_TRACE(2)
+		fprintf(stderr, "dlp_dlpc_req: maximum retries exceeded.\n");
+	palm_errno = PALMERR_TIMEOUT;
+	return -1;
 }
 
 /* This is for Emacs's benefit:
