@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.8 1999-09-09 05:55:45 arensb Exp $
+ * $Id: coldsync.c,v 1.9 1999-11-04 11:46:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,15 +23,11 @@
 #include <unistd.h>		/* For sleep(), getopt() */
 #include <ctype.h>		/* For isalpha() and friends */
 #include <errno.h>		/* For errno. Duh. */
-/*#include "palm_errno.h"
-#include "PConnection.h"
-#include "cmp.h"
-#include "dlp_cmd.h"
-#include "util.h"*/
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+#include "pconn/pconn.h"
 #include "coldsync.h"
 #include "pdb.h"
 #include "conduit.h"
+#include "parser.h"
 
 #if !HAVE_STRCASECMP
 #  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
@@ -39,6 +35,9 @@
 #if !HAVE_STRNCASECMP
 #  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
 #endif	/* HAVE_STRNCASECMP */
+
+int sync_trace = 0;		/* Debugging level for sync-related stuff */
+int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -50,16 +49,11 @@
 #define SYNC_RATE		38400
 #define BSYNC_RATE		B38400
 
-extern int load_config();
 extern int load_palm_config(struct Palm *palm);
 int CheckLocalFiles(struct Palm *palm);
 int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
-int parse_args(int argc, char *argv[]);
-void set_debug_level(const char *str);
-void usage(int argc, char *argv[]);
-void print_version(void);
 
 /* speeds
  * This table provides a list of speeds at which the serial port might be
@@ -121,8 +115,8 @@ char *synclog = NULL;
 int log_size = 0;
 int log_len = 0;
 
-struct cmd_opts global_opts;	/* Command-ine options */
-struct debug_flags debug;	/* Debugging levels */
+struct cmd_opts global_opts;	/* Command-line options */
+struct config config;		/* Main configuration */
 
 int
 main(int argc, char *argv[])
@@ -131,9 +125,33 @@ main(int argc, char *argv[])
 	int err;
 	int i;
 
+	/* XXX - Getting the configuration:
+	 * Assume standalone mode.
+	 * Read command-line options.
+	 * If in daemon mode:
+	 *	read /etc/coldsync.conf; don't override command line
+	 * else
+	 *	read /etc/coldsync.conf; don't override command line
+	 *	read ~/.coldsyncrc; overrides /etc/coldsync.conf, but
+	 *		not command line.
+	 */
+
+#if 0
 	/* Parse arguments */
 	if (parse_args(argc, argv) < 0)
 		exit(1);
+
+	/* Read config files */
+	if ((err = load_config()) < 0)
+	{
+		exit(1);
+	}
+#endif	/* 0 */
+	if ((err = get_config(argc, argv)) < 0)
+	{	
+		fprintf(stderr, "Error loading configuration\n");
+		exit(1);
+	}
 
 	MISC_TRACE(2)
 	{
@@ -152,14 +170,6 @@ main(int argc, char *argv[])
 			global_opts.force_slow ? "True" : "False");
 		fprintf(stderr, "\tforce_fast: %s\n",
 			global_opts.force_fast ? "True" : "False");
-		fprintf(stderr, "\tport: \"%s\"\n",
-			global_opts.port == NULL ?
-				"(null)" : global_opts.port);
-		fprintf(stderr, "\tusername: \"%s\"\n",
-			global_opts.username == NULL ?
-				"(null)" : global_opts.username);
-		fprintf(stderr, "\tuid: %ld\n",
-			(long) global_opts.uid);
 		fprintf(stderr, "\tcheck_ROM: %s\n",
 			global_opts.check_ROM ? "True" : "False");
 	}
@@ -167,18 +177,20 @@ main(int argc, char *argv[])
 	MISC_TRACE(3)
 	{
 		fprintf(stderr, "\nDebugging levels:\n");
-		fprintf(stderr, "\tSLP:\t%d\n", debug.slp);
-		fprintf(stderr, "\tCMP:\t%d\n", debug.cmp);
-		fprintf(stderr, "\tPADP:\t%d\n", debug.padp);
-		fprintf(stderr, "\tDLP:\t%d\n", debug.dlp);
-		fprintf(stderr, "\tDLPC:\t%d\n", debug.dlpc);
-		fprintf(stderr, "\tSYNC:\t%d\n", debug.sync);
-		fprintf(stderr, "\tMISC:\t%d\n", debug.misc);
+		fprintf(stderr, "\tSLP:\t%d\n", slp_trace);
+		fprintf(stderr, "\tCMP:\t%d\n", cmp_trace);
+		fprintf(stderr, "\tPADP:\t%d\n", padp_trace);
+		fprintf(stderr, "\tDLP:\t%d\n", dlp_trace);
+		fprintf(stderr, "\tDLPC:\t%d\n", dlpc_trace);
+		fprintf(stderr, "\tPDB:\t%d\n", pdb_trace);
+		fprintf(stderr, "\tSYNC:\t%d\n", sync_trace);
+		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
-	/* Read config files */
-	if ((err = load_config()) < 0)
+	/* Make sure at least one port was specified */
+	if (config.listen == NULL)
 	{
+		fprintf(stderr, "Error: no port specified.\n");
 		exit(1);
 	}
 
@@ -190,7 +202,11 @@ main(int argc, char *argv[])
 	/* XXX - Figure out fastest speed at which each serial port will
 	 * run
 	 */
-	if ((pconn = new_PConnection(global_opts.port)) == NULL)
+	/* XXX - Clean this up */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			config.listen[0].device);
+	if ((pconn = new_PConnection(config.listen[0].device)) == NULL)
 	{
 		fprintf(stderr, "Error: can't open connection.\n");
 		/* XXX - Clean up */
@@ -198,7 +214,7 @@ main(int argc, char *argv[])
 	}
 
 	/* Connect to the Palm */
-	if ((err = Connect(pconn, global_opts.port)) < 0)
+	if ((err = Connect(pconn, config.listen[0].device/*global_opts.port*/)) < 0)
 	{
 		fprintf(stderr, "Can't connect to Palm\n");
 		/* XXX - Clean up */
@@ -324,6 +340,9 @@ main(int argc, char *argv[])
 	}
 
 	/* Figure out what to do: backup, restore, or sync */
+	/* XXX - It'd probably be a good idea to break this up into several
+	 * functions. That is, add a "Sync()" function.
+	 */
 	if (global_opts.do_backup)
 	{
 		MISC_TRACE(1)
@@ -365,6 +384,22 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
+		/* For each database, walk config.fetch, looking for
+		 * applicable conduits for each database.
+		 */
+		for (i = 0; i < palm.num_dbs; i++)
+		{
+			err = run_Fetch_conduits(&palm, &(palm.dblist[i]));
+			if (err < 0)
+			{
+				fprintf(stderr,
+					"Error %d running pre-fetch conduits.\n",
+					err);
+				/* XXX - Clean up */
+				exit(1);
+			}
+		}
+
 		/* Synchronize the databases */
 		for (i = 0; i < palm.num_dbs; i++)
 		{
@@ -402,6 +437,9 @@ main(int argc, char *argv[])
 
 		if (synclog != NULL)
 		{
+			SYNC_TRACE(2)
+				fprintf(stderr, "Writing log to Palm\n");
+
 			if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 			{
 				fprintf(stderr, "Error writing sync log.\n");
@@ -412,6 +450,8 @@ main(int argc, char *argv[])
 	}
 
 	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, "Error disconnecting\n");
@@ -419,7 +459,27 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* XXX - For each database in the palm, walk config.dump, looking
+	 * for applicable conduits. This is done after we've disconnected
+	 * from the Palm, since this shouldn't require the user to be
+	 * present.
+	 */
+	for (i = 0; i < palm.num_dbs; i++)
+	{
+		err = run_Dump_conduits(&palm, &(palm.dblist[i]));
+		if (err < 0)
+		{
+			fprintf(stderr,
+				"Error %d running post-dump conduits.\n",
+				err);
+			/* XXX - Clean up */
+			break;
+		}
+	}
+
 	/* XXX - Clean up conduits */
+	MISC_TRACE(3)
+		fprintf(stderr, "Cleaning up conduits\n");
 	if ((err = tini_conduits()) < 0)
 	{
 		fprintf(stderr, "Error cleaning up conduits\n");
@@ -428,6 +488,8 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - Clean up */
+	MISC_TRACE(1)
+		fprintf(stderr, "ColdSync terminating normally\n");
 	exit(0);
 
 	/* NOTREACHED */
@@ -810,6 +872,12 @@ CheckLocalFiles(struct Palm *palm)
 		if ((db = find_dbentry(palm, dbname)) != NULL)
 				/* It exists. Ignore it */
 			continue;
+
+		/* XXX - Walk through config.uninstall to find any *
+		 * applicable conduits. Tell them that this database has
+		 * been deleted. When they're done, if the database file
+		 * still exists, move it to the attic.
+		 */
 
 		/* XXX - Might be a good idea to move this into its own
 		 * function in "util.c": cautious_mv(from,to);
@@ -1196,194 +1264,6 @@ find_max_speed(struct PConnection *pconn)
 	return -1;
 }
 
-/* parse_args
- * Parse command-line arguments, and fill in the appropriate slots in
- * 'global_opts'.
- */
-/* XXX - Command-line options to add or implement:
- * -u <user>:	run as <user>
- * -i <file>:	upload (install) <file>
- * -p:		print PID to stdout, like 'amd'. Or maybe just do this by
- *		default when running in daemon mode.
- * -d <dir>:	Sync with <dir> rather than ~/.palm
- * -s <speed>:	Set sync speed.
- */
-int
-parse_args(int argc, char *argv[])
-{
-	int oldoptind;		/* Previous value of 'optind', to allow us
-				 * to figure out exactly which argument was
-				 * bogus, and thereby print descriptive
-				 * error messages.
-				 */
-	int arg;		/* Current option */
-
-	opterr = 0;		/* Don't print getopt() error messages. */
-
-	/* Initialize the options to sane values */
-	global_opts.config_file = NULL;	/* XXX - Should be some constant */
-	global_opts.do_backup = False;
-	global_opts.backupdir = NULL;
-	global_opts.do_restore = False;
-	global_opts.restoredir = NULL;
-	global_opts.force_slow = False;
-	global_opts.force_fast = False;
-	global_opts.port = NULL;
-	global_opts.username = NULL;
-	global_opts.uid = (uid_t) -1;	/* Run as root by default */
-	global_opts.check_ROM = False;
-
-	/* Initialize the debugging levels to 0 */
-	debug.slp	= 0;
-	debug.cmp	= 0;
-	debug.padp	= 0;
-	debug.dlp	= 0;
-	debug.dlpc	= 0;
-	debug.sync	= 0;
-	debug.misc	= 0;
-
-	oldoptind = optind;		/* Initialize "last argument"
-					 * index.
-					 */
-
-	/* Get each option in turn */
-	while ((arg = getopt(argc, argv, ":hVSFRu:b:r:p:f:d:")) != -1)
-	{
-		switch (arg)
-		{
-		    case 'h':	/* -h: Print usage message and exit */
-			usage(argc,argv);
-			return -1;
-
-		    case 'V':	/* -V: Print version number and exit */
-			print_version();
-			return -1;
-
-		    case 'u':	/* -u <user|uid>: Run as user <user>, or
-				 * uid <uid>.
-				 */
-			printf("User \"%s\"\n", optarg);
-			if (isalpha((int) optarg[0]))
-				/* User specified as username */
-				global_opts.username = optarg;
-			else
-				/* User specified as UID */
-				global_opts.uid = (uid_t) atoi(optarg);
-			break;
-
-		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
-			global_opts.do_backup = True;
-			global_opts.backupdir = optarg;
-			break;
-
-		    case 'r':	/* -r <dir>: Do a restore from <dir> */
-			global_opts.do_restore = True;
-			global_opts.restoredir = optarg;
-			break;
-
-		    case 'p':	/* -p <device>: Listen on serial port
-				 * <device>
-				 */
-			global_opts.port = optarg;
-			break;
-
-		    case 'f':	/* -f <file>: Read configuration from
-				 * <file>.
-				 */
-			/* XXX - Implement config files */
-			global_opts.config_file = optarg;
-			break;
-
-		    case 'S':	/* -S: Force slow sync */
-			global_opts.force_slow = True;
-			break;
-
-		    case 'F':	/* -F: Force fast sync */
-			global_opts.force_fast = True;
-			break;
-
-		    case 'R':	/* -R: Consider ROM databases */
-			global_opts.check_ROM = True;
-			break;
-
-		    case 'd':	/* -d <level>: Debugging level */
-			set_debug_level(optarg);
-			break;
-
-		    case '?':	/* Unknown option */
-			fprintf(stderr, "Unrecognized option: \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    case ':':	/* An argument required an option, but none
-				 * was given (e.g., "-u" instead of "-u
-				 * daemon").
-				 */
-			fprintf(stderr, "Missing option argument after \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    default:
-			fprintf(stderr,
-				"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
-				"to do with it. This is a bug. Please notify the maintainer.\n", arg);
-			return -1;
-			break;
-		}
-		oldoptind = optind;	/* Remember the current "next
-					 * argument", in case it causes an
-					 * error.
-					 */
-	}
-
-	/* XXX - Check for trailing arguments. What to do? Barf? */
-
-	/* Sanity checks */
-
-	/* Can't back up and restore at the same time */
-	if (global_opts.do_backup &&
-	    global_opts.do_restore)
-	{
-		fprintf(stderr, "Error: Can't specify backup and restore at the same time.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	/* Can't force both a slow and a fast sync */
-	if (global_opts.force_slow &&
-	    global_opts.force_fast)
-	{
-		fprintf(stderr, "Error: Can't force slow and fast sync at the same time.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	/* Can't specify both a username and a UID. */
-	if ((global_opts.username != NULL) &&
-	    (global_opts.uid != -1))
-	{
-		fprintf(stderr, "Error: Can't specify both a user name and a UID.\n");
-		usage(argc, argv);
-		return -1;
-	}
-	/* XXX - If username specified, ought to make sure that user
-	 * exists. Or should this be deferred until later?
-	 */
-
-	/* Make sure at least one port was specified */
-	/* XXX - This really ought to be specified in the config file(s) */
-	if (global_opts.port == NULL)
-	{
-		fprintf(stderr, "Error: no port specified.\n");
-		usage(argc, argv);
-		return -1;
-	}
-
-	return 0;
-}
-
 /* set_debug_level
  * Set a debugging/trace value. These are settable on a per-facility basis
  * (see struct debug_flags in "coldsync.h"). Thus, specifying
@@ -1423,21 +1303,21 @@ set_debug_level(const char *str)
 
 	/* Set the appropriate debugging facility. */
 	if (strncasecmp(str, "slp:", 4) == 0)
-		debug.slp = lvl;
+		slp_trace = lvl;
 	else if (strncasecmp(str, "cmp:", 4) == 0)
-		debug.cmp = lvl;
+		cmp_trace = lvl;
 	else if (strncasecmp(str, "padp:", 5) == 0)
-		debug.padp = lvl;
+		padp_trace = lvl;
 	else if (strncasecmp(str, "dlpc:", 5) == 0)
-		debug.dlpc = lvl;
+		dlpc_trace = lvl;
 	else if (strncasecmp(str, "dlp:", 4) == 0)
-		debug.dlp = lvl;
+		dlp_trace = lvl;
 	else if (strncasecmp(str, "sync:", 5) == 0)
-		debug.sync = lvl;
+		sync_trace = lvl;
 	else if (strncasecmp(str, "pdb:", 4) == 0)
-		debug.pdb = lvl;
+		pdb_trace = lvl;
 	else if (strncasecmp(str, "misc:", 5) == 0)
-		debug.misc = lvl;
+		misc_trace = lvl;
 	else {
 		fprintf(stderr, "Unknown facility \"%s\"\n", str);
 	}
@@ -1445,6 +1325,8 @@ set_debug_level(const char *str)
 
 /* usage
  * Print out a usage string.
+ * XXX - Move this to "config.c"
+ * XXX - Need to update this to conform to reality.
  */
 void
 usage(int argc, char *argv[])
@@ -1453,7 +1335,6 @@ usage(int argc, char *argv[])
 	       "Options:\n"
 	       "\t-h:\t\tPrint this help message and exit.\n"
 	       "\t-V:\t\tPrint version and exit.\n"
-/*  	       "\t-u <user|uid>:\tRun under the given UID.\n" */
 	       "\t-b <dir>:\tPerform a backup to <dir>.\n"
 	       "\t-r <dir>:\tRestore from <dir>.\n"
 	       "\t-S:\t\tForce slow sync.\n"
@@ -1489,6 +1370,8 @@ print_version(void)
 "    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 "        to case, whenever possible.\n"
 #endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
+"\n"
+"    Default global configuration file: " DEFAULT_GLOBAL_CONFIG "\n"
 	       );
 }
 
@@ -1570,7 +1453,7 @@ append_dbentry(struct Palm *palm,
 }
 
 /* This is for Emacs's benefit:
- * Local Variables: ***
- * fill-column:	75 ***
- * End: ***
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
  */
