@@ -1,12 +1,11 @@
 dnl #
-dnl # $Id: configure.in,v 1.28 1999-10-24 19:47:56 arensb Exp $
+dnl # $Id: configure.in,v 1.29 1999-11-02 03:24:16 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
 
-dnl # XXX - Check for existence of 'tar' (gtar, tar). If "tar
-dnl # --version" exits with zero status and contains the string "GNU",
-dnl # then it's GNU tar, and we can use
+dnl # XXX - If "tar --version" exits with zero status and contains the
+dnl # string "GNU", then it's GNU tar, and we can use
 dnl #	GZIP="--best" ${TAR} chozf ${TARBALL} ${DISTDIR}
 dnl # Otherwise, fall back on that old stand-by
 dnl #	tar cf ${TARBALL} ${DISTDIR}
