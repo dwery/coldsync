@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.17 2001-04-15 03:38:22 arensb Exp $
+ * $Id: slp.c,v 1.18 2001-04-15 04:43:17 arensb Exp $
  */
 
 #include "config.h"
@@ -277,7 +277,7 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
 
 		SLP_TRACE(6)
 			fprintf(stderr,
-				"Resizing SLP buffer from %ld to %d\n",
+				"Resizing SLP input buffer from %ld to %d\n",
 				pconn->slp.inbuf_len,
 				header.size);
 
@@ -407,9 +407,6 @@ slp_read(PConnection *pconn,	/* Connection to Palm */
  * Write a SLP packet on the given file descriptor, with contents
  * 'buf' and length 'len'.
  * Returns the number of bytes written (excluding SLP overhead)
-
- * XXX - Linux's serial USB driver appears not to like two-byte(?) packets,
- * so need to use pconn->slp.outbuf to write the packet all at once.
  */
 int
 slp_write(PConnection *pconn,
@@ -418,10 +415,6 @@ slp_write(PConnection *pconn,
 {
 	int i;
 	int err;
-	static ubyte header_buf[SLP_HEADER_LEN];
-				/* Buffer to hold the SLP header on output */
-	static ubyte crc_buf[SLP_CRC_LEN];
-				/* Buffer to hold the CRC on output */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	uword sent;		/* How many bytes have been sent so far */
 	uword want;		/* How many bytes we still want to send */
@@ -432,8 +425,38 @@ slp_write(PConnection *pconn,
 	SLP_TRACE(5)
 		fprintf(stderr, "slp_write(x, x, %d)\n", len);
 
+	/* Make sure the output buffer is big enough to hold this packet
+	 * and the SLP overhead.
+	 */
+	if (pconn->slp.outbuf_len < SLP_HEADER_LEN + len + SLP_CRC_LEN)
+	{
+		ubyte *eptr;	/* Pointer to reallocated buffer */
+
+		SLP_TRACE(6)
+			fprintf(stderr,
+				"Resizing SLP output buffer from %ld to %d\n",
+				pconn->slp.outbuf_len,
+				SLP_HEADER_LEN + len + SLP_CRC_LEN);
+
+		/* Reallocate the input buffer. We use the temporary
+		 * variable `eptr' in case realloc() fails: we don't
+		 * want to lose the existing buffer.
+		 */
+		eptr = (ubyte *) realloc(pconn->slp.outbuf,
+					 SLP_HEADER_LEN + len + SLP_CRC_LEN);
+		if (eptr == NULL)
+		{
+			/* Reallocation failed */
+			palm_errno = PALMERR_NOMEM;
+			return -1;
+		}
+		pconn->slp.outbuf = eptr;	/* Set the new buffer */
+		pconn->slp.outbuf_len = SLP_HEADER_LEN + len + SLP_CRC_LEN;
+						/* and record its new size */
+	}
+
 	/* Build a packet header in 'header_buf' */
-	wptr = header_buf;
+	wptr = pconn->slp.outbuf;
 	put_ubyte(&wptr, slp_preamble[0]);
 	put_ubyte(&wptr, slp_preamble[1]);
 	put_ubyte(&wptr, slp_preamble[2]);
@@ -450,26 +473,29 @@ slp_write(PConnection *pconn,
 	/* Compute the header checksum */
 	checksum = 0;
 	for (i = 0; i < SLP_HEADER_LEN-1; i++)
-		checksum += header_buf[i];
+		checksum += pconn->slp.outbuf[i];
 	put_ubyte(&wptr, checksum);			/* checksum */
 
+	/* Append the body of the packet to the buffer */
+	memcpy(pconn->slp.outbuf + SLP_HEADER_LEN, buf, len);
+
 	/* Compute the CRC of the message */
-	crc = crc16(header_buf, SLP_HEADER_LEN, 0);
-	crc = crc16(buf, len, crc);
+	crc = crc16(pconn->slp.outbuf, SLP_HEADER_LEN + len, 0);
 
 	/* Construct the CRC buffer */
-	wptr = crc_buf;
+	wptr += len;
 	put_uword(&wptr, crc);
 
-	/* Send the header */
-	want = SLP_HEADER_LEN;
+	/* Send the SLP packet */
+	want = SLP_HEADER_LEN + len + SLP_CRC_LEN;
 	sent = 0;
 	while (sent < want)
 	{
-		err = (*pconn->io_write)(pconn, header_buf+sent, want-sent);
+		err = (*pconn->io_write)(pconn, pconn->slp.outbuf+sent,
+					 want-sent);
 		if (err < 0)
 		{
-			perror("slp_write: write header");
+			perror("slp_write: write");
 			palm_errno = PALMERR_SYSTEM;
 			close(pconn->fd);
 			pconn->fd = -1;		/* Prevent others from
@@ -481,41 +507,16 @@ slp_write(PConnection *pconn,
 		sent += err;
 	}
 	SLP_TRACE(6)
-		debug_dump(stderr, "SLP(h) >>>", header_buf, SLP_HEADER_LEN);
-
-	/* Send the body */
-	want = len;
-	sent = 0;
-	while (sent < want)
 	{
-		err = (*pconn->io_write)(pconn, buf+sent, want-sent);
-		if (err < 0)
-		{
-			perror("slp_write: write body");
-			palm_errno = PALMERR_SYSTEM;
-			return -1;
-		}
-		sent += err;
+		debug_dump(stderr, "SLP(h) >>>", pconn->slp.outbuf,
+			   SLP_HEADER_LEN);
+		debug_dump(stderr, "SLP(b) >>>",
+			   pconn->slp.outbuf + SLP_HEADER_LEN,
+			   len);
+		debug_dump(stderr, "SLP(c) >>>",
+			   pconn->slp.outbuf + SLP_HEADER_LEN + len,
+			   SLP_CRC_LEN);
 	}
-	SLP_TRACE(6)
-		debug_dump(stderr, "SLP(b) >>>", buf, len);
-
-	/* Send the CRC */
-	want = SLP_CRC_LEN;
-	sent = 0;
-	while (sent < want)
-	{
-		err = (*pconn->io_write)(pconn, crc_buf+sent, want-sent);
-		if (err < 0)
-		{
-			perror("slp_write: write CRC");
-			palm_errno = PALMERR_SYSTEM;
-			return -1;
-		}
-		sent += err;
-	}
-	SLP_TRACE(6)
-		debug_dump(stderr, "SLP(c) >>>", crc_buf, SLP_CRC_LEN);
 
 	return len;		/* Success */
 }
