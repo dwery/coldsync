@@ -2,11 +2,11 @@
 /* lexer.l
  * Lexer for config file parser.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.6 2000-01-13 17:51:25 arensb Exp $
+ * $Id: lexer.l,v 2.7 2000-01-22 05:00:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

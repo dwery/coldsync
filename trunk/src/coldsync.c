@@ -1,10 +1,10 @@
 /* coldsync.c
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.17 2000-01-19 06:12:19 arensb Exp $
+ * $Id: coldsync.c,v 1.18 2000-01-22 05:00:22 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

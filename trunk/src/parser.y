@@ -2,11 +2,11 @@
 /* parser.y
  * Config file parser.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.10 2000-01-19 06:13:00 arensb Exp $
+ * $Id: parser.y,v 2.11 2000-01-22 05:01:03 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
