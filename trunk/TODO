@@ -155,7 +155,6 @@
   portability comments in 'automake' documentation.
 - Bug: For now should complain if extraneous arguments are given on
   command line.
-- Add ColdSync.pm and friends to the BSD port.
 - No-brainer configuration: make "conduit -config" part of the spec.
   Allow the user to add "CONDUITDIR=/conduit/dir" to .coldsyncrc.
   Then, when ColdSync runs, it runs "/conduit/dir/foo -config" for
@@ -231,13 +230,7 @@
   appointments older than N days (where N is configurable).
 	Delete and archive events by default. Allow an option to
   expunge them.
-- Config file: Require a colon after required tokens:
-		type: memo/DATA;
-  instead of
-		type memo/DATA;
-	That way, parsing regular lines and header lines is more
-  similar.
-- If a memo dies (e.g., "memo-kjots" with flavor "fetch"), should
+- If a conduit dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
 - Possible API for "Sync" conduits: run generic conduit. Run an
@@ -284,6 +277,36 @@
   database.
 	At the end of the local sync, if the dirty flag is still
   false, don't bother writing the database to disk.
-- Use sigsetjmp()/siglongjmp() in SIGCHLD handler: this allows
-  immediate notification of change in child's state, and hence cleaner
-  code.
+- Consider replacing the {put,get}_uword() etc. functions with htons()
+  and friends, since the order's the same, and the [hn]to[nh][sl]()
+  functions have most likely been optimized for the local machine.
+- libpdb and libpconn are useful in their own right. Turn them into
+  standalone packages. At least libpd.
+- Fix the libpdb error messages to say which database (preferably,
+  which file) they apply to.
+- Two-way pipes: either pipe() opens a bidirectional pipe, or else
+  might need to use socketpair().
+			Bidrectional	socketpair()
+			pipe():
+	FreeBSD:	Yes		Yes
+	Solaris 2.6:	Yes		Yes
+	DU 4.0:		No[1]		Yes
+	Redhat 5.1:	No		Yes
+	AIX 4.3:	Maybe		Maybe
+	IRIX 6.5:	Yes[2]		Yes
+
+  [1]: Need to link with -lsys5 to get bidirectional pipes.
+  [2]: Need to link with -lnsl to get bidirectional pipes, and/or tune
+  the kernel and/or set an environment variable.
+- Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
+  'rpcgen' looked like just the thing, but DLP packets are not a
+  subset of XDR, so there are too many niggling problems.
+- To guard against the Bargle bug, perhaps can abort if the user ID is
+  0? But then need some way to initialize the Palm. Of course,
+  presumably a sysadmin needs this anyway.
+- Perhaps the job of communicating with the Palm can be done in a
+  separate (Posix) thread? That way, that thread can deal more
+  naturally and more single-mindedly with things (e.g., timeouts,
+  unexpected data packets, etc.). In particular, it would be able to
+  send tickle packets at appropriate intervals.
+- ColdSync.pm should open SPC file handle as appropriate.
