@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.31 2002-11-12 20:11:51 azummo Exp $
+ * $Id: PConnection_net.c,v 1.32 2003-02-24 23:55:15 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -457,7 +457,8 @@ net_connect(PConnection *pconn, const void *addr, const int addrlen)
 	if (err < 0)
 		return -1;
 
-	fprintf(stderr, "ritual exchange ok\n");
+	IO_TRACE(5)
+		fprintf(stderr, "ritual exchange ok\n");
 
 	return 0;
 }
