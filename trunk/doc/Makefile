@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000-02-05 06:08:31 arensb Exp $
+# $Id: Makefile,v 1.7 2000-05-19 12:05:20 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -18,7 +18,8 @@ DISTFILES =	Makefile \
 		${TEXIFILES} \
 		libpalm.texi \
 		texinfo.tex \
-		version.texi.in
+		version.texi.in \
+		sample.coldsync.rc
 
 EXTRA_DISTFILES = \
 		${INFOFILES} \
@@ -36,7 +37,9 @@ include ${TOP}/Make.rules
 all::	${INFOFILES}
 
 install::	coldsync.8 ${INFOFILES}
+	${MKDIR} ${MAN8DIR} ${INFODIR} ${SYSCONFDIR}
 	${INSTALL_MAN} coldsync.8 ${MAN8DIR}/coldsync.8
+	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
 	@for file in ${INFOFILES}; do \
 		echo "${INSTALL_DATA} $${file} ${INFODIR}/$${file}"; \
 		${INSTALL_DATA} $${file} ${INFODIR}/$${file}; \
