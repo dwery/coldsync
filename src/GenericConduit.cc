@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.11 1999-12-02 09:16:15 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.12 2000-01-13 17:20:21 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -1192,12 +1192,16 @@ GenericConduit::SyncRecord(
 	 * check that flag by itself. However, the ARCHIVE flag overlaps
 	 * the category field, so a record that has been deleted with
 	 * archiving must have both the DELETED and ARCHIVE flags set.
+	 * "AddressBook" sets the DELETE and ARCHIVE flags when you delete
+	 * a record and want to archive it.
 	 *
-	 * If DELETED is set, but neither EXPUNGE nor ARCHIVE are set, then
-	 * treat the record as if the ARCHIVE flag had been set.
-	 * XXX - Rewrite all of the conditionals to deal with this case.
+	 * For now, I'm going to assume that
+	 *	DIRTY & ARCHIVE
+	 * and	DELETED & ARCHIVE
+	 * both mean "this has been deleted, and should be archived."
 	 */
-	if (DELETED(remoterec) && ARCHIVE(remoterec))
+	if ((DELETED(remoterec) || DIRTY(remoterec)) &&
+	    ARCHIVE(remoterec))
 	{
 		SYNC_TRACE(5)
 			cerr << "Remote: deleted, archived"
@@ -1205,7 +1209,8 @@ GenericConduit::SyncRecord(
 		/* Remote record has been deleted; user wants an
 		 * archive copy.
 		 */
-		if (DELETED(localrec) && ARCHIVE(localrec))
+		if ((DELETED(localrec) || DIRTY(localrec)) &&
+		    ARCHIVE(localrec))
 		{
 			SYNC_TRACE(5)
 				cerr << "Local:  deleted, archived"
@@ -1381,7 +1386,8 @@ GenericConduit::SyncRecord(
 			cerr << "Remote: deleted, expunged"
 			     << endl;
 
-		if (DELETED(localrec) && ARCHIVE(localrec))
+		if ((DELETED(localrec) || DIRTY(localrec)) &&
+		    ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
@@ -1511,7 +1517,8 @@ GenericConduit::SyncRecord(
 		 * archive it first.
 		 * XXX - In fact, can this be done throughout?
 		 */
-		if (DELETED(localrec) && ARCHIVE(localrec))
+		if ((DELETED(localrec) || DIRTY(localrec)) &&
+		    ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
@@ -1767,7 +1774,8 @@ GenericConduit::SyncRecord(
 			cerr << "Remote: clean"
 			     << endl;
 
-		if (DELETED(localrec) && ARCHIVE(localrec))
+		if ((DELETED(localrec) || DIRTY(localrec)) &&
+		    ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
