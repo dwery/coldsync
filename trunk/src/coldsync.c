@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.124 2002-03-30 15:43:12 azummo Exp $
+ * $Id: coldsync.c,v 1.125 2002-03-30 15:58:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -504,41 +504,6 @@ open_log_file(void)
 	return 0;
 }
 
-static listen_block *
-find_listen_block( char *name )
-{
-	if (name)
-	{
-		listen_block *l;
-	
-		SYNC_TRACE(2)
-		        fprintf(stderr, "Searching for listen block: %s\n",
-	        	        name);   
-
-		for (l = sync_config->listen; l != NULL; l = l->next)
-	        {
-			if (l->name == NULL)
-				continue;
-
-			MISC_TRACE(3)
-			        fprintf(stderr, " evaluating %s.\n", l->name);
-
-			if (strcmp(l->name, name) == 0)
-			{
-				MISC_TRACE(2)
-				        fprintf(stderr, " found.\n");
-				return l;
-			}
-	 	}
-
-		MISC_TRACE(2)
-		        fprintf(stderr, " failed.\n");
-	}
-
-	/* Fall back */
-	return sync_config->listen;	
-}
-
 static struct Palm *
 palm_Connect( void )
 {
@@ -652,10 +617,9 @@ run_mode_Standalone(int argc, char *argv[])
 					 * with */
 	time_t now;
 
-
+	/* Connect to the Palm */
 	if( (palm = palm_Connect()) == NULL )
 		return -1;
-
 
 	/* Figure out which Palm we're dealing with */
 	pda = find_pda_block(palm, True);

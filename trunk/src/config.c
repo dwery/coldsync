@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.91 2002-03-29 17:26:00 azummo Exp $
+ * $Id: config.c,v 1.92 2002-03-30 15:58:21 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1543,6 +1543,44 @@ find_pda_block(struct Palm *palm, const Bool check_user)
 			 * anyway.
 			 */
 }
+
+/* Finds the named listen_block or gives back a default one if name == NULL */
+
+listen_block *
+find_listen_block(char *name)
+{
+ 	if (name)
+ 	{
+ 	 	listen_block *l;
+ 	
+ 		SYNC_TRACE(2)
+ 		        fprintf(stderr, "Searching for listen block: %s\n",
+ 		                name);   
+
+		for (l = sync_config->listen; l != NULL; l = l->next)
+		{
+		 	if (l->name == NULL)
+		 	        continue;   
+
+			MISC_TRACE(3)
+			        fprintf(stderr, " evaluating %s.\n", l->name);
+
+			if (strcmp(l->name, name) == 0)
+			{
+			 	MISC_TRACE(2)
+			 	        fprintf(stderr, " found.\n");
+			 	return l;
+			}
+		}
+
+		MISC_TRACE(2)
+		        fprintf(stderr, " failed.\n");
+	}
+
+	/* Fall back */
+	return sync_config->listen;
+}
+
 
 /* make_sync_dirs
  * Make sure that the various directories that ColdSync will be using for

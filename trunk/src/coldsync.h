@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.61 2002-03-28 23:14:27 azummo Exp $
+ * $Id: coldsync.h,v 1.62 2002-03-30 15:58:21 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -342,6 +342,8 @@ extern void print_pda_block(FILE *outfile,
 			    struct Palm *palm);
 extern pda_block *find_pda_block(struct Palm *palm,
 				 const Bool check_user);
+extern listen_block * find_listen_block( char *name );
+
 extern int make_sync_dirs(const char *basedir);
 extern struct sync_config *new_sync_config(void);
 extern void free_sync_config(struct sync_config *config);
