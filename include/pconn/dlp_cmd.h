@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.10 2000-11-28 01:42:47 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.11 2000-12-18 06:15:57 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -368,8 +368,11 @@ struct dlp_setuserinfo
 /* No arguments, nothing returned */
 
 /** AddSyncLogEntry **/
-/* The limit appears to be 2047 characters (on a Palm III, PalmOS 3.0) */
 #define DLPARG_AddSyncLogEntry_Msg	DLPARG_BASE
+
+#define DLPC_MAXLOGLEN			2048
+			/* The longest log that can be uploaded (including
+			 * terminating NUL). */
 
 /** ReadOpenDBInfo **/
 #define DLPARG_ReadOpenDBInfo_DB	DLPARG_BASE
