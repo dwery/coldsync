@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.20 2001-06-26 05:50:30 arensb Exp $
+# $Id: Makefile,v 2.21 2001-09-07 10:07:08 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -78,8 +78,8 @@ coldsync:	${TOP}/libpconn/libpconn.a
 coldsync:	${TOP}/libpdb/libpdb.a
 
 lexhack.o:	lex.yy.c
-lex.yy.c:	parser.h
-y.tab.c:	parser.h
+lex.yy.c:	parser.h lexer.l
+y.tab.c y.tab.h:	parser.h parser.y
 
 # This is for Emacs's benefit:
 # Local Variables:	***
