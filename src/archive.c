@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.20 2001-01-25 07:47:46 arensb Exp $
+ * $Id: archive.c,v 1.21 2001-01-28 22:38:00 arensb Exp $
  */
 
 #include "config.h"
@@ -68,7 +68,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 		Error(_("%s: Can't open \"%s\"."),
 		      "arch_create",
 		      archfname);
-		perror("open");
+		Perror("open");
 		return -1;
 	}
 
@@ -88,7 +88,7 @@ arch_create(const struct dlp_dbinfo *dbinfo)
 	{
 		Error(_("%s: Can't write archive file header."),
 		      "arch_create");
-		perror("write");
+		Perror("write");
 		close(fd);
 		return -1;
 	}
@@ -127,7 +127,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 			Error(_("%s: Can't open \"%s\"."),
 			      "arch_open",
 			      archfname);
-			perror("open");
+			Perror("open");
 		}
 		return -1;
 	}
@@ -137,7 +137,7 @@ arch_open(const struct dlp_dbinfo *dbinfo,
 	{
 		Error(_("%s: Can't seek to end of file."),
 		      "arch_open");
-		perror("lseek");
+		Perror("lseek");
 		close(fd);
 		return -1;
 	}

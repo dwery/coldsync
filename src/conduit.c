@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.29 2001-01-25 07:47:49 arensb Exp $
+ * $Id: conduit.c,v 2.30 2001-01-28 22:38:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -347,7 +347,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		/* Set up a pair of pipes for talking SPC with the child */
 		if ((err = socketpair(AF_UNIX, SOCK_STREAM, 0, spcpipe)) < 0)
 		{
-			perror("pipe(spcpipe)");
+			Perror("pipe(spcpipe)");
 			return 501;
 		}
 
@@ -393,7 +393,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 	{
 		Error(_("%s: Can't set signal handler."),
 		      "run_conduit");
-		perror("signal");
+		Perror("signal");
 		return 503;
 	}
 
@@ -582,7 +582,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			 * point.
 			 */
 			SYNC_TRACE(5)
-				perror("poll_fd");
+				Perror("poll_fd");
 		} else if (err > 0)
 		{
 			/* The child has printed something. Read it, then
@@ -612,7 +612,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			{
 				/* An error occurred */
 				Error(_("Couldn't send header to conduit."));
-				perror("write");
+				Perror("write");
 				goto abort;
 			}
 
@@ -702,7 +702,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			{
 				Error(_("%s: Error in select()."),
 				      "run_conduit");
-				perror("select");
+				Perror("select");
 
 				/* EINTR is harmless. All of the other ways
 				 * select() can return -1 are severe
@@ -769,7 +769,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 				Error(_("%s: Error reading SPC request "
 					"from conduit."),
 				      "run_conduit");
-				perror("read");
+				Perror("read");
 				/* XXX - What now? Abort? */
 			}
 			if (err != SPC_HEADER_LEN)
@@ -838,7 +838,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 					Error(_("%s: Error reading SPC "
 						"request."),
 					      "run_conduit");
-					perror("read");
+					Perror("read");
 					/* XXX - What now? Abort or
 					 * something.
 					 */
@@ -916,7 +916,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 					"header."),
 				      "run_conduit");
 				if (err < 0)
-					perror("write");
+					Perror("write");
 				/* XXX - What now? Abort? */
 			}
 
@@ -948,7 +948,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 					Error(_("%s: Error sending SPC "
 						"response data."),
 					      "run_conduit");
-					perror("write");
+					Perror("write");
 					/* XXX - What now? Abort? */
 				}
 
@@ -993,7 +993,7 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 		{
 			/* An error occurred. I don't think we care */
 			SYNC_TRACE(5)
-				perror("select");
+				Perror("select");
 			break;
 		}
 
@@ -1318,7 +1318,7 @@ spawn_conduit(
 	/* Child's stdin */
 	if ((err = pipe(inpipe)) < 0)
 	{
-		perror("pipe(inpipe)");
+		Perror("pipe(inpipe)");
 		return -1;
 	}
 	SYNC_TRACE(6)
@@ -1334,7 +1334,7 @@ spawn_conduit(
 	{
 		Error(_("%s: Can't create file handle to child's stdin."),
 		      "spawn_conduit");
-		perror("fdopen");
+		Perror("fdopen");
 
 		close(inpipe[0]);
 		close(inpipe[1]);
@@ -1345,7 +1345,7 @@ spawn_conduit(
 	/* Child's stdout */
 	if ((err = pipe(outpipe)) < 0)
 	{
-		perror("pipe(outpipe)");
+		Perror("pipe(outpipe)");
 
 		close(inpipe[0]);
 		close(inpipe[1]);
@@ -1362,7 +1362,7 @@ spawn_conduit(
 	{
 		Error(_("%s: Can't create file handle to child's stdout."),
 		      "spawn_conduit");
-		perror("fdopen");
+		Perror("fdopen");
 
 		close(inpipe[0]);
 		close(inpipe[1]);
@@ -1380,7 +1380,7 @@ spawn_conduit(
 	{
 		Error(_("%s: Can't make child's stdout be line-buffered."),
 		      "spawn_conduit");
-		perror("setvbuf");
+		Perror("setvbuf");
 
 		close(inpipe[0]);
 		close(inpipe[1]);
@@ -1400,7 +1400,7 @@ spawn_conduit(
 
 	if ((conduit_pid = fork()) < 0)
 	{
-		perror("fork");
+		Perror("fork");
 		return -1;
 	} else if (conduit_pid != 0)
 	{
@@ -1434,7 +1434,7 @@ spawn_conduit(
 	/* Dup stdin to the pipe */
 	if ((err = dup2(inpipe[0], STDIN_FILENO)) < 0)
 	{
-		perror("dup2(stdin)");
+		Perror("dup2(stdin)");
 		exit(1);
 	}
 	close(inpipe[0]);
@@ -1442,7 +1442,7 @@ spawn_conduit(
 	/* Dup stdout to the pipe */
 	if ((err = dup2(outpipe[1], STDOUT_FILENO)) < 0)
 	{
-		perror("dup2(stdout)");
+		Perror("dup2(stdout)");
 		exit(1);
 	}
 	close(outpipe[1]);
@@ -1456,7 +1456,7 @@ spawn_conduit(
 	Error(_("%s: execvp(%s) failed and returned %d."),
 	      "spawn_conduit",
 	      path, err);
-	perror("execvp");
+	Perror("execvp");
 	exit(1);		/* If we get this far, then something
 				 * went wrong.
 				 */
@@ -1537,7 +1537,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 					"unexpected error. This should "
 					"never happen."),
 				      "cond_readline");
-				perror("select");
+				Perror("select");
 				return -1;
 			}
 
@@ -1615,7 +1615,7 @@ cond_readline(char *buf,	/* Buffer to read into */
 				SYNC_TRACE(4)
 					fprintf(stderr, "cond_readline: "
 						"error in fgets()\n");
-				perror("cond_readline: fgets");
+				Perror("cond_readline: fgets");
 
 				return -1;
 			}
@@ -1816,7 +1816,7 @@ sigchld_handler(int sig)
 	{
 		Error(_("%s: Can't get child process status."),
 		      "sigchld_handler");
-		perror("waitpid");
+		Perror("waitpid");
 
 		conduit_pid = -1;
 

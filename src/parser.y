@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.40 2001-01-25 07:47:57 arensb Exp $
+ * $Id: parser.y,v 2.41 2001-01-28 22:39:23 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -1077,7 +1077,7 @@ int parse_config_file(const char *fname,
 	{
 		Error(_("%s: Can't open \"%s\"."),
 		      "parse_config_file", fname);
-		perror("fopen");
+		Perror("fopen");
 		return -1;
 	}
 

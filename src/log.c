@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.21 2001-01-25 07:47:54 arensb Exp $
+ * $Id: log.c,v 1.22 2001-01-28 22:39:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -71,7 +71,7 @@ add_to_log(const char *msg)
 			{
 				Error(_("%s: Out of memory."),
 					"add_to_log");
-				perror("malloc");
+				Perror("malloc");
 				return -1;
 			}
 
@@ -100,7 +100,7 @@ add_to_log(const char *msg)
 			{
 				Error(_("%s: realloc(%d) failed."),
 				      "add_to_log", newsize);
-				perror("realloc");
+				Perror("realloc");
 				return -1;
 			}
 
