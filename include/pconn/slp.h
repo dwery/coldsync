@@ -6,6 +6,11 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
+ * Palm's documentation can be found at
+ * http://www.palmos.com/dev/tech/docs/palmos/
+ * under "Palm OS SDK Companion", section 9. The following is an abridged
+ * version:
+ *
  * Structure of a SLP packet:
  *	+------+------+------+------+------+
  *	| preamble           | dest | src  |
@@ -47,7 +52,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.2 2000-04-09 14:16:01 arensb Exp $
+ * $Id: slp.h,v 1.3 2000-08-29 11:05:52 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -59,12 +64,19 @@
 #define SLP_PORT_CONSOLE	1	/* Console port */
 #define SLP_PORT_REMOTEUI	2	/* Remote UI port */
 #define SLP_PORT_DLP		3	/* Desktop Link port */
-#define SLP_PORT_FIRSTDYNAMIC	4	/* First dynamic port (?) */
+#define SLP_PORT_FIRSTDYNAMIC	4	/* First dynamic port */
+/* Ports 0x04-0xcf are reserved for dynamic assignment (a la RPC port
+ * mapper).
+ */
+/* Ports 0xd0-0xdf are reserved for testing (?) */
 
 /* Define the various packet types that SLP packets can encapsulate.
  * That is, the various protocols
  */
 #define SLP_PKTTYPE_SYSTEM	0	/* System packets */
+			/* This includes Remote Debugger, Remote Console,
+			 * and System Remote Procedure Call packets.
+			 */
 #define SLP_PKTTYPE_UNUSED1	1	/* Used to be Connection
 					 * Manager packets */
 #define SLP_PKTTYPE_PAD		2	/* PADP packets */
