@@ -8,16 +8,21 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: net_compat.c,v 2.1 2000-12-23 11:28:26 arensb Exp $
+ * $Id: net_compat.c,v 2.2 2001-01-30 08:13:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>		/* For NULL */
+#include <string.h>		/* For strlen() and friends */
 #include <errno.h>		/* For EAFNOSUPPORT */
 #include <sys/types.h>		/* For inet_aton() */
 #include <sys/socket.h>		/* For inet_aton() */
 #include <netinet/in.h>		/* For inet_aton(), INET_ADDRSTRLEN */
 #include <arpa/inet.h>		/* For inet_aton() */
 #include "net_compat.h"
+
+#if !HAVE_SNPRINTF
+extern int snprintf(char *buf, size_t len, const char *format, ...);
+#endif	/* HAVE_SNPRINTF */
 
 #if !HAVE_INET_NTOP
 /* inet_ntop
@@ -88,3 +93,10 @@ inet_pton(int af, const char *src, void *dst)
 	return 1;			/* Success */
 }
 #endif	/* HAVE_INET_NTOP */
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * mode: C		***
+ * fill-column:	75	***
+ * End:			***
+ */
