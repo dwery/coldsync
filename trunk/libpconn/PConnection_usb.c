@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.25 2001-07-28 19:19:42 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.26 2001-07-30 07:23:56 arensb Exp $
  */
 
 #include "config.h"
@@ -44,7 +44,7 @@
 #include "pconn/PConnection.h"
 #include "palm.h"
 #include "pconn/palm_errno.h"
-#include "pconn/cmp.h"			/* XXX - This ought to go away */
+#include "pconn/netsync.h"
 
 struct usb_data {
 	unsigned char iobuf[1024];	/* XXX - Is there anything
@@ -114,7 +114,19 @@ usb_bind(PConnection *pconn,
 	 const void *addr,
 	 const int addrlen)
 {
-	return slp_bind(pconn, (const struct slp_addr *) addr);
+	switch (pconn->protocol)
+	{
+	    case PCONN_STACK_FULL:
+		return slp_bind(pconn, (const struct slp_addr *) addr);
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		return 0;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol */
+		return -1;
+	}
 }
 
 static int
@@ -190,18 +202,34 @@ usb_connect(PConnection *p, const void *addr, const int addrlen)
 static int
 usb_accept(PConnection *pconn)
 {
+	int err;
 	udword newspeed;		/* Not really a speed; this is just
 					 * used for the return value from
 					 * cmp_accept().
 					 */
 
-	/* Negotiate a CMP connection.
-	 * Since this is USB, the speed is meaningless: it'll just go
-	 * however fast it can.
-	 */
-	newspeed = cmp_accept(pconn, 0);
-	if (newspeed == ~0)
+	switch (pconn->protocol)
+	{
+	    case PCONN_STACK_FULL:
+		/* Negotiate a CMP connection. Since this is USB, the speed
+		 * is meaningless: it'll just go however fast it can.
+		 */
+		newspeed = cmp_accept(pconn, 0);
+		if (newspeed == ~0)
+			return -1;
+		break;
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		err = ritual_exch_server(pconn);
+		if (err < 0)
+			return -1;
+		break;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol */
 		return -1;
+	}
 
 	return 0;
 }
@@ -211,10 +239,33 @@ usb_close(PConnection *p)
 {	
 	struct usb_data *u = p->io_private;
 
+	/* I _think_ it's okay to assume that pconn->protocol has been set,
+	 * even though this function may have been called before the
+	 * connection was completely set up.
+	 */
+
 	/* Clean up the protocol stack elements */
-	dlp_tini(p);
-	padp_tini(p);
-	slp_tini(p);
+	switch (p->protocol)
+	{
+	    case PCONN_STACK_DEFAULT:	/* Fall through */
+	    case PCONN_STACK_FULL:
+		dlp_tini(p);
+		padp_tini(p);
+		slp_tini(p);
+		break;
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		dlp_tini(p);
+		netsync_tini(p);
+		break;
+
+	    default:
+		/* Do nothing silently: the connection might not have been
+		 * completely set up.
+		 */
+		break;
+	}
 
 	if (u != NULL)
 		free((void *)u);
@@ -251,11 +302,17 @@ usb_select(PConnection *p, pconn_direction which, struct timeval *tvp)
 static int
 usb_drain(PConnection *p)
 {
+	/* We don't check p->protocol, because there's nothing to do for
+	 * any of them.
+	 */
 	return 0;
 }
 
 int
-pconn_usb_open(PConnection *pconn, char *device, int prompt)
+pconn_usb_open(PConnection *pconn,
+	       const char *device,
+	       const int protocol,
+	       const Bool prompt)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;
@@ -266,30 +323,62 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 	unsigned char usbresponse[50];
 	UsbConnectionInfoType ci;
 
+	if (protocol == PCONN_STACK_DEFAULT)
+		pconn->protocol = PCONN_STACK_FULL;
+	else
+		pconn->protocol = protocol;
+
 	/* Initialize the various protocols that the serial connection will
 	 * use.
 	 */
-	/* Initialize the SLP part of the PConnection */
-	if (slp_init(pconn) < 0)
+	switch (pconn->protocol)
 	{
-		free(pconn);
-		return -1;
-	}
+	    case PCONN_STACK_FULL:
+		/* Initialize the SLP part of the PConnection */
+		if (slp_init(pconn) < 0)
+		{
+			free(pconn);
+			return -1;
+		}
 
-	/* Initialize the PADP part of the PConnection */
-	if (padp_init(pconn) < 0)
-	{
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;
-	}
+		/* Initialize the PADP part of the PConnection */
+		if (padp_init(pconn) < 0)
+		{
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;
+		}
 
-	/* Initialize the DLP part of the PConnection */
-	if (dlp_init(pconn) < 0)
-	{
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
+		/* Initialize the DLP part of the PConnection */
+		if (dlp_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;
+		}
+		break;
+
+	    case PCONN_STACK_SIMPLE:	/* Fall through */
+	    case PCONN_STACK_NET:
+		/* Initialize the DLP part of the PConnection */
+		if (dlp_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			return -1;
+		}
+
+		/* Initialize the NetSync part of the PConnnection */
+		if (netsync_init(pconn) < 0)
+		{
+			dlp_tini(pconn);
+			netsync_tini(pconn);
+			return -1;
+		}
+		break;
+
+	    default:
+		/* XXX - Indicate error: unsupported protocol */
 		return -1;
 	}
 
@@ -321,6 +410,10 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 	 *  We've got to loop trying to open the USB device since
 	 *  you'll get an ENXIO until the device has been inserted
 	 *  on the USB bus.
+	 */
+	/* XXX - Perhaps add a "transient" flag to listen blocks. This
+	 * indicates that it's okay for the device (both /dev/ugen0 and the
+	 * endpoint, /dev/ugen0.2) not to exist, so keep trying.
 	 */
 
 	for (i = 0; i < 30; i++) {
@@ -575,6 +668,7 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 		fprintf(stderr, "Hotsync endpoint name: \"%s\"\n",
 			SURE(hotsync_ep_name));
 
+	/* XXX - Under FreeBSD 5.x, this might not exist yet */
 	pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
 
 	if (pconn->fd < 0) {
