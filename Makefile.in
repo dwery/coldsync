@@ -1,12 +1,12 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.7 1999-08-25 08:01:14 arensb Exp $
+# $Id: Makefile.in,v 1.8 1999-09-09 05:46:37 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
 
 SRCDIR =	@srcdir@
 CURDIR =	${SRCDIR}
-SUBDIRS =	src doc
+SUBDIRS =	include libpconn libpdb src doc
 
 TAR =		@TAR@
 GZIP =		@GZIP@
