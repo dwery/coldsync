@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.131 2002-04-02 15:29:49 azummo Exp $
+ * $Id: coldsync.c,v 1.132 2002-04-14 08:36:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -248,6 +248,8 @@ main(int argc, char *argv[])
 
 	MISC_TRACE(2)
 	{
+		char *tmp;
+
 		fprintf(stderr, "Options:\n");
 		fprintf(stderr, "\tMode: ");
 		switch (global_opts.mode) {
@@ -297,8 +299,9 @@ main(int argc, char *argv[])
 			Bool3str(global_opts.force_install));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
+		tmp = get_symbol("LOGFILE");
 		fprintf(stderr, "\tlog_fname: \"%s\"\n",
-			get_symbol("LOGFILE"));
+			(tmp == NULL ? "(null)" : tmp));
 
 		fprintf(stderr, "\nhostid == 0x%08lx (%02d.%02d.%02d.%02d)\n",
 			hostid,
