@@ -5,7 +5,7 @@
  * An archive file consists of a file header followed by zero or more
  * records. Each record consists of 
  *
- * $Id: archive.h,v 1.1 1999-03-28 09:52:21 arensb Exp $
+ * $Id: archive.h,v 1.2 1999-06-27 05:54:51 arensb Exp $
  */
 #ifndef _archive_h_
 #define _archive_h_
@@ -65,7 +65,11 @@ struct arch_record
 
 /* Archive record types, for arch_record.type */
 #define ARCHREC_REC		0	/* Plain data record */
-#define ARCHREC_APPINFO		1	/* AppInfo block */
+#define ARCHREC_RSRC		1	/* Resource record */
+					/* XXX - Not used */
+#define ARCHREC_APPINFO		2	/* AppInfo block */
+#define ARCHREC_SORTINFO	3	/* SortInfo block */
+					/* XXX - Not used */
 
 /* Function prototype */
 extern int arch_create(char *fname, const struct dlp_dbinfo *dbinfo);
