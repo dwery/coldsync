@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.27 2000-11-20 10:12:29 arensb Exp $
+.\" $Id: coldsync.8,v 1.28 2000-11-27 11:27:09 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -58,7 +58,8 @@ databases on the Palm.
 Initialization mode. Before you can sync a Palm, you must initialize
 its user information. This may seem annoying, but it can prevent other
 annoyances (e.g., losing all of your information the next time you
-reset your Palm, or failing to work with HotSync).
+reset your Palm, or failing to work with HotSync). Note that backup
+and restore mode do not require that the Palm be initialized.
 .Pp
 In this mode,
 .Nm coldsync
@@ -716,42 +717,20 @@ but not
 .Ed
 .Sh WARNINGS
 .Ss The Bargle Bug
-If you've been syncing with one Palm and later upgrade to a new one, do
-.Em not
-simply sync with the new one: you will lose all of your old data.
-.Pp
-Instead, make a backup of your old Palm:
-.Dl % mkdir palm-backup
-.Dl % coldsync -mb palm-backup
-Then copy the contents of
-.Pa palm-backup
-to
-.Pa ~/.palm/install ,
-and sync with the new Palm.
-.Pp
-If your old Palm has been lost or stolen and you can't make a backup, then
-copy the files from
-.Pa ~/.palm/backup
-to
-.Pa ~/.palm/install .
-This isn't as good as working from a fresh backup, but it's better
-than nothing.
-.Pp
-This behavior is not considered a bug, but rather an unfortunate side
-effect of normal behavior:
+While you can choose any user ID you like for the Palm, you should
+avoid using 0 (this also means that you should avoid running
 .Nm ColdSync
-can't tell whether you've upgraded to a new Palm or simply decided to
-delete everything you had.
+as root): if you do, you risk being bitten by the Bargle Bug.
 .Pp
-You can guard against this problem by putting a
-.Li pda
-clause with a serial number and a non-default directory in your
-.Pa .coldsyncrc .
-That way, when you upgrade to a new Palm,
+If you perform a hard reset of your Palm, or upgrade to a new one, you
+can lose all of your backup data:
 .Nm ColdSync
-will trash the default directory,
-.Pa ~/.palm ,
-instead of the real one.
+doesn't notice and assumes that you've chosen to delete everything on
+your Palm.
+.Pp
+To guard against this woeful fate,
+.Nm ColdSync
+requires the Palm to be initialized with a user name and userid.
 .Ss Upgrades
 Every so often, Palm announces a PalmOS upgrade. Some of these
 upgrades are simple and consist of a
@@ -807,14 +786,23 @@ Many and hopefully self-explanatory.
 .Sh LIMITATIONS
 .Pp
 .Nm ColdSync
-does not detect the serial number correctly on Handspring Visors. This
-is because the Visor does not appear to have a software-readable
-serial number.
-.Sh BUGS
-When syncing a Handpring Visor under Linux,
-.Nm ColdSync
-often spits out copious amounts of "Bad CRC" messages.
+does not detect the serial number on Handspring Visors. This is
+because the Visor does not appear to have a software-readable serial
+number. The pda block for a Visor should contain
+.Bd -literal -offset indent
+	snum: "";
+.Ed
+to explicitly say,
+.Dq This Palm does not have a serial number.
+If you omit the
+.Li snum
+line, the pda block will match any Palm device.
 .Pp
+Under Linux,
+.Nm ColdSync
+often spits out copious amounts of "Bad CRC" messages. This is due to
+Linux's flaky serial driver.
+.Sh BUGS
 .Nm ColdSync
 does not deal with categories.
 .Pp
