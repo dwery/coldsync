@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.51 2001-02-20 12:39:21 arensb Exp $
+ * $Id: coldsync.h,v 1.52 2001-06-26 05:51:23 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -17,7 +17,7 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include "pconn/pconn.h"
 #include "pdb.h"
-#include "palm.h"
+#include "spalm.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
 #define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
@@ -335,6 +335,10 @@ extern int append_crea_type(conduit_block *cond,
 			    const udword type);
 
 /* backup.c */
+extern struct pdb * download_database(
+	PConnection *pconn,
+	const struct dlp_dbinfo *dbinfo,
+	ubyte dbh);
 extern int backup(PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
@@ -351,6 +355,7 @@ extern int restore_dir(PConnection *pconn,
 		       const char *dirname);
 
 /* install.c */
+extern int upload_database(PConnection *pconn, struct pdb *db);
 extern int NextInstallFile(struct dlp_dbinfo *dbinfo);
 extern int InstallNewFiles(PConnection *pconn,
 			   struct Palm *palm,
