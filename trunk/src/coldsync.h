@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.72 2002-11-13 20:14:38 azummo Exp $
+ * $Id: coldsync.h,v 1.73 2002-11-26 18:30:44 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -26,7 +26,8 @@
 #include "trace.h"
 
 #define COND_NAMELEN		128	/* Max. length of conduit name */
-#define DEFAULT_GLOBAL_CONFIG	SYSCONFDIR "/coldsync.conf"
+#define DEFAULT_GLOBAL_CONFIG_OLD	SYSCONFDIR "/coldsync.conf"
+#define DEFAULT_GLOBAL_CONFIG		SYSCONFDIR "/coldsync/coldsync.conf"
 
 #define GLOBAL_INSTALL_DIR	"/usr/share/coldsync/install"
 
