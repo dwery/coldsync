@@ -1,4 +1,4 @@
-$Id: INSTALL,v 1.3 2000-05-19 11:59:20 arensb Exp $
+$Id: INSTALL,v 1.4 2001-04-15 04:32:25 arensb Exp $
 
 The latter part of this file is the standard GNU tool installation
 instructions. Skip them if you're used to building GNU packages.
@@ -72,7 +72,8 @@ Internationalization
 `libintl' package is known to work.
 
 	Solaris's `xgettext' utility is known not to work with
-ColdSync. On a Sun, you'll need to configure with "--without-i18n".
+ColdSync. On a Sun, the `configure' utility should detect this and act
+accordingly.
 
 Documentation
 =============
