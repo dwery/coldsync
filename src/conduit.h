@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.7 2000-01-13 18:18:47 arensb Exp $
+ * $Id: conduit.h,v 1.8 2000-01-19 06:12:41 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -75,8 +75,8 @@ extern int register_conduit(const char *name,
 extern const struct conduit_spec *find_conduit(const struct dlp_dbinfo *db);
 
 /* XXX - New-API functions */
-extern int run_Fetch_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo);
-extern int run_Dump_conduits(struct Palm *palm, struct dlp_dbinfo *dbinfo);
+extern int run_Fetch_conduits(struct dlp_dbinfo *dbinfo);
+extern int run_Dump_conduits(struct dlp_dbinfo *dbinfo);
 
 #endif	/* _conduit_h_ */
 
