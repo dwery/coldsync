@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.8 2002-04-27 18:36:31 azummo Exp $
+ * $Id: palm_errno.c,v 1.9 2003-02-24 23:54:31 azummo Exp $
  */
 #include "config.h"
 
@@ -16,6 +16,9 @@
 #  include <libintl.h>
 #endif	/* HAVE_LIBINTL_H */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <pconn/palm_errno.h>
 
 palmerrno_t palm_errno;				/* Current error code */
@@ -28,13 +31,13 @@ palmerrno_t palm_errno;				/* Current error code */
  * itself, instead of forcing the calling function to do so.
  */
 const char *
-palm_strerror(const palmerrno_t errno)
+palm_strerror(const palmerrno_t palm_errno)
 {
 	/* This is implemented as a switch statement and not as an array
 	 * lookup in order to allow the compiler to make sure that all
 	 * error codes have an error message.
 	 */
-	switch (errno)
+	switch (palm_errno)
 	{
 	    case PALMERR_NOERR:
 		return N_("No error");
@@ -64,6 +67,20 @@ palm_strerror(const palmerrno_t errno)
 
 	/* This should never be reached */
 	return N_("Unknown error");
+}
+
+void
+palm_perror(const char *preamble, const palmerrno_t palm_errno)
+{
+	if (palm_errno  == PALMERR_SYSTEM)
+		perror(preamble);
+	else
+	{
+		fprintf(stderr,
+			"%s: %s.",
+			preamble,
+			palm_strerror(palm_errno));
+	}
 }
 
 /* This is for Emacs's benefit:
