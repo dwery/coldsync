@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.7 2000-11-27 09:52:35 arensb Exp $
+ * $Id: slp.c,v 1.8 2000-12-16 19:49:47 arensb Exp $
  */
 
 #include "config.h"
@@ -77,11 +77,17 @@ slp_tini(struct PConnection *pconn)
 	 * too, just on general principle.
 	 */
 	if (pconn->slp.inbuf != NULL)
+	{
 		free(pconn->slp.inbuf);
+		pconn->slp.inbuf = NULL;
+	}
 	pconn->slp.inbuf_len = 0;
 
 	if (pconn->slp.outbuf != NULL)
+	{
 		free(pconn->slp.outbuf);
+		pconn->slp.outbuf = NULL;
+	}
 	pconn->slp.outbuf_len = 0;
 
 	return 0;
