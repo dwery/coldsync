@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.32 2000-11-17 07:39:47 arensb Exp $
+ * $Id: parser.y,v 2.33 2000-11-20 10:19:38 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -935,7 +935,7 @@ pda_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "UserID \"%ld\"\n", $3);
 
-		if (cur_pda->userid != 0)
+		if (cur_pda->userid_given)
 		{
 			fprintf(stderr,
 				_("%s: %d: Warning: userid already "
@@ -943,6 +943,7 @@ pda_directive:
 				conf_fname, lineno);
 		}
 
+		cur_pda->userid_given = True;
 		cur_pda->userid = $3;
 	}
 	| DEFAULT semicolon
