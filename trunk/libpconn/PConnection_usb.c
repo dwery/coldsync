@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.28 2001-08-22 06:42:39 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.29 2001-09-07 10:03:00 arensb Exp $
  */
 
 #include "config.h"
@@ -129,6 +129,9 @@ usb_bind(PConnection *pconn,
 	    case PCONN_STACK_NET:
 		return 0;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol */
 		return -1;
@@ -232,6 +235,9 @@ usb_accept(PConnection *pconn)
 			return -1;
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol */
 		return -1;
@@ -317,7 +323,7 @@ usb_drain(PConnection *p)
 int
 pconn_usb_open(PConnection *pconn,
 	       const char *device,
-	       const int protocol,
+	       const pconn_proto_t protocol,
 	       const Bool prompt)
 {
 	struct usb_data *u;
@@ -383,6 +389,9 @@ pconn_usb_open(PConnection *pconn,
 		}
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol */
 		return -1;
