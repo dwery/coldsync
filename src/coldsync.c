@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.108 2001-10-18 02:48:28 arensb Exp $
+ * $Id: coldsync.c,v 1.109 2001-11-12 01:05:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -105,8 +105,8 @@ main(int argc, char *argv[])
 	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
 	global_opts.log_fname		= NULL;
-	global_opts.force_install	= False;
-	global_opts.install_first	= True;
+	global_opts.force_install	= Undefined;	/* Defaults to False */
+	global_opts.install_first	= Undefined;	/* Defaults to True */
 	global_opts.verbosity		= 0;
 
 	/* Initialize the debugging levels to 0 */
@@ -292,9 +292,9 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tcheck_ROM: %s\n",
 			global_opts.check_ROM ? "True" : "False");
 		fprintf(stderr, "\tinstall_first: %s\n",
-			global_opts.install_first ? "True" : "False");
+			Bool3str(global_opts.install_first));
 		fprintf(stderr, "\tforce_install: %s\n",
-			global_opts.force_install ? "True" : "False");
+			Bool3str(global_opts.force_install));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
 		fprintf(stderr, "\tlog_fname: \"%s\"\n",
@@ -539,7 +539,7 @@ run_mode_Standalone(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     1))
+				     PCONNFL_PROMPT))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1331,7 +1331,7 @@ run_mode_Backup(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     1))
+				     PCONNFL_PROMPT))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1475,7 +1475,7 @@ run_mode_Restore(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     1))
+				     PCONNFL_PROMPT))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -1615,7 +1615,7 @@ run_mode_Init(int argc, char *argv[])
 	if ((pconn = new_PConnection(sync_config->listen->device,
 				     sync_config->listen->listen_type,
 				     sync_config->listen->protocol,
-				     1))
+				     PCONNFL_PROMPT))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
@@ -2063,7 +2063,7 @@ run_mode_Daemon(int argc, char *argv[])
 	}
 
 	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(devname, devtype, protocol, False))
+	if ((pconn = new_PConnection(devname, devtype, protocol, 0))
 	    == NULL)
 	{
 		Error(_("Can't open connection."));
