@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.1 2000-04-21 07:47:43 arensb Exp $
+# $Id: send-mail,v 1.2 2000-05-06 11:20:46 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -15,15 +15,15 @@ use ColdSync;
 	"My-Address"	=> (getpwuid($>))[0],
 );
 
-my $VERSION = (qw( $Revision: 1.1 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.2 $ ))[1];	# Conduit version
 
 StartConduit("dump");
 
 my $record;
-foreach $record (@{$PDB->{"records"}})
+foreach $record (@{$PDB->{records}})
 {
 	# Skip everything excep the Outbox folder
-	next unless $PDB->{"appinfo"}{"categories"}[$record->{"category"}]
+	next unless $PDB->{appinfo}{categories}[$record->{category}]
 		eq "Outbox";
 
 	my $whoami = $HEADERS{"My-Address"};
@@ -33,7 +33,7 @@ foreach $record (@{$PDB->{"records"}})
 					# body of the message
 					# -i: ignore lines consisting of
 					# a single dot.
-	if ($record->{"confirm_delivery"})
+	if ($record->{confirm_delivery})
 	{
 		push @sm_args, "-N", "success,failure";
 	}
@@ -47,19 +47,19 @@ foreach $record (@{$PDB->{"records"}})
 	# RFC822-compliant header (the \n should be followed by
 	# whitespace).
 	print "From: $whoami\n";
-	print "To: ", $record->{"to"}, "\n" if $record->{"to"} ne "";
-	print "Cc: ", $record->{"cc"}, "\n" if $record->{"cc"} ne "";
-	print "Bcc: ", $record->{"bcc"}, "\n"
-		if $record->{"bcc"} ne "";
-	print "Reply-To: ", $record->{"reply_to"}, "\n"
-		if $record->{"reply_to"} ne "";
-	print "X-Sent-To: ", $record->{"sent_to"}, "\n"
-		if $record->{"sent_to"} ne "";
+	print "To: ", $record->{to}, "\n" if $record->{to} ne "";
+	print "Cc: ", $record->{cc}, "\n" if $record->{cc} ne "";
+	print "Bcc: ", $record->{bcc}, "\n"
+		if $record->{bcc} ne "";
+	print "Reply-To: ", $record->{reply_to}, "\n"
+		if $record->{reply_to} ne "";
+	print "X-Sent-To: ", $record->{sent_to}, "\n"
+		if $record->{sent_to} ne "";
 	print "X-Mailer: $HEADERS{Daemon} $HEADERS{Version}/send-mail conduit $VERSION\n";
-	print "Subject: ", $record->{"subject"}, "\n"
-		if $record->{"subject"} ne "";
+	print "Subject: ", $record->{subject}, "\n"
+		if $record->{subject} ne "";
 
-	my $body = $record->{"body"};
+	my $body = $record->{body};
 
 	$body .= "\n" if $body !~ /\n$/m;	# Make sure message ends in \n
 	print "\n", $body;
@@ -70,7 +70,7 @@ foreach $record (@{$PDB->{"records"}})
 	$PDB->delete_Record($record, 1);
 }
 
-$PDB->Write($HEADERS{"OutputDB"} || $HEADERS{"InputDB"});
+$PDB->Write($HEADERS{OutputDB} || $HEADERS{InputDB});
 
 EndConduit;
 
