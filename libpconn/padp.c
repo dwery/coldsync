@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.12 2000-11-27 12:00:01 arensb Exp $
+ * $Id: padp.c,v 1.13 2000-12-10 21:42:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -76,6 +76,10 @@ padp_init(struct PConnection *pconn)
 	pconn->padp.inbuf = NULL;
 	pconn->padp.inbuf_len = 0L;
 
+	/* Set the functions to send and receive DLP packets */
+	pconn->dlp.read = padp_read;
+	pconn->dlp.write = padp_write;
+
 	return 0;
 }
 
@@ -92,13 +96,12 @@ padp_tini(struct PConnection *pconn)
 }
 
 /* padp_read
- * Read a PADP packet from the given file descriptor. A pointer to the
- * packet data (without the PADP header) is put in '*buf'. The length
- * of the data (not counting the PADP header) is put in '*len'.
+ * Read a PADP packet from the given PConnection. A pointer to the packet
+ * data (without the PADP header) is put in '*buf'. The length of the data
+ * (not counting the PADP header) is put in '*len'.
  *
- * If successful, returns a non-negative value. In case of error,
- * returns a negative value and sets 'palm_errno' to indicate the
- * error.
+ * If successful, returns a non-negative value. In case of error, returns a
+ * negative value and sets 'palm_errno' to indicate the error.
  */
 int
 padp_read(struct PConnection *pconn,	/* Connection to Palm */
