@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.106 2001-10-12 02:20:40 arensb Exp $
+ * $Id: coldsync.c,v 1.107 2001-10-18 01:36:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -23,6 +23,9 @@
 #  include <strings.h>		/* For strcasecmp() under AIX */
 #endif	/* HAVE_STRINGS_H */
 
+/* XXX - Solaris 2.6, 7 appear to choke on these next two, at least when
+ * there's no inet_ntop(). Make them conditional.
+ */
 #include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #include <resolv.h>		/* For inet_ntop() under Solaris */
 #include <unistd.h>		/* For sleep(), getopt() */
@@ -49,6 +52,10 @@
 #include "palment.h"
 #include "net_compat.h"
 #include "symboltable.h"
+
+/* XXX - Add an inet_ntop() prototype for brain-damaged OSes that have it,
+ * but don't have a prototype.
+ */
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
