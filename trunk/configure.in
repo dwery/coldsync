@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.142 2002-03-18 11:18:24 arensb Exp $
+dnl # $Id: configure.in,v 1.143 2002-04-14 05:04:25 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -497,25 +497,78 @@ AC_TRY_COMPILE(
 # it's turned on, 'configure' still checks to see whether it's
 # possible to use the USB code. IOW, "--without-i18n" allows the user
 # to turn off USB under *BSD, but that's it.
+#
+# Note the way this is set up: if "--with(out)-usb" was specified, then
+# 'cs_cv_usb' is unconditionally set to whatever the user said. Only if
+# "--with(out)-usb" _wasn't_ specified do we check the cache.
 AC_ARG_WITH(usb,dnl
-[  --without-usb           Disable USB support for Visor (FreeBSD 4.x only).],
-	[WITH_USB="$withval"],[WITH_USB="yes"])
+[  --without-usb           Disable USB support (FreeBSD 4.x only).],
+	[
+		cs_cv_usb="$withval"
+		# This is a kludge to give something like a section header.
+		# We won't know whether USB is supported until after we
+		# perform the other tests in the following block.
+		AC_MSG_CHECKING([for USB support])
+		AC_MSG_RESULT()
+	],dnl
+	[AC_CACHE_CHECK("for USB support",cs_cv_usb,[])])
 
-if test x"$WITH_USB" != xno; then
-	AC_MSG_CHECKING([for BSD USB support])
-
+if test x"$cs_cv_usb" != xno; then
 	# This code snippet checks several things:
 	#   1) <dev/usb/usb.h> exists
 	#   2) It contains 'struct usb_device_info'
-	#   3) That struct contains a 'vendorNo' field.
+	#   3a) That struct contains a 'vendorNo' field, or
+	#   3b) That struct contains a 'udi_vendorNo' field.
 	# All three conditions must be true for USB support to be enabled
-	AC_TRY_COMPILE(dnl
-		[#include <dev/usb/usb.h>],dnl
-		[struct usb_device_info udi;
-		 udi.vendorNo = 0x082d;],dnl
-		[AC_DEFINE_UNQUOTED(WITH_USB)
-		AC_MSG_RESULT(yes)],dnl
-		[AC_MSG_RESULT(no)])
+	#
+	# Note that this code is ugly because it tries to Do The Right
+	# Thing in trying circumstances: we don't want to perform more
+	# time-consuming tests than we need to (i.e., if it's known that
+	# 'udi.udi_vendorNo' works, don't check for 'udi.vendorNo'), so the
+	# results are cached. But even if the results are cached, we should
+	# still print the results.
+
+	if test "${cs_cv_udi_prefix+set}" = set; then
+		# This is a kludge. $cs_cv_udi_prefix is really a three-way
+		# test: whether USB is supported, and which structure
+		# fields it requires. This if-clause is just here to print
+		# messages when the values are already known and cached.
+		AC_MSG_CHECKING([for udi_vendorNo in struct usb_device_info])
+		AC_MSG_RESULT([(cached) $cs_cv_udi_prefix])
+		if test x"$cs_cv_udi_prefix" = xno; then
+			AC_MSG_CHECKING([for vendorNo in struct usb_device_info])
+			AC_MSG_RESULT([(cached) yes])
+		fi
+	else
+		AC_MSG_CHECKING([for udi_vendorNo in struct usb_device_info])
+		AC_TRY_COMPILE(dnl
+			[#include <dev/usb/usb.h>],dnl
+			[struct usb_device_info udi;
+			 udi.udi_vendorNo = 0x082d;],dnl
+			[AC_MSG_RESULT(yes)
+			 cs_cv_usb="yes"
+			 cs_cv_udi_prefix="yes"],
+			[AC_MSG_RESULT(no)
+
+			 AC_MSG_CHECKING([for vendorNo in struct usb_device_info])
+			 AC_TRY_COMPILE(dnl
+				[#include <dev/usb/usb.h>],dnl
+				[struct usb_device_info udi;
+				 udi.vendorNo = 0x082d;],dnl
+				[AC_MSG_RESULT(yes)
+				 cs_cv_usb="yes"
+				 cs_cv_udi_prefix="no"],
+				[AC_MSG_RESULT(no)
+				 cs_cv_usb="no"])])
+	fi
+
+	# Now define the results we've just discovered
+	if test x"$cs_cv_usb" = xyes; then
+		AC_DEFINE_UNQUOTED(WITH_USB)
+		if test x"$cs_cv_udi_prefix" = xyes; then
+			AC_DEFINE_UNQUOTED(WITH_UDI_PREFIX)
+		fi
+	fi
 fi
 
 # Don't build the Perl stuff
@@ -685,3 +738,9 @@ AC_OUTPUT_COMMANDS([cd perl/ColdSync && ${PERL} Makefile.PL PREFIX="${prefix}"])
 dnl #'	# For Emacs
 
 exit "$EXIT_STATUS"
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# mode: sh		***
+# fill-column:	75	***
+# End:			***
