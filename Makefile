@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.15 2000-12-10 01:04:23 arensb Exp $
+# $Id: Makefile,v 1.16 2001-01-25 06:36:50 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -21,8 +21,10 @@ DISTFILES =	README \
 		Artistic \
 		AUTHORS \
 		NEWS \
+		OLDNEWS.1 \
 		ChangeLog \
 		ChangeLog.0 \
+		ChangeLog.1 \
 		HACKING \
 		Makefile \
 		Make.rules.in \
