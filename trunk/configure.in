@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.26 1999-10-21 14:15:36 arensb Exp $
+dnl # $Id: configure.in,v 1.27 1999-10-21 14:15:53 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -174,7 +174,6 @@ AC_OUTPUT([Makefile
 	libpdb/Makefile
 	include/Makefile
 	include/pconn/Makefile
-	conduits/memodump/Makefile
 	doc/Makefile
 	doc/version.texi])
 AC_MSG_RESULT(dnl
