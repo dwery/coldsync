@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.7 2000-10-20 20:23:08 arensb Exp $
+ * $Id: PConnection.c,v 1.8 2000-11-10 03:45:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -48,6 +48,8 @@ new_PConnection(char *fname, int listenType, int promptHotSync)
 		fprintf(stderr, _("Can't allocate new connection\n"));
 		return NULL;
 	}
+
+	/* XXX - The "methods" ought to be initialized here */
 
 	/* Initialize the SLP part of the PConnection */
 	if (slp_init(pconn) < 0)
