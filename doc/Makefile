@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2002-04-14 07:26:20 arensb Exp $
+# $Id: Makefile,v 1.18 2004-10-11 18:18:43 christophe Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -12,7 +12,7 @@ INFOFILES =	${TEXIFILES:.texi=.info}
 # are no existing foo.info-* files, /bin/sh just expands the glob to the
 # string "foo.info-*". Then 'make' complains that it doesn't know how to
 # build this file.
-EXTRA_INFOFILES =	${TEXIFILES:.texi=.info-*}
+EXTRA_INFOFILES =	${TEXIFILES:.texi=.info*}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
 PSFILES =	${TEXIFILES:.texi=.ps}
 PDFFILES =	${TEXIFILES:.texi=.pdf}
@@ -125,8 +125,8 @@ install::	coldsync.8 ${INFOFILES}
 	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
 	${MKDIR} ${INFODIR}
 	@for file in ${INFOFILES} ${EXTRA_INFOFILES}; do \
-		echo "${INSTALL_DATA} $${file} ${INFODIR}/$${file}"; \
-		${INSTALL_DATA} $${file} ${INFODIR}/$${file}; \
+		echo "${INSTALL_DATA} $${file} ${INFODIR}/"; \
+		${INSTALL_DATA} $${file} ${INFODIR}/; \
 	done
 
 dvi:	${DVIFILES}
