@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.11 2000-09-03 07:34:37 arensb Exp $
+ * $Id: conduit.c,v 2.12 2000-09-03 22:41:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1276,7 +1276,8 @@ spawn_conduit(
 	{
 		/* This is the parent */
 		SYNC_TRACE(5)
-			fprintf(stderr, "Conduit PID == %d\n", conduit_pid);
+			fprintf(stderr, "Conduit PID == %d\n",
+				(int) conduit_pid);
 
 		/* Close the unused ends of the pipes */
 		close(inpipe[0]);
@@ -1678,7 +1679,7 @@ sigchld_handler(int sig)
 		MISC_TRACE(5)
 			fprintf(stderr,
 				"Got a SIGCHLD, but conduit_pid == %d. "
-				"Ignoring.\n", conduit_pid);
+				"Ignoring.\n", (int) conduit_pid);
 		errno = old_errno;	/* Restore old errno */
 		return;
 	}
