@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.11 2001-09-07 22:14:11 arensb Exp $
+# $Id: AUTHORS,v 2.12 2001-10-30 15:45:12 arensb Exp $
 
 Authors and Contributors:
 
@@ -35,6 +35,7 @@ Koen Deforche <kdf@irule.be>: support for Palm M50x series.
 Mike Durian <durian@boogie.com>.
 Fred Gylys-Colwell <fredgc@ktb.net>.
 Nicholas J Kreucher <kreucher@msu.edu>: Info on Sony Clie.
+Francisco Castro <fcastro@solucionespalm.com>
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
