@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.81 2001-11-12 01:08:16 arensb Exp $
+ * $Id: config.c,v 1.82 2001-11-12 05:50:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -540,6 +540,10 @@ load_config(const Bool read_user_config)
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
 			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
 			fprintf(stderr, "\tProtocol: %d\n", (int) l->protocol);
+			fprintf(stderr, "\tFlags:");
+			if ((l->flags & LISTENFL_TRANSIENT) != 0)
+				fprintf(stderr, " TRANSIENT");
+			fprintf(stderr, "\n");
 		}
 
 		fprintf(stderr, "Known PDAs:\n");
