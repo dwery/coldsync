@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.31 2001-11-12 01:03:32 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.32 2001-11-12 05:49:09 arensb Exp $
  */
 
 #include "config.h"
@@ -439,11 +439,6 @@ pconn_usb_open(PConnection *pconn,
 	 *  you'll get an ENXIO until the device has been inserted
 	 *  on the USB bus.
 	 */
-	/* XXX - Perhaps add a "transient" flag to listen blocks. This
-	 * indicates that it's okay for the device (both /dev/ugen0 and the
-	 * endpoint, /dev/ugen0.2) not to exist, so keep trying.
-	 */
-
 	for (i = 0; i < 30; i++) {
 		if ((usb_ep0 = open(device, O_RDWR | O_BINARY)) >= 0) 
 				/* The O_BINARY flag is rather bogus, since
@@ -458,7 +453,9 @@ pconn_usb_open(PConnection *pconn,
 		IO_TRACE(1)
 			perror(device);
 
-		if (errno != ENXIO) {
+		if ((errno == ENOENT) && ((flags & PCONNFL_TRANSIENT) != 0))
+			/* Just ignore this error */
+		else if (errno != ENXIO) {
 			fprintf(stderr, _("Error: Can't open \"%s\".\n"),
 				device);
 			perror("open");
@@ -703,22 +700,33 @@ pconn_usb_open(PConnection *pconn,
 		fprintf(stderr, "Hotsync endpoint name: \"%s\"\n",
 			SURE(hotsync_ep_name));
 
-	/* XXX - Under FreeBSD 5.x, this might not exist yet */
-	pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
+	/* Under FreeBSD 5.x, the endpoint might not exist yet */
+	do {
+		pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
 
-	if (pconn->fd < 0) {
-		fprintf(stderr, _("%s: Can't open \"%s\".\n"),
-			"pconn_usb_open", hotsync_ep_name);
-		perror("open");
-		(void) close(usb_ep0);
-		free(hotsync_ep_name);
-		free((void *)u);
-		u = pconn->io_private = NULL;
+		if (pconn->fd < 0)
+		{
+			if ((errno == ENOENT) &&
+			    ((flags & PCONNFL_TRANSIENT) != 0))
+			{
+				/* Ignore this error and try again */
+				sleep(1);
+				continue;
+			}
 
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
-		return -1;	  
+			fprintf(stderr, _("%s: Can't open \"%s\".\n"),
+				"pconn_usb_open", hotsync_ep_name);
+			perror("open");
+			(void) close(usb_ep0);
+			free(hotsync_ep_name);
+			free((void *)u);
+			u = pconn->io_private = NULL;
+
+			dlp_tini(pconn);
+			padp_tini(pconn);
+			slp_tini(pconn);
+			return -1;	  
+		}
 	}
 
 	if ((i = fcntl(pconn->fd, F_GETFL, 0))!=-1) {
