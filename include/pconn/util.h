@@ -6,11 +6,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.2 2000-05-03 03:32:05 arensb Exp $
+ * $Id: util.h,v 1.3 2000-08-29 14:09:43 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
 
+#include <stdio.h>
 #include <time.h>
 #include "palm_types.h"
 #include "dlp_cmd.h"
