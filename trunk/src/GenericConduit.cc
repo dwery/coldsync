@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.43 2000-09-21 14:54:43 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.44 2000-11-20 05:22:39 arensb Exp $
  */
 
 /* Note on I/O:
@@ -37,7 +37,6 @@
 #include "config.h"
 #include <stdio.h>		// For perror(), rename(), printf()
 #include <stdlib.h>		// For free()
-#include <sys/stat.h>
 #include <sys/param.h>		// For MAXPATHLEN
 #include <string.h>
 #include <errno.h>
@@ -156,15 +155,11 @@ GenericConduit::run()
 	 */
 	if (DBINFO_ISRSRC(_dbinfo))
 	{
-		struct stat statbuf;	/* For stat(), to see if the backup
-					 * file exists.
-					 */
-		const char *bakfname;
+		const volatile char *bakfname;
 
 		/* See if the backup file exists */
 		bakfname = mkbakfname(_dbinfo);
-		err = lstat(bakfname, &statbuf);
-		if ((err < 0) && (errno == ENOENT))
+		if (!lexists(const_cast<const char *>(bakfname)))
 		{
 			SYNC_TRACE(2)
 				fprintf(stderr, "%s doesn't exist. Doing a "
@@ -2175,43 +2170,25 @@ GenericConduit::close_archive()
 int
 GenericConduit::read_backup()
 {
-	int err;
-	const char *bakfname;		// Backup filename
+	const volatile char *bakfname;		// Backup filename
 
 	bakfname = mkbakfname(_dbinfo);
 			/* Construct the full pathname of the backup file */
 
 	/* See if the backup file exists */
-	struct stat statbuf;
-
-	err = stat(bakfname, &statbuf);
-	if (err < 0)
+	if (!exists(const_cast<const char *>(bakfname)))
 	{
-		SYNC_TRACE(3)
-			perror("read_backup: stat");
-		if (errno == ENOENT)
-		{
-			/* The backup file doesn't exist. This isn't
-			 * technically an error.
-			 */
-			/* XXX - Perhaps run the appropriate Fetch conduit
-			 * to create the database.
-			 */
-			_localdb = 0;
-			return 0;
-		} 
-
-		/* There's a serious problem: it's not just that the file
-		 * doesn't exist; stat() failed for some other reason
-		 * (e.g., directory permissions). This is serious enough to
-		 * abort this conduit altogether.
+		/* The backup file doesn't exist. This isn't technically an
+		 * error.
 		 */
-		return -1;
+		_localdb = 0;
+		return 0;
 	}
 
 	/* Load backup file to _localdb */
 	int infd;		// File descriptor for backup file
-	if ((infd = open(bakfname, O_RDONLY | O_BINARY)) < 0)
+	if ((infd = open(const_cast<const char *>(bakfname),
+			 O_RDONLY | O_BINARY)) < 0)
 	{
 		fprintf(stderr, _("%s error: Can't open \"%s\"\n"),
 			"read_backup", bakfname);
@@ -2250,7 +2227,9 @@ GenericConduit::write_backup(struct pdb *db)
 					// Length of staging file extension
 
 	/* Construct the full pathname of the backup file */
-	strncpy(bakfname, mkbakfname(_dbinfo), MAXPATHLEN);
+	strncpy(bakfname,
+		const_cast<const char *>(mkbakfname(_dbinfo)),
+		MAXPATHLEN);
 	bakfname[MAXPATHLEN] = '\0';	// Terminate pathname, just in case
 
 	/* Construct the full pathname of the file we'll use for staging
