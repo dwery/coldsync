@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.3 2000-02-03 04:25:33 arensb Exp $
+ * $Id: PConnection.h,v 1.4 2000-03-14 06:35:08 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -31,6 +31,8 @@
 #  include <strings.h>			/* For bzero() under AIX */
 #endif	/* HAVE_STRINGS_H */
 
+typedef enum { forReading = 0, forWriting = 1 } pconn_direction;
+
 /* PConnection
  * This struct is an opaque type that contains all of the state about
  * a connection to a given Palm device at a given time.
@@ -53,12 +55,12 @@ struct PConnection
 	int (*io_write)(struct PConnection *p, unsigned char *buf, int len);
 	int (*io_drain)(struct PConnection *p);
 	int (*io_close)(struct PConnection *p);
-	int (*io_select)(struct PConnection *p, int direction,
+	int (*io_select)(struct PConnection *p, pconn_direction direction,
 			 struct timeval *tvp);
 	int (*io_setspeed)(struct PConnection *p, int speed);
 
-#define forReading 0
-#define forWriting 1
+/* XXX - Experimental */
+int speed;
 
 	void *io_private;	/* XXX - This is only used by the USB code.
 				 * It'd be cleaner to either declare it as
