@@ -43,7 +43,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.2 1999-01-31 22:14:09 arensb Exp $
+ * $Id: slp.h,v 1.3 1999-02-14 04:35:06 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -98,39 +98,21 @@ struct slp_header
 #define SLP_CRC_LEN		2	/* Length of the CRC following
 					 * each SLP packet */
 
-/* XXX - These shouldn't be necessary: I don't think SLP has a limit
- * on packet length.
- */
-#define SLP_MAX_BODY_LEN	2*1024/*0x10000*/
-				/* Max length of encapsulated body.
-				 * This is an implementation limit,
-				 * not a protocol limit. */
-#define SLP_MAX_PACKET_LEN	10+SLP_MAX_BODY_LEN+2
-				/* Max total length of an SLP packet:
-				 * 10 bytes for the preamble and
-				 * header, followed by the body and a
-				 * 2-byte CRC. */
+#define SLP_INIT_INBUF_LEN	2*1024
+				/* Initial length of the input buffer */
+#define SLP_INIT_OUTBUF_LEN	SLP_INIT_INBUF_LEN
+				/* Initial length of the output buffer */
 
-/* SLP error codes */
-#define SLPERR_NOERR	0	/* No error */
-#define SLPERR_EOF	1	/* End of file */
-#define SLPERR_BADFD	2	/* Bad connection descriptor */
-#define SLPERR_SEP	3	/* Someone Else's Problem: some other
-				 * function, usuall a system call,
-				 * returned an error and SLP is just
-				 * passing it along. You probably need
-				 * to check 'errno'. */
-#define SLPERR_ISIZE	4	/* Input buffer is too small to read
-				 * the incoming packet. */
+struct PConnection;		/* Forward declaration */
 
-extern int slp_errno;		/* Error code */
-extern char *slp_errlist[];	/* Error messages */
-
+extern int slp_init(struct PConnection *pconn);
+extern int slp_tini(struct PConnection *pconn);
 extern int slp_bind(int fd, struct slp_addr *addr);
 				/* XXX - Ought to take the same
 				 * arguments as bind().
 				 */
-extern int slp_read(int fd, ubyte *buf, uword len);
-extern int slp_write(int fd, ubyte *buf, uword len);
+/*  extern int slp_read(int fd, ubyte *buf, uword len); */
+extern int slp_read(int fd, const ubyte **buf, uword *len);
+extern int slp_write(int fd, const ubyte *buf, const uword len);
 
 #endif	/* _slp_h_ */
