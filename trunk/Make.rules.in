@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.2 2000-01-27 06:25:24 arensb Exp $
+# $Id: Make.rules.in,v 1.3 2000-01-27 07:38:16 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -11,8 +11,10 @@ VERSION =	@VERSION@
 
 # Various directories gleaned from `configure'
 PREFIX =	@prefix@
-prefix =	${PREFIX}		# Grrr... Freakin' capitalization!
-exec_prefix =	@exec_prefix@		# GNU 'configure'-ism
+# Grrr... Freakin' capitalization!
+prefix =	${PREFIX}
+# GNU 'configure'-ism
+exec_prefix =	@exec_prefix@
 BINDIR =	@bindir@
 SBINDIR =	@sbindir@
 LIBEXECDIR =	@libexecdir@
