@@ -147,6 +147,10 @@ Digital Unix 4.0:
 	config.c:964: warning: overflow in implicit constant conversion
 	GenericConduit.cc:82: warning: unused parameter `const struct conduit_block * block'
 
+	If you are using DEC's C compiler, I suggest the following
+	compiler flags:
+		-std1 -msg_enable level3
+
 
 AIX 4.1:
 	(as of ColdSync v1.1.2)
