@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.48 2000-12-30 11:01:44 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.49 2000-12-31 07:08:43 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1034,6 +1034,13 @@ GenericConduit::FastSync()
 				/* This record was created, deleted, and
 				 * marked for archival, all since the last
 				 * sync. Add it to the archive file.
+				 */
+				/* The 'archive' flag is 0x08, which means
+				 * that in the PDB, it overlaps with the
+				 * high bit of the category. However, since
+				 * this record was downloaded straight from
+				 * the Palm, its attributes and category
+				 * are separate.
 				 */
 				SYNC_TRACE(5)
 					fprintf(stderr,
