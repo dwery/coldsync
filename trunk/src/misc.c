@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.3 2000-11-14 16:37:21 arensb Exp $
+ * $Id: misc.c,v 2.4 2000-11-19 00:12:05 arensb Exp $
  */
 
 #include "config.h"
@@ -48,7 +48,7 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
 				 * by (l)exists() and is_*(), below.
 				 */
 
-/* mkfname
+/* mkpdbname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
  * weird characters so that the result can be used as a pathname.
  *
@@ -58,9 +58,9 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
  * Returns a pointer to the resulting filename.
  */
 const char *
-mkfname(const char *dirname,
-	const struct dlp_dbinfo *dbinfo,
-	Bool add_suffix)
+mkpdbname(const char *dirname,
+	  const struct dlp_dbinfo *dbinfo,
+	  Bool add_suffix)
 {
 	static char buf[MAXPATHLEN+1];
 	static char namebuf[(DLPCMD_DBNAME_LEN * 3) + 1];
@@ -75,7 +75,7 @@ mkfname(const char *dirname,
 	char *nptr;
 
 	MISC_TRACE(3)
-		fprintf(stderr, "Inside mkfname(\"%s\",\"%s\")\n",
+		fprintf(stderr, "Inside mkpdbname(\"%s\",\"%s\")\n",
 			dirname, dbinfo->name);
 	strncpy(buf, dirname, MAXPATHLEN);
 	strncat(buf, "/", MAXPATHLEN-strlen(buf));
@@ -116,7 +116,7 @@ mkfname(const char *dirname,
 			MAXPATHLEN-strlen(buf));
 
 	MISC_TRACE(3)
-		fprintf(stderr, "mkfname:    -> \"%s\"\n", buf);
+		fprintf(stderr, "mkpdbname:    -> \"%s\"\n", buf);
 	return buf;
 }
 
@@ -131,7 +131,7 @@ mkfname(const char *dirname,
 const char *
 mkbakfname(const struct dlp_dbinfo *dbinfo)
 {
-	return mkfname(backupdir, dbinfo, True);
+	return mkpdbname(backupdir, dbinfo, True);
 }
 
 /* mkinstfname
@@ -141,7 +141,7 @@ mkbakfname(const struct dlp_dbinfo *dbinfo)
 const char *
 mkinstfname(const struct dlp_dbinfo *dbinfo)
 {
-	return mkfname(installdir, dbinfo, True);
+	return mkpdbname(installdir, dbinfo, True);
 }
 
 /* mkarchfname
@@ -151,7 +151,7 @@ mkinstfname(const struct dlp_dbinfo *dbinfo)
 const char *
 mkarchfname(const struct dlp_dbinfo *dbinfo)
 {
-	return mkfname(archivedir, dbinfo, False);
+	return mkpdbname(archivedir, dbinfo, False);
 }
 
 /* hex2int

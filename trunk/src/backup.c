@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.18 2000-11-18 22:35:43 arensb Exp $
+ * $Id: backup.c,v 2.19 2000-11-19 00:10:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,7 +36,7 @@ backup(struct PConnection *pconn,
 	struct pdb *pdb;		/* Database downloaded from Palm */
 	ubyte dbh;			/* Database handle (on Palm) */
 
-	bakfname = mkfname(dirname, dbinfo, True);
+	bakfname = mkpdbname(dirname, dbinfo, True);
 				/* Construct the backup file name */
 
 	add_to_log(_("Backup "));
