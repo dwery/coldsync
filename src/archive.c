@@ -4,13 +4,26 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.5 1999-09-09 05:50:27 arensb Exp $
+ * $Id: archive.c,v 1.6 1999-11-04 10:48:17 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For getenv() */
-#include <string.h>		/* For strncat() et al. */
+
+#if STDC_HEADERS
+# include <string.h>		/* For strncat(), memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
+
 #include <fcntl.h>		/* For open() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For write() */
@@ -18,9 +31,7 @@
 #include <unistd.h>		/* For write(), lseek() */
 #include <time.h>		/* For time() */
 #include <errno.h>		/* For errno */
-/*  #include "palm_types.h" */	/* XXX */
-/*#include "util.h"*/		/* For put_*() */
-#include <pconn/pconn.h>	/* XXX - Clean this up */
+#include "pconn/pconn.h"
 #include "archive.h"
 
 /* arch_create
