@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.68 2001-05-06 06:04:27 arensb Exp $
+ * $Id: config.c,v 1.69 2001-06-10 22:32:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1237,6 +1237,13 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 	{
 		/* This Palm doesn't have a serial number. Say so. */
 		printf("\tsnum: \"\";\n");
+	} else if (p_snum[0] == '*') {
+		/* Print the Palm's serial number. */
+		/* Special serial numbers (currently, only "*Visor*") are
+		 * assumed to begin with '*', so anything that begins with
+		 * '*' doesn't get a checksum.
+		 */
+		printf("\tsnum: \"%s\";\n", p_snum);
 	} else {
 		/* Print the Palm's serial number. */
 		printf("\tsnum: \"%s-%c\";\n",
