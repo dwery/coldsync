@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.29 2004-03-27 15:34:19 azummo Exp $
+# $Id: SPC.pm,v 1.30 2004-07-07 02:20:43 christophe Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.29 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.30 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -350,7 +350,15 @@ Sends a DLP request over SPC. C<$reqno> is the DLP request number;
 C<@args> is the array of DLP arguments.
 
 C<$err> is the DLP return status; C<@argv> is the array of values
-returned from the Palm.
+returned from the Palm. The only C<$err> code meaning success is zero.
+C<undef> or non-zero indicates some kind of error. That is:
+
+	undef  failure
+	0      success
+	>0     failure (see DLPSTAT_* in include/pconn/dlp.h)
+
+C<dlp_*> functions that don't explicitly return a data value (i.e.
+C<dlp_CloseDB>, C<dlp_ResetRecordIndex>) will return this error code.
 
 This is a fairly low-level function. It is much easier to use one of
 the DLP wrapper functions. However, not every DLP function has been
