@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.4 2000-09-21 15:26:43 arensb Exp $
+# $Id: todo-text,v 1.5 2000-09-27 15:16:00 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -31,7 +31,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.4 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.5 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -400,19 +400,12 @@ todo-text - ColdSync conduit that converts to do lists to/from plain text
 
 Add the following to your F<.coldsyncrc> file:
 
-	conduit fetch {
+	conduit fetch, dump {
 		type todo/DATA;
 		path "<...>/todo-text";
 	    arguments:
 		Where:	/home/arensb/todo;
 		Delete:	yes;
-	}
-
-	conduit dump {
-		type todo/DATA;
-		path "<...>/todo-text";
-	    arguments:
-		Where:	/home/arensb/todo;
 	}
 
 or run C<todo-text -conduit>.
@@ -504,7 +497,7 @@ so that you don't have to delete items in two places each time.
 
 These arguments affect the way the items are printed to the text files. I
 won't explain them in detail, because they are set to sane values by
-default, and the current version of ColdSync (1.1.8 as of this writing)
+default, and the current version of ColdSync (1.4.5 as of this writing)
 doesn't allow you to set them to other sane values.
 
 =back
