@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.119 2001-03-16 14:05:44 arensb Exp $
+dnl # $Id: configure.in,v 1.120 2001-03-17 04:42:21 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -445,6 +445,17 @@ if test x"$ac_cv_search_gethostbyname2" = xno; then
 	fi
 fi
 #'
+
+# Check for ENODEV error code, for Linux.
+AC_CACHE_CHECK([whether ENODEV is defined], ac_cv_enodev,
+[AC_TRY_COMPILE(dnl
+[#include <errno.h>],dnl
+	[int e; e = ENODEV;],
+	ac_cv_enodev=yes,
+	ac_cv_enodev=no)])
+if test $ac_cv_enodev = yes; then
+	AC_DEFINE(HAVE_ENODEV)
+fi
 
 # Check whether O_BINARY is defined. It's known to exist under Windows
 # (NT); not sure whether it's universal or if it's specific to Cygwin,
