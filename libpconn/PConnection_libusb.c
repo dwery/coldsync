@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.4 2002-12-28 22:44:02 arensb Exp $
+ * $Id: PConnection_libusb.c,v 1.5 2003-03-02 12:11:37 azummo Exp $
  */
 
 #include "config.h"
@@ -46,27 +46,6 @@
 #include "palm.h"
 #include "pconn/palm_errno.h"
 #include "pconn/netsync.h"
-
-/* In 'struct usb_device_info' in FreeBSD 4.5 (and later?), the fields
- * begin with "udi_". In earlier version, they don't. Thus, under FreeBSD
- * 4.4, we use to 'udi.vendorNo'; under 4.5, we need to use
- * 'udi.udi_vendorNo'.
- *
- * Likewise in 'struct usb_ctl_request', the fields now begin with "ucr_".
- *
- * XXX - This relies on the fact that the only difference is a prefix in
- * the fields' names. If the situation ever becomes more complex (e.g.,
- * supporting USB under Solaris), it might become necessary to write a set
- * of inline wrapper functions.
- * XXX - Peter Haight supplied a patch for this.
- */
-#if WITH_UDI_PREFIX
-#  define UDI(field)	udi_##field
-#  define UCR(field)	ucr_##field
-#else	/* WITH_UDI_PREFIX */
-#  define UDI(field)	field
-#  define UCR(field)	field
-#endif	/* WITH_UDI_PREFIX */
 
 #define IOBUF_LEN	1024
 
@@ -121,15 +100,30 @@ typedef struct {
 #define	hs_usbfun_RemoteFileSys	4
 #define	hs_usbfun_MAX		4
 
-/* Expected device vendor IDs.
- * Device		Vendor	Product	Revision
- * Handspring Visor	0x82d
- * Palm M505		0x830	0x0002	0x0100
- * Sony Clie		0x054c
- */
-#define	HANDSPRING_VENDOR_ID	0x082d
-#define PALM_VENDOR_ID		0x0830
-#define SONY_VENDOR_ID		0x054c
+
+/* USB vendors/products */
+
+#define HANDSPRING_VENDOR_ID		0x082d
+#define HANDSPRING_VISOR_ID		0x0100
+#define HANDSPRING_TREO_ID		0x0200
+
+#define PALM_VENDOR_ID			0x0830
+#define PALM_M500_ID			0x0001
+#define PALM_M505_ID			0x0002
+#define PALM_M515_ID			0x0003
+#define PALM_I705_ID			0x0020
+#define PALM_M125_ID			0x0040
+#define PALM_M130_ID			0x0050
+#define PALM_TUNGSTEN_T_ID              0x0060
+#define PALM_TUNGSTEN_Z_ID		0x0031
+#define PALM_ZIRE_ID			0x0070
+
+#define SONY_VENDOR_ID			0x054C
+#define SONY_CLIE_3_5_ID		0x0038
+#define SONY_CLIE_4_0_ID		0x0066
+#define SONY_CLIE_S360_ID		0x0095
+#define SONY_CLIE_4_1_ID		0x009A
+#define SONY_CLIE_NX60_ID		0x00DA
 
 static char *hs_usb_functions[] = {
 	"Generic",
@@ -279,7 +273,8 @@ usb_accept(PConnection *pconn)
 		 */
 		IO_TRACE(5)
 			fprintf(stderr, "usb_accept simple/net\n");
-/* XXX - It seems to help here to send a packet to the m500. */
+
+		/* XXX - It seems to help here to send a packet to the m500. */
 		err = ritual_exch_server(pconn);
 		if (err < 0)
 		{
@@ -420,10 +415,11 @@ pconn_libusb_open(PConnection *pconn,
 		for (bus = busses; bus; bus = bus->next) {
 			for (dev = bus->devices; dev; dev = dev->next)
 			{
-				if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
-					dev->descriptor.idProduct == 0x0100) 
-						break;
-						
+				/* XXX We should evaluate the devices, not the vendors */
+
+				if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID)
+					break;
+
 				if (dev->descriptor.idVendor == PALM_VENDOR_ID)
 					break;
 
@@ -639,23 +635,47 @@ pconn_libusb_open(PConnection *pconn,
 		return -1;
 	}
 
-	/* Required for PalmOS 4.0 devices */
-	
-	if (dev->descriptor.idVendor == PALM_VENDOR_ID ||
-		dev->descriptor.idVendor == SONY_VENDOR_ID)
+	/* Hack for PalmOS 4.0 devices */
+
+	if (dev->descriptor.idVendor == SONY_VENDOR_ID)
 	{
+		if (dev->descriptor.idProduct == SONY_CLIE_4_0_ID ||
+			dev->descriptor.idProduct == SONY_CLIE_S360_ID)
+		{
+			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
 
-		ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-			usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+			if (ret < 0)
+				perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
 
-		if (ret < 0)
-			perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
+			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
 
-		ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
-			usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+			if (ret < 0)
+				perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
+		}
+	}
 
-		if (ret < 0)
-			perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
+	if (dev->descriptor.idVendor == PALM_VENDOR_ID)
+	{
+		if (dev->descriptor.idProduct == PALM_M500_ID ||
+			dev->descriptor.idProduct == PALM_M505_ID ||
+			dev->descriptor.idProduct == PALM_M125_ID ||
+			dev->descriptor.idProduct == PALM_M130_ID ||
+			dev->descriptor.idProduct == PALM_I705_ID)
+		{
+			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+
+			if (ret < 0)
+				perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
+
+			ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+				usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+
+			if (ret < 0)
+				perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
+		}
 	}
 
 
@@ -681,18 +701,6 @@ pconn_libusb_open(PConnection *pconn,
 			"GetBytesAvailable.\n"),
 			"PConnection_usb", usbresponse[0] | (usbresponse[1] << 8));
 	}
-
-	/* ------------------------------------------------------------------ 
-	 * 
-	 *  Ok, all of the device specific control messages have been
-	 *  completed.  It is critically important that these be performed
-	 *  before opening a full duplex connection to the hot sync
-	 *  endpoint on the Visor, on which all of the data transfer occur.
-	 *  If this is open while the set configuration operation above is
-	 *  done, at best it won't work (in FreeBSD 4.0 and later), and at
-	 *  worst it will cause a panic in your kernel.. (pre FreeBSD 4.0)
-	 *
-	 * ---------------------------------------------------------------- */
 
 	/* Make it so */
 	return 1;
