@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 1.1.2.6 2000-09-03 03:12:27 arensb Exp $
+ * $Id: pref.c,v 1.1.2.7 2000-09-03 04:30:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -33,6 +33,7 @@ CacheFromConduits(const conduit_block *conduits,
 	int i;
 
 	/* Create a placeholder for first item */
+	/* XXX - Ugh. This seems convoluted */
 	if ((pref_cache = (pref_item *) malloc(sizeof *pref_cache))
 		== NULL)
 	    return -1; /* Failure */
@@ -43,6 +44,7 @@ CacheFromConduits(const conduit_block *conduits,
 	pref_cursor->contents_info = NULL;
 	pref_cursor->pconn = pconn;	/* Needed for run_conduit */
 
+	/* Look at each conduit's list of preferences in turn */
 	for (conduit_cursor = conduits;
 	     conduit_cursor != NULL;
 	     conduit_cursor = conduit_cursor->next)
@@ -55,26 +57,30 @@ CacheFromConduits(const conduit_block *conduits,
 		     i++)
 		{
 			if ((item = FindPrefItem(&(conduit_cursor->prefs[i]),
-						 pref_cache)) == NULL)
-			{
-				MISC_TRACE(4)
-					fprintf(stderr,
-						"Request for preference added "
-						"in cache: '%c%c%c%c' %u\n",
-						(char) (conduit_cursor->prefs[i].creator >> 24) & 0xff,
-						(char) (conduit_cursor->prefs[i].creator >> 16) & 0xff,
-						(char) (conduit_cursor->prefs[i].creator >> 8) & 0xff,
-						(char) conduit_cursor->prefs[i].creator & 0xff,
-						conduit_cursor->prefs[i].id);
-				item = (pref_item *) malloc(sizeof *item);
-				pref_cursor->next = item;
-				item->next = NULL;
-				item->contents = NULL;
-				item->contents_info = NULL;
-				item->description = conduit_cursor->prefs[i];
-				item->pconn = pconn;
-				pref_cursor = item;
-			}
+						 pref_cache)) != NULL)
+				/* This preference is already in the cache.
+				 * Skip it.
+				 */
+				continue;
+
+			MISC_TRACE(4)
+				fprintf(stderr,
+					"Request for preference added "
+					"in cache: '%c%c%c%c' %u\n",
+					(char) (conduit_cursor->prefs[i].creator >> 24) & 0xff,
+					(char) (conduit_cursor->prefs[i].creator >> 16) & 0xff,
+					(char) (conduit_cursor->prefs[i].creator >> 8) & 0xff,
+					(char) conduit_cursor->prefs[i].creator & 0xff,
+					conduit_cursor->prefs[i].id);
+
+			item = (pref_item *) malloc(sizeof *item);
+			pref_cursor->next = item;
+			item->next = NULL;
+			item->contents = NULL;
+			item->contents_info = NULL;
+			item->description = conduit_cursor->prefs[i];
+			item->pconn = pconn;
+			pref_cursor = item;
 		}
 	}
 
@@ -118,7 +124,7 @@ FetchPrefItem(struct PConnection *pconn,
 	 * database anyway.
 	 */
 	if ((flags & PREFDFL_SAVED) != 0 ||
-	   (flags & PREFDFL_UNSAVED) == 0)
+	    (flags & PREFDFL_UNSAVED) == 0)
 	{
 		MISC_TRACE(4)
 			fprintf(stderr,"Downloading preference from Saved "
@@ -142,7 +148,7 @@ FetchPrefItem(struct PConnection *pconn,
 
 	/* Same reasoning as above */
 	if ((flags & PREFDFL_UNSAVED) != 0 ||
-	   (flags & PREFDFL_SAVED) == 0)
+	    (flags & PREFDFL_SAVED) == 0)
 	{
 		MISC_TRACE(4)
 			fprintf(stderr,"Downloading preference from Unsaved "
@@ -298,7 +304,7 @@ DownloadPrefItem(struct PConnection *pconn,
 	{
 	    free(prefitem->contents);
 	    prefitem->contents = NULL;
-	 }
+	}
 
 	prefitem->contents = contents;
 	prefitem->contents_info = contents_info;
@@ -310,11 +316,21 @@ struct pref_item *
 FindPrefItem(const struct pref_desc *description,
 	     struct pref_item *list)
 {
+	SYNC_TRACE(4)
+		fprintf(stderr, "FindPrefItem: looking for 0x%08lx/%d\n",
+			description->creator, description->id);
+
 	/* Walk the list, looking for a pref_item that matches
 	 * 'description'
 	 */
 	for (; list != NULL; list = list->next)
 	{
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"FindPrefItem: comparing against 0x%08lx/%d\n",
+				list->description.creator,
+				list->description.id);
+
 		if ((description->creator == list->description.creator) &&
 		    (description->id == list->description.id))
 			/* Found it */
@@ -329,10 +345,10 @@ GetPrefItem(struct pref_desc *description)
 {
     struct pref_item  *retval;
 
-    if ((retval = FindPrefItem(description,pref_cache)) == NULL)
+    if ((retval = FindPrefItem(description, pref_cache)) == NULL)
 	return NULL;
 
-    if (FetchPrefItem(retval->pconn,retval) < 0)
+    if (FetchPrefItem(retval->pconn, retval) < 0)
 	return NULL;
 
     return retval;
