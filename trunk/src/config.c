@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.113 2002-11-26 18:30:44 azummo Exp $
+ * $Id: config.c,v 1.114 2002-12-28 23:58:37 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -445,9 +445,9 @@ load_config(const Bool read_user_config)
 	else
 	if (exists(DEFAULT_GLOBAL_CONFIG_OLD))
 	{
-		Warn(_("PLEASE MOVE your coldsync.conf file to %s\n"
+		Warn(_("PLEASE MOVE your %s file to %s\n"
 			"or it will not work with the next ColdSync release."),
-			DEFAULT_GLOBAL_CONFIG);
+			DEFAULT_GLOBAL_CONFIG_OLD, DEFAULT_GLOBAL_CONFIG);
 
 		err = parse_config_file(DEFAULT_GLOBAL_CONFIG_OLD, sync_config);
 		if (err < 0)
@@ -838,6 +838,10 @@ set_mode(const char *str)
 			global_opts.mode = mode_Daemon;
 			return 0;
 
+		    case 'l':		/* List mode */
+			global_opts.mode = mode_List;
+			return 0;
+
 		    default:
 			Error(_("Unknown mode: \"%s\"."), str);
 			return -1;
@@ -878,6 +882,16 @@ set_mode(const char *str)
 		else if (strcmp(str,"daemon") == 0)
 		{
 			global_opts.mode = mode_Daemon;
+			return 0;
+		}
+		else if (strcmp(str,"info") == 0)
+		{
+			global_opts.mode = mode_Info;
+			return 0;
+		}
+		else if (strcmp(str,"list") == 0)
+		{
+			global_opts.mode = mode_List;
 			return 0;
 		}
 		else
