@@ -1,0 +1,163 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define to empty if the keyword does not work.  */
+#undef const
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
+/* Define if your struct tm has tm_zone.  */
+#undef HAVE_TM_ZONE
+
+/* Define if you don't have tm_zone but do have the external array
+   tzname.  */
+#undef HAVE_TZNAME
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef mode_t
+
+/* Define to `long' if <sys/types.h> doesn't define.  */
+#undef off_t
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define to `int' if <signal.h> doesn't define return value for signal() */
+#undef RETSIGTYPE	/* int */
+
+/* Define to `unsigned' if <sys/types.h> doesn't define.  */
+#undef size_t
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+/* Define if you can safely include both <sys/time.h> and <time.h>.  */
+#undef TIME_WITH_SYS_TIME
+
+/* Define if your <sys/time.h> declares struct tm.  */
+#undef TM_IN_SYS_TIME
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
+/* Define if you have the cfmakeraw function.  */
+#undef HAVE_CFMAKERAW
+
+/* Define if you have the strcasecmp function.  */
+#undef HAVE_STRCASECMP
+
+/* Define if you have the strncasecmp function.  */
+#undef HAVE_STRNCASECMP
+
+/* Define if you have the getopt function.  */
+#undef HAVE_GETOPT
+
+/* Define if you have the rename function.  */
+#undef HAVE_RENAME
+
+/* Define if you have the select function.  */
+#undef HAVE_SELECT
+
+/* Define if you have the strncpy function.  */
+#undef HAVE_STRNCPY
+
+/* Define if you have the sysconf function.  */
+#undef HAVE_SYSCONF
+
+/* Define if you have the <dirent.h> header file.  */
+#undef HAVE_DIRENT_H
+
+/* Define if your struct dirent has d_type */
+#undef HAVE_DIRENT_TYPE
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <strings.h> header file.  */
+#undef HAVE_STRINGS_H
+
+/* Define if you have the <termios.h> header file.  */
+#undef HAVE_TERMIOS_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the <sys/dir.h> header file.  */
+#undef HAVE_SYS_DIR_H
+
+/* Define if you have the <sys/ndir.h> header file.  */
+#undef HAVE_SYS_NDIR_H
+
+/* Define if you have the <sys/select.h> header file.  */
+#undef HAVE_SYS_SELECT_H
+
+/* Define if you have the <sys/time.h> header file.  */
+#undef HAVE_SYS_TIME_H
+
+/* Define if you have the <sys/types.h> header file.  */
+#undef HAVE_SYS_TYPES_H
+
+/* Define if you have the GNU gettext package */
+#undef HAVE_LIBINTL
+
+/* Defined if the package was compiled with the ElectricFence library */
+#undef WITH_EFENCE
+
+/* Define if you want USB support for the Handspring Visor */
+#undef WITH_USB
+
+/* Name of package */
+#undef PACKAGE
+
+#undef SYSCONFDIR
+
+#undef LOCALEDIR
+
+/* Version number of package */
+#undef VERSION
+
+/* The internationalizable strings in the source are enclosed in _(), e.g.,
+ * _("Hello, world!"). That way, they can be looked up by whichever i18n
+ * package you happen to be using.
+ */
+#if HAVE_LIBINTL
+#  define _(str)	gettext(str)
+#else	/* HAVE_LIBINTL */
+#  define _(str)	str
+#endif	/* HAVE_LIBINTL */
+
+#if __GNUC__
+
+   /* The following should fix gcc complaining about missing
+    * 'strcasecmp()' and 'getopt()' declarations on Linux boxen using
+    * glibc1 (e.g., Slackware 4.0).
+    */
+#  if _LINUX_C_LIB_VERSION_MAJOR <= 5
+#    ifndef _POSIX_C_SOURCE
+#      define _POSIX_C_SOURCE  2
+#    endif	/* _POSIX_C_SOURCE */
+#    ifndef _BSD_SOURCE
+#      define _BSD_SOURCE
+#    endif	/* _BSD_SOURCE */
+#  endif /* _LINUX_C_LIB_VERSION_MAJOR */
+
+/* For any given version of 'gcc', one of these two should make 'gcc'
+ * shut up about "implicit declaration of xxx".
+ */
+#  define _GNU_SOURCE		1
+#  define __EXTENSIONS__	1
+#endif	/* __GNUC__ */
+
+/* OSF1/Digital Unix/Tru64 apparently requires this, to catch certain
+ * declarations.
+ */
+#ifdef __osf__
+#  define _OSF_SOURCE
+#endif
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * mode: C		***
+ * fill-column:	75	***
+ * End:			***
+ */

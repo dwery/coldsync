@@ -1,0 +1,373 @@
+.\" coldsync.8
+.\" $Id: coldsync.8,v 1.9 2000-01-25 11:25:42 arensb Exp $
+.\" 
+.\" Copyright 1999, 2000, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.Dd July 12, 1999
+.Dt COLDSYNC 8 SMM
+.Os
+.Sh NAME
+.Nm coldsync
+.Nd synchronize files between a Palm and a workstation.
+.Sh SYNOPSIS
+.Nm coldsync
+.Op Fl hVSFR
+.Op Fl p Ar device
+.Op Fl d Ar debug
+.Op Fl u Ar user|uid
+.Op Fl f Ar config_file
+.Nm coldsync
+.Op Fl FSR
+.Op Fl p Ar device
+.Op Fl d Ar debug
+.Fl b Ar dir
+.Nm coldsync
+.Op Fl FSR
+.Op Fl p Ar device
+.Op Fl d Ar debug
+.Fl r Ar dir
+.Sh DESCRIPTION
+.Nm coldsync
+synchronizes databases between a Palm device and a workstation. If the
+.Fl b Ar directory
+option is specified,
+.Nm coldsync
+performs a full backup of the Palm to
+.Ar directory .
+When the
+.Fl r Ar directory
+option is specified,
+.Nm coldsync
+restores files from
+.Ar directory
+to the Palm. By default,
+.Nm coldsync
+performs a full sync (see below) with a Palm device listening on the
+device given by the
+.Fl p
+option. Normally, the only reason to do a backup is to save the
+contents of your Palm before doing something that might cause you to
+lose data.
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Fl h
+(Help) Print a usage message and exit.
+.It Fl V
+Print the version number and exit.
+.It Fl f Ar config_file
+Tells
+.Nm coldsync
+to read its configuration from
+.Pa config_file
+instead of
+.Pa ~/.coldsyncrc .
+.It Fl S
+Force a slow sync. Don't use this unless you know what you're doing.
+.It Fl F
+Force a fast sync. Don't use this unless you know what you're doing.
+.It Fl R
+Consider read-only (ROM) databases when syncing or doing a backup or
+restore. Normally, these are ignored.
+.It Fl p Ar device
+Specifies the device, e.g.
+.Pa /dev/cuaa0
+for serial connections, or
+.Pa /dev/ugen0
+for USB connections, that the Palm is connected to. If not specified,
+this defaults to
+.Pa /dev/palm .
+.It Fl b Ar directory
+Perform a full backup of the Palm, and put the files in
+.Ar directory .
+.Em NB:
+This will not overwrite any existing files: if a backup file for a
+database already exists in the backup directory, that database will
+simply be skipped.
+.It Fl r Ar directory
+Restore files from
+.Ar directory .
+.Em Warning:
+If you restore a database that already exists on the Palm, that
+database will be overwritten.
+.It Fl d Ar debug
+Set debugging level. The argument
+.Ar debug
+can be either of the form
+.Ar facility 
+or
+.Ar facility:level .
+This sets the debugging level for the named facility. If the debugging
+level is not specified, it defaults to 1. Thus,
+.Li -dmisc
+is equivalent to
+.Li -dmisc:1 .
+Facilities currently include
+.Dv SLP , CMP , PADP , DLP , DLPC , SYNC ,
+and
+.Dv MISC .
+The
+.Ar level
+argument is an integer that specifies the verbosity of the output.
+Unless you are a developer, you should probably never need to go above
+5.
+.El
+.Sh CONFIGURATION FILE
+.Nm ColdSync
+reads its configuration from the file
+.Pa .coldsyncrc
+in the user's home directory, or from the file specified with the
+.Fl f
+command-line argument.
+.Pp
+The
+.Pa .coldsyncrc
+file contains
+.Li listen
+and
+.Li conduit
+directives.
+.Li listen
+directives are of the form
+.\" XXX - It'd be nice to have font changes inside the display, to
+.\" indicate pathnames and whatnot.
+.Bd -literal -offset indent
+listen <type> {
+	device "/dev/palm";
+}
+.Ed
+where
+.Li <type>
+is either
+.Li serial
+for a serial connection (PalmPilot, Palm V, etc.), or
+.Li usb
+for a USB connection (Visor);
+.Pa /dev/palm
+is the pathname to your serial or USB device. Currently, only one
+device may be specified.
+.Pp
+(If you don't understand the next bit, don't worry.)
+.Pp
+.Li conduit
+directives are of the form
+.Bd -literal -offset indent
+conduit <flavor> {
+	path "/path/to/conduit";
+	type "<creator>"/"<type>";
+}
+.Ed
+where
+.Li <flavor>
+is the conduit flavor, either
+.Li fetch
+or
+.Li dump
+(
+.Li pre-fetch
+and
+.Li post-dump
+are synonyms for
+.Li fetch
+and
+.Li dump ,
+respectively);
+.Pa /path/to/conduit
+is the pathname of the conduit;
+.Li <creator>
+is the database creator;
+.Li <type>
+is the database type.
+For instance:
+.Bd -literal -offset indent
+conduit fetch {
+	path "/usr/local/libexec/coldsync/addressbook-fetch";
+	type "addr"/"DATA";
+}
+.Ed
+The database creator and type should be specified in the documentation
+for each conduit. You may also use the empty string (
+.Li \&"\&"
+) for the type or creator, to indicate a wildcard. This is not
+generally useful, though.
+.Pp
+If a device was specified on the command line,
+.Nm ColdSync
+ignores the one specified in the configuration file. If no device was
+specified either on the command line or in the configuration file,
+.Nm ColdSync
+defaults to
+.Pa /dev/palm .
+.Sh CONDUITS AND SYNCING
+.Em Syncing
+refers to the process of synchronizing the Palm with a Unix
+workstation. By default,
+.Nm ColdSync
+keeps a copy each database on the Palm in a
+.Pa .pdb
+or
+.Pa .prc
+file in
+.Pa ~/.palm/backup .
+When it syncs,
+.Nm ColdSync
+examines the differences between each database on the Palm and its
+backup file, and makes whatever changes are necessary to make their
+contents identical: if a record has been added on the Palm, it will be
+downloaded to the backup file; if a record has been deleted from the
+backup file, it will be deleted on the Palm as well.
+.Pp
+After a successful sync,
+.Nm ColdSync
+notes, on the Palm, the IP address of the last workstation that it
+synced with. That way, if the next time you sync with the same
+workstation,
+.Nm ColdSync
+can simply look at the records that have changed since the last sync.
+Otherwise, it needs to download every database from the Palm and
+compare it to the version that it has in
+.Pa ~/.palm/backup ,
+which is much slower.
+.Pp
+While simple syncing is useful, it's possible to do better. That's
+where conduits come in. A
+.Em conduit
+is a program that helps the Palm communicate with other applications.
+Typically, this means that a conduit converts
+.Pa .pdb
+files to the other application's format or vice-versa.
+.Pp
+Conduits come in several varieties, called
+.Em flavors .
+Currently, the only flavors defined are
+.Dq Fetch
+and
+.Dq Dump .
+A Fetch conduit runs before the main sync, and is intended to create a
+.Pa .pdb
+file from some other file. A Dump conduit runs after the main sync,
+and is intended to convert the
+.Pa .pdb
+file to some other format.
+.Pp
+An example might help. Let's say that you use
+.Pa kab ,
+the KDE address book, and that you have two conduits,
+.Pa kab-fetch
+and
+.Pa kab-dump ,
+that convert between
+.Nm kab
+and the Palm
+.Pa Address Book
+application. Since
+.Pa Address Book
+keeps its data in a database with creator
+.Li addr
+and type
+.Li DATA ,
+you'd add the following to your
+.Pa .coldsyncrc :
+.Bd -literal -offset indent
+conduit fetch {
+	path "/usr/local/libexec/coldsync/kab-fetch";
+	type "addr"/"DATA";
+}
+conduit dump {
+	path "/usr/local/libexec/coldsync/kab-fetch";
+	type "addr"/"DATA";
+}
+.Ed
+.Pp
+When
+.Nm ColdSync
+runs, it will first run
+.Pa kab-fetch
+which reads the
+.Nm kab
+list of addresses and writes them to
+.Pa ~/.palm/backup/AddressDB.pdb .
+Then
+.Nm ColdSync
+performs the main sync, compares
+.Pa ~/.palm/backup/AddressDB.pdb
+to what's on the Palm, and brings the two up to date. Then it runs
+.Pa kab-dump
+which reads
+.Pa ~/.palm/backup/AddressDB.pdb
+and writes the contents back to the
+.Nm kab
+address file. This way, you can add, delete or edit addresses either
+on the Palm or in
+.Nm kab ,
+and the changes will be propagated everywhere.
+.Pp
+Alternately, if you only have the Fetch conduit listed in
+.Pa .coldsyncrc ,
+you'll have a
+.Dq desktop overwrites Palm
+setup, where
+.Nm kab
+holds the master list of addresses, and any changes you make on the
+Palm will be lost the next time you sync.
+.Pp
+Similarly, if you only have the Dump conduit in your
+.Pa .coldsyncrc ,
+you'll have a
+.Dq Palm overwrites desktop
+setup, where the master list of addresses is on the Palm, and any
+changes made in
+.Nm kab
+will be lost the next time you sync.
+.Pp
+For information on writing your own conduits, see
+.%T ColdSync Conduits
+.\" .Sh EXAMPLES
+.Sh FILES
+.Bl -tag -width ~/.palm/archive -compact
+.It Pa ~/.coldsyncrc
+configuration file.
+.It Pa ~/.palm/backup
+contains backup files for the Palm.
+.It Pa ~/.palm/backup/Attic
+contains databases that have been deleted from the Palm.
+.It Pa ~/.palm/archive
+contains records deleted from the Palm, but with the "Save archive on
+PC" box checked.
+.It Pa ~/.palm/install
+contains files to be installed at the next sync.
+.El
+.Sh SEE ALSO
+.Xr pilot-xfer 1
+.Rs
+.%T Palm Database Files
+.Re
+.Rs
+.%T ColdSync Conduits
+.Re
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.An Louis A. Mamakos Aq louie@TranSys.COM :
+USB support.
+.Sh DIAGNOSTICS
+Many and hopefully self-explanatory.
+.Sh BUGS
+It is not possible to have more than one Palm device and keep their
+contents separate.
+.Pp
+.Nm ColdSync
+does not sync
+.Pa .prc
+files. You need to do a backup to get them.
+.Pp
+If you've been syncing with one Palm, then get a replacement and
+immediately sync with it, all of your old data will be archived. This
+is probably not what you want.
+.Pp
+There is as yet no tool for manipulating archive files.
+.Pp
+Probably many others.
