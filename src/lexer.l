@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.8 2000-01-25 11:26:08 arensb Exp $
+ * $Id: lexer.l,v 2.9 2000-02-03 01:51:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -45,6 +45,11 @@ extern int fileno(FILE *);
 
 int lineno;
 %}
+
+ /* We don't use yywrap(), and this option makes
+  * things compile cleanly under Irix.
+  */
+%option noyywrap
 
  /* Decimal digit */
 DIGIT		[0-9]
@@ -155,3 +160,9 @@ WS		[ \t\f\r]
 .	{ return yytext[0]; }
 
 %%
+
+/* This is for Emacs's benefit:
+ * Local Variables:	***
+ * fill-column:	75	***
+ * End:			***
+ */
