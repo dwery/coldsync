@@ -1,14 +1,9 @@
+- Bug: should be smarter about installing files: it'd be nice to make
+  sure that there's enough memory.
+- Bug: if you start a restore, then cancel on the Palm, ColdSync
+  doesn't appear to notice that you cancelled. It keeps going, but
+  every database upload fails.
 - Update doc/conduits.texi to talk about Install conduits.
-- Turn 'struct Palm' into an "object" with accessors. See Proxy design
-  pattern.
-- Fix restore_file() to not assume that there's a list of databases
-  downloaded from the Palm. This should cut down on wall time needed
-  to install/restore files.
-	Bleah. Before installing the new file, you need to delete it,
-  unless the OKNEWER flag is set. But the only way to get the OKNEWER
-  flag is to run ListDBs, which takes a long time.
-	Possible workaround: if the database can't be deleted, punt.
-  Tell the user to run a full sync.
 - Bug: Under FreeBSD, when both Visor and Rio 600 are plugged in,
   Coldsync doesn't find the Visor correctly.
 - Bug: interaction with HotSync:
