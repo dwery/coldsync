@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.48 2001-10-12 03:59:57 arensb Exp $
+ * $Id: parser.y,v 2.49 2001-10-18 01:37:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -758,7 +758,7 @@ options_stmt: OPTIONS open_brace
 	}
         options_list
 	{
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 	}
 	'}'
 	;
@@ -779,7 +779,7 @@ options_list: options_list
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found symbol: %s ==> %s\n",
 				$2, $5);
-		lex_expect(0);
+		lex_expect(LEX_NONE);
 		put_symbol($2, $5);
 		$2 = NULL;
 		$5 = NULL;
