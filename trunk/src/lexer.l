@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.5 1999-12-02 09:18:41 arensb Exp $
+ * $Id: lexer.l,v 2.6 2000-01-13 17:51:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -88,11 +88,18 @@ WS		[ \t\f\r]
  /* Conduit flavors */
 "sync"		{ return SYNC; }
 "fetch"		{ return FETCH; }
-"pre-fetch"	{ return FETCH; /* Synonym */}
+"pre-fetch"	{ return FETCH;	/* Synonym */}
 "dump"		{ return DUMP; }
-"post-dump"	{ return DUMP; /* Synonym */}
+"post-dump"	{ return DUMP;	/* Synonym */}
 "install" 	{ return INSTALL; }
 "uninstall" 	{ return UNINSTALL; }
+
+ /* Conduit options */
+ /* XXX - Implement in parser. Add flags in conduit descriptor. Make
+  * the run_*_conduits() functions check for these.
+  */
+"final"		{ return FINAL; }
+"default"	{ return DEFAULT; }
 
  /* XXX - This should be capable of handling strings longer than
   * YYLMAX. The obvious way to do this is to implement a "string"
