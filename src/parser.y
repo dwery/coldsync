@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.24 2000-06-03 06:36:32 arensb Exp $
+ * $Id: parser.y,v 2.25 2000-06-11 07:00:08 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -102,12 +102,9 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token INSTALL
 %token UNINSTALL
 
-%type <flavor> conduit_flavor
-
 %union {
 	long integer;
 	char *string;
-	conduit_flavor flavor;
 	comm_type commtype;
 	crea_type_pair crea_type;
 }
@@ -296,8 +293,7 @@ listen_directive:
 	';'
 	;
 
- /* XXX - Might be nice to allow a comma-separated list of flavors */
-conduit_stmt:	CONDUIT conduit_flavor '{'
+conduit_stmt:	CONDUIT
 	{
 		cur_conduit = new_conduit_block();
 		if (cur_conduit == NULL)
@@ -307,91 +303,15 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 				"yyparse");
 			return -1;
 		}
-		cur_conduit->flavor = $2;
-
-		PARSE_TRACE(4)
-			fprintf(stderr, "Found start of conduit [");
-
-		switch (cur_conduit->flavor)
-		{
-		    case Sync:
-			PARSE_TRACE(4)
-				fprintf(stderr, "Sync");
-			fprintf(stderr,
-				_("%s: %d: Warning: Sync conduits are not "
-				  "implemented.\n"),
-				conf_fname, lineno);
-			break;
-		    case Fetch:
-			PARSE_TRACE(4)
-				fprintf(stderr, "Fetch");
-			break;
-		    case Dump:
-			PARSE_TRACE(4)
-				fprintf(stderr, "Dump");
-			break;
-		    case Install:
-			PARSE_TRACE(4)
-				fprintf(stderr, "Install");
-			fprintf(stderr,
-				_("%s: %d: Warning: Install conduits are not "
-				  "implemented.\n"),
-				conf_fname, lineno);
-			break;
-		    case Uninstall:
-			PARSE_TRACE(4)
-				fprintf(stderr, "Uninstall");
-			fprintf(stderr,
-				_("%s: %d: Warning: Uninstall conduits are "
-				  "not implemented.\n"),
-				conf_fname, lineno);
-			break;
-		    default:
-			fprintf(stderr,
-				_("%s: %d: Unknown conduit flavor %d\n"),
-				conf_fname, lineno, cur_conduit->flavor);
-			ANOTHER_ERROR;
-			YYERROR;
-		}
-		PARSE_TRACE(4)
-			fprintf(stderr, "]\n");
-	}
+	} flavor_list '{'
 	conduit_block opt_header_list '}'
 	{
-		/* Got a conduit block. Append it to the appropriate list. */
-		conduit_block **list;
-
 		lex_expect(0);		/* No special lexer context */
 
-		switch (cur_conduit->flavor)
-		{
-		    case Sync:
-			list = &(file_config->sync_q);
-			break;
-		    case Fetch:
-			list = &(file_config->fetch_q);
-			break;
-		    case Dump:
-			list = &(file_config->dump_q);
-			break;
-		    case Install:
-			list = &(file_config->install_q);
-			break;
-		    case Uninstall:
-			list = &(file_config->uninstall_q);
-			break;
-		    default:
-			fprintf(stderr,
-				_("%s: %d: Unknown conduit flavor %d\n"),
-				conf_fname, lineno, cur_conduit->flavor);
-			ANOTHER_ERROR;
-			YYERROR;
-		}
-
-		if (*list == NULL)
+		if (file_config->the_q == NULL)
 		{
 			/* First conduit on this list */
-			*list = cur_conduit;
+			file_config->the_q = cur_conduit;
 			cur_conduit = NULL;	/* So it doesn't get freed
 						 * twice.
 						 */
@@ -400,7 +320,7 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			conduit_block *last;
 
 			/* Go to the end of the list */
-			last = *list;
+			last = file_config->the_q;
 			while (last->next != NULL)
 				last = last->next;
 
@@ -413,36 +333,28 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 	}
 	;
 
-conduit_flavor:
+flavor_list:	flavor
+	| flavor_list ',' flavor
+	;
+
+flavor:
 	SYNC
 	{
 		PARSE_TRACE(5)
 			fprintf(stderr, "Found a conduit_flavor: Sync\n");
-		$$ = Sync;
+		cur_conduit->flavors |= FLAVORFL_SYNC;
 	}
 	| FETCH
 	{
 		PARSE_TRACE(5)
 			fprintf(stderr, "Found a conduit_flavor: Fetch\n");
-		$$ = Fetch;
+		cur_conduit->flavors |= FLAVORFL_FETCH;
 	}
 	| DUMP
 	{
 		PARSE_TRACE(5)
 			fprintf(stderr, "Found a conduit_flavor: Dump\n");
-		$$ = Dump;
-	}
-	| INSTALL
-	{
-		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Install\n");
-		$$ = Install;
-	}
-	| UNINSTALL
-	{
-		PARSE_TRACE(5)
-			fprintf(stderr, "Found a conduit_flavor: Uninstall\n");
-		$$ = Uninstall;
+		cur_conduit->flavors |= FLAVORFL_DUMP;
 	}
 	| error
 	{
@@ -451,9 +363,6 @@ conduit_flavor:
 			_("\tUnrecognized conduit flavor \"%s\"\n"),
 			yytext);
 		yyclearin;
-		$$ = Fetch;	/* Some generic value, just so that parsing
-				 * can go on.
-				 */
 	}
 	;
 
