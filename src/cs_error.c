@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.3 2002-09-03 08:10:47 azummo Exp $
+ * $Id: cs_error.c,v 2.4 2002-09-03 19:21:22 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -38,8 +38,9 @@ update_cs_errno_pconn(PConnection *pconn, palmerrno_t palm_errno)
 				cs_errno = CSE_NOCONN;
 				break;
 			default:
-				Warn(_("Setting CSE_OTHER due to palm_errno = %d"), palm_errno);
-				cs_errno = CSE_OTHER;
+				/* XXX - Temp. debugging message */
+				Warn("Setting CSE_PALMERR due to palm_errno = %d.", palm_errno);
+				cs_errno = CSE_PALMERR;
 				break;
 		}
 	}
@@ -51,24 +52,34 @@ update_cs_errno_dlp(PConnection *pconn)
 	MISC_TRACE(10)
 		fprintf(stderr, "update_cs_errno_dlp: %d\n", pconn->dlp.resp.error);
 
-	/* Avoid overwriting the current error */
-	/* XXX - Is this correct? */
-	if (cs_errno == CSE_NOERR)	
+	/* Updates cs_errno only if had no errors 'till now or if
+	 * the latest one was CSE_DLPERR
+	 */
+	 
+	if (cs_errno == CSE_NOERR || cs_errno == CSE_DLPERR)	
 	{
 		switch (pconn->dlp.resp.error)
 		{
 			case DLPSTAT_NOERR:
+				cs_errno = CSE_NOERR;
 				break;
 				
 			case DLPSTAT_CANCEL:
 				cs_errno = CSE_CANCEL;
 				break;
 			default:
-				Warn(_("Setting CSE_OTHER due dlp error = %d"), pconn->dlp.resp.error);
-				cs_errno = CSE_OTHER;
+				/* XXX - Temp. debugging message */
+				Warn("Setting CSE_DLPERR due to dlp error = %d.", pconn->dlp.resp.error);
+				cs_errno = CSE_DLPERR;
 				break;
 		}
 	}
+
+	/* XXX - Btw a lower level error (CSE_PALMERR) would probably
+	 * have an higher precedence than CSE_DLPERR, so maybe the only
+	 * DLP error we are interested in is DLPSTAT_CANCEL... ?
+	 */
+
 }
 
 void
@@ -80,7 +91,15 @@ print_cs_errno(CSErrno cs_errno)
 			break;
 
 		case CSE_OTHER:
-			Error(_("Other error"));
+			Error(_("Other error."));
+			break;
+	
+		case CSE_PALMERR:
+			Error(_("Protocol error."));
+			break;
+	
+		case CSE_DLPERR:
+			Error(_("DLP error."));
 			break;
 	
 		case CSE_NOCONN:
