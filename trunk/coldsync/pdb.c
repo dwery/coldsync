@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.2 1999-02-21 08:57:26 arensb Exp $
+ * $Id: pdb.c,v 1.3 1999-02-22 10:38:51 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -16,6 +16,14 @@
 
 /* A macro to tell whether 'db' is a resource database or not. */
 #define IS_RSRC_DB(db) 		((db)->header.attributes & PDB_ATTR_RESDB)
+
+/* XXX - Need functions:
+ *
+ * pdb *read_pdb(fd) - Read a PDB/PRC from a file, return it as a data
+ * structure
+ *
+ * int write_pdb(fd, struct pdb *pdb) - Write a struct pdb to a file.
+ */
 
 /* read_pdb
  *
