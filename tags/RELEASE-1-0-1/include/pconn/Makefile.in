@@ -1,0 +1,107 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.7 2000-01-22 05:09:40 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+SRCDIR =	@srcdir@
+subdir =	include/pconn
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+INCLUDEDIR =	@includedir@
+
+SUBDIRS =	
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+HEADERS =	PConnection.h \
+		cmp.h \
+		dlp.h \
+		dlp_cmd.h \
+		padp.h \
+		palm_errno.h \
+		palm_types.h \
+		pconn.h \
+		slp.h \
+		util.h
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES =
+
+CLEAN =		*.o *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+
+.SUFFIXES:	.c .o .cc
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+all::	
+
+install::	${HEADERS}
+# XXX - It might be a good idea to install this stuff eventually, but not yet.
+# 	if test -d "${INCLUDEDIR}/pconn"; then \
+# 		true; \
+# 	else \
+# 		mkdir "${INCLUDEDIR}/pconn"; \
+# 	fi
+# 	for i in ${HEADERS}; do \
+# 		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/pconn/"$$i"; \
+# 	done
+
+depend::
+
+distdir-core::	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	if test -s "${EXTRA_DISTFILES}"; then \
+		cp -p ${EXTRA_DISTFILES} ${DISTDIR}; \
+	fi
+
+clean::
+	-rm -f ${CLEAN}
+distclean::
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless::
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+lint:
