@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.4 1999-08-23 08:38:38 arensb Exp $
+# $Id: Makefile.in,v 1.5 1999-08-25 08:06:46 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -11,6 +11,13 @@ curdir =	${top_srcdir}/${subdir}
 prefix =	@prefix@
 MANDIR =	@mandir@
 MAN8DIR =	${MANDIR}/man8
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-c -m 555
+
+MAKEINFO =	@MAKEINFO@
+TEXI2DVI =	@TEXI2DVI@
+DVIPS =		@DVIPS@
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 
@@ -42,13 +49,13 @@ SPOTLESS =
 .SUFFIXES:	.dvi .info .ps .texi
 
 .texi.info:
-	makeinfo $<
+	${MAKEINFO} $<
 
 .texi.dvi:
-	texi2dvi $<
+	${TEXI2DVI} $<
 
 .dvi.ps:
-	dvips -f $< >$@
+	${DVIPS} -o $@ $<
 
 all:	${INFOFILES}
 all-doc:	info dvi ps
