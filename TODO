@@ -20,7 +20,7 @@
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
   sure what for.
 - Fix PADP so it can dump when writing, as well as when reading.
-- Modem sync
+- Modem, IR, network sync
 - NetSync: figure out just how it works and stuff.
   Blargh. From the output of 'tcpdump', it looks as if the host with
   the databases wants to talk NetBIOS to the host with the cradle.
@@ -46,15 +46,10 @@
   probably return an error if the sync is being run in batch
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
-- Test under Purify.
 - Add Makefile targets for Purify.
 - Installing new databases: make it possible to install an older
   version of a database. (Actually, this is already possible with
   restoring.)
-- It'd be nice to import/export sets of records into external
-  databases. But you can't just upload any random database. Need to
-  integrate with what you've got, somehow. Presumably, the Right Thing
-  here is to let the conduits do this.
 - Directory structure:
 	~/.palm/<id>/backup	Backup of what's on the Palm
 	~/.palm/<id>/archive	Old archived stuff
@@ -123,7 +118,6 @@
   single, more general document that describes all sorts of things
   programmers ought to know about Palm formats.
 - Write a few tutorials on writing conduits.
-- Perl PDB library for manipulating .pdb and .prc files.
 - Bug: 'coldsync -b <dir> -R' causes reset at the end of dumping
   "System"
 	Fix: when opening a database with DlpOpenDB, if the database
@@ -138,8 +132,6 @@
   something.
 - BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
-- Should man pages be compressed after installation, or should the
-  port take care of that?
 - FreeBSD's /bin/sh is still broken:
 	echo "before"
 	for dir in a b c; do
@@ -163,14 +155,16 @@
   conduits to do any number of weird things. If there are a dozen
   conduits, how does ColdSync decide which one(s) to run?
 - Should all of the .h files be lumped under #include <palm/foo.h> ?
-- Figure out the rules for building libraries on all the various platforms.
 - Perl: Write helper function to parse/pack category blocks, for
   well-behaved applications (i.e., the ones that store categories the
   same way as the built-in ones).
 - Test parser with old lex and yacc. See if it's worth supporting
   them, or whether it's easier to just require flex.
 - Documentation for the config file format.
-- 'make install' is broken: installs 'conduits/memodump/memodump' as
-  /usr/local/libexec/coldsync. Needs to check for target directory,
-  and create it if necessary.
-- Add a "make snapshot" target. Use date "+%Y%m%d"
+- When building, make sure that #include and such find the .h files
+  and libraries in this, the build directory, and not the ones in
+  /usr/local that were presumably installed previously.
+- Either fix the install: targets to not install "libpconn.a" and
+  "libdb.a", or write man pages for all of the library functions.
+- Add Makefile stuff for rerunning 'autoconf' when necessary. See node
+  "Automatic Remaking" in "autoconf.info".
