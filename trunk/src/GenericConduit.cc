@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.22 2000-04-09 10:39:06 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.23 2000-04-09 14:23:11 arensb Exp $
  */
 
 /* Note on I/O:
@@ -385,6 +385,9 @@ GenericConduit::FirstSync()
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "### Resetting sync flags.\n");
+	/* XXX - This appears to cause a reset on the Palm if the database
+	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
+	 */
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
@@ -414,7 +417,6 @@ GenericConduit::SlowSync()
 	int err;
 	ubyte dbh;			// Database handle
 	struct pdb_record *localrec;	// Record in local database
-	struct pdb_record *remoterec;	// Record in remote database
 
 	add_to_log(_dbinfo->name);
 	add_to_log(" - ");
@@ -496,12 +498,20 @@ GenericConduit::SlowSync()
 	/* Check each remote record in turn, and compare it to the
 	 * copy in the local database.
 	 */
+	struct pdb_record *remoterec;	// Record in remote database
+	struct pdb_record *nextrec;	// Next record in remote database.
+
 	SYNC_TRACE(3)
 		fprintf(stderr, "Checking remote database entries.\n");
-	for (remoterec = _remotedb->rec_index.rec;
+	for (remoterec = _remotedb->rec_index.rec, nextrec = 0;
 	     remoterec != 0;
-	     remoterec = remoterec->next)
+	     remoterec = nextrec)
 	{
+		/* Remember the next record, since the current one might
+		 * get deleted.
+		 */
+		nextrec = remoterec->next;
+
 		SYNC_TRACE(5)
 		{
 			fprintf(stderr, "Remote Record:\n");
@@ -661,8 +671,6 @@ GenericConduit::SlowSync()
 	SYNC_TRACE(3)
 		fprintf(stderr, "Checking local database entries.\n");
 
-	struct pdb_record *nextrec;	// Next record in list
-
 	for (localrec = _localdb->rec_index.rec, nextrec = 0;
 	     localrec != 0;
 	     localrec = nextrec)
@@ -801,6 +809,9 @@ GenericConduit::SlowSync()
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "### Resetting sync flags.\n");
+	/* XXX - This appears to cause a reset on the Palm if the database
+	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
+	 */
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
@@ -1266,6 +1277,9 @@ GenericConduit::FastSync()
 
 	SYNC_TRACE(3)
 		fprintf(stderr, "### Resetting sync flags.\n");
+	/* XXX - This appears to cause a reset on the Palm if the database
+	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
+	 */
 	err = DlpResetSyncFlags(_pconn, dbh);
 	if (err != DLPSTAT_NOERR)
 	{
@@ -1939,7 +1953,7 @@ GenericConduit::SyncRecord(
 					_("%s: Warning: can't delete record "
 					  "0x%08lx: %d\n"),
 					"SlowSync",
-					localrec->id, err);
+					remoterec->id, err);
 				/* XXX - For now, just ignore this,
 				 * since it's probably not a show
 				 * stopper.
@@ -2217,6 +2231,10 @@ GenericConduit::write_backup(struct pdb *db)
 	 */
 	strncpy(stage_fname, bakfname, MAXPATHLEN-stage_ext_len);
 	strncat(stage_fname, stage_ext, stage_ext_len);
+
+	/* XXX - FreeBSD's libc complains about mktemp() possibly being
+	 * used unsafely. True, but mkstemp() isn't portable.
+	 */
 	if (mktemp(stage_fname) == 0)
 	{
 		fprintf(stderr, _("%s: Can't create staging file name\n"),
