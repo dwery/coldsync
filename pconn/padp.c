@@ -8,7 +8,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.3 1999-02-22 11:01:59 arensb Exp $
+ * $Id: padp.c,v 1.4 1999-02-24 13:09:45 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
@@ -101,6 +101,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	uword inlen;		/* Length of incoming data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+/* XXX - AIX uses some weird shit for select() */
 	fd_set readfds;		/* Set of readable file descriptors
 				 * (for select()) */
 	struct timeval timeout;	/* Read timeout, for select() */
@@ -194,28 +195,6 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 		return -1;
 	};
 
-	/* XXX - If it's a single-fragment packet, just pass it up to
-	 * the caller.
-	 * The other possibility is that this is the first fragment of
-	 * a multi-fragment packet. In that case, allocate a new
-	 * buffer and read the other fragments in the packet. Assume
-	 * that they come in order until it becomes necessary to
-	 * assume otherwise.
-	 * This check needs to be done here, because it's possible
-	 * that there isn't enough memory to allocate the buffer. If
-	 * so, the ACK for the first packet should have the
-	 * PADP_FLAG_ERRNOMEM flag set.
-	 */
-#if 0
-/* XXX - For now, just handle the simple case */
-if (((header.flags & PADP_FLAG_FIRST) == 0) ||
-    ((header.flags & PADP_FLAG_LAST) == 0))
-{
-	fprintf(stderr, "+++++ I don't know how to handle multi-fragment packets (yet)\nDying at %s:%d", __FILE__, __LINE__);
-	return -1;
-}
-#endif	/* 0 */
-
 	/* XXX - If a fragment comes in with the 'last' flag set but not
 	 * the 'first' flag, this'll get confused.
 	 */
@@ -258,38 +237,40 @@ if (((header.flags & PADP_FLAG_FIRST) == 0) ||
 		uword cur_offset;	/* Offset of the next expected
 					 * fragment */
 
-fprintf(stderr, "+ Got first fragment of a multi-fragment message\n");
 		/* XXX - Make sure the 'first' flag is set */
 
 		/* It's a multi-fragment packet */
 		PADP_TRACE(6, "Got part 1 of a multi-fragment message\n");
 
 		msg_len = header.size;	/* Total length of message */
-fprintf(stderr, "+ Total length == %d\n", msg_len);
+		PADP_TRACE(7, "MP: Total length == %d\n", msg_len);
 
 		/* Allocate (or reallocate) a buffer in the PADP part of
 		 * the PConnection large enough to hold the entire message.
 		 */
 		if (pconn->padp.inbuf == NULL)
 		{
-fprintf(stderr, "+ Allocating new MP buffer\n");
+			PADP_TRACE(7, "MP: Allocating new MP buffer\n");
 			/* Allocate a new buffer */
 			if ((pconn->padp.inbuf = (ubyte *) malloc(msg_len))
 			    == NULL)
 			{
-fprintf(stderr, "+ Can't allocate new MP buffer\n");
+				PADP_TRACE(7, "MP: Can't allocate new MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
+				/* XXX - Should return an ACK to the Palm
+				 * that says we're out of memory.
+				 */
 				return -1;
 			}
 		} else {
 			/* Resize the existing buffer to a new size */
 			ubyte *eptr;	/* Pointer to reallocated buffer */
 
-fprintf(stderr, "+ Resizing existing MP buffer\n");
+			PADP_TRACE(7, "MP: Resizing existing MP buffer\n");
 			if ((eptr = (ubyte *) realloc(pconn->padp.inbuf,
 						      msg_len)) == NULL)
 			{
-fprintf(stderr, "+ Can't resize existing MP buffer\n");
+				PADP_TRACE(7, "MP: Can't resize existing MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
 				return -1;
 			}
@@ -300,7 +281,8 @@ fprintf(stderr, "+ Can't resize existing MP buffer\n");
 		/* Copy the first fragment to the PConnection buffer */
 		memcpy(pconn->padp.inbuf, rptr, inlen-PADP_HEADER_LEN);
 		cur_offset = inlen-PADP_HEADER_LEN;
-fprintf(stderr, "+ Copied first fragment. cur_offset == %d\n", cur_offset);
+		PADP_TRACE(7, "MP: Copied first fragment. cur_offset == %d\n",
+			   cur_offset);
 
 		/* Send an ACK for the first fragment */
 		/* Construct an output packet header and put it in 'outbuf' */
@@ -328,7 +310,7 @@ fprintf(stderr, "+ Copied first fragment. cur_offset == %d\n", cur_offset);
 
 		/* Get the rest of the message */
 		do {
-fprintf(stderr, "+ Waiting for more fragments\n");
+			PADP_TRACE(7, "MP: Waiting for more fragments\n");
 			/* Receive a new fragment */
 		  mpretry:		/* It can take several attempts to
 					 * read a packet, if the Palm sends
@@ -428,24 +410,26 @@ fprintf(stderr, "+ Waiting for more fragments\n");
 			/* If it's new, then I'm confused */
 			if (header.flags & PADP_FLAG_FIRST)
 			{
-fprintf(stderr, "##### I wasn't expecting a new fragment. I'm confused!\n");
+				fprintf(stderr, "##### I wasn't expecting a new fragment. I'm confused!\n");
 				/* palm_errno = XXX */
 				return -1;
 			}
-fprintf(stderr, "+ It's not a new fragment\n");
+			PADP_TRACE(7, "MP: It's not a new fragment\n");
 
 			if (header.size != cur_offset)
 			{
 				/* XXX */
-fprintf(stderr, "##### Bad offset: wanted %d, got %d\n", cur_offset, header.size);
+				fprintf(stderr, "##### Bad offset: wanted %d, got %d\n",
+					cur_offset, header.size);
 				return -1;
 			}
-fprintf(stderr, "+ It goes at the right offset\n");
+			PADP_TRACE(7, "MP: It goes at the right offset\n");
 
 			/* Copy fragment to pconn->padp.inbuf */
 			memcpy(pconn->padp.inbuf+cur_offset, rptr,
 			       inlen-PADP_HEADER_LEN);
-fprintf(stderr, "+ Copies this fragment to inbuf+%d\n", cur_offset);
+			PADP_TRACE(7, "MP: Copies this fragment to inbuf+%d\n",
+				   cur_offset);
 
 			/* Update cur_offset */
 			cur_offset += inlen-PADP_HEADER_LEN;
@@ -477,13 +461,16 @@ fprintf(stderr, "+ Copies this fragment to inbuf+%d\n", cur_offset);
 				return err;	/* An error has occurred */
 
 		} while ((header.flags & PADP_FLAG_LAST) == 0);
-fprintf(stderr, "+ That was the last fragment. Returning:\n");
+		PADP_TRACE(7, "MP: That was the last fragment. Returning:\n");
 
 		/* Return the message to the caller */
 		*buf = pconn->padp.inbuf;	/* Message data */
 		*len = msg_len;			/* Message length */
-fprintf(stderr, "+\tlen == %d\n", *len);
-debug_dump(stderr, "+MP", *buf, *len);
+		PADP_TRACE(10, "\tlen == %d\n", *len);
+#if PADP_DEBUG
+		if (padp_debug >= 10)
+			debug_dump(stderr, "+MP", *buf, *len);
+#endif /* PADP_DEBUG */
 		return 0;
 	}
 
@@ -512,6 +499,8 @@ padp_write(struct PConnection *pconn,		/* Connection to Palm */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	int attempt;		/* Send attempt number */
 	fd_set readfds;		/* File descriptors to read from, for
+				 * select() */
+	fd_set writefds;	/* File descriptors to write to, for
 				 * select() */
 	struct timeval timeout;	/* Timeout length, for select() */
 
@@ -549,14 +538,26 @@ if (len >= 1024)
 
 	/* Append the caller's data to 'outbuf' */
 	memcpy(outbuf+PADP_HEADER_LEN, buf, len);
+fprintf(stderr, "After memcpy\n");
 
 	/* Set the timeout length, for select() */
 	timeout.tv_sec = PADP_ACK_TIMEOUT;
 	timeout.tv_usec = 0L;
 	for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
 	{
+FD_ZERO(&writefds);
+FD_SET(pconn->fd, &writefds);
+err = select(pconn->fd+1, NULL, &writefds, NULL, &timeout);
+if (err == 0)
+{
+	/* select() timed out */
+	fprintf(stderr, "Write timeout. Attempting to resend\n");
+	continue;
+}
+fprintf(stderr, "about to slp_write()\n");
 		/* Send 'outbuf' as a SLP packet */
 		err = slp_write(pconn, outbuf, PADP_HEADER_LEN+len);
+fprintf(stderr, "slp_write returned %d\n", err);
 		if (err < 0)
 			return err;		/* Error */
 
@@ -564,6 +565,7 @@ if (len >= 1024)
 		/* Use select() to wait for the file descriptor to become
 		 * readable. If nothing comes in, time out and retry.
 		 */
+fprintf(stderr, "Waiting to read\n");
 		FD_ZERO(&readfds);
 		FD_SET(pconn->fd, &readfds);
 		err = select(pconn->fd+1, &readfds, NULL, NULL, &timeout);
