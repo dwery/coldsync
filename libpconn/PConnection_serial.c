@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.36 2002-04-27 18:36:31 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.37 2002-05-02 22:45:46 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -586,7 +586,7 @@ pconn_serial_open(PConnection *pconn,
 		 * hacks.
 		 */
 
-		if (flags & (PCONNFL_PROMPTAFTER | PCONNFL_TRANSIENT))
+		if (flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT))
 			printf(_("Please press the HotSync button.\n"));
 
 		while (1)
@@ -653,7 +653,7 @@ pconn_serial_open(PConnection *pconn,
 	/* XXX - Error-checking */
 					/* Make it so */
 
-	if ((flags & PCONNFL_PROMPTAFTER) && !(flags & PCONNFL_TRANSIENT))
+	if ((flags & PCONNFL_PROMPT) && !(flags & PCONNFL_TRANSIENT))
 		printf(_("Please press the HotSync button.\n"));
 
 	return pconn->fd;

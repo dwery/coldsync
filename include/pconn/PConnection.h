@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.29 2002-04-27 18:00:07 azummo Exp $
+ * $Id: PConnection.h,v 1.30 2002-05-02 22:45:46 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -73,9 +73,8 @@ typedef enum {
 
 /* Flags */
 #define PCONNFL_TRANSIENT	0x0001	/* The device might not exist */
-#define PCONNFL_PROMPTAFTER	0x0002	/* Prompt the user to press the
-					 * HotSync button after the
-					 * connection has been established.
+#define PCONNFL_PROMPT		0x0002	/* Prompt the user to press the
+					 * HotSync button.
 					 */
 
 /* Misc defines */
