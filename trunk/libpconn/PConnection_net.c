@@ -215,9 +215,9 @@ net_read(PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-net_write(PConnection *p, unsigned char *buf, int len)
+net_write(PConnection *p, unsigned const char *buf, const int len)
 {
-	return read(p->fd, buf, len);
+	return write(p->fd, buf, len);
 }
 
 /* net_connect
