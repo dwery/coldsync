@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.24 2000-06-23 11:33:35 arensb Exp $
+ * $Id: conduit.c,v 1.25 2000-07-01 19:56:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -101,26 +101,6 @@ static char cond_stdin_buf[BUFSIZ];	/* Buffer for conduit's stdin */
 #endif	/* 0 */
 static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 
-/* init_conduits
- * Initialize everything conduit-related.
- */
-int
-init_conduits(struct Palm *palm)	/* XXX - Unused argument */
-{
-	/* XXX - Is there anything to do? */
-	return 0;
-}
-
-/* tini_conduits
- * Clean up everything conduit-related.
- */
-int
-tini_conduits()
-{
-	/* XXX - Is there anything to do here? */
-	return 0;
-}
-
 /* run_conduit
  * Run a single conduit, of the given flavor.
  * Returns a negative value in case of an error running the conduit.
@@ -180,10 +160,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 
 	/* Feed the various parameters to the child via 'tochild'. */
 
-	/* XXX - These ought to be integrated into a single list (or maybe
-	 * two lists: one for the common headers, and one for the
-	 * user-supplied ones).
-	 */
 	/* Daemon: the name of the ColdSync daemon. Under the terms of the
 	 * Artistic license, you can come up with your own version of
 	 * ColdSync, but you have to call it something else. The "Daemon"
@@ -469,6 +445,31 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP);
 }
 
+/* run_Sync_conduits
+ * Go through the list of Sync conduits and run whichever ones are
+ * applicable for the database 'dbinfo'.
+ *
+ * XXX - This is just an experimental first draft so far
+ */
+int
+run_Sync_conduits(struct dlp_dbinfo *dbinfo)
+{
+	SYNC_TRACE(1)
+		fprintf(stderr, "Running sync conduits for \"%s\".\n",
+			dbinfo->name);
+
+	/* Note: If there are any open file descriptors that the conduit
+	 * shouldn't have access to (other than stdin and stdout, which are
+	 * handled separately, here would be a good place to close them.
+	 * Use
+	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
+	 * The global variable 'sys_maxfds' holds the size of the file
+	 * descriptor table.
+	 */
+
+	return run_conduits(dbinfo, "dump", FLAVORFL_SYNC);
+}
+
 /* spawn_conduit
  * Spawn a conduit. Runs the program named by 'path', passing it the
  * command-line arguments (including argv[0], the name of the program)
@@ -589,15 +590,8 @@ spawn_conduit(
 	close(inpipe[1]);
 	close(outpipe[0]);
 
-	/* We don't close stdin and stdout for two reasons:
-	 *
-	 * 1) dup2() is supposed to do this (at least, it does so under
-	 * FreeBSD, DU, and Solaris. It appears to be mandated by POSIX).
-	 *
-	 * 2) I don't know why, but closing stdin causes a bug: if stdin is
-	 * already closed (e.g., if coldsync is run by certain daemons),
-	 * then the first dup2() fails with EBADF. I have no idea why this
-	 * would happen, but it does.
+	/* We don't close stdin and stdout because dup2() already does so,
+	 * but does it atomically.
 	 */
 
 	/* Dup stdin to the pipe */
@@ -735,7 +729,6 @@ cond_sendline(const char *data,	/* Data to send */
 			 * the line.
 			 */
 			static char buf[1024];
-/*  fprintf(stderr, "Child has written something\n"); */
 			/* XXX - Read what the child has to say, and do
 			 * something intelligent about it.
 			 */
@@ -1186,7 +1179,6 @@ cond_readstatus(FILE *fromchild)
 	}
 
 	/* XXX - Do something intelligent */
-/*  fprintf(stderr, "CONDUIT: %d - %s\n", errcode, errmsg); */
 
 	return errcode; 
 }
