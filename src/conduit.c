@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.71 2004-10-11 04:28:25 christophe Exp $
+ * $Id: conduit.c,v 2.72 2004-10-11 18:29:13 christophe Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1107,6 +1107,8 @@ run_conduit(struct Palm *palm,
 		/* Presumably, we're here because there was an internal
 		 * error, but the conduit isn't dead. Kill it.
 		 */
+		CONDUIT_TRACE(5)
+			fprintf(stderr, "Sending SIGTERM to %d\n", conduit_pid);
 		kill(conduit_pid, SIGTERM);
 				/* No error checking, at least for now,
 				 * since there was an internal error, and
@@ -2276,8 +2278,8 @@ sigchld_handler(int sig)
 	p = waitpid(conduit_pid, &conduit_status, WNOHANG);
 	if (p < 0)
 	{
-		Error(_("%s: Can't get child process status."),
-		      "sigchld_handler");
+		Error(_("%s: Can't get child pid %d status."),
+		      "sigchld_handler", conduit_pid );
 		Perror("waitpid");
 
 		conduit_pid = -1;
@@ -2296,7 +2298,8 @@ sigchld_handler(int sig)
 	    WIFSIGNALED(conduit_status))
 	{
 		MISC_TRACE(4)
-			fprintf(stderr, "Conduit is no longer running.\n");
+			fprintf(stderr, "Conduit pid %d is no longer running.\n",
+				conduit_pid );
 		MISC_TRACE(5)
 		{
 			if (WIFEXITED(conduit_status))
