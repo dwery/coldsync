@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.34 2002-08-31 19:26:03 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.35 2002-10-16 18:59:32 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1076,7 +1076,8 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
  */
 int
 DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
-	   ubyte handle)		/* Handle of database to close */
+	   ubyte handle,		/* Handle of database to close */
+	   ubyte flags)			/* Flags, PalmOS >= v3.0 only */
 {
 	int i;
 	int err;
@@ -1104,9 +1105,27 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 		argv[0].data = NULL;
 	} else {
 		/* We're only closing one database */
-		argv[0].id = DLPARG_CloseDB_One;
-		argv[0].size = DLPARGLEN_CloseDB_One;
-		argv[0].data = &handle;
+
+		if (flags == 0)
+		{
+			argv[0].id	= DLPARG_CloseDB_One;
+			argv[0].size	= DLPARGLEN_CloseDB_One;
+			argv[0].data	= &handle;
+		}
+		else
+		{
+			/* We have given flags, so use the newer call to DlpCloseDB */
+		
+			static ubyte outbuf[DLPARGLEN_CloseDB_Update];
+			ubyte *wptr = outbuf;
+
+			argv[0].id	= DLPARG_CloseDB_Update;
+			argv[0].size	= DLPARGLEN_CloseDB_Update;
+			argv[0].data	= outbuf;
+		
+			put_ubyte(&wptr, handle);
+			put_ubyte(&wptr, flags);
+		}
 	}
 
 	/* Send the DLP request */

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.39 2002-09-08 12:14:04 azummo Exp $
+ * $Id: backup.c,v 2.40 2002-10-16 18:59:32 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -112,7 +112,7 @@ download_database(PConnection *pconn,
 			"download_database");
 
 		print_latest_dlp_error(pconn);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
+		DlpCloseDB(pconn, dbh, 0);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
 		return NULL;
@@ -138,7 +138,7 @@ download_database(PConnection *pconn,
 		{
 			fprintf(stderr, _("%s: Out of memory.\n"),
 				"download_database");
-			DlpCloseDB(pconn, dbh);	/* Don't really care if
+			DlpCloseDB(pconn, dbh, 0);	/* Don't really care if
 						 * this fails */
 			free_pdb(retval);
 			/* XXX - Set cs_errno? */
@@ -169,7 +169,7 @@ download_database(PConnection *pconn,
 			"download_database",
 			dbinfo->name, err);
 		print_latest_dlp_error(pconn);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
+		DlpCloseDB(pconn, dbh, 0);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
 		return NULL;
@@ -188,7 +188,7 @@ download_database(PConnection *pconn,
 		{
 			fprintf(stderr, _("%s: Out of memory.\n"),
 				"download_database");
-			DlpCloseDB(pconn, dbh);	/* Don't really care if
+			DlpCloseDB(pconn, dbh, 0);	/* Don't really care if
 						 * this fails */
 			free_pdb(retval);
 			return NULL;
@@ -209,7 +209,7 @@ download_database(PConnection *pconn,
 			"download_database",
 			dbinfo->name, err);
 		print_latest_dlp_error(pconn);
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
+		DlpCloseDB(pconn, dbh, 0);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
 		return NULL;
@@ -228,7 +228,7 @@ download_database(PConnection *pconn,
 	{
 		fprintf(stderr, _("Can't download record or resource "
 				  "index.\n"));
-		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
+		DlpCloseDB(pconn, dbh, 0);	/* Don't really care if this fails */
 		free_pdb(retval);
 		/* XXX - Set cs_errno? */
 		return NULL;
@@ -574,7 +574,7 @@ backup(PConnection *pconn,
 		 * typically the problem is that the connection to the Palm
 		 * was lost.
 		 */
-		err = DlpCloseDB(pconn, dbh);
+		err = DlpCloseDB(pconn, dbh, 0);
 		unlink(bakfname);	/* Delete the zero-length backup
 					 * file */
 		close(bakfd);
@@ -584,7 +584,7 @@ backup(PConnection *pconn,
 	}
 	SYNC_TRACE(7)
 		fprintf(stderr, "After download_database\n");
-	DlpCloseDB(pconn, dbh);
+	DlpCloseDB(pconn, dbh, 0);
 	SYNC_TRACE(7)
 		fprintf(stderr, "After DlpCloseDB\n");
 
@@ -595,7 +595,7 @@ backup(PConnection *pconn,
 		Error(_("%s: can't write database \"%s\" to \"%s\"."),
 		      "backup",
 		      dbinfo->name, bakfname);
-		err = DlpCloseDB(pconn, dbh);
+		err = DlpCloseDB(pconn, dbh, 0);
 		free_pdb(pdb);
 		close(bakfd);
 		va_add_to_log(pconn, "%s %s - %s\n",
@@ -606,7 +606,7 @@ backup(PConnection *pconn,
 		fprintf(stderr, "Wrote \"%s\" to \"%s\"\n",
 			dbinfo->name, bakfname);
 
-	err = DlpCloseDB(pconn, dbh);
+	err = DlpCloseDB(pconn, dbh, 0);
 	free_pdb(pdb);
 	close(bakfd);
 	va_add_to_log(pconn, "%s %s - %s\n",
