@@ -25,6 +25,15 @@ A: First of all, don't panic. This is the so-called Bargle Bug.
    didn't mean to re-upload. All of your application categories will have
    been lost as well, so you'll need to recreate them again.
 
+Q: ColdSync seems to start okay, but then fails with "ACK timeout".
+A: Most likely, your Palm is running PalmOS 3.5 or later, and has a
+   password set. Try unsetting the password.
+	Early versions of PalmOS trusted the desktop implicitly. As of
+   version 3.5, however, this is no longer the case: it expects the desktop
+   to know the password on the Palm. I haven't sussed out yet how the
+   desktop is supposed to tell this to the Palm, so ColdSync fails with
+   password-protected Palms.
+
 Q: Are these *really* frequently-asked questions?
 A: No. ColdSync really doesn't have enough of a following for any questions
    to have been asked often enough to become tedious. But if I had called
