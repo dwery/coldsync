@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.14 1999-06-04 00:53:08 arensb Exp $
+ * $Id: pdb.c,v 1.15 1999-06-24 02:52:24 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -146,8 +146,8 @@ free_pdb(struct pdb *db)
 /* XXX - Separate pdb_Read() into two functions: one to load the header and
  * record index, and one to read the actual data. This should simplify
  * syncing, since you can have a list of databases on disk (and their
- * relevant characteristics, like creator and type) without having to load
- * their entire contents.
+ * relevant characteristics, like creator, type, and modification number)
+ * without having to load their entire contents.
  */
 struct pdb *
 pdb_Read(char *fname)
