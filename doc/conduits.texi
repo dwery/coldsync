@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.10 2000-09-03 09:38:13 arensb Exp $
+@c $Id: conduits.texi,v 1.11 2000-09-04 05:19:57 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -104,6 +104,7 @@ Specification
 
 * Conduit Input::               What ColdSync sends to the conduit.
 * Conduit Output::              What the conduit may send to ColdSync.
+* SPC::                         Serialized Procedure Call protocol
 * Conduit Flavors::             The different types of conduit.
 * Status Codes::                Numerical error codes and thier meanings.
 
@@ -115,6 +116,7 @@ Conduit Flavors
 
 * Fetch Conduits::              Conduits that run before the main sync
 * Dump Conduits::               Conduits that run after the main sync
+* Sync conduits::               Conduits that run during the main sync
 
 @end detailmenu
 @end menu
@@ -1284,13 +1286,14 @@ same flavor to be run for the same database, the conduits will be run in
 the order in which they are listed in the configuration file.
 
 	ColdSync makes no guarantees as to the order in which different
-databases' will conduits will be run, nor is there any guarantee that
-all of the conduits for one database will be run befor the first conduit
-of another database.
+databases' conduits will be run, nor is there any guarantee that all of
+the conduits for one database will be run before the first conduit of
+another database.
 
 @menu
 * Conduit Input::               What ColdSync sends to the conduit.
 * Conduit Output::              What the conduit may send to ColdSync.
+* SPC::                         Serialized Procedure Call protocol
 * Conduit Flavors::             The different types of conduit.
 * Status Codes::                Numerical error codes and thier meanings.
 @end menu
@@ -1300,11 +1303,9 @@ of another database.
 @section Conduit Input
 
 @cindex Headers
-	ColdSync passes information to conduits in two ways: as
-command-line arguments, and in a series of @emph{headers} on standard
-input. In future versions, ColdSync may allow other means of
-communication (e.g., environment variables or pre-opened file
-descriptors).
+	ColdSync passes information to conduits in three ways: as
+command-line arguments, in a series of @emph{headers} on standard input,
+and through a designated special file descriptor (@pxref{SPC}).
 
 @subsection Command-line Arguments
 @cindex Command-line arguments
@@ -1313,8 +1314,8 @@ is the string @code{conduit}. This argument will always be present when
 the conduit is run from ColdSync.
 
 	The second argument is either the string @file{fetch}, for Fetch
-conduits, or the string @code{dump}, for Dump conduits (@pxref{Conduit
-Flavors}).
+conduits, the string @code{dump}, for Dump conduits, or the string
+@file{sync}, for Sync conduits. (@pxref{Conduit Flavors}).
 
 @subsection Standard Input
 @cindex Standard input
@@ -1433,6 +1434,16 @@ where @var{creator} is the preference's four-character creator, @var{ID}
 is its numerical identifier (decimal), and @var{length} is the length of
 the preference data following the header (decimal).
 
+@item SPCPipe
+
+@cindex SPCPipe
+@cindex SPC
+@cindex Serialized Procedure Call
+
+	The @code{SPCPipe} header specifies the number (decimal) of an
+open file descriptor. This file descriptor may be used for SPC
+communications (@pxref{SPC}).
+
 @end table
 
 	Other headers may be passed to the conduit, so the conduit
@@ -1444,7 +1455,7 @@ should be prepared to handle them.
 to a conduit, the last value sent is the authoritative one. It is an
 error to send more than one @code{Daemon} or @code{Version} header.
 
-@node Conduit Output, Conduit Flavors, Conduit Input, Specification
+@node Conduit Output, SPC, Conduit Input, Specification
 @comment  node-name,  next,  previous,  up
 @section Conduit Output
 
@@ -1481,15 +1492,76 @@ exit status of the conduit, i.e., success or failure.
 	Only 2@i{yz}, 4@i{yz}, and 5@i{yz} status codes may be used for
 the exit status.
 
-@node Conduit Flavors, Status Codes, Conduit Output, Specification
+@node SPC, Conduit Flavors, Conduit Output, Specification
+@comment  node-name,  next,  previous,  up
+@section SPC
+
+@cindex SPC
+@cindex Serialized Procedure Call
+	The Serialized Procedure Call (SPC) is a protocol that allows a
+Sync conduit to communicate with the Palm. A Sync conduit is passed an
+@code{SPCPipe} header that gives the number of a file descriptor over
+which it can communicate via SPC (@pxref{Predefined Headers}).
+
+	SPC is similar in spirit to RPC (Remote Procedure Call): the
+conduit sends an SPC request over the SPC file descriptor, and receives
+a response.
+
+	SPC requests and responses have the same form:
+@example
+	unsigned short op;
+	unsigned short status;
+	unsigned long len;
+	@i{// @code{len} bytes of data}
+@end example
+
+where @code{op} is an opcode indicating which operation to perform;
+@code{status} indicates whether the operation was successful or not;
+@code{len} gives the length of the data following the header.
+
+	Supported values for @code{op} are given by the @var{SPCOP_*}
+constants in @file{spc.h} in the ColdSync distribution. For known values
+for @code{status}, see the @var{SPCERR_*} constants in that file.
+
+	All numeric values are given in network byte order. A
+@code{short} is 16 bits long; a @code{long} is 32 bits long.
+
+	@code{status} is ignored in a request packet.
+
+	In a response packet, @code{op} is the opcode of the request.
+
+	The following SPC operations are currently defined:
+
+@itemize @bullet
+@item @code{NOP}
+	No-op. This does nothing, and is mainly useful as a connectivity
+test. The response to a @code{NOP} has 0 bytes of data.
+
+@item @code{DBINFO}
+	Get database information. Returns a @code{struct dlp_dbinfo},
+similar to those returned by the @code{dlpReadDBList} request, except
+that the SPC request returns the copy that ColdSync has already fetched,
+so it does not involve extra communication with the Palm over a slow
+serial connection.
+
+@item @code{DLPC}
+	This is the most powerful SPC request. The data for a
+@code{DLPC} request is a raw DLP request that will be sent to the Palm.
+The response is the raw response, as received from the Palm.
+
+@end itemize
+
+@node Conduit Flavors, Status Codes, SPC, Specification
 @comment  node-name,  next,  previous,  up
 @section Conduit Flavors
 
-	There are currently two conduit flavors: Fetch and Dump.
+	There are currently three conduit flavors: Fetch, Dump, and
+Sync.
 
 @menu
 * Fetch Conduits::              Conduits that run before the main sync
 * Dump Conduits::               Conduits that run after the main sync
+* Sync conduits::               Conduits that run during the main sync
 @end menu
 
 @node Fetch Conduits, Dump Conduits, Conduit Flavors, Conduit Flavors
@@ -1502,7 +1574,7 @@ Fetch conduit is to create or modify the backup copy of a database
 before ColdSync compares it to the copy on the Palm. The conduit may,
 for instance, add new records to be uploaded to the Palm.
 
-@node Dump Conduits,  , Fetch Conduits, Conduit Flavors
+@node Dump Conduits, Sync conduits, Fetch Conduits, Conduit Flavors
 @comment  node-name,  next,  previous,  up
 @subsection Dump Conduits
 
@@ -1517,6 +1589,21 @@ of some other application.
 database. If necessary, however, it may modify the database. For
 instance, a Dump conduit for the Palm Mail application may send out
 every message in the Outbox, then delete it from the database.
+
+@node Sync conduits,  , Dump Conduits, Conduit Flavors
+@comment  node-name,  next,  previous,  up
+@subsection Sync conduits
+
+@cindex Sync conduits
+	Sync conduits run during the main sync. As of this writing, the
+Sync conduits for a database are run immediately after the built-in
+generic conduit for that database has run. However, in a future version
+of ColdSync, the built-in generic conduit will be a special instance of
+a Sync conduit.
+
+	Sync conduits have the unique property that they run while
+ColdSync is connected to the Palm, and so may communicate with it by
+using the SPC protocol (@pxref{SPC}).
 
 @node Status Codes,  , Conduit Flavors, Specification
 @comment  node-name,  next,  previous,  up
@@ -1794,6 +1881,11 @@ constant.
 
 	A four-letter string that identifies the type of data contained
 in a resource, e.g. executable code, bitmap images, menu entries, etc.
+
+@item Serialized Procedure Call (SPC)
+
+	A protocol that allows a Sync conduit to send DLP requests to
+the Palm.
 
 @item Status code
 
