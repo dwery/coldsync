@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.7 1999-09-04 20:52:35 arensb Exp $
+# $Id: Makefile.in,v 1.8 1999-09-09 05:53:30 arensb Exp $
 
 # XXX - Explicitly write .c.o , .cc.o and executable targets:
 # different compilers have different default rules, and I don't want
@@ -42,17 +42,28 @@ MKDEP =		@MKDEP@
 COMPAT =	@COMPAT@
 COMPATOBJS =	@COMPATOBJS@
 
-SRCS =		PConnection.c \
-		util.c \
-		pack.c \
-		slp.c \
-		cmp.c \
-		padp.c \
-		dlp.c \
-		dlp_cmd.c \
-		palm_errno.c \
-		pdb.c \
-		coldsync.c \
+# SRCS =		PConnection.c \
+# 		util.c \
+# 		pack.c \
+# 		slp.c \
+# 		cmp.c \
+# 		padp.c \
+# 		dlp.c \
+# 		dlp_cmd.c \
+# 		palm_errno.c \
+# 		pdb.c \
+# 		coldsync.c \
+# 		archive.c \
+# 		backup.c \
+# 		restore.c \
+# 		install.c \
+# 		config.c \
+# 		handledb.c \
+# 		log.c \
+# 		conduit.c \
+# 		GenericConduit.cc \
+# 		${COMPAT}
+SRCS =		coldsync.c \
 		archive.c \
 		backup.c \
 		restore.c \
@@ -64,17 +75,28 @@ SRCS =		PConnection.c \
 		GenericConduit.cc \
 		${COMPAT}
 
-OBJS =		PConnection.o \
-		util.o \
-		pack.o \
-		slp.o \
-		cmp.o \
-		padp.o \
-		dlp.o \
-		dlp_cmd.o \
-		palm_errno.o \
-		pdb.o \
-		coldsync.o \
+# OBJS =		PConnection.o \
+# 		util.o \
+# 		pack.o \
+# 		slp.o \
+# 		cmp.o \
+# 		padp.o \
+# 		dlp.o \
+# 		dlp_cmd.o \
+# 		palm_errno.o \
+# 		pdb.o \
+# 		coldsync.o \
+# 		archive.o \
+# 		backup.o \
+# 		restore.o \
+# 		install.o \
+# 		config.o \
+# 		handledb.o \
+# 		log.o \
+# 		conduit.o \
+# 		GenericConduit.o \
+# 		${COMPATOBJS}
+OBJS =		coldsync.o \
 		archive.o \
 		backup.o \
 		restore.o \
@@ -86,18 +108,22 @@ OBJS =		PConnection.o \
 		GenericConduit.o \
 		${COMPATOBJS}
 
-HEADERS =	PConnection.h \
-		util.h \
-		pack.h \
-		slp.h \
-		cmp.h \
-		padp.h \
-		dlp.h \
-		dlp_cmd.h \
-		palm_types.h \
-		palm_errno.h \
-		pdb.h \
-		coldsync.h \
+# HEADERS =	PConnection.h \
+# 		util.h \
+# 		pack.h \
+# 		slp.h \
+# 		cmp.h \
+# 		padp.h \
+# 		dlp.h \
+# 		dlp_cmd.h \
+# 		palm_types.h \
+# 		palm_errno.h \
+# 		pdb.h \
+# 		coldsync.h \
+# 		archive.h \
+# 		conduit.h \
+# 		GenericConduit.hh
+HEADERS =	coldsync.h \
 		archive.h \
 		conduit.h \
 		GenericConduit.hh
@@ -111,17 +137,21 @@ CLEAN =		coldsync *.o *.bak *~ core *.core
 DISTCLEAN =	Makefile .depend
 SPOTLESS =
 
+# XXX - Figure out where to put this. Also, allow for -R flag.
+LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
+LIBPDB =	-L${top_srcdir}/libpdb -lpdb
+
 # Explicitly say how things are to be compiled: the default varies
 # between systems.
 
 CC =		@CC@
 CXX =		@CXX@
 DEFINES =	@DEFS@
-INCLUDES =	-I. -I${top_srcdir}
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
 CPPFLAGS =	${DEFINES} ${INCLUDES}
 CFLAGS =	@CFLAGS@ ${CPPFLAGS}
 CXXFLAGS =	${CFLAGS}
-LIBS =		@LIBS@
+LIBS =		@LIBS@ ${LIBPCONN} ${LIBPDB}
 LDFLAGS =	@LDFLAGS@ ${LIBS}
 
 .SUFFIXES:	.c .o .cc
