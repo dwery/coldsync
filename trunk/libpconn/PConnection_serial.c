@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.13 2000-12-13 16:58:43 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.14 2000-12-15 07:25:58 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -15,8 +15,6 @@
  * Then, the part of Connect() that sets the speed can just call
  * pconn->io_setspeed(). This, in turn, accepts a speed of 0 as "as fast as
  * possible".
- * Obviously, the USB and network versions of io_setspeed() should just
- * return 0 for anything.
  */
 #include "config.h"
 #include <stdio.h>
@@ -38,6 +36,7 @@ extern void cfmakeraw(struct termios *t);
 
 static int find_available_speeds(int fd);
 static inline int bps_entry(const udword bps);
+static int setspeed(struct PConnection *pconn, int speed);
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -305,7 +304,8 @@ serial_accept(struct PConnection *pconn)
 	tcspeed = speeds[speed_ix].tcspeed;
 
 	/* Change the speed */
-	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
+/*  	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0) */
+	if ((err = setspeed(pconn, tcspeed)) < 0)
 	{
 		fprintf(stderr, _("Error trying to set speed"));
 		return -1;
@@ -350,55 +350,6 @@ serial_select(struct PConnection *p,
 				     : select(p->fd+1, NULL, &fds, NULL, tvp);
 }
 
-static int
-serial_setspeed(struct PConnection *pconn, int speed)
-{
-	int err;
-	struct termios term;
-
-	err = tcgetattr(pconn->fd, &term);
-	if (err < 0)
-	{
-		perror("tcgetattr");
-		return -1;
-	}
-
-	err = cfsetispeed(&term, speed);
-	if (err < 0)
-	{
-		perror("cfsetispeed");
-		return -1;
-	}
-
-	err = cfsetospeed(&term, speed);
-	if (err < 0)
-	{
-		perror("cfsetospeed");
-		return -1;
-	}
-				/* XXX - Instead of syncing at a constant
-				 * speed, should figure out the fastest
-				 * speed that the serial port will support.
-				 */
-
-	err = tcsetattr(pconn->fd, TCSANOW, &term);
-	if (err < 0)
-	{
-		perror("tcsetattr");
-		return -1;
-	}
-
-#if defined(__FreeBSD__)
-	/* XXX - For some reason, under FreeBSD, when syncing with xcopilot
-	 * (pseudo-ttys), no communication occurs after this point unless
-	 * this sleep() is present.
-	 */
-	sleep(1);
-#endif	/* __FreeBSD__ */
-
-	return 0;
-}
-
 int
 pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 {
@@ -437,7 +388,6 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 	pconn->io_accept = &serial_accept;
 	pconn->io_close = &serial_close;
 	pconn->io_select = &serial_select;
-	pconn->io_setspeed = &serial_setspeed;
 	pconn->io_drain = &serial_drain;
 	pconn->io_private = 0;
 
@@ -470,13 +420,63 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 	cfsetospeed(&term, B9600);
 
 	cfmakeraw(&term);		/* Make it raw */
+	/* XXX - Error-checking */
 	tcsetattr(pconn->fd, TCSANOW, &term);
 					/* Make it so */
+	/* XXX - Error-checking */
 
 	if (prompt)
 		printf(_("Please press the HotSync button.\n"));
 
 	return pconn->fd;
+}
+
+/* XXX - This is just the old serial_setspeed() (aka io_setspeed) with a
+ * new name. Is it worth keeping this as a separate function?
+ */
+static int
+setspeed(struct PConnection *pconn, int speed)
+{
+	int err;
+	struct termios term;
+
+	err = tcgetattr(pconn->fd, &term);
+	if (err < 0)
+	{
+		perror("tcgetattr");
+		return -1;
+	}
+
+	err = cfsetispeed(&term, speed);
+	if (err < 0)
+	{
+		perror("cfsetispeed");
+		return -1;
+	}
+
+	err = cfsetospeed(&term, speed);
+	if (err < 0)
+	{
+		perror("cfsetospeed");
+		return -1;
+	}
+
+	err = tcsetattr(pconn->fd, TCSANOW, &term);
+	if (err < 0)
+	{
+		perror("tcsetattr");
+		return -1;
+	}
+
+#if defined(__FreeBSD__)
+	/* XXX - For some reason, under FreeBSD, when syncing with xcopilot
+	 * (pseudo-ttys), no communication occurs after this point unless
+	 * this sleep() is present.
+	 */
+	sleep(1);
+#endif	/* __FreeBSD__ */
+
+	return 0;
 }
 
 /* This is for Emacs's benefit:
