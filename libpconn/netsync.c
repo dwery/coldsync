@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.15 2001-10-18 01:35:20 arensb Exp $
+ * $Id: netsync.c,v 1.16 2001-10-30 15:41:45 arensb Exp $
  */
 
 #include "config.h"
@@ -63,10 +63,6 @@ int net_trace = 0;		/* Debugging level for NetSync */
  *	udword len;
  *	ubyte data[];		// 'len' bytes of data
  * };
- */
-/* XXX - Could these be CMP 2.0? When answering this question, might want
- * to keep in mind the underlying protocol, the one with the (other) XIDs,
- * implemented by netsync_read() and netsync_write().
  */
 /* XXX - http://hcirisc.cs.binghamton.edu/pipermail/pilot-unix/2001-July/004238.html
  * also mentions the following packet:
