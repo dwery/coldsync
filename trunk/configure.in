@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.73 2000-05-30 17:48:10 arensb Exp $
+dnl # $Id: configure.in,v 1.74 2000-06-03 06:56:42 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -316,6 +316,7 @@ AC_STRUCT_TIMEZONE
 ## Checks for library functions.
 AC_CHECK_FUNCS(getopt \
 	memcpy \
+	mkstemp \
 	select \
 	rename \
 	strchr \
