@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.37 2002-07-04 21:03:27 azummo Exp $
+ * $Id: PConnection_usb.c,v 1.38 2002-11-26 00:15:00 azummo Exp $
  */
 
 #include "config.h"
@@ -384,7 +384,6 @@ pconn_usb_open(PConnection *pconn,
 		/* Initialize the SLP part of the PConnection */
 		if (slp_init(pconn) < 0)
 		{
-			free(pconn);
 			return -1;
 		}
 

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.2 2002-11-23 17:21:58 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.3 2002-11-26 00:15:00 azummo Exp $
  */
 
 #include "config.h"
@@ -100,6 +100,11 @@ struct usb_data {
  * by the connection.
  */
 #define usbRequestVendorGetConnectionInfo		0x03
+
+/* Required on some PalmOS 4.0 devices. Unknown meaning.
+ */
+#define usbRequestVendorUnknown				0x04
+
 
 typedef struct {
 	unsigned short	numPorts;
@@ -294,7 +299,6 @@ usb_accept(PConnection *pconn)
 		return -1;
 	}
 
-printf("usb_accept done\n");
 	return 0;
 }
 
@@ -368,8 +372,99 @@ pconn_libusb_open(PConnection *pconn,
 	struct usb_bus *bus;
 	struct usb_device *dev;
 
+
+	/* Set the methods used by the USB connection */
+	pconn->io_bind		= &usb_bind;
+	pconn->io_read		= &usb_read;
+	pconn->io_write		= &usb_write;
+	pconn->io_connect	= &usb_connect;
+	pconn->io_accept	= &usb_accept;
+	pconn->io_close		= &pconn_usb_close;
+	pconn->io_select	= &usb_select;
+	pconn->io_drain		= &usb_drain;
+
+	u = pconn->io_private = malloc(sizeof(struct usb_data));
+	if (!u)
+		return -1;
+
+	bzero((void *) pconn->io_private, sizeof(struct usb_data));
+
+	/*
+	 *  Prompt for the Hot Sync button now, as the USB bus
+	 *  enumerator won't create the underlying device we want to
+	 *  open until that happens.  The act of starting the hot sync
+	 *  operation on the PDA logically plugs it into the USB
+	 *  hub port, where it's noticed and enumerated.
+	 */
+	if (pconn->flags & PCONNFL_PROMPT)
+		printf(_("Please press the HotSync button.\n"));
+
+	/*
+	 *  We've got to loop trying to open the USB device since
+	 *  you'll get an ENXIO until the device has been inserted
+	 *  on the USB bus.
+	 */
+
+	usb_init();
+
+	dev = NULL;
+	for (i = 0; i < 30; i++)
+	{
+		struct usb_bus *busses;
+
+		usb_find_busses();
+		usb_find_devices();
+
+		busses = usb_get_busses();
+
+		for (bus = busses; bus; bus = bus->next) {
+			for (dev = bus->devices; dev; dev = dev->next)
+			{
+				if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
+					dev->descriptor.idProduct == 0x0100) 
+						break;
+						
+				if (dev->descriptor.idVendor == PALM_VENDOR_ID)
+					break;
+
+				if (dev->descriptor.idVendor == SONY_VENDOR_ID)
+					break;
+			}
+		}
+
+		if (dev)
+			break;
+
+		sleep(1);
+	}
+
+	/*
+	 *  Open the control endpoint of the USB device.  We'll use this
+	 *  to figure out if the device in question is the one we are
+	 *  interested in and understand, and then to configure it in
+	 *  preparation of doing I/O for the actual hot sync operation.
+	 */
+	if (!dev || !(u->dev = usb_open(dev))) {
+		fprintf(stderr, _("%s: Can't open USB device.\n"),
+			"pconn_libusb_open");
+		if (dev)
+			perror("open");
+
+		free(u);
+		u = pconn->io_private = NULL;
+
+		return -1;
+	}
+
+	/* Choice the default protocol */
+
 	if (protocol == PCONN_STACK_DEFAULT)
-		pconn->protocol = PCONN_STACK_FULL;
+	{
+		if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID)
+			pconn->protocol = PCONN_STACK_FULL;
+		else
+			pconn->protocol = PCONN_STACK_NET;
+	}
 	else
 		pconn->protocol = protocol;
 
@@ -381,7 +476,6 @@ pconn_libusb_open(PConnection *pconn,
 	    case PCONN_STACK_FULL:
 		/* Initialize the SLP part of the PConnection */
 		if (slp_init(pconn) < 0) {
-			free(pconn);
 			return -1;
 		}
 
@@ -422,101 +516,6 @@ pconn_libusb_open(PConnection *pconn,
 		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol */
-		return -1;
-	}
-
-	/* Set the methods used by the USB connection */
-	pconn->io_bind = &usb_bind;
-	pconn->io_read = &usb_read;
-	pconn->io_write = &usb_write;
-	pconn->io_connect = &usb_connect;
-	pconn->io_accept = &usb_accept;
-	pconn->io_close = &pconn_usb_close;
-	pconn->io_select = &usb_select;
-	pconn->io_drain = &usb_drain;
-
-	u = pconn->io_private = malloc(sizeof(struct usb_data));
-	if (!u)
-		return -1;
-
-	bzero((void *) pconn->io_private, sizeof(struct usb_data));
-
-	/*
-	 *  Prompt for the Hot Sync button now, as the USB bus
-	 *  enumerator won't create the underlying device we want to
-	 *  open until that happens.  The act of starting the hot sync
-	 *  operation on the Visor logically plugs it into the USB
-	 *  hub port, where it's noticed and enumerated.
-	 */
-	if (pconn->flags & PCONNFL_PROMPT)
-		printf(_("Please press the HotSync button.\n"));
-
-	/*
-	 *  We've got to loop trying to open the USB device since
-	 *  you'll get an ENXIO until the device has been inserted
-	 *  on the USB bus.
-	 */
-
-	usb_init();
-
-	dev = NULL;
-	for (i = 0; i < 30; i++)
-	{
-		struct usb_bus *busses;
-
-		usb_find_busses();
-		usb_find_devices();
-
-		busses = usb_get_busses();
-
-		for (bus = busses; bus; bus = bus->next) {
-			for (dev = bus->devices; dev; dev = dev->next)
-			{
-				if (dev->descriptor.idVendor == 0x082d &&
-					dev->descriptor.idProduct == 0x0100) 
-						break;
-			}
-		}
-
-		if (dev)
-			break;
-
-		sleep(1);
-	}
-
-#if 0
-
-	/*
-	 *  If we've enabled trace for I/O, then poke the USB kernel
-	 *  driver to turn on the minimal amount of tracing.  This can
-	 *  fail if the kernel wasn't built with UGEN_DEBUG defined, so
-	 *  we just ignore any error which might occur.
-	 */
-	IO_TRACE(1)
-		i = 1;
-	else
-		i = 0;
-	(void) ioctl(usb_ep0, USB_SETDEBUG, &i);
-#endif
-
-	/*
-	 *  Open the control endpoint of the USB device.  We'll use this
-	 *  to figure out if the device in question is the one we are
-	 *  interested in and understand, and then to configure it in
-	 *  preparation of doing I/O for the actual hot sync operation.
-	 */
-	if (!dev || !(u->dev = usb_open(dev))) {
-		fprintf(stderr, _("%s: Can't open USB device.\n"),
-			"pconn_usb_open");
-		if (dev)
-			perror("open");
-
-		free(u);
-		u = pconn->io_private = NULL;
-
-		dlp_tini(pconn);
-		padp_tini(pconn);
-		slp_tini(pconn);
 		return -1;
 	}
 
@@ -614,7 +613,7 @@ pconn_libusb_open(PConnection *pconn,
 
 	if (u->hotsync_ep < 0) {
 		fprintf(stderr,
-			_("%s: Could not find HotSync endpoint on Visor.\n"),
+			_("%s: Could not find HotSync endpoint on your PDA.\n"),
 			"PConnection_usb");
 		usb_close(u->dev);
 		free((void *)u);
@@ -626,11 +625,32 @@ pconn_libusb_open(PConnection *pconn,
 		return -1;
 	}
 
+	/* Required for PalmOS 4.0 devices */
+	
+	if (dev->descriptor.idVendor == PALM_VENDOR_ID ||
+		dev->descriptor.idVendor == SONY_VENDOR_ID)
+	{
+
+		ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+			usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+
+		if (ret < 0)
+			perror(_("usb_control_msg(usbRequestVendorUnknown) 1 failed"));
+
+		ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
+			usbRequestVendorUnknown, 0, 0, (char *)usbresponse, 0x14, 5000);
+
+		if (ret < 0)
+			perror(_("usb_control_msg(usbRequestVendorUnknown) 2 failed"));
+	}
+
+
 	ret = usb_control_msg(u->dev, USB_TYPE_VENDOR | USB_RECIP_ENDPOINT | 0x80,
 		usbRequestVendorGetBytesAvailable, 0, 5, (char *)usbresponse, 2, 5000);
 
 	if (ret < 0)
 		perror(_("usb_control_msg(usbRequestVendorGetBytesAvailable) failed"));
+
 
 	IO_TRACE(2) {
 		if (ret > 0) {
