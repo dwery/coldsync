@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.32 2001-04-01 07:15:32 arensb Exp $
+ * $Id: lexer.l,v 2.32.4.1 2001-07-26 03:42:09 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -154,6 +154,7 @@ ID		[-a-zA-Z_0-9]
 "directory"	{ KEYWORD(DIRECTORY);	}
 "forward"	{ KEYWORD(FORWARD);	}
 "listen"	{ KEYWORD(LISTEN);	}
+"usb_m50x"	{ KEYWORD(USB_M50X);	}
 "net"		{ KEYWORD(NET);	}
 "network"	{ KEYWORD(NET);		/* Synonym */	}
 "path"		{ KEYWORD(PATH);	}
