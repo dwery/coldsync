@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.9 2001-03-29 05:39:09 arensb Exp $
+ * $Id: spc.c,v 2.10 2001-07-30 07:09:58 arensb Exp $
  */
 
 #include "config.h"
@@ -67,7 +67,7 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 {
 	int err;
 
-	SYNC_TRACE(5)
+	SYNC_TRACE(7)
 	{
 		fprintf(stderr, "* Inside spc_send(%d, (%d), %ld))\n",
 			header->op, header->status, header->len);
