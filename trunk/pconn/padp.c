@@ -8,7 +8,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: padp.c,v 1.2 1999-02-21 08:15:03 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
@@ -347,7 +347,6 @@ if (len >= 1024)
 		}
 		if (err < 0)
 			return err;		/* Error */
-fprintf(stderr, "slp_read returned %d\n", err);
 
 		/* Parse the ACK packet */
 		rptr = ack_buf;
