@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.9 1999-11-09 06:24:12 arensb Exp $
+ * $Id: coldsync.h,v 1.10 1999-11-20 05:14:46 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -329,7 +329,7 @@ extern listen_block *new_listen_block();
 extern void free_listen_block(listen_block *l);
 extern conduit_block *new_conduit_block();
 extern void free_conduit_block(conduit_block *c);
-extern int Connect(struct PConnection *pconn, const char *name);
+extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
 extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
@@ -344,17 +344,16 @@ extern int InstallNewFiles(struct PConnection *pconn,
 			   char *newdir,
 			   Bool deletep);
 extern void usage(int argc, char *argv[]);
-extern int parse_args(int argc, char *argv[]);
 extern void print_version(void);
 extern void set_debug_level(const char *str);
-extern int load_config();
+/*  extern int load_config(); */	/* XXX - Obsolete */
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
 extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
 extern int append_dbentry(struct Palm *palm,
 			  struct pdb *pdb);
 extern int get_config(int argc, char *argv[]);
-
+extern int add_to_log(char *msg);
 
 #endif	/* _coldsync_h_ */
 
