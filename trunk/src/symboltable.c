@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.c,v 1.5 2002-11-13 12:09:04 azummo Exp $
+ * $Id: symboltable.c,v 1.6 2003-06-26 20:54:36 azummo Exp $
  *
  * This file implements the symbol table, as used in the .coldsyncrc
  * parser. No, it's not terribly sophisticated, because we're likely
@@ -98,7 +98,7 @@ new_symbol(const char *key, const char *value)
 	}
 
 	MISC_TRACE(7)
-		fprintf(stderr, "\treturning %p\n", retval);
+		fprintf(stderr, "\treturning %p\n", (void *)retval);
 	return retval;
 }
 
@@ -110,7 +110,7 @@ free_symbol(struct symbol *sym)
 {
 	MISC_TRACE(7)
 		fprintf(stderr, "Inside free_symbol(%p == %s)\n",
-			sym, (sym == NULL ? "(nil)" : sym->key));
+			(void *) sym, (sym == NULL ? "(nil)" : sym->key));
 
 	if (sym == NULL)
 		return;
@@ -179,7 +179,7 @@ put_symbol(const char *name, const char *value)
 	MISC_TRACE(6)
 	{
 		fprintf(stderr, "Inside put_symbol(%s,%s)\n", name, value);
-		fprintf(stderr, "\tsymtab == %p\n", symtab);
+		fprintf(stderr, "\tsymtab == %p\n", (void *) symtab);
 	}
 
 	/* Automatically set an env var with the same name */
@@ -194,7 +194,8 @@ put_symbol(const char *name, const char *value)
 	{
 		MISC_TRACE(7)
 			fprintf(stderr, "\toldsym == %p; last == %p\n",
-				oldsym, last);
+				(void *) oldsym,
+				(void *) last);
 
 		if (strcmp(oldsym->key, name) == 0)
 			/* Found it */
@@ -203,7 +204,8 @@ put_symbol(const char *name, const char *value)
 	}
 	MISC_TRACE(7)
 		fprintf(stderr, "\tlast: oldsym == %p; last == %p\n",
-			oldsym, last);
+			(void *) oldsym,
+			(void *) last);
 
 	/* Add the new symbol to the list */
 	if (oldsym == NULL)
