@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.130 2001-07-30 07:32:29 arensb Exp $
+dnl # $Id: configure.in,v 1.130.2.1 2001-10-09 01:13:04 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -53,9 +53,12 @@ AC_SUBST(VERSION)
 AC_SUBST(EDITION)
 
 # This is almost certainly a Good Thing
-# XXX - Shouldn't CPPFLAGS make its way into "Make.rules"?
-LDFLAGS="-L${prefix}/lib"
-CPPFLAGS="-I${prefix}/include"
+# But if the user wants to install in /usr, then gcc can get confused
+# as to which include files are system ones and which are local.
+if test x"$prefix" != x"/usr"; then
+	: ${LDFLAGS="-L${prefix}/lib"}
+	: ${CPPFLAGS="-I${prefix}/include"}
+fi
 
 ## Checks for programs.
 
@@ -380,6 +383,7 @@ AC_CHECK_FUNCS(fpurge \
 	getopt \
 	memcpy \
 	memset \
+	bcopy \
 	bzero \
 	mkstemp \
 	select \
@@ -510,6 +514,14 @@ else
 	PERLDIR=""
 fi
 AC_SUBST(PERLDIR)
+
+# Specify location where conduits are installed.
+CONDUITDIR=\${LIBEXECDIR}/coldsync
+AC_ARG_WITH(conduits,
+[  --with-conduits=DIR     Conduit installation directory [LIBEXECDIR/coldsync]],
+    CONDUITDIR=$with_conduits)
+AC_SUBST(CONDUITDIR)
+AC_DEFINE_UNQUOTED(CONDUITDIR, "${CONDUITDIR}")
 
 AC_MSG_CHECKING([for socks behind the sofa])
 AC_MSG_RESULT([no])
