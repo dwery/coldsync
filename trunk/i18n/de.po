@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ColdSync 1.1.4\n"
+"Project-Id-Version: ColdSync 2.3.1\n"
 "POT-Creation-Date: 2002-06-21 16:10+0200\n"
-"PO-Revision-Date: 2000-03-27 16:57+02:00\n"
+"PO-Revision-Date: 2002-07-12 08:31+02:00\n"
 "Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
 "Language-Team:  de <de@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -198,7 +198,7 @@ msgstr "    WITH_USB: Mit USB-Unterstützung\n"
 #: ../libpdb/pdb.c:546
 #, c-format
 msgid "\"%.*s\" record 0x%08lx has length 0.\n"
-msgstr "\"%s\" Datensatz 0x%08lx hat Länge 0.\n"
+msgstr "\"%.*s\" Datensatz 0x%08lx hat Länge 0.\n"
 
 #: ../src/coldsync.c:1414
 #, c-format
@@ -316,7 +316,7 @@ msgstr "%s: %d: Kann keine Einstellungen der Liste hinzufügen."
 #: ../src/parser.y:590
 #, fuzzy, c-format
 msgid "%s: %d: Cwd already defined."
-msgstr "%s: %d: Warnung: Mehrfache Angabe der Geschwindigkeit."
+msgstr "%s: %d: Aktuelles Arbeitsverzeichnis bereits definiert."
 
 #: ../src/parser.y:301
 #, c-format
@@ -409,7 +409,7 @@ msgstr "%s: Kann keinen neuen Datensatz an die Datenbank anhängen: %d."
 #: lexer.l:382
 #, fuzzy, c-format
 msgid "%s: Can't append to qstring."
-msgstr "%s: Kann q-Zeichenkette nicht kopieren."
+msgstr "%s: Kann nicht an q-Zeichenkette anhängen."
 
 #: ../src/backup.c:695
 #, c-format
@@ -506,7 +506,7 @@ msgstr "%s: Kann \"%s\" nicht öffnen.\n"
 #: ../src/GenericConduit.cc:991 ../src/GenericConduit.cc:1003
 #, c-format
 msgid "%s: Can't open \"%s\": %d."
-msgstr "%s: Kann \"%s\" nicht öffnen: %d: %d."
+msgstr "%s: Kann \"%s\" nicht öffnen: %d."
 
 #: ../libpconn/PConnection_usb.c:514
 #, c-format
@@ -577,7 +577,7 @@ msgstr "%s: Kann nicht auf Ende der Datei positionieren."
 #: ../src/parser.y:909
 #, fuzzy, c-format
 msgid "%s: Can't set option.\n"
-msgstr "%s: Kann %s nicht öffnen\n"
+msgstr "%s: Kann Option nicht setzen.\n"
 
 #: ../src/conduit.c:390
 #, c-format
@@ -608,7 +608,7 @@ msgstr "%s: Kann Backup-Datei nicht schreiben."
 #: ../libpdb/pdb.c:659
 #, c-format
 msgid "%s: Can't write record data for \"%.*s\".\n"
-msgstr "%s: Kann Datensatz für \"%.*\" nicht schreiben.\n"
+msgstr "%s: Kann Datensatz für \"%.*s\" nicht schreiben.\n"
 
 #: ../libpdb/pdb.c:564
 #, c-format
@@ -675,7 +675,7 @@ msgstr "%s: Konnte keinen Endpunkt für HotSync auf dem Visor finden.\n"
 #: ../src/conduit.c:1538
 #, fuzzy, c-format
 msgid "%s: Couldn't change directory to \"%s\"\n"
-msgstr "%s: Kann Verzeichnis \"%s\" nicht öffnen."
+msgstr "%s: Kann nicht in Verzeichnis \"%s\" wechseln\n"
 
 #: ../src/restore.c:118
 #, c-format
@@ -777,7 +777,7 @@ msgstr ""
 #: ../src/conduit.c:1757
 #, fuzzy, c-format
 msgid "%s: No home directory for %s.\n"
-msgstr "%s: Kann Verzeichnis \"%s\" nicht öffnen."
+msgstr "%s: Kein HOME-Verzeichnis für \"%s\".\n"
 
 #: ../src/config.c:1243 ../src/config.c:1279 ../src/config.c:1301
 #: ../src/pref.c:220 ../src/pref.c:278 lexer.l:506 lexer.l:740
@@ -876,17 +876,17 @@ msgstr "%s: Fehler beim Sender des SPC Antwortkopfes."
 #: ../src/conduit.c:1774
 #, fuzzy, c-format
 msgid "%s: execv(%s) failed and returned %d."
-msgstr "%s: excevp(%s) gescheitert, Rückgabewert %d."
+msgstr "%s: execv(%s) gescheitert, Rückgabewert %d."
 
 #: ../src/conduit.c:1761
 #, fuzzy, c-format
 msgid "%s: getpwuid(%d) failed.\n"
-msgstr "%s: realloc gescheitert\n"
+msgstr "%s: getpwuid(%d) gescheitert\n"
 
 #: ../src/config.c:1367 lexer.l:767
 #, c-format
 msgid "%s: realloc(%d) failed."
-msgstr "%s: realloc gescheitert."
+msgstr "%s: realloc(%d) gescheitert."
 
 #: ../src/conduit.c:743
 #, c-format
@@ -1204,7 +1204,7 @@ msgstr "Kann %s nicht lesen."
 #: ../libpdb/pdb.c:337
 #, c-format
 msgid "Can't read AppInfo block for \"%.*s\".\n"
-msgstr "Kann AppInfo-Block für \"%.*s\" nicht lesen: %d.\n"
+msgstr "Kann AppInfo-Block für \"%.*s\" nicht lesen.\n"
 
 #: ../src/spalm.c:280
 msgid "Can't read NetSync info."
@@ -1222,7 +1222,7 @@ msgstr "Fehler: Kann Länge der Seriennummer nicht lesen."
 #: ../libpdb/pdb.c:1990
 #, c-format
 msgid "Can't read record %d in \"%.*s\".\n"
-msgstr "Kann Datensatz %d in \"%.*s\" nicht lesen: %d.\n"
+msgstr "Kann Datensatz %d in \"%.*s\" nicht lesen.\n"
 
 #: ../src/backup.c:469
 #, c-format
@@ -1246,7 +1246,7 @@ msgstr ""
 #: ../libpdb/pdb.c:1849
 #, c-format
 msgid "Can't read resource %d in \"%.*s\".\n"
-msgstr "Kann Ressource %d in \"%.*s\" nicht lesen: %d.\n"
+msgstr "Kann Ressource %d in \"%.*s\" nicht lesen.\n"
 
 #: ../src/backup.c:302
 #, c-format
@@ -1270,7 +1270,7 @@ msgstr "Kann die Seriennummer nicht lesen."
 #: ../libpdb/pdb.c:347
 #, c-format
 msgid "Can't read sort block for \"%.*s\".\n"
-msgstr "Kann Sort-Block für \"%.*s\" nicht lesen: %d.\n"
+msgstr "Kann Sort-Block für \"%.*s\" nicht lesen.\n"
 
 #: ../src/coldsync.c:159 ../src/coldsync.c:164 ../src/coldsync.c:169
 #, c-format
@@ -1663,7 +1663,7 @@ msgstr "Problem"
 #: ../src/restore.c:176 ../src/restore.c:187 ../src/restore.c:192
 #, fuzzy
 msgid "Restore"
-msgstr "Restore"
+msgstr "Wiederherstellen"
 
 #: ../src/restore.c:151
 #, c-format
@@ -1760,7 +1760,7 @@ msgstr "Zeit abgelaufen"
 #: ../src/parser.y:32
 #, fuzzy
 msgid "Too many errors. Aborting."
-msgstr "%s: Zu viele offene Dateien. Abbruch."
+msgstr "Zu viele Fehler. Abbruch."
 
 #: ../src/coldsync.c:2410
 #, c-format
@@ -2065,9 +2065,8 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "\"%s\" is a read-only database. Not uploading."
 #~ msgstr "\"%s\" kann nur gelesen werden, wird nicht hinaufgeladen."
 
-#, fuzzy
 #~ msgid "\tError(1) near \"%s\"."
-#~ msgstr "\tFehler bei \"%s\"."
+#~ msgstr "\tFehler(1) bei \"%s\"."
 
 #~ msgid "Can't read AppInfo block.\n"
 #~ msgstr "Kann AppInfo-Block nicht lesen.\n"
@@ -2081,53 +2080,41 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "Can't read sort block.\n"
 #~ msgstr "Kann Sort-Block nicht lesen.\n"
 
-#, fuzzy
 #~ msgid "Lost connection with Palm."
-#~ msgstr "Keine Verbindung zum Palm\n"
+#~ msgstr "Verbindung zum Palm verloren\n"
 
-#, fuzzy
 #~ msgid "Lost connection to Palm"
-#~ msgstr "Keine Verbindung zum Palm\n"
+#~ msgstr "Verbindung zum Palm verloren\n"
 
-#, fuzzy
 #~ msgid "Can't open log file \"%s\".\n"
-#~ msgstr "Fehler: Kann %s nicht öffnen.\n"
+#~ msgstr "Kann Log-Datei \"%s\" nicht öffnen.\n"
 
-#, fuzzy
 #~ msgid "DlpWriteUserInfo failed: %d.\n"
-#~ msgstr "DlpWriteUserInfo gescheitert: %d\n"
+#~ msgstr "DlpWriteUserInfo gescheitert: %d.\n"
 
-#, fuzzy
 #~ msgid "Can't reserve file descriptor %d.\n"
-#~ msgstr "Fehler: Kann Dateidescriptor %d nicht belegen\n"
+#~ msgstr "Kann Dateidescriptor %d nicht reservieren.\n"
 
-#, fuzzy
 #~ msgid "%s: Can't open \"%s\": %d.\n"
-#~ msgstr "%s: Kann \"%s\" nicht öffnen: %d\n"
+#~ msgstr "%s: Kann \"%s\" nicht öffnen: %d.\n"
 
-#, fuzzy
 #~ msgid "%s: Warning: Can't delete record 0x%08lx: %d.\n"
-#~ msgstr "%s: Warnung: Kann Datensatz 0x%08lx nicht löschen: %d\n"
+#~ msgstr "%s: Warnung: Kann Datensatz 0x%08lx nicht löschen: %d.\n"
 
-#, fuzzy
 #~ msgid "%s: Can't open install directory.\n"
 #~ msgstr "%s: Kann Installationsverzeichnis nicht öffnen.\n"
 
-#, fuzzy
 #~ msgid "no port specified.\n"
-#~ msgstr "Fehler: Kein Port angegeben.\n"
+#~ msgstr "Kein Port angegeben.\n"
 
-#, fuzzy
 #~ msgid "%s: can't open \"%s/\".\n"
-#~ msgstr "%s: Kann \"%s\" nicht öffnen.\n"
+#~ msgstr "%s: Kann \"%s/\" nicht öffnen.\n"
 
-#, fuzzy
 #~ msgid "%s error: Can't clean up database: %d.\n"
-#~ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d\n"
+#~ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d.\n"
 
-#, fuzzy
 #~ msgid "%s error: Can't open \"%s\".\n"
-#~ msgstr "%s Fehler: Kann \"%s\" nicht öffnen\n"
+#~ msgstr "%s Fehler: Kann \"%s\" nicht öffnen.\n"
 
 #~ msgid "%s error: Can't write backup file.\n"
 #~ msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
@@ -2138,19 +2125,15 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "%s: realloc failed\n"
 #~ msgstr "%s: realloc gescheitert\n"
 
-#, fuzzy
 #~ msgid "Error: Can't open \"%s\"\n"
-#~ msgstr "Fehler: Kann %s nicht öffnen.\n"
+#~ msgstr "Fehler: Kann \"%s\" nicht öffnen\n"
 
-#, fuzzy
 #~ msgid "can't open connection.\n"
-#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+#~ msgstr "Kann Verbindung nicht öffnen.\n"
 
-#, fuzzy
 #~ msgid "Warning: Error backing up \"%s\".\n"
-#~ msgstr "\"%s: Fehler beim Heraufladen von \"%s\"\n"
+#~ msgstr "Warnunf: Fehler beim Sichern von \"%s\".\n"
 
-#, fuzzy
 #~ msgid "Error loading configuration.\n"
 #~ msgstr "Fehler beim Laden der Konfiguration.\n"
 
@@ -2169,25 +2152,20 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "Error: no port specified.\n"
 #~ msgstr "Fehler: Kein Port angegeben.\n"
 
-#, fuzzy
 #~ msgid "parse error"
-#~ msgstr "Kein Fehler"
+#~ msgstr "Fehler beim Parsen"
 
-#, fuzzy
 #~ msgid "syntax error: cannot back up"
-#~ msgstr "%s Fehler: Kann Backup-Datei nicht schreiben.\n"
+#~ msgstr "Syntax-Fehler: Kann nicht zurück"
 
-#, fuzzy
 #~ msgid "Can't copy a new record\n"
-#~ msgstr "Kann neuen Datensatz nicht kopieren.\n"
+#~ msgstr "Kann neuen Datensatz nicht kopieren\n"
 
-#, fuzzy
 #~ msgid "Error: Unknown host: \"%s\"\n"
-#~ msgstr "Fehler bei \"%s\"\n"
+#~ msgstr "Fehler: Unbekannter Rechner: \"%s\"\n"
 
-#, fuzzy
 #~ msgid "%s: Out of memory"
-#~ msgstr "%s: Kein Speicher mehr.\n"
+#~ msgstr "%s: Kein Speicher mehr"
 
 #~ msgid ""
 #~ "Warning: can't set the speed you requested (%ld bps).\n"
@@ -2202,13 +2180,11 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "Can't get per-Palm config.\n"
 #~ msgstr "Kann die Palm-spezifischen Einstellungen nicht bekommen.\n"
 
-#, fuzzy
 #~ msgid "Error: incorrect userid on Palm.\n"
-#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+#~ msgstr "Fehler: Falsche Benutzer-ID auf dem Palm.\n"
 
-#, fuzzy
 #~ msgid "Error: incorrect username on Palm.\n"
-#~ msgstr "Fehler: Kann Verbindung nicht öffnen.\n"
+#~ msgstr "Fehler: Falscher Benutzername auf Palm.\n"
 
 #~ msgid "Can't get system/user/NetSync info\n"
 #~ msgstr "Kann System/Benutzer/NetSync-Information nicht bekommen.\n"
@@ -2246,9 +2222,8 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "Not synced\n"
 #~ msgstr "Nicht synchronisiert\n"
 
-#, fuzzy
 #~ msgid "%s: error sending SPC response to conduit.\n"
-#~ msgstr "Fehler beim Aufräumen der Conduits.\n"
+#~ msgstr "%s: Fehler beim Sender der SPC-Antwort an das Conduit.\n"
 
 # Message deliberately not translated. This is intended for the maintainer, and 
 # he should be receiving the *original* message
@@ -2273,17 +2248,14 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "Can't initialize conduits\n"
 #~ msgstr "Kann Conduits nicht initialisieren.\n"
 
-#, fuzzy
 #~ msgid "%s: %d: Unknown conduit flavor %d\n"
-#~ msgstr "%s: Zeile %d: Unbekannter Conduit-Typ %d\n"
+#~ msgstr "%s: %d: Unbekannter Conduit-Typ %d\n"
 
-#, fuzzy
 #~ msgid "\tMangled header near \"%s\"\n"
-#~ msgstr "Fehlendes Argument nach \"%s\"\n"
+#~ msgstr "\tKaputter Header bei \"%s\"\n"
 
-#, fuzzy
 #~ msgid "\tMalformed conduit argument near \"%s\".\n"
-#~ msgstr "Option \"%s\" nicht erkannt.\n"
+#~ msgstr "\tFehlerhaftes Conduit-Argument bei \"%s\".\n"
 
 #~ msgid "Unknown conduit flavor: %d"
 #~ msgstr "Unbekannter Conduit-Flavor: %d"
@@ -2294,6 +2266,5 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgid "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"
 #~ msgstr "!!! Ein Conduit hat nicht funktioniert! Programmabbruch\n"
 
-#, fuzzy
 #~ msgid "%s: Error deleting record 0x%08x: %d\n"
-#~ msgstr "Fehler beim Übertragen von Datensatz 0x%08lx: %d\n"
+#~ msgstr "%s: Fehler beim Löschen von Datensatz 0x%08lx: %d\n"
