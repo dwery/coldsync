@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.6 1999-11-04 10:48:17 arensb Exp $
+ * $Id: archive.c,v 1.7 1999-11-09 06:22:54 arensb Exp $
  */
 
 #include "config.h"
@@ -32,6 +32,7 @@
 #include <time.h>		/* For time() */
 #include <errno.h>		/* For errno */
 #include "pconn/pconn.h"
+#include "coldsync.h"
 #include "archive.h"
 
 /* arch_create
@@ -45,7 +46,7 @@ arch_create(char *fname,
 {
 	int err;
 	int fd;				/* File descriptor; will be returned */
-	char fnamebuf[MAXPATHLEN];	/* Name of the archive file */
+	char fnamebuf[MAXPATHLEN+1];	/* Name of the archive file */
 	ubyte headerbuf[ARCH_HEADERLEN];	/* Archive header to write */
 	ubyte *wptr;			/* Pointer into buffers, for writing */
 
@@ -54,33 +55,15 @@ arch_create(char *fname,
 	{
 		/* 'fname' is an absolute pathname, so just use that */
 		strncpy(fnamebuf, fname, MAXPATHLEN-1);
-		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
+		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
 	} else {
 		/* 'fname' is a relative pathname; take it to be
 		 * relative to ~/.palm/archive; construct that.
 		 */
-		/* XXX - Use 'archivedir' from coldsync.h */
-
-		char *home;	/* User's home directory */
-		int len;	/* Length of filename so far */
-
-		if ((home = getenv("HOME")) == NULL)
-		{
-			fprintf(stderr, "arch_create: can't get $HOME\n");
-			perror("getenv");
-			return -1;
-		}
-
-		strncpy(fnamebuf, home, MAXPATHLEN-1);
-		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
-		len = strlen(fnamebuf);
-
-		/* Append "/.palm/archive/" to the pathname so far */
-		strncat(fnamebuf, "/.palm/archive/", MAXPATHLEN-len-1);
-		len = strlen(fnamebuf);
-
-		/* Append 'fname' to the pathname so far */
-		strncat(fnamebuf, fname, MAXPATHLEN-len-1);
+		strncpy(fnamebuf, archivedir, MAXPATHLEN);
+		strncat(fnamebuf, "/", MAXPATHLEN-strlen(fnamebuf));
+		strncat(fnamebuf, fname, MAXPATHLEN-strlen(fnamebuf));
+		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
 	}
 
 	/* Open the file for writing; create it if it exists, truncate
@@ -132,40 +115,22 @@ arch_open(char *fname,
 {
 	int err;
 	int fd;				/* Return value: file descriptor */
-	char fnamebuf[MAXPATHLEN];	/* Name of the archive file */
+	char fnamebuf[MAXPATHLEN+1];	/* Name of the archive file */
 
 	/* Construct the name of the archive file */
 	if (fname[0] == '/')
 	{
 		/* 'fname' is an absolute pathname, so just use that */
-		strncpy(fnamebuf, fname, MAXPATHLEN-1);
-		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
+		strncpy(fnamebuf, fname, MAXPATHLEN);
+		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
 	} else {
 		/* 'fname' is a relative pathname; take it to be
 		 * relative to ~/.palm/archive; construct that.
 		 */
-		/* XXX - This should use 'archivedir' from coldsync.h */
-
-		char *home;	/* User's home directory */
-		int len;	/* Length of filename so far */
-
-		if ((home = getenv("HOME")) == NULL)
-		{
-			fprintf(stderr, "arch_create: can't get $HOME\n");
-			perror("getenv");
-			return -1;
-		}
-
-		strncpy(fnamebuf, home, MAXPATHLEN-1);
-		fnamebuf[MAXPATHLEN-1] = '\0';	/* Terminate the string */
-		len = strlen(fnamebuf);
-
-		/* Append "/.palm/archive/" to the pathname so far */
-		strncat(fnamebuf, "/.palm/archive/", MAXPATHLEN-len-1);
-		len = strlen(fnamebuf);
-
-		/* Append 'fname' to the pathname so far */
-		strncat(fnamebuf, fname, MAXPATHLEN-len-1);
+		strncpy(fnamebuf, archivedir, MAXPATHLEN);
+		strncat(fnamebuf, "/", MAXPATHLEN-strlen(fnamebuf));
+		strncat(fnamebuf, fname, MAXPATHLEN-strlen(fnamebuf));
+		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
 	}
 
 	/* Open the file according to the mode given in 'flags'. The
