@@ -34,6 +34,8 @@
   <System/SystemMgr.h>
 - Add functions InitPalmLog(), AddToPalmLog(char *), WritePalmLog(),
   to make logging work more or less the way you expect.
+- AddToPalmLog() should probably also use printf() syntax, for
+  convenience.
 - Make the *_TRACE stuff go to a separate debugging log file.
 - It should be possible to sync two Palms with each other if you have
   two cradles, or over the net.
@@ -54,6 +56,15 @@
   depending on whether the database exists on the desktop or not. The
   generic conduit (and possibly the backup) should probably be written
   in C++ for easy subclassing.
+- Add code to check ~/.palm/backup to look for databases that aren't
+  on the Palm. Not sure what to do about those, though: if the user
+  deliberately deleted them, don't want them restored, but if the Palm
+  had to be cold-reset, then you _do_ want them restored.
+	Under what circumstances do you want to restore a database
+  that exists on the desktop but not the Palm? (example: sysadmin
+  setting up a default configuration for a user.) Should this be
+  manual or automatic? Would it be a good idea to always check for
+  extraneous databases and ask the user what to do about them?
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
@@ -107,13 +118,20 @@
   copy on the desktop. But if that database includes deleted records,
   they'll be marked as deleted in the backup. Presumably they should
   be deleted. Or will this fix itself the next time you do a sync?
+	The Right Thing might be to have two modes: a simple backup
+  just backs everything up to a directory, without any changes (also,
+  it shouldn't reset the sync flags!). You can then restore from this
+  directory. The other, more common mode, does a complete backup of a
+  database if it doesn't exist on the desktop; then it archives the
+  archived records and deletes the expunged ones.
 - Directory structure:
 	~/.palm/<id>/backup	Backup of what's on the Palm
 	~/.palm/<id>/archive	Old archived stuff
 	~/.palm/<id>/install	Stuff to install at next sync
   where <id> is the Palm's unique ID. This is fine for the Palm III,
-  but what about older ones (PalmPilot et al.)? How does one create
-  one?
+  but what about older ones (PalmPilot et al.)? Can the viewer ID be
+  used for this? How does one create one? Generate a random number and
+  hope for the best?
 - Add the vc-mode RCS/CVS Id headers everywhere.
 - Use syslog for logging.
 - Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
@@ -121,3 +139,19 @@
   "dlp_cmd.c", to replace the blocks of
   get_ubyte()/get_uword()/get_udword() and
   put_ubyte()/put_uword()/put_udword() calls.
+- For starters, define a conduit map that does an ordinary sync for
+  everything. Make SlowSync() and FastSync() part of the generic
+  conduit. Then add PalmOverwritesDesktop(), DesktopOverwritesPalm()
+  and Backup() conduits. Put all this in a config file.
+- Conduits should have pre-fetch and post-dump hooks, with C and Perl
+  libraries to simplify things. This should make a number of common
+  things easier to write. The pre-fetch hook reads, say, a file, and
+  returns a list of records; the post-dump hook takes a list of
+  records and does something to them, e.g., dump them to a file.
+	This way, if you want to keep "ToDoDB" in sync with ~/TODO,
+  you just need to provide a hook that'll read ~/TODO and convert it
+  to a list of records; and a hook that'll take a list of records and
+  write them to ~/TODO. This is easy, and allows you to use the
+  generic conduit instead of having to write your own.
+- Conduits need a method (hook) to determine whether two records are
+  identical.
