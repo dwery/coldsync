@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.49 2001-11-12 00:59:36 arensb Exp $
+.\" $Id: coldsync.8,v 1.50 2001-12-07 14:51:48 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -372,6 +372,7 @@ listen serial {
 	device: /dev/palm;
 	protocol: default;
 	speed: 57600;
+	transient;
 }
 
 listen usb {			# BSD only
@@ -396,6 +397,13 @@ directive specifies the speed at which to sync, in bytes per second.
 If omitted or set to 0, the speed defaults to the speed suggested by
 the Palm, or the fastest speed supported by the serial port, whichever
 is slower.
+.Pp
+The
+.Li transient
+directive indicates that the device may not exist when
+.Nm ColdSync
+starts, but will be created later on, when the Palm connects to the
+workstation. Use this if you are using devfs.
 .Pp
 .Li listen usb
 is used to sync a Handspring Visor using native USB mode. This only
