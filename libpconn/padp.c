@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.2 1999-11-04 10:45:37 arensb Exp $
+ * $Id: padp.c,v 1.3 1999-11-27 05:45:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -28,12 +28,17 @@
 #  include <strings.h>			/* For bzero() under AIX */
 #endif	/* HAVE_STRINGS_H */
 #include <stdlib.h>			/* For free() */
-#include <pconn/palm_types.h>
-#include <pconn/palm_errno.h>
-#include <pconn/slp.h>
-#include <pconn/padp.h>
-#include <pconn/util.h>
-#include <pconn/PConnection.h>
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
+
+#include "pconn/palm_types.h"
+#include "pconn/palm_errno.h"
+#include "pconn/slp.h"
+#include "pconn/padp.h"
+#include "pconn/util.h"
+#include "pconn/PConnection.h"
 
 int padp_trace = 0;		/* Debugging level for PADP */
 #define PADP_TRACE(n)	if (padp_trace >= (n))
@@ -181,8 +186,8 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 		/* XXX - I'm not sure what to do in this case. Drop
 		 * the packet and wait for a new one?
 		 */
-		fprintf(stderr, "##### I just got an unexpected ACK. "
-			"I'm confused!\n");
+		fprintf(stderr, _("##### I just got an unexpected ACK. "
+			"I'm confused!\n"));
 		return -1;
 	    case PADP_FRAGTYPE_TICKLE:
 		/* Tickle packets aren't acknowledged, but the connection
@@ -195,7 +200,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 		return -1;
 	    default:
 		/* XXX */
-		fprintf(stderr, "##### Unexpected packet type %d\n",
+		fprintf(stderr, _("##### Unexpected packet type %d\n"),
 			header.type);
 		return -1;
 	};
@@ -232,6 +237,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 
 		/* Send the ACK as a SLP packet */
 		err = slp_write(pconn, outbuf, PADP_HEADER_LEN);
+		/* XXX - dump the ACK */
 		if (err < 0)
 			return err;	/* An error has occurred */
 
@@ -419,7 +425,9 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 				 * case. Drop the packet and wait for a new
 				 * one?
 				 */
-				fprintf(stderr, "##### I just got an unexpected ACK. I'm confused!\n");
+				fprintf(stderr,
+					_("##### I just got an unexpected "
+					  "ACK. I'm confused!\n"));
 				return -1;
 			    case PADP_FRAGTYPE_TICKLE:
 				/* Tickle packets aren't acknowledged, but
@@ -432,14 +440,19 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 				return -1;
 			    default:
 				/* XXX */
-				fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
+				fprintf(stderr,
+					_("##### Unexpected packet type "
+					  "%d\n"),
+					header.type);
 				return -1;
 			};
 
 			/* If it's new, then I'm confused */
 			if (header.flags & PADP_FLAG_FIRST)
 			{
-				fprintf(stderr, "##### I wasn't expecting a new fragment. I'm confused!\n");
+				fprintf(stderr,
+					_("##### I wasn't expecting a new "
+					  "fragment. I'm confused!\n"));
 				/* palm_errno = XXX */
 				return -1;
 			}
@@ -450,7 +463,9 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 			if (header.size != cur_offset)
 			{
 				/* XXX */
-				fprintf(stderr, "##### Bad offset: wanted %d, got %d\n",
+				fprintf(stderr,
+					_("##### Bad offset: wanted %d, got "
+					  "%d\n"),
 					cur_offset, header.size);
 				return -1;
 			}
@@ -463,7 +478,8 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 			       inlen-PADP_HEADER_LEN);
 			PADP_TRACE(7)
 				fprintf(stderr,
-					"MP: Copies this fragment to inbuf+%d\n",
+					"MP: Copied this fragment to "
+					"inbuf+%d\n",
 					cur_offset);
 
 			/* Update cur_offset */
@@ -607,11 +623,16 @@ padp_write(struct PConnection *pconn,
 			if (err == 0)
 			{
 				/* select() timed out */
-				fprintf(stderr, "Write timeout. Attempting to resend.\n");
+				fprintf(stderr,
+					_("Write timeout. Attempting to "
+					  "resend.\n"));
 				continue;
 			}
 			PADP_TRACE(6)
 				fprintf(stderr, "about to slp_write()\n");
+			PADP_TRACE(6)
+				debug_dump(stderr, "PADP >>>", outbuf,
+					   PADP_HEADER_LEN+frag_len);
 
 			/* Send 'outbuf' as a SLP packet */
 			err = slp_write(pconn, outbuf,
@@ -632,7 +653,8 @@ padp_write(struct PConnection *pconn,
 			if (err == 0)
 			{
 				/* select() timed out */
-				fprintf(stderr, "Timeout. Attempting to resend\n");
+				fprintf(stderr,
+					_("Timeout. Attempting to resend\n"));
 				continue;
 			}
 			err = slp_read(pconn, &ack_buf, &ack_len);
@@ -651,10 +673,16 @@ padp_write(struct PConnection *pconn,
 			ack_header.flags = get_ubyte(&rptr);
 			ack_header.size = get_uword(&rptr);
 
+			PADP_TRACE(7)
+				debug_dump(stderr, "ACK <<<", rptr,
+					   ack_header.size);
+
 			switch (ack_header.type)
 			{
 			    case PADP_FRAGTYPE_DATA:
-				fprintf(stderr, "##### Got an unexpected data packet. I'm confused!\n");
+				fprintf(stderr,
+					_("##### Got an unexpected data "
+					  "packet. I'm confused!\n"));
 				return -1;
 			    case PADP_FRAGTYPE_ACK:
 				/* An ACK. Just what we wanted */
@@ -664,14 +692,15 @@ padp_write(struct PConnection *pconn,
 				 * the connection doesn't time out as long
 				 * as they keep coming in. Just ignore it.
 				 */
-				attempt--;	/* XXX - Hack! */
+				attempt--;	/* Hack! */
 				continue;
 			    case PADP_FRAGTYPE_ABORT:
 				palm_errno = PALMERR_ABORT;
 				return -1;
 			    default:
 				/* XXX */
-				fprintf(stderr, "##### Unexpected packet type %d\n",
+				fprintf(stderr,
+					_("##### Unexpected packet type %d\n"),
 					ack_header.type);
 				return -1;
 			};
@@ -682,8 +711,8 @@ padp_write(struct PConnection *pconn,
 			 */
 			if (pconn->slp.last_xid != pconn->padp.xid)
 			{
-				fprintf(stderr, "##### Expected XID 0x%02x, "
-					"got 0x%02x\n",
+				fprintf(stderr, _("##### Expected XID 0x%02x, "
+					"got 0x%02x\n"),
 					pconn->padp.xid, pconn->slp.last_xid);
 				return -1;
 			}
