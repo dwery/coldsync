@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.66 2000-12-10 21:45:59 arensb Exp $
+ * $Id: coldsync.c,v 1.67 2000-12-11 09:09:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -171,6 +171,7 @@ main(int argc, char *argv[])
 	pdb_trace	= 0;
 	misc_trace	= 0;
 	io_trace	= 0;
+	net_trace	= 0;
 
 #if HAVE_GETTEXT
 	/* Set things up so that i18n works. The constants PACKAGE and
