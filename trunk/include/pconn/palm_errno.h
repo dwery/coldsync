@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.4 2001-09-08 01:10:01 arensb Exp $
+ * $Id: palm_errno.h,v 1.5 2001-09-08 01:12:06 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -28,8 +28,6 @@ typedef enum {
 } palmerr_t;
 
 extern palmerr_t palm_errno;		/* Error code */
-extern const char *palm_errlist[];	/* List of error messages */
-extern const int palm_numerrs;		/* Length of palm_errlist */
 
 extern const char *palm_strerror(const palmerr_t palm_errno);
 
