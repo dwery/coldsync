@@ -165,6 +165,17 @@ If you have any updated information, please send it in to the
 maintainer (arensb@ooblick.com). My testing pool isn't as large as it
 once was.
 
+Windows NT:
+	(as of ColdSync 1.4.5)
+	To the best of my knowledge, ColdSync compiles and runs under
+	Windows NT with the Cygwin tools.
+
+	However, ColdSync was written as a Unix tool. Windows users
+	have the HotSync desktop tools from Palm, which work quite
+	well. If ColdSync works under Windows, that's wonderful, but
+	I'm not going to let Windows compatibility get in the way of
+	Unix development.
+
 	       ----------------------------------------
 
 BUGS:
