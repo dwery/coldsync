@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.44 2002-03-18 08:26:20 arensb Exp $
+ * $Id: lexer.l,v 2.45 2002-03-18 10:06:45 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -720,7 +720,7 @@ qstr_append(const char *data,		/* Data to append */
 				fprintf(stderr, "Creating initial qstring, "
 					"newsize == %d\n",
 					newsize);
-			if ((newqstring = malloc(newsize)) == NULL)
+			if ((newqstring = (char *) malloc(newsize)) == NULL)
 			{
 				Error(_("%s: Out of memory."),
 					"qstr_append");
@@ -746,7 +746,8 @@ qstr_append(const char *data,		/* Data to append */
 			 * for 'data', rounded up to the nearest Kb.
 			 */
 			newsize = (qstr_len + len + 1 + 1023) & (~0x03ff);
-			if ((newqstring = realloc(qstring, newsize)) == NULL)
+			if ((newqstring = (char *) realloc(qstring, newsize))
+			    == NULL)
 			{
 				Error(_("%s: realloc(%d) failed."),
 				      "qstr_append", newsize);
