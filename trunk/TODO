@@ -83,3 +83,8 @@
 - Write a utility to just dump the contents of a pdb file.
 - Add CTRACE() macro for debugging, like the *_TRACE() ones.
 - Turn the pdb stuff into its own library.
+- Config: not all printfs recognize %q (or else the types printed out
+  as %q are really long longs). Should either figure out how to get
+  the size of those variables ('off_t's, generally) or get rid of
+  those printf() statements.
+- Test with xcopilot (and real Palm) under Linux and other OSes.
