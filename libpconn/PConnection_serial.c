@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.38 2002-07-04 21:03:27 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.39 2002-07-04 21:23:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -378,7 +378,7 @@ serial_accept(PConnection *pconn)
 		tcspeed = speeds[speed_ix].tcspeed;
 
 		/* Change the speed */
-		if (pconn->flags & PCONNFL_MODEM) {
+		if (pconn->flags & PCONNFL_NOCHANGESPEED) {
 			IO_TRACE(5)
 				fprintf(stderr, "This is a modem, so not changing speed.\n");
 		} else {
@@ -656,7 +656,7 @@ pconn_serial_open(PConnection *pconn,
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
 
 	/* Set initial rate. 9600 bps required for handshaking */
-	if (pconn->flags & PCONNFL_MODEM) {
+	if (pconn->flags & PCONNFL_NOCHANGESPEED) {
 		IO_TRACE(5)
 			fprintf(stderr, "This is a modem, so not setting initial speed.\n");
 	} else {

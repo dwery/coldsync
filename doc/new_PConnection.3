@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: new_PConnection.3,v 1.4 2002-07-04 21:03:26 azummo Exp $
+.\" $Id: new_PConnection.3,v 1.5 2002-07-04 21:23:11 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -88,7 +88,7 @@ is the bitwise-or of
 ,
 .Dv PCONNFL_PROMPT .
 and
-.Dv PCONNFL_MODEM .
+.Dv PCONNFL_NOCHANGESPEED .
 If
 .Dv PCONN_TRANSIENT
 has been specified, the device may or may not exist at any given time,
@@ -104,7 +104,7 @@ will prompt the user to press the HotSync button on the cradle, after
 the device has been opened.
 .Pp
 If
-.Dv PCONN_MODEM
+.Dv PCONN_NOCHANGESPEED
 has been specified,
 .Nm
 will not attept to change the change the speed of the connection that

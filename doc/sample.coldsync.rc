@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.6 2002-07-04 21:03:26 azummo Exp $
+# $Id: sample.coldsync.rc,v 1.7 2002-07-04 21:23:11 azummo Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -38,7 +38,7 @@ listen serial {
 # 
 # listen serial {
 #	device: stdin;
-#	modem;
+#	nochangespeed;
 # }
 
 # If you're syncing a Visor over USB under FreeBSD, use "usb" instead

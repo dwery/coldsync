@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.65 2002-07-04 21:03:27 azummo Exp $
+ * $Id: parser.y,v 2.66 2002-07-04 21:23:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -93,7 +93,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token SPEED
 %token SNUM
 %token TRANSIENT
-%token MODEM
+%token NOCHANGESPEED
 %token TYPE
 %token UNSAVED
 
@@ -337,13 +337,13 @@ listen_directive:
 		/* Mark this device as being transient */
 		cur_listen->flags |= LISTENFL_TRANSIENT;
 	}
-	| MODEM semicolon
+	| NOCHANGESPEED semicolon
 	{
 		PARSE_TRACE(4)
 			fprintf(stderr, "This is a modem device.\n");
 
 		/* Mark this device as being a modem */
-		cur_listen->flags |= LISTENFL_MODEM;
+		cur_listen->flags |= LISTENFL_NOCHANGESPEED;
 	}
 	| error
 	{

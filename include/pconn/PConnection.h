@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.31 2002-07-04 21:03:27 azummo Exp $
+ * $Id: PConnection.h,v 1.32 2002-07-04 21:23:11 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -76,7 +76,7 @@ typedef enum {
 #define PCONNFL_PROMPT		0x0002	/* Prompt the user to press the
 					 * HotSync button.
 					 */
-#define PCONNFL_MODEM		0x0004	/* This is a modem, don't change speeds */
+#define PCONNFL_NOCHANGESPEED	0x0004	/* This is a modem, don't change speeds */
 
 /* Misc defines */
 #define PCONN_NET_CONNECT_RETRIES 10	/* connect() retries */
