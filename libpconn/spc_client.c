@@ -2,13 +2,13 @@
  *
  * Functions to manipulate Palm connections via SPC.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * This file was modified by Fred Gylys-Colwell
+ * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.1.2.1 2001-10-09 01:41:25 arensb Exp $
+ * $Id: spc_client.c,v 1.1.2.2 2001-10-11 02:52:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

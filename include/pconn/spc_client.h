@@ -2,13 +2,13 @@
  *
  * Allows a conduit to connect to the Palm device using SPC.
  *
- *	Copyright (C) 1999-2001, Andrew Arensburger.
+ *	Copyright (C) 2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * This file was modified by Fred Gylys-Colwell
+ * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.h,v 1.1.2.1 2001-10-09 01:41:24 arensb Exp $
+ * $Id: spc_client.h,v 1.1.2.2 2001-10-11 02:52:31 arensb Exp $
  */
 #ifndef _spc_client_h_
 #define _spc_client_h_
