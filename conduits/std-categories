@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: std-categories,v 3.3 2000-11-28 01:43:20 arensb Exp $
+# $Id: std-categories,v 3.4 2000-12-10 01:13:25 arensb Exp $
 #
 # This is a ColdSync Sync conduit for synchronizing the categories between
 # a database on the Palm and one on the desktop.
@@ -80,6 +80,11 @@ for (my $i = 0; $i < NumCategories; $i++)
 	my $Dcategory;
 
 	print STDERR "category $i: [$category->{name}]\n" if $DEBUG;
+
+	# XXX - This logic for finding the corresponding category on the
+	# desktop is too primitive: if the Palm category is unchanged, then
+	# we need to find either a clean category on the desktop with the
+	# same name, or a modified category with the same ID.
 
 	if ($category->{name} eq "")
 	{
