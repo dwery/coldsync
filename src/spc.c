@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.10 2001-07-30 07:09:58 arensb Exp $
+ * $Id: spc.c,v 2.11 2001-10-30 15:44:50 arensb Exp $
  */
 
 #include "config.h"
@@ -107,7 +107,7 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 		    if (pconn == NULL)	/* Sanity check */
 			    return -1;
 
-		    err = padp_write(pconn, inbuf, header->len);
+		    err = (*pconn->dlp.write)(pconn, inbuf, header->len);
 		    SYNC_TRACE(7)
 			    fprintf(stderr,
 				    "spc_send: padp_write returned %d\n",
@@ -125,7 +125,7 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 			    return -1;
 		    }
 
-		    err = padp_read(pconn, &padp_respbuf, &padp_resplen);
+		    err = (*pconn->dlp.read)(pconn, &padp_respbuf, &padp_resplen);
 		    SYNC_TRACE(7)
 		    {
 			    fprintf(stderr,
