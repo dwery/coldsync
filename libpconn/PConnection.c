@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.8 2000-11-10 03:45:54 arensb Exp $
+ * $Id: PConnection.c,v 1.9 2000-11-18 23:55:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -18,10 +18,6 @@
 #endif	/* HAVE_LIBINTL_H */
 
 #include "pconn/PConnection.h"
-#include "src/coldsync.h"	/* XXX - Required for LISTEN_USB. This
-				 * symbol ought to be defined in a libpconn
-				 * file somewhere.
-				 */
 
 int	io_trace = 0;
 
@@ -140,7 +136,7 @@ PConnClose(struct PConnection *pconn)
 	/* XXX - Why does this hang until the Palm times out, under
 	 * FreeBSD? (But only with 'xcopilot', it appears.)
 	 */
-	MISC_TRACE(4)
+	IO_TRACE(4)
 		fprintf(stderr, "Calling io_drain()\n");
 
 	(*pconn->io_drain)(pconn);
