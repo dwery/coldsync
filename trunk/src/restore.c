@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.35 2003-09-30 20:13:49 azummo Exp $
+ * $Id: restore.c,v 2.36 2003-10-16 15:28:40 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -61,7 +61,12 @@ is_database_restorable(PConnection *pconn,
 {
 	const struct dlp_dbinfo *dbinfo = NULL;
 
+	SYNC_TRACE(6)
+		fprintf(stderr, "evaluating restorability of %s\n", pdb->name);  
+
 	if (pdb->attributes & PDB_ATTR_RO) {
+		SYNC_TRACE(6)
+			fprintf(stderr, " local database is read-only\n");  
 		/* don't even bother if the local database says it's read only. */
 		return False;
 	}
@@ -84,23 +89,28 @@ is_database_restorable(PConnection *pconn,
 	 */
 	if (dbinfo->db_flags & DLPCMD_DBFLAG_RO )
 	{
+		SYNC_TRACE(6)
+			fprintf(stderr, " remote database is read-only\n");  
 		return False;
 	}
 
-	/* Keep in mind that we're looking at restoring here. If the database
-	 * versions aren't identical it's a pretty good bet that the database
-	 * we're trying to upload _isn't_ from a backup of this particular PDA.
-	 * Trying to force it, even if flags would allow it, leads to all
-	 * sorts of problems.
+	/*
+	 * It's always a bad idea to overwrite a with an older version of
+	 * a database.
 	 */
-	if (pdb->version != dbinfo->version)
+  	 	 
+	if (pdb->version < dbinfo->version)
 	{
+		SYNC_TRACE(6)
+			fprintf(stderr, " version mismatch (local: %d, remote: %d)\n", pdb->version, dbinfo->version);
 		return False;
 	}
 
 	/* this should never happen, but it's a cheap stupidity shield */
 	if (pdb->type != dbinfo->type || pdb->creator != dbinfo->creator)
 	{
+		SYNC_TRACE(6)
+			fprintf(stderr, "creator/type mismatch\n");  
 		return False;
 	}
 
@@ -142,6 +152,8 @@ restore_file(PConnection *pconn,
 
 	if (!is_database_restorable(pconn,palm,pdb))
 	{
+		SYNC_TRACE(4)
+			fprintf(stderr, "database is not restorable\n");  
 		va_add_to_log(pconn, "%s %s - %s\n",
 			      _("Restore"), pdb->name, _("Not restorable"));
 		return 0;
@@ -149,11 +161,11 @@ restore_file(PConnection *pconn,
 
 	/* Call pdb_Upload() to install the file. Enable the force
 	 * option so that existing databases that aren't newer than
-    * the one were trying to install are wiped first.
+	 * the one were trying to install are wiped first.
 	 */
 	err = upload_database(pconn, pdb, True);
 	SYNC_TRACE(4)
-		fprintf(stderr, "pdb_Upload returned %d\n", err);  
+		fprintf(stderr, "upload_database returned %d\n", err);  
 	if (err < 0)
 	{
 		/* XXX - Ugh. Hack-ptui! */
