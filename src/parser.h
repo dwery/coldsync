@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.2 1999-11-04 10:59:27 arensb Exp $
+ * $Id: parser.h,v 2.3 1999-11-09 04:02:22 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
@@ -15,6 +15,7 @@
 #include "coldsync.h"
 #include "pconn/pconn.h"	/* For Palm types */
 
+extern int parse_trace;		/* Debugging level for config file parser */
 extern int lineno;		/* Line number */
 
 #endif	/* _parser_h_ */
