@@ -1,3 +1,6 @@
+- It'd be nice to add types to distinguish between bytes and letters,
+  and between arrays of arbitrary data and strings of characters. This
+  is for i18n and for the benefit of Japanese users and such.
 - Move the ritual_{stmt,resp} constants from "netsync.h" back to
   "netsync.c", since that's the only place they're used.
 - Document the -P <protocol> option. Add it to the usage string.
