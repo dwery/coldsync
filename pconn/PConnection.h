@@ -3,7 +3,7 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.1 1999-02-19 22:51:54 arensb Exp $
+ * $Id: PConnection.h,v 1.2 1999-02-21 08:53:15 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -12,6 +12,7 @@
 #include "palm/palm_types.h"
 #include "slp.h"
 #include "padp.h"
+#include "dlp.h"
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
@@ -19,8 +20,10 @@
  * Programs should never use the PConnection type directly.
  * Instead, everything should use the PConnHandle type, defined
  * below.
+ * This bears a superficial resemblance to a socket, but I think it's
+ * unlikely that this will ever become a real, honest-to-God socket type in
+ * the kernel.
  */
-/* XXX - It'd be way cool to turn this into an honest-to-God socket */
 struct PConnection
 {
 	/* Common part */
@@ -28,21 +31,38 @@ struct PConnection
 					 * list */
 	int fd;				/* File descriptor */
 
+	/* The HotSync protocol version number that the other end
+	 * understands. This is determined by the CMP layer, and
+	 * therefore ought to go in its part, but it's used by the
+	 * layers above it, so it goes in the common part.
+	 */
+	ubyte ver_maj;		/* Major version */
+	ubyte ver_min;		/* Minor version */
+
 	/* Protocol-dependent parts */
+
+	/* Desktop Link Protocol (DLP) */
+	struct {
+		int argv_len;	/* Current length of 'argv' */
+		struct dlp_arg *argv;
+				/* Holds arguments in a DLP response. This
+				 * is actually an array that gets
+				 * dynamically resized to hold however many
+				 * arguments there are in the response.
+				 */
+		/* XXX - Should have something here for the log */
+	} dlp;
 
 	/* Packet Assembly/Disassembly Protocol (PADP) */
 	struct {
-		ubyte xid;	/* Transaction ID. PADP sets this, and
-				 * SLP reads it when sending out a
-				 * packet.
-				 * This violates encapsulation, but I
-				 * can't think of a better way to do
-				 * it.
+		ubyte xid;	/* Transaction ID. PADP sets this, and SLP
+				 * reads it when sending out a packet. This
+				 * violates encapsulation, but I can't
+				 * think of a better way to do it.
 				 */
 		int read_timeout;
 				/* How long to wait (in 1/10ths of a
-				 * second) for a PADP packet to come
-				 * in.
+				 * second) for a PADP packet to come in.
 				 */
 	} padp;
 
@@ -51,11 +71,11 @@ struct PConnection
 		struct slp_addr local_addr;
 		struct slp_addr remote_addr;
 
-		/* The PConnection contains buffers for reading and
-		 * writing SLP data. This is partly because there
-		 * could conceivably be multiple connections (so
-		 * static variables wouldn't do), and partly because
-		 * there may be a need to un-read packets.
+		/* The PConnection contains buffers for reading and writing
+		 * SLP data. This is partly because there could conceivably
+		 * be multiple connections (so static variables wouldn't
+		 * do), and partly because there may be a need to un-read
+		 * packets.
 		 */
 		ubyte header_inbuf[SLP_HEADER_LEN];
 				/* Buffer to hold incoming headers */
@@ -72,12 +92,11 @@ struct PConnection
 				/* Buffer to hold outgoing CRCs */
 
 		ubyte last_xid;	/* The transaction ID of the last SLP
-				 * packet that was received. PADP uses
-				 * this for replies.
+				 * packet that was received. PADP uses this
+				 * for replies.
 				 * This is a gross hack that violates
-				 * encapsulation, but it's necessary
-				 * since SLP and PADP are so closely
-				 * tied.
+				 * encapsulation, but it's necessary since
+				 * SLP and PADP are so closely tied.
 				 */
 	} slp;
 };
@@ -91,3 +110,9 @@ extern int PConn_bind(int fd, struct slp_addr *addr);
 extern int PConnSetSpeed(int fd, speed_t speed);	/* XXX */
 
 #endif	/* _PConn_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
