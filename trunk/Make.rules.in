@@ -3,7 +3,14 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.11 2000-05-30 17:27:12 arensb Exp $
+# $Id: Make.rules.in,v 1.12 2000-12-02 02:42:15 arensb Exp $
+
+# Note: there aren't many portable Makefile constructs. In particular,
+# various versions of 'make' don't recognize one or more of
+#	VAR += VALUE
+#	VAR ?= DEFAULT_VALUE
+#	VAR != command
+# so don't use these.
 
 # The basics
 PACKAGE =	@PACKAGE@
