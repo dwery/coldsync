@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.4 2000-04-10 09:28:34 arensb Exp $
+ * $Id: pdb.h,v 1.5 2000-05-03 04:38:51 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -119,11 +119,8 @@ struct pdb_record
 {
 	struct pdb_record *next;	/* Next record on linked list */
 	localID offset;			/* Offset of record in file */
-	ubyte attributes;		/* Record attributes */
-		/* XXX - The record's category is the bottom nybble of the
-		 * attributes byte. Deal with this: separate them when the
-		 * record is read, combine them when it's written.
-		 */
+	ubyte flags;			/* Record flags (PDB_REC_*) */
+	ubyte category;			/* Record's category */
 	udword id;			/* Record's unique ID. Actually,
 					 * only the bottom 3 bytes are
 					 * stored in the file, but for
