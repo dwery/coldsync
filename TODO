@@ -21,6 +21,9 @@
   where, etc.
   How do you sync two heterogenous databases (e.g., ToDo.pdb and an
   XPostitNote of things to do)?
+  (A: By using an intermediate format. In this case, have a function
+  that reads XPostitNotes into a PDB, and another that takes a PDB and
+  stores it as XPostitNotes.)
 - A lot of assertion-checking would probably be a Good Thing.
 - (When ColdSync actually gets written:) Gnome and KDE support
 - Fix PADP so it can dump when writing, as well as when reading.
@@ -113,3 +116,8 @@
   one?
 - Add the vc-mode RCS/CVS Id headers everywhere.
 - Use syslog for logging.
+- Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
+  "The Practice of Programming," section 9.1). Use them in
+  "dlp_cmd.c", to replace the blocks of
+  get_ubyte()/get_uword()/get_udword() and
+  put_ubyte()/put_uword()/put_udword() calls.
