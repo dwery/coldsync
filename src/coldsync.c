@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.135 2002-04-27 18:00:07 azummo Exp $
+ * $Id: coldsync.c,v 1.136 2002-05-02 23:53:21 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -534,7 +534,7 @@ palm_Connect( void )
 	if ((pconn = new_PConnection(listen->device,
 				     listen->listen_type,
 				     listen->protocol,
-				     PCONNFL_PROMPTAFTER |
+				     PCONNFL_PROMPT |
 				     (listen->flags &
 				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
 				      0)
