@@ -29,7 +29,7 @@
 #undef pid_t
 
 /* Define to `int' if <signal.h> doesn't define return value for signal() */
-#undef RETSIGTYPE	/* int */
+#define RETSIGTYPE int
 
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 #undef size_t
@@ -107,6 +107,9 @@
 
 /* Define if you have the getopt function.  */
 #undef HAVE_GETOPT
+
+/* Define if you have the getopt_long function.  */
+#undef HAVE_GETOPT_LONG
 
 /* Define if you have the inet_aton function.  */
 #undef HAVE_INET_ATON
