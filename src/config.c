@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.77 2001-10-18 01:58:52 arensb Exp $
+ * $Id: config.c,v 1.78 2001-10-18 02:49:16 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -140,7 +140,7 @@ parse_args(int argc, char *argv[])
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
-	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:b:r:p:t:P:d:"))
+	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:p:t:P:d:"))
 	       != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
@@ -212,30 +212,6 @@ parse_args(int argc, char *argv[])
 				usage(argc, argv);
 				return -1;
 			}
-			break;
-
-		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
-			/* XXX - This option is obsolete. Remove it some
-			 * time after v1.4.6.
-			 */
-			Warn(_("The \"-b <dir>\" option is obsolete. "
-			       "Please use \"-mb <dir>\"\n"
-			       "instead."));
-			global_opts.mode = mode_Backup;
-			global_opts.do_backup = True;
-			global_opts.backupdir = optarg;
-			break;
-
-		    case 'r':	/* -r <dir>: Do a restore from <dir> */
-			/* XXX - This option is obsolete. Remove it some
-			 * time after v1.4.6.
-			 */
-			Warn(_("The \"-r <dir>\" option is obsolete. "
-			       "Please use \"-mr <dir>\"\n"
-			       "instead."));
-			global_opts.mode = mode_Restore;
-			global_opts.do_restore = True;
-			global_opts.restoredir = optarg;
 			break;
 
 		    case 'p':	/* -p <device>: Listen on serial port
@@ -760,6 +736,13 @@ usage(int argc, char *argv[])
 	/* XXX - gcc 3.0 complains that this string is longer than 509
 	 * characters, which is what ISO C89 mandates.
 	 */
+	/* XXX - Presumably the list of values should be separated from the
+	 * strings themselves. That is, use
+	 *	printf(_("\t-t <devtype>:\tPort type %s.\n"),
+	 *		"[serial|usb|net]");
+	 * so that future changes don't require translation. (Obviously,
+	 * things like "<file|dir>" should remain as they are.
+	 */
 	printf(_("Usage: %s [options] <mode> <mode args>\n"
 		 "Modes:\n"
 		 "\t-ms:\tSynchronize (default).\n"
@@ -778,7 +761,9 @@ usage(int argc, char *argv[])
 		 "\t-F:\t\tForce fast sync.\n"
 		 "\t-R:\t\tCheck ROM databases.\n"
 		 "\t-p <port>:\tListen on device <port>.\n"
-		 "\t-t <devtype>:\tPort type [serial|usb|tcp].\n"
+		 "\t-t <devtype>:\tPort type [serial|usb|net].\n"
+		 "\t-P <protocol>:\tSoftware protocol "
+			 "[default|full|simple|net].\n"
 		 "\t-s:\t\tLog error messages to syslog.\n"
 		 "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
 		 "\t-v:\t\tIncrease verbosity.\n"
