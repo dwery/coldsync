@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.16 2000-02-06 22:26:41 arensb Exp $
+ * $Id: pdb.c,v 1.17 2000-02-07 19:08:42 arensb Exp $
  */
 
 #include "config.h"
@@ -109,7 +109,8 @@ pdb_FreeResource(struct pdb_resource *rsrc)
 void
 free_pdb(struct pdb *db)
 {
-	/* XXX - Add some PDB_TRACE statements in here */
+	PDB_TRACE(7)
+		fprintf(stderr, "Inside free_pdb(0x%08lx)\n", db);
 
 	if (db == NULL)
 		/* Trivial case */
@@ -121,6 +122,9 @@ free_pdb(struct pdb *db)
 		/* It's a resource database */
 		struct pdb_resource *rsrc;
 		struct pdb_resource *next;
+
+		PDB_TRACE(8)
+			fprintf(stderr, "Freeing resource list\n"):
 
 		/* Walk the linked list, freeing as we go along */
 		for (rsrc = db->rec_index.rsrc;
@@ -141,6 +145,9 @@ free_pdb(struct pdb *db)
 		/* It's a record database */
 		struct pdb_record *rec;
 		struct pdb_record *next;
+
+		PDB_TRACE(8)
+			fprintf(stderr, "Freeing record list\n"):
 
 		/* Walk the linked list, freeing as we go along */
 		for (rec = db->rec_index.rec;
@@ -1040,7 +1047,16 @@ pdb_AppendRecord(struct pdb *db,
 	/* Check to see if the list is empty */
 	if (db->rec_index.rec == NULL)
 	{
-		/* XXX - Sanity check: db->numrecs should be 0 */
+		if (db->numrecs != 0)	/* Sanity check */
+		{
+			fprintf(stderr, _("Error: \"%s\" is in an inconstent "
+					  "state: \n"
+					  "    rec_index.rec is NULL, but "
+					  "numrecs is %d\n"),
+				db->name, db->numrecs);
+			return -1;
+		}
+
 		db->rec_index.rec = newrec;
 		newrec->next = NULL;
 
@@ -1078,7 +1094,16 @@ pdb_AppendResource(struct pdb *db,
 	/* Check to see if the list is empty */
 	if (db->rec_index.rsrc == NULL)
 	{
-		/* XXX - Sanity check: db->numrecs should be 0 */
+		if (db->numrecs != 0)	/* Sanity check */
+		{
+			fprintf(stderr, _("Error: \"%s\" is in an inconstent "
+					  "state: \n"
+					  "    rec_index.rsrc is NULL, but "
+					  "numrecs is %d\n"),
+				db->name, db->numrecs);
+			return -1;
+		}
+
 		db->rec_index.rsrc = newrsrc;
 		newrsrc->next = NULL;
 
