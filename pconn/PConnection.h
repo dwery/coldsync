@@ -3,7 +3,7 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.3 1999-02-22 10:44:44 arensb Exp $
+ * $Id: PConnection.h,v 1.4 1999-02-22 11:14:16 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -27,8 +27,6 @@
 struct PConnection
 {
 	/* Common part */
-	struct PConnection *next;	/* Next PConnection on linked
-					 * list */
 	int fd;				/* File descriptor */
 
 	/* The HotSync protocol version number that the other end
