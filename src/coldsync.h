@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.54 2001-09-07 10:05:36 arensb Exp $
+ * $Id: coldsync.h,v 1.55 2001-10-06 22:11:01 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -366,7 +366,7 @@ extern int InstallNewFiles(PConnection *pconn,
 			   Bool deletep);
 
 /* log.c */
-extern int add_to_log(const char *msg);
+extern int va_add_to_log(PConnection *pconn, const char *fmt, ...);
 
 /* parser.y */
 extern int parse_config_file(const char *fname, struct sync_config *config);
