@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.9 1999-11-27 05:53:38 arensb Exp $
+ * $Id: handledb.c,v 1.10 2000-01-13 17:50:19 arensb Exp $
  */
 
 #include "config.h"
@@ -38,6 +38,10 @@ HandleDB(struct PConnection *pconn,
 					/* Conduit for this database */
 
 	dbinfo = &(palm->dblist[dbnum]);	/* Convenience pointer */
+
+	SYNC_TRACE(1)
+		fprintf(stderr, "Syncing %s\n",
+			dbinfo->name);
 
 	if (DBINFO_ISRSRC(dbinfo))
 	{
