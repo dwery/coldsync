@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38.2.3 2001-10-11 06:34:59 arensb Exp $
+ * $Id: conduit.c,v 2.38.2.4 2001-10-11 10:04:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1352,7 +1352,7 @@ static int
 exec_from_path(const char *name, char *const argv[])
 {
 	int err = ENOENT;
-	const char *path;	/* Current path */
+	char *path;		/* Current path */
 	char *search;		/* Search path */
 	char *dir;
 
