@@ -307,3 +307,29 @@
 - The $VERSION stuff in the Perl modules doesn't handle branch
   versions: revision 1.2.3.4 will set $VERSION to "1.002", rather than
   "1.002_003_004", which might be desirable. Is it worth fixing this?
+- Look at J. D. Smith's patches for -i(nstall).
+- Try to shorten the time between <press HotSync> and the interesting
+  stuff. In particular, things like NetSync info and whatnot aren't
+  necessarily used, so they need not be retrieved every time.
+	One possibility is to figure out in advance what is needed,
+  and only download the information if it's needed.
+	Another is to use accessor functions that only download data
+  if necessary:
+
+	struct userinfo *userinfo = NULL;
+
+	int UserID()
+	{
+		if (userinfo == NULL)
+			userinfo = DownloadUserInfo();
+
+		return userinfo->id;
+	}
+
+	const char *UserName()
+	{
+		if (userinfo == NULL)
+			userinfo = DownloadUserInfo();
+
+		return userinfo->name;
+	}
