@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.7 1999-11-04 11:27:12 arensb Exp $
+ * $Id: config.c,v 1.8 1999-11-09 04:26:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -29,11 +29,13 @@
 #include <ctype.h>		/* For toupper() */
 #include "coldsync.h"
 #include "pconn/pconn.h"
-#include "parser.h"		/* For config file parser hooks */
+#include "parser.h"		/* For config file parser stuff */
 
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN	256
 #endif	/* MAXHOSTNAMELEN */
+
+#define PALMDEV		"/dev/palm"	/* Default device */
 
 extern struct config config;
 
@@ -67,16 +69,6 @@ static int get_userinfo(struct userinfo *userinfo);
  * Parse command-line arguments, and fill in the appropriate slots in
  * 'global_opts'.
  */
-/* XXX - Command-line options to add or implement:
- * -u <user>:	run as <user>
- * -i <file>:	upload (install) <file>
- * -p:		print PID to stdout, like 'amd'. Or maybe just do this by
- *		default when running in daemon mode.
- * -d <dir>:	Sync with <dir> rather than ~/.palm
- * -s <speed>:	Set sync speed.
- * -T <fname>:	Set trace file
- */
-/* XXX - This should be renamed to get_config() or something */
 int
 parse_args(int argc, char *argv[])
 {
@@ -156,9 +148,6 @@ parse_args(int argc, char *argv[])
 				 * <device>
 				 */
 			global_opts.port = optarg;
-			/* XXX - This should add a 'listen' block to
-			 * 'config'.
-			 */
 			break;
 
 		    case 'f':	/* -f <file>: Read configuration from
@@ -211,8 +200,6 @@ parse_args(int argc, char *argv[])
 					 */
 	}
 
-	/* XXX - Check for trailing arguments. What to do? Barf? */
-
 	/* Sanity checks */
 
 	/* Can't back up and restore at the same time */
@@ -241,9 +228,6 @@ parse_args(int argc, char *argv[])
 		usage(argc, argv);
 		return -1;
 	}
-	/* XXX - If username specified, ought to make sure that user
-	 * exists. Or should this be deferred until later?
-	 */
 
 	return 0;
 }
@@ -487,7 +471,6 @@ for (c = config.uninstall_q; c != NULL; c = c->next)
 }
 
 	/* By default, the host ID is its IP address. */
-	/* XXX - This should probably be configurable */
 	/* Get the hostname */
 	if ((err = gethostname(hostname, MAXHOSTNAMELEN)) < 0)
 	{
@@ -560,6 +543,455 @@ for (c = config.uninstall_q; c != NULL; c = c->next)
 	return 0;
 }
 #endif	/* 0 */
+
+/* get_config
+ * XXX - Once this is working, get rid of parse_args() and load_config()
+ * Get the initial configuration: parse command-line arguments and load the
+ * configuration file, if any.
+ * For now, this assumes standalone mode, not daemon mode.
+ */
+/* XXX - A lot of what load_palm_config() does belongs in here. In
+ * particular, this function needs to look up the current user in order to
+ * get the user's home directory in order to build the full pathname to
+ * ~/.coldsyncrc.
+ */
+/* XXX - Home directory: should look at $HOME first. Look at getpw*() entry
+ * only if $HOME isn't defined. This makes things work the way you expect
+ * when using 'su -m'.
+ */
+int
+get_config(int argc, char *argv[])
+{
+	int oldoptind;			/* Previous value of 'optind', to
+					 * allow us to figure out exactly
+					 * which argument was bogus, and
+					 * thereby print descriptive error
+					 * messages. */
+	int arg;			/* Current option */
+	char *config_fname = NULL;	/* Name of config file to read */
+	static char fname_buf[MAXPATHLEN];
+					/* Buffer in which to construct the
+					 * config file path, if not given.
+					 */
+	Bool config_fname_given;	/* Whether the user specified a
+					 * config file on the command line.
+					 */
+	struct stat statbuf;		/* For stat() */
+	char *devname = NULL;		/* Name of device to listen on */
+	struct config *user_config = NULL;
+					/* Configuration read from config
+					 * file (as opposed to what was
+					 * specified on the command line).
+					 */
+
+	/* Initialize the global options to sane values */
+	global_opts.do_backup	= False;
+	global_opts.backupdir	= NULL;
+	global_opts.do_restore	= False;
+	global_opts.restoredir	= NULL;
+
+	/* Initialize the debugging levels to 0 */
+	slp_trace	= 0;
+	cmp_trace	= 0;
+	padp_trace	= 0;
+	dlp_trace	= 0;
+	dlpc_trace	= 0;
+	sync_trace	= 0;
+	pdb_trace	= 0;
+	misc_trace	= 0;
+
+	oldoptind = optind;		/* Initialize "last argument"
+					 * index.
+					 */
+
+	/* Start by reading command-line options. */
+	config_fname_given = False;
+	while ((arg = getopt(argc, argv, ":hVSFRf:b:r:p:d:")) != -1)
+	{
+		switch (arg)
+		{
+		    case 'h':	/* -h: Print usage message and exit */
+			usage(argc,argv);
+			return -1;
+
+		    case 'V':	/* -V: Print version number and exit */
+			print_version();
+			return -1;
+
+		    case 'S':	/* -S: Force slow sync */
+			global_opts.force_slow = True;
+			break;
+
+		    case 'F':	/* -F: Force fast sync */
+			global_opts.force_fast = True;
+			break;
+
+		    case 'R':	/* -R: Consider ROM databases */
+			global_opts.check_ROM = True;
+			break;
+
+		    case 'f':	/* -f <file>: Read configuration from
+				 * <file>.
+				 */
+			config_fname = optarg;
+			config_fname_given = True;
+			break;
+
+		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
+			global_opts.do_backup = True;
+			global_opts.backupdir = optarg;
+			break;
+
+		    case 'r':	/* -r <dir>: Do a restore from <dir> */
+			global_opts.do_restore = True;
+			global_opts.restoredir = optarg;
+			break;
+
+		    case 'p':	/* -p <device>: Listen on serial port
+				 * <device>
+				 */
+			devname = optarg;
+			break;
+
+		    case 'd':	/* -d <fac>:<n>: Debugging level */
+			set_debug_level(optarg);
+			break;
+
+		    case '?':	/* Unknown option */
+			fprintf(stderr, "Unrecognized option: \"%s\"\n",
+				argv[oldoptind]);
+			usage(argc, argv);
+			return -1;
+
+		    case ':':	/* An argument required an option, but none
+				 * was given (e.g., "-u" instead of "-u
+				 * daemon").
+				 */
+			fprintf(stderr, "Missing option argument after \"%s\"\n",
+				argv[oldoptind]);
+			usage(argc, argv);
+			return -1;
+
+		    default:
+			fprintf(stderr,
+				"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
+				"to do with it. This is a bug. Please notify the maintainer.\n", arg);
+			return -1;
+			break;
+		}
+	}
+
+	/* XXX - Check for trailing arguments. If they're of the form
+	 * "FOO=bar", set the variable $FOO to value "bar". Otherwise,
+	 * complain and exit.
+	 */
+
+	if (get_userinfo(&userinfo) < 0)
+	{
+		fprintf(stderr, "Can't get user info\n");
+		return -1;
+	}
+
+	/* Config file: if a config file was specified on the command line,
+	 * use that. Otherwise, default to ~/.coldsyncrc.
+	 */
+	/* XXX - Ought to see if /etc/coldsync.common (or whatever) exists;
+	 * if it does, get site-wide defaults from there. The user's config
+	 * file overrides that, and command-line arguments override
+	 * everything, naturally.
+	 */
+	if (config_fname == NULL)
+	{
+		/* No config file specified on the command line. Construct
+		 * the full pathname to ~/.coldsyncrc in 'fname_buf'.
+		 */
+		strncpy(fname_buf, userinfo.homedir, MAXPATHLEN);
+		strncat(fname_buf, "/.coldsyncrc",
+			MAXPATHLEN - strlen(fname_buf));
+		config_fname = fname_buf;
+	}
+	MISC_TRACE(2)
+		fprintf(stderr, "Reading configuration from \"%s\"\n",
+			config_fname);
+
+	/* Allocate a place to put the user's configuration */
+	if ((user_config = new_config()) == NULL)
+	{
+		fprintf(stderr, "Can't allocate new configuration.\n");
+		return -1;
+	}
+
+	/* Make sure this file exists. If it doesn't, fall back on
+	 * defaults.
+	 */
+	if (stat(config_fname, &statbuf) < 0)
+	{
+		/* The file doesn't exist */
+		if (config_fname_given)
+		{
+			/* The user explicitly said to use this file, but
+			 * it doesn't exist. Give a warning.
+			 */
+			fprintf(stderr, "Warning: config file \"%s\" "
+				"doesn't exist. Using defaults.\n",
+				config_fname);
+		}
+		config_fname = NULL;
+	}
+
+	if (config_fname != NULL)
+	{
+		/* Config file exists. Read it */
+		if (parse_config(config_fname, user_config) < 0)
+		{
+			fprintf(stderr, "Error reading configuration file "
+				"\"%s\"\n",
+				config_fname);
+			free_config(user_config);
+			return -1;
+		}
+	}
+
+	/* Fill in the fields for the main configuration */
+	config.mode = Standalone;
+
+	/* If the user specified a device on the command line, build a
+	 * listen block for it. Otherwise, use the list given in the config
+	 * file.
+	 */
+	if (devname != NULL)
+	{
+		/* Use the device specified on the command line. */
+		listen_block *l;
+
+		MISC_TRACE(4)
+			fprintf(stderr,
+				"Device specified on command line: \"%s\"\n", 
+				devname);
+
+		if ((l = new_listen_block()) == NULL)
+		{
+			fprintf(stderr, "Can't allocate listen block.\n");
+			free_config(user_config);
+			return -1;
+		}
+
+		if ((l->device = strdup(devname)) == NULL)
+		{
+			fprintf(stderr, "Can't copy string.\n");
+			free_listen_block(l);
+			free_config(user_config);
+			return -1;
+		}
+
+		/* Make the new listen block be the one for the main
+		 * configuration.
+		 */
+		config.listen = l;
+		l = NULL;
+	} else {
+		/* No device specified on the command line. Use the one(s)
+		 * from the config file.
+		 */
+		config.listen = user_config->listen;
+		user_config->listen = NULL;
+
+		/* If the config file didn't specify any listen blocks,
+		 * fall back on the default.
+		 */
+		if (config.listen == NULL)
+		{
+			listen_block *l;
+
+			MISC_TRACE(4)
+				fprintf(stderr, "No device specified on the "
+					"command line or in config file.\n"
+					"Using default: \""
+					PALMDEV "\"\n");
+
+			if ((l = new_listen_block()) == NULL)
+			{
+				fprintf(stderr,
+					"Can't allocate listen block.\n");
+				free_config(user_config);
+				return -1;
+			}
+
+			if ((l->device = strdup(PALMDEV)) == NULL)
+			{
+				fprintf(stderr, "Can't copy string.\n");
+				free_listen_block(l);
+				free_config(user_config);
+				return -1;
+			}
+
+			/* Make the new listen block be the one for the
+			 * main configuration.
+			 */
+			config.listen = l;
+			l = NULL;
+		}
+	}
+
+	/* Set up the conduit lists in the main configuration */
+	if (user_config == NULL)
+	{
+		config.sync_q		= NULL;
+		config.fetch_q		= NULL;
+		config.dump_q		= NULL;
+		config.install_q	= NULL;
+		config.uninstall_q	= NULL;
+	} else {
+		config.sync_q		= user_config->sync_q;
+		user_config->sync_q	= NULL;
+		config.fetch_q		= user_config->fetch_q;
+		user_config->fetch_q	= NULL;
+		config.dump_q		= user_config->dump_q;
+		user_config->dump_q	= NULL;
+		config.install_q	= user_config->install_q;
+		user_config->install_q	= NULL;
+		config.uninstall_q	= user_config->uninstall_q;
+		user_config->uninstall_q	= NULL;
+	}
+
+	SYNC_TRACE(4)
+	{
+		/* Dump a summary of the config file */
+		listen_block *l;
+		conduit_block *c;
+
+		fprintf(stderr, "Summary of sync configuration:\n");
+		for (l = config.listen; l != NULL; l = l->next)
+		{
+			fprintf(stderr, "Listen:\n");
+			fprintf(stderr, "\tType: %d\n", l->listen_type);
+			fprintf(stderr, "\tDevice: [%s]\n", l->device);
+			fprintf(stderr, "\tSpeed: %d\n", l->speed);
+		}
+
+		fprintf(stderr, "Sync conduits:\n");
+		for (c = config.sync_q; c != NULL; c = c->next)
+		{
+			fprintf(stderr, "  Conduit:\n");
+			if (c->flavor != Sync)
+				fprintf(stderr, "Error: wrong conduit flavor. "
+					"Expected %d (Sync), but this is %d\n",
+					Sync, c->flavor);
+			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbcreator >> 24) & 0xff),
+				(char) ((c->dbcreator >> 16) & 0xff),
+				(char) ((c->dbcreator >> 8) & 0xff),
+				(char) (c->dbcreator & 0xff),
+				c->dbcreator);
+			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbtype >> 24) & 0xff),
+				(char) ((c->dbtype >> 16) & 0xff),
+				(char) ((c->dbtype >> 8) & 0xff),
+				(char) (c->dbtype & 0xff),
+				c->dbtype);
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+		}
+		
+		fprintf(stderr, "Fetch conduits:\n");
+		for (c = config.fetch_q; c != NULL; c = c->next)
+		{
+			fprintf(stderr, "  Conduit:\n");
+			if (c->flavor != Fetch)
+				fprintf(stderr, "Error: wrong conduit flavor. "
+					"Expected %d (Fetch), but this is %d\n",
+					Fetch, c->flavor);
+			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbcreator >> 24) & 0xff),
+				(char) ((c->dbcreator >> 16) & 0xff),
+				(char) ((c->dbcreator >> 8) & 0xff),
+				(char) (c->dbcreator & 0xff),
+				c->dbcreator);
+			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbtype >> 24) & 0xff),
+				(char) ((c->dbtype >> 16) & 0xff),
+				(char) ((c->dbtype >> 8) & 0xff),
+				(char) (c->dbtype & 0xff),
+				c->dbtype);
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+		}
+		
+		fprintf(stderr, "Dump conduits:\n");
+		for (c = config.dump_q; c != NULL; c = c->next)
+		{
+			fprintf(stderr, "  Conduit:\n");
+			if (c->flavor != Dump)
+				fprintf(stderr, "Error: wrong conduit flavor. "
+					"Expected %d (Dump), but this is %d\n",
+					Dump, c->flavor);
+			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbcreator >> 24) & 0xff),
+				(char) ((c->dbcreator >> 16) & 0xff),
+				(char) ((c->dbcreator >> 8) & 0xff),
+				(char) (c->dbcreator & 0xff),
+				c->dbcreator);
+			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbtype >> 24) & 0xff),
+				(char) ((c->dbtype >> 16) & 0xff),
+				(char) ((c->dbtype >> 8) & 0xff),
+				(char) (c->dbtype & 0xff),
+				c->dbtype);
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+		}
+		
+		fprintf(stderr, "Install conduits:\n");
+		for (c = config.install_q; c != NULL; c = c->next)
+		{
+			fprintf(stderr, "  Conduit:\n");
+			if (c->flavor != Install)
+				fprintf(stderr, "Error: wrong conduit flavor. "
+					"Expected %d (Install), but this is "
+					"%d\n",
+					Install, c->flavor);
+			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbcreator >> 24) & 0xff),
+				(char) ((c->dbcreator >> 16) & 0xff),
+				(char) ((c->dbcreator >> 8) & 0xff),
+				(char) (c->dbcreator & 0xff),
+				c->dbcreator);
+			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbtype >> 24) & 0xff),
+				(char) ((c->dbtype >> 16) & 0xff),
+				(char) ((c->dbtype >> 8) & 0xff),
+				(char) (c->dbtype & 0xff),
+				c->dbtype);
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+		}
+		
+		fprintf(stderr, "Uninstall conduits:\n");
+		for (c = config.uninstall_q; c != NULL; c = c->next)
+		{
+			fprintf(stderr, "  Conduit:\n");
+			if (c->flavor != Uninstall)
+				fprintf(stderr, "Error: wrong conduit flavor. "
+					"Expected %d (Uninstall), but this is "
+					"%d\n",
+					Uninstall, c->flavor);
+			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbcreator >> 24) & 0xff),
+				(char) ((c->dbcreator >> 16) & 0xff),
+				(char) ((c->dbcreator >> 8) & 0xff),
+				(char) (c->dbcreator & 0xff),
+				c->dbcreator);
+			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
+				(char) ((c->dbtype >> 24) & 0xff),
+				(char) ((c->dbtype >> 16) & 0xff),
+				(char) ((c->dbtype >> 8) & 0xff),
+				(char) (c->dbtype & 0xff),
+				c->dbtype);
+			fprintf(stderr, "\tPath: [%s]\n", c->path);
+		}
+	}
+
+	if (user_config != NULL)
+		free_config(user_config);
+
+	return 0;
+}
 
 int
 load_palm_config(struct Palm *palm)
@@ -812,7 +1244,9 @@ new_config()
 	retval->install_q	= NULL;
 	retval->uninstall_q	= NULL;
 
-fprintf(stderr, "Allocated config 0x%08lx\n", (unsigned long) retval);
+	MISC_TRACE(5)
+		fprintf(stderr,
+			"Allocated config 0x%08lx\n", (unsigned long) retval);
 	return retval;
 }
 
@@ -824,7 +1258,10 @@ free_config(struct config *config)
 	conduit_block *c;
 	conduit_block *nextc;
 
-fprintf(stderr, "Freeing config 0x%08lx\n", (unsigned long) config);
+	MISC_TRACE(5)
+		fprintf(stderr, "Freeing config 0x%08lx\n",
+			(unsigned long) config);
+
 	/* Free the listen blocks */
 	for (l = config->listen, nextl = NULL; l != NULL; l = nextl)
 	{
@@ -881,441 +1318,6 @@ fprintf(stderr, "Freeing config 0x%08lx\n", (unsigned long) config);
 
 	/* Free the config itself */
 	free(config);
-}
-
-/* get_config
- * XXX - Once this is working, get rid of parse_args() and load_config()
- * Get the initial configuration: parse command-line arguments and load the
- * configuration file, if any.
- * For now, this assumes standalone mode, not daemon mode.
- */
-/* XXX - A lot of what load_palm_config() does belongs in here. In
- * particular, this function needs to look up the current user in order to
- * get the user's home directory in order to build the full pathname to
- * ~/.coldsyncrc.
- */
-/* XXX - Home directory: should look at $HOME first. Look at getpw*() entry
- * only if $HOME isn't defined. This makes things work the way you expect
- * when using 'su -m'.
- */
-int
-get_config(int argc, char *argv[])
-{
-	int oldoptind;			/* Previous value of 'optind', to
-					 * allow us to figure out exactly
-					 * which argument was bogus, and
-					 * thereby print descriptive error
-					 * messages. */
-	int arg;			/* Current option */
-	char *config_fname = NULL;	/* Name of config file to read */
-	static char fname_buf[MAXPATHLEN];
-					/* Buffer in which to construct the
-					 * config file path, if not given.
-					 */
-	Bool config_fname_given;	/* Whether the user specified a
-					 * config file on the command line.
-					 */
-	struct stat statbuf;		/* For stat() */
-	char *devname = NULL;		/* Name of device to listen on */
-	struct config *user_config = NULL;
-					/* Configuration read from config
-					 * file (as opposed to what was
-					 * specified on the command line).
-					 */
-
-	/* Initialize the global options to sane values */
-	global_opts.do_backup	= False;
-	global_opts.backupdir	= NULL;
-	global_opts.do_restore	= False;
-	global_opts.restoredir	= NULL;
-
-	/* Initialize the debugging levels to 0 */
-	slp_trace	= 0;
-	cmp_trace	= 0;
-	padp_trace	= 0;
-	dlp_trace	= 0;
-	dlpc_trace	= 0;
-	sync_trace	= 0;
-	pdb_trace	= 0;
-	misc_trace	= 0;
-
-	oldoptind = optind;		/* Initialize "last argument"
-					 * index.
-					 */
-
-	/* Start by reading command-line options. */
-	config_fname_given = False;
-/*  	while ((arg = getopt(argc, argv, ":hVSFRu:b:r:p:f:d:")) != -1) */
-	while ((arg = getopt(argc, argv, ":hVf:b:r:p:d:")) != -1)
-	{
-		switch (arg)
-		{
-		    case 'h':	/* -h: Print usage message and exit */
-			usage(argc,argv);
-			return -1;
-
-		    case 'V':	/* -V: Print version number and exit */
-			print_version();
-			return -1;
-
-		    case 'f':	/* -f <file>: Read configuration from
-				 * <file>.
-				 */
-			config_fname = optarg;
-			config_fname_given = True;
-			break;
-
-		    case 'b':	/* -b <dir>: Do a full backup to <dir> */
-			global_opts.do_backup = True;
-			global_opts.backupdir = optarg;
-			break;
-
-		    case 'r':	/* -r <dir>: Do a restore from <dir> */
-			global_opts.do_restore = True;
-			global_opts.restoredir = optarg;
-			break;
-
-		    case 'p':	/* -p <device>: Listen on serial port
-				 * <device>
-				 */
-			devname = optarg;
-			break;
-
-		    case 'd':	/* -d <fac>:<n>: Debugging level */
-			set_debug_level(optarg);
-			break;
-
-		    case '?':	/* Unknown option */
-			fprintf(stderr, "Unrecognized option: \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    case ':':	/* An argument required an option, but none
-				 * was given (e.g., "-u" instead of "-u
-				 * daemon").
-				 */
-			fprintf(stderr, "Missing option argument after \"%s\"\n",
-				argv[oldoptind]);
-			usage(argc, argv);
-			return -1;
-
-		    default:
-			fprintf(stderr,
-				"You specified an apparently legal option (\"-%c\"), but I don't know what\n"
-				"to do with it. This is a bug. Please notify the maintainer.\n", arg);
-			return -1;
-			break;
-		}
-	}
-
-	if (get_userinfo(&userinfo) < 0)
-	{
-		fprintf(stderr, "Can't get user info\n");
-		return -1;
-	}
-
-	/* Config file: if a config file was specified on the command line,
-	 * use that. Otherwise, default to ~/.coldsyncrc.
-	 */
-	/* XXX - Ought to see if /etc/coldsync.common (or whatever) exists;
-	 * if it does, get site-wide defaults from there. The user's config
-	 * file overrides that, and command-line arguments override
-	 * everything, naturally.
-	 */
-	if (config_fname == NULL)
-	{
-		/* No config file specified on the command line. Construct
-		 * the full pathname to ~/.coldsyncrc in 'fname_buf'.
-		 */
-		strncpy(fname_buf, userinfo.homedir, MAXPATHLEN);
-		strncat(fname_buf, "/.coldsyncrc",
-			MAXPATHLEN - strlen(fname_buf));
-		config_fname = fname_buf;
-	}
-	MISC_TRACE(2)
-		fprintf(stderr, "Reading configuration from \"%s\"\n",
-			config_fname);
-
-	/* Make sure this file exists. If it doesn't, fall back on
-	 * defaults.
-	 */
-	if (stat(config_fname, &statbuf) < 0)
-	{
-		/* The file doesn't exist */
-		if (config_fname_given)
-		{
-			/* The user explicitly said to use this file, but
-			 * it doesn't exist. Give a warning.
-			 */
-			fprintf(stderr, "Warning: config file \"%s\" "
-				"doesn't exist. Using defaults.\n",
-				config_fname);
-		}
-		config_fname = NULL;
-	}
-
-	if (config_fname == NULL)
-	{
-		/* XXX - Set up defaults */
-	} else {
-		/* Config file exists. Read it */
-		if ((user_config = new_config()) == NULL)
-		{
-			fprintf(stderr, "Can't allocate new configuration.\n");
-			return -1;
-		}
-
-		if (parse_config(config_fname, user_config) < 0)
-		{
-			fprintf(stderr, "Error reading configuration file "
-				"\"%s\"\n",
-				config_fname);
-			free_config(user_config);
-			return -1;
-		}
-	}
-
-	/* Fill in the fields for the main configuration */
-	config.mode = Standalone;
-
-	/* If the user specified a device on the command line, build a
-	 * listen block for it. Otherwise, use the list given in the config
-	 * file.
-	 */
-	if (devname != NULL)
-	{
-		/* Use the device specified on the command line. */
-		listen_block *l;
-
-		MISC_TRACE(4)
-			fprintf(stderr, "No device specified on the command "
-				"line. Using default.\n");
-
-		if ((l = new_listen_block()) == NULL)
-		{
-			fprintf(stderr, "Can't allocate listen block.\n");
-			free_config(user_config);
-			return -1;
-		}
-
-		if ((l->device = strdup(devname)) == NULL)
-		{
-			fprintf(stderr, "Can't copy string.\n");
-			free_listen_block(l);
-			free_config(user_config);
-			return -1;
-		}
-
-		/* Make the new listen block be the one for the main
-		 * configuration.
-		 */
-		config.listen = l;
-		l = NULL;
-	} else {
-		/* No device specified on the command line. Use the one(s)
-		 * from the config file.
-		 */
-		config.listen = user_config->listen;
-		user_config->listen = NULL;
-
-		/* If the config file didn't specify any listen blocks,
-		 * fall back on the default.
-		 */
-		if (config.listen == NULL)
-		{
-			listen_block *l;
-
-			MISC_TRACE(4)
-				fprintf(stderr, "No device specified on the "
-					"command line or in config file. "
-					"Using default.\n");
-
-			if ((l = new_listen_block()) == NULL)
-			{
-				fprintf(stderr,
-					"Can't allocate listen block.\n");
-				free_config(user_config);
-				return -1;
-			}
-
-			/* XXX - Device name should be a preprocessor
-			 * symbol.
-			 */
-			if ((l->device = strdup("/dev/palm")) == NULL)
-			{
-				fprintf(stderr, "Can't copy string.\n");
-				free_listen_block(l);
-				free_config(user_config);
-				return -1;
-			}
-
-			/* Make the new listen block be the one for the
-			 * main configuration.
-			 */
-			config.listen = l;
-			l = NULL;
-		}
-	}
-
-	/* Set up the conduit lists in the main configuration */
-	if (user_config == NULL)
-	{
-		config.sync_q		= NULL;
-		config.fetch_q		= NULL;
-		config.dump_q		= NULL;
-		config.install_q	= NULL;
-		config.uninstall_q	= NULL;
-	} else {
-		config.sync_q		= user_config->sync_q;
-		user_config->sync_q	= NULL;
-		config.fetch_q		= user_config->fetch_q;
-		user_config->fetch_q	= NULL;
-		config.dump_q		= user_config->dump_q;
-		user_config->dump_q	= NULL;
-		config.install_q	= user_config->install_q;
-		user_config->install_q	= NULL;
-		config.uninstall_q	= user_config->uninstall_q;
-		user_config->uninstall_q	= NULL;
-	}
-
-	SYNC_TRACE(4)
-	{
-		/* Dump a summary of the config file */
-		listen_block *l;
-		conduit_block *c;
-
-		fprintf(stderr, "Summary of sync configuration:\n");
-		for (l = config.listen; l != NULL; l = l->next)
-		{
-			fprintf(stderr, "Listen:\n");
-			fprintf(stderr, "\tType: %d\n", l->listen_type);
-			fprintf(stderr, "\tDevice: [%s]\n", l->device);
-			fprintf(stderr, "\tSpeed: %d\n", l->speed);
-		}
-
-		fprintf(stderr, "Sync conduits:\n");
-		for (c = config.sync_q; c != NULL; c = c->next)
-		{
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Sync)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Sync), but this is %d\n",
-					Sync, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-		}
-		
-		fprintf(stderr, "Fetch conduits:\n");
-		for (c = config.fetch_q; c != NULL; c = c->next)
-		{
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Fetch)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Fetch), but this is %d\n",
-					Fetch, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-		}
-		
-		fprintf(stderr, "Dump conduits:\n");
-		for (c = config.dump_q; c != NULL; c = c->next)
-		{
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Dump)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Dump), but this is %d\n",
-					Dump, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-		}
-		
-		fprintf(stderr, "Install conduits:\n");
-		for (c = config.install_q; c != NULL; c = c->next)
-		{
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Install)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Install), but this is "
-					"%d\n",
-					Install, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-		}
-		
-		fprintf(stderr, "Uninstall conduits:\n");
-		for (c = config.uninstall_q; c != NULL; c = c->next)
-		{
-			fprintf(stderr, "  Conduit:\n");
-			if (c->flavor != Uninstall)
-				fprintf(stderr, "Error: wrong conduit flavor. "
-					"Expected %d (Uninstall), but this is "
-					"%d\n",
-					Uninstall, c->flavor);
-			fprintf(stderr, "\tCreator: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbcreator >> 24) & 0xff),
-				(char) ((c->dbcreator >> 16) & 0xff),
-				(char) ((c->dbcreator >> 8) & 0xff),
-				(char) (c->dbcreator & 0xff),
-				c->dbcreator);
-			fprintf(stderr, "\tType: [%c%c%c%c] 0x%08lx\n",
-				(char) ((c->dbtype >> 24) & 0xff),
-				(char) ((c->dbtype >> 16) & 0xff),
-				(char) ((c->dbtype >> 8) & 0xff),
-				(char) (c->dbtype & 0xff),
-				c->dbtype);
-			fprintf(stderr, "\tPath: [%s]\n", c->path);
-		}
-	}
-
-	if (user_config != NULL)
-		free_config(user_config);
-
-	return 0;
 }
 
 /* get_userinfo
