@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.23 2000-05-06 11:42:16 arensb Exp $
+ * $Id: config.c,v 1.24 2000-05-20 22:44:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -598,6 +598,10 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
 			fprintf(stderr, "\tHeaders:\n");
 			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
 			{
@@ -629,6 +633,10 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
 			fprintf(stderr, "\tHeaders:\n");
 			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
 			{
@@ -660,6 +668,10 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
 			fprintf(stderr, "\tHeaders:\n");
 			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
 			{
@@ -692,6 +704,10 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
 			fprintf(stderr, "\tHeaders:\n");
 			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
 			{
@@ -724,6 +740,10 @@ get_config(int argc, char *argv[])
 				(char) (c->dbtype & 0xff),
 				c->dbtype);
 			fprintf(stderr, "\tPath: [%s]\n", c->path);
+			if ((c->flags & CONDFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
+			if ((c->flags & CONDFL_FINAL) != 0)
+				fprintf(stderr, "\tFINAL\n");
 			fprintf(stderr, "\tHeaders:\n");
 			for (hdr = c->headers; hdr != NULL; hdr = hdr->next)
 			{
