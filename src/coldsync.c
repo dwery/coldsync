@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.145 2002-11-13 12:06:35 azummo Exp $
+ * $Id: coldsync.c,v 1.146 2002-11-13 20:14:38 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -120,6 +120,19 @@ main(int argc, char *argv[])
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	textdomain(PACKAGE);
 #endif	/* HAVE_GETTEXT */
+
+#if USE_CAPABILITIES
+
+	/* Drop all capabilities */
+	err = cap_set_proc(cap_from_text("= cap_setuid+ep"));
+	
+	if (err < 0)
+	{
+		Error(_("Failed to set process capabilities/privileges."));
+		exit(1);		
+	}
+
+#endif /* USE_CAPABILITIES */
 
 	/* Make sure that file descriptors 0-2 (stdin, stdout, stderr) are
 	 * in use. This avoids some nasty problems that can occur when
