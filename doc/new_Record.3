@@ -1,0 +1,75 @@
+.\" new_Record.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: new_Record.3,v 1.1 2001-11-20 14:35:17 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt new_Record 3
+.Sh NAME
+.Nm new_Record
+.Nd short description
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft struct pdb *
+.Fn new_Record "const ubyte flags" "const ubyte category" "const udword id" "const uword len" "const ubyte *data"
+.Ft void
+.Fn pdb_FreeRecord "struct pdb_record *rec"
+.Ft struct pdb_resource *
+.Fn new_Resource "const udword type" "const uword id" "const uword len" "const ubyte *data"
+.Ft void
+.Fn pdb_FreeResource "struct pdb_resource *rsrc"
+.Sh DESCRIPTION
+.Nm new_Record
+allocates space for a new
+.Ft struct pdb_record
+and initializes it from the given variables.
+.Fa flags
+is the bitwise-or of zero or more of the
+.Dv PDB_REC_*
+flags from
+.Pa <pdb.h> .
+.Fa category
+is an index into the database's category table, if it has one.
+.Fa id
+is the record's ID.
+.Fa len
+is the length of the data pointed to by
+.Fa data .
+The record's data will be initialized from this. The data is copied.
+.Pp
+.Nm new_Resource
+is similar to
+.Nm new_Record ,
+but allocates a new
+.Ft struct pdb_resource .
+.Pp
+.Nm pdb_FreeRecord
+frees a
+.Ft struct pdb_record
+allocated by
+.Nm new_Record .
+.Pp
+.Nm pdb_FreeResource
+frees a
+.Ft struct pdb_resource
+allocated by
+.Nm new_Resource .
+.Sh RETURN VALUE
+.Nm new_Record
+and
+.Nm new_Resource
+return a pointer to the new
+.Ft struct pdb_record
+or
+.Ft struct pdb_resource
+if successful, or NULL in case of error.
+.Sh SEE ALSO
+.Xr libpdb 3 .
