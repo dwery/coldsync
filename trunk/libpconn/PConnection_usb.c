@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.16 2000-12-17 09:52:10 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.17 2000-12-24 09:44:48 arensb Exp $
  */
 
 #include "config.h"
@@ -110,6 +110,14 @@ static char *hs_usb_functions[] = {
 
 
 static int
+usb_bind(struct PConnection *pconn,
+	 const void *addr,
+	 const int addrlen)
+{
+	return slp_bind(pconn, (const struct slp_addr *) addr);
+}
+
+static int
 usb_read(struct PConnection *p, unsigned char *buf, int len)
 {
 	/*
@@ -174,6 +182,12 @@ static int
 usb_write(struct PConnection *p, unsigned char *buf, int len)
 {
 	return write(p->fd, buf, len);
+}
+
+static int
+usb_connect(struct PConnection *p, const void *addr, const int addrlen)
+{
+	return -1;		/* Not applicable to USB connection */
 }
 
 static int
@@ -284,8 +298,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	}
 
 	/* Set the methods used by the USB connection */
+	pconn->io_bind = &usb_bind;
 	pconn->io_read = &usb_read;
 	pconn->io_write = &usb_write;
+	pconn->io_connect = &usb_connect;
 	pconn->io_accept = &usb_accept;
 	pconn->io_close = &usb_close;
 	pconn->io_select = &usb_select;
