@@ -4,11 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.1 1999-10-22 02:37:47 arensb Exp $
-
-# XXX - Explicitly write .c.o , .cc.o and executable targets:
-# different compilers have different default rules, and I don't want
-# to deal with them.
+# $Id: Makefile.in,v 1.2 1999-11-02 03:38:21 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -104,21 +100,16 @@ RANLIB =	@RANLIB@
 # throughout.
 all:	libpconn.a
 
-# XXX - This is probably very OS-dependent.
-# XXX - Redhat(?) doesn't have lorder or tsort.
 libpconn.a:	${OBJS}
 	ar cq $@ ${OBJS}
 	${RANLIB} $@
-#	ar cq ${.TARGET} `lorder ${OBJS} | tsort -q`
 
 install:	libpconn.a
-	${INSTALL} ${INSTALLARGS} libpconn.a ${BINDIR}
-
-# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
-# specify -I/usr/include/g++
-# Actually, 'gcc -M' generates a dependency list the right way. This
-# may be exploited, but the sources then need to be separated into
-# C_SRCS and CXX_SRCS.
+	if test ! -d ${LIBDIR}; then\
+		mkdir ${LIBDIR}; \
+		chmod 755 ${LIBDIR}; \
+	fi
+	${INSTALL} ${INSTALLARGS} libpconn.a ${LIBDIR}
 
 depend:
 	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
