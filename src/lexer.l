@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.59 2003-10-01 12:29:39 azummo Exp $
+ * $Id: lexer.l,v 2.60 2003-11-12 07:16:24 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -272,7 +272,7 @@ QSTR		[^\\\$\"\n]
 
 <CTPAIR>{ALNUM}{4}"/*" {
 	PARSE_TRACE(6)
-		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s] (creator/*)\n", yytext);
 
 	yylval.crea_type.creator =
 		(yytext[0] << 24) |
@@ -286,21 +286,21 @@ QSTR		[^\\\$\"\n]
 
 <CTPAIR>"*/"{ALNUM}{4} {
 	PARSE_TRACE(6)
-		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s] (*/type)\n", yytext);
 
 	yylval.crea_type.creator = 0L;
 	yylval.crea_type.type =
-		(yytext[5] << 24) |
-		(yytext[6] << 16) |
-		(yytext[7] <<  8) |
-		yytext[8];
+		(yytext[2] << 24) |
+		(yytext[3] << 16) |
+		(yytext[4] <<  8) |
+		yytext[5];
 	yylval.crea_type.flags = 0L;
 	return CREA_TYPE;
 	}
 
 <CTPAIR>"*/*" {
 	PARSE_TRACE(6)
-		fprintf(stderr, "(lex) Found CREA_TYPE [%s]\n", yytext);
+		fprintf(stderr, "(lex) Found CREA_TYPE [%s] (*/*)\n", yytext);
 
 	yylval.crea_type.creator = 0L;
 	yylval.crea_type.type = 0L;
