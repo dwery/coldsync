@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.4 1999-11-09 06:21:10 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.5 1999-11-10 09:05:14 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -272,9 +272,9 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	put_ubyte(&wptr, userinfo->usernamelen);
 	if (userinfo->usernamelen > 0)
 	{
-		max = userinfo->usernamelen < sizeof(userinfo->username) ?
+		max = userinfo->usernamelen < DLPCMD_USERNAME_LEN ?
 			userinfo->usernamelen :
-			sizeof(userinfo->usernamelen);
+			DLPCMD_USERNAME_LEN;
 
 		memcpy(wptr, userinfo->username, max);
 		wptr += max;
