@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.8 2000-12-16 19:49:47 arensb Exp $
+ * $Id: slp.c,v 1.9 2000-12-16 20:27:37 arensb Exp $
  */
 
 #include "config.h"
@@ -15,7 +15,7 @@
 #include <sys/uio.h>	/* For read() */
 #include <unistd.h>	/* For read() */
 #include <stdlib.h>	/* For malloc(), realloc() */
-#include <string.h>	/* For memset() */
+#include <string.h>	/* For bzero() */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -293,11 +293,9 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Read the body */
-	memset(pconn->slp.inbuf, '\0', pconn->slp.inbuf_len);
+	bzero(pconn->slp.inbuf, pconn->slp.inbuf_len);
 					/* Clear out the remains of the
 					 * last packet read.
-					 * XXX - Does this introduce
-					 * significant overhead?
 					 */
 	want = header.size;
 	got = 0;

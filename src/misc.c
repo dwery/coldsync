@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.8 2000-12-15 06:09:50 arensb Exp $
+ * $Id: misc.c,v 2.9 2000-12-16 20:27:40 arensb Exp $
  */
 
 #include "config.h"
@@ -273,7 +273,7 @@ fname2dbname(const char *fname)
 			fname);
 
 	/* Clear the database name, just 'cos. */
-	memset(dbname, '\0', DLPCMD_DBNAME_LEN+1);
+	bzero(dbname, DLPCMD_DBNAME_LEN+1);
 
 	/* Find the beginning of the filename. This is either the character
 	 * just after the last '/', or the beginning of the string.
