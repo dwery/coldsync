@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.21 2001-07-11 04:33:31 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.22 2001-08-22 06:42:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -2993,6 +2993,9 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
  * Bleah. Oh, and just for the record: no, you can't send multiple
  * arguments, each with one line of the log. That would have been just
  * a bit too easy :-(
+ *
+ * XXX - Could it be that if you send a non-NUL-terminated string, then
+ * subsequent calls will append to the log?
  *
  * The maximum length for the message appears to be 2047 characters (plus
  * the terminating NUL) on a Palm III running PalmOS 3.0 (this may be
