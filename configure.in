@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.2 1999-02-19 23:45:43 arensb Exp $
+dnl # $Id: configure.in,v 1.3 1999-02-22 10:26:03 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -9,7 +9,7 @@ dnl # Berkeley 'make' copes quite well with the equivalent
 dnl #	if test "$var1" = value; then var2=true; fi
 
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.0.4)
+AM_INIT_AUTOMAKE(coldsync, 0.0.5)
 AM_CONFIG_HEADER(config.h)
 
 dnl # XXX - Without this, the Makefile contains
@@ -49,7 +49,8 @@ AC_HEADER_TIME
 dnl # Checks for library functions.
 AC_CHECK_FUNCS(select \
 	cfsetspeed \
-	cfmakeraw)
+	cfmakeraw \
+	snprintf)
 
 dnl # Should print out an error if one or more required components
 dnl # couldn't be found. Use AC_MSG_WARN([message])
