@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.10 1999-11-09 04:08:34 arensb Exp $
+ * $Id: coldsync.c,v 1.11 1999-11-09 06:36:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1152,11 +1152,11 @@ UpdateUserInfo(struct PConnection *pconn,
 	       const int success)
 {
 	int err;
-	struct dlp_setuserinfo userinfo;
+	struct dlp_setuserinfo uinfo;
 			/* Fill this in with new values */
 	
-	userinfo.modflags = 0;		/* Initialize modification flags */
-	userinfo.usernamelen = 0;
+	uinfo.modflags = 0;		/* Initialize modification flags */
+	uinfo.usernamelen = 0;
 
 	MISC_TRACE(1)
 		fprintf(stderr, "* UpdateUserInfo:\n");
@@ -1173,16 +1173,16 @@ UpdateUserInfo(struct PConnection *pconn,
 				(int) user_uid,
 				(unsigned int) user_uid);
 		/* XXX - Fill this in */
-		userinfo.userid = (udword) user_uid;
-		userinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
+		uinfo.userid = (udword) user_uid;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
 					/* Set modification flag */
 	}
 
 	/* Fill in this machine's host ID as the last sync PC */
 	MISC_TRACE(3)
 		fprintf(stderr, "Setting lastsyncPC to 0x%08lx\n", hostid);
-	userinfo.lastsyncPC = hostid;
-	userinfo.modflags |= DLPCMD_MODUIFLAG_SYNCPC;
+	uinfo.lastsyncPC = hostid;
+	uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCPC;
 
 	/* If successful, update the "last successful sync" date */
 	if (success)
@@ -1192,30 +1192,30 @@ UpdateUserInfo(struct PConnection *pconn,
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting last sync time to now\n");
 		time(&now);		/* Get current time */
-		time_time_t2dlp(now, &userinfo.lastsync);
+		time_time_t2dlp(now, &uinfo.lastsync);
 					/* Convert to DLP time */
-		userinfo.modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_SYNCDATE;
 	}
 
 	/* Fill in the user name if there isn't one, or if it has changed
 	 */
 	if ((palm->userinfo.usernamelen == 0) ||
-	    (strcmp(palm->userinfo.username, user_fullname) != 0))
+	    (strcmp(palm->userinfo.username, userinfo.fullname) != 0))
 	{
 		MISC_TRACE(3)
 			fprintf(stderr, "Setting user name to \"%s\"\n",
-				user_fullname);
-		userinfo.username = user_fullname;
-		userinfo.usernamelen = strlen(userinfo.username)+1;
-		userinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
+				userinfo.fullname);
+		uinfo.username = userinfo.fullname;
+		uinfo.usernamelen = strlen(uinfo.username)+1;
+		uinfo.modflags |= DLPCMD_MODUIFLAG_USERNAME;
 		MISC_TRACE(3)
 			fprintf(stderr, "User name length == %d\n",
-				userinfo.usernamelen);
+				uinfo.usernamelen);
 	}
 
 	/* Send the updated user info to the Palm */
 	err = DlpWriteUserInfo(pconn,
-			       &userinfo);
+			       &uinfo);
 	if (err != DLPSTAT_NOERR)
 	{
 		fprintf(stderr, "DlpWriteUserInfo failed: %d\n", err);
