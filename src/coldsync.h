@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.16 2000-01-27 05:22:12 arensb Exp $
+ * $Id: coldsync.h,v 1.17 2000-02-07 01:38:56 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -133,7 +133,7 @@ typedef struct listen_block
 {
 	struct listen_block *next;
 	int listen_type;	/* Block type. See the LISTEN_*
-				 * constants below.
+				 * constants above.
 				 */
 	char *device;		/* Device to listen on */
 	int speed;		/* How fast to sync */
@@ -213,104 +213,6 @@ struct config
 	conduit_block *dump_q;		/* List of dump conduits */
 	conduit_block *install_q;	/* List of install conduits */
 	conduit_block *uninstall_q;	/* List of uninstall conduits */
-};
-
-/* XXX - Should there be a separate struct to hold the user configuration,
- * i.e., the user's name, uid, directories where to put all the various
- * stuff etc.? Or maybe for a particular invocation, i.e., when we've
- * already figured out which user and which Palm we're dealing with?
- */
-
-/* conduit_spec
- * Describes a conduit.
- */
-struct conduit_spec
-{
-	char name[COND_NAMELEN];	/* Name of this conduit */
-
-	/* What databases does this conduit apply to? */
-	char dbname[DLPCMD_DBNAME_LEN];
-			/* Name of the database that the conduit
-			 * applies to. Empty string means conduit
-			 * applies to all databases */
-	udword dbtype;	/* Database type. 0 means conduit applies to
-			 * all types. */
-	udword dbcreator;
-			/* Database creator. 0 means conduit applies
-			 * to all creators. */
-	/* XXX - Need an enum to specify whether this is a regular
-	 * conduit, a pre-fetch function, or a post-dump function.
-	 */
-
-	/* The actual functions involved */
-	/* XXX - Should there be some mechanism to indicate that this
-	 * conduit may be used in conjunction with others? I.e., there
-	 * might be one post-dump function that reads the address book
-	 * and converts it to a MH mail alias list, another that
-	 * converts it to a Pine alias list. Both should be run.
-	 */
-	ConduitFunc run;
-			/* The conduit function. */
-};
-
-/* conduit_config
- * Configuration for a given conduit: specifies when it should be run
- * (which databases and whatnot).
- */
-struct conduit_config
-{
-	/* Database characteristics
-	 * If 'dbname' is the empty string, it's a wildcard: this
-	 * conduit is applicable to all databases. If 'dbtype' or
-	 * 'dbcreator' is 0, then it's a wildcard: this conduit
-	 * applies to all types and creators.
-	 * When a conduit is registered, 'dbname', 'dbtype' and
-	 * 'dbcreator' are and-ed with their corresponding values in
-	 * '*conduit'. Thus, if a conduit applies to (*, 'appl', *)
-	 * and is registered with ("Memo Pad", *, *), then it will
-	 * only be invoked for ("Memo Pad", 'appl', *).
-	 */
-	char dbname[DLPCMD_DBNAME_LEN];	/* Database name */
-	udword dbtype;			/* Database type */
-	udword dbcreator;		/* Database creator */
-
-	/* Other information */
-	Bool mandatory;			/* If true, stop looking if
-					 * this conduit matches:
-					 * prevents other conduits
-					 * from overriding this one.
-					 */
-
-	/* Information needed at run-time */
-	struct conduit_spec *conduit;	/* The conduit itself. If this
-					 * is NULL, then don't do
-					 * anything when syncing this
-					 * database.
-					 */
-	/* XXX - Arguments and such (e.g., for commands or scripts) */
-};
-
-/* XXX - conduit_config2
- * This struct should replace 'conduit_config' eventually.
- */
-struct conduit_config2
-{
-	struct conduit_config2 *next;	/* Next descriptor on the list */
-
-	char pathname[MAXPATHLEN];	/* Path to conduit program */
-	conduit_flavor flavor;		/* What flavor of conduit is this? */
-
-	/* Which databases does this conduit apply to? */
-	char dbname[DLPCMD_DBNAME_LEN];	/* Database name */
-	udword dbtype;			/* Database type */
-	udword dbcreator;		/* Database creator */
-
-	Bool final;			/* If this conduit applies, don't
-					 * look any further. */
-	Bool isdefault;			/* Use this conduit iff no other
-					 * applies. */
-
-	/* XXX - Conduit arguments and whatnot */
 };
 
 extern int sys_maxfds;			/* Max # of file descriptors
