@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.7 2001-03-27 14:05:17 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.8 2001-09-08 02:13:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -146,10 +146,6 @@ DlpRPC(PConnection *pconn,		/* Connection to Palm */
 			put_ubyte(&wptr, argv[i].byref);	/* By ref */
 			put_ubyte(&wptr, 4);			/* Size */
 			put_udword(&wptr, argv[i].data.dword_v);
-			break;
-
-		    default:
-			/* XXX - Barf */
 			break;
 		}
 	}
@@ -324,7 +320,7 @@ RDLP_Backlight(PConnection *pconn,
 	argv[0].type = RPCP_Bool;
 	argv[0].data.bool_v = newState;
 
-	err = DlpRPC(pconn, RPCTRAP_Backlight, &D0, &A0, 2, argv);
+	err = DlpRPC(pconn, (uword) RPCTRAP_Backlight, &D0, &A0, 2, argv);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_Backlight: err == %d\n", err);
 	if (err < 0)
@@ -348,7 +344,7 @@ RDLP_BatteryLevel(PConnection *pconn)
 		fprintf(stderr, "Inside RDLP_BatteryLevel()\n");
 	D0 = A0 = 0L;
 
-	err = DlpRPC(pconn, RPCTRAP_BatteryLevel, &D0, &A0, 0, NULL);
+	err = DlpRPC(pconn, (uword) RPCTRAP_BatteryLevel, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_BatteryLevel: err == %d\n", err);
 	if (err < 0)
@@ -374,7 +370,7 @@ RDLP_PluggedIn(PConnection *pconn)
 		fprintf(stderr, "Inside RDLP_PluggedIn()\n");
 	D0 = A0 = 0L;
 
-	err = DlpRPC(pconn, RPCTRAP_PluggedIn, &D0, &A0, 0, NULL);
+	err = DlpRPC(pconn, (uword) RPCTRAP_PluggedIn, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_PluggedIn: err == %d\n", err);
 	if (err < 0)
@@ -394,7 +390,8 @@ RDLP_GetOSVersionString(PConnection *pconn)
 		fprintf(stderr, "Inside RDLP_GetOSVersionString()\n");
 	D0 = A0 = 0L;
 
-	err = DlpRPC(pconn, RPCTRAP_GetOSVersionString, &D0, &A0, 0, NULL);
+	err = DlpRPC(pconn, (uword) RPCTRAP_GetOSVersionString,
+		     &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_GetOSVersionString: err == %d\n", err);
 	if (err < 0)
@@ -441,7 +438,7 @@ RDLP_MemMove(PConnection *pconn,
 	argv[0].type = RPCP_DWord;
 	argv[0].data.dword_v = len;
 
-	err = DlpRPC(pconn, RPCTRAP_MemMove, &D0, &A0, 3, argv);
+	err = DlpRPC(pconn, (uword) RPCTRAP_MemMove, &D0, &A0, 3, argv);
 	if (err < 0)
 	{
 		fprintf(stderr, _("%s: Error in DlpRPC().\n"),
@@ -463,7 +460,7 @@ RDLP_BatteryDialog(PConnection *pconn)
 		fprintf(stderr, "Inside RDLP_BatteryDialog()\n");
 	D0 = A0 = 0L;
 
-	err = DlpRPC(pconn, RPCTRAP_BatteryDialog, &D0, &A0, 0, NULL);
+	err = DlpRPC(pconn, (uword) RPCTRAP_BatteryDialog, &D0, &A0, 0, NULL);
 	DLPC_TRACE(5)
 		fprintf(stderr, "RDLP_BatteryDialog: err == %d\n", err);
 	if (err < 0)
@@ -490,7 +487,7 @@ RDLP_MemHandleNew(PConnection *pconn,
 	argv[0].type = RPCP_DWord;
 	argv[0].data.dword_v = size;
 
-	err = DlpRPC(pconn, RPCTRAP_MemHandleNew, &D0, &A0, 1, argv);
+	err = DlpRPC(pconn, (uword) RPCTRAP_MemHandleNew, &D0, &A0, 1, argv);
 	DLPC_TRACE(5)
 	{
 		fprintf(stderr, "RDLP_MemHandleNew: err == %d\n", err);
@@ -549,7 +546,7 @@ RDLP_ROMToken(PConnection *pconn,
 	argv[0].type = RPCP_Word;
 	argv[0].data.word_v = 0;
 
-	err = DlpRPC(pconn, RPCTRAP_GetROMToken, &D0, &A0, 4, argv);
+	err = DlpRPC(pconn, (uword) RPCTRAP_GetROMToken, &D0, &A0, 4, argv);
 	if (err < 0)
 		return err;
 
@@ -576,7 +573,7 @@ RDLP_MemReadable(PConnection *pconn,
 	argv[0].type = RPCP_DWord;
 	argv[0].data.dword_v = addr;
 
-	err = DlpRPC(pconn, RPCTRAP_MemReadable, &D0, &A0, 1, argv);
+	err = DlpRPC(pconn, (uword) RPCTRAP_MemReadable, &D0, &A0, 1, argv);
 	DLPC_TRACE(5)
 	{
 		fprintf(stderr, "RDLP_MemReadable: err == %d\n", err);
