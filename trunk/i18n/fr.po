@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-09-21 11:43-0400\n"
+"POT-Creation-Date: 2000-09-23 13:06-0400\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Nicolas Bouthors <nicolas@bouthors.org>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -69,7 +69,9 @@ msgstr ""
 
 #: src/coldsync.c:1651
 msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
-msgstr "    WITH_EFENCE: les débordements de mémoires tampon provoqueront une violation de segmentation"
+msgstr ""
+"    WITH_EFENCE: les débordements de mémoires tampon provoqueront une "
+"violation de segmentation\n"
 
 #: src/coldsync.c:1647
 msgid "    WITH_USB: USB support.\n"
@@ -382,8 +384,9 @@ msgstr "%s: Impossible de charger la base de données « %s »\n"
 #: src/conduit.c:1378
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered\n"
+msgstr ""
 "%s: Impossible de mettre en place une sortie standard ligne à ligne\n"
-"pour le fils"
+"pour le fils\n"
 
 #: lexer.l:137 lexer.l:150 lexer.l:268 lexer.l:346
 #, fuzzy, c-format
@@ -459,8 +462,7 @@ msgstr ""
 #: src/restore.c:243
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application\n"
-msgstr ""
-"%s: Ne peux pas restaurer %s: il est ouvert par un autre programme\n"
+msgstr "%s: Ne peux pas restaurer %s: il est ouvert par un autre programme\n"
 
 #: src/archive.c:137
 #, c-format
@@ -470,7 +472,7 @@ msgstr "%s: Impossible de me positionner à la fin du fichier\n"
 #: src/conduit.c:394
 #, c-format
 msgid "%s: Can't set signal handler\n"
-msgstr "%s: Impossible de mettre en place une fonction de gestion de signal"
+msgstr "%s: Impossible de mettre en place une fonction de gestion de signal\n"
 
 #: libpdb/pdb.c:547
 #, c-format
@@ -536,7 +538,7 @@ msgstr ""
 #: libpconn/PConnection_usb.c:423
 #, c-format
 msgid "%s: Could not find HotSync endpoint on Visor.\n"
-msgstr "%s: Je n'arrive pas à établir la connection HotSync avec le Visor."
+msgstr "%s: Je n'arrive pas à établir la connection HotSync avec le Visor.\n"
 
 #: src/restore.c:231
 #, c-format
@@ -786,15 +788,15 @@ msgstr "CacheFromConduits() a rendu le code de retour %d\n"
 msgid "Can't allocate list of record IDs\n"
 msgstr "Je ne peux pas allouer la liste des numéros d'enregistrements\n"
 
-#: src/config.c:501 src/config.c:549
+#: src/config.c:503 src/config.c:551
 msgid "Can't allocate listen block.\n"
 msgstr "Impossible d'allouer un bloc d'écoute.\n"
 
-#: src/config.c:435
+#: src/config.c:437
 msgid "Can't allocate new conduit block.\n"
 msgstr "Impossible d'allouer un conduit_block.\n"
 
-#: src/config.c:416
+#: src/config.c:418
 msgid "Can't allocate new configuration.\n"
 msgstr ""
 "Impossible d'allouer une nouvelle configuration.\n"
@@ -812,7 +814,7 @@ msgstr "Impossible de se connecter au Palm\n"
 msgid "Can't copy a new record.\n"
 msgstr "Je n'arrive pas à copier un nouvel enregistrement.\n"
 
-#: src/config.c:508 src/config.c:556
+#: src/config.c:510 src/config.c:558
 msgid "Can't copy string.\n"
 msgstr "Impossible de copier une chaîne.\n"
 
@@ -862,11 +864,11 @@ msgstr ""
 "Impossible d'obtenir l'information sur le système, l'utilisateur, ou "
 "NetSync\n"
 
-#: src/coldsync.c:1368 src/config.c:385
+#: src/coldsync.c:1368 src/config.c:387
 msgid "Can't get user info\n"
 msgstr "Impossible d'obtenir les informations sur l'utilisateur\n"
 
-#: src/config.c:1101
+#: src/config.c:1103
 msgid "Can't get user's full name.\n"
 msgstr "Impossible d'obtenir le nom complet de l'utilisateur.\n"
 
@@ -1057,7 +1059,7 @@ msgstr "Erreur lors de la lecture de %s\n"
 msgid "Error reading NetSync info\n"
 msgstr "Erreur lors de la lecture des informations sur NetSync\n"
 
-#: src/config.c:474
+#: src/config.c:476
 #, c-format
 msgid "Error reading configuration file \"%s\"\n"
 msgstr "Erreur lors de la lecture du fichier de configuration « %s »\n"
@@ -1089,7 +1091,7 @@ msgstr "Erreur lors de l'écriture de l'historique.\n"
 msgid "Error writing user info\n"
 msgstr "Erreur lors de l'écriture des informations sur l'utilisateur\n"
 
-#: src/config.c:374
+#: src/config.c:376
 msgid "Error: Can't force slow and fast sync at the same time.\n"
 msgstr ""
 "Erreur: Vous ne pouvez pas demander une synchronisation lente et rapide\n"
@@ -1109,7 +1111,7 @@ msgstr "Erreur: Impossible d'ouvrir %s\n"
 msgid "Error: Can't read serial number\n"
 msgstr "Erreur: Impossible de lire le numéro de série\n"
 
-#: src/config.c:364
+#: src/config.c:366
 msgid "Error: Can't specify backup and restore at the same time.\n"
 msgstr ""
 "Erreur: Vous ne pouvez pas en même temps demander de faire une copie\n"
@@ -1190,7 +1192,7 @@ msgstr "ListDBs a rendu le code de retour %d\n"
 msgid "Missing option argument after \"%s\"\n"
 msgstr "Argument manquant après l'option « %s »\n"
 
-#: src/config.c:327
+#: src/config.c:329
 #, c-format
 msgid "My canonical name is \"%s\"\n"
 msgstr "Mon nom officiel est « %s »\n"
@@ -1339,11 +1341,11 @@ msgid ""
 "Warning: can't set the speed you requested (%ld bps).\n"
 "Using default (%ld bps)\n"
 msgstr ""
-"Avertissement: ne peux pas transmettre à la vitesse que vous avez demandé (%ld "
-"o/s).\n"
+"Avertissement: ne peux pas transmettre à la vitesse que vous avez demandé "
+"(%ld o/s).\n"
 "Je mettrai la vitesse de défaut (%ld o/s)\n"
 
-#: src/config.c:462
+#: src/config.c:464
 #, c-format
 msgid "Warning: config file \"%s\" doesn't exist. Using defaults.\n"
 msgstr ""
