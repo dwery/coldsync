@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38.2.4 2001-10-11 10:04:33 arensb Exp $
+ * $Id: conduit.c,v 2.38.2.5 2001-10-11 11:11:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -27,7 +27,7 @@
 					 * Linux */
 #endif	/* HAVE_NETINET_IN_H */
 
-#include <unistd.h>			/* For select(), write() */
+#include <unistd.h>			/* For select(), write(), access() */
 #include <signal.h>			/* For signal() */
 #include <setjmp.h>			/* For sigsetjmp()/siglongjmp() */
 #include <errno.h>			/* For errno. Duh */
@@ -72,6 +72,7 @@ static int run_conduits(const struct dlp_dbinfo *dbinfo,
 			unsigned short flavor_mask,
 			const Bool with_spc,
 			PConnection *pconn);
+static const char *find_in_path(const char *conduit);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -1335,64 +1336,146 @@ run_Install_conduits(struct dlp_dbinfo *dbinfo)
 		fprintf(stderr, 
 			"Running install conduits for \"%s\".\n",
 			dbinfo->name);
-	
-	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
-}	
-/* exec_from_path
- * Search each of the paths $(CONDUITDIR) and try to execute the given process.
- * It starts with the name as stated, in case it is in the default search path.
- */
-/* XXX - I'd rather have find_executable_in_path() or some such: if
- * $(CONDUITDIR) is empty, return NULL. Otherwise, split $(CONDUITDIR)
- * along /:/, and look for an executable in that directory.
- * Oh, and if 'name' contains a slash (i.e., it's not just a plain
- * filename), just use that.
- */
-static int
-exec_from_path(const char *name, char *const argv[])
-{
-	int err = ENOENT;
-	char *path;		/* Current path */
-	char *search;		/* Search path */
-	char *dir;
 
-	search = get_symbol("CONDUITDIR");
-	path = (char *)name;
-	while(1)
+	return run_conduits(dbinfo, "install", FLAVORFL_INSTALL, False, NULL);
+}
+
+/* find_in_path
+ * Looks for an executable conduit in the appropriate path. $CONDUIT_PATH
+ * is a colon-separated list of directories in which to look for conduits.
+ * If a path component is empty, that means to look in "the usual places";
+ * currently, this means $CONDUITDIR, although in the future this might be
+ * a system-wide path.
+ *
+ * If $CONDUIT_PATH isn't set, find_in_path() tries "the usual places"
+ * which, again, means $CONDUITDIR.
+ *
+ * If none of these approaches work, return NULL, meaning that there is no
+ * executable for this conduit.
+ *
+ * Returns a pathname that can be fed to execv(), or NULL if no executable
+ * conduit can be found.
+ */
+static const char *
+find_in_path(const char *conduit)
+{
+	const char *path;		/* $CONDUIT_PATH */
+	const char *conduitdir;		/* $CONDUITDIR */
+	const char *colon;		/* Pointer to path separator */
+	static char buf[MAXPATHLEN];	/* Holds current pathname attempt */
+
+	/* If the pathname contains a slash, then it's either absolute or
+	 * relative, and should remain as-is.
+	 */
+	if (strchr(conduit, '/') != NULL)
 	{
 		SYNC_TRACE(3)
-			fprintf(stderr, "Trying path '%s'.\n", path);
-		/* XXX - No, don't just do this: execvp() can fail for any
-		 * number of reasons. Rather, try the various possible
-		 * pathnames; test them with access(fname, X_OK) (I _think_
-		 * that tests for execute permissions for the current
-		 * user); once access() indicates that a file is
-		 * executable, try that. If it fails, don't try anything
-		 * else.
-		 * IOW, find_executable_in_path() should just return the
-		 * first executable file that looks like it could be run.
-		 */
-		execvp(path, argv);
-		SYNC_TRACE(3)
-			fprintf(stderr, "%s: error = %d, <%s>\n",
-				path, errno, strerror(errno));
-		if (err != ENOENT)
-			err = errno;
-		/* If we make it here, then that path didn't work. */
-		if (search == NULL)
-			return err;
-		dir = search;
-		search = strchr(search, ':'); /* find next colon. */
-		if (search != NULL)	/* replace the colon with a \0. */
-		{
-			search[0] = 0;
-			search++;
-		}
-		/* We don't need to free anything, because we will throw out
-		 * this memory image with execvp. */
-		path = (char *) malloc(strlen(dir) + 1 + strlen(name) + 1);
-		sprintf(path, "%s/%s", dir, name);
+			fprintf(stderr, "find_in_path: returning [%s]\n",
+				conduit);
+		return conduit;
 	}
+
+	path = get_symbol("CONDUIT_PATH");
+	conduitdir = get_symbol("CONDUITDIR");
+	SYNC_TRACE(4)
+	{
+		fprintf(stderr, "find_in_path: $CONDUIT_PATH == [%s]\n",
+			path);
+		fprintf(stderr, "find_in_path: $CONDUITDIR == [%s]\n",
+			conduitdir);
+	}
+
+	/* If $CONDUIT_PATH is empty, try $CONDUITDIR */
+	if ((path == NULL) || (path[0] == '\0'))
+	{
+		SYNC_TRACE(4)
+			fprintf(stderr, "find_in_path: no $CONDUIT_PATH\n");
+		/* Empty or unset $CONDUIT_PATH. */
+		if ((conduitdir == NULL) || (conduitdir[0] == '\0'))
+		{
+			/* Empty or unset $CONDUITDIR. */
+			SYNC_TRACE(4)
+				fprintf(stderr, "find_in_path: no "
+					"$CONDUITDIR, either. Returning "
+					"NULL\n");
+			return NULL;
+		}
+		snprintf(buf, MAXPATHLEN, conduitdir, conduit);
+		if (access(buf, X_OK) == 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, "find_in_path: returning "
+					"[%s]\n",
+					buf);
+			return buf;
+		}
+
+		/* No $CONDUIT_PATH, and $CONDUITDIR/conduit isn't
+		 * executable. Give up. */
+		SYNC_TRACE(3)
+			fprintf(stderr, "find_in_path: returning NULL\n");
+		return NULL;
+	}
+
+	/* Look in each path component in turn */
+	while (path != NULL)
+	{
+		colon = strchr(path, ':');
+		if (colon == NULL)
+		{
+			/* Last path component */
+			if (strlen(path) == 0)
+			{
+				/* Empty final path component. Try
+				 * $CONDUITDIR/conduit
+				 */
+				if ((conduitdir != NULL) &&
+				    (conduitdir[0] != '\0'))
+				{
+					snprintf(buf, MAXPATHLEN, "%s/%s",
+						 conduitdir, conduit);
+				}
+			} else {
+				/* Non-empty final path component */
+				snprintf(buf, MAXPATHLEN, "%s/%s",
+					 path, conduit);
+			}
+		} else {
+			if (colon == path+1)
+			{
+				/* Empty path component. Try
+				 * $CONDUITDIR/conduit
+				 */
+				if ((conduitdir != NULL) &&
+				    (conduitdir[0] != '\0'))
+				{
+					snprintf(buf, MAXPATHLEN, "%s/%s",
+						 conduitdir, conduit);
+				}
+			} else {
+				/* Non-empty path component */
+				snprintf(buf, MAXPATHLEN, "%.*s/%s",
+					 colon-path-1, path,
+					 conduit);
+			}
+		}
+
+		/* See if the pathname in 'buf' is executable */
+		SYNC_TRACE(4)
+			fprintf(stderr, "find_in_path: Trying [%s]\n", buf);
+		if (access(buf, X_OK) == 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr, "find_in_path: "
+					"returning [%s]\n", buf);
+			return buf;
+		}
+	}
+
+	/* Nothing is executable. */
+	SYNC_TRACE(3)
+		fprintf(stderr, "find_in_path: returning NULL\n");
+	return NULL;
 }
 
 /* spawn_conduit
@@ -1429,6 +1512,7 @@ spawn_conduit(
 	FILE *fh;		/* Temporary file handle */
 	sigset_t sigmask;	/* Mask of signals to block. Used by
 				 * {,un}block_sigchld() */
+	const char *fname;	/* (Usually full) pathname to conduit */
 
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
@@ -1566,7 +1650,17 @@ spawn_conduit(
 	/* Unblock SIGCHLD in the child as well. */
 	unblock_sigchld(&sigmask);
 
-	err = exec_from_path(path, argv);
+	/* Find pathname to executable */
+	fname = find_in_path(path);
+	if (fname == NULL)
+	{
+		Error(_("%s: No executable \"%s\" in $CONDUIT_PATH or "
+			"$CONDUITDIR.\n"),
+		      "spawn_conduit", path);
+		exit(1);
+	}
+	execv(fname, argv);	/* Use exec(), not execvp(): don't look in
+				 * $PATH. We've already checked. */
 
 	/* If we ever get to this point, then something went wrong */
 	Error(_("%s: execvp(%s) failed and returned %d."),
