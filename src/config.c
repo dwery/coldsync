@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.43 2000-11-20 05:25:53 arensb Exp $
+ * $Id: config.c,v 1.44 2000-11-20 10:17:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -310,7 +310,12 @@ load_config()
 	/* Read ~/.coldsyncrc */
 	if (global_opts.mode != mode_Daemon)
 	{
-		struct userinfo userinfo;	/* User's /etc/passwd entry */
+		err = get_userinfo(&userinfo);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Can't get user info\n"));
+			return -1;
+		}
 
 		if (global_opts.conf_fname_given &&
 		    !exists(global_opts.conf_fname))
@@ -329,13 +334,6 @@ load_config()
 
 		if (global_opts.conf_fname == NULL)
 		{
-			err = get_userinfo(&userinfo);
-			if (err < 0)
-			{
-				fprintf(stderr, _("Can't get user info\n"));
-				return -1;
-			}
-
 			/* Construct the full pathname to ~/.coldsyncrc in
 			 * 'conf_fname'.
 			 */
@@ -653,21 +651,17 @@ set_mode(const char *str)
 		global_opts.mode = mode_Restore;
 		return 0;
 
-#if 0	/* Not implemented yet */
-	    case 'i':		/* Install mode */
-		global_opts.mode = mode_Install;
+	    case 'I':		/* Init mode */
+		global_opts.mode = mode_Init;
 		return 0;
 
+#if 0	/* Not implemented yet */
 	    case 'd':		/* Daemon mode */
 		global_opts.mode = mode_Daemon;
 		return 0;
 
 	    case 'g':		/* Getty mode */
 		global_opts.mode = mode_Getty;
-		return 0;
-
-	    case 'I':		/* Init mode */
-		global_opts.mode = mode_Init;
 		return 0;
 #endif	/* 0 */
 
@@ -686,22 +680,25 @@ set_mode(const char *str)
 void
 usage(int argc, char *argv[])
 {
-	/* XXX - Very much out of date. Rewrite this. */
-	printf(_("Usage: %s [options] -p port\n"
+	printf(_("Usage: %s [options] <mode> <mode args>\n"
+		 "Modes:\n"
+		 "\t-ms:\tSynchronize (default).\n"
+		 "\t-mI:\tInitialize.\n"
+		 "\t-mb <dir> [database...]\n"
+		 "\t\tPerform a backup to <dir>.\n"
+		 "\t-mr <file|dir>...\n"
+		 "\t\tRestore or install new databases.\n"
 		 "Options:\n"
 		 "\t-h:\t\tPrint this help message and exit.\n"
 		 "\t-V:\t\tPrint version and exit.\n"
-		 "\t-f <file>:\tRead configuration from <file>.\n"
-		 "\t-b <dir>:\tPerform a backup to <dir>.\n"
-		 "\t-r <dir>:\tRestore from <dir>.\n"
+		 "\t-f <file>:\tRead configuration from <file>\n"
 		 "\t-I:\t\tForce installation of new databases.\n"
 		 "\t-S:\t\tForce slow sync.\n"
 		 "\t-F:\t\tForce fast sync.\n"
 		 "\t-R:\t\tCheck ROM databases.\n"
-		 "\t-p <port>:\tListen on device <port>\n"
-		 "\t-t <devtype>:\tPort type [serial|usb]\n"
-		 "\t-d <fac[:level]>:\tSet debugging level.\n")
-	       ,
+		 "\t-p <port>:\tListen on device <port>.\n"
+		 "\t-t <devtype>:\tPort type [serial|usb].\n"
+		 "\t-d <fac[:level]>:\tSet debugging level.\n"),
 	       argv[0]);
 }
 
@@ -763,6 +760,84 @@ name2listen_type(const char *str)
 	return -1;		/* None of the above */
 }
 
+/* find_pda_block
+ * Helper function. Finds the best-matching PDA block for the given Palm.
+ * Returns a pointer to it if one was defined in the config file(s), or
+ * NULL otherwise.
+ */
+pda_block *
+find_pda_block(struct Palm *palm)
+{
+	pda_block *cur;		/* The pda-block we're currently looking at */
+	pda_block *default_pda;	/* pda_block for the default PDA, if no
+				 * better match is found.
+				 */
+
+	default_pda = NULL;
+	for (cur = sync_config->pda; cur != NULL; cur = cur->next)
+	{
+		/* See if this pda_block has a serial number and if so,
+		 * whether it matches the one we read off of the Palm.
+		 * Palms with pre-3.0 ROMs don't have serial numbers. They
+		 * can be represented in the .coldsyncrc file with
+		 *	snum "";
+		 * This does mean that you shouldn't have more than one
+		 * pda_block with an empty string.
+		 */
+		if ((cur->snum != NULL) &&
+		    (strncasecmp(cur->snum, palm_serial(palm),
+				 SNUM_MAX)
+		     != 0))
+		{
+			/* The serial number doesn't match */
+			continue;
+		}
+
+		MISC_TRACE(3)
+		{
+			fprintf(stderr, "Found a match for this PDA:\n");
+			fprintf(stderr, "\tS/N: [%s]\n", cur->snum);
+			fprintf(stderr, "\tDirectory: [%s]\n",
+				cur->directory);
+		}
+
+		if ((cur->flags & PDAFL_DEFAULT) != 0)
+		{
+			MISC_TRACE(3)
+				fprintf(stderr,
+					"Found a default PDA\n");
+
+			/* Mark this as the default pda_block */
+			default_pda = cur;
+			continue;
+		}
+
+		/* If we get this far, then the serial number matches and
+		 * this is not a default pda_block. So this is the one we
+		 * want to use.
+		 */
+		return cur;
+	}
+
+	/* If we get this far, then there's no non-default matching PDA. */
+	MISC_TRACE(3)
+		fprintf(stderr, "No exact match found for "
+			"this PDA. Using default\n");
+
+	return default_pda;
+			/* 'default_pda' may or may not be NULL. In either
+			 * case, this does the Right Thing: if it's
+			 * non-NULL, then this function returns the default
+			 * PDA block. If 'default_pda' is NULL, then the
+			 * config file contains neither a good matching
+			 * PDA, nor a default, so it should return NULL
+			 * anyway.
+			 */
+}
+
+/* XXX - This function's purpose isn't very well defined. And it does far
+ * too much.
+ */
 int
 load_palm_config(struct Palm *palm)
 {
@@ -782,75 +857,9 @@ load_palm_config(struct Palm *palm)
 	struct passwd *pwent;	/* /etc/passwd entry for current user */
 	pda_block *pda;		/* Description of the current PDA */
 
-	/* Try to find a pda_block for the current PDA */
-	{
-		pda_block *cur;	/* The pda-block we're currently looking at */
-		pda_block *default_pda;
-				/* pda_block for the default PDA, if no
-				 * better match is found.
-				 */
-
-		pda = NULL;
-		default_pda = NULL;
-		for (cur = sync_config->pda; cur != NULL; cur = cur->next)
-		{
-			/* See if this pda_block has a serial number and if
-			 * so, whether it matches the one we read off of
-			 * the Palm.
-			 * Palms with pre-3.0 ROMs don't have serial
-			 * numbers. They can be represented in the
-			 * .coldsyncrc file with
-			 *	snum "";
-			 * This does mean that you shouldn't have more than
-			 * one pda_block with an empty string.
-			 */
-			if ((cur->snum != NULL) &&
-			    (strncasecmp(cur->snum, palm_serial(palm),
-					 SNUM_MAX)
-			     != 0))
-			{
-				/* The serial number doesn't match */
-				continue;
-			}
-
-			MISC_TRACE(3)
-			{
-				fprintf(stderr, "Found a match for "
-					"this PDA:\n");
-				fprintf(stderr, "\tS/N: [%s]\n",
-					cur->snum);
-				fprintf(stderr, "\tDirectory: [%s]\n",
-					cur->directory);
-			}
-
-			if ((cur->flags & PDAFL_DEFAULT) != 0)
-			{
-				MISC_TRACE(3)
-					fprintf(stderr,
-						"Found a default PDA\n");
-
-				/* Mark this as the default pda_block */
-				default_pda = cur;
-				continue;
-			}
-
-			/* If we get this far, then the serial number
-			 * matches and this is not a default pda_block. So
-			 * this is the one we want to use.
-			 */
-			pda = cur;
-			break;
-		}
-
-		if (pda == NULL)
-		{
-			MISC_TRACE(3)
-				fprintf(stderr, "No exact match found for "
-					"this PDA. Using default\n");
-			/* Fall back to the default pda_block */
-			pda = default_pda;
-		}
-	}
+	pda = find_pda_block(palm);
+				/* Try to find a pda_block for the
+				 * current PDA */
 
 	MISC_TRACE(3)
 		if (pda == NULL)
@@ -1295,6 +1304,7 @@ new_pda_block()
 	retval->snum = NULL;
 	retval->directory = NULL;
 	retval->username = NULL;
+	retval->userid_given = False;
 	retval->userid = 0L;
 
 	return retval;
