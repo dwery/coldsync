@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.4 2002-09-07 15:08:20 azummo Exp $
+ * $Id: sync.c,v 2.5 2002-10-26 12:05:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -813,7 +813,8 @@ do_sync(pda_block *pda, struct Palm *palm)
 	InstallNewFiles(palm, GLOBAL_INSTALL_DIR, False, False);
 
 	/* Install any file in the "rescue" directory */
-	InstallNewFiles(palm, rescuedir, False, False);
+	if (sync_config->options.autorescue == True)
+		InstallNewFiles(palm, rescuedir, False, False);
 
 	/* XXX - Do we need install conduits for the above directories? */
 

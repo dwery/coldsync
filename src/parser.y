@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.67 2002-08-31 19:26:03 azummo Exp $
+ * $Id: parser.y,v 2.68 2002-10-26 12:05:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -83,6 +83,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token HOSTID
 %token INSTALL_FIRST
 %token AUTOINIT
+%token AUTORESCUE
 %token FILTER_DBS
 %token LISTEN
 %token OPTIONS
@@ -890,6 +891,18 @@ option:	FORCE_INSTALL colon boolean ';'
 		PARSE_TRACE(3)
 			fprintf(stderr, "Option: autoinit.\n");
 		file_config->options.autoinit = True3;
+	}
+	| AUTORESCUE colon boolean ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: autorescue.\n");
+		file_config->options.autoinit = $3;
+	}
+	| AUTORESCUE ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: autorescue.\n");
+		file_config->options.autorescue = True3;
 	}
 	| FILTER_DBS colon boolean ';'
 	{

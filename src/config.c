@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.105 2002-08-31 19:26:03 azummo Exp $
+ * $Id: config.c,v 1.106 2002-10-26 12:05:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -372,12 +372,14 @@ load_config(const Bool read_user_config)
 	}
 
 	/* Initialize the options to be undefined */
-	sync_config->options.force_install = Undefined;
-	sync_config->options.install_first = Undefined;
-	sync_config->options.autoinit      = Undefined;
-	sync_config->options.filter_dbs	   = False;	 /* We don't have an equivalent cmd line option
-							  * for this, so it defaults to False here.
-							  */
+	sync_config->options.force_install	= Undefined;
+	sync_config->options.install_first	= Undefined;
+	sync_config->options.autoinit		= Undefined;
+	sync_config->options.autorescue		= False;
+	sync_config->options.filter_dbs		= False;	 /* We don't have an equivalent cmd line option
+								  * for the last twos, so they defaults to 
+								  * False here.
+								  */
 
 	/* Add a default conduit to the head of the queue, equivalent
 	 * to:
