@@ -5,12 +5,13 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.12 2000-09-19 15:18:58 arensb Exp $
+# $Id: ColdSync.pm,v 1.13 2000-09-21 14:35:55 arensb Exp $
 package ColdSync;
+use strict;
 
 use vars qw( $VERSION );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.12 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.13 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -253,7 +254,7 @@ sub ParseArgs
 # Read the conduit headers from stdin.
 sub ReadHeaders
 {
-	my @preflist;		# List of preferences to read from STDIN:
+	my @preflist = ();	# List of preferences to read from STDIN:
 				# Each element is an anonymous array:
 				#	[ creator, ID, length ]
 	my $len;
