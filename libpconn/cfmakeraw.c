@@ -3,7 +3,7 @@
  * cfmakeraw(), for systems that don't have it. Ripped bodily from the
  * FreeBSD 3.0 distribution (/usr/src/lib/libc/gen/termios.c)
  *
- * $Id: cfmakeraw.c,v 1.2 2000-01-25 11:25:50 arensb Exp $
+ * $Id: cfmakeraw.c,v 1.3 2000-09-03 07:35:29 arensb Exp $
  */
 /*-
  * Copyright (c) 1989, 1993
@@ -39,6 +39,11 @@
  */
 #include "config.h"
 #include <termios.h>
+
+/* Windows apparently doesn't define PENDIN. */
+#if !defined(PENDIN)
+#  define PENDIN	0
+#endif	/* PENDIN */
 
 #if !HAVE_CFMAKERAW
 /*
