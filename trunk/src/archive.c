@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.9 1999-11-27 05:50:13 arensb Exp $
+ * $Id: archive.c,v 1.10 2000-01-27 02:03:11 arensb Exp $
  */
 
 #include "config.h"
@@ -109,48 +109,36 @@ arch_create(char *fname,
 }
 
 /* arch_open
- * Open the archive file 'fname' (which may be relative or absolute)
- * either for reading, writing, or both, depending on the value of
- * 'flags' (which takes the same values as open(2)).
+ * Open the archive file for 'dbinfo'. This will be a file under
+ * ~/.palm/archive, named after the database.
+ * 'flags' are passed to open(2), and should therefore be O_RDONLY,
+ * O_WRONLY, O_RDWR and friends.
  * Returns a file descriptor for the archive file, or a negative value
  * in case of error.
  */
 int
-arch_open(char *fname,
+arch_open(const struct dlp_dbinfo *dbinfo,
 	  int flags)
 {
 	int err;
 	int fd;				/* Return value: file descriptor */
-	char fnamebuf[MAXPATHLEN+1];	/* Name of the archive file */
+	const char *archfname;		/* Name of the archive file */
 
-	/* Construct the name of the archive file */
-	if (fname[0] == '/')
-	{
-		/* 'fname' is an absolute pathname, so just use that */
-		strncpy(fnamebuf, fname, MAXPATHLEN);
-		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
-	} else {
-		/* 'fname' is a relative pathname; take it to be
-		 * relative to ~/.palm/archive; construct that.
-		 */
-		strncpy(fnamebuf, archivedir, MAXPATHLEN);
-		strncat(fnamebuf, "/", MAXPATHLEN-strlen(fnamebuf));
-		strncat(fnamebuf, fname, MAXPATHLEN-strlen(fnamebuf));
-		fnamebuf[MAXPATHLEN] = '\0';	/* Terminate the string */
-	}
+	archfname = mkarchfname(dbinfo);
+				/* Construct the name of the archive file */
 
 	/* Open the file according to the mode given in 'flags'. The
 	 * third, 'mode' flag, is just there for paranoia, in case the
 	 * caller specified O_CREAT, so that open() doesn't read bogus
 	 * values from the stack.
 	 */
-	if ((fd = open(fnamebuf, flags, 0600)) < 0)
+	if ((fd = open(archfname, flags, 0600)) < 0)
 	{
 		if (errno != ENOENT)
 		{
 			fprintf(stderr, _("%s: Can't open \"%s\"\n"),
 				"arch_open",
-				fnamebuf);
+				archfname);
 			perror("open");
 		}
 		return -1;
