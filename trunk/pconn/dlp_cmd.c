@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.11 1999-06-06 18:32:05 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.12 1999-06-24 02:46:54 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -186,6 +186,14 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1, ">>> WriteUserInfo\n");
+/*
+fprintf(stderr, "userinfo->userid == %ld\n", userinfo->userid);
+fprintf(stderr, "userinfo->viewerid == %ld\n", userinfo->viewerid);
+fprintf(stderr, "userinfo->lastsyncPC == 0x%08lx\n", userinfo->lastsyncPC);
+fprintf(stderr, "userinfo->modflags == 0x%02x\n", userinfo->modflags);
+fprintf(stderr, "userinfo->usernamelen == %d\n", userinfo->usernamelen);
+fprintf(stderr, "userinfo->username == \"%s\"\n", userinfo->username);
+*/
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteUserInfo;
@@ -199,12 +207,12 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	dlpcmd_puttime(&wptr, &(userinfo->lastsync));
 	put_ubyte(&wptr, userinfo->modflags);
 	put_ubyte(&wptr, userinfo->usernamelen);
-	/* XXX - Probably shouldn't do this unless modifying the user
-	 * name.
-	 */
-	/* XXX - Potential buffer overflow */
-	memcpy(wptr, userinfo->username, userinfo->usernamelen);
-	wptr += userinfo->usernamelen;
+	if (userinfo->usernamelen > 0)
+	{
+		/* XXX - Potential buffer overflow */
+		memcpy(wptr, userinfo->username, userinfo->usernamelen);
+		wptr += userinfo->usernamelen;
+	}
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteUserInfo_UserInfo;
