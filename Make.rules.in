@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.18 2001-09-22 09:23:10 arensb Exp $
+# $Id: Make.rules.in,v 1.19 2001-11-12 04:31:22 arensb Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -102,9 +102,17 @@ INSTALL_MAN =		${INSTALL_DATA}
 
 .SUFFIXES:	.c .o .cc .ln
 .SUFFIXES:	.a
+.SUFFIXES:	.So .so
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
+
+# XXX - Shared library object. This is only known to work under
+# FreeBSD 4.2 for now.
+.c.So:
+	${CC} -fpic -DPIC ${CFLAGS} -c $< -o $@
+	${LD} -o $@.tmp -x -r $@
+	mv $@.tmp $@
 
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
@@ -131,6 +139,8 @@ INSTALL_MAN =		${INSTALL_DATA}
 	${MSGFMT} -v ${EXTRA_MSGFMT_ARGS} -o $@ $<
 
 LIBRARY =	lib${LIBNAME}.a
+SHLIB =		lib${LIBNAME}.so
+SHLIBVER =	lib${LIBNAME}.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
 
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
@@ -152,6 +162,14 @@ ${CXXPROG}:	${OBJS}
 ${LIBRARY}:	${LIBOBJS}
 	ar cr $@ ${LIBOBJS}
 	${RANLIB} $@
+
+# XXX - Build a shared library from .So object files. This is only
+# known to work under FreeBSD 4.2 for now.
+${SHLIB} ${SHLIBVER}:	${SHLIBOBJS}
+	-rm -f ${SHLIBVER} ${SHLIB}
+	-ln -sf ${SHLIBVER} ${SHLIB}
+	${CC} -shared -Wl,-x -o ${SHLIBVER} -Wl,-soname,${SHLIBVER} \
+		`lorder ${SHLIBOBJS} | tsort -q`
 
 # lex.yy.o:	lex.yy.c
 # 	${CC} ${CFLAGS} -c $<
