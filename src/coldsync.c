@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.103 2001-09-08 00:22:03 arensb Exp $
+ * $Id: coldsync.c,v 1.104 2001-09-08 01:13:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -3011,8 +3011,8 @@ Disconnect(PConnection *pconn, const ubyte status)
 		}
 
 		Error(_("Error during DlpEndOfSync: (%d) %s."),
-		      palm_errno,
-		      _(palm_errlist[palm_errno]));
+		      (int) palm_errno,
+		      _(palm_strerror(palm_errno)));
 		PConnClose(pconn);
 		return err;
 	}
