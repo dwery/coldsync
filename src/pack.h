@@ -2,7 +2,11 @@
  *
  * Declarations for ppack() and punpack().
  *
- * $Id: pack.h,v 2.2 1999-08-25 04:06:07 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: pack.h,v 2.3 1999-08-26 14:19:44 arensb Exp $
  */
 #ifndef _pack_h_
 #define _pack_h_

@@ -2,7 +2,11 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.2 1999-08-01 08:06:53 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: pdb.h,v 1.3 1999-08-26 14:18:40 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_

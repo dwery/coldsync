@@ -2,7 +2,11 @@
  *
  * Error codes for libpalm.
  *
- * $Id: palm_errno.h,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: palm_errno.h,v 1.2 1999-08-26 14:19:00 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_

@@ -2,6 +2,10 @@
  *
  * Types and definitions for Palm Serial Link Protocol (SLP).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Structure of a SLP packet:
  *	+------+------+------+------+------+
  *	| preamble           | dest | src  |
@@ -43,7 +47,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: slp.h,v 1.2 1999-08-26 14:18:06 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_

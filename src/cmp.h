@@ -1,5 +1,9 @@
 /* cmp.h
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Types and definitions for Palm Connection Management Protocol
  * (CMP).
  *
@@ -37,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: cmp.h,v 1.2 1999-08-26 14:21:35 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_

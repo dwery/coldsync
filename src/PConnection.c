@@ -2,7 +2,11 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.4 1999-08-23 08:43:37 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: PConnection.c,v 1.5 1999-08-26 14:24:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

@@ -2,7 +2,11 @@
  *
  * Convenience functions for logging.
  *
- * $Id: log.c,v 1.5 1999-08-25 09:51:54 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: log.c,v 1.6 1999-08-26 14:20:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

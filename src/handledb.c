@@ -2,7 +2,11 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.3 1999-08-01 08:06:05 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: handledb.c,v 1.4 1999-08-26 14:20:21 arensb Exp $
  */
 
 #include "config.h"
