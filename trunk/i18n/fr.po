@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: coldsync 1.1.2\n"
-"POT-Creation-Date: 2000-02-06 03:03-0500\n"
+"POT-Creation-Date: 2000-02-06 19:52-0500\n"
 "PO-Revision-Date: 2000-02-05 17:48-0500\n"
 "Last-Translator: Andrew Arensburger <arensb@ooblick.com>\n"
 "Language-Team: fr <fr@li.org>\n"
@@ -155,6 +155,8 @@ msgstr "%s: Erreur: Impossible de lire le fichier de secours pour %s.\n"
 #, c-format
 msgid "%s error: Can't reset sync flags: %d\n"
 msgstr ""
+"%s: Erreur: Je n'arrive pas a remettre à zéro les flags de synchronisation: "
+"%d\n"
 
 #: src/GenericConduit.cc:358
 #, c-format
@@ -397,7 +399,7 @@ msgstr ""
 
 #: libpconn/PConnection_usb.c:414
 #, c-format
-msgid "%s: Could not find Hotsync endpoint on Visor.\n"
+msgid "%s: Could not find HotSync endpoint on Visor.\n"
 msgstr ""
 
 #: src/install.c:197
