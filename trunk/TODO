@@ -29,9 +29,6 @@
 - add_to_log() should probably also use printf() syntax, for
   convenience.
 - Make the *_TRACE stuff go to a separate debugging log file.
-- It should be possible to sync two Palms with each other if you have
-  two cradles, or over the net.
-	Naah. Just sync to an intermediate file.
 - Add identd support?
 - PAM for security throughout?
 - Add code to check ~/.palm/backup to look for databases that aren't
@@ -107,22 +104,10 @@
 - Dynamically-loaded objects: if the 'coldsync' binary has a variable
   'foo' or a function func(), how does it make these available to a
   dynamically-loaded library?
-- Redo the PDB library API: should use filehandles, rather than
-  filenames. That way, can attempt to open a file and see if that's
-  even possible. Currently, we download a database from the Palm, try
-  to write it, and only *then* find out if ~/.palm/backup isn't
-  writable.
-- Optimization: don't sync a database if its modification number is
-  the same as the desktop copy. We already know that this database
-  hasn't changed, so there's no need to open the database, send a
-  "send me the next modified record" request that we know is going to
-  fail, and close the database.
+  I suspect that the way to do this is to have dummy variables in the
+  loadable object that the main program has to fill in manually when
+  the object is loaded.
 - Lock files while syncing.
-- Separate the distribution into 'coldsync' and 'coldsync-doc', since
-  the documentation is almost three times as large as everything else.
-  At least, get rid of the .ps files, or distribute them separately.
-  Is it possible to make 'make dist' create two distributions?
-- Write a license (Artistic? Adapt it?).
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
   and other fun stuff. OTOH, since this is Unix, it ought to be able
@@ -193,8 +178,6 @@
   something.
 - When printing "questionable" types (uid_t, etc.), cast them to long,
   or whatever the largest type is, to shut compilers up.
-- Under Solaris 2.5, need:
-	env LIBS="-lbind -lsocket -lnsl" ./configure
 - Under DU 4.0 (and a few others), 'make' doesn't appear to know how
   to build .cc->.o
 - AIX 4.1: linker complains about:
@@ -204,15 +187,24 @@
 	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
   This appears to be something in GenericConduit.cc, but I haven't
   been able to find anything more.
-- It might be possible to save time by not syncing databases whose
-  modnum hasn't changed. This is tricky, though: need to figure out
-  the expected modnum at the next sync (probably sufficient to just
-  record the current modnum). Also, if the local and remote databases
-  get modified the same number of times in different ways, nothing
-  will be synced.
-- Include "config.h" before the various system files. Fix throughout.
-- 'install' target.
+- Optimization: don't sync a database if its modification number is
+  the same as the desktop copy. We already know that this database
+  hasn't changed, so there's no need to open the database, send a
+  "send me the next modified record" request that we know is going to
+  fail, and close the database.
+  This presumes that the modnum on the desktop doesn't get updated.
+  Then again, is this worth worrying about?
 - BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - Should man pages be compressed after installation, or should the
   port take care of that?
+- FreeBSD's /bin/sh is still broken:
+	echo "before"
+	for dir in a b c; do
+		test "$dir" = "." && echo "found dot"
+	done
+	echo "after"
+  still exits right after the "done". Presumably, what needs to happen
+  is for information about whether to exit with the "-e" flag to be
+  carried upwards through the parse tree.
+	Until this gets fixed, I don't want to use 'automake'.
