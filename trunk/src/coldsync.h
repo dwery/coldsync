@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.31 2000-10-22 03:23:33 arensb Exp $
+ * $Id: coldsync.h,v 1.32 2000-10-22 08:36:33 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -29,6 +29,7 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 
 /* Types of listen blocks */
 /* XXX - This should go elsewhere, in PConnection.h or something */
+/* XXX - Perhaps this ought to be an enum */
 #define LISTEN_NONE	0	/* Dunno if this will be useful */
 #define LISTEN_SERIAL	1	/* Listen on serial port */
 #define LISTEN_TCP	2	/* Listen on TCP port (not
@@ -101,12 +102,17 @@ typedef enum {
 				/* XXX - Not implemented yet */
 } run_mode;
 
-/* cmd_opts
- * Command-line options. This nameless struct acts sort of like a C++
+/* cmd_opts Command-line options. This struct acts sort of like a C++
  * namespace, and just serves to make sure there are no name collisions.
  */
 struct cmd_opts {
 	run_mode mode;		/* Mode in which to run */
+	char *conf_fname;	/* User configuration file name */
+	Bool conf_fname_given;	/* If true, user specified a config file on
+				 * the command line.
+				 */
+	char *devname;		/* Name of the device on which to listen */
+	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
 	/* XXX - do_backup and do_restore will be obsoleted by run modes */
 	/* XXX - backupdir and restoredir will be obsoleted by
 	 * mode-specific functions.
@@ -327,6 +333,9 @@ extern int Connect(struct PConnection *pconn);
 extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
 extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
+extern int run_mode_Standalone();
+extern int run_mode_Backup();
+extern int run_mode_Restore();
 extern int backup(struct PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
@@ -348,6 +357,10 @@ extern const char *mkfname(const char *dirname,
 extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
 extern const char *mkarchfname(const struct dlp_dbinfo *dbinfo);
 extern const char *fname2dbname(const char *fname);
+extern const Bool exists(const char *fname);
+extern const Bool lexists(const char *fname);
+extern const Bool is_file(const char *fname);
+extern const Bool is_directory(const char *fname);
 extern struct dlp_dbinfo *find_dbentry(struct Palm *palm,
 				       const char *name);
 extern int append_dbentry(struct Palm *palm,
@@ -355,6 +368,7 @@ extern int append_dbentry(struct Palm *palm,
 extern char snum_checksum(const char *snum, int len);
 extern int open_tempfile(char *name_template);
 extern int get_config(int argc, char *argv[]);
+extern int parse_args(int argc, char *argv[]);
 extern int add_to_log(const char *msg);
 
 #endif	/* _coldsync_h_ */
