@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.24 2000-04-10 09:56:37 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.25 2000-04-15 18:10:29 arensb Exp $
  */
 
 /* Note on I/O:
@@ -54,6 +54,7 @@ extern "C" {
 #endif	/* HAVE_LIBINTL */
 
 #include "pconn/pconn.h"
+#include "error.h"
 #include "pdb.h"
 #include "coldsync.h"
 #include "archive.h"
@@ -215,13 +216,25 @@ GenericConduit::FirstSync()
 	add_to_log(_(" (1st) - "));
 
 	err = DlpOpenConduit(_pconn);
-	if (err != DLPSTAT_NOERR)
+	switch (err)
 	{
+	    case DLPSTAT_NOERR:		/* Everything's fine */
+		break;
+	    case DLPSTAT_CANCEL:	/* Sync cancelled by Palm */
 		SYNC_TRACE(4)
+			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
+				"by user\n");
+		add_to_log(_("Cancelled\n"));
+		cs_errno = CSE_CANCEL;
+		return -1;
+	    default:
+		SYNC_TRACE(4)
+		{
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
-		add_to_log(_("Error\n"));
-		return -1; 
+			fprintf(stderr, "palm_errno == %d\n", palm_errno);
+		}	
+		return -1;
 	}
 
 	/* Open the database for reading */
@@ -425,13 +438,22 @@ GenericConduit::SlowSync()
 		fprintf(stderr, "*** Phase 1:\n");
 	/* Phase 1: grab the entire database from the Palm */
 	err = DlpOpenConduit(_pconn);
-	if (err != DLPSTAT_NOERR)
+	switch (err)
 	{
+	    case DLPSTAT_NOERR:		/* Everything's fine */
+		break;
+	    case DLPSTAT_CANCEL:	/* Sync cancelled by Palm */
+		SYNC_TRACE(4)
+			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
+				"by user\n");
+		add_to_log(_("Cancelled\n"));
+		cs_errno = CSE_CANCEL;
+		return -1;
+	    default:
 		SYNC_TRACE(4)
 			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
-		add_to_log(_("Error\n"));
-		return -1; 
+		return -1;
 	}
 
 	/* Open the database for reading */
@@ -849,14 +871,22 @@ GenericConduit::FastSync()
 	add_to_log(" - ");
 
 	err = DlpOpenConduit(_pconn);
-	if (err != DLPSTAT_NOERR)
+	switch (err)
 	{
+	    case DLPSTAT_NOERR:		/* Everything's fine */
+		break;
+	    case DLPSTAT_CANCEL:	/* Sync cancelled by Palm */
 		SYNC_TRACE(4)
-			fprintf(stderr, "GenericConduit::FastSync: "
-				"DlpOpenConduit() returned %d\n",
+			fprintf(stderr, "DlpOpenConduit() failed: cancelled "
+				"by user\n");
+		add_to_log(_("Cancelled\n"));
+		cs_errno = CSE_CANCEL;
+		return -1;
+	    default:
+		SYNC_TRACE(4)
+			fprintf(stderr, "DlpOpenConduit() returned %d\n",
 				err);
-		add_to_log(_("Error\n"));
-		return -1; 
+		return -1;
 	}
 
 	/* Open the database for reading */
