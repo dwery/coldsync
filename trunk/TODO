@@ -214,3 +214,5 @@
 - 'install' target.
 - BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
+- Should man pages be compressed after installation, or should the
+  port take care of that?
