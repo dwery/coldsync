@@ -1,5 +1,9 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.110 2001-01-08 08:09:22 arensb Exp $
+dnl # Copyright (C) 1999-2001, Andrew Arensburger.
+dnl # You may distribute this file under the terms of the Artistic
+dnl # License, as specified in the README file.
+dnl #
+dnl # $Id: configure.in,v 1.111 2001-01-09 16:24:17 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
