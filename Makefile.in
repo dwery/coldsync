@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.1 1999-07-04 14:44:09 arensb Exp $
+# $Id: Makefile.in,v 1.2 1999-07-12 07:46:03 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -11,14 +11,15 @@ SUBDIRS =	src doc
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
 RECURSIVE_TARGETS = \
-		all clean distclean spotless distdir
+		all depend clean distclean spotless distdir
 
 DISTFILES =	AUTHORS \
 		ChangeLog \
 		HACKING \
 		Makefile.in \
-		TODO \
+		configure.in \
 		config.h.in \
+		TODO \
 		install-sh \
 		configure
 
@@ -29,9 +30,10 @@ COMPRESS =	true ${TARBALL}
 
 # Additional files to delete when making 'clean', 'distclean' and
 # 'spotless', respectively. Each one includes the previous ones.
-CLEAN =		core *.core *.bak *~ errs
-DISTCLEAN =	Makefile config.cache config.h config.log config.status ID
-SPOTLESS =	${TARBALL}
+CLEAN =		core *.core *.bak *~ errs errs.*
+DISTCLEAN =	Makefile config.cache config.h config.log config.status ID \
+		.depend
+SPOTLESS =	${TARBALL} ${DISTDIR} configure
 
 # This empty rule is just so that 'make' (build the first target) and
 # 'make all' (build the "all" target) build the same thing, the way
@@ -46,7 +48,7 @@ distdir::	${DISTFILES}
 	cp -p ${DISTFILES} ${DISTDIR}
 
 dist::	distdir
-	tar chozf ${TARBALL} ${DISTDIR}
+	GZIP="--best" tar chozf ${TARBALL} ${DISTDIR}
 	rm -rf ${DISTDIR}
 
 ${RECURSIVE_TARGETS}::
@@ -70,6 +72,8 @@ spotless-here:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
 spotless::	spotless-here 
 
+# This creates the ID file that lists where various identifiers are
+# found. Used by 'lid', part of the id-utils package.
 id:	ID
 ID:
 	@MKID@
