@@ -2,8 +2,10 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.2 1999-07-12 09:27:30 arensb Exp $
+ * $Id: pdb.c,v 1.3 1999-08-23 08:46:11 arensb Exp $
  */
+
+#include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
 #include <sys/types.h>
@@ -570,7 +572,7 @@ pdb_Download(struct PConnection *pconn,
 	retval->creator = dbinfo->creator;
 	retval->uniqueIDseed = 0L;	/* XXX - Should this be something
 					 * else? */
-	SYNC_TRACE(4)
+	PDB_TRACE(4)
 	{
 		fprintf(stderr, "pdb_Download:\n");
 		fprintf(stderr, "\tname: \"%s\"\n", retval->name);
@@ -610,7 +612,7 @@ pdb_Download(struct PConnection *pconn,
 	}
 	retval->next_reclistID = 0L;
 	retval->numrecs = opendbinfo.numrecs;
-	SYNC_TRACE(4)
+	PDB_TRACE(4)
 	{
 		fprintf(stderr, "\n\tnextID: %ld\n", retval->next_reclistID);
 		fprintf(stderr, "\tlen: %d\n", retval->numrecs);
@@ -636,10 +638,10 @@ pdb_Download(struct PConnection *pconn,
 		memcpy(retval->appinfo, rptr, appinfo_len);
 					/* Copy the AppInfo block */
 		retval->appinfo_len = appinfo_len;
-		SYNC_TRACE(4)
+		PDB_TRACE(4)
 			fprintf(stderr,
 				"pdb_Download: got an AppInfo block\n");
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 			debug_dump(stderr, "APP", retval->appinfo,
 				   retval->appinfo_len);
 		break;
@@ -647,7 +649,7 @@ pdb_Download(struct PConnection *pconn,
 		/* This database doesn't have an AppInfo block */
 		retval->appinfo_len = 0;
 		retval->appinfo = NULL;
-		SYNC_TRACE(5)
+		PDB_TRACE(5)
 			fprintf(stderr, "pdb_Download: this db doesn't have "
 				"an AppInfo block\n");
 		break;
@@ -698,7 +700,7 @@ pdb_Download(struct PConnection *pconn,
 		err = pdb_DownloadResources(pconn, dbh, retval);
 	else
 		err = pdb_DownloadRecords(pconn, dbh, retval);
-	SYNC_TRACE(7)
+	PDB_TRACE(7)
 		fprintf(stderr,
 			"After pdb_Download{Resources,Records}; err == %d\n",
 			err);
@@ -711,6 +713,167 @@ pdb_Download(struct PConnection *pconn,
 	}
 
 	return retval;			/* Success */
+}
+
+/* pdb_Upload
+ * Upload 'db' to the Palm. This database must not exist (i.e., it's the
+ * caller's responsibility to delete it if necessary).
+ * When a record is uploaded, the Palm may assign it a new record number.
+ * pdb_Upload() records this change in 'db', but it is the caller's
+ * responsibility to save this change to the appropriate file, if
+ * applicable.
+ */
+int
+pdb_Upload(struct PConnection *pconn,
+	   struct pdb *db)
+{
+	int err;
+	ubyte dbh;			/* Database handle */
+	struct dlp_createdbreq newdb;	/* Argument for creating a new
+					 * database */
+
+	PDB_TRACE(1)
+		fprintf(stderr, "Uploading \"%s\"\n", db->name);
+
+	/* Call OpenConduit to let the Palm (or the user) know that
+	 * something's going on. (Actually, I don't know that that's the
+	 * reason. I'm just imitating HotSync, here.
+	 */
+	err = DlpOpenConduit(pconn);
+	if (err != DLPSTAT_NOERR)
+	{
+		fprintf(stderr, "Can't open conduit for \"%s\", err == %d\n",
+			db->name, err);
+		return -1;
+	}
+
+	/* Create the database */
+	newdb.creator = db->creator;
+	newdb.type = db->type;
+	newdb.card = CARD0;
+	newdb.flags = db->attributes;	/* XXX - Is this right? This is voodoo code */
+	newdb.version = db->version;
+	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
+
+	err = DlpCreateDB(pconn, &newdb, &dbh);
+	if (err != DLPSTAT_NOERR)
+	{
+		fprintf(stderr, "Error creating database \"%s\", err == %d\n",
+			db->name, err);
+		return -1;
+	}
+
+	/* Upload the AppInfo block, if it exists */
+	if (db->appinfo_len > 0)
+	{
+		PDB_TRACE(3)
+			fprintf(stderr, "Uploading AppInfo block\n");
+
+		err = DlpWriteAppBlock(pconn, dbh,
+				       0, db->appinfo_len,
+				       db->appinfo);
+		if (err < 0)
+			return err;
+	}
+
+	/* Upload the sort block, if it exists */
+	if (db->sortinfo_len > 0)
+	{
+		PDB_TRACE(3)
+			fprintf(stderr, "Uploading sort block\n");
+
+		err = DlpWriteSortBlock(pconn, dbh,
+					0, db->sortinfo_len,
+					db->sortinfo);
+		if (err < 0)
+			return err;
+	}
+
+	/* Upload each record/resource in turn */
+	if (IS_RSRC_DB(db))
+	{
+		/* It's a resource database */
+		struct pdb_resource *rsrc;
+
+		PDB_TRACE(4)
+			fprintf(stderr, "Uploading resources.\n");
+
+		for (rsrc = db->rec_index.rsrc;
+		     rsrc != NULL;
+		     rsrc = rsrc->next)
+		{
+			PDB_TRACE(5)
+				fprintf(stderr,
+					"Uploading resource 0x%04x\n",
+					rsrc->id);
+
+			err = DlpWriteResource(pconn,
+					       dbh,
+					       rsrc->type,
+					       rsrc->id,
+					       rsrc->data_len,
+					       rsrc->data);
+
+			if (err != DLPSTAT_NOERR)
+			{
+				/* Close the database */
+				err = DlpCloseDB(pconn, dbh);
+				return -1;
+			}
+		}
+	} else {
+		/* It's a record database */
+		struct pdb_record *rec;
+
+		PDB_TRACE(4)
+			fprintf(stderr, "Uploading records.\n");
+
+		for (rec = db->rec_index.rec;
+		     rec != NULL;
+		     rec = rec->next)
+		{
+			udword newid;		/* New record ID */
+			PDB_TRACE(5)
+				fprintf(stderr,
+					"Uploading record 0x%08lx\n",
+					rec->id);
+
+			err = DlpWriteRecord(pconn,
+					     dbh,
+					     0x80,	/* Mandatory magic */
+							/* XXX - Actually,
+							 * at some point
+							 * DlpWriteRecord
+							 * will get fixed
+							 * to make sure the
+							 * high bit is set,
+							 * at which point
+							 * this argument be
+							 * allowed to be 0.
+							 */
+					     rec->id,
+					     (rec->attributes & 0xf0),
+					     (rec->attributes & 0x0f),
+					     rec->data_len,
+					     rec->data,
+					     &newid);
+
+			if (err != DLPSTAT_NOERR)
+			{
+				/* Close the database */
+				err = DlpCloseDB(pconn, dbh);
+				return -1;
+			}
+
+			/* Update the ID assigned to this record */
+			rec->id = newid;
+		}
+	}
+
+	/* Clean up */
+	err = DlpCloseDB(pconn, dbh);
+
+	return 0;		/* Success */
 }
 
 /* pdb_FindRecordByID
@@ -1161,7 +1324,7 @@ pdb_LoadHeader(int fd,
 	db->creator = get_udword(&rptr);
 	db->uniqueIDseed = get_udword(&rptr);
 
-	SYNC_TRACE(5)
+	PDB_TRACE(5)
 	{
 		time_t t;
 
@@ -1233,7 +1396,7 @@ pdb_LoadRecListHeader(int fd,
 	db->next_reclistID = get_udword(&rptr);
 	db->numrecs = get_uword(&rptr);
 
-	SYNC_TRACE(6)
+	PDB_TRACE(6)
 	{
 		printf("\tnextID: %ld\n", db->next_reclistID);
 		printf("\tlen: %u\n", db->numrecs);
@@ -1299,7 +1462,7 @@ pdb_LoadRsrcIndex(int fd,
 		rsrc->id = get_uword(&rptr);
 		rsrc->offset = get_udword(&rptr);
 
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 		{
 			printf("\tResource %d: type '%c%c%c%c' (0x%08lx), "
 			       "id %u, offset 0x%04lx\n",
@@ -1392,7 +1555,7 @@ pdb_LoadRecIndex(int fd,
 			((udword) (get_ubyte(&rptr) << 8)) |
 			((udword) get_ubyte(&rptr));
 
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 			printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, "
 			       "ID 0x%08lx\n",
 			       i,
@@ -1503,7 +1666,7 @@ pdb_LoadAppBlock(int fd,
 		perror("pdb_LoadAppBlock: read");
 		return -1;
 	}
-	SYNC_TRACE(6)
+	PDB_TRACE(6)
 		debug_dump(stdout, "<APP", db->appinfo, db->appinfo_len);
 
 	return 0; 
@@ -1604,7 +1767,7 @@ pdb_LoadSortBlock(int fd,
 		perror("pdb_LoadSortBlock: read");
 		return -1;
 	}
-	SYNC_TRACE(6)
+	PDB_TRACE(6)
 		debug_dump(stdout, "<SORT", db->sortinfo, db->sortinfo_len); 
 
 	return 0; 
@@ -1641,7 +1804,7 @@ pdb_LoadResources(int fd,
 			return -1;
 		}
 
-		SYNC_TRACE(5)
+		PDB_TRACE(5)
 			printf("Reading resource %d (type '%c%c%c%c')\n",
 			       i,
 			       (char) (rsrc->type >> 24) & 0xff,
@@ -1715,7 +1878,7 @@ pdb_LoadResources(int fd,
 			perror("pdb_LoadResources: read");
 			return -1;
 		}
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 		{
 			printf("Contents of resource %d:\n", i);
 			debug_dump(stdout, "<RSRC", rsrc->data,
@@ -1757,7 +1920,7 @@ pdb_LoadRecords(int fd,
 			return -1;
 		}
 
-		SYNC_TRACE(5)
+		PDB_TRACE(5)
 			printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
 
 		/* Out of paranoia, make sure we're in the right place */
@@ -1826,7 +1989,7 @@ pdb_LoadRecords(int fd,
 			return -1;
 		}
 
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 		{
 			printf("Contents of record %d:\n", i);
 			debug_dump(stdout, "<REC", rec->data, rec->data_len);
@@ -1903,7 +2066,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 			return -1;
 		}
 
-		SYNC_TRACE(5)
+		PDB_TRACE(5)
 		{
 			fprintf(stderr, "DLP resource data %d:\n", i);
 			fprintf(stderr, "\ttype: '%c%c%c%c'\n",
@@ -1934,7 +2097,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 
 		/* Copy the resource data to 'rsrc' */
 		memcpy(rsrc->data, rptr, rsrc->data_len);
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 			debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
 
 		/* Append the resource to the database */
@@ -2047,7 +2210,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 			return -1;
 		}
 
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 		{
 			fprintf(stderr, "DLP record data %d:\n", i);
 			fprintf(stderr, "\tid: 0x%08lx\n", recinfo.id);
@@ -2077,7 +2240,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 
 		/* Copy the record data to 'rec' */
 		memcpy(rec->data, rptr, rec->data_len);
-		SYNC_TRACE(6)
+		PDB_TRACE(6)
 			debug_dump(stderr, "REC", rec->data, rec->data_len);
 
 		/* Append the record to the database */
