@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.41 2000-09-17 21:37:29 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.42 2000-09-21 14:35:25 arensb Exp $
  */
 
 /* Note on I/O:
@@ -212,7 +212,8 @@ GenericConduit::run()
 		 * a FirstSync().
 		 */
 		err = this->FirstSync();
-	} else if (global_opts.force_slow || need_slow_sync)
+	} else if ((global_opts.force_slow || need_slow_sync) && 
+		   !global_opts.force_fast)
 	{
 		SYNC_TRACE(3)
 			fprintf(stderr, "Doing a slow sync\n");
