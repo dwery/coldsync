@@ -6,13 +6,17 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.3 2000-02-03 04:25:38 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.4 2000-02-06 22:29:18 arensb Exp $
  */
 
 #include "config.h"
-#if WITH_USB		/* This encompasses the entire file */
 
-#include <stdio.h>
+#include <stdio.h>	/* This is left outside of the #if WITH_USB solely
+			 * to make 'gcc' shut up: apparently, ANSI C
+			 * doesn't like empty source files.
+			 */
+
+#if WITH_USB		/* This encompasses the entire file */
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -394,11 +398,11 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 	for (i = 0; i < UGETW(ci.numPorts); i++) {
 	  IO_TRACE(2)
 	  	fprintf(stderr,
-			_("ConnectionInfo: entry %d function %s on port %d\n"),
+			"ConnectionInfo: entry %d function %s on port %d\n",
 			i, 
 			(ci.connections[i].portFunctionID <= hs_usbfun_MAX)
 			  ? hs_usb_functions[ci.connections[i].portFunctionID]
-			  : _("unknown"),
+			  : "unknown",
 			ci.connections[i].port);
 
 	  if (ci.connections[i].portFunctionID == hs_usbfun_Hotsync)
@@ -407,8 +411,8 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 
 	if (hotsync_endpoint < 0) {
 		fprintf(stderr,
-			_("%s: could not find Hotsync endpoint on Visor.\n"),
-			_("PConnection_usb"));
+			_("%s: Could not find HotSync endpoint on Visor.\n"),
+			"PConnection_usb");
 		(void) close(usb_ep0);
 		free((void *)u);
 		return -1;	  
@@ -440,7 +444,7 @@ pconn_usb_open(struct PConnection *p, char *device, int prompt)
 	if (UGETW(usbresponse) != 1) {
 		fprintf(stderr,
 			_("%s: unexpected response %d to GetBytesAvailable\n"),
-			_("PConnection_usb"), UGETW(usbresponse));
+			"PConnection_usb", UGETW(usbresponse));
 	}
 
 
