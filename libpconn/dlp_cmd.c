@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.32 2002-05-03 17:15:30 azummo Exp $
+ * $Id: dlp_cmd.c,v 1.33 2002-07-04 21:04:09 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -314,9 +314,9 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 
 	/* Fill in the argument */
 	
-	outbuf[0] = 0x00; /* We are telling our peer we support
-	outbuf[1] = 0x01;  * DLP 1.3. Old PDAs will discard the argument.
-	outbuf[2] = 0x00;  */
+	outbuf[0] = 0x00; /* We are telling our peer we support */
+	outbuf[1] = 0x01; /* DLP 1.3. Old PDAs will discard the argument. */
+	outbuf[2] = 0x00; 
 	outbuf[3] = 0x03;
 	
 	argv[0].id	= DLPARG_ReadSysInfo_Ver;
