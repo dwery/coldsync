@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.17 2000-11-18 22:46:31 arensb Exp $
+ * $Id: install.c,v 2.18 2000-11-19 00:11:53 arensb Exp $
  */
 
 #include "config.h"
@@ -206,20 +206,9 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
         while ((file = readdir(dir)) != NULL) {
 		static char fname[MAXPATHLEN+1];
 
-		/* XXX - Use is_database_name() */
-		/* Find the last dot in the filename, to see if the
-                 * file has a kosher extension (".pdb" or ".prc");
-                 */
-                lastdot = strrchr(file->d_name, '.');
-		
-                if (lastdot == NULL)
-                        /* No dot, so no extension. Ignore this */
-                        continue;
-		
-                if ((strcasecmp(lastdot, ".pdb") != 0) &&
-                    (strcasecmp(lastdot, ".prc") != 0))
-                        /* The file has an unknown extension. Ignore it */
-                        continue;
+		/* Does this look like a database? */
+		if (!is_database_name(file->d_name))
+			continue;	/* No. Ignore it */
 
 		/* Construct the file's full pathname */
                 strncpy(fname, installdir, MAXPATHLEN);
@@ -264,7 +253,6 @@ InstallNewFiles(struct PConnection *pconn,
 		Bool deletep)		/* Flag: delete after installing? */
 {
 	int err;
-/*  	int i; */
 	DIR *dir;
 	struct dirent *file;
 
