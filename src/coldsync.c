@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.71 2000-12-16 23:22:26 arensb Exp $
+ * $Id: coldsync.c,v 1.72 2000-12-24 09:50:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,6 +14,11 @@
 #include <termios.h>		/* Experimental */
 #include <dirent.h>		/* For opendir(), readdir(), closedir() */
 #include <string.h>		/* For strrchr() */
+#include <netdb.h>		/* For gethostbyname2() */
+/* XXX - Is <arpa/inet.h> needed, except for debugging? */
+#include <sys/socket.h>		/* For AF_* */
+#include <netinet/in.h>		/* For in_addr */
+#include <arpa/inet.h>		/* For inet_ntop() and friends */
 
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For strcasecmp() under AIX */
@@ -50,6 +55,12 @@ static int run_mode_Standalone(int argc, char *argv[]);
 static int run_mode_Backup(int argc, char *argv[]);
 static int run_mode_Restore(int argc, char *argv[]);
 static int run_mode_Init(int argc, char *argv[]);
+static int mkforw_addr(struct Palm *palm,
+		       pda_block *pda,
+		       struct sockaddr **addr,
+		       socklen_t *sa_len);
+int forward_netsync(struct PConnection *local,
+		    struct PConnection *remote);
 
 int CheckLocalFiles(struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
@@ -147,10 +158,10 @@ main(int argc, char *argv[])
 	}
 
 	/* Get this host's hostid */
-	if ((err = get_hostid(&hostid)) < 0)
+	if ((err = get_hostinfo()) < 0)
 	{
 		fprintf(stderr, _("Error: can't get host ID.\n"));
-		exit(1);
+		goto done;
 	}
 
 	/* Parse command-line arguments */
@@ -165,7 +176,7 @@ main(int argc, char *argv[])
 		/* Not an error, but no need to go on (e.g., the user just
 		 * wanted the usage message.
 		 */
-		exit(0);
+		goto done;
 
 	argc -= err;		/* Skip the parsed command-line options */
 	argv += err;
@@ -294,7 +305,10 @@ main(int argc, char *argv[])
 		err = -1;
 	}
 
-  done:
+  done:	/* Generic termination label. Here we take care of cleaning up
+	 * after everything, and exit. If 'err' is negative, exit with an
+	 * error status; otherwise, exit with a 0 status.
+	 */
 	if (sync_config != NULL)
 	{
 		free_sync_config(sync_config);
@@ -310,6 +324,9 @@ main(int argc, char *argv[])
 
 	if (synclog != NULL)
 		free(synclog);
+
+	if (hostaddrs != NULL)
+		free_hostaddrs();
 
 	MISC_TRACE(1)
 		fprintf(stderr, "ColdSync terminating normally\n");
@@ -463,6 +480,137 @@ run_mode_Standalone(int argc, char *argv[])
 		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return -1;
+	}
+
+	/* XXX - If the PDA block has forwarding turned on, then see which
+	 * host to forward to (NULL == whatever the Palm wants). Check to
+	 * see if we're that host. If so, continue normally. Otherwise,
+	 * open a NetSync connection to that host and allow it to sync.
+	 * Then return from run_mode_Standalone().
+	 *
+	 * How to figure out whether this is the host to sync with:
+	 *	Get all of this host's addresses (get_hostaddrs()).
+	 *	gethostbyname(remotehost) to get all of the remote host's
+	 *	addresses.
+	 *	Compare each local address with each remote address. If
+	 *	there's a match, then localhost == remotehost.
+	 * The way to get the list of the local host's addresses is
+	 * ioctl(SIOCGIFCONF). See Stevens, UNP1, chap. 16.6.
+	 */
+	if (pda->forward)
+	{
+		/* XXX - Need to figure out if remote address is really
+		 * local, in which case we really need to continue doing a
+		 * normal sync.
+		 */
+		struct sockaddr *sa;
+		socklen_t sa_len;
+		struct PConnection *pconn_forw;
+
+		SYNC_TRACE(2)
+			fprintf(stderr,
+				"I ought to forward this sync to \"%s\" "
+				"(%s)\n",
+				(pda->forward_host == NULL ? "<whatever>" :
+				 pda->forward_host),
+				(pda->forward_name == NULL ? "(null)" :
+				 pda->forward_name));
+
+		/* Get list of addresses corresponding to this host. We do
+		 * this now and not during initialization because in this
+		 * age of dynamic DNS and whatnot, you can't assume that a
+		 * machine will have the same addresses all the time.
+		 */
+		/* XXX - OTOH, most machines don't change addresses that
+		 * quickly. So perhaps it'd be better to call
+		 * get_hostaddrs() earlier, in case there are errors. Then,
+		 * if the desired address isn't found, rerun
+		 * get_hostaddrs() and see if that address has magically
+		 * appeared.
+		 */
+		if ((err = get_hostaddrs()) < 0)
+		{
+			fprintf(stderr,
+				_("Error: Can't get host addresses.\n"));
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
+		err = mkforw_addr(palm, pda, &sa, &sa_len);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error: can't resolve forwarding "
+				  "address.\n"));
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
+		SYNC_TRACE(3)
+		{
+			char namebuf[128];
+
+			fprintf(stderr, "Forwarding to host [%s]\n",
+				inet_ntop(sa->sa_family,
+/*  					  &(((struct sockaddr_in *) &(sa->sa_data))->sin_addr), */
+					  &(((struct sockaddr_in *) sa)->sin_addr),
+					  namebuf, 128));
+		}
+					  
+
+		/* XXX - Check whether *sa is local. If it is, just do a
+		 * local sync, normally.
+		 */
+
+		/* XXX - Perhaps the rest of this block should be put in
+		 * forward_netsync()?
+		 */
+		/* Create a new PConnection for talking to the remote host */
+		if ((pconn_forw = new_PConnection(NULL, LISTEN_NET, 0))
+		    == NULL)
+		{
+			fprintf(stderr,
+				_("Error: can't create connection to "
+				  "forwarding host.\n"));
+			free(sa);
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			return -1;
+		}
+
+		/* Establish a connection to the remote host */
+		err = (*pconn_forw->io_connect)(pconn_forw, sa, sa_len);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error: can't establish connection with "
+				  "forwarding host.\n"));
+			free(sa);
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			PConnClose(pconn_forw);
+			return -1;
+		}
+
+		err = forward_netsync(pconn, pconn_forw);
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error: network sync forwarding failed.\n"));
+			free(sa);
+			free_Palm(palm);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			PConnClose(pconn_forw);
+			return -1;
+		}
+
+		free(sa);
+		free_Palm(palm);
+		PConnClose(pconn);
+		PConnClose(pconn_forw);
+		return 0;
 	}
 
 	/* Figure out what the base sync directory is */
@@ -1355,6 +1503,39 @@ run_mode_Init(int argc, char *argv[])
 			pconn = NULL;
 			return -1;
 		}
+
+		/* XXX - If the PDA block contains a "forward:" line with a
+		 * non-"*" hostname, update the NetSync info on the Palm.
+		 */
+		if (pda->forward && (pda->forward_host != NULL))
+		{
+			/* XXX - Look up pda->forward_host. Or, if it's an
+			 * address with a netmask, notice this and deal
+			 * appropriately.
+			 * If pda->forward_host is an address (with
+			 * optional netmask), figure this out and convert
+			 * both to strings.
+			 * Otherwise, if it's a host address, get its
+			 * address and convert it to a string
+			 * (inet_ntop()).
+			 * Otherwise, if it's a network name, figure out
+			 * its netmask (how? Assume pre-CIDR class rules?
+			 * What about IPv6?) and convert both to strings.
+			 */
+			/* XXX - If pda->forward_name is non-NULL, use
+			 * that. Otherwise, use either the host or network
+			 * name obtained above.
+			 */
+			/* XXX - Set 'lansync_on' to true: presumably if
+			 * the user went to the trouble of adding a
+			 * "forward:" line, it means he wants to use
+			 * NetSync.
+			 */
+			/* XXX - Convert the above mess into a
+			 * dlp_netsyncinfo structure and upload it to the
+			 * Palm.
+			 */
+		}
 	}
 
 	/* Upload sync log */
@@ -1446,11 +1627,7 @@ Connect(struct PConnection *pconn)
 						 * socket setup.
 						 */
 	pcaddr.port = SLP_PORT_DLP;
-	PConn_bind(pconn, &pcaddr);	/* XXX - This is bogus. Stick this
-					 * in PConnection_serial and
-					 * PConnection_usb, and get rid of
-					 * the PConn_bind function.
-					 */
+	PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
 	if ((*pconn->io_accept)(pconn) < 0)
 		return -1;
 
@@ -1792,35 +1969,6 @@ UpdateUserInfo(struct PConnection *pconn,
 	return 0;		/* Success */
 }
 
-#if 0
-/* XXX - Not used anywhere yet */
-/* find_max_speed
- * Find the maximum speed at which the serial port (pconn->fd) is able to
- * talk. Returns an index into the 'speeds' array, or -1 in case of error.
- * XXX - Okay, now where does this get called? The logical place is right
- * after the open() in new_PConnection(). But the result from this function
- * is used in this file, when setting the speed for the main part of the
- * sync.
- */
-int
-find_max_speed(struct PConnection *pconn)
-{
-	int i;
-
-	/* Step through the array of speeds, one at a time. Stop as soon as
-	 * we find a speed that works, since the 'speeds' array is sorted
-	 * in order of decreasing desirability (i.e., decreasing speed).
-	 */
-	for (i = 0; i < num_speeds; i++)
-	{
-		if ((*pconn->io_setspeed)(pconn, speeds[i].tcspeed) == 0)
-			return i;
-	}
-
-	return -1;
-}
-#endif	/* 0 */
-
 /* dbinfo_fill
  * Fill in a dbinfo record from a pdb record header.
  */
@@ -1852,6 +2000,329 @@ dbinfo_fill(struct dlp_dbinfo *dbinfo,
 	return 0;		/* Success */
 }
 
+/* mkforw_addr
+ * The pda block has forwarding turned on. Look at all the pertinent
+ * information and figure out the address to which the connection needs to
+ * be forwarded.
+ * '*addr' and '*netmask' are filled in by mkforw_addr(). Upon successful
+ * completion, they will be pointers to sockaddrs that can be passed to
+ * various socket functions establish a connection with the remote host.
+ *
+ * Returns 0 if successful, or a negative value in case of error.
+ */
+static int
+mkforw_addr(struct Palm *palm,
+	    pda_block *pda,
+	    struct sockaddr **sa,
+	    socklen_t *sa_len)
+{
+	int err;
+	const char *hostname;		/* Name (or address, as a string)
+					 * of the host to which to forward
+					 * the sync.
+					 */
+	struct hostent *hostent = NULL;	/* From gethostby*() */
+	struct servent *service;	/* NetSync wakeup service entry */
+	int wakeup_port;		/* NetSync wakeup port number */
+
+	service = getservbyname("netsync-wakeup", "udp");
+				/* Try to get the entry for
+				 * "netsync-wakeup" from /etc/services */
+	if (service == NULL)
+		wakeup_port = htons(NETSYNC_WAKEUP_PORT);
+	else
+		wakeup_port = service->s_port;
+
+	SYNC_TRACE(4)
+	{
+		if (service != NULL)
+		{
+			int i;
+
+			fprintf(stderr, "Got entry for netsync-wakeup/udp:\n");
+			fprintf(stderr, "\tname: \"%s\"\n", service->s_name);
+			fprintf(stderr, "\taliases:\n");
+			for (i = 0; service->s_aliases[i] != NULL; i++)
+				fprintf(stderr, "\t\t\"%s\"\n",
+					service->s_aliases[i]);
+			fprintf(stderr, "\tport: %d\n",
+				ntohs(service->s_port));
+			fprintf(stderr, "\tprotocol: \"%s\"\n",
+				service->s_proto);
+		} else {
+			fprintf(stderr, "No entry for netsync-wakeup/udp\n");
+		}
+	}
+
+	/* Get the name of the host to forward the connection to.
+	 * Try the name given on the "forward:" line in .coldsyncrc first.
+	 * If there isn't one, ask the Palm for the address of its
+	 * preferred server host. If that isn't set, try the hostname.
+	 *
+	 * XXX - Would it be better first to check whether the address
+	 * resolves and, if that fails, try to use the hostname?
+	 */
+	hostname = pda->forward_host;
+	if (hostname == NULL)
+		hostname = palm_netsync_hostaddr(palm);
+	if (hostname == NULL)
+		hostname = palm_netsync_hostname(palm);
+
+	SYNC_TRACE(3)
+		fprintf(stderr, "forward hostname is [%s]\n",
+			(hostname == NULL ? "(null)" : hostname));
+
+#if HAVE_IPV6
+	/* Try to look up the name as IPv6 hostname */
+	if ((hostent = gethostbyname2(hostname, AF_INET6)) != NULL)
+	{
+		struct sockaddr_in6 *sa6;	/* Temporary */
+
+		SYNC_TRACE(3)
+			fprintf(stderr, "It's an IPv6 hostname\n");
+
+		/* Allocate a new sockaddr */
+		sa6 = (struct sockaddr_in6 *)
+			malloc(sizeof(struct sockaddr_in6));
+		if (sa6 == NULL)
+			return -1;
+
+		/* Fill in the new sockaddr */
+		bzero(sa6, sizeof(struct sockaddr_in6));
+		sa6->sin6_family = AF_INET6;
+		sa6->sin6_port = wakeup_port;
+		memcpy(&sa6->sin6_addr,
+		       hostent->h_addr_list[0],
+		       sizeof(struct in6_addr));
+
+		SYNC_TRACE(3)
+		{
+			char namebuf[128];
+
+			debug_dump(stderr, "sa6",
+				   (ubyte *) sa6,
+				   sizeof(struct sockaddr_in));
+			fprintf(stderr, "Returning address [%s]\n",
+				inet_ntop(AF_INET6,
+					  &(sa6->sin6_addr),
+					  namebuf, 128));
+		}
+
+		*sa = (struct sockaddr *) sa6;
+		*sa_len = sizeof(struct sockaddr_in6);
+		return 0;		/* Success */
+	}
+
+	SYNC_TRACE(3)
+		fprintf(stderr, "It's not an IPv6 hostname\n");
+#endif	/* HAVE_IPV6 */
+
+	/* Try to look up the name as IPv4 hostname */
+	if ((hostent = gethostbyname2(hostname, AF_INET)) != NULL)
+	{
+		struct sockaddr_in *sa4;	/* Temporary */
+
+		SYNC_TRACE(3)
+			fprintf(stderr, "It's an IPv4 hostname\n");
+
+		/* Allocate a new sockaddr */
+		sa4 = (struct sockaddr_in *)
+			malloc(sizeof(struct sockaddr_in));
+		if (sa4 == NULL)
+			return -1;
+
+		/* Fill in the new sockaddr */
+		bzero(sa4, sizeof(struct sockaddr_in));
+		sa4->sin_family = AF_INET;
+		sa4->sin_port = wakeup_port;
+		memcpy(&sa4->sin_addr,
+		       hostent->h_addr_list[0],
+		       sizeof(struct in_addr));
+
+		SYNC_TRACE(3)
+		{
+			char namebuf[128];
+
+			debug_dump(stderr, "sa4",
+				   (ubyte *) sa4,
+				   sizeof(struct sockaddr_in));
+			fprintf(stderr, "Returning address [%s]\n",
+				inet_ntop(AF_INET,
+					  &(sa4->sin_addr),
+					  namebuf, 128));
+		}
+
+		*sa = (struct sockaddr *) sa4;
+		*sa_len = sizeof(struct sockaddr_in);
+		return 0;		/* Success */
+	}
+
+	SYNC_TRACE(3)
+		fprintf(stderr, "It's not an IPv4 hostname\n");
+
+#if HAVE_IPV6
+	/* Try to use the name as an IPv6 address */
+	{
+		struct in6_addr addr6;
+		struct sockaddr_in6 *sa6;
+
+		/* Try to convert the string to an IPv6 address */
+		err = inet_pton(AF_INET6, hostname, &addr6);
+		if (err < 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr,
+					"Error in inet_pton(AF_INET6)\n");
+
+			perror("inet_pton");
+		} else if (err == 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr,
+					"It's not a valid IPv6 address\n");
+		} else {
+			/* Succeeded in converting to IPv6 address */
+			SYNC_TRACE(3)
+				fprintf(stderr, "It's an IPv6 address\n");
+
+			/* Allocate a new sockaddr */
+			sa6 = (struct sockaddr_in6 *)
+				malloc(sizeof(struct sockaddr_in6));
+			if (sa6 == NULL)
+				return -1;
+
+			/* Fill in the new sockaddr */
+			bzero(sa6, sizeof(struct sockaddr_in6));
+			sa6->sin6_family = AF_INET6;
+			sa6->sin6_port = wakeup_port;
+			memcpy(&sa6->sin6_addr, &addr6,
+			       sizeof(struct in6_addr));
+
+			*sa = (struct sockaddr *) sa6;
+			*sa_len = sizeof(struct sockaddr_in6);
+			return 0;		/* Success */
+		}
+	}
+#endif	/* HAVE_IPV6 */
+
+	/* Try to use the name as an IPv4 address */
+	{
+		struct in_addr addr4;
+		struct sockaddr_in *sa4;
+
+		/* Try to convert the string to an IPv4 address */
+		err = inet_pton(AF_INET, hostname, &addr4);
+		if (err < 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr,
+					"Error in inet_pton(AF_INET)\n");
+
+			perror("inet_pton");
+		} else if (err == 0)
+		{
+			SYNC_TRACE(3)
+				fprintf(stderr,
+					"It's not a valid IPv4 address\n");
+		} else {
+			/* Succeeded in converting to IPv4 address */
+			SYNC_TRACE(3)
+				fprintf(stderr, "It's an IPv4 address\n");
+
+			/* Allocate a new sockaddr */
+			sa4 = (struct sockaddr_in *)
+				malloc(sizeof(struct sockaddr_in));
+			if (sa4 == NULL)
+				return -1;
+
+			/* Fill in the new sockaddr */
+			bzero(sa4, sizeof(struct sockaddr_in));
+			sa4->sin_family = AF_INET;
+			sa4->sin_port = wakeup_port;
+			memcpy(&sa4->sin_addr, &addr4,
+			       sizeof(struct in_addr));
+
+			*sa = (struct sockaddr *) sa4;
+			*sa_len = sizeof(struct sockaddr_in);
+			return 0;		/* Success */
+		}
+	}
+
+	/* Nothing worked */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Nothing worked. I give up.\n");
+
+	return -1;
+}
+
+/* forward_netsync
+ * Listen for packets from either pconn, and forward them to the other.
+ */
+int
+forward_netsync(struct PConnection *local,
+		struct PConnection *remote)
+{
+	int err;
+	int maxfd;
+	fd_set in_fds;
+	fd_set out_fds;
+	const ubyte *inbuf;
+	uword inlen;
+
+	/* Get highest-numbered file descriptor, for select() */
+	maxfd = local->fd;
+	if (remote->fd > maxfd)
+		maxfd = remote->fd;
+
+	for (;;)
+	{
+		FD_ZERO(&in_fds);
+		FD_SET(local->fd, &in_fds);
+		FD_SET(remote->fd, &in_fds);
+		FD_ZERO(&out_fds);
+		FD_SET(local->fd, &out_fds);
+		FD_SET(remote->fd, &out_fds);
+
+		err = select(maxfd+1, &in_fds, /*&out_fds*/NULL, NULL, NULL);
+		SYNC_TRACE(5)
+			fprintf(stderr, "select() returned %d\n", err);
+
+		if (FD_ISSET(local->fd, &in_fds))
+		{
+			err = (*local->dlp.read)(local, &inbuf, &inlen);
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Read %d-byte message from local. "
+					"err == %d\n",
+					inlen, err);
+
+			err = (*remote->dlp.write)(remote, inbuf, inlen);
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Wrote %d-byte message to remote. "
+					"err == %d\n",
+					inlen, err);
+		} else if (FD_ISSET(remote->fd, &in_fds))
+		{
+			err = (*remote->dlp.read)(remote, &inbuf, &inlen);
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Read %d-byte message from remote. "
+					"err == %d\n",
+					inlen, err);
+
+			err = (*local->dlp.write)(local, inbuf, inlen);
+			SYNC_TRACE(5)
+				fprintf(stderr,
+					"Wrote %d-byte message to local. "
+					"err == %d\n",
+					inlen, err);
+		}
+	}
+
+	return 0;
+}
+
 /* snum_checksum
  * Calculate and return the checksum character for a checksum 'snum' of
  * length 'len'.
@@ -1871,8 +2342,8 @@ snum_checksum(const char *snum, int len)
 	}
 	checksum = (checksum >> 4) + (checksum & 0x0f) + 2;
 		/* The "+2" is there so that the checksum won't be '0' or
-		 * '1', which are too easily confused with the characters
-		 * 'O' and 'I'.
+		 * '1', which are too easily confused with the letters 'O'
+		 * and 'I'.
 		 */
 
 	/* Convert to a character and return it */
