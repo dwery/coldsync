@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.c,v 1.1.2.3 2000-09-03 02:14:17 arensb Exp $
+ * $Id: pref.c,v 1.1.2.4 2000-09-03 02:24:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -29,7 +29,7 @@ CacheFromConduits(const conduit_block *conduits,
 {
 	const conduit_block *conduit_cursor;
 	pref_item *pref_cursor;
-	const pref_item *item;
+	pref_item *item;
 	int i;
 
 	/* Create a placeholder for first item */
@@ -54,7 +54,7 @@ CacheFromConduits(const conduit_block *conduits,
 		     i < conduit_cursor->num_prefs;
 		     i++)
 		{
-			if ((item = FindPrefItem(conduit_cursor->prefs[i],
+			if ((item = FindPrefItem(&(conduit_cursor->prefs[i]),
 						 pref_cache)) == NULL)
 			{
 				MISC_TRACE(4)
@@ -306,14 +306,19 @@ DownloadPrefItem(struct PConnection *pconn,
 	return 0;	/* Success */
 }
 
+/* XXX - This shouldn't be everywhere. Move it to pref.c where it's
+ * actually used. Consider making it an inline function.
+ */
+#define prefdesccmp(x,y)	(((x).creator == (y)->creator && (x).id == (y)->id) ? 0 : 1)
+
 /* Finds a preference item from a list by matching it to the description.
  * Returns the found preference item if found, else returns NULL.
  */
-const struct pref_item *
-FindPrefItem(const struct pref_desc description,
-	     const struct pref_item *list)
+struct pref_item *
+FindPrefItem(const struct pref_desc *description,
+	     struct pref_item *list)
 {
-    const struct pref_item *match = list;
+    struct pref_item *match = list;
     const struct pref_item *previous = NULL;
 
     /* XXX - Rewrite this as a simple for loop. 'previous' is redundant */
@@ -330,10 +335,10 @@ FindPrefItem(const struct pref_desc description,
 
 
 /* Returns a fully filled preference item or, if not found, returns NULL. */
-const struct pref_item *
-GetPrefItem(struct pref_desc description)
+struct pref_item *
+GetPrefItem(struct pref_desc *description)
 {
-    const struct pref_item  *retval;
+    struct pref_item  *retval;
 
     if ((retval = FindPrefItem(description,pref_cache)) == NULL)
 	return NULL;
@@ -365,9 +370,9 @@ FreePrefItem(struct pref_item *prefitem)
  * of the cache list.
  */
 void
-FreePrefList(const struct pref_item *list)
+FreePrefList(struct pref_item *list)
 {
-    const struct pref_item *cursor;
+    struct pref_item *cursor;
 
     for (cursor = list;
 	 cursor != NULL;
