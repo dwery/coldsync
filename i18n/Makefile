@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2000-11-10 03:35:57 arensb Exp $
+# $Id: Makefile,v 1.8 2000-12-17 09:50:56 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -49,13 +49,22 @@ ${POFILES}:	messages.po
 		rm -f temp.pox; \
 	fi
 
-install-i18n::	${MOFILES}
+# ${INSTALL_I18N} is either "yes" or "no", depending on whether 'configure'
+# was run with "--without-i18n", and whether all the requisite tools could
+# be found.
+install::	install-i18n-${INSTALL_I18N}
+
+# Install the message catalogs
+install-i18n-yes:	${MOFILES}
 	langs="${LANGS}"; \
 	for lang in $$langs; do \
 		${MKDIR} "${LOCALEDIR}/$$lang"; \
 		${INSTALL_DATA} "$$lang.mo" \
 			"${LOCALEDIR}/$$lang/LC_MESSAGES/${PACKAGE}.mo"; \
 	done
+
+# Do nothing.
+install-i18n-no:
 
 # This is for Emacs's benefit:
 # Local Variables:	***
