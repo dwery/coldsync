@@ -4,11 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.12 1999-11-02 03:40:56 arensb Exp $
-
-# XXX - Explicitly write .c.o , .cc.o and executable targets:
-# different compilers have different default rules, and I don't want
-# to deal with them.
+# $Id: Makefile.in,v 1.13 1999-11-09 06:35:36 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -70,8 +66,6 @@ CLEAN =		coldsync *.o *.bak *~ core *.core \
 DISTCLEAN =	Makefile .depend
 SPOTLESS =
 
-# XXX - Figure out where to put this. Also, allow for -R flag if ever
-# decide to build shared libraries.
 LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
 LIBPDB =	-L${top_srcdir}/libpdb -lpdb
 
@@ -118,12 +112,6 @@ install:	coldsync
 	fi
 	${INSTALL} ${INSTALLARGS} coldsync ${BINDIR}
 
-# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
-# specify -I/usr/include/g++
-# Actually, 'gcc -M' generates a dependency list the right way. This
-# may be exploited, but the sources then need to be separated into
-# C_SRCS and CXX_SRCS.
-
 depend:
 	${MKDEP} ${DEFS} ${INCLUDES} ${C_SRCS} ${CXX_INCLUDEDIRS} ${CXX_SRCS}
 
@@ -139,11 +127,6 @@ distclean:
 	-rm -f ${CLEAN} ${DISTCLEAN}
 spotless:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
-
-# XXX - Experimental. This will need to be folded in to the main
-# program at some point.
-parse:	lex.yy.o y.tab.o
-	${CC} ${CFLAGS} lex.yy.o y.tab.o -o $@ ${LIBYACC} ${LIBLEX}
 
 lex.yy.o:	lex.yy.c
 	${CC} ${CFLAGS} -c $<
