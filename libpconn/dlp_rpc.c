@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.2 2000-05-21 07:59:06 arensb Exp $
+ * $Id: dlp_rpc.c,v 1.3 2000-06-18 07:07:59 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -289,76 +289,6 @@ DlpRPC(struct PConnection *pconn,	/* Connection to Palm */
 
 	return 0;
 }
-
-#if 0
-/* XXX - Bleah. This doesn't appear to barf, but neither does it return
- * sane values. Plus, what it does return appears to be byte-swapped, as if
- * it were reading a series of word-sized values.
- */
-int
-DlpRPC_ReadMem(struct PConnection *pconn,
-	       udword ptr,		/* Starting address */
-	       uword len,		/* Length to read */
-	       ubyte *buf)		/* Where to put the results */
-{
-	int err;
-/*  	int i; */
-	static ubyte outbuf[4096];	/* XXX - Fixed size: bad */
-		/* XXX - Actually, you can only read/write up to 256 bytes
-		 * at a time with ReadMem/WriteMem, so can just make this
-		 * the maximum size.
-		 */
-	const ubyte *inbuf;
-/*  	const ubyte *rptr; */
-	ubyte *wptr;
-	uword inlen;
-
-	DLPC_TRACE(3)
-		fprintf(stderr, "Inside DlpRPC_ReadMem(0x%08lx, %d)\n",
-			ptr, len);
-
-	/* Construct DLP header */
-	wptr = outbuf;
-	put_ubyte(&wptr, DLPCMD_ProcessRPC);
-	put_ubyte(&wptr, 1);		/* # arguments */
-					/* XXX - Is this even used? */
-
-	/* Construct RPC header */
-	put_ubyte(&wptr, 0x01);		/* RPC request */
-					/* XXX - Define a constant */
-	put_ubyte(&wptr, 0);		/* padding */
-	put_udword(&wptr, ptr);		/* Starting address to read */
-	put_uword(&wptr, len);		/* # bytes to read */
-
-	/* Now send this whole thing off as a DLP packet. */
-	DLPC_TRACE(5)
-	{
-		fprintf(stderr, "Sending ReadMem request:\n");
-		debug_dump(stderr, "RPC>", outbuf, wptr-outbuf);
-	}
-	err = padp_write(pconn, outbuf, /*wptr-outbuf*/4+len);
-fprintf(stderr, "RDLP_ReadMem: After padp_write()\n");
-	if (err < 0)
-	{
-		fprintf(stderr, _("%s: Error: padp_write() returned %d\n"),
-			"RDLP_ReadMem",
-			err);
-/*  		free(outbuf); */
-		return err;
-	}
-
-	/* Get response */
-	err = padp_read(pconn, &inbuf, &inlen);
-	/* XXX - Barf if err < 0 */
-fprintf(stderr, "RDLP_ReadMem: After padp_read()\n");
-	DLPC_TRACE(5)
-		fprintf(stderr, "Got response. Err == %d\n", err);
-	DLPC_TRACE(6)
-		debug_dump(stderr, "RPC<", inbuf, inlen);
-
-	return 0;
-}
-#endif	/* 0 */
 
 /* RDLP_Backlight
  * Queries and optionally sets the backlight.

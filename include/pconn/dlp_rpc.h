@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_rpc.h,v 1.1 2000-04-09 14:15:11 arensb Exp $
+ * $Id: dlp_rpc.h,v 1.2 2000-06-18 07:07:47 arensb Exp $
  *
  * Structure of an RPC-over-DLP request:
  *      +------+------+------+------+
@@ -94,7 +94,7 @@
 #define RPCTRAP_GetROMToken		0xa340
 #define RPCTRAP_MemReadable		0xa23e
 
-/* ROM tokens, for RDLP_ROMToken */
+/* ROM tokens, for RDLP_ROMToken. Actually, only ROMToken_Snum is used. */
 #define ROMToken_Snum	0x736e756d	/* 'snum' */
 #define ROMToken_Irda	0x69726461	/* 'irda' */
 #define ROMToken_Flex	0x666c6578	/* 'flex' */
@@ -131,12 +131,6 @@ extern int DlpRPC(struct PConnection *pconn,
 		  udword *A0,
 		  int argc,
 		  struct DLPRPC_param *argv);
-#if 0
-extern int DlpRPC_ReadMem(struct PConnection *pconn,
-			  udword ptr,
-			  uword len,
-			  ubyte *buf);
-#endif	/* 0 */
 extern int RDLP_Backlight(struct PConnection *pconn,
 			  Bool set,
 			  Bool newState);
