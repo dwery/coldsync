@@ -2,7 +2,7 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.4 1999-03-11 04:14:37 arensb Exp $
+ * $Id: handledb.c,v 1.5 1999-03-16 11:04:35 arensb Exp $
  */
 
 #include <stdio.h>
@@ -101,7 +101,7 @@ HandleDB(struct PConnection *pconn,
 		printf("\tNeed to do a backup\n");
 		return Backup(pconn, palm, dbinfo, bakfname);
 
-		/*NOTREACHED*/
+		/* NOTREACHED */
 	}
 
 	/* If we get this far, then the backup filename does exist */
@@ -132,7 +132,8 @@ HandleDB(struct PConnection *pconn,
 	 * sync; if no, do a slow sync.
 	 */
 	/* XXX - For now, just try a slow sync */
-	err = SlowSync(pconn, dbinfo, localdb, bakfname);
+/*  	err = SlowSync(pconn, dbinfo, localdb, bakfname); */
+	err = FastSync(pconn, dbinfo, localdb, bakfname);
 	if (err < 0)
 	{
 		fprintf(stderr, "### SlowSync returned %d\n", err);
