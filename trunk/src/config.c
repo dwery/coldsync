@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.53 2000-12-18 06:20:17 arensb Exp $
+ * $Id: config.c,v 1.54 2000-12-24 09:54:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -14,12 +14,17 @@
 #include <stdlib.h>		/* For atoi(), getenv() */
 #include <sys/types.h>		/* For getuid(), getpwuid() */
 #include <sys/stat.h>		/* For mkdir() */
+#include <sys/ioctl.h>		/* For ioctl() and ioctl values */
 #include <pwd.h>		/* For getpwuid() */
 #include <sys/param.h>		/* For MAXPATHLEN */
-#include <netdb.h>		/* For gethostbyname() */
-#include <sys/socket.h>		/* For AF_INET */
+#include <netdb.h>		/* For gethostbyname2() */
+#include <sys/socket.h>		/* For socket() */
+#include <net/if.h>		/* For struct ifreq */
+#include <netinet/in.h>		/* For struct sockaddr_in */
+#include <arpa/inet.h>		/* For inet_ntop() and friends */
 #include <string.h>		/* For string functions */
 #include <ctype.h>		/* For toupper() */
+#include <errno.h>		/* For errno(). Duh. */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
@@ -60,6 +65,13 @@ udword hostid;			/* This machine's host ID, so you can tell
 				 * whether this was the last machine the
 				 * Palm synced with.
 				 */
+struct sockaddr **hostaddrs = NULL;
+				/* NULL-terminated array of addresses local
+				 * to this host */
+int num_hostaddrs = 0;		/* Number of addresses in 'hostaddrs' */
+
+char hostname[MAXHOSTNAMELEN+1];
+				/* This machine's hostname */
 char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
@@ -98,6 +110,12 @@ parse_args(int argc, char *argv[])
 	oldoptind = optind;		/* Initialize "last argument"
 					 * index.
 					 */
+
+	/* XXX - Set mode based on argv[0]:
+	 * "coldbackup"		-> mode_Backup
+	 * "coldrestore"	-> mode_Restore
+	 * "coldinstall"	-> mode_Restore
+	 */
 
 	/* Read command-line options. */
 	while ((arg = getopt(argc, argv, ":hVSFRIf:m:b:r:p:t:d:")) != -1)
@@ -743,7 +761,7 @@ _("\n"
 		DEFAULT_GLOBAL_CONFIG);
 }
 
-/* get_hostid
+/* get_hostinfo
  * Figures out the hostid for this host, and returns it in 'hostid'.
  * Returns 0 if successful, or a negative value in case of error.
  *
@@ -751,12 +769,13 @@ _("\n"
  * address. It only has to be a 32-bit integer, one that's unique among the
  * set of all hosts with which the user will sync.
  */
+/* NB: the *_TRACE() statements in this function have no effect, since the
+ * "-d" options aren't parsed until after this function is called.
+ */
 int
-get_hostid(udword *hostid)
+get_hostinfo()
 {
 	int err;
-	char hostname[MAXHOSTNAMELEN+1];
-					/* Buffer to hold the host name. */
 	struct hostent *myaddr;		/* This host's address */
 
 	/* Get the hostname */
@@ -766,8 +785,10 @@ get_hostid(udword *hostid)
 		perror("gethostname");
 		return -1;
 	}
+	MISC_TRACE(2)
+		fprintf(stderr, "My hostname is \"%s\"\n", hostname);
 
-	if ((myaddr = gethostbyname(hostname)) == NULL)
+	if ((myaddr = gethostbyname2(hostname, AF_INET)) == NULL)
 	{
 		fprintf(stderr, _("Can't look up my address\n"));
 		perror("gethostbyname");
@@ -787,7 +808,21 @@ get_hostid(udword *hostid)
 	{
 		fprintf(stderr, _("Hey! This isn't an AF_INET address!\n"));
 		return -1;
-	} 
+	}
+
+	MISC_TRACE(2)
+	{
+		int i;
+
+		fprintf(stderr, "My addresses:\n");
+		for (i = 0; myaddr->h_addr_list[i] != NULL; i++)
+		{
+			fprintf(stderr, "    %d:\n", i);
+			debug_dump(stderr, "\tIP",
+				   (ubyte *) myaddr->h_addr_list[i],
+				   myaddr->h_length);
+		}
+	}
 
 	/* Make sure there's at least one address */
 	if (myaddr->h_addr_list[0] == NULL)
@@ -799,15 +834,321 @@ get_hostid(udword *hostid)
 	}
 
 	/* Use the first address as the host ID */
-	*hostid =
+	hostid =
 		(((udword) myaddr->h_addr_list[0][0] & 0xff) << 24) |
 		(((udword) myaddr->h_addr_list[0][1] & 0xff) << 16) |
 		(((udword) myaddr->h_addr_list[0][2] & 0xff) << 8) |
 		 ((udword) myaddr->h_addr_list[0][3] & 0xff);
 	MISC_TRACE(2)
-		fprintf(stderr, "My hostid is 0x%08lx\n", *hostid);
+		fprintf(stderr, "My hostid is 0x%08lx\n", hostid);
 
 	return 0;
+}
+
+/* sockaddr_len
+ * Return the length of the sockaddr pointed to by 'sa'.
+ * Moved out into its own function mainly to concentrate all the #ifdef
+ * ugliness in one place.
+ */
+static int
+sockaddr_len(const struct sockaddr *sa)
+{
+#if HAVE_SOCKADDR_SA_LEN
+#  ifndef MAX
+#    define MAX(x,y)	((x) > (y) ? (x) : (y))
+#  endif	/* MAX */
+
+	/* This system has struct sockaddr.sa_len. Yay! */
+	return MAX(sizeof(struct sockaddr), sa->sa_len);
+#else
+	/* This system doesn't have sockaddr.sa_len, so we have to
+		 * infer the size of the current entry from the address
+		 * family.
+		 */
+	switch (sa->sa_family)
+	{
+#  if HAVE_SOCKADDR6	/* Does this machine support IPv6? */
+	    case AF_INET6:
+		return sizeof(struct sockaddr_in6);
+		break;
+#  endif	/* HAVE_SOCKADDR6 */
+	    case AF_INET:
+		return sizeof(struct sockaddr_in);
+		break;
+	    default:
+		return sizeof(struct sockaddr);
+		break;
+	}
+#endif	/* HAVE_SOCKADDR_SA_LEN */
+}
+
+/* get_hostaddrs
+ * Get the list of IPv4 and IPv6 addresses that correspond to this host.
+ * Sets 'hostaddrs' to this list. Sets 'num_hostaddrs' to the length of the
+ * array 'hostaddrs'.
+ * Returns 0 if successful, or a negative value in case of error.
+ */
+int
+get_hostaddrs()
+{
+	int err;
+	int sock;		/* Socket, for ioctl() */
+	char *buf;		/* Buffer to hold SIOCGIFCONF data */
+	char *bufptr;		/* Pointer into 'buf' */
+	int buflen;		/* Current length of 'buf' */
+	int lastlen;		/* Length returned by last SIOCGIFCONF */
+	struct ifconf ifconf;	/* SIOCGIFCONF request */
+	int hostaddrs_size;	/* Current size of 'hostaddrs[]' (Not to be
+				 * confused with the number of entries it
+				 * contains: 'hostaddrs_size' refers to the
+				 * amount of memory allocated).
+				 */
+
+	free_hostaddrs();	/* In case this isn't the first time this
+				 * function was called. */
+
+	if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+	{
+		fprintf(stderr, "socket() returned %d\n", sock);
+		perror("socket");
+		return -1;
+	}
+
+	/* Obtain the list of interfaces with ioctl(SIOCGIFCONF).
+	 * Unfortunately, the API for SIOCGIFCONF sucks rocks, and isn't
+	 * consistent across implementations. The problem is that the
+	 * caller supplies a buffer into which to place the results, but
+	 * while SIOCGIFCONF returns the size of the data, it doesn't say
+	 * whether the buffer was large enough to hold all of the data for
+	 * all interfaces (and aliases), nor how big the buffer ought to
+	 * be.
+	 *
+	 * Hence, we resort to the kludge described in UNP[1]: call
+	 * SIOCGIFCONF repeatedly, with an increasing buffer size, until
+	 * the size of the returned data stops increasing. Thus, even if
+	 * our initial buffer size is large enough to hold all of the data,
+	 * we still need to SIOCGIFCONF twice to find this out.
+	 *
+	 * [1] W. Richard Stevens, "Unix Network Programming, vol 1",
+	 * section 16.6.
+	 */
+	lastlen = 0;
+	buflen = 2048;		/* Initial guess at buffer size */
+	for (;;)
+	{
+		if ((buf = malloc(buflen)) == NULL)
+			/* Out of memory */
+			return -1;
+
+		ifconf.ifc_len = buflen;
+		ifconf.ifc_buf = buf;
+
+		err = ioctl(sock, SIOCGIFCONF, &ifconf);
+		if (err < 0)
+		{
+			/* Solaris returns -1 and sets errno to EINVAL when
+			 * 'buf' is too small to hold the request. FreeBSD
+			 * returns 0, fills the buffer with as much data as
+			 * will fit, and returns the size of the partial
+			 * data. DU doesn't seem to say what it does.
+			 */
+			if ((errno != EINVAL) || (lastlen != 0))
+			{
+				/* Something unexpected went wrong */
+				perror("ioctl(SIOCGIFCONF)");
+				free(buf);
+				return -1;
+			}
+		} else {
+			if ((lastlen != 0) && (ifconf.ifc_len == lastlen))
+				/* Success: size hasn't changed */
+				break;
+			lastlen = ifconf.ifc_len;
+					/* Remember size for next iteration */
+		}
+
+		/* If we get this far, then the buffer isn't large enough.
+		 * Increase its size and try again.
+		 */
+		free(buf);
+		buflen *= 2;
+	}
+
+	/* Allocate hostaddrs[] */
+	hostaddrs_size = (buflen / sizeof(struct ifreq)) + 1;
+					/* Initial guess at number of
+					 * addresses contained in 'buf'.
+					 */
+	if ((hostaddrs = (struct sockaddr **)
+	     malloc(hostaddrs_size * sizeof(struct sockaddr *))) == NULL)
+	{
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"get_hostaddrs");
+		free(buf);
+		return -1;
+	}
+
+	/* Go through 'buf' and get each interface's address in turn. 'buf'
+	 * contains an array of 'struct ifreq's. However, 'struct ifreq' is
+	 * a variable-sized union that consists of a (fixed size) name
+	 * followed by a variable-size 'struct ifaddr'. Hence, it takes a
+	 * bit of effort to find the address of the (n+1)th element of the
+	 * list, given the location of the nth element.
+	 */
+	num_hostaddrs = 0;
+	for (bufptr = buf; bufptr < buf + ifconf.ifc_len;)
+	{
+		struct ifreq *ifreq;	/* Current interface element */
+		int sa_len;		/* Length of current sockaddr */
+
+		ifreq = (struct ifreq *) bufptr;
+
+		/* Point 'bufptr' to the next entry */
+		sa_len = sockaddr_len(&(ifreq->ifr_addr));
+		bufptr += sizeof(ifreq->ifr_name) + sa_len;
+
+		/* Make sure 'hostaddrs' is large enough to contain
+		 * the next entry.
+		 */
+		if (hostaddrs_size <= num_hostaddrs)
+		{
+			struct sockaddr *temp;
+
+			hostaddrs_size *= 2;
+			temp = realloc(hostaddrs, hostaddrs_size);
+			if (temp == NULL)
+			{
+				fprintf(stderr, _("%s: Out of memory.\n"),
+					"get_hostaddrs");
+				free(hostaddrs);
+				hostaddrs = NULL;
+				free(buf);
+				return -1;
+			}
+		}
+
+		switch (ifreq->ifr_addr.sa_family)
+		{
+		    case AF_INET:	/* IPv4 */
+#if HAVE_SOCKADDR6
+		    case AF_INET6:	/* IPv6 */
+#endif	/* HAVE_SOCKADDR6 */
+			{
+				struct sockaddr *addr;
+
+				/* Copy current sockaddr to 'hostaddrs[]' */
+				if ((addr = (struct sockaddr *)
+				     malloc(sa_len)) == NULL)
+				{
+					fprintf(stderr,
+						_("%s: Out of memory.\n"),
+						"get_hostaddrs");
+					free(hostaddrs);
+					hostaddrs = NULL;
+					free(buf);
+					return -1;
+				}
+				memcpy(addr, &(ifreq->ifr_addr), sa_len);
+				hostaddrs[num_hostaddrs] = addr;
+
+#if 0
+{ char data[1024];
+switch (ifreq->ifr_addr.sa_family)
+{
+    case AF_INET:
+	{
+		struct sockaddr_in *sa;
+
+		sa = (struct sockaddr_in *) hostaddrs[num_hostaddrs];
+		fprintf(stderr, "Interface [%s]: [%s]\n",
+			ifreq->ifr_name,
+			inet_ntop(sa->sin_family,
+				  &sa->sin_addr,
+				  data, 1024));
+	}
+	break;
+    case AF_INET6:
+	{
+		struct sockaddr_in6 *sa;
+
+		sa = (struct sockaddr_in6 *) hostaddrs[num_hostaddrs];
+		fprintf(stderr, "Interface [%s]: [%s]\n",
+			ifreq->ifr_name,
+			inet_ntop(sa->sin6_family,
+				  &(sa->sin6_addr),
+				  data, 1024));
+	}
+	break;
+    default:
+	break;
+}
+}
+#endif	/* 0 */
+				num_hostaddrs++;
+			}
+			break;
+		    default:
+			/* Ignore anything else */
+			break;
+		}
+	}
+
+	/* If 'hostaddrs' was resized larger than it needs to be, realloc()
+	 * it to the proper size (let's not waste memory).
+	 */
+	if (hostaddrs_size > num_hostaddrs)
+	{
+		struct sockaddr **temp;
+
+		temp = (struct sockaddr **)
+			realloc(hostaddrs,
+				num_hostaddrs * sizeof(struct sockaddr *));
+		if (temp == NULL)
+		{
+			fprintf(stderr, _("%s: realloc(%d) failed.\n"),
+				"get_hostaddrs",
+				num_hostaddrs * sizeof(struct sockaddr *));
+			free(hostaddrs);
+			hostaddrs = NULL;
+			free(buf);
+			return -1;
+		}
+		hostaddrs = temp;
+	}
+#if 0
+{
+int i;
+
+fprintf(stderr, "Final list of addresses, hostaddrs == 0x%08lx:\n",
+	(unsigned long) hostaddrs);
+for (i = 0; i < num_hostaddrs; i++)
+{
+	fprintf(stderr, "hostaddrs[%d] == 0x%08lx\n",
+		i,
+		(unsigned long) hostaddrs[i]);
+}
+}
+#endif	/* 0 */
+
+	free(buf);
+	return 0;		/* Success */
+}
+
+/* free_hostaddrs
+ * Free the 'hostaddrs' array.
+ */
+void
+free_hostaddrs(void)
+{
+	int i;
+
+	if (hostaddrs == NULL)
+		return;
+	for (i = 0; i < num_hostaddrs; i++)
+		if (hostaddrs[i] != NULL)
+			free(hostaddrs[i]);
+	free(hostaddrs);
+	hostaddrs = NULL;	/* Belt and suspenders */
 }
 
 /* print_pda_block
@@ -1417,12 +1758,16 @@ new_pda_block()
 
 	/* Initialize the new pda_block */
 	retval->next = NULL;
+	retval->flags = 0;
 	retval->name = NULL;
 	retval->snum = NULL;
 	retval->directory = NULL;
 	retval->username = NULL;
 	retval->userid_given = False;
 	retval->userid = 0L;
+	retval->forward = False;
+	retval->forward_host = NULL;
+	retval->forward_name = NULL;
 
 	return retval;
 }
@@ -1444,6 +1789,10 @@ free_pda_block(pda_block *p)
 		free(p->directory);
 	if (p->username != NULL)
 		free(p->username);
+	if (p->forward_host != NULL)
+		free(p->forward_host);
+	if (p->forward_name != NULL)
+		free(p->forward_name);
 	free(p);
 }
 
