@@ -1,3 +1,5 @@
+- Perhaps move all of the "this software includes code contributed by
+  UCBerkeley" etc. to "AUTHORS"?
 - It'd be nice to have a tool to make sure i18n/FILES contains all of
   the appropriate files. For that matter, it'd be nice to make sure
   that all files that CVS knows about are in the distribution
