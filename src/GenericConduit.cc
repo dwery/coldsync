@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.33 2000-06-15 13:30:52 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.34 2000-06-18 08:00:34 arensb Exp $
  */
 
 /* Note on I/O:
@@ -422,7 +422,6 @@ GenericConduit::FirstSync()
  * and must download the entire database and compare it with the local
  * copy.
  */
-/* XXX - Should the record's category be synced as well? */
 int
 GenericConduit::SlowSync()
 {
@@ -1520,12 +1519,8 @@ GenericConduit::SyncRecord(
 			SYNC_TRACE(6)
 				fprintf(stderr, "> Archiving remote record "
 					"0x%08lx\n",
-					localrec->id);
-			/* XXX - Should this be
-			 *	archive_record(remoterec)
-			 * ?
-			 */
-			this->archive_record(localrec);
+					remoterec->id);
+			this->archive_record(remoterec);
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
@@ -1562,8 +1557,8 @@ GenericConduit::SyncRecord(
 
 			/* Delete localrec */
 			SYNC_TRACE(6)
-				fprintf(stderr, "> Deleting record 0x%08lx "
-					"local database\n",
+				fprintf(stderr, "> Deleting local record "
+					"0x%08lx\n",
 					localrec->id);
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
@@ -1749,12 +1744,7 @@ GenericConduit::SyncRecord(
 				fprintf(stderr, "Local:  dirty\n");
 
 			/* See if the records are identical */
-			/* XXX - Use method to compare records */
-			if ((localrec->data_len == remoterec->data_len) &&
-			    (localrec->data != 0) &&
-			    (remoterec->data != 0) &&
-			    (memcmp(localrec->data, remoterec->data,
-				    localrec->data_len) == 0))
+			if (this->compare_rec(localrec, remoterec) != 0)
 			{
 				/* The records are identical.
 				 * Reset localrec's flags to clean, but
@@ -1918,6 +1908,10 @@ GenericConduit::SyncRecord(
 					localrec->id);
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
+			SYNC_TRACE(6)
+				fprintf(stderr, "> Deleting remote record "
+					"0x%08lx\n",
+					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
@@ -1946,6 +1940,10 @@ GenericConduit::SyncRecord(
 					localrec->id);
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
+			SYNC_TRACE(6)
+				fprintf(stderr, "> Deleting remote record "
+					"0x%08lx\n",
+					remoterec->id);
 			err = DlpDeleteRecord(_pconn, dbh, 0,
 					      remoterec->id);
 			if (err != DLPSTAT_NOERR)
@@ -2016,16 +2014,20 @@ GenericConduit::SyncRecord(
  * Compare two records, in the manner of 'strcmp()'. If rec1 is "less than"
  * rec2, return -1. If they are equal, return 0. If rec1 is "greater than"
  * rec2, return 1.
- * XXX - This is a naive and sub-optimal implementation. It remains to be
- * seen whether it's worth optimizing, though.
  */
-/* XXX - Perhaps this should also compare the category each record is in? */
 int
 GenericConduit::compare_rec(const struct pdb_record *rec1,
 			    const struct pdb_record *rec2)
 {
 	int i;
 
+	/* Compare the category, since that's quick and easy */
+	if (rec1->category < rec2->category)
+		return -1;
+	else if (rec1->category > rec2->category)
+		return 1;
+
+	/* The category is the same. Compare the record data. */
 	for (i = 0; i < rec1->data_len; ++i)
 	{
 		if (i >= rec2->data_len)
