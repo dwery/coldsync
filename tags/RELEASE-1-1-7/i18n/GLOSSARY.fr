@@ -1,0 +1,64 @@
+"foo"				« foo »
+allocate			allouer
+backup
+block				block
+  AppInfo block			  bloc AppInfo
+  sort block			  bloc de tri
+bogus				bidon
+buffer				tampon
+  buffer overrun		  ?
+  line-buffered			  ?
+  output buffer			  tampon de sortie
+bug				bogue
+byte				octet
+canonical			officiel (?)
+compile-time X			X lors de la compilation
+conduit				conduit (perhaps `tuyau'?)
+connection			connexion
+database			base de données
+debug (v)			déboguer
+debugging (n)			débogage
+delete				effacer
+device
+directory			répertoire
+disconnecting			déconnexion (~)
+download			télécharger
+(debugging) facility		catégorie (de débogage)
+fail				échouer
+file				fichier
+  archive file			  fichier d'archive
+  backup file			  fichier de secours
+  file descriptor		  ?
+  file handle			  ?
+  staging file			  fichier intermédiaire
+flag				flag
+flavor				?
+header				entête
+host				hôte
+hostname			nom de l'hôte(?)
+invalid				invalable (?)
+load				charger
+log				historique
+library				?
+offset				position
+process				?
+  child process			  ?
+record				enregistrement
+resize X			changer la taille de X
+return value			code de retour (?)
+run				éxecuter(sp?)
+save
+seek				repositionner
+signal				?
+  signal handler		  ?
+stdin				?
+stdout				?
+stderr				?
+string				chaîne (de caractères)
+segfault			?
+segmentation violation		?
+system call			?
+timeout				?
+transfer (n)			transfert
+upload
+user				utilisateur

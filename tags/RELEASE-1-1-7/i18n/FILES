@@ -1,0 +1,25 @@
+# List of files in which to look for translatable messages
+libpconn/PConnection.c
+libpconn/PConnection_serial.c
+libpconn/PConnection_usb.c
+libpconn/cfmakeraw.c
+libpconn/cmp.c
+libpconn/dlp.c
+libpconn/dlp_cmd.c
+libpconn/padp.c
+libpconn/palm_errno.c
+libpconn/slp.c
+libpconn/util.c
+libpdb/pdb.c
+src/archive.c
+src/backup.c
+src/coldsync.c
+src/conduit.c
+src/config.c
+src/handledb.c
+src/install.c
+#src/lexer.l
+src/log.c
+src/parser.y
+src/restore.c
+src/GenericConduit.cc
