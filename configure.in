@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.105 2000-12-16 23:21:25 arensb Exp $
+dnl # $Id: configure.in,v 1.106 2000-12-17 09:09:48 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -128,7 +128,7 @@ dnl # AC_CHECK_PROGS to make sure that there's a working 'lex'.
 AC_CHECK_PROGS(LEX, flex)
 if test -z "$LEX"; then
 	AC_MSG_WARN([
-	flex could be found. Please install them, then run configure again.])
+	flex could be found. Please install it, then run configure again.])
 	LEX=true		# Just in case the bozo tries to build anyway
 	EXIT_STATUS=1
 fi
@@ -171,7 +171,9 @@ if test x"$with_i18n" = x"no"; then
 	GETTEXT=true
 	MSGMERGE=true
 	MSGFMT=true
+	INSTALL_I18N=no
 else
+	INSTALL_I18N=yes
 
 	# Under Redhat Linux, gettext() is in libc. On other systems,
 	# it's in libintl. The following looks for it in both places,
@@ -198,6 +200,9 @@ else
 	CS_CHECK_GNU_PROGS(GETTEXT, gettext, true)
 	CS_CHECK_GNU_PROGS(MSGMERGE, msgmerge, true)
 	CS_CHECK_GNU_PROGS(MSGFMT, msgfmt, true)
+	if test "$MSGFMT" = "true"; then
+		INSTALL_I18N=no
+	fi
 	if test "$ac_cv_have_gnu_msgfmt" = yes; then
 		EXTRA_MSGFMT_ARGS="--statistics --strict"
 	else
@@ -205,6 +210,7 @@ else
 	fi
 fi
 
+AC_SUBST(INSTALL_I18N)
 AC_SUBST(XGETTEXT)
 AC_SUBST(GETTEXT)
 AC_SUBST(MSGMERGE)
@@ -248,7 +254,10 @@ AC_SUBST(LINTARGS)
 # be nice to make sure that this is the right one. It's probably
 # enough to run '$MAKEINFO --version' and grep for "GNU" in the
 # output.
-AC_CHECK_PROG(MAKEINFO, makeinfo, makeinfo, true)
+CS_CHECK_GNU_PROGS(MAKEINFO, makeinfo, true)
+if test "$ac_cv_have_gnu_makeinfo" = no; then
+	ac_cv_prog_MEKEINFO=true
+fi
 if test -z "$ac_cv_prog_MAKEINFO" -o x"$ac_cv_prog_MAKEINFO" = x"true"; then
 	AC_MSG_WARN([
 	The makeinfo program could not be found. This isn't critical,
@@ -264,7 +273,7 @@ if test -z "$ac_cv_prog_TEXI2DVI" -o x"$ac_cv_prog_TEXI2DVI" = x"true"; then
 	\"make dist\".])
 fi
 
-AC_CHECK_PROG(DVIPS, dvips, dvips, true)
+AC_CHECK_PROGS(DVIPS, dvips, true)
 if test -z "$ac_cv_prog_DVIPS" -o x"$ac_cv_prog_DVIPS" = x"true"; then
 	AC_MSG_WARN([
 	The dvips program could not be found. This isn't critical,
