@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.15 2000-09-20 04:33:29 arensb Exp $
+ * $Id: conduit.c,v 2.16 2000-10-22 03:25:50 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1213,8 +1213,6 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
 	 * handled separately, here would be a good place to close them.
 	 * Use
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
-	 * The global variable 'sys_maxfds' holds the size of the file
-	 * descriptor table.
 	 */
 
 	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False, NULL);
@@ -1242,8 +1240,6 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	 * handled separately, here would be a good place to close them.
 	 * Use
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
-	 * The global variable 'sys_maxfds' holds the size of the file
-	 * descriptor table.
 	 */
 
 	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False, NULL);
@@ -1266,8 +1262,6 @@ run_Sync_conduits(struct dlp_dbinfo *dbinfo,
 	 * handled separately, here would be a good place to close them.
 	 * Use
 	 *	fcntl(fd, F_SETFD, FD_CLOEXEC);
-	 * The global variable 'sys_maxfds' holds the size of the file
-	 * descriptor table.
 	 */
 
 	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn);
