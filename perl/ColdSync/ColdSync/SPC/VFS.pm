@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.2 2002-05-03 17:31:31 azummo Exp $
+# $Id: VFS.pm,v 1.3 2002-05-20 13:29:44 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.2 $ ' =~ m{(\d+)\.(\d+)};
+$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.3 $ ' =~ m{(\d+)\.(\d+)};
 
 
 
@@ -57,7 +57,7 @@ use constant vfsModeCreate		=> 0x0008;			# Create the file if it doesn't exists.
 use constant vfsModeTruncate		=> 0x0010;               	# Truncate file to 0 bytes after opening.
 use constant vfsModeReadWrite		=> vfsModeWrite | vfsModeRead;	# Open for read/write access
 use constant vfsModeLeaveOpen		=> 0x0020;			# Leave the file open even if when the
-
+									# the foreground task closes
 
 # File Attributes
 use constant vfsFileAttrReadOnly	=> 0x00000001;
@@ -99,9 +99,8 @@ use constant vfsFileDateAccessed	=> 3;
 	dlp_VFSFileRead
 	dlp_VFSFileWrite
 	dlp_VFSFileSize
+	dlp_VFSFileResize
 	dlp_VFSDirEntryEnumerate
-	dlp_VFSGetFile
-	dlp_VFSPutFile
 );
 
 %ColdSync::SPC::VFS::EXPORT_TAGS = (
@@ -131,9 +130,6 @@ use constant vfsFileDateAccessed	=> 3;
 );
 
 Exporter::export_ok_tags('vfs_opentags','vfs_fileattrs');
-
-
-
 
 
 
@@ -171,7 +167,7 @@ sub dlp_VFSVolumeEnumerate
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
 
 sub dlp_VFSVolumeInfo
@@ -206,7 +202,7 @@ sub dlp_VFSVolumeInfo
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
 
 sub dlp_VFSVolumeGetLabel
@@ -230,7 +226,7 @@ sub dlp_VFSVolumeGetLabel
 		}
 	}
 
-	return $retval;
+	return ($err, $retval, $retval->{'label'});
 }
 
 sub dlp_VFSVolumeSetLabel
@@ -275,7 +271,7 @@ sub dlp_VFSVolumeGetSize
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
 
 sub dlp_VFSFileOpen
@@ -301,7 +297,8 @@ sub dlp_VFSFileOpen
 		}
 	}
 
-	return $retval;
+
+	return ($err, $retval, $retval->{'fileRef'});
 }
 
 sub dlp_VFSFileClose
@@ -318,6 +315,110 @@ sub dlp_VFSFileClose
 	# No return arguments to parse
 	return $err;
 }
+
+sub dlp_VFSFileRead
+{
+	my $fileRef	= shift;	# fileRef
+	my $numBytes	= shift;	# bytes to read
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileRead,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N N", $fileRef, $numBytes),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'numBytes',
+			} = unpack("N",$arg->{data});
+		}
+	}
+
+	# Read raw data
+	$retval->{'data'} = spc_recv( $retval->{'numBytes'} );
+
+	return ($err, $retval);
+}
+
+sub dlp_VFSFileWrite
+{
+	my $fileRef	= shift;	# fileRef
+	my $data	= shift;	#
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileWrite,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N N", $fileRef, length( $data )),
+				 }
+				 );
+
+	print STDERR "File write failed: $err\n" unless $err eq 0;
+
+	# Parse the return arguments.
+	# XXX - Probably no args
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			@$retval{
+				'unknown',
+			} = unpack("a*",$arg->{data});
+		}
+	}
+
+	# Write raw data
+	spc_send( $data );
+
+	return ($err, $retval);
+}
+
+sub dlp_VFSFileSize
+{
+	my $fileRef	= shift;	# fileRef
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileSize,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N", $fileRef),
+				 }
+				 );
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			$retval->{'fileSize'} = unpack("N",$arg->{data});
+		}
+	}
+
+	return ($err, $retval, $retval->{'fileSize'});
+}
+
+sub dlp_VFSFileResize
+{
+	my $fileRef	= shift;	# fileRef
+	my $newSize	= shift;
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileResize,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N N", $fileRef, $newSize),
+				 }
+				 );
+
+	# No return arguments to parse
+	return $err;
+}
+
 
 sub dlp_VFSDirEntryEnumerate
 {
@@ -393,117 +494,8 @@ sub dlp_VFSDirEntryEnumerate
 		}
 	}
 
-	return $retval;
+	return ($err, $retval);
 }
-
-sub dlp_VFSFileRead
-{
-	my $fileRef	= shift;	# fileRef
-	my $numBytes	= shift;	# bytes to read
-
-	my ($err, @argv) = dlp_req(DLPCMD_VFSFileRead,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("N N", $fileRef, $numBytes),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval{
-				'numBytes',
-			} = unpack("N",$arg->{data});
-		}
-	}
-
-	return $retval;
-}
-
-sub dlp_VFSFileSize
-{
-	my $fileRef	= shift;	# fileRef
-
-	my ($err, @argv) = dlp_req(DLPCMD_VFSFileSize,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("N", $fileRef),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval{
-				'fileSize',
-			} = unpack("N",$arg->{data});
-		}
-	}
-
-	return $retval;
-}
-
-sub dlp_VFSGetFile
-{
-	my $volRefNum	= shift;
-	my $name	= shift;
-
-	my ($err, @argv) = dlp_req(DLPCMD_VFSGetFile,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("n Z*", $volRefNum, $name, $name),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval{
-				'test',
-			} = unpack("a*",$arg->{data});
-		}
-	}
-
-	return $retval;
-}
-
-sub dlp_VFSPutFile
-{
-	my $fileRef	= shift;	# fileRef
-
-	my ($err, @argv) = dlp_req(DLPCMD_VFSPutFile,
-				 {
-					 id   => dlpFirstArgID,
-					 data => pack("N", $fileRef),
-				 }
-				 );
-
-	# Parse the return arguments.
-	my $retval = {};
-
-	foreach my $arg (@argv) {
-		if ($arg->{id} == dlpFirstArgID)
-		{
-			@$retval{
-				'test',
-			} = unpack("a*",$arg->{data});
-		}
-	}
-
-	return $retval;
-}
-
-
-
 
 1;
 

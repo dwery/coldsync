@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.11 2002-05-01 23:06:48 azummo Exp $
+# $Id: SPC.pm,v 1.12 2002-05-20 13:29:44 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,7 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.11 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.12 $ ' =~ m{(\d+)\.(\d+)};
 
 @ISA = qw( Exporter );
 
@@ -202,6 +202,8 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 @EXPORT = qw( spc_req *SPC
 	dlp_req
 	spc_get_dbinfo
+	spc_recv
+	spc_send
 	dlp_ReadSysInfo
 	dlp_OpenDB
 	dlp_CloseDB
@@ -251,6 +253,9 @@ sub spc_req
 	# Handle empty data
 	$data = defined $data ? $data : "";
 
+#	print "spc_req, Header:\n";
+#	print sprintf "OP    : %02x\n", $op;
+
 	# Send the SPC request: header and data
 	$header = pack("n x2 N", $op, length($data));
 	print SPC $header, $data;
@@ -265,13 +270,47 @@ sub spc_req
 	($op, $status, $len) = unpack("n n N", $buf);
 	return undef if $status != 0;
 
+#	print "spc_req, Response header:\n";
+#	print sprintf "OP    : %02x\n", $op;
+#	print sprintf "STATUS: %02x\n", $status;
+#	print         "LEN   : $len\n";
+
+
 	# Read the reply data
 	if ($len > 0)
 	{
 		read SPC, $buf, $len;
 	}
 
-	return ($status, $buf);
+	return ($status, $buf, $len);
+}
+
+sub spc_recv
+{
+	my $wlen = shift;
+	my $rlen = 0;
+	my $gbuf = "";
+
+#	print "spc_recv, reading $wlen bytes\n";
+
+	while( $rlen < $wlen )
+	{
+		my ($status, $buf, $len) = spc_req( SPCOP_DLPC );
+
+#		print " - $len, $rlen\n";
+
+		$rlen += $len;
+		$gbuf .= $buf;
+	}
+
+	return $gbuf;
+}
+
+sub spc_send
+{
+	my $data = shift;
+
+	spc_req( SPCOP_DLPC, $data );
 }
 
 =head1 FUNCTIONS
