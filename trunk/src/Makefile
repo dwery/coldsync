@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.34 2002-12-10 14:38:30 arensb Exp $
+# $Id: Makefile,v 2.35 2002-12-10 16:56:24 azummo Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -37,7 +37,7 @@ C_SRCS =	coldsync.c \
 
 C_OBJS =	${C_SRCS:.c=.o}
 
-CXX_SRCS =	GenericConduit.cc
+CXX_SRCS =	
 
 CXX_OBJS =	${CXX_SRCS:.cc=.o}
 
@@ -55,14 +55,16 @@ HEADERS =	archive.h \
 		pref.h \
 		net_compat.h \
 		trace.h \
-		GenericConduit.hh \
 		netsync.h \
 		palmconn.h \
 		runmode.h \
 		sync.h 
 
-OBJS =		${C_OBJS} ${CXX_OBJS} \
-		y.tab.o conduits/*.o
+CONDUITS_OBJS =	conduits/generic.o \
+		conduits/dummy.o
+
+OBJS =		${C_OBJS} ${CXX_OBJS} ${CONDUITS_OBJS} \
+		y.tab.o
 
 LIBPCONN = 	-L${TOP}/libpconn -lpconn
 LIBPDB = 	-L${TOP}/libpdb -lpdb
