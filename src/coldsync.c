@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.61 2000-11-28 00:53:52 arensb Exp $
+ * $Id: coldsync.c,v 1.62 2000-12-08 06:29:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -56,6 +56,13 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
  */
 #define SYNC_RATE		38400L
 #define BSYNC_RATE		B38400
+
+static int Connect(struct PConnection *pconn);
+static int Disconnect(struct PConnection *pconn, const ubyte status);
+static int run_mode_Standalone(int argc, char *argv[]);
+static int run_mode_Backup(int argc, char *argv[]);
+static int run_mode_Restore(int argc, char *argv[]);
+static int run_mode_Init(int argc, char *argv[]);
 
 int CheckLocalFiles(struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
@@ -209,6 +216,13 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	/* Get this host's hostid */
+	if ((err = get_hostid(&hostid)) < 0)
+	{
+		fprintf(stderr, _("Error: can't get host ID.\n"));
+		exit(1);
+	}
+
 	/* Parse command-line arguments */
 	err = parse_args(argc, argv);
 	if (err < 0)
@@ -301,6 +315,13 @@ main(int argc, char *argv[])
 			global_opts.install_first ? "True" : "False");
 		fprintf(stderr, "\tforce_install: %s\n",
 			global_opts.force_install ? "True" : "False");
+
+		fprintf(stderr, "\nhostid == 0x%08lx (%02d.%02d.%02d.%02d)\n",
+			hostid,
+			(int) ((hostid >> 24) & 0xff),
+			(int) ((hostid >> 16) & 0xff),
+			(int) ((hostid >>  8) & 0xff),
+			(int)  (hostid        & 0xff));
 	}
 
 	MISC_TRACE(3)
@@ -366,7 +387,7 @@ main(int argc, char *argv[])
 	/* NOTREACHED */
 }
 
-int
+static int
 run_mode_Standalone(int argc, char *argv[])
 {
 	int err;
@@ -812,7 +833,7 @@ run_mode_Standalone(int argc, char *argv[])
 	return 0;
 }
 
-int
+static int
 run_mode_Backup(int argc, char *argv[])
 {
 	int err;
@@ -998,7 +1019,7 @@ run_mode_Backup(int argc, char *argv[])
 	return 0;
 }
 
-int
+static int
 run_mode_Restore(int argc, char *argv[])
 {
 	int err;
@@ -1120,7 +1141,7 @@ run_mode_Restore(int argc, char *argv[])
  * Hence, Standalone mode doesn't modify the username/userid, but does
  * require it to match what's in the config file.
  */
-int
+static int
 run_mode_Init(int argc, char *argv[])
 {
 	int err;
@@ -1438,7 +1459,7 @@ run_mode_Init(int argc, char *argv[])
 
 /* XXX - run_mode_Daemon() */
 /* XXX
-int
+static int
 run_mode_Daemon()
 {
 	XXX - Read command-line arguments
@@ -1457,7 +1478,7 @@ run_mode_Daemon()
 */
 /* XXX - run_mode_Getty() */
 /* XXX
-int
+static int
 run_mode_Getty()
 {
 	XXX - Read command-line arguments
@@ -1481,7 +1502,7 @@ run_mode_Getty()
  * establish a connection with the first one that starts talking. This
  * might also be the place to fork().
  */
-int
+static int
 Connect(struct PConnection *pconn)
 {
 	int err;
@@ -1603,7 +1624,7 @@ Connect(struct PConnection *pconn)
 	return 0;
 }
 
-int
+static int
 Disconnect(struct PConnection *pconn, const ubyte status)
 {
 	int err;
