@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.1 1999-09-09 05:15:24 arensb Exp $
+ * $Id: palm_errno.h,v 1.2 2001-03-16 14:16:30 arensb Exp $
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_
@@ -26,6 +26,7 @@
 
 extern int palm_errno;			/* Error code */
 extern const char *palm_errlist[];	/* List of error messages */
+extern const int palm_numerrs;		/* Length of palm_errlist */
 
 /* XXX - palm_perror(), perhaps? */
 
