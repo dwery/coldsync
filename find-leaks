@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: find-leaks,v 2.2 2000-12-15 06:09:38 arensb Exp $
+# $Id: find-leaks,v 2.3 2002-03-09 05:37:14 arensb Exp $
 
 # This script helps implement a very primitive form of memory allocation.
 # See the comments in "config.h.in". Basically, if you configure ColdSync
