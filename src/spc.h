@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.h,v 2.1 2000-07-31 09:00:47 arensb Exp $
+ * $Id: spc.h,v 2.2 2000-08-07 00:44:14 arensb Exp $
  *
  * Structure of an SPC request:
  *	[request header] [data]
@@ -53,25 +53,11 @@ struct spc_hdr {
 /* Status/error codes */
 #define SPCERR_OK	0	/* No error */
 #define SPCERR_BADOP	1	/* Unknown opcode */
-
-/* XXX - Need a function to actually do this stuff. Presumably, it should
- * be:
- *	int handle_spc(
- *		const struct spc_req_hdr *header,
- *		const ubyte *inbuf,
- *		ubyte **reply,
- *		long *reply_len);
- * The header is in '*header', 'inbuf' is a buffer containing the request
- * data. handle_spc() runs, allocates memory for the response, and stuffs
- * the reply in '*reply' (and the length of the reply in '*reply_len').
- *
- * Should handle_spc() also put the response header in '*reply'? That would
- * probably be a bad idea: there will always be a reply header, but perhaps
- * there will not always be any other response data. So that would save a
- * couple of extra malloc()s.
- */
+#define SPCERR_NOMEM	2	/* Out of memory */
 
 extern int spc_send(struct spc_hdr *header,
+		    struct PConnection *pconn,
+		    const struct dlp_dbinfo *dbinfo,
 		    const unsigned char *inbuf,
 		    unsigned char **outbuf);
 
