@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.12 2001-06-26 05:47:15 arensb Exp $
+ * $Id: cmp.c,v 1.13 2001-09-07 10:56:57 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -143,13 +143,13 @@ cmp_accept(PConnection *pconn, udword bps)
 				_(palm_errlist[palm_errno]));
 			return ~0;
 		}
-	} while (cmpp.type != CMP_TYPE_WAKEUP);
+	} while (cmpp.type != (ubyte) CMP_TYPE_WAKEUP);
 
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Got a wakeup packet\n");
 
 	/* Compose a reply */
-	cmpp.type = CMP_TYPE_INIT;
+	cmpp.type = (ubyte) CMP_TYPE_INIT;
 	cmpp.ver_major = CMP_VER_MAJOR;
 	cmpp.ver_minor = CMP_VER_MINOR;
 	if (bps != 0)
