@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.33 2001-07-26 07:02:23 arensb Exp $
+ * $Id: lexer.l,v 2.34 2001-07-30 07:12:09 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -154,16 +154,12 @@ ID		[-a-zA-Z_0-9]
 "directory"	{ KEYWORD(DIRECTORY);	}
 "forward"	{ KEYWORD(FORWARD);	}
 "listen"	{ KEYWORD(LISTEN);	}
-"usb_m50x"	{ KEYWORD(USB_M50X);	}
-"net"		{ KEYWORD(NET);	}
-"network"	{ KEYWORD(NET);		/* Synonym */	}
 "path"		{ KEYWORD(PATH);	}
 "pda"		{ KEYWORD(PDA);		}
 "palm"		{ KEYWORD(PDA);		/* Synonym */	}
 "preference"	{ KEYWORD(PREFERENCE);	}
 "pref"		{ KEYWORD(PREFERENCE);	/* Synonym */	}
-"serial"	{ KEYWORD(SERIAL);	}
-"usb"		{ KEYWORD(USB);		}
+"protocol"	{ KEYWORD(PROTOCOL);	}
 "saved"		{ KEYWORD(SAVED);	}
 "snum"		{ KEYWORD(SNUM);	}
 "speed"		{ KEYWORD(SPEED);	}
@@ -173,6 +169,20 @@ ID		[-a-zA-Z_0-9]
 "username"	{ KEYWORD(USERNAME);	}
 "Chosen"	{ KEYWORD(SAVED);	}
 "Heathen"	{ KEYWORD(UNSAVED);	}
+
+ /* Hardware protocols */
+"usb_m50x"	{ KEYWORD(USB_M50X);	}
+"net"		{ KEYWORD(NET);	}
+"network"	{ KEYWORD(NET);		/* Synonym */	}
+"serial"	{ KEYWORD(SERIAL);	}
+"usb"		{ KEYWORD(USB);		}
+
+ /* Software protocols */
+ /* "default" already in conduit options */
+"full"		{ KEYWORD(FULL);	}
+"simple"	{ KEYWORD(SIMPLE);	}
+"m50x"		{ KEYWORD(SIMPLE)	/* Synonym */	}
+ /* "net" already in keywords */
 
  /* Conduit flavors */
 "sync"		{ KEYWORD(SYNC);	}
