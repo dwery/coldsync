@@ -1,0 +1,65 @@
+.\" coldsync.8
+.\" $Id: coldsync.8,v 1.1 1999-07-12 08:46:57 arensb Exp $
+.\" 
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.Dd July 6, 1999
+.Dt COLDSYNC 8 SMM
+.Os
+.Sh NAME
+.Nm coldsync
+.Nd synchronize files between a Palm and a workstation.
+
+.Sh SYNOPSYS
+.Nm coldsync
+.Op Fl hVSFR
+.Op Fl u Ar user|uid
+.Op Fl b Ar directory
+.Op Fl r Ar directory
+.Op Fl f Ar config_file
+.Fl p Ar device
+
+.Sh DESCRIPTION
+
+.Nm
+synchronizes databases between a Palm\(tm device.
+device and a workstation.
+.Pp
+The following options are available:
+.Bl -tag -width indent
+.It Fl h
+(Help) Print a usage message and exit.
+.It Fl V
+Print the version number and exit.
+.It Fl u Aq user|uid
+Run as the specified user. This may be either a user name or a numeric
+UID.
+.It Fl b Aq directory
+Perform a full backup of the Palm, and put the files in
+.Aq directory .
+.It Fl r Aq directory
+Restore files from
+.Aq directory .
+.El
+.Pp
+If neither
+.Fl b
+nor
+.Fl r
+is specified,
+.Nm
+performs a sync. A sync is the process of synchronizing databases on
+the Palm with files on the desktop machine. Usually this just means
+making sure that a copy of every record in each database has been
+backed up to a file on the workstation, and vice-versa.
+.\"  .Sh ENVIRONMENT
+.\"  .Sh EXAMPLES
+.\"  .Sh FILES
+.\"  .Sh SEE ALSO
+.\"  .Sh STANDARDS
+.\"  .Sh HISTORY
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com
+.\"  .Sh DIAGNOSTICS
+.\"  .Sh ERRORS
+.\"  .Sh BUGS
