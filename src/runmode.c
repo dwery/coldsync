@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.3 2002-09-07 15:08:20 azummo Exp $
+ * $Id: runmode.c,v 2.4 2002-09-07 16:41:45 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -812,7 +812,6 @@ run_mode_Daemon(int argc, char *argv[])
 
 	/* Look up this Palm in /etc/palms */
 	/* XXX - Figure out exactly what the search criteria should be */
-	/* XXX - Should allow '*' in fields as wildcard */
 	/* XXX - If userid is 0, abort? */
 
 	palment = lookup_palment(palm, PMATCH_EXACT);
