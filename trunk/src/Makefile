@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.8 2000-05-19 12:11:23 arensb Exp $
+# $Id: Makefile,v 2.9 2000-05-20 22:44:14 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -36,7 +36,7 @@ LIBPDB = 	-L${TOP}/libpdb -lpdb
 EXTRA_LIBS =	${LIBPDB} ${LIBPCONN} ${LIBYACC} ${LIBLEX}
 CLEAN =		${CXXPROG} ${OBJS} \
 		*.ln *.bak *~ core *.core .depend \
-		lex.yy.c y.tab.c y.tab.h y.output
+		lex.yy.c y.tab.c y.tab.h y.output parser.output
 
 DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
@@ -57,3 +57,6 @@ install::	${CXXPROG}
 # else to do it
 coldsync:	${TOP}/libpconn/libpconn.a
 coldsync:	${TOP}/libpdb/libpdb.a
+
+lex.yy.c:	parser.h
+y.tab.c:	parser.h
