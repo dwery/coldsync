@@ -8,9 +8,20 @@
  * of Palms.
  *
  * The structure of /etc/palms is reminiscent of /etc/passwd: each
- * line represents one Palm; fields are
+ * line represents one Palm; fields in each line are separated by '|'.
+ * The fields are, in order,
+ *	serial|username|userid|luser|name|conf_fname
  *
- * $Id: palment.h,v 2.1 2001-02-16 11:05:29 arensb Exp $
+ * serial:	The Palm's serial number
+ * username:	The username on the Palm
+ * userid:	The user ID on the Palm
+ * luser:	Local (Unix) user to setuid() to
+ * name:	Palm's name in .coldsyncrc
+ * conf_fname:	Config file to use
+ *
+ * 'name' and 'conf_fname' are optional.
+ *
+ * $Id: palment.h,v 2.2 2001-02-16 11:16:18 arensb Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
