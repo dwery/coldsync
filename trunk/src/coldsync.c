@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.144 2002-11-02 13:20:43 azummo Exp $
+ * $Id: coldsync.c,v 1.145 2002-11-13 12:06:35 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -294,7 +294,7 @@ main(int argc, char *argv[])
 			Bool3str(global_opts.autoinit));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
-		tmp = get_symbol("LOGFILE");
+		tmp = get_symbol("CS_LOGFILE");
 		fprintf(stderr, "\tlog_fname: \"%s\"\n",
 			(tmp == NULL ? "(null)" : tmp));
 
@@ -382,7 +382,7 @@ main(int argc, char *argv[])
 	/* Write a timestamp to the log file.
 	 * The condition may be non-obvious: the idea is that we don't log
 	 * this timestamp to stderr, only to a file specified with the "-l
-	 * logfile" option, or $LOGFILE variable. If we opened a separate
+	 * logfile" option, or $CS_LOGFILE variable. If we opened a separate
 	 * log file, then 'oldstderr' was set to the old stderr.
 	 */
 	if (oldstderr != NULL)
@@ -411,7 +411,7 @@ main(int argc, char *argv[])
  * in the Bourne shell.
  *
  * If a log file has been specified on the command line, use that.
- * Otherwise, if the symbol "LOGFILE" is defined, use that. Otherwise, just
+ * Otherwise, if the symbol "CS_LOGFILE" is defined, use that. Otherwise, just
  * have error messages go to stderr.
  *
  * Returns 0 if successful, or -1 in case of error.
@@ -431,7 +431,7 @@ open_log_file(void)
 	if (global_opts.log_fname != NULL)
 		filename = global_opts.log_fname;
 	else {
-		filename = get_symbol("LOGFILE");
+		filename = get_symbol("CS_LOGFILE");
 		if ((filename == NULL) || (filename[0] == '\0'))
 			/* No log file, or empty log file specified. Don't
 			 * do anything. */
