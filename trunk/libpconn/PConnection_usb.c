@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.22 2001-04-15 04:38:26 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.23 2001-05-06 06:00:49 arensb Exp $
  */
 
 #include "config.h"
@@ -573,6 +573,10 @@ pconn_usb_open(PConnection *pconn, char *device, int prompt)
 	}
 
 	sprintf(hotsync_ep_name, "%s.%d", device, hotsync_endpoint);
+
+	IO_TRACE(1)
+		fprintf(stderr, "Hotsync endpoint name: \"%s\"\n",
+			SURE(hotsync_ep_name));
 
 	pconn->fd = open(hotsync_ep_name, O_RDWR, 0);
 
