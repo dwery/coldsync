@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.42 2002-11-02 12:59:42 azummo Exp $
+ * $Id: PConnection_serial.c,v 1.43 2002-11-02 21:34:46 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -615,6 +615,8 @@ pconn_serial_open(PConnection *pconn,
 		 * hacks.
 		 */
 
+		int first_attempt = 1;
+
 		/* XXX Should this message go to stderr instead? */
 
 		if ((pconn->flags & (PCONNFL_PROMPT | PCONNFL_TRANSIENT)) ==
@@ -635,10 +637,17 @@ pconn_serial_open(PConnection *pconn,
 				/* If PCONNFL_TRANSIENT is set, fall
 				 * through */
 			    case ENODEV:
-				fprintf(stderr,
-					_("Warning: no device on %s. "
-					  "Sleeping\n"),
-					device);
+			    	if (first_attempt)
+			    	{
+					fprintf(stderr,
+						_("Warning: no device on %s. "
+						  "Waiting...\n"),
+						device);
+
+					first_attempt = 0;
+				}
+
+				/* XXX This should be made configurable */
 				sleep(5);
 				continue;
 
