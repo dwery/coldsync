@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.139 2001-12-09 19:58:55 arensb Exp $
+dnl # $Id: configure.in,v 1.140 2002-03-10 01:37:52 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -531,6 +531,49 @@ else
 fi
 AC_SUBST(PERLDIR)
 
+# Put the Perl stuff someplace other than ${PREFIX}
+# This is mainly for Red Hat, since their Perl doesn't look in
+# /usr/local. Dumbasses.
+#
+# The idea is as follows: we want to be able to
+#	./configure --prefix=/usr/local
+#	make install PREFIX=/pkg/coldsync
+# and have everything be installed in /pkg/coldsync, but with paths
+# that refer to /usr/local.
+# Unfortunately, Perl doesn't easily allow you to do this. So the Perl
+# Makefile does naughty things to make its paths use "${PREFIX}"
+# instead of hardcoded values.
+
+# Now on top of everything else, Red Hat's perl doesn't look in
+# /usr/local like a good Perl should. So we introduce this ugly
+# workaround. If you specify "--with-perl-prefix=/foo", then the Perl
+# Makefile will strip "/foo" from the beginning of its built-in path,
+# and replaces it with the string "${PREFIX}", so that you can specify
+# a different PREFIX at install-time.
+
+# Acceptable values are:
+#	[no --with-perl-prefix option]	${PREFIX}
+#	--with-perl-prefix=no		${PREFIX}
+#	--without-perl-prefix		${PREFIX}
+#	--with-perl-perfix		Whatever Perl wants
+#	--with-perl-prefix=yes		Whatever Perl wants
+#	--with-perl-prefix=/foo		/foo
+
+PERL_PREFIX='${PREFIX}'
+AC_ARG_WITH(perl-prefix,dnl
+[  --with-perl-prefix[=DIR]
+                          Put Perl modules in DIR. Defaults to whatever
+                          Perl wants.],dnl
+	[PERL_PREFIX="$withval"])
+if test x"$PERL_PREFIX" = xyes; then
+	perl_prefix=""
+	PERL_PREFIX=""
+elif test x"$PERL_PREFIX" = xno; then
+	perl_prefix="${prefix}"
+	PERL_PREFIX='${PREFIX}'
+fi
+AC_SUBST(PERL_PREFIX)
+
 # Specify location where conduits are installed.
 CONDUITDIR=\${LIBEXECDIR}/coldsync
 AC_ARG_WITH(conduits,
@@ -628,8 +671,10 @@ if test x"$EXIT_STATUS" != x0; then
 fi
 dnl #'
 # Create the Makefile for the Perl module(s)
-# IMPORTANT: YOU MUST SPECIFY THE PREFIX!
-(cd perl/ColdSync && ${PERL} Makefile.PL PREFIX=${prefix})
+# If PREFIX is given, the Makefile.PL will strip off the given value
+# of PREFIX, and replace it with the literal string '${PREFIX}' in the
+# Makefile
+(cd perl/ColdSync && ${PERL} Makefile.PL PREFIX="${prefix}")
 AC_OUTPUT_COMMANDS([cd perl/ColdSync && ${PERL} Makefile.PL PREFIX="${prefix}"])
 
 # XXX - I'm not sure this is working quite right everywhere just yet
