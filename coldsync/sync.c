@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.2 1999-03-11 04:17:13 arensb Exp $
+ * $Id: sync.c,v 1.3 1999-03-11 05:20:21 arensb Exp $
  */
 
 #include <stdio.h>
@@ -28,9 +28,9 @@
 	record is new and is marked as modified (in the remote database,
 	presumably).
 	- If the backup record doesn't exist in the remote database, the
-	remote record has been delete it. Mark it as deleted (in the remote
-	database?) (If it was supposed to be archived, presumably it got
-	archived somewhere else.)
+	remote record has been delete. Delete it. Mark it as deleted (in
+	the remote database?) (If it was supposed to be archived,
+	presumably it got archived somewhere else.)
 	- If the backup and remote records don't match, the remote record
 	has been modified; mark it as such.
 
@@ -82,33 +82,32 @@
    * case where it's been modified in both places, but not the same way: in
    * this case, you don't have the option of creating a second AppInfo
    * block.
-
  */
 
 int
 SlowSync(struct PConnection *pconn,
-	 struct dlp_dbinfo *remotedb,
+	 struct dlp_dbinfo *remotedbinfo,
 	 struct pdb *localdb,
 	 char *bakfname)
 {
 	int err;
 	int i;
-	struct pdb *db;		/* The database on the Palm will be read
+	struct pdb *remotedb;	/* The database on the Palm will be read
 				 * into here */
 	ubyte dbh;		/* Database handle */
 
 fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
-	remotedb->name, localdb->header.name, bakfname);
+	remotedbinfo->name, localdb->header.name, bakfname);
 
 	/* Open the database */
 	/* XXX - Card #0 shouldn't be hardwired. It probably ought to be a
 	 * field in dlp_dbinfo or something.
 	 */
-	if (remotedb->db_flags & DLPCMD_DBFLAG_OPEN)
+	if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
 		fprintf(stderr, "This database is open. Not opening for writing\n");
-	err = DlpOpenDB(pconn, 0, remotedb->name,
+	err = DlpOpenDB(pconn, 0, remotedbinfo->name,
 			DLPCMD_MODE_READ |
-			(remotedb->db_flags & DLPCMD_DBFLAG_OPEN ?
+			(remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN ?
 			 0 :
 			 DLPCMD_MODE_WRITE) |
 			DLPCMD_MODE_SECRET,
@@ -129,49 +128,59 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 		 * show-stopper. The sync can go on.
 		 */
 		fprintf(stderr, "SlowSync: Can't open \"%s\": %d\n",
-			remotedb->name, err);
+			remotedbinfo->name, err);
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync can't
 		 * continue.
 		 */
 		fprintf(stderr, "SlowSync: Can't open \"%s\": %d\n",
-			remotedb->name, err);
+			remotedbinfo->name, err);
 		return -1;
 	}
 
+	/* Phase 1:
+	 * Read the entire database from the Palm to an in-memory copy. Go
+	 * through each record one at a time, and see what has changed
+	 * since the last time this database was synced with this machine.
+	 * Only then will we be able to do the actual sync.
+	 */
+
 	/* Read the database on the Palm to an in-memory copy */
-	if ((db = pdb_Download(pconn, remotedb, dbh)) == NULL)
+	if ((remotedb = pdb_Download(pconn, remotedbinfo, dbh)) == NULL)
 	{
 		fprintf(stderr, "Can't downlod \"%s\"\n",
-			remotedb->name);
+			remotedbinfo->name);
 		DlpCloseDB(pconn, dbh);
 		return -1;
 	}
 
+	/* Look through each record in the remote database, comparing it to
+	 * the copy in the local database.
+	 */
 	/* XXX - Compare each record in turn to 'localdb' */
 	/* XXX - This ought to handle both record and resource databases */
-	for (i = 0; i < db->reclist_header.len; i++)
+	for (i = 0; i < remotedb->reclist_header.len; i++)
 	{
 		struct pdb_record *remoterec;
 		struct pdb_record *localrec;
 
-		remoterec = &(db->rec_index.rec[i]);
+		remoterec = &(remotedb->rec_index.rec[i]);
 
 		printf("Remote Record %d:\n", i);
 		printf("\tuniqueID: 0x%08lx\n", remoterec->uniqueID);
 		printf("\tattributes: 0x%02x ",
 		       remoterec->attributes);
 		/* XXX - Need flag #defines */
-		if (remoterec->attributes & 0x80)
+		if (remoterec->attributes & PDB_REC_DELETED)
 			printf("DELETED ");
-		if (remoterec->attributes & 0x40)
+		if (remoterec->attributes & PDB_REC_DIRTY)
 			printf("DIRTY ");
-		if (remoterec->attributes & 0x20)
+		if (remoterec->attributes & PDB_REC_BUSY)
 			printf("BUSY ");
-		if (remoterec->attributes & 0x10)
-			printf("SECRET ");
-		if (remoterec->attributes & 0x08)
+		if (remoterec->attributes & PDB_REC_PRIVATE)
+			printf("PRIVATE ");
+		if (remoterec->attributes & PDB_REC_ARCHIVED)
 			printf("ARCHIVED ");
 		printf("\n");
 
@@ -179,38 +188,114 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 		localrec = pdb_FindRecordByID(localdb, remoterec->uniqueID);
 		if (localrec == NULL)
 		{
-			/* It doesn't exist. */
-			/* XXX - This record is new. Mark it as modified in
-			 * the remote database.
+			/* This record is new. Mark it as modified in the
+			 * remote database.
 			 */
-			fprintf(stderr, "Can't find a local record with ID 0x%08lx\n",
+			fprintf(stderr, "Record 0x%08lx is new.\n",
 				remoterec->uniqueID);
-		} else {
-			/* XXX - The record exists. Do a byte-by-byte
-			 * comparison with the local copy. If they're
-			 * identical, that's fine. Otherwise, the record's
-			 * been modified.
-			 */
-			printf("Local Record %d:\n", i);
-			printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
-			printf("\tattributes: 0x%02x ",
-			       localrec->attributes);
-			/* XXX - Need flag #defines */
-			if (localrec->attributes & 0x80)
-				printf("DELETED ");
-			if (localrec->attributes & 0x40)
-				printf("DIRTY ");
-			if (localrec->attributes & 0x20)
-				printf("BUSY ");
-			if (localrec->attributes & 0x10)
-				printf("SECRET ");
-			if (localrec->attributes & 0x08)
-				printf("ARCHIVED ");
-			printf("\n");
+			remoterec->attributes |= PDB_REC_DIRTY;
+			continue;
 		}
+
+		/* The record exists. Compare the local and remote versions */
+
+		printf("Local Record %d:\n", i);
+		printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
+		printf("\tattributes: 0x%02x ",
+		       localrec->attributes);
+		if (localrec->attributes & PDB_REC_DELETED)
+			printf("DELETED ");
+		if (localrec->attributes & PDB_REC_DIRTY)
+			printf("DIRTY ");
+		if (localrec->attributes & PDB_REC_BUSY)
+			printf("BUSY ");
+		if (localrec->attributes & PDB_REC_PRIVATE)
+			printf("PRIVATE ");
+		if (localrec->attributes & PDB_REC_ARCHIVED)
+			printf("ARCHIVED ");
+		printf("\n");
+
+		/* Compare the records' length. If they differ, then the
+		 * records differ.
+		 */
+		if (remotedb->data_len[i] != localdb->data_len[i])
+		{
+				/* The sizes differ; they're different.
+				 * Mark the record in the remote database
+				 * as dirty.
+				 */
+			fprintf(stderr, "The size is different. This record has been modified.\n");
+			remoterec->attributes |= PDB_REC_DIRTY;
+			continue;
+		}
+
+		/* The lengths are the same. Have to do a byte-by-byte
+		 * comparison.
+		 */
+		if (memcmp(remotedb->data[i], localdb->data[i],
+			   remotedb->data_len[i]) != 0)
+		{
+				/* They're different. Mark the
+				 * record in the remote database as
+				 * dirty.
+					 */
+			fprintf(stderr, "The records are different.\n");
+			remoterec->attributes |= PDB_REC_DIRTY;
+			continue;
+		}
+
+		/* The two records are identical.
+		 * XXX - Is it worth clearing the dirty flag?
+		 */
 	}
 
-if (remotedb->db_flags & DLPCMD_DBFLAG_OPEN)
+	/* XXX - For each record in the local database, try to look it up
+	 * in the remote database. If not found, the record has been
+	 * deleted (and presumably archived elsewhere).
+	 */
+	/* XXX - Actually, if the local record was added after the last
+	 * sync time (as reported by the Palm, and correcting for time zone
+	 * differences), then the local record was added locally, and
+	 * should be added to the Palm. Or should the local copy have its
+	 * dirty bit set?
+	 */
+fprintf(stderr, "Checking local database entries\n");
+	for (i = 0; i < localdb->reclist_header.len; i++)
+	{
+		struct pdb_record *remoterec;
+		struct pdb_record *localrec;
+
+		localrec = &(localdb->rec_index.rec[i]);
+
+		/* Try to look this record up in the remote database */
+		remoterec = pdb_FindRecordByID(remotedb, localrec->uniqueID);
+		if (remoterec != NULL)
+			/* The record exists in the remote database. That
+			 * means we've dealt with it in the previous
+			 * section, so we can skip it now.
+			 */
+			continue;
+
+		/* The local record doesn't exist in the remote database.
+		 * If its dirty flag is set, that means it was added
+		 * locally since the last sync, and should be added to the
+		 * remote database. If the local record isn't dirty, that
+		 * means it was deleted on the Palm (and, presumably,
+		 * archived someplace else if it needed to be archived);
+		 * delete it from the local database.
+		 */
+		if ((localrec->attributes & PDB_REC_DIRTY) == 0)
+			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+	}
+
+	/* XXX - Phase 2:
+	 * Now that each record in the remote database has been examined,
+	 * and it has been decided whether it is new, deleted, etc., go
+	 * through the database once again and do a proper sync, following
+	 * the same logic as for fast syncs.
+	 */
+
+if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
 {
 	fprintf(stderr, "File is open. Not cleaning up, not resetting flags\n");
 } else {
@@ -220,7 +305,7 @@ fprintf(stderr, "### Cleaning up database\n");
 	{
 		fprintf(stderr, "Can't clean up database: err = %d\n", err);
 		DlpCloseDB(pconn, dbh);
-		free_pdb(db);
+		free_pdb(remotedb);
 		return -1;
 	}
 fprintf(stderr, "### Resetting sync flags 3\n");
@@ -229,13 +314,13 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 	{
 		fprintf(stderr, "Can't reset sync flags.\n");
 		DlpCloseDB(pconn, dbh);
-		free_pdb(db);
+		free_pdb(remotedb);
 		return -1;
 	}
 }
 
 	/* Clean up */
-	free_pdb(db);
+	free_pdb(remotedb);
 	DlpCloseDB(pconn, dbh);
 
 	return 0;		/* Success */
