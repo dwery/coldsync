@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.52 2000-12-16 23:22:43 arensb Exp $
+ * $Id: config.c,v 1.53 2000-12-18 06:20:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -874,10 +874,8 @@ name2listen_type(const char *str)
 	/* XXX - It'd be really nice if these strings were translatable */
 	if (strcasecmp(str, "serial") == 0)
 		return LISTEN_SERIAL;
-#if 0	/* XXX - Not implemented yet */
-	if (strcasecmp(str, "tcp") == 0)
-		return LISTEN_TCP;
-#endif	/* 0 */
+	if (strcasecmp(str, "net") == 0)
+		return LISTEN_NET;
 	if (strcasecmp(str, "usb") == 0)
 		return LISTEN_USB;
 	return -1;		/* None of the above */
