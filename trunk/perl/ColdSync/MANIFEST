@@ -1,5 +1,7 @@
 ColdSync.pm
 ColdSync/SPC.pm
+ColdSync/SPC/VFS.pm
+ColdSync/SPC/ExpSlot.pm
 MANIFEST
 MANIFEST.SKIP
 Makefile.PL
