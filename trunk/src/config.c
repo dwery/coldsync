@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.39 2000-11-04 23:14:48 arensb Exp $
+ * $Id: config.c,v 1.40 2000-11-14 16:33:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -500,6 +500,8 @@ get_config(int argc, char *argv[])
 				fprintf(stderr, " DUMP");
 			if (c->flavors & FLAVORFL_SYNC)
 				fprintf(stderr, " SYNC");
+			if (c->flavors & FLAVORFL_INSTALL)
+				fprintf(stderr, " INSTALL");
 			fprintf(stderr, "\n");
 			fprintf(stderr, "\tCreator/Types:\n");
 			for (i = 0; i < c->num_ctypes; i++)
@@ -977,6 +979,8 @@ load_config()
 				fprintf(stderr, " DUMP");
 			if (c->flavors & FLAVORFL_SYNC)
 				fprintf(stderr, " SYNC");
+			if (c->flavors & FLAVORFL_INSTALL)
+				fprintf(stderr, " INSTALL");
 			fprintf(stderr, "\n");
 			fprintf(stderr, "\tCreator/Types:\n");
 			for (i = 0; i < c->num_ctypes; i++)
@@ -1170,7 +1174,7 @@ set_mode(const char *str)
 void
 usage(int argc, char *argv[])
 {
-	/* XXX - Obsolete. Rewrite this. */
+	/* XXX - Very much out of date. Rewrite this. */
 	printf(_("Usage: %s [options] -p port\n"
 		 "Options:\n"
 		 "\t-h:\t\tPrint this help message and exit.\n"
