@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.29 2001-09-07 10:03:00 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.30 2001-10-12 01:22:51 arensb Exp $
  */
 
 #include "config.h"
@@ -109,7 +109,6 @@ static char *hs_usb_functions[] = {
 	"RemoteFileSys",
 	NULL
 };
-
 
 /*************************************************************************/
 
@@ -230,9 +229,23 @@ usb_accept(PConnection *pconn)
 
 	    case PCONN_STACK_SIMPLE:	/* Fall through */
 	    case PCONN_STACK_NET:
+		/* XXX - The m500 hangs right around here. The sync hangs
+		 * until the Palm aborts. This suggests that the Palm is
+		 * waiting for data from the desktop. Or maybe the Palm
+		 * wants to be tickled in some non-obvious way.
+		 */
+		IO_TRACE(5)
+			fprintf(stderr, "usb_accept simple/net\n");
+/* XXX - It seems to help here to send a packet to the m500. */
 		err = ritual_exch_server(pconn);
 		if (err < 0)
+		{
+			IO_TRACE(3)
+				fprintf(stderr, "usb_accept simple/net: "
+					"ritual_exch_server() returned %d\n",
+					err);
 			return -1;
+		}
 		break;
 
 	    case PCONN_STACK_NONE:
@@ -506,6 +519,11 @@ pconn_usb_open(PConnection *pconn,
 
 #define SURE(x) \
 	(((x!=NULL) && (*x !='\0')) ? x : "<not defined>")
+
+	/* XXX - Try using ioctl(USB_GET_DEVICE_DESC) to get all sorts of
+	 * juicy tidbits about the device, possibly even including its
+	 * serial number.
+	 */
 
 	/*
 	 *  Happily, all of the multibyte values in the struct usb_device_info
