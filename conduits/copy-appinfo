@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2001, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: copy-appinfo,v 3.1 2001-06-04 01:40:39 arensb Exp $
+
+# This conduit simply copies the AppInfo block from the database on the
+# Palm to the desktop.
+
+# XXX - Write POD
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+use Palm::Raw;
+
+StartConduit("sync");
+
+use vars qw( $err $dbinfo $dbh $Pappinfo );
+
+select STDERR;		# XXX - Just for debugging
+
+# Find out which database we're dealing with
+$dbinfo = spc_get_dbinfo;
+die "401 Error reading database info" if !defined($dbinfo);
+
+# Open the database
+($dbh = &dlp_OpenDB($dbinfo->{name}, 0x80))
+	or die "402 Can't open database";
+
+# Get the category list from the Palm
+$Pappinfo = dlp_ReadAppBlock($dbh);
+				# Download the AppInfo block from the Palm
+print STDERR "$0: read AppInfo block [$Pappinfo]\n";
+
+# Copy the Palm's AppInfo block to the desktop PDB
+$PDB->{appinfo} = $Pappinfo;
+
+$err = &dlp_CloseDB($dbh);
+# XXX - Error-checking
+
+EndConduit;
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
