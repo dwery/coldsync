@@ -2,7 +2,7 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.2 1999-03-11 10:04:43 arensb Exp $
+ * $Id: upload.c,v 1.3 1999-03-11 20:38:04 arensb Exp $
  */
 #include <stdio.h>
 #include "pconn/PConnection.h"
@@ -30,10 +30,10 @@ if (IS_RSRC_DB(db))
 for (i = 0; i < db->numrecs; i++)
 fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 	i,
-       (char) (db->rec_index.res[i].type >> 24) & 0xff,
-       (char) (db->rec_index.res[i].type >> 16) & 0xff,
-       (char) (db->rec_index.res[i].type >> 8) & 0xff,
-       (char) db->rec_index.res[i].type & 0xff);
+       (char) (db->rec_index.rsrc[i].type >> 24) & 0xff,
+       (char) (db->rec_index.rsrc[i].type >> 16) & 0xff,
+       (char) (db->rec_index.rsrc[i].type >> 8) & 0xff,
+       (char) db->rec_index.rsrc[i].type & 0xff);
 #endif	/* 0 */
 }
 
@@ -112,15 +112,15 @@ if (db->header.attributes & PDB_ATTR_RESDB)
 for (j = 0; j < db->reclist_header.len; j++)
 fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 	j,
-       (char) (db->rec_index.res[j].type >> 24) & 0xff,
-       (char) (db->rec_index.res[j].type >> 16) & 0xff,
-       (char) (db->rec_index.res[j].type >> 8) & 0xff,
-       (char) db->rec_index.res[j].type & 0xff);
+       (char) (db->rec_index.rsrc[j].type >> 24) & 0xff,
+       (char) (db->rec_index.rsrc[j].type >> 16) & 0xff,
+       (char) (db->rec_index.rsrc[j].type >> 8) & 0xff,
+       (char) db->rec_index.rsrc[j].type & 0xff);
 }
 			err = DlpWriteResource(pconn,
 					       dbh,
-					       db->rec_index.res[i].type,
-					       db->rec_index.res[i].id,
+					       db->rec_index.rsrc[i].type,
+					       db->rec_index.rsrc[i].id,
 					       db->data_len[i],
 					       db->data[i]);
 			if (err != DLPSTAT_NOERR)

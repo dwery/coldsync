@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.9 1999-03-11 10:04:39 arensb Exp $
+ * $Id: pdb.c,v 1.10 1999-03-11 20:38:02 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -79,7 +79,7 @@ free_pdb(struct pdb *db)
 		struct pdb_resource *next;
 
 		/* Walk the linked list, freeing as we go along */
-		for (rec = db->rec_index.res;
+		for (rec = db->rec_index.rsrc;
 		     rec != NULL;
 		     rec = next)
 		{
@@ -387,10 +387,10 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	if (IS_RSRC_DB(db))
 	{
 		/* It's a resource database */
-		struct pdb_resource *res;	/* Current resource */
+		struct pdb_resource *rsrc;	/* Current resource */
 
 		/* Go through the list of resources, writing each one */
-		for (res = db->rec_index.res; res != NULL; res = res->next)
+		for (rsrc = db->rec_index.rsrc; rsrc != NULL; rsrc = rsrc->next)
 		{
 			static ubyte rsrcbuf[PDB_RESOURCEIX_LEN];
 					/* Buffer to hold the resource
@@ -399,8 +399,8 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 
 			/* Construct the resource index entry */
 			wptr = rsrcbuf;
-			put_udword(&wptr, res->type);
-			put_uword(&wptr, res->id);
+			put_udword(&wptr, rsrc->type);
+			put_uword(&wptr, rsrc->id);
 			put_udword(&wptr, offset);
 
 			/* Write the resource index entry */
@@ -416,7 +416,7 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			/* Bump 'offset' up to point to the offset of the
 			 * next variable-sized thing in the file.
 			 */
-			offset += res->data_len;
+			offset += rsrc->data_len;
 		}
 	} else {
 		/* It's a record database */
@@ -498,16 +498,16 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	if (IS_RSRC_DB(db))
 	{
 		/* It's a resource database */
-		struct pdb_resource *res;
+		struct pdb_resource *rsrc;
 
 		/* Go through the list of resources, writing each one's
 		 * data.
 		 */
-		for (res = db->rec_index.res; res != NULL; res = res->next)
+		for (rsrc = db->rec_index.rsrc; rsrc != NULL; rsrc = rsrc->next)
 		{
 			/* Write the data */
-			if (write(fd, res->data, res->data_len) !=
-			    res->data_len)
+			if (write(fd, rsrc->data, rsrc->data_len) !=
+			    rsrc->data_len)
 			{
 				fprintf(stderr, "pdb_Write: Can't write resource data\n");
 				perror("write");
@@ -887,17 +887,17 @@ pdb_AppendResource(struct pdb *db,
 		return -1;
 
 	/* Check to see if the list is empty */
-	if (db->rec_index.res == NULL)
+	if (db->rec_index.rsrc == NULL)
 	{
 		/* XXX - Sanity check: db->numrecs should be 0 */
-		db->rec_index.res = newrsrc;
+		db->rec_index.rsrc = newrsrc;
 		newrsrc->next = NULL;
 
 		return 0;		/* Success */
 	}
 
 	/* Walk the list to find its end */
-	for (rsrc = db->rec_index.res; rsrc->next != NULL; rsrc = rsrc->next)
+	for (rsrc = db->rec_index.rsrc; rsrc->next != NULL; rsrc = rsrc->next)
 		;
 	rsrc->next = newrsrc;
 	newrsrc->next = NULL;
@@ -956,8 +956,8 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
 	/* If 'prev' is NULL, insert at the beginning of the list */
 	if (prev == NULL)
 	{
-		newrsrc->next = db->rec_index.res;
-		db->rec_index.res = newrsrc;
+		newrsrc->next = db->rec_index.rsrc;
+		db->rec_index.rsrc = newrsrc;
 		db->numrecs++;		/* Increment record count */
 
 		return 0;		/* Success */
@@ -1131,7 +1131,7 @@ pdb_LoadRsrcIndex(int fd,
 	if (db->numrecs == 0)
 	{
 		/* There are no resources in this file */
-		db->rec_index.res = NULL;
+		db->rec_index.rsrc = NULL;
 		return 0;
 	}
 
@@ -1287,7 +1287,7 @@ pdb_LoadAppBlock(int fd,
 		 * offset of the first one.
 		 */
 		if (IS_RSRC_DB(db))
-			next_off = db->rec_index.res->offset;
+			next_off = db->rec_index.rsrc->offset;
 		else
 			next_off = db->rec_index.rec->offset;
 	} else
@@ -1386,7 +1386,7 @@ pdb_LoadSortBlock(int fd,
 		/* There are records. Get the offset of the first one.
 		 */
 		if (IS_RSRC_DB(db))
-			next_off = db->rec_index.res->offset;
+			next_off = db->rec_index.rsrc->offset;
 		else
 			next_off = db->rec_index.rec->offset;
 	} else
@@ -1466,7 +1466,7 @@ pdb_LoadResources(int fd,
 	/* This assumes that the resource list has already been created by
 	 * 'pdb_LoadRsrcIndex()'.
 	 */
-	for (i = 0, rsrc = db->rec_index.res;
+	for (i = 0, rsrc = db->rec_index.rsrc;
 	     i < db->numrecs;
 	     i++, rsrc = rsrc->next)
 	{
@@ -1742,7 +1742,7 @@ fprintf(stderr, "\tsize: %d\n", resinfo.size);
 
 		/* Copy the resource data to 'rsrc' */
 		memcpy(rsrc->data, rptr, rsrc->data_len);
-/*  debug_dump(stderr, "RES", rsrc->data, rsrc->data_len); */
+/*  debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len); */
 
 		/* Append the resource to the database */
 		pdb_AppendResource(db, rsrc);
