@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.21 2001-03-29 05:33:46 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.22 2001-04-15 04:38:26 arensb Exp $
  */
 
 #include "config.h"
@@ -179,7 +179,7 @@ usb_read(PConnection *p, unsigned char *buf, int len)
 }
 
 static int
-usb_write(PConnection *p, unsigned char *buf, int len)
+usb_write(PConnection *p, unsigned const char *buf, const int len)
 {
 	return write(p->fd, buf, len);
 }
