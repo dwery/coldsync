@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.19 2000-05-20 19:17:15 arensb Exp $
+ * $Id: parser.y,v 2.20 2000-05-20 23:23:33 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -20,6 +20,8 @@
 #endif	/* HAVE_LIBINTL */
 
 #include "parser.h"
+
+#define YYDEBUG 1
 
 int parse_trace = 0;		/* Debugging level for config file parser */
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
@@ -68,7 +70,6 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %}
 
 %token <crea_type>	CREA_TYPE
-%token <header_type>	HEADER_PAIR
 %token <integer>	NUMBER
 %token <string>		STRING
 %token <string>		WORD
@@ -79,7 +80,6 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token DIRECTORY
 %token FINAL
 %token LISTEN
-%token NAME
 %token PATH
 %token PDA
 %token SPEED
@@ -108,7 +108,6 @@ static struct config *file_config;	/* As the parser runs, it will fill
 	conduit_flavor flavor;
 	comm_type commtype;
 	crea_type_pair crea_type;
-	struct cond_header header_type;
 }
 
 %%
@@ -248,12 +247,17 @@ listen_directives:
 	;
 
 listen_directive:
-	DEVICE opt_colon STRING semicolon
+	DEVICE opt_colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: device [%s]\n", $3);
+			fprintf(stderr, "Listen: device [%s]\n", $4);
 
-		cur_listen->device = $3;
+		lex_expect(0);
+		cur_listen->device = $4;
 	}
 	| SPEED opt_colon NUMBER semicolon
 	{
@@ -337,6 +341,8 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 	{
 		/* Got a conduit block. Append it to the appropriate list. */
 		conduit_block **list;
+
+		lex_expect(0);		/* No special lexer context */
 
 		switch (cur_conduit->flavor)
 		{
@@ -442,7 +448,11 @@ conduit_directives:
 	;
 
 conduit_directive:
-	TYPE opt_colon creator_type semicolon
+	TYPE opt_colon
+	{
+		lex_expect(LEX_CTPAIR);
+	}
+	creator_type semicolon
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
@@ -450,31 +460,40 @@ conduit_directive:
 		PARSE_TRACE(4)
 		{
 			fprintf(stderr, "Conduit creator: 0x%08ld (%c%c%c%c)\n",
-				$3.creator,
-				(char) (($3.creator >> 24) & 0xff),
-				(char) (($3.creator >> 16) & 0xff),
-				(char) (($3.creator >>  8) & 0xff),
-				(char) ($3.creator & 0xff));
+				$4.creator,
+				(char) (($4.creator >> 24) & 0xff),
+				(char) (($4.creator >> 16) & 0xff),
+				(char) (($4.creator >>  8) & 0xff),
+				(char) ($4.creator & 0xff));
 			fprintf(stderr, "Conduit type: 0x%08ld (%c%c%c%c)\n",
-				$3.type,
-				(char) (($3.type >> 24) & 0xff),
-				(char) (($3.type >> 16) & 0xff),
-				(char) (($3.type >>  8) & 0xff),
-				(char) ($3.type & 0xff));
+				$4.type,
+				(char) (($4.type >> 24) & 0xff),
+				(char) (($4.type >> 16) & 0xff),
+				(char) (($4.type >>  8) & 0xff),
+				(char) ($4.type & 0xff));
 		}
-		cur_conduit->dbcreator = $3.creator;
-		cur_conduit->dbtype = $3.type;
+
+		lex_expect(0);
+
+		cur_conduit->dbcreator = $4.creator;
+		cur_conduit->dbtype = $4.type;
 	}
-	| PATH opt_colon STRING semicolon
+	| PATH opt_colon
 	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
+	{
+		lex_expect(0);
+
 		/* Path to the conduit program. If this is a relative
 		 * pathname, look for it in the path.
 		 * XXX - There should be a ConduitPath directive to specify
 		 * where to look for conduits.
 		 * XXX - Or else allow the user to set $PATH, or something.
 		 */
-		cur_conduit->path = $3;
-		$3 = NULL;
+		cur_conduit->path = $4;
+		$4 = NULL;
 
 		PARSE_TRACE(4)
 			fprintf(stderr, "Conduit path: [%s]\n",
@@ -574,17 +593,30 @@ opt_header_list:	ARGUMENTS ':'
 		lex_expect(LEX_HEADER);
 	}
 	header_list
+	{
+		/* This resets the leftover state from the last header
+		 * line.
+		 */
+		lex_expect(0);
+	}
 	|	/* Empty */
+	{
+		lex_expect(0);
+	}
 	;
 
 /* header_list: a possibly-empty list of user-supplied headers */
-/* XXX - this is broken: it ought to say
- *	header_list STRING ':' STRING ';'
- * or some such. That would make it easier to detect errors. Probably need
- * to make heavy use of lex states for this, though.
- *	It should be possible to double-quote the rhs string.
+/* NOTE: at the beginning of the first (nonempty list) clause, we are
+ * expecting to see a header name (LEX_HEADER). This is set by the other
+ * (error and empty list) clauses. I'm sorry for violating locality this
+ * way, but it was necessary.
  */
-header_list:	header_list HEADER_PAIR semicolon
+header_list:	header_list
+	STRING colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
 	{
 		struct cond_header *new_hdr;
 
@@ -592,7 +624,7 @@ header_list:	header_list HEADER_PAIR semicolon
 		{
 			fprintf(stderr, "Found header list\n");
 			fprintf(stderr, "New header: [%s]->[%s]\n",
-				$2.name, $2.value);
+				$2, $5);
 		}
 
 		/* Append the new header to the current conduit_block's
@@ -609,10 +641,8 @@ header_list:	header_list HEADER_PAIR semicolon
 
 		/* Initialize the new header */
 		new_hdr->next = NULL;
-		new_hdr->name = $2.name;
-		$2.name = NULL;
-		new_hdr->value = $2.value;
-		$2.value = NULL;
+		new_hdr->name = $2; $2 = NULL;
+		new_hdr->value = $5; $5 = NULL;
 
 		/* Append the new header to the list in the current conduit
 		 * block.
@@ -635,12 +665,24 @@ header_list:	header_list HEADER_PAIR semicolon
 				;
 			last_hdr->next = new_hdr;
 		}
+
+		lex_expect(LEX_HEADER);		/* Prepare for the next line */
 	}
 	|	/* Empty */
 	{
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found empty header list\n");
+		lex_expect(LEX_HEADER);
 	}
+	| header_list ':' error
+	{
+		fprintf(stderr, _("\tMissing argument name near \": %s\".\n"),
+			yytext);
+		ANOTHER_ERROR;
+		yyclearin;
+		lex_expect(LEX_HEADER);
+	}
+	';'
 	;
 
 pda_stmt:	PDA opt_name '{'
@@ -740,17 +782,23 @@ pda_directives:
 	;
 
 pda_directive:
-	SNUM opt_colon STRING semicolon
+	SNUM opt_colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
 	{
 		/* Serial number from ROM */
 		char *csum_ptr;		/* Pointer to checksum character */
 		unsigned char checksum;	/* Calculated checksum */
 
 		PARSE_TRACE(4)
-			fprintf(stderr, "Serial number \"%s\"\n", $3);
+			fprintf(stderr, "Serial number \"%s\"\n", $4);
 
-		cur_pda->snum = $3;
-		$3 = NULL;
+		lex_expect(0);
+
+		cur_pda->snum = $4;
+		$4 = NULL;
 
 		/* Verify the checksum */
 		csum_ptr = strrchr(cur_pda->snum, '-');
@@ -802,13 +850,19 @@ pda_directive:
 			}
 		}
 	}
-	| DIRECTORY opt_colon STRING semicolon
+	| DIRECTORY opt_colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Directory \"%s\"\n", $3);
+			fprintf(stderr, "Directory \"%s\"\n", $4);
 
-		cur_pda->directory = $3;
-		$3 = NULL;
+		lex_expect(0);
+
+		cur_pda->directory = $4;
+		$4 = NULL;
 	}
 	| DEFAULT semicolon
 	{
@@ -849,6 +903,14 @@ opt_colon:	':'
 	}
 	;
 
+colon:	':'
+	| error
+	{
+		ANOTHER_ERROR;
+		fprintf(stderr, _("\tMissing ':'\n"));
+	}
+
+
 open_brace:	'{'
 	| error
 	{
@@ -883,6 +945,7 @@ int parse_config(const char *fname,
 {
 	FILE *infile;
 	int retval;
+/*  	yydebug = 1; */
 
 	if ((infile = fopen(fname, "r")) == NULL)
 	{
