@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.5 2000-07-13 04:16:07 arensb Exp $
+ * $Id: conduit.c,v 2.6 2000-07-14 04:37:49 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -154,6 +154,31 @@ poll_fd(const int fd, const Bool for_writing)
 	return 1;			/* File descriptor is readable */
 }
 
+/* format_header
+
+ * A convenience function. Takes a buffer, a header name, and a header
+ * value. Writes the header to 'buf', making sure that the result obeys the
+ * rules for conduit headers:
+ *	- Header name (the part before the colon) has no more than
+ *	  COND_MAXHFIELDLEN characters.
+ *	- The entire line, not counting the \n at the end or the
+ *	  terminating NUL, is no more than COND_MAXLINELEN characters.
+ */
+static INLINE void
+format_header(char *buf,
+	      const char *name,
+	      const char *value)
+{
+		strncpy(buf, name,  COND_MAXHFIELDLEN);
+		strncat(buf, ": ",  COND_MAXLINELEN - strlen(buf));
+		strncat(buf, value, COND_MAXLINELEN - strlen(buf));
+		strncat(buf, "\n",  COND_MAXLINELEN - strlen(buf));
+
+		/* Make sure it's terminated properly */
+		buf[COND_MAXLINELEN] = '\n';
+		buf[COND_MAXLINELEN] = '\0';
+}
+
 /* The following two variables are for setvbuf's benefit, for when we make
  * the conduit's stdin and stdout be line-buffered.
  */
@@ -286,19 +311,20 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 				 * send. The +2 is to hold a \n and a NUL
 				 * at the end.
 				 */
+		char *bufp;	/* Pointer to the part of 'buf' that should
+				 * be written next.
+				 */
+		int len;	/* How many bytes of 'bufp' to write */
 
 		/* Create the header line */
-		/* XXX - Write format_header() to do this */
-		strncpy(buf, headers[i].name, COND_MAXHFIELDLEN);
-		strncat(buf, ": ", COND_MAXLINELEN - strlen(buf));
-		strncat(buf, headers[i].value, COND_MAXLINELEN - strlen(buf));
-		buf[sizeof(buf)-2] = '\n';
-		buf[sizeof(buf)-1] = '\0';
+		format_header(buf, headers[i].name, headers[i].value);
+		bufp = buf;
+		len = strlen(bufp);
 
+	  check_status:
 		/* Before proceeding, see if the child has written a status
 		 * message.
 		 */
-	  check_status:
 		err = poll_fd(fileno(fromchild), False);
 		if (err < 0)
 		{
@@ -318,38 +344,106 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 			goto check_status;
 		}
 
-		/* Okay, now that the child has shut up for a moment, we
-		 * can send it the current header.
+		/* Okay, now that the child has nothing to say, we can send
+		 * it the current header.
 		 */
 		SYNC_TRACE(4)
 			fprintf(stderr, ">>> %s: %s\n",
 				headers[i].name,
 				headers[i].value);
 
-		err = write(fileno(tochild), buf, strlen(buf));
-		/* XXX - Error-checking */
-		/* XXX - What if 'err' < strlen(buf)? (e.g., if the write()
-		 * was interrupted.) Ought to 'goto check_status' or
-		 * something and try again.
-		 */
+		while (len > 0)
+		{
+			SYNC_TRACE(7)
+				fprintf(stderr, "writing chunk [%s] (%d)\n",
+					bufp, len);
+			err = write(fileno(tochild), bufp, len);
+			if (err < 0)
+			{
+				/* An error occurred */
+				fprintf(stderr, _("Error while sending "
+						  "header to conduit.\n"));
+				perror("write");
+				goto abort;
+			}
+
+			/* write() might not have written all of 'bufp' */
+			len -= err;
+			bufp += err;
+		}
 	}
 
 	/* User-supplied header lines */
-	/* XXX - Do here the same thing that was done with the standard
-	 * headers, above.
-	 */
 	/* NB: if you make any changes here, make sure to make them in the
 	 * "standard header" section, above.
 	 */
 	for (hdr = conduit->headers; hdr != NULL; hdr = hdr->next)
 	{
+		static char buf[COND_MAXLINELEN+2];
+				/* Buffer to hold the line we're about to
+				 * send. The +2 is to hold a \n and a NUL
+				 * at the end.
+				 */
+		char *bufp;	/* Pointer to the part of 'buf' that should
+				 * be written next.
+				 */
+		int len;	/* How many bytes of 'bufp' to write */
+
+		/* Create the header line */
+		format_header(buf, hdr->name, hdr->value);
+		bufp = buf;
+		len = strlen(bufp);
+
+	  check_status2:
+		/* Before proceeding, see if the child has written a status
+		 * message.
+		 */
+		err = poll_fd(fileno(fromchild), False);
+		if (err < 0)
+		{
+			/* An error occurred. I don't think we care at this
+			 * point.
+			 */
+			SYNC_TRACE(5)
+				perror("poll_fd");
+		} else if (err > 0)
+		{
+			/* The child has printed something. Read it, then
+			 * check again.
+			 */
+			err = cond_readstatus(fromchild);
+			if (err > 0)
+				laststatus = err;
+			goto check_status2;
+		}
+
+		/* Okay, now that the child has nothing to say, we can send
+		 * it the current header.
+		 */
 		SYNC_TRACE(4)
 			fprintf(stderr, ">>> %s: %s\n",
 				hdr->name,
 				hdr->value);
-		fprintf(tochild, "%s: %s\n",
-			hdr->name,
-			hdr->value);
+
+		while (len > 0)
+		{
+			SYNC_TRACE(7)
+				fprintf(stderr, "writing chunk [%s] (%d)\n",
+					bufp, len);
+			err = write(fileno(tochild), bufp, len);
+			if (err < 0)
+			{
+				/* An error occurred */
+				fprintf(stderr, _("Error while sending "
+						  "header to conduit.\n"));
+				perror("write");
+				goto abort;
+			}
+
+			/* write() might not have written all of 'bufp' */
+			len -= err;
+			bufp += err;
+		}
 	}
 
 	/* Send an empty line to the child (end of input) */
@@ -381,24 +475,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	/* See if there is anything pending on 'fromchild' */
 	while (1)
 	{
-		/* XXX - Use poll_fd() */
-		fd_set infds;
-		struct timeval timeout;
-		int fromchild_fd;	/* 'fromchild' as a file descriptor */
-
-		fromchild_fd = fileno(fromchild);
-		FD_ZERO(&infds);
-		FD_SET(fromchild_fd, &infds);
-
-		/* Don't wait for anything. Just poll the file descriptor */
-		timeout.tv_sec = 0;
-		timeout.tv_usec = 0;
-
-		SYNC_TRACE(5)
-			fprintf(stderr, "run_conduit: flushing 'fromchild'\n");
-		err = select(fromchild_fd+1,
-			     &infds, NULL, NULL,
-			     &timeout);
+		err = poll_fd(fileno(fromchild), False);
 
 		if (err < 0)
 		{
