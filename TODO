@@ -1,3 +1,14 @@
+- Bug: run_mode_Daemon() apparently ignores serial number when looking
+  in /usr/local/etc/palms. When syncing a visor, it recognizes
+
+	|Andrew Arensburger|2072|arensb|Palm Pilot Pro
+	10A813V96PC0-H|Andrew Arensburger|2072|arensb|Palm V
+	*Visor*|Andrew Arensburger|2072|arensb|Visor
+
+  though not
+
+	109X7B28GC66-F|Gorko the Invincible|31337|arensb|Palm III|/folks/arensb/.coldsyncrc.test
+- Update FAQ.
 - Find someone to try a Japanese translation.
 - Rethink the Dlp*() functions.
 	They return a DLPSTAT_* error code, but this makes
