@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.2 2000-08-29 11:15:21 arensb Exp $
+# $Id: SPC.pm,v 1.3 2000-09-03 05:34:24 arensb Exp $
 
 # XXX - Write POD
 
@@ -30,11 +30,18 @@
 
 use strict;
 package ColdSync::SPC;
+
+=head1 NAME
+
+SPC - Allows ColdSync conduits to communicate with the Palm.
+
+=cut
+
 use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-($VERSION) = '$Revision: 1.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.3 $ ' =~ /\$Revision:\s+([^\s]+)/;
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
 	spc_get_dbinfo
