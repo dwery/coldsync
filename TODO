@@ -7,28 +7,6 @@
 - Review Alessandro Zummo's SPC.pm. Add POD. Improve some of the
   identifiers.
 - Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
-- Devfs: At configure-time, check for the existence of /dev/.devfsd.
-  This is created by Linux's devfs daemon. If it exists, assume
-  HAVE_DEVFS.
-- The Linux USB-to-serial driver appears to be flaky: I've seen it
-  drop 3k characters at one point.
-	When this happens, the symptom is that ColdSync hangs until
-  the Palm times out. This is because ColdSync is expecting a netsync
-  packet of a certain length, but it never gets as many bytes as it
-  wants.
-	It's possible to time out in netsync_read() (after 2 or 10
-  seconds or something?). The Right Thing to do at that point would be
-  to resend the DLP command and try again. However, the timeout would
-  be noticed by dlp_recv_resp(), which doesn't know which DLP command
-  was sent, and so can't resend it.
-	The obvious fix would appear to be to write a
-  dlp_process_cmd() function, which sends the DLP request and receives
-  the response, possibly filling in the returned arguments
-  appropriately. This function could then watch for a timeout and
-  resend the request.
-	Note that the netsync functions, when they time out, should
-  return a unique error code meaning "timeout on a reliable protocol",
-  since this means something different from a timeout over PADP.
 - Windows appears to use an ioctl() on the USB device to get the
   serial number. Is this possible here as well? If so, how to
   communicate this to the appropriate levels?
@@ -45,13 +23,6 @@
 	Allow execution of external programs.
 - Should all of the Dlp*() functions return type dlp_stat_t instead of
   int?
-- For man pages that cover several functions, write short ".so
-  somefunc.3" man pages for the secondary ones.
-	Actually, it looks as if FreeBSD uses either the whatis
-  database or hard links instead of .so files. Perhaps the Right Thing
-  is to make links (hard or soft) at install time, perhaps from some
-  database. Or better yet, have a script or something find the various
-  .Nm lines before the first .Nd line, and make appropriate symlinks.
 - PConnection_net.c uses tini_slp() et al. even when it isn't
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
@@ -63,7 +34,6 @@
   encoding. Most Unix boxen use EUC for Japanese, but the Visor uses
   SJIS.
 - Fix API bogosities in libpdb, libpconn.
-- Man pages for libpdb functions.
 - 'make install' should install libraries, headers.
 - Redo error return status in {upload,download}_database() and
   friends, as per XXX comments.
@@ -366,9 +336,6 @@
 	A GUI front end would be nice.
 - Fix ColdSync.pm so that "-config" will also print which preferences
   the conduit knows about.
-- Allow something like "ForceInstall: yes;" line in .coldsyncrc, to
-  have the same effect as -I command-line option.
-	Actually, add a block for global options.
 - Consider an optimization: if the local database hasn't been
   modified, don't write it back to disk. This reduces the size of
   daily backups by a trivial amount, but will also make a couple of
@@ -381,9 +348,6 @@
   false, don't bother writing the database to disk.
 - libpdb and libpconn are useful in their own right. Turn them into
   standalone packages. At least libpdb.
-- Look into generating libpconn/dlp_{cmd,rpc}.{c,h} automatically.
-  'rpcgen' looked like just the thing, but DLP packets are not a
-  subset of XDR, so there are too many niggling problems.
 - Perhaps the job of communicating with the Palm can be done in a
   separate (Posix) thread? That way, that thread can deal more
   naturally and more single-mindedly with things (e.g., timeouts,
