@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000-09-03 04:59:29 arensb Exp $
+# $Id: Makefile,v 1.7 2000-09-22 14:39:53 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -6,17 +6,20 @@ SUBDIR =	conduits
 # Conduits are grouped by interpreter, since the #! path is munged at
 # install time.
 PERL_CONDUITS =	send-mail \
-		todo-text \
-		std-categories
-# XXX - memo-text is still incomplete. Don't install it
-# memo-text
+		todo-text
+
+# XXX - memo-text and std-categories aren't ready for prime time, so
+# they're listed under DISTFILES so they won't be installed.
+
 CONDUITS =	${PERL_CONDUITS}
 
 # XXX - The *.1 is bad: it will nuke separate man pages, if there are ever any
 CLEAN =		*.1 \
 		pod2html-dircache pod2html-itemcache
 DISTFILES =	Makefile \
-		${CONDUITS}
+		${CONDUITS} \
+		memo-text \
+		std-categories
 
 all::
 
