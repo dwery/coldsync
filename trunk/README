@@ -1,0 +1,99 @@
+	This is ColdSync, a tool for synchronizing data between Palm
+devices and Unix workstations.
+
+	Copyright (C) 1999, Andrew Arensburger.
+
+	The latest version of this package is available at
+	http://www.ooblick.com/software/coldsync/
+
+	This package is distributable under the terms of the Artistic
+License. You should have received a file called "Artistic", which
+specifies the terms under which this package may be distributed and
+modified.
+	The Artistic License is taken from the Perl 5.005_03
+distribution, so some of the text is specific to Perl and does not
+apply to ColdSync. I hope to address this in a future release.
+
+	       ----------------------------------------
+
+* WHAT IS COLDSYNC?
+
+	ColdSync is a tool for synchronizing data between Palm
+computing devices (such as the PalmPilot, PalmPilot Pro, Palm V,
+QualComm PDQ, and so forth), and a Unix workstation.
+	ColdSync can back up and restore the state of a Palm, as well
+as synchronize its data, which is sort of like a two-way rdist (see
+below). In future versions, it will be possible to do more interesting
+things with this data.
+
+* BUILDING AND INSTALLING COLDSYNC
+
+	If you've built GNU software before, this should be familiar
+territory. You should be able to just
+
+	./configure
+	make
+	make install
+
+Full details are provided in the "INSTALL" file.
+
+* WHAT IS SYNCHRONIZING?
+
+	Synchronizing, also referred to as "syncing" refers to the
+process of examining two databases (everything on the Palm is a
+database) to see how they differ, and updating them so that they are
+identical.
+	Syncing is different from just overwriting one database with
+the other. For instance, if you add an entry for "Aunt Mabel" in your
+Palm's address book, and an entry for "Uncle Bob" on your desktop
+machine, then you don't want to just copy the address book from the
+Palm to the desktop or vice-versa: that would delete one of the
+entries that you just created. When you sync with ColdSync, you'll
+wind up with both entries, on both the Palm and the desktop.
+
+	Another difference between synchronizing and blind copying
+lies in the fact that PalmOS has facilities to support syncing. If you
+have 2000 entries in your Palm address book and want to copy them to
+the desktop, it'll take a rather long time to copy them over a
+relatively slow serial connection. When it syncs, ColdSync copies only
+those records that have changed.
+
+	ColdSync tries to be very cautious when it syncs, and not
+delete any information unless it is sure that that is the right thing
+to do. Its attitude is that it's better to err on the side of caution,
+and maybe make you delete something twice, than it is to delete some
+crucial bit of information.
+
+* SECURITY CONSIDERATIONS
+
+	ColdSync is not secure. Period.
+	I have tried to pay due attention to security considerations,
+but the sync process itself is inherently insecure. When ColdSync,
+running on a workstation, receives a connection from a Palm, it has no
+reliable way of knowing that the Palm on the other end is in fact the
+one that it claims to be.
+	Likewise, when a Palm syncs with a workstation (whether that
+workstation is using ColdSync or Palm's own HotSync), it has no
+reliable way of knowing that the workstation is the one that it claims
+to be.
+	PalmOS allows you to mark records as "private." This doesn't
+mean a thing when you sync: the private and non-private records are
+treated equally. In particular, anyone who has physical access to your
+Palm can download your private records.
+
+	There may be a Palm utility out there that will encrypt each
+record in a database before a sync, but I don't know of any such
+utility.
+
+* Y2K COMPLIANCE
+
+	To the best of my knowledge and belief, ColdSync itself is
+fully Y2K-compliant. Where it deals with times and dates, it uses
+either Unix-style "time_t"s, which count the number of seconds since
+Jan. 1, 1970, or Palm-style time structures, which record the number
+of years since 1904. Hence, there is nothing special about the year
+2000, and any problems that ColdSync may exhibit in the years 2000 and
+beyond will be due to other causes.
+	And even if there is a problem, ColdSync comes without any
+guarantees of any kind, so don't bug me about it. You have the source,
+so fix it.
