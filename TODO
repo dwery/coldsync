@@ -45,9 +45,6 @@
   not going to worry about it too much in this alpha stage, though.
 - Figure out why 'coldsync/coldsync' and HotSync on the Palm don't
   always finish at the same time.
-- Would it be a good idea to grab as many of the identifiers from the
-  Palm header files as practical, to make it easier to switch to them
-  at some future point?
 - Get dependencies working right in Makefiles, so stuff gets rebuilt
   properly.
 - The sync itself should probably just consist of opening the database
@@ -65,6 +62,13 @@
   setting up a default configuration for a user.) Should this be
   manual or automatic? Would it be a good idea to always check for
   extraneous databases and ask the user what to do about them?
+	Best solution is probably: if database exists on desktop but
+  not on Palm, move it to an 'attic' directory (like CVS). That way,
+  at least it's not gone. Should also be possible to force a backup
+  from the backup directory: don't try to do anything fancy, just
+  restore everything as is.
+	List of Palm's databases is in 'palm->dblist[]', so check the
+  backup directory for files that aren't in there.
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
@@ -103,14 +107,13 @@
   those printf() statements.
 - Test with xcopilot (and real Palm) under Linux and other OSes.
 - Test under Purify.
-- Ought to be more careful with the "palm_install" stuff: don't just
-  wantonly delete the database if it's already there. For now, the
-  best thing to do might be to a) do nothing, b) prompt the user.
-  Later, it might get more sophisticated and merge the new database
-  with the existing one. OTOH, the best solution might be to not
-  install anything that's already installed. If you want to install a
-  new app, delete it first. If you want to install a new .pdb file,
-  merge it with the backup copy first, then do a sync.
+- Installing new databases: if the database to be installed already
+  exists on the Palm, check the modification numbers: if the one on
+  the desktop is more recent (has a higher modification number) than
+  the one on the Palm, install it. Otherwise, ignore it. This way,
+  sysadmin can install a standard set of databases in a central
+  location, for all users, and it'll work the way you expect.
+	It should also be possible to override this behavior.
 - It'd be nice to import/export sets of records into external
   databases. But you can't just upload any random database. Need to
   integrate with what you've got, somehow.
@@ -153,5 +156,21 @@
   to a list of records; and a hook that'll take a list of records and
   write them to ~/TODO. This is easy, and allows you to use the
   generic conduit instead of having to write your own.
-- Conduits need a method (hook) to determine whether two records are
-  identical.
+- The generic conduit needs a method (hook) to determine whether two
+  records are identical.
+- Dynamically-loaded objects: if the 'coldsync' binary has a variable
+  'foo' or a function func(), how does it make these available to a
+  dynamically-loaded library?
+- Redo the PDB library API: should use filehandles, rather than
+  filenames. That way, can attempt to open a file and see if that's
+  even possible. Currently, we download a database from the Palm, try
+  to write it, and only *then* find out if ~/.palm/backup isn't
+  writable.
+- Optimization: don't sync a database if its modification number is
+  the same as the desktop copy. We already know that this database
+  hasn't changed, so there's no need to open the database, send a
+  "send me the next modified record" request that we know is going to
+  fail, and close the database.
+- Optimization: when requesting the list of databases on the Palm,
+  don't bother requesting the ones in ROM, since those don't get
+  synced anyway (this should be optional, though).
