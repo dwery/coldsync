@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.116 2002-03-18 08:31:36 arensb Exp $
+ * $Id: coldsync.c,v 1.117 2002-03-28 23:14:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -107,6 +107,7 @@ main(int argc, char *argv[])
 	global_opts.force_install	= Undefined;	/* Defaults to False */
 	global_opts.install_first	= Undefined;	/* Defaults to True */
 	global_opts.verbosity		= 0;
+	global_opts.listen_name		= NULL;
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.89 2002-03-18 10:05:32 arensb Exp $
+ * $Id: config.c,v 1.90 2002-03-28 23:14:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -246,6 +246,13 @@ parse_args(int argc, char *argv[])
 		    case 'd':	/* -d <fac>:<n>: Debugging level */
 			set_debug_level(optarg);
 			break;
+
+		    case 'n':	/* -n <listen block name>: Use the named listen 
+		    		 * block.
+		    		 */
+		    	global_opts.listen_name = optarg;
+		    	break;
+
 
 		    case '?':	/* Unknown option */
 			Error(_("Unrecognized option: \"%s\"."),

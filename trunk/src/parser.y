@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.60 2002-03-18 10:08:24 arensb Exp $
+ * $Id: parser.y,v 2.61 2002-03-28 23:14:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -106,7 +106,8 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %type <boolean> boolean
 %type <commtype> comm_type
 %type <crea_type> creator_type
-%type <string> opt_name
+%type <string> opt_pda_name
+%type <string> opt_listen_name
 %type <integer> opt_pref_flag
 %type <string> opt_string
 %type <proto_type> protocol_stack
@@ -167,7 +168,7 @@ statement:
 	;
 
 listen_stmt:
-	LISTEN comm_type open_brace
+	LISTEN comm_type opt_listen_name open_brace
 	{
 		/* Create a new listen block. Subsequent rules that parse
 		 * substatements inside a 'listen' block will fill in
@@ -180,12 +181,16 @@ listen_stmt:
 			return -1;
 		}
 		cur_listen->listen_type = $2;
+		cur_listen->name = $3;
 	}
 	listen_block '}'
 	{
 		PARSE_TRACE(3)
 		{
 			fprintf(stderr, "Found listen+listen_block:\n");
+			fprintf(stderr, "\tName: [%s]\n",
+				(cur_listen->name == NULL ? "(null)" :
+				 cur_listen->name));
 			fprintf(stderr, "\tDevice: [%s]\n",
 				(cur_listen->device == NULL ? "(null)" :
 				 cur_listen->device));
@@ -253,6 +258,13 @@ comm_type:
 			yyclearin; 
 		}
 		$$ = LISTEN_SERIAL;
+	}
+	;
+
+opt_listen_name: STRING
+	|	/* Empty */
+	{
+		$$ = NULL;
 	}
 	;
 
@@ -866,7 +878,7 @@ pda_stmt:	PDA
 	{
 		lex_expect(LEX_BSTRING);
 	}
-	opt_name '{'
+	opt_pda_name open_brace
 	{
 		lex_expect(LEX_NONE);
 
@@ -894,8 +906,7 @@ pda_stmt:	PDA
 				fprintf(stderr, "name [%s]\n", cur_pda->name);
 		}
 	}
-	pda_block
-	'}'
+	pda_block '}'
 	{
 		PARSE_TRACE(3)
 		{
@@ -947,7 +958,7 @@ pda_stmt:	PDA
 	}
 	;
 
-opt_name:	STRING
+opt_pda_name:	STRING
 	|	/* Empty */
 	{
 		$$ = NULL;
@@ -1193,7 +1204,6 @@ colon:	':'
 		Error(_("\tMissing ':'."));
 	}
 	;
-
 
 open_brace:	'{'
 	| error
