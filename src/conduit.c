@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9 2000-08-07 00:55:47 arensb Exp $
+ * $Id: conduit.c,v 2.10 2000-09-03 05:06:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -45,6 +45,7 @@
 
 #include "conduit.h"
 #include "spc.h"
+#include "pref.h"
 
 typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
@@ -277,6 +278,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				/* Pointer into spc_inbuf or spc_outbuf */
 	sigset_t sigmask;
 				/* Signal mask for {,un}block_sigchld() */
+	const struct pref_item ** volatile pref_list = NULL;
+				/* Array of pointers to preference items in
+				 * the cache */
 
 	/* XXX - See if conduit->path is a predefined string (set up a
 	 * table of built-in conduits). If so, run the corresponding
@@ -331,15 +335,24 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		return -1;
 	}
 
+	/* Before all the jumping stuff, make sure the pref_list is
+	 * allocated.
+	 */
+	SYNC_TRACE(6)
+		fprintf(stderr, "run_conduit: %d prefs in this conduit\n",
+			conduit->num_prefs);
+	if (conduit->num_prefs > 0)
+		pref_list = calloc(conduit->num_prefs, sizeof *pref_list);
+
 	/* When the child exits, sigchld_handler() will longjmp() back to
 	 * here. This way, none of the other code has to worry about
 	 * whether the conduit is still running.
 	 */
 	if ((err = sigsetjmp(chld_jmpbuf, 1)) != 0)
 	{
-		/* XXX - NB: Both FreeBSD's and the Open Group's manual
-		 * entries say that longjmp() restores the environment
-		 * saved by _the most recent_ invocation of setjmp().
+		/* NB: Both FreeBSD's and the Open Group's manual entries
+		 * say that longjmp() restores the environment saved by
+		 * _the most recent_ invocation of setjmp().
 		 *
 		 * Furthermore, Stevens says that you can't call longjmp()
 		 * if the function that called setjmp() has already
@@ -408,6 +421,47 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	headers[last_header].value = (char *) bakfname;
 				/* The cast is just to stop the compiler
 				 * from complaining. */
+
+	/* Then we add the preference items as headers */
+	for (i = 0; i < conduit->num_prefs; i++)
+	{
+		static char tmpvalue[64];
+				/* Since 2^64 is a 20-digit number
+				 * (decimal), this should be big enough to
+				 * hold the longest possible preference
+				 * line.
+				 */ 
+
+		/* Set the pointer to the right preference in the cache
+		 * list and if necessary, download it
+		 */
+
+		SYNC_TRACE(4)
+			fprintf(stderr,
+				"run_conduit: sending preference %d: "
+				"0x%08lx/%d\n",
+				i,
+				conduit->prefs[i].creator,
+				conduit->prefs[i].id);
+
+		pref_list[i] = GetPrefItem(&(conduit->prefs[i]));
+
+		/* Set the header */
+		++last_header;
+		headers[last_header].name = "Preference";
+
+		/* Build the preference line with sprintf() because
+		 * snprintf() isn't portable.
+		 */
+		sprintf(tmpvalue, "%c%c%c%c/%d/%d\n",
+			(char) (conduit->prefs[i].creator >> 24) & 0xff,
+			(char) (conduit->prefs[i].creator >> 16) & 0xff,
+			(char) (conduit->prefs[i].creator >> 8) & 0xff,
+			(char) conduit->prefs[i].creator & 0xff,
+			conduit->prefs[i].id,
+			pref_list[i]->contents_info->len);
+		headers[last_header].value = tmpvalue;
+	}
 
 	/* If the conduit might understand SPC, tell it what file
 	 * descriptor to use to talk to the parent.
@@ -499,8 +553,15 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		}
 	}
 
-	/* Send an empty line to the child (end of input) */
+	/* Send an empty line to the child (end of headers) */
 	fprintf(tochild, "\n");
+
+	/* Now write all the raw data to the child */
+	for(i = 0; i < conduit->num_prefs; i++)
+		fwrite(pref_list[i]->contents,
+			1,
+			pref_list[i]->contents_info->len,
+			tochild);
 	fflush(tochild);
 
 	/* Listen for the child to either a) print a status message on its
@@ -888,6 +949,17 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				fileno(fromchild));
 		fclose(fromchild);
 	}
+
+	/* Let's not hog memory */
+	/* XXX - This is an array of pointers, but the individual elements
+	 * are not freed. This might leak memory: most of the elements are
+	 * really pointers into pref_cache (which gets freed later on), but
+	 * some of these elements might get initialized from
+	 * DownloadPrefItem(), and I'm not convinced that they get freed
+	 * correctly.
+	 */
+	if (pref_list != NULL)
+		free(pref_list);
 
 	return laststatus;
 }
