@@ -2,9 +2,10 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.2 1999-07-12 09:28:07 arensb Exp $
+ * $Id: slp.c,v 1.3 1999-08-01 08:08:18 arensb Exp $
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <sys/types.h>	/* For read() */
 #include <sys/uio.h>	/* For read() */
@@ -233,11 +234,13 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	    (header.dest == pconn->slp.local_addr.port))
 		ignore = False;
 	if (ignore)
+	{
 		SLP_TRACE(6)
 			fprintf(stderr, "Ignoring packet\n");
-	else
+	} else {
 		SLP_TRACE(6)
 			fprintf(stderr, "Not ignoring packet\n");
+	}
 
 	/* Before reading the body of the packet, see if the input buffer
 	 * in the PConnection is big enough to hold it. If not, resize it.
