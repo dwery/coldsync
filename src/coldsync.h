@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.20 2000-04-10 09:26:50 arensb Exp $
+ * $Id: coldsync.h,v 1.21 2000-05-06 11:37:00 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -199,6 +199,15 @@ typedef enum {
 	Uninstall
 } conduit_flavor;
 
+/* cond_header
+ * A (name, value) pair that will be passed to a conduit.
+ */
+struct cond_header {
+	struct cond_header *next;	/* Next header on the list */
+	char *name;
+	char *value;
+};
+
 /* conduit_block
  * The information specified in a 'conduit' block: its type, pathname,
  * arguments, and so forth.
@@ -211,6 +220,7 @@ typedef struct conduit_block
 	udword dbcreator;
 	unsigned char flags;	/* CONDFL_* flags */
 	char *path;		/* Path to conduit */
+	struct cond_header *headers;	/* User-supplied headers */
 } conduit_block;
 
 #define CONDFL_DEFAULT	0x01	/* This is a default conduit: if no other
@@ -227,6 +237,7 @@ typedef struct conduit_block
 typedef struct pda_block
 {
 	struct pda_block *next;
+	char *name;			/* Name of this PDA */
 	char *snum;			/* Serial number */
 	char *directory;		/* Base directory, where the
 					 * "backup", "archive" etc.
