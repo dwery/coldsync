@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.48 2001-11-05 00:26:04 arensb Exp $
+.\" $Id: coldsync.8,v 1.49 2001-11-12 00:59:36 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -784,14 +784,46 @@ whether the generic conduit should be run at all.
 directives are of the form
 .Bd -literal -offset indent
 option {
+	install_first:	true;
+	force_install:	no;
+
 	CONDUIT_PATH: "$(CONDUITDIR):$(HOME)/.palm/conduits";
 	key:  "this is the value";
 }
 .Ed
-Options behave like shell variables, in that you may use them later on in the
-configuration file.  In fact, if you do not set an option before you use it,
-coldsync will try to use your environment variables to set it.
-Options may only be used inside quoted strings.
+The first two options are boolean; their values can be specified as
+.Dq True ,
+.Dq False ,
+.Dq Yes ,
+or
+.\" Bleah. "No" is an mdoc macro, so we resort to stupid tricks to avoid
+.\" having it be interpreted as such.
+.Dq N\?\?o
+.Pp
+.Dv install_first
+specifies whether new databases should be installed before the main
+sync. It defaults to
+.Dq True .
+.Dq Li install_first: false
+is equivalent to specifying
+.Fl z
+on the command line, except that the command line takes precedence
+over the configuration file.
+.Pp
+.Dv force_install
+specifies whether new databases should be installed even if they have
+the same modification number as the copy on the Palm. This defaults to
+.Dq False .
+.Dq Li force_install: true
+is equivalent to specifying
+.Fl I
+on the command line, except that the command line takes precedence
+over the configuration file.
+.Pp
+All other options behave like shell variables, in that you may use
+them later on in the configuration file. In fact, if you do not set an
+option before you use it, coldsync will try to use your environment
+variables to set it. Options may only be used inside quoted strings.
 .Pp
 Two useful options are
 .Dv $(CONDUITDIR)
@@ -980,7 +1012,7 @@ Explains how to sync a Handspring Visor under Linux.
 .An Andrew Arensburger Aq arensb@ooblick.com
 .An Louis A. Mamakos Aq louie@TranSys.COM :
 USB support.
-.An And a cast of several.
+.An And a cast of many.
 .Sh DIAGNOSTICS
 Many and hopefully self-explanatory.
 .Sh LIMITATIONS
