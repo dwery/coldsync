@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.53 2001-07-30 07:08:34 arensb Exp $
+ * $Id: coldsync.h,v 1.54 2001-09-07 10:05:36 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -27,8 +27,6 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 
 #define SYNC_TRACE(n)	if (sync_trace >= (n))
 #define MISC_TRACE(n)	if (misc_trace >= (n))
-
-typedef int comm_type;
 
 /* userinfo
  * Information about the user whose Palm we're syncing.
@@ -67,8 +65,8 @@ struct cmd_opts {
 				 * the command line.
 				 */
 	char *devname;		/* Name of the device on which to listen */
-	int devtype;		/* Type of device (serial, USB, TCP, etc.) */
-	int protocol;		/* Protocol stack for talking to cradle */
+	pconn_listen_t devtype;	/* Type of device (serial, USB, TCP, etc.) */
+	pconn_proto_t protocol;	/* Protocol stack for talking to cradle */
 	Bool use_syslog;	/* Use syslog for error messages? */
 	char *log_fname;	/* Where to write the log file */
 	/* XXX - do_backup and do_restore are made obsolete by run modes */
@@ -115,10 +113,11 @@ extern struct cmd_opts global_opts;	/* XXX - I'm not quite happy with
 typedef struct listen_block
 {
 	struct listen_block *next;
-	int listen_type;	/* Block type. See the LISTEN_*
+	pconn_listen_t listen_type;
+				/* Block type. See the LISTEN_*
 				 * constants in "pconn/PConnection.h"
 				 */
-	int protocol;		/* Protocol stack. See the PCONN_STACK_*
+	pconn_proto_t protocol;	/* Protocol stack. See the PCONN_STACK_*
 				 * constants in "pconn/PConnection.h"
 				 */
 	char *device;		/* Device to listen on */
