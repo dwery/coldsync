@@ -2,7 +2,7 @@
  *
  * Functions to download an entire database from the Palm.
  *
- * $Id: download.c,v 1.1 1999-03-11 03:29:05 arensb Exp $
+ * $Id: download.c,v 1.2 1999-03-11 10:04:38 arensb Exp $
  */
 #include <stdio.h>
 #include "pconn/PConnection.h"
@@ -44,9 +44,9 @@ DownloadRecordDB(struct PConnection *pconn,
 	/* Convert the times from DLP time structures to Palm-style
 	 * time_ts.
 	 */
-	retval->header.ctime = time_dlp2palmtime(&dbinfo->ctime);
-	retval->header.mtime = time_dlp2palmtime(&dbinfo->mtime);
-	retval->header.baktime = time_dlp2palmtime(&dbinfo->baktime);
+	retval->ctime = time_dlp2palmtime(&dbinfo->ctime);
+	retval->mtime = time_dlp2palmtime(&dbinfo->mtime);
+	retval->baktime = time_dlp2palmtime(&dbinfo->baktime);
 
 return NULL;
 }

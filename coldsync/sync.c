@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.3 1999-03-11 05:20:21 arensb Exp $
+ * $Id: sync.c,v 1.4 1999-03-11 10:04:42 arensb Exp $
  */
 
 #include <stdio.h>
@@ -11,6 +11,7 @@
 #include "pconn/dlp_cmd.h"
 #include "coldsync.h"
 #include "pdb.h"
+#include "pconn/util.h"		/* For debugging: for debug_dump() */
 
 /* XXX - According to the Pigeon Book, here's the logic of syncing:
 
@@ -91,13 +92,19 @@ SlowSync(struct PConnection *pconn,
 	 char *bakfname)
 {
 	int err;
-	int i;
 	struct pdb *remotedb;	/* The database on the Palm will be read
 				 * into here */
 	ubyte dbh;		/* Database handle */
+	struct pdb_record *remoterec;	/* Record in "remote" database */
+	struct pdb_record *localrec;	/* Record in "local" database */
 
 fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
-	remotedbinfo->name, localdb->header.name, bakfname);
+	remotedbinfo->name, localdb->name, bakfname);
+
+	/* Tell the Palm we're synchronizing a database */
+	err = DlpOpenConduit(pconn);
+	if (err != DLPSTAT_NOERR)
+		return -1;
 
 	/* Open the database */
 	/* XXX - Card #0 shouldn't be hardwired. It probably ought to be a
@@ -158,20 +165,16 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 	/* Look through each record in the remote database, comparing it to
 	 * the copy in the local database.
 	 */
-	/* XXX - Compare each record in turn to 'localdb' */
 	/* XXX - This ought to handle both record and resource databases */
-	for (i = 0; i < remotedb->reclist_header.len; i++)
+fprintf(stderr, "*** Phase 1:\n");
+	for (remoterec = remotedb->rec_index.rec;
+	     remoterec != NULL;
+	     remoterec = remoterec->next)
 	{
-		struct pdb_record *remoterec;
-		struct pdb_record *localrec;
-
-		remoterec = &(remotedb->rec_index.rec[i]);
-
-		printf("Remote Record %d:\n", i);
+		printf("Remote Record:\n");
 		printf("\tuniqueID: 0x%08lx\n", remoterec->uniqueID);
 		printf("\tattributes: 0x%02x ",
 		       remoterec->attributes);
-		/* XXX - Need flag #defines */
 		if (remoterec->attributes & PDB_REC_DELETED)
 			printf("DELETED ");
 		if (remoterec->attributes & PDB_REC_DIRTY)
@@ -199,7 +202,7 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 
 		/* The record exists. Compare the local and remote versions */
 
-		printf("Local Record %d:\n", i);
+		printf("Local Record:\n");
 		printf("\tuniqueID: 0x%08lx\n", localrec->uniqueID);
 		printf("\tattributes: 0x%02x ",
 		       localrec->attributes);
@@ -218,12 +221,12 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 		/* Compare the records' length. If they differ, then the
 		 * records differ.
 		 */
-		if (remotedb->data_len[i] != localdb->data_len[i])
+		if (remoterec->data_len != localrec->data_len)
 		{
-				/* The sizes differ; they're different.
-				 * Mark the record in the remote database
-				 * as dirty.
-				 */
+			/* The sizes differ; they're different. Mark the
+			 * record in the remote database as dirty: it
+			 * should be added as a separate record.
+			 */
 			fprintf(stderr, "The size is different. This record has been modified.\n");
 			remoterec->attributes |= PDB_REC_DIRTY;
 			continue;
@@ -232,21 +235,22 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 		/* The lengths are the same. Have to do a byte-by-byte
 		 * comparison.
 		 */
-		if (memcmp(remotedb->data[i], localdb->data[i],
-			   remotedb->data_len[i]) != 0)
+		if (memcmp(remoterec->data, localrec->data,
+			   remoterec->data_len) != 0)
 		{
-				/* They're different. Mark the
-				 * record in the remote database as
-				 * dirty.
-					 */
+			/* They're different. Mark the record in the remote
+			 * database as dirty: it should be added as a
+			 * separate record.
+			 */
 			fprintf(stderr, "The records are different.\n");
 			remoterec->attributes |= PDB_REC_DIRTY;
 			continue;
 		}
 
-		/* The two records are identical.
-		 * XXX - Is it worth clearing the dirty flag?
-		 */
+fprintf(stderr, "The records are identical.\n");
+		/* The two records are identical. Clear the dirty flags */
+		remoterec->attributes &= ~PDB_REC_DIRTY;
+		localrec->attributes &= ~PDB_REC_DIRTY;
 	}
 
 	/* XXX - For each record in the local database, try to look it up
@@ -260,13 +264,10 @@ fprintf(stderr, "Doing a slow sync of \"%s\" to \"%s\" (filename \"%s\")\n",
 	 * dirty bit set?
 	 */
 fprintf(stderr, "Checking local database entries\n");
-	for (i = 0; i < localdb->reclist_header.len; i++)
+	for (localrec = localdb->rec_index.rec;
+	     localrec != NULL;
+	     localrec = localrec->next)
 	{
-		struct pdb_record *remoterec;
-		struct pdb_record *localrec;
-
-		localrec = &(localdb->rec_index.rec[i]);
-
 		/* Try to look this record up in the remote database */
 		remoterec = pdb_FindRecordByID(remotedb, localrec->uniqueID);
 		if (remoterec != NULL)
@@ -285,7 +286,13 @@ fprintf(stderr, "Checking local database entries\n");
 		 * delete it from the local database.
 		 */
 		if ((localrec->attributes & PDB_REC_DIRTY) == 0)
+		{
+			/* Delete this record from the local database;
+			 * presumably it was archived elsewhere.
+			 */
+fprintf(stderr, "Deleting this record: it's clean locally but doesn't exist in the remote database\n");
 			pdb_DeleteRecordByID(localdb, localrec->uniqueID);
+		}
 	}
 
 	/* XXX - Phase 2:
@@ -294,6 +301,31 @@ fprintf(stderr, "Checking local database entries\n");
 	 * through the database once again and do a proper sync, following
 	 * the same logic as for fast syncs.
 	 */
+	/* XXX - It may be possible to fold phases 1 and 2 into one. But is
+	 * this desirable?
+	 */
+fprintf(stderr, "*** Phase 2:\n");
+	for (remoterec = remotedb->rec_index.rec;
+	     remoterec != NULL;
+	     remoterec = remoterec->next)
+	{
+		printf("Remote Record:\n");
+		printf("\tuniqueID: 0x%08lx\n", remoterec->uniqueID);
+		printf("\tattributes: 0x%02x ",
+		       remoterec->attributes);
+		if (remoterec->attributes & PDB_REC_DELETED)
+			printf("DELETED ");
+		if (remoterec->attributes & PDB_REC_DIRTY)
+			printf("DIRTY ");
+		if (remoterec->attributes & PDB_REC_BUSY)
+			printf("BUSY ");
+		if (remoterec->attributes & PDB_REC_PRIVATE)
+			printf("PRIVATE ");
+		if (remoterec->attributes & PDB_REC_ARCHIVED)
+			printf("ARCHIVED ");
+		printf("\n");
+debug_dump(stderr, "REM", remoterec->data, remoterec->data_len);
+	}
 
 if (remotedbinfo->db_flags & DLPCMD_DBFLAG_OPEN)
 {

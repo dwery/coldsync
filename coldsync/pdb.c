@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.8 1999-03-11 05:22:21 arensb Exp $
+ * $Id: pdb.c,v 1.9 1999-03-11 10:04:39 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -40,7 +40,6 @@ static int pdb_DownloadResources(struct PConnection *pconn,
 static int pdb_DownloadRecords(struct PConnection *pconn,
 			       ubyte dbh,
 			       struct pdb *db);
-
 /* XXX - Document the format of database files */
 
 /* new_pdb
@@ -56,14 +55,8 @@ new_pdb()
 		/* Out of memory */
 		return NULL;
 
-	/* Initialize it to be empty */
-	retval->reclist_header.len = 0;
-	retval->appinfo_len = 0;
-	retval->appinfo = NULL;
-	retval->sortinfo_len = 0;
-	retval->sortinfo = NULL;
-	retval->data_len = NULL;
-	retval->data = NULL;
+	/* Write zeros all over it, just for safety */
+	memset(retval, 0, sizeof(struct pdb));
 
 	return retval;
 }
@@ -78,25 +71,57 @@ free_pdb(struct pdb *db)
 		/* Trivial case */
 		return;
 
-	/* Free the array of records */
-	if (db->data != NULL)
+	/* Free the array of records/resources */
+	if (IS_RSRC_DB(db))
 	{
-		int i;
+		/* It's a resource database */
+		struct pdb_resource *rec;
+		struct pdb_resource *next;
 
-		/* Free each record in turn */
-		for (i = 0; i < db->reclist_header.len; i++)
+		/* Walk the linked list, freeing as we go along */
+		for (rec = db->rec_index.res;
+		     rec != NULL;
+		     rec = next)
 		{
-			if (db->data[i] != NULL)
-				free(db->data[i]);
+			next = rec->next;	/* Remember the next
+						 * element on the list. We
+						 * won't have a chance to
+						 * look it up after this
+						 * one has been free()d.
+						 */
+
+			/* Free the resource data, if any */
+			if (rec->data != NULL)
+				free(rec->data);
+
+			/* Free this element */
+			free(rec);
 		}
+	} else {
+		/* It's a record database */
+		struct pdb_record *rec;
+		struct pdb_record *next;
 
-		/* Finally, free the array itself */
-		free(db->data);
+		/* Walk the linked list, freeing as we go along */
+		for (rec = db->rec_index.rec;
+		     rec != NULL;
+		     rec = next)
+		{
+			next = rec->next;	/* Remember the next
+						 * element on the list. We
+						 * won't have a chance to
+						 * look it up after this
+						 * one has been free()d.
+						 */
+
+			/* Free the record data, if any */
+			if (rec->data != NULL)
+				free(rec->data);
+
+			/* Free this element */
+			free(rec);
+		}
 	}
-
-	/* Free the array of record lengths */
-	if (db->data_len != NULL)
-		free(db->data_len);
 
 	/* Free the sort block */
 	if (db->sortinfo != NULL)
@@ -105,16 +130,6 @@ free_pdb(struct pdb *db)
 	/* Free the app info block */
 	if (db->appinfo != NULL)
 		free(db->appinfo);
-
-	/* Free either the resource or record index, as appropriate */
-	if (db->header.attributes & PDB_ATTR_RESDB)
-	{
-		if (db->rec_index.res != NULL)
-			free(db->rec_index.res);
-	} else {
-		if (db->rec_index.rec != NULL)
-			free(db->rec_index.rec);
-	}
 
 	free(db);
 }
@@ -255,11 +270,6 @@ pdb_Read(char *fname)
 	return retval;			/* Success */
 }
 
-/* XXX - Need a function to write database files. Make sure it's paranoid,
- * doesn't overwrite existing files, does locking properly (even over NFS
- * (ugh!)).
- */
-
 /* pdb_Write
  * Write 'db' to the file given by 'fname'.
  */
@@ -267,7 +277,6 @@ int
 pdb_Write(const struct pdb *db,
 	  const char *fname)
 {
-	int i;
 	int err;
 	int fd;			/* File descriptor for staging file */
 	static char tempfname[MAXPATHLEN];
@@ -306,30 +315,30 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	 */
 
 	/* Initialize 'offset': the next variable-sized item will go after
-	 * the header, after the index header, after the index.
+	 * the header, after the index header, after the index, after the
+	 * two useless NULs.
 	 */
 	offset = PDB_HEADER_LEN + PDB_RECORDLIST_LEN;
 	if (IS_RSRC_DB(db))
-		offset += db->reclist_header.len * PDB_RESOURCEIX_LEN;
+		offset += db->numrecs * PDB_RESOURCEIX_LEN;
 	else
-		offset += db->reclist_header.len * PDB_RECORDIX_LEN;
+		offset += db->numrecs * PDB_RECORDIX_LEN;
 	offset += 2;		/* Those two useless NUL bytes */
 
 	/** Write the database header **/
 
 	/* Construct the header in 'header_buf' */
 	wptr = header_buf;
-	memcpy(wptr, db->header.name, PDB_DBNAMELEN);
+	memcpy(wptr, db->name, PDB_DBNAMELEN);
 	wptr += PDB_DBNAMELEN;
-	put_uword(&wptr, (db->header.attributes &
-			  ~DLPCMD_DBFLAG_OPEN));
+	put_uword(&wptr, (db->attributes & ~DLPCMD_DBFLAG_OPEN));
 				/* Clear the 'open' flag before writing */
-	put_uword(&wptr, db->header.version);
-	put_udword(&wptr, db->header.ctime);
-	put_udword(&wptr, db->header.mtime);
-	put_udword(&wptr, db->header.baktime);
-	put_udword(&wptr, db->header.modnum);
-	if (db->appinfo == NULL)
+	put_uword(&wptr, db->version);
+	put_udword(&wptr, db->ctime);
+	put_udword(&wptr, db->mtime);
+	put_udword(&wptr, db->baktime);
+	put_udword(&wptr, db->modnum);
+	if (db->appinfo == NULL)	/* Write the AppInfo block, if any */
 		/* This database doesn't have an AppInfo block */
 		put_udword(&wptr, 0L);
 	else {
@@ -337,16 +346,16 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 		put_udword(&wptr, offset);
 		offset += db->appinfo_len;
 	}
-	if (db->sortinfo == NULL)
+	if (db->sortinfo == NULL)	/* Write the sort block, if any */
 		/* This database doesn't have a sort block */
 		put_udword(&wptr, 0L);
 	else {
 		put_udword(&wptr, offset);
 		offset += db->sortinfo_len;
 	}
-	put_udword(&wptr, db->header.type);
-	put_udword(&wptr, db->header.creator);
-	put_udword(&wptr, db->header.uniqueIDseed);
+	put_udword(&wptr, db->type);
+	put_udword(&wptr, db->creator);
+	put_udword(&wptr, db->uniqueIDseed);
 
 	/* Write the database header */
 	if (write(fd, header_buf, PDB_HEADER_LEN) != PDB_HEADER_LEN)
@@ -363,7 +372,7 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	put_udword(&wptr, 0L);	/* nextID */
 			/* XXX - What is this? Should this be something
 			 * other than 0? */
-	put_uword(&wptr, db->reclist_header.len);
+	put_uword(&wptr, db->numrecs);
 
 	/* Write the record list header */
 	if (write(fd, rlheader_buf, PDB_RECORDLIST_LEN) != PDB_RECORDLIST_LEN)
@@ -375,11 +384,14 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	}
 
 	/* Write the record/resource index */
-	for (i = 0; i < db->reclist_header.len; i++)
+	if (IS_RSRC_DB(db))
 	{
-		if (IS_RSRC_DB(db))
+		/* It's a resource database */
+		struct pdb_resource *res;	/* Current resource */
+
+		/* Go through the list of resources, writing each one */
+		for (res = db->rec_index.res; res != NULL; res = res->next)
 		{
-			/* It's a resource database */
 			static ubyte rsrcbuf[PDB_RESOURCEIX_LEN];
 					/* Buffer to hold the resource
 					 * index entry.
@@ -387,8 +399,8 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 
 			/* Construct the resource index entry */
 			wptr = rsrcbuf;
-			put_udword(&wptr, db->rec_index.res[i].type);
-			put_uword(&wptr, db->rec_index.res[i].id);
+			put_udword(&wptr, res->type);
+			put_uword(&wptr, res->id);
 			put_udword(&wptr, offset);
 
 			/* Write the resource index entry */
@@ -400,8 +412,19 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 				close(fd);
 				return -1;
 			}
-		} else {
-			/* It's a record database */
+
+			/* Bump 'offset' up to point to the offset of the
+			 * next variable-sized thing in the file.
+			 */
+			offset += res->data_len;
+		}
+	} else {
+		/* It's a record database */
+		struct pdb_record *rec;		/* Current record */
+
+		/* Go through the list of resources, writing each one */
+		for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
+		{
 			static ubyte recbuf[PDB_RECORDIX_LEN];
 					/* Buffer to hold the record index
 					 * entry.
@@ -410,31 +433,29 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			/* Construct the record index entry */
 			wptr = recbuf;
 			put_udword(&wptr, offset);
-			put_ubyte(&wptr, db->rec_index.rec[i].attributes);
+			put_ubyte(&wptr, rec->attributes);
 			put_ubyte(&wptr,
-				  (char) ((db->rec_index.rec[i].uniqueID >> 16)
-					  & 0xff));
+				  (char) ((rec->uniqueID >> 16) & 0xff));
 			put_ubyte(&wptr,
-				  (char) ((db->rec_index.rec[i].uniqueID >> 8)
-					  & 0xff));
+				  (char) ((rec->uniqueID >> 8) & 0xff));
 			put_ubyte(&wptr,
-				  (char) (db->rec_index.rec[i].uniqueID & 0xff));
+				  (char) (rec->uniqueID & 0xff));
 
-			/* Write the record index entry */
+			/* Write the resource index entry */
 			if (write(fd, recbuf, PDB_RECORDIX_LEN) !=
 			    PDB_RECORDIX_LEN)
 			{
-				fprintf(stderr, "pdb_Write: Can't write record index entry\n");
+				fprintf(stderr, "pdb_Write: Can't write RECORD index entry\n");
 				perror("write");
 				close(fd);
 				return -1;
 			}
-		}
 
-		/* Bump 'offset' up to point to the offset of the
-		 * next variable-sized thing in the file.
-		 */
-		offset += db->data_len[i];
+			/* Bump 'offset' up to point to the offset of the
+			 * next variable-sized thing in the file.
+			 */
+			offset += rec->data_len;
+		}
 	}
 
 	/* Write the two useless NUL bytes */
@@ -474,15 +495,42 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 	}
 
 	/* Write the record/resource data */
-	for (i = 0; i < db->reclist_header.len; i++)
+	if (IS_RSRC_DB(db))
 	{
-		if (write(fd, db->data[i], db->data_len[i]) !=
-		    db->data_len[i])
+		/* It's a resource database */
+		struct pdb_resource *res;
+
+		/* Go through the list of resources, writing each one's
+		 * data.
+		 */
+		for (res = db->rec_index.res; res != NULL; res = res->next)
 		{
-			fprintf(stderr, "pdb_Write: Can't write record/resource data\n");
-			perror("write");
-			close(fd);
-			return -1;
+			/* Write the data */
+			if (write(fd, res->data, res->data_len) !=
+			    res->data_len)
+			{
+				fprintf(stderr, "pdb_Write: Can't write resource data\n");
+				perror("write");
+				close(fd);
+				return -1;
+			}
+		}
+	} else {
+		/* It's a record database */
+		struct pdb_record *rec;
+
+		/* Go through the list of records, writing each one's data. */
+		for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
+		{
+			/* Write the data */
+			if (write(fd, rec->data, rec->data_len) !=
+			    rec->data_len)
+			{
+				fprintf(stderr, "pdb_Write: Can't write record data\n");
+				perror("write");
+				close(fd);
+				return -1;
+			}
 		}
 	}
 
@@ -535,43 +583,43 @@ pdb_Download(struct PConnection *pconn,
 	}
 
 	/* Get the database header info */
-	memcpy(retval->header.name, dbinfo->name, PDB_DBNAMELEN);
-	retval->header.attributes = dbinfo->db_flags;
-	retval->header.version = dbinfo->version;
+	memcpy(retval->name, dbinfo->name, PDB_DBNAMELEN);
+	retval->attributes = dbinfo->db_flags;
+	retval->version = dbinfo->version;
 	/* Convert the times from DLP time structures to Palm-style
 	 * time_ts.
 	 */
-	retval->header.ctime = time_dlp2palmtime(&dbinfo->ctime);
-	retval->header.mtime = time_dlp2palmtime(&dbinfo->mtime);
-	retval->header.baktime = time_dlp2palmtime(&dbinfo->baktime);
-	retval->header.modnum = dbinfo->modnum;
-	retval->header.appinfoID = 0L;	/* For now */
-	retval->header.sortinfoID = 0L;	/* For now */
-	retval->header.type = dbinfo->type;
-	retval->header.creator = dbinfo->creator;
-	retval->header.uniqueIDseed = 0L;	/* XXX - Should this be
-						 * something else? */
+	retval->ctime = time_dlp2palmtime(&dbinfo->ctime);
+	retval->mtime = time_dlp2palmtime(&dbinfo->mtime);
+	retval->baktime = time_dlp2palmtime(&dbinfo->baktime);
+	retval->modnum = dbinfo->modnum;
+	retval->appinfo_offset = 0L;	/* For now */
+	retval->sortinfo_offset = 0L;	/* For now */
+	retval->type = dbinfo->type;
+	retval->creator = dbinfo->creator;
+	retval->uniqueIDseed = 0L;	/* XXX - Should this be something
+					 * else? */
 fprintf(stderr, "pdb_Download:\n");
-fprintf(stderr, "\tname: \"%s\"\n", retval->header.name);
-fprintf(stderr, "\tattributes: 0x%04x\n", retval->header.attributes);
-fprintf(stderr, "\tversion: %d\n", retval->header.version);
-fprintf(stderr, "\tctime: %ld\n", retval->header.ctime);
-fprintf(stderr, "\tmtime: %ld\n", retval->header.mtime);
-fprintf(stderr, "\tbaktime: %ld\n", retval->header.baktime);
-fprintf(stderr, "\tmodnum: %ld\n", retval->header.modnum);
-fprintf(stderr, "\tappinfoID: %ld\n", retval->header.appinfoID);
-fprintf(stderr, "\tsortinfoID: %ld\n", retval->header.sortinfoID);
+fprintf(stderr, "\tname: \"%s\"\n", retval->name);
+fprintf(stderr, "\tattributes: 0x%04x\n", retval->attributes);
+fprintf(stderr, "\tversion: %d\n", retval->version);
+fprintf(stderr, "\tctime: %ld\n", retval->ctime);
+fprintf(stderr, "\tmtime: %ld\n", retval->mtime);
+fprintf(stderr, "\tbaktime: %ld\n", retval->baktime);
+fprintf(stderr, "\tmodnum: %ld\n", retval->modnum);
+fprintf(stderr, "\tappinfo_offset: %ld\n", retval->appinfo_offset);
+fprintf(stderr, "\tsortinfo_offset: %ld\n", retval->sortinfo_offset);
 fprintf(stderr, "\ttype: '%c%c%c%c'\n",
-	(char) ((retval->header.type >> 24) & 0xff),
-	(char) ((retval->header.type >> 16) & 0xff),
-	(char) ((retval->header.type >> 8) & 0xff),
-	(char) (retval->header.type & 0xff));
+	(char) ((retval->type >> 24) & 0xff),
+	(char) ((retval->type >> 16) & 0xff),
+	(char) ((retval->type >> 8) & 0xff),
+	(char) (retval->type & 0xff));
 fprintf(stderr, "\tcreator: '%c%c%c%c'\n",
-	(char) ((retval->header.creator >> 24) & 0xff),
-	(char) ((retval->header.creator >> 16) & 0xff),
-	(char) ((retval->header.creator >> 8) & 0xff),
-	(char) (retval->header.creator & 0xff));
-fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->header.uniqueIDseed);
+	(char) ((retval->creator >> 24) & 0xff),
+	(char) ((retval->creator >> 16) & 0xff),
+	(char) ((retval->creator >> 8) & 0xff),
+	(char) (retval->creator & 0xff));
+fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->uniqueIDseed);
 
 	/* Get the database record/resource index header info */
 	/* Find out how many records/resources there are in this database */
@@ -584,10 +632,10 @@ fprintf(stderr, "\tuniqueIDseed: %ld\n", retval->header.uniqueIDseed);
 		free_pdb(retval);
 		return NULL;
 	}
-	retval->reclist_header.nextID = 0L;
-	retval->reclist_header.len = opendbinfo.numrecs;
-fprintf(stderr, "\n\tnextID: %ld\n", retval->reclist_header.nextID);
-fprintf(stderr, "\tlen: %d\n", retval->reclist_header.len);
+	retval->next_reclistID = 0L;
+	retval->numrecs = opendbinfo.numrecs;
+fprintf(stderr, "\n\tnextID: %ld\n", retval->next_reclistID);
+fprintf(stderr, "\tlen: %d\n", retval->numrecs);
 
 	/* Try to get the AppInfo block */
 	err = DlpReadAppBlock(pconn, dbh, 0, DLPC_APPBLOCK_TOEND,
@@ -686,13 +734,13 @@ pdb_FindRecordByID(
 	const struct pdb *db,
 	const udword id)
 {
-	int i;
+	struct pdb_record *rec;
 
-	/* Just look through each record in turn */
-	for (i = 0; i < db->reclist_header.len; i++)
+	/* Walk the list of records, comparing IDs */
+	for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
 	{
-		if (db->rec_index.rec[i].uniqueID == id)
-			return &(db->rec_index.rec[i]);
+		if (rec->uniqueID == id)
+			return rec;
 	}
 
 	return NULL;		/* Couldn't find it */
@@ -707,17 +755,35 @@ pdb_FindRecordByIndex(
 	const struct pdb *db,	/* Database to look in */
 	const uword index)	/* Index of the record to look for */
 {
-	/* Check to make sure 'index' is valid */
-	if (index < db->reclist_header.len)
-		return &(db->rec_index.rec[index]);
+	struct pdb_record *rec;
+	int i;
 
-	return NULL;		/* No such record */
+	/* Walk the list, decrementing the count as we go along. If it
+	 * reaches 0, we've found the record.
+	 */
+	rec = db->rec_index.rec;
+	for (i = index; i > 0; i--)
+	{
+		if (rec == NULL)
+			/* Oops! We've fallen off the end of the list */
+			return NULL;
+		rec = rec->next;
+	}
+
+	return rec;		/* Success */
 }
 
-/* XXX - pdb_FindNextRecord(db *, record *)
- * Find the next record after this one. This makes more sense with a
- * linked-list implementation.
+/* pdb_NextRecord
+ * Find the next record after 'rec' in 'db', and return a pointer to it. If
+ * 'rec' is the last record in the list, return NULL.
  */
+struct pdb_record *
+pdb_NextRecord(const struct pdb *db,	/* Database to look in */
+	       const struct pdb_record *rec)
+					/* Return 'rec's successor */
+{
+	return rec->next;
+}
 
 /* pdb_DeleteRecordByID
  * Find the record whose unique ID is 'id' and delete it from 'db'. If the
@@ -727,29 +793,186 @@ pdb_FindRecordByIndex(
 /* XXX - This really ought to be redone with a linked list */
 int
 pdb_DeleteRecordByID(
-	const struct pdb *db,
+	struct pdb *db,
 	const udword id)
 {
-	int i;
+	struct pdb_record *rec;		/* Record we're looking at */
+	struct pdb_record *last;	/* Last record we saw */
 
 	if (IS_RSRC_DB(db))
 		/* This only works with record databases */
 		return -1;
 
 	/* Look through the list of records */
-	for (i = 0; i < db->reclist_header.len; i++)
+	last = NULL;		/* Haven't seen any records yet */
+	for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
 	{
 		/* See if the uniqueID matches */
-		if (db->rec_index.rec[i].uniqueID == id)
+		if (rec->uniqueID == id)
 		{
 			/* Found it */
-			db->data[i] = NULL;
+
+			/* Free 'rec's data */
+			if (rec->data != NULL)
+				free(rec->data);
+
+			/* Cut 'rec' out of the list. The first element of
+			 * the list is a special case.
+			 */
+			if (last == NULL)
+				db->rec_index.rec = rec->next;
+			else
+				last->next = rec->next;
+
+			free(rec);		/* Free it */
+			db->numrecs--;		/* Decrement record count */
+			
 			return 0;	/* Success */
 		}
+
+		last = rec;	/* Remember what we just saw */
 	}
 
-	/* Couldn't find it. Oh, well. */
+	/* Couldn't find it. Oh, well. Call it a success anyway. */
 	return 0;
+}
+
+/* pdb_AppendRecord
+ * Append a new record to 'db's record list. 'newrec' is not copied, so it
+ * is important that the caller not free it afterwards.
+ */
+int
+pdb_AppendRecord(struct pdb *db,
+		 struct pdb_record *newrec)
+{
+	struct pdb_record *rec;
+
+	/* Sanity check */
+	if (IS_RSRC_DB(db))
+		/* This only works with record databases */
+		return -1;
+
+	/* Check to see if the list is empty */
+	if (db->rec_index.rec == NULL)
+	{
+		/* XXX - Sanity check: db->numrecs should be 0 */
+		db->rec_index.rec = newrec;
+		newrec->next = NULL;
+
+		return 0;		/* Success */
+	}
+
+	/* Walk the list to find its end */
+	for (rec = db->rec_index.rec; rec->next != NULL; rec = rec->next)
+		;
+	rec->next = newrec;
+	newrec->next = NULL;
+
+	return 0;			/* Success */
+}
+
+/* pdb_AppendResource
+ * Append a new resource to 'db's resource list. 'newrsrc' is not copied,
+ * so it is important that the caller not free it afterwards.
+ */
+int
+pdb_AppendResource(struct pdb *db,
+		   struct pdb_resource *newrsrc)
+{
+	struct pdb_resource *rsrc;
+
+	/* Sanity check */
+	if (!IS_RSRC_DB(db))
+		/* This only works with resource databases */
+		return -1;
+
+	/* Check to see if the list is empty */
+	if (db->rec_index.res == NULL)
+	{
+		/* XXX - Sanity check: db->numrecs should be 0 */
+		db->rec_index.res = newrsrc;
+		newrsrc->next = NULL;
+
+		return 0;		/* Success */
+	}
+
+	/* Walk the list to find its end */
+	for (rsrc = db->rec_index.res; rsrc->next != NULL; rsrc = rsrc->next)
+		;
+	rsrc->next = newrsrc;
+	newrsrc->next = NULL;
+
+	return 0;			/* Success */
+}
+
+/* pdb_InsertRecord
+ * Insert 'newrec' into 'db', just after 'prev'. If 'prev' is NULL,
+ * 'newrec' is inserted at the beginning of the list.
+ * Returns 0 if successful, -1 otherwise.
+ * 'newrec' is not copied, so it is important that the caller not free it.
+ */
+int
+pdb_InsertRecord(struct pdb *db,	/* The database to insert into */
+		 struct pdb_record *prev,
+					/* Insert after this record */
+		 struct pdb_record *newrec)
+					/* The record to insert */
+{
+	/* If 'prev' is NULL, insert at the beginning of the list */
+	if (prev == NULL)
+	{
+		newrec->next = db->rec_index.rec;
+		db->rec_index.rec = newrec;
+		db->numrecs++;		/* Increment record count */
+
+		return 0;		/* Success */
+	}
+
+	/* XXX - This function doesn't actually check to make sure that
+	 * 'prev' is in 'db'. You could really fuck yourself over with
+	 * this.
+	 */
+	/* The new record goes in the middle of the list. Insert it. */
+	newrec->next = prev->next;
+	prev->next = newrec;
+	db->numrecs++;			/* Increment record count */
+
+	return 0;			/* Success */
+}
+
+/* pdb_InsertResource
+ * Insert 'newrsrc' into 'db', just after 'prev'. If 'prev' is NULL, 'newrsrc'
+ * is inserted at the beginning of the list.
+ * Returns 0 if successful, -1 otherwise.
+ * 'newrec' is not copied, so it is important that the caller not free it.
+ */
+int
+pdb_InsertResource(struct pdb *db,	/* The database to insert into */
+		   struct pdb_resource *prev,
+					/* Insert after this resource */
+		   struct pdb_resource *newrsrc)
+					/* The resource to insert */
+{
+	/* If 'prev' is NULL, insert at the beginning of the list */
+	if (prev == NULL)
+	{
+		newrsrc->next = db->rec_index.res;
+		db->rec_index.res = newrsrc;
+		db->numrecs++;		/* Increment record count */
+
+		return 0;		/* Success */
+	}
+
+	/* XXX - This function doesn't actually check to make sure that
+	 * 'prev' is in 'db'. You could really fuck yourself over with
+	 * this.
+	 */
+	/* The new resource goes in the middle of the list. Insert it. */
+	newrsrc->next = prev->next;
+	prev->next = newrsrc;
+	db->numrecs++;			/* Increment record count */
+
+	return 0;			/* Success */
 }
 
 /*** Helper functions ***/
@@ -799,63 +1022,63 @@ pdb_LoadHeader(int fd,
 
 	/* Parse the database header */
 	rptr = buf;
-	memcpy(db->header.name, buf, PDB_DBNAMELEN);
+	memcpy(db->name, buf, PDB_DBNAMELEN);
 	rptr += PDB_DBNAMELEN;
-	db->header.attributes = get_uword(&rptr);
-	db->header.version = get_uword(&rptr);
-	db->header.ctime = get_udword(&rptr);
-	db->header.mtime = get_udword(&rptr);
-	db->header.baktime = get_udword(&rptr);
-	db->header.modnum = get_udword(&rptr);
-	db->header.appinfoID = get_udword(&rptr);
-	db->header.sortinfoID = get_udword(&rptr);
-	db->header.type = get_udword(&rptr);
-	db->header.creator = get_udword(&rptr);
-	db->header.uniqueIDseed = get_udword(&rptr);
+	db->attributes = get_uword(&rptr);
+	db->version = get_uword(&rptr);
+	db->ctime = get_udword(&rptr);
+	db->mtime = get_udword(&rptr);
+	db->baktime = get_udword(&rptr);
+	db->modnum = get_udword(&rptr);
+	db->appinfo_offset = get_udword(&rptr);
+	db->sortinfo_offset = get_udword(&rptr);
+	db->type = get_udword(&rptr);
+	db->creator = get_udword(&rptr);
+	db->uniqueIDseed = get_udword(&rptr);
 
 /* XXX - These printf() statements should be controlled by a
  * debugging flag.
  */
 #if 0
-printf("\tname: \"%s\"\n", db->header.name);
-printf("\tattributes: 0x%04x", db->header.attributes);
-if (db->header.attributes & PDB_ATTR_RESDB) printf(" RESDB");
-if (db->header.attributes & PDB_ATTR_RO) printf(" RO");
-if (db->header.attributes & PDB_ATTR_APPINFODIRTY)
+printf("\tname: \"%s\"\n", db->name);
+printf("\tattributes: 0x%04x", db->attributes);
+if (db->attributes & PDB_ATTR_RESDB) printf(" RESDB");
+if (db->attributes & PDB_ATTR_RO) printf(" RO");
+if (db->attributes & PDB_ATTR_APPINFODIRTY)
 	 printf(" APPINFODIRTY");
-if (db->header.attributes & PDB_ATTR_BACKUP) printf(" BACKUP");
-if (db->header.attributes & PDB_ATTR_OKNEWER) printf(" OKNEWER");
-if (db->header.attributes & PDB_ATTR_RESET) printf(" RESET");
-if (db->header.attributes & PDB_ATTR_OPEN) printf(" OPEN");
+if (db->attributes & PDB_ATTR_BACKUP) printf(" BACKUP");
+if (db->attributes & PDB_ATTR_OKNEWER) printf(" OKNEWER");
+if (db->attributes & PDB_ATTR_RESET) printf(" RESET");
+if (db->attributes & PDB_ATTR_OPEN) printf(" OPEN");
 printf("\n");
-printf("\tversion: %u\n", db->header.version);
-t = db->header.ctime - EPOCH_1904;
-printf("\tctime: %lu %s", db->header.ctime,
+printf("\tversion: %u\n", db->version);
+t = db->ctime - EPOCH_1904;
+printf("\tctime: %lu %s", db->ctime,
 	ctime(&t));
-t = db->header.mtime - EPOCH_1904;
-printf("\tmtime: %lu %s", db->header.mtime,
+t = db->mtime - EPOCH_1904;
+printf("\tmtime: %lu %s", db->mtime,
 	ctime(&t));
-t = db->header.baktime - EPOCH_1904;
-printf("\tbaktime: %lu %s", db->header.baktime,
+t = db->baktime - EPOCH_1904;
+printf("\tbaktime: %lu %s", db->baktime,
 	ctime(&t));
-printf("\tmodnum: %ld\n", db->header.modnum);
-printf("\tappinfoID: 0x%08lx\n",
-	db->header.appinfoID);
-printf("\tsortinfoID: 0x%08lx\n",
-	db->header.sortinfoID);
+printf("\tmodnum: %ld\n", db->modnum);
+printf("\tappinfo_offset: 0x%08lx\n",
+	db->appinfo_offset);
+printf("\tsortinfo_offset: 0x%08lx\n",
+	db->sortinfo_offset);
 printf("\ttype: '%c%c%c%c' (0x%08lx)\n",
-	(char) (db->header.type >> 24) & 0xff,
-	(char) (db->header.type >> 16) & 0xff,
-	(char) (db->header.type >> 8) & 0xff,
-	(char) db->header.type & 0xff,
-	db->header.type);
+	(char) (db->type >> 24) & 0xff,
+	(char) (db->type >> 16) & 0xff,
+	(char) (db->type >> 8) & 0xff,
+	(char) db->type & 0xff,
+	db->type);
 printf("\tcreator: '%c%c%c%c' (0x%08lx)\n",
-	(char) (db->header.creator >> 24) & 0xff,
-	(char) (db->header.creator >> 16) & 0xff,
-	(char) (db->header.creator >> 8) & 0xff,
-	(char) db->header.creator & 0xff,
-	db->header.creator);
-printf("\tuniqueIDseed: %ld\n", db->header.uniqueIDseed);
+	(char) (db->creator >> 24) & 0xff,
+	(char) (db->creator >> 16) & 0xff,
+	(char) (db->creator >> 8) & 0xff,
+	(char) db->creator & 0xff,
+	db->creator);
+printf("\tuniqueIDseed: %ld\n", db->uniqueIDseed);
 #endif	/* 0 */
 
 	return 0;		/* Success */
@@ -882,14 +1105,14 @@ pdb_LoadRecListHeader(int fd,
 
 	/* Parse the record list */
 	rptr = buf;
-	db->reclist_header.nextID = get_udword(&rptr);
-	db->reclist_header.len = get_uword(&rptr);
+	db->next_reclistID = get_udword(&rptr);
+	db->numrecs = get_uword(&rptr);
 
 /* XXX - These printf() statements should be controlled by a
  * debugging flag.
  */
-/*  printf("\tnextID: %ld\n", db->reclist_header.nextID); */
-/*  printf("\tlen: %u\n", db->reclist_header.len); */
+/*  printf("\tnextID: %ld\n", db->next_reclistID); */
+/*  printf("\tlen: %u\n", db->numrecs); */
 
 	return 0;
 }
@@ -904,33 +1127,31 @@ pdb_LoadRsrcIndex(int fd,
 {
 	int i;
 	int err;
-	static ubyte inbuf[PDB_RESOURCEIX_LEN];
-					/* Input buffer */
-	const ubyte *rptr;	/* Pointer into buffers, for reading */
 
-	if (db->reclist_header.len == 0)
+	if (db->numrecs == 0)
 	{
 		/* There are no resources in this file */
 		db->rec_index.res = NULL;
 		return 0;
 	}
 
-	/* It's a resource database. Allocate an array of resource index
-	 * entries.
-	 */
-	if ((db->rec_index.res =
-	     (struct pdb_resource *)
-	     calloc(db->reclist_header.len,
-		    sizeof(struct pdb_resource)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate resource list\n");
-		return -1;
-	}
-
 	/* Read the resource index */
-	for (i = 0; i < db->reclist_header.len; i++)
+	for (i = 0; i < db->numrecs; i++)
 	{
+		static ubyte inbuf[PDB_RESOURCEIX_LEN];
+					/* Input buffer */
+		const ubyte *rptr;	/* Pointer into buffers, for reading */
+		struct pdb_resource *rsrc;
+					/* New resource entry */
+
+		/* Allocate the resource entry */
+		if ((rsrc = (struct pdb_resource *)
+		     malloc(sizeof(struct pdb_resource)))
+		    == NULL)
+			return -1;
+		/* Scribble zeros all over it, just in case */
+		memset(rsrc, 0, sizeof(struct pdb_resource));
+
 		/* Read the next resource index entry */
 		if ((err = read(fd, inbuf, PDB_RESOURCEIX_LEN)) !=
 		    PDB_RESOURCEIX_LEN)
@@ -938,9 +1159,9 @@ pdb_LoadRsrcIndex(int fd,
 
 		/* Parse it */
 		rptr = inbuf;
-		db->rec_index.res[i].type = get_udword(&rptr);
-		db->rec_index.res[i].id = get_uword(&rptr);
-		db->rec_index.res[i].offset = get_udword(&rptr);
+		rsrc->type = get_udword(&rptr);
+		rsrc->id = get_uword(&rptr);
+		rsrc->offset = get_udword(&rptr);
 
 /* XXX - These printf() statements should be controlled by a
  * debugging flag.
@@ -948,14 +1169,17 @@ pdb_LoadRsrcIndex(int fd,
 #if 0
 printf("\tResource %d: type '%c%c%c%c' (0x%08lx), id %u, offset 0x%04lx\n",
        i,
-       (char) (db->rec_index.res[i].type >> 24) & 0xff,
-       (char) (db->rec_index.res[i].type >> 16) & 0xff,
-       (char) (db->rec_index.res[i].type >> 8) & 0xff,
-       (char) db->rec_index.res[i].type & 0xff,
-       db->rec_index.res[i].type,
-       db->rec_index.res[i].id,
-       db->rec_index.res[i].offset);
-#endif	/* 0 */
+       (char) (rsrc->type >> 24) & 0xff,
+       (char) (rsrc->type >> 16) & 0xff,
+       (char) (rsrc->type >> 8) & 0xff,
+       (char) rsrc->type & 0xff,
+       rsrc->type,
+       rsrc->id,
+       rsrc->offset);
+#endif	/* 0 */ 
+
+		/* Append the new resource to the list */
+		pdb_AppendResource(db, rsrc);
 	}
 
 	return 0;
@@ -971,33 +1195,31 @@ pdb_LoadRecIndex(int fd,
 {
 	int i;
 	int err;
-	static ubyte inbuf[PDB_RECORDIX_LEN];
-					/* Input buffer */
-	const ubyte *rptr;	/* Pointer into buffers, for reading */
 
-	if (db->reclist_header.len == 0)
+	if (db->numrecs == 0)
 	{
 		/* There are no records in this file */
-		db->rec_index.res = NULL;
+		db->rec_index.rec = NULL;
 		return 0;
 	}
 
-	/* It's a record database. Allocate an array of record index
-	 * entries.
-	 */
-	if ((db->rec_index.rec =
-	     (struct pdb_record *)
-	     calloc(db->reclist_header.len,
-		    sizeof(struct pdb_record)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate record list\n");
-		return -1;
-	}
-
 	/* Read the record index */
-	for (i = 0; i < db->reclist_header.len; i++)
+	for (i = 0; i < db->numrecs; i++)
 	{
+		static ubyte inbuf[PDB_RECORDIX_LEN];
+					/* Input buffer */
+		const ubyte *rptr;	/* Pointer into buffers, for reading */
+		struct pdb_record *rec;
+					/* New record entry */
+
+		/* Allocate the record entry */
+		if ((rec = (struct pdb_record *)
+		     malloc(sizeof(struct pdb_record)))
+		    == NULL)
+			return -1;
+		/* Scribble zeros all over it, just in case */
+		memset(rec, 0, sizeof(struct pdb_record));
+
 		/* Read the next record index entry */
 		if ((err = read(fd, inbuf, PDB_RECORDIX_LEN)) !=
 		    PDB_RECORDIX_LEN)
@@ -1005,9 +1227,9 @@ pdb_LoadRecIndex(int fd,
 
 		/* Parse it */
 		rptr = inbuf;
-		db->rec_index.rec[i].offset = get_udword(&rptr);
-		db->rec_index.rec[i].attributes = get_ubyte(&rptr);
-		db->rec_index.rec[i].uniqueID =
+		rec->offset = get_udword(&rptr);
+		rec->attributes = get_ubyte(&rptr);
+		rec->uniqueID =
 			((udword) (get_ubyte(&rptr) << 16)) |
 			((udword) (get_ubyte(&rptr) << 8)) |
 			((udword) get_ubyte(&rptr));
@@ -1018,10 +1240,13 @@ pdb_LoadRecIndex(int fd,
 #if 0
 printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, uniqueID 0x%08lx\n",
        i,
-       db->rec_index.rec[i].offset,
-       db->rec_index.rec[i].attributes,
-       db->rec_index.rec[i].uniqueID;
+       rec->offset,
+       rec->attributes,
+       rec->uniqueID);
 #endif	/* 0 */
+
+		/* Append the new record to the database */
+		pdb_AppendRecord(db, rec); 
 	}
 
 	return 0;
@@ -1042,7 +1267,7 @@ pdb_LoadAppBlock(int fd,
 	off_t offset;		/* Offset into file, for checking */
 
 	/* Check to see if there even *is* an AppInfo block */
-	if (db->header.appinfoID == 0L)
+	if (db->appinfo_offset == 0L)
 	{
 		/* Nope */
 		db->appinfo_len = 0L;
@@ -1053,18 +1278,18 @@ pdb_LoadAppBlock(int fd,
 	/* Figure out how long the AppInfo block is, by comparing its
 	 * offset to that of the next thing in the file.
 	 */
-	if (db->header.sortinfoID > 0L)
+	if (db->sortinfo_offset > 0L)
 		/* There's a sort block */
-		next_off = db->header.sortinfoID;
-	else if (db->reclist_header.len > 0)
+		next_off = db->sortinfo_offset;
+	else if (db->numrecs > 0)
 	{
 		/* There's no sort block, but there are records. Get the
 		 * offset of the first one.
 		 */
 		if (IS_RSRC_DB(db))
-			next_off = db->rec_index.res[0].offset;
+			next_off = db->rec_index.res->offset;
 		else
-			next_off = db->rec_index.rec[0].offset;
+			next_off = db->rec_index.rec->offset;
 	} else
 		/* There is neither sort block nor records, so the AppInfo
 		 * block must go to the end of the file.
@@ -1074,7 +1299,7 @@ pdb_LoadAppBlock(int fd,
 	/* Subtract the AppInfo block's offset from that of the next thing
 	 * in the file to get the AppInfo block's length.
 	 */
-	db->appinfo_len = next_off - db->header.appinfoID;
+	db->appinfo_len = next_off - db->appinfo_offset;
 
 	/* This is probably paranoid, but what the hell */
 	if (db->appinfo_len == 0L)
@@ -1097,15 +1322,15 @@ pdb_LoadAppBlock(int fd,
 	 * the file.
 	 */
 	offset = lseek(fd, 0, SEEK_CUR);	/* Find out where we are */
-	if (offset != db->header.appinfoID)
+	if (offset != db->appinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
 		fprintf(stderr, "Warning: AppInfo block isn't where I thought it would be.\n"
 			"expected 0x%lx, but we're at 0x%qx\n",
-			db->header.appinfoID, offset);
+			db->appinfo_offset, offset);
 
 		/* Try to recover */
-		offset = lseek(fd, db->header.appinfoID, SEEK_SET);
+		offset = lseek(fd, db->appinfo_offset, SEEK_SET);
 					/* Go to where the AppInfo block
 					 * ought to be */
 		if (offset < 0)
@@ -1145,7 +1370,7 @@ pdb_LoadSortBlock(int fd,
 	off_t offset;		/* Offset into file, for checking */
 
 	/* Check to see if there even *is* a sort block */
-	if (db->header.sortinfoID == 0L)
+	if (db->sortinfo_offset == 0L)
 	{
 		/* Nope */
 		db->sortinfo_len = 0L;
@@ -1156,14 +1381,14 @@ pdb_LoadSortBlock(int fd,
 	/* Figure out how long the sort block is, by comparing its
 	 * offset to that of the next thing in the file.
 	 */
-	if (db->reclist_header.len > 0)
+	if (db->numrecs > 0)
 	{
 		/* There are records. Get the offset of the first one.
 		 */
 		if (IS_RSRC_DB(db))
-			next_off = db->rec_index.res[0].offset;
+			next_off = db->rec_index.res->offset;
 		else
-			next_off = db->rec_index.rec[0].offset;
+			next_off = db->rec_index.rec->offset;
 	} else
 		/* There are no records, so the sort block must go to the
 		 * end of the file.
@@ -1173,7 +1398,7 @@ pdb_LoadSortBlock(int fd,
 	/* Subtract the sort block's offset from that of the next thing
 	 * in the file to get the sort block's length.
 	 */
-	db->sortinfo_len = next_off - db->header.sortinfoID;
+	db->sortinfo_len = next_off - db->sortinfo_offset;
 
 	/* This is probably paranoid, but what the hell */
 	if (db->sortinfo_len == 0L)
@@ -1196,15 +1421,15 @@ pdb_LoadSortBlock(int fd,
 	 * the file.
 	 */
 	offset = lseek(fd, 0, SEEK_CUR);	/* Find out where we are */
-	if (offset != db->header.sortinfoID)
+	if (offset != db->sortinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
 		fprintf(stderr, "Warning: sort block isn't where I thought it would be.\n"
 			"Expected 0x%lx, but we're at 0x%qx\n",
-			db->header.sortinfoID, offset);
+			db->sortinfo_offset, offset);
 
 		/* Try to recover */
-		offset = lseek(fd, db->header.sortinfoID, SEEK_SET);
+		offset = lseek(fd, db->sortinfo_offset, SEEK_SET);
 					/* Go to where the sort block
 					 * ought to be */
 		if (offset < 0)
@@ -1236,50 +1461,46 @@ pdb_LoadResources(int fd,
 {
 	int i;
 	int err;
+	struct pdb_resource *rsrc;
 
-	/* Allocate an array to hold the resources' sizes */
-	if ((db->data_len = (uword *) calloc(db->reclist_header.len,
-					     sizeof(uword))) == NULL)
-	{
-		fprintf(stderr, "Out of memory.\n");
-		perror("pdb_LoadResources: malloc");
-		return -1;
-	}
-
-	/* Allocate an array to hold the resources */
-	if ((db->data = (ubyte **) calloc(db->reclist_header.len,
-					  sizeof(ubyte *))) == NULL)
-	{
-		fprintf(stderr, "Out of memory.\n");
-		perror("pdb_LoadResources: malloc");
-		return -1;
-	}
-
-	/* Read each resource in turn */
-	for (i = 0; i < db->reclist_header.len; i++)
+	/* This assumes that the resource list has already been created by
+	 * 'pdb_LoadRsrcIndex()'.
+	 */
+	for (i = 0, rsrc = db->rec_index.res;
+	     i < db->numrecs;
+	     i++, rsrc = rsrc->next)
 	{
 		off_t offset;		/* Current offset, for checking */
-		udword next_off;	/* Offset of the next thing in the
-					 * file */
+		udword next_off;	/* Offset of next resource in file */
 
-printf("Reading resource %d (type '%c%c%c%c')\n", i,
-       (char) (db->rec_index.res[i].type >> 24) & 0xff,
-       (char) (db->rec_index.res[i].type >> 16) & 0xff,
-       (char) (db->rec_index.res[i].type >> 8) & 0xff,
-       (char) db->rec_index.res[i].type & 0xff);
+		/* Sanity check: make sure we haven't stepped off the end
+		 * of the list.
+		 */
+		if (rsrc == NULL)
+		{
+			fprintf(stderr, "Hey! I can't find the %dth resource!\n",
+				i);
+			return -1;
+		}
+
+printf("Reading resource %d (type '%c%c%c%c')\n",
+       i,
+       (char) (rsrc->type >> 24) & 0xff,
+       (char) (rsrc->type >> 16) & 0xff,
+       (char) (rsrc->type >> 8) & 0xff,
+       (char) rsrc->type & 0xff);
+
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
 					/* Find out where we are now */
-		if (offset != db->rec_index.res[i].offset)
+		if (offset != rsrc->offset)
 		{
 			fprintf(stderr, "Warning: resource %d isn't where I thought it would be.\n"
 				"Expected 0x%lx, but we're at 0x%qx\n",
 				i,
-				db->rec_index.res[i].offset, offset);
-
+				rsrc->offset, offset);
 			/* Try to recover */
-			offset = lseek(fd, db->rec_index.res[i].offset,
-				       SEEK_SET);
+			offset = lseek(fd, rsrc->offset, SEEK_SET);
 						/* Go to where this
 						 * resource ought to be.
 						 */
@@ -1292,11 +1513,17 @@ printf("Reading resource %d (type '%c%c%c%c')\n", i,
 			}
 		}
 
-		/* Okay, now that we're in the right place. Find out what
+		/* Okay, now that we're in the right place, find out what
 		 * the next thing in the file is: its offset will tell us
 		 * how much to read.
+		 * It's debatable whether 'i' or 'rsrc' should be
+		 * authoritative for determining the offset of the next
+		 * resource. I'm going to choose 'rsrc', since I think
+		 * that's more likely to be immune to fencepost errors. The
+		 * two should, however, be equivalent. In fact, it might be
+		 * a Good Thing to add a check to make sure.
 		 */
-		if (i == db->reclist_header.len - 1)
+		if (rsrc->next == NULL)
 		{
 			/* This is the last resource in the file, so it
 			 * goes to the end of the file.
@@ -1306,31 +1533,31 @@ printf("Reading resource %d (type '%c%c%c%c')\n", i,
 			/* This isn't the last resource. Find the next
 			 * one's offset.
 			 */
-			next_off = db->rec_index.res[i+1].offset;
+			next_off = rsrc->next->offset;
 		}
 
 		/* Subtract this resource's index from that of the next
 		 * thing, to get the size of this resource.
 		 */
-		db->data_len[i] = next_off - db->rec_index.res[i].offset;
+		rsrc->data_len = next_off - rsrc->offset;
 
 		/* Allocate space for this resource */
-		if ((db->data[i] = (ubyte *) malloc(db->data_len[i])) == NULL)
+		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 		{
 			fprintf(stderr, "Out of memory\n");
 			return -1;
 		}
 
 		/* Read the resource */
-		if ((err = read(fd, db->data[i], db->data_len[i])) !=
-		    db->data_len[i])
+		if ((err = read(fd, rsrc->data, rsrc->data_len)) !=
+		    rsrc->data_len)
 		{
 			fprintf(stderr, "Can't read resource %d\n", i);
 			perror("pdb_LoadResources: read");
 			return -1;
 		}
 /*  printf("Contents of resource %d:\n", i); */
-/*  debug_dump(stdout, "<RSRC", db->data[i], db->data_len[i]); */
+/*  debug_dump(stdout, "<RSRC", rsrc->data, rsrc->data_len); */
 	}
 
 	return 0;		/* Success */
@@ -1345,49 +1572,43 @@ pdb_LoadRecords(int fd,
 {
 	int i;
 	int err;
+	struct pdb_record *rec;
 
-	/* Allocate an array to hold the records' sizes */
-	if ((db->data_len = (uword *) calloc(db->reclist_header.len,
-					     sizeof(uword))) == NULL)
-	{
-		fprintf(stderr, "Out of memory.\n");
-		perror("pdb_LoadRecords: malloc");
-		return -1;
-	}
-
-	/* Allocate an array to hold the records */
-	if ((db->data = (ubyte **) calloc(db->reclist_header.len,
-					  sizeof(ubyte *))) == NULL)
-	{
-		fprintf(stderr, "Out of memory.\n");
-		perror("pdb_LoadRecords: malloc");
-		return -1;
-	}
-
-	/* Read each record in turn */
-	for (i = 0; i < db->reclist_header.len; i++)
+	/* This assumes that the record list has already been created by
+	 * 'pdb_LoadRecIndex()'.
+	 */
+	for (i = 0, rec = db->rec_index.rec;
+	     i < db->numrecs;
+	     i++, rec = rec->next)
 	{
 		off_t offset;		/* Current offset, for checking */
-		udword next_off;	/* Offset of the next thing in the
-					 * file */
+		udword next_off;	/* Offset of next resource in file */
 
-/*  printf("Reading record %d\n", i); */
+		/* Sanity check: make sure we haven't stepped off the end
+		 * of the list.
+		 */
+		if (rec == NULL)
+		{
+			fprintf(stderr, "Hey! I can't find the %dth record!\n",
+				i);
+			return -1;
+		}
+
+printf("Reading record %d (id 0x%08lx)\n", i, rec->uniqueID);
+
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
 					/* Find out where we are now */
-		if (offset != db->rec_index.rec[i].offset)
+		if (offset != rec->offset)
 		{
 			fprintf(stderr, "Warning: record %d isn't where I thought it would be.\n"
 				"Expected 0x%lx, but we're at 0x%qx\n",
 				i,
-				db->rec_index.rec[i].offset, offset);
-
+				rec->offset, offset);
 			/* Try to recover */
-			offset = lseek(fd, db->rec_index.rec[i].offset,
-				       SEEK_SET);
-						/* Go to where this
-						 * record ought to be.
-						 */
+			offset = lseek(fd, rec->offset, SEEK_SET);
+						/* Go to where this record
+						 * ought to be. */
 			if (offset < 0)
 			{
 				/* Something's wrong */
@@ -1397,50 +1618,60 @@ pdb_LoadRecords(int fd,
 			}
 		}
 
-		/* Okay, now that we're in the right place. Find out what
+		/* Okay, now that we're in the right place, find out what
 		 * the next thing in the file is: its offset will tell us
 		 * how much to read.
+		 * It's debatable whether 'i' or 'rec' should be
+		 * authoritative for determining the offset of the next
+		 * resource. I'm going to choose 'rec', since I think
+		 * that's more likely to be immune to fencepost errors. The
+		 * two should, however, be equivalent. In fact, it might be
+		 * a Good Thing to add a check to make sure.
 		 */
-		if (i == db->reclist_header.len - 1)
+		if (rec->next == NULL)
 		{
-			/* This is the last record in the file, so it
-			 * goes to the end of the file.
+			/* This is the last record in the file, so it goes
+			 * to the end of the file.
 			 */
 			next_off = db->file_size;
 		} else {
-			/* This isn't the last record. Find the next
-			 * one's offset.
+			/* This isn't the last record. Find the next one's
+			 * offset.
 			 */
-			next_off = db->rec_index.rec[i+1].offset;
+			next_off = rec->next->offset;
 		}
 
-		/* Subtract this record's index from that of the next
-		 * thing, to get the size of this record.
+		/* Subtract this record's index from that of the next one,
+		 * to get the size of this record.
 		 */
-		db->data_len[i] = next_off - db->rec_index.rec[i].offset;
+		rec->data_len = next_off - rec->offset;
 
 		/* Allocate space for this record */
-		if ((db->data[i] = (ubyte *) malloc(db->data_len[i])) == NULL)
+		if ((rec->data = (ubyte *) malloc(rec->data_len)) == NULL)
 		{
 			fprintf(stderr, "Out of memory\n");
 			return -1;
 		}
 
 		/* Read the record */
-		if ((err = read(fd, db->data[i], db->data_len[i])) !=
-		    db->data_len[i])
+		if ((err = read(fd, rec->data, rec->data_len)) !=
+		    rec->data_len)
 		{
 			fprintf(stderr, "Can't read record %d\n", i);
 			perror("pdb_LoadRecords: read");
 			return -1;
 		}
 /*  printf("Contents of record %d:\n", i); */
-/*  debug_dump(stdout, "<REC", db->data[i], db->data_len[i]); */
+/*  debug_dump(stdout, "<REC", rec->data, rec->data_len); */
 	}
 
 	return 0;		/* Success */
 }
 
+/* pdb_DownloadResources
+ * Download a resource database's resources from the Palm, and put them in
+ * 'db'.
+ */
 static int
 pdb_DownloadResources(struct PConnection *pconn,
 		      ubyte dbh,
@@ -1449,61 +1680,40 @@ pdb_DownloadResources(struct PConnection *pconn,
 	int i;
 	int err;
 
-	/* Handle the easy case first */
-	if (db->reclist_header.len == 0)
-	{
-		/* No resources */
-		db->rec_index.res = NULL;
-		return 0;
-	}
-
-	/* Allocate the resource index: an array of 'struct pdb_resource's */
-	if ((db->rec_index.res = (struct pdb_resource *)
-	     calloc(db->reclist_header.len, sizeof(struct pdb_resource)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate resource index\n");
-		return -1;
-	}
-
-	/* Allocate the resource length array: an array of 'uword's */
-	if ((db->data_len = (uword *) calloc(db->reclist_header.len,
-					     sizeof(uword)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate resource length array\n");
-		return -1;
-	}
-
-	/* Allocate the resource data array: merely an array of 'ubyte *'s. */
-	if ((db->data = (ubyte **) calloc(db->reclist_header.len,
-					  sizeof(ubyte *)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate resource data array\n");
-		return -1;
-	}
-
 	/* Read each resource in turn */
-	for (i = 0; i < db->reclist_header.len; i++)
+	for (i = 0; i < db->numrecs; i++)
 	{
+		struct pdb_resource *rsrc;	/* The new resource */
 		struct dlp_resource resinfo;	/* Resource info will be
 						 * read into here before
-						 * being parsed into 'db'.
+						 * being parsed into
+						 * 'rsrc'.
 						 */
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
+
+
+		/* Allocate the new resource */
+		if ((rsrc = (struct pdb_resource *)
+		     malloc(sizeof(struct pdb_resource)))
+		    == NULL)
+		{
+			fprintf(stderr, "pdb_DownloadResources: out of memory\n");
+			return -1;
+		}
 
 		/* Download the 'i'th resource from the Palm */
 		err = DlpReadResourceByIndex(pconn, dbh, i, 0,
 					     DLPC_RESOURCE_TOEND,
 					     &resinfo,
 					     &rptr);
+
 		if (err != DLPSTAT_NOERR)
 		{
 			fprintf(stderr, "Can't read resource %d: %d\n",
 				i, err);
 			return -1;
 		}
+
 fprintf(stderr, "DLP resource data %d:\n", i);
 fprintf(stderr, "\ttype: '%c%c%c%c'\n",
 	(char) ((resinfo.type >> 24) & 0xff),
@@ -1515,26 +1725,27 @@ fprintf(stderr, "\tindex: %d\n", resinfo.index);
 fprintf(stderr, "\tsize: %d\n", resinfo.size);
 
 		/* Fill in the resource index data */
-		db->rec_index.res[i].type = resinfo.type;
-		db->rec_index.res[i].id = resinfo.id;
-		db->rec_index.res[i].offset = 0L;	/* For now */
+		rsrc->type = resinfo.type;
+		rsrc->id = resinfo.id;
+		rsrc->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
 
 		/* Fill in the data size entry */
-		db->data_len[i] = resinfo.size;
+		rsrc->data_len = resinfo.size;
 
-		/* Allocate space in 'db' for the resource data itself */
-		if ((db->data[i] = (ubyte *) malloc(db->data_len[i]))
-		    == NULL)
+		/* Allocate space in 'rsrc' for the resource data itself */
+		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 		{
-			fprintf(stderr, "Can't allocate space for resource %d data\n",
-				i);
+			fprintf(stderr, "pdb_DownloadResources: out of memory.\n");
 			return -1;
 		}
 
-		/* Copy the resource data to 'db' */
-		memcpy(db->data[i], rptr, db->data_len[i]);
-/*  debug_dump(stderr, "RES", db->data[i], db->data_len[i]); */
+		/* Copy the resource data to 'rsrc' */
+		memcpy(rsrc->data, rptr, rsrc->data_len);
+/*  debug_dump(stderr, "RES", rsrc->data, rsrc->data_len); */
+
+		/* Append the resource to the database */
+		pdb_AppendResource(db, rsrc);
 	}
 
 	return 0;	/* Success */
@@ -1550,39 +1761,15 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	udword *recids;		/* Array of record IDs */
 	uword numrecs;		/* # record IDs actually read */
 
-	/* Handle the easy case first */
-	if (db->reclist_header.len == 0)
+	/* Handle the easy case first: if there aren't any records, don't
+	 * bother asking for their IDs.
+	 */
+	if (db->numrecs == 0)
 	{
-		/* No resources */
+		/* No records */
 		db->rec_index.rec = NULL;
+
 		return 0;
-	}
-
-	/* Allocate the record index: an array of 'struct pdb_record's */
-	if ((db->rec_index.rec = (struct pdb_record *)
-	     calloc(db->reclist_header.len, sizeof(struct pdb_record)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate record index\n");
-		return -1;
-	}
-
-	/* Allocate the record length array: an array of 'uword's */
-	if ((db->data_len = (uword *) calloc(db->reclist_header.len,
-					     sizeof(uword)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate record length array\n");
-		return -1;
-	}
-
-	/* Allocate the record data array: merely an array of 'ubyte *'s. */
-	if ((db->data = (ubyte **) calloc(db->reclist_header.len,
-					  sizeof(ubyte *)))
-	    == NULL)
-	{
-		fprintf(stderr, "Can't allocate record data array\n");
-		return -1;
 	}
 
 	/* Allocate the array of record IDs.
@@ -1593,7 +1780,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	 * DlpReadRecordIDList() to get a list with each record's ID, then
 	 * use DlpReadRecordByID() to get the record data.
 	 */
-	if ((recids = (udword *) calloc(db->reclist_header.len,
+	if ((recids = (udword *) calloc(db->numrecs,
 					sizeof(udword)))
 	    == NULL)
 	{
@@ -1613,23 +1800,35 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	}
 
 	/* Sanity check */
-	if (numrecs != db->reclist_header.len)
+	if (numrecs != db->numrecs)
 	{
-		fprintf(stderr, "### Whoa! reclist_header.len is %d, but ReadRecordIDList says %d!\n",
-			db->reclist_header.len, numrecs);
+		fprintf(stderr, "### Whoa! numrecs is %d, but ReadRecordIDList says %d!\n",
+			db->numrecs, numrecs);
 		/* XXX - What to do in this case? For now, just punt. */
 		free(recids);
 		return -1;
 	}
 
 	/* Read each record in turn */
-	for (i = 0; i < db->reclist_header.len; i++)
+	for (i = 0; i < db->numrecs; i++)
 	{
+		struct pdb_record *rec;		/* The new resource */
 		struct dlp_recinfo recinfo;	/* Record info will be read
 						 * into here before being
-						 * parsed into 'db'.
+						 * parsed into 'rec'.
 						 */
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
+
+
+		/* Allocate the new record */
+		if ((rec = (struct pdb_record *)
+		     malloc(sizeof(struct pdb_record)))
+		    == NULL)
+		{
+			fprintf(stderr, "pdb_DownloadRecords: out of memory\n");
+			free(recids);
+			return -1;
+		}
 
 		/* Download the 'i'th record from the Palm */
 		err = DlpReadRecordByID(pconn, dbh,
@@ -1644,38 +1843,39 @@ pdb_DownloadRecords(struct PConnection *pconn,
 			free(recids);
 			return -1;
 		}
+
 fprintf(stderr, "DLP record data %d:\n", i);
 fprintf(stderr, "\tid: 0x%08lx\n", recinfo.id);
 fprintf(stderr, "\tindex: %d\n", recinfo.index);
 fprintf(stderr, "\tsize: %d\n", recinfo.size);
 fprintf(stderr, "\tattributes: 0x%02x\n", recinfo.attributes);
-fprintf(stderr, "\tcategory: %d\n", recinfo.category);
+fprintf(stderr, "\tcategory: %d\n", recinfo.category); 
 
 		/* Fill in the record index data */
-		db->rec_index.rec[i].offset = 0L;	/* For now */
+		rec->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
-		db->rec_index.rec[i].attributes = recinfo.attributes;
-		db->rec_index.rec[i].uniqueID = recinfo.id;
+		rec->attributes = recinfo.attributes;
+		rec->uniqueID = recinfo.id;
 
 		/* Fill in the data size entry */
-		db->data_len[i] = recinfo.size;
+		rec->data_len = recinfo.size;
 
-		/* Allocate space in 'db' for the record data itself */
-		if ((db->data[i] = (ubyte *) malloc(db->data_len[i]))
-		    == NULL)
+		/* Allocate space in 'rec' for the record data itself */
+		if ((rec->data = (ubyte *) malloc(rec->data_len)) == NULL)
 		{
-			fprintf(stderr, "Can't allocate space for record %d data\n",
-				i);
+			fprintf(stderr, "pdb_DownloadRecords: out of memory.\n");
 			free(recids);
 			return -1;
 		}
 
-		/* Copy the record data to 'db' */
-		memcpy(db->data[i], rptr, db->data_len[i]);
-/*  debug_dump(stderr, "REC", db->data[i], db->data_len[i]); */
+		/* Copy the record data to 'rec' */
+		memcpy(rec->data, rptr, rec->data_len);
+/*  debug_dump(stderr, "REC", rec->data, rec->data_len); */
+
+		/* Append the record to the database */
+		pdb_AppendRecord(db, rec);
 	}
 
-	free(recids);	/* Clean up */
 	return 0;	/* Success */
 }
 
