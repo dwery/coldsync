@@ -1,15 +1,8 @@
 dnl #
-dnl # $Id: configure.in,v 1.18 1999-07-14 13:53:10 arensb Exp $
+dnl # $Id: configure.in,v 1.19 1999-08-01 07:56:56 arensb Exp $
 dnl #
 
-dnl # XXX - Test to see whether cpp accepts macro definitions with
-dnl # "..." as argument.
-
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
-dnl # XXX - See if printf() and friends accept %q format.
-dnl # XXX - Under Solaris 2.5, gcc fusses if you print a 'uid_t' with
-dnl # %ld. Figure out how to set this properly.
-dnl # See AC_CHECK_SIZEOF(TYPE)
 
 dnl # XXX - Check for existence of 'tar' (gtar, tar). If "tar
 dnl # --version" exits with zero status and contains the string "GNU",
@@ -21,12 +14,14 @@ dnl #	${COMPRESS} ${TARBALL}
 dnl # So also check for 'gzip'; if it doesn't exist, fall back on
 dnl # 'compress'
 
+dnl # XXX - Check for gettext library
+
 AC_INIT(src/PConnection.c)
 
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="0.4.2"
+VERSION="0.4.4"
 
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
@@ -36,6 +31,9 @@ fi
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 AC_SUBST(EDITION)
+
+# This is almost certainly a Good Thing
+LDFLAGS="-L/usr/local/lib"
 
 ## Checks for programs.
 
@@ -78,11 +76,24 @@ AC_SUBST(GZIP)
 
 dnl ## Checks for libraries.
 
+# ElectricFence (optional)
+AC_ARG_WITH(efence,dnl
+[  --with-efence           Use Electric Fence memory checking library
+                          (only desirable for developers).],dnl
+[AC_CHECK_LIB(efence,malloc)
+if test "$ac_cv_lib_efence_malloc" = yes; then
+echo "Setting WITH_EFENCE"
+	AC_DEFINE_UNQUOTED(WITH_EFENCE)
+	LIBS="$LIBS -lefence"
+fi])
+
 dnl ## Checks for header files.
 
 dnl # XXX - I believe some OSes require <string.h>, while some 
 
 AC_HEADER_STDC
+AC_HEADER_DIRENT
+CS_DIRENT_TYPE
 AC_CHECK_HEADERS([\
 	fcntl.h \
 	strings.h \
@@ -118,10 +129,56 @@ AC_CHECK_FUNCS(getopt \
 )
 
 # XXX - Under Redhat 6.0 (egcs), need to compile with -D_BSD_SOURCE
-# -D_POSIX_C_SOURCE=2 to kill a lot of the warnings. How to detect
-# this?
+# -D_XOPEN_SOURCE to kill a lot of the warnings. How to detect this?
+#
 # Under gcc, can use 'gcc -Werror', which turns all warnings into
 # errors.
+# Even with gcc, though, this could get mighty complex mighty fast.
+# Would it be better to just let the user define these symbols on the
+# "configure" command line?
+
+if test x"$GCC" = xyes; then
+	echo 1>&6 "	These next few tests try to figure out how to make your
+	compiler compile without warnings. Even if they fail, you
+	should still be able to compile."
+
+	OLDCFLAGS="$CFLAGS"		# Save old value of CFLAGS
+	CFLAGS="-Werror $CFLAGS"	# Warnings are now errors
+
+	# XXX - Check whether __EXTENSIONS__ helps
+
+	# Check whether getopt() requires _XOPEN_SOURCE (needed under
+	# Redhat 6.0)
+	AC_CACHE_CHECK([whether getopt() wants _XOPEN_SOURCE],cs_cv_anal_xopen_source,
+	AC_TRY_COMPILE([#include <unistd.h>],[char *foo = optarg; foo++],
+	cs_cv_anal_xopen_source="no",
+	AC_TRY_COMPILE([#define _XOPEN_SOURCE
+#include <unistd.h>],[char *foo = optarg; foo++],
+	cs_cv_anal_xopen_source="yes",
+	AC_MSG_WARN([I don't know how to satisfy your compiler!]))))
+
+	# Check whether strncasecmp() requires _BSD_SOURCE (needed
+	# under Redhat 6.0)
+	# XXX - Check whether strncasecmp() exists?
+	# XXX - Check whether to use <string.h> or <strings.h> ?
+	AC_CACHE_CHECK([whether strncasecmp() wants _BSD_SOURCE],cs_cv_anal_bsd_source,
+	AC_TRY_COMPILE([#include <string.h>],[int foo;
+	foo = strncasecmp("foo","bar",3)],
+	cs_cv_anal_bsd_source="no",
+	AC_TRY_COMPILE([#define _BSD_SOURCE
+#include <string.h>],[int foo;
+	foo = strncasecmp("foo","bar",3)],
+	cs_cv_anal_bsd_source="yes",
+	AC_MSG_WARN([I don't know how to satisfy your compiler!]))))
+
+	CFLAGS="$OLDCFLAGS"		# Restore old value of CFLAGS
+fi
+if test x"$cs_cv_anal_xopen_source" = xyes; then
+	AC_DEFINE_UNQUOTED(WANT_XOPEN_SOURCE)
+fi
+if test x"$cs_cv_anal_bsd_source" = xyes; then
+	AC_DEFINE_UNQUOTED(WANT_BSD_SOURCE)
+fi
 
 # Tell the various Makefiles to use the compatibility function provided
 if test -z "$ac_cv_func_cfmakeraw" -o x"$ac_cv_func_cfmakeraw" = xno ; then
