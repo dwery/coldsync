@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.8 2004-10-21 14:40:18 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.9 2004-10-24 14:29:05 azummo Exp $
  */
 
 #include "config.h"
@@ -631,6 +631,9 @@ pconn_libusb_open(PConnection *pconn,
 				if (dev->descriptor.idVendor == GARMIN_VENDOR_ID)
 					break;
 			}
+
+			if (dev)
+				break;
 		}
 
 		if (dev)
