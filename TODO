@@ -14,7 +14,6 @@
   wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
   daemon, or whatever.
 - A lot of assertion-checking would probably be a Good Thing.
-- (When ColdSync actually gets written:) Gnome and KDE support
 - KDE korganizer just uses vCalendar format for both events and todo
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
@@ -32,7 +31,6 @@
   <System/SystemMgr.h>
 - add_to_log() should probably also use printf() syntax, for
   convenience.
-- Make the *_TRACE stuff go to a separate debugging log file.
 - Add identd support?
 - PAM for security throughout?
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
@@ -58,7 +56,9 @@
   but what about older ones (PalmPilot et al.)? Can the viewer ID be
   used for this? How does one create one? Generate a random number and
   hope for the best?
-- Use syslog for logging.
+- Allow syslog for logging.
+- Allow copious debugging to a file, including a trace of everything
+  going back and forth. See tcpdump().
 - Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
   "The Practice of Programming," section 9.1). Use them in
   "dlp_cmd.c", to replace the blocks of
@@ -96,18 +96,19 @@
 - For files that include <string.h>, fix them according to the
   'autoconf' documentation:
 	#if STDC_HEADERS
-	# include <string.h>
-	#else
+	# include <string.h>		/* For memcpy() et al. */
+	#else	/* STDC_HEADERS */
 	# ifndef HAVE_STRCHR
 	#  define strchr index
 	#  define strrchr rindex
-	# endif
-	char *strchr (), *strrchr ();
+	# endif	/* HAVE_STRCHR */
 	# ifndef HAVE_MEMCPY
-	#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-	#  define memmove(d, s, n) bcopy ((s), (d), (n))
-	# endif
-	#endif
+	#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+	#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+	# endif	/* HAVE_MEMCPY */
+	#endif	/* STDC_HEADERS */
+  (Done, except for libpconn/padp.c, since it already has weirdness
+  for AIX. I'm not sure how the two interact.)
 - Split up the doc directory into directories, one per document. (But
   see next item.)
 - Combine the documentation: there's no 'libpalm' anymore, and I'm
@@ -168,3 +169,25 @@
   "libdb.a", or write man pages for all of the library functions.
 - Add Makefile stuff for rerunning 'autoconf' when necessary. See node
   "Automatic Remaking" in "autoconf.info".
+- Add a "group" field to the listen and conduit blocks, of the form
+	group "admin";
+  If a conduit belongs to a certain group, it will only be invoked if
+  the current listening device is also in the same group. This way,
+  the site administrator can define certain conduits that will only be
+  run on a privileged cradle. This should be useful for things like
+  setting up a new user's Palm.
+- In daemon mode, when setting the UID, use setuid() to set both the
+  real and effective UID: once it is determined that this is
+  "arensb"'s Palm, we want to relinquish all of our root-ly powers and
+  become as much like "arensb" as possible.
+	What about setgid()?
+	What's initgroups()? Is it useful?
+- How does GenericConduit fit into the new conduit API? Perhaps the
+  best thing to do is to have two APIs: one for built-in conduits
+  (functions compiled into coldsync) and one for external programs.
+  That way, the simplest conduits (generic, ignore, desktop overwrites
+  Palm, Palm overwrites desktop) can be built in, and the naive user
+  doesn't need to install all sorts of stuff just to try this out
+  (read: can run coldsync out of the ports directory).
+	When doing the main sync, if can't find any other conduit for
+  a database, fall back on the built-in generic conduit.
