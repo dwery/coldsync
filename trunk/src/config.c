@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.62 2001-01-30 16:54:56 arensb Exp $
+ * $Id: config.c,v 1.63 2001-02-20 12:44:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -135,9 +135,12 @@ parse_args(int argc, char *argv[])
 	 */
 
 	/* Read command-line options. */
-	while ((arg = getopt(argc, argv, ":hVSFRIszf:l:m:b:r:p:t:d:")) != -1)
+	opterr = 0;			/* Don't want getopt() writing to
+					 * stderr */
+	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:b:r:p:t:d:")) != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
+		 * How about 2.0.0? Sounds like a good breakpoint.
 		 */
 	{
 		switch (arg)
@@ -145,6 +148,10 @@ parse_args(int argc, char *argv[])
 		    case 'h':	/* -h: Print usage message and exit */
 			usage(argc, argv);
 			return 0;
+
+		    case 'v':	/* -v: Increase verbosity */
+			global_opts.verbosity++;
+			break;
 
 		    case 'V':	/* -V: Print version number and exit */
 			print_version(stdout);
@@ -275,11 +282,12 @@ parse_args(int argc, char *argv[])
 }
 
 /* load_config
- * Load the global configuration file /etc/coldsync.conf. If we're
- * not running in daemon mode, load the user's .coldsyncrc as well.
+ * Load the global configuration file /etc/coldsync.conf.
+ * If 'read_user_config' is true, load the user's .coldsyncrc as well.
+ * Returns 0 if successful, or a negative value in case of error.
  */
 int
-load_config()
+load_config(const Bool read_user_config)
 {
 	int err;
 
@@ -295,6 +303,7 @@ load_config()
 	 * 	conduit sync {
 	 *		type: * / *;
 	 *		path: [generic];
+	 *		default;
 	 *	}
 	 */
 	{
@@ -352,7 +361,7 @@ load_config()
 	}
 
 	/* Read ~/.coldsyncrc */
-	if (global_opts.mode != mode_Daemon)
+	if (read_user_config)
 	{
 		err = get_userinfo(&userinfo);
 		if (err < 0)
@@ -379,6 +388,7 @@ load_config()
 			/* Construct the full pathname to ~/.coldsyncrc in
 			 * 'conf_fname'.
 			 */
+			/* XXX - Replace with snprintf() */
 			strncpy(conf_fname, userinfo.homedir, MAXPATHLEN);
 			strncat(conf_fname, "/.coldsyncrc",
 				MAXPATHLEN - strlen(conf_fname));
@@ -705,15 +715,9 @@ set_mode(const char *str)
 		global_opts.mode = mode_Init;
 		return 0;
 
-#if 0	/* Not implemented yet */
 	    case 'd':		/* Daemon mode */
 		global_opts.mode = mode_Daemon;
 		return 0;
-
-	    case 'g':		/* Getty mode */
-		global_opts.mode = mode_Getty;
-		return 0;
-#endif	/* 0 */
 
 	    default:
 		Error(_("Unknown mode: \"%s\"."), str);
