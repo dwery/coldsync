@@ -1,3 +1,35 @@
+- Bug: zero-length records. See Simon Callan's email: if a
+  Memo/ToDo/Datebook record is EXPUNGED and DIRTY, GenericConduit
+  doesn't handle it correctly (saves it instead of deleting it).
+- Include Apache's snprintf().
+- Init mode should set the NetSync host and mask, if they're set in
+  the pda block.
+- "forward:" line in pda block: this is of the form
+	forward: <destination> [<name>];
+  where <name> is the name to use in NetSync wakeup packets. HotSync
+  doesn't appear to use this anywhere else, which is why it's
+  optional. Perhaps the server can multiplex based on the name it was
+  given, like Apache.
+	<destination> is usually a host name, though it can also be a
+  host address, e.g., "192.168.1.2". Ideally, it should be possible to
+  specify a network address and mask, e.g., "192.168.0.0/16"; or a
+  network name, to be looked up with getnetbyname() (in this case,
+  though, how do you get the mask?).
+- Include a inet_aton() based implementation of inet_pton() (ditto
+  inet_ntop()). The easiest thing to do is probably to borrow from
+  Stevens (again) and use the implementation from UNP1.
+- Would be nice to allow conduit headers consisting entirely of
+  whitespace.
+	Actually, it appears that this already works: you can quote an
+  argument, e.g.
+	arguments:
+	    Foo: "   ";
+  and apparently the parser will do the Right Thing. Furthermore,
+  IIRC, the conduit spec says that there is a single space after the
+  colon following the argument name. Hence, spec-compliant parsers
+  should be able to do the Right Thing. The only problem occurs when
+  you allow newlines in strings.
+	Test this, though.
 - "System MIDI Sounds.pdb" complains that
 	I have a new, deleted record that is neither archived nor expunged
 	What am I supposed to do?
@@ -16,10 +48,8 @@
 - Update FreeBSD port to include .mo files
 - Bug: run coldsync -mr ... . Kill xcopilot before running HotSync.
   ColdSync dumps core.
-- It'd be nice to have a tool to make sure i18n/FILES contains all of
-  the appropriate files. For that matter, it'd be nice to make sure
-  that all files that CVS knows about are in the distribution
-  somewhere.
+- It'd be nice to have a tool to make sure that all files that CVS
+  knows about are in the distribution somewhere.
 - Add a SIGTERM handler, to catch Ctrl-C.
 - Add support for TCP wrappers. RTFM hosts_access().
 - FreeBSD bug: accept(2) man page doesn't say that you need to
@@ -28,8 +58,8 @@
 - Bug?: If the serial number matches (and is a real serial number),
   but the username/userid doesn't, ColdSync proceeds to the next
   entry. Arguably, this should be a definitive non-match.
-- There ought to be cmp_init() etc., jus as for the other protocols.
-- Mention ${prefix}/etc/coldsync.conf in the man page.
+- There ought to be cmp_init() etc., just as for the other protocols.
+- Better description of ${prefix}/etc/coldsync.conf in the man page.
 - Add support for CMP 2.0 (once I find a CMP 2.0 Palm)
 - It should be possible to set the hostid in a config file. If it's
   set in /etc/coldsync.conf, then obviously it shouldn't be possible
@@ -272,10 +302,6 @@
   which records will be restored, etc.
 	Ought to be able to delete records.
 	A GUI front end would be nice.
-- Would be nice to allow conduit headers consisting entirely of
-  whitespace.
-- Install .mo files in
-	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
 - Fix ColdSync.pm so that "-config" will also print which preferences
   the conduit knows about.
 - Allow something like "ForceInstall: yes;" line in .coldsyncrc, to
