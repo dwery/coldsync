@@ -2,10 +2,11 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.6 1999-06-24 02:53:32 arensb Exp $
+ * $Id: upload.c,v 1.7 1999-07-04 02:50:52 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcmp() */
+#include "coldsync.h"
 #include "pconn/PConnection.h"
 #include "pconn/dlp_cmd.h"
 #include "pdb.h"
@@ -62,7 +63,7 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 	 * XXX - Okay, what if it's a completely new record database
 	 * for an existing application?
 	 */
-	err = DlpDeleteDB(pconn, 0, db->name);
+	err = DlpDeleteDB(pconn, CARD0, db->name);
 				/* XXX - Card # shouldn't be hardcoded */
 	if ((err != DLPSTAT_NOERR) &&
 	    (err != DLPSTAT_NOTFOUND))
