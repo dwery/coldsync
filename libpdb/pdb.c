@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.1 1999-09-09 05:18:41 arensb Exp $
+ * $Id: pdb.c,v 1.2 1999-10-24 19:49:30 arensb Exp $
  */
 
 #include "config.h"
@@ -28,7 +28,13 @@
 #define PDB_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
 				 * back */
 
-extern int add_to_log(char *msg);
+/* XXX - For now, this is a hack to make conduits compile. In the longer
+ * term, logging doesn't really belong in this library. It was originally
+ * put in here so that pdb_Upload() could add to the Palm's log.
+ * Figure out a better way to do this.
+ */
+/*  extern int add_to_log(char *msg); */
+#define add_to_log(msg)
 
 /* Helper functions */
 static uword get_file_length(int fd);
@@ -2284,6 +2290,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		pdb_AppendRecord(db, rec);
 		db->numrecs = totalrecs;	/* Kludge */
 	}
+
+	free(recids);
 
 	return 0;	/* Success */
 }
