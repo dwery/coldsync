@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.6.4.1 2001-07-25 04:15:38 arensb Exp $
+ * $Id: netsync.c,v 1.6.4.2 2001-07-26 03:41:48 arensb Exp $
  */
 
 #include "config.h"
@@ -181,7 +181,8 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		    const ubyte **buf,	/* Buffer to put the packet in */
 		    uword *len,		/* Length of received message */
 		    			/* XXX - Is a uword enough? */
-		    int no_header)	/* m50x starts without a header! */
+		    const Bool no_header)
+					/* m50x starts without a header! */
 {
 	int err;
 	ubyte hdr_buf[NETSYNC_HDR_LEN];	/* Unparsed header */
