@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.16 2001-05-06 05:53:47 arensb Exp $
+@c $Id: conduits.texi,v 1.17 2001-06-26 05:42:32 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -1099,7 +1099,6 @@ the Palm to purge the deleted records.
 <P>
 @end ifhtml
 
-@cindex Stench
 	If you're writing to the backup file and simply fail to write a
 deleted record, ColdSync will never notice this record and won't tell
 the Palm to delete it. It will remain on the Palm, and you will have to
