@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.3 1999-11-09 05:32:51 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.4 1999-11-09 06:21:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -945,7 +945,6 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-	int max;		/* Prevents buffer overflows */
 
 	/* XXX */
 	if (outbuf == NULL)
