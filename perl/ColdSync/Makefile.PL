@@ -1,4 +1,4 @@
-# $Id: Makefile.PL,v 1.5 2000-05-19 12:10:46 arensb Exp $
+# $Id: Makefile.PL,v 1.6 2000-05-20 16:31:51 arensb Exp $
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -21,6 +21,17 @@ use ExtUtils::MakeMaker;
 # on the install-time prefix (see above). Whether this is correct or
 # not depends on why, exactly, you're specifying different build-time
 # and install-time prefixes.
+
+# XXX - In what version did AUTHOR and ABSTRACT appear?
+if ($ExtUtils::MakeMaker::VERSION < 5.4302)
+{
+	print <<EOT;
+This script may print a warning about `AUTHOR' and `ABSTRACT' being
+unrecognized. This is harmless.
+
+EOT
+}
+#'
 
 WriteMakefile(
     'NAME'		=> 'ColdSync',
