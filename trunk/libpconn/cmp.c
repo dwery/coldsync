@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.14 2001-09-08 01:13:19 arensb Exp $
+ * $Id: cmp.c,v 1.15 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -32,7 +32,7 @@ cmp_read(PConnection *pconn,
 	uword inlen;		/* Length of input data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 
-	palm_errno = PALMERR_NOERR;
+	pconn->palm_errno = PALMERR_NOERR;
 
 	/* Read a PADP packet */
 	err = padp_read(pconn, &inbuf, &inlen);
@@ -81,7 +81,7 @@ cmp_write(PConnection *pconn,			/* File descriptor */
 	static ubyte outbuf[CMP_PACKET_LEN];
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	palm_errno = PALMERR_NOERR;
+	pconn->palm_errno = PALMERR_NOERR;
 
 	CMP_TRACE(5)
 		fprintf(stderr,
@@ -136,11 +136,12 @@ cmp_accept(PConnection *pconn, udword bps)
 		err = cmp_read(pconn, &cmpp);
 		if (err < 0)
 		{
-			if (palm_errno == PALMERR_TIMEOUT)
+			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT)
 				continue;
+	
 			fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
-				(int) palm_errno,
-				_(palm_strerror(palm_errno)));
+				(int) PConn_get_palmerrno(pconn),
+				_(palm_strerror(PConn_get_palmerrno(pconn))));
 			return ~0;
 		}
 	} while (cmpp.type != (ubyte) CMP_TYPE_WAKEUP);

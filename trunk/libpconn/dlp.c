@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.15 2001-12-10 07:26:52 arensb Exp $
+ * $Id: dlp.c,v 1.16 2002-04-27 18:36:31 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -91,6 +91,7 @@ dlp_tini(PConnection *pconn)
  * Returns 0 if successful. In case of error, returns a negative
  * value. 'palm_errno' is set to indicate the error.
  */
+
 int
 dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	     const struct dlp_req_header *header,
@@ -103,7 +104,7 @@ dlp_send_req(PConnection *pconn,	/* Connection to Palm */
 	long buflen;			/* Length of outgoing request */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
-	palm_errno = PALMERR_NOERR;
+	PConn_set_palmerrno(pconn, PALMERR_NOERR);
 
 	/* Calculate size of outgoing request */
 	DLP_TRACE(6)
@@ -291,7 +292,7 @@ dlp_recv_resp(PConnection *pconn,	/* Connection to Palm */
 			_("##### Bad response ID: expected 0x%02x, "
 			  "got 0x%02x.\n"),
 			id | 0x80, header->id);
-		palm_errno = PALMERR_BADID;
+		PConn_set_palmerrno(pconn, PALMERR_BADID);
 		return -1;
 	}
 
@@ -392,7 +393,7 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 		err = dlp_send_req(pconn, header, argv);
 		if (err < 0)
 		{
-			if (palm_errno == PALMERR_TIMEOUT2)
+			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT2)
 				/* Try resending the request */
 				continue;
 			return err;		/* Some other error */
@@ -407,13 +408,13 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 				    resp_header, ret_argv);
 		if (err < 0)
 		{
-			if (palm_errno == PALMERR_TIMEOUT2)
+			if (PConn_get_palmerrno(pconn) == PALMERR_TIMEOUT2)
 				/* Try resending the request */
 				continue;
 			DLP_TRACE(2)
 				fprintf(stderr, "dlp_dlpc_req: "
-					"dlp_recv_resp set palm_errno == %d\n",
-					palm_errno);
+					"dlp_recv_resp set pconn->palm_errno == %d\n",
+					pconn->palm_errno);
 			return err;		/* Some other error */
 		}
 
@@ -430,7 +431,8 @@ dlp_dlpc_req(PConnection *pconn,		/* Connection to Palm */
 
 	DLP_TRACE(2)
 		fprintf(stderr, "dlp_dlpc_req: maximum retries exceeded.\n");
-	palm_errno = PALMERR_TIMEOUT;
+	PConn_set_palmerrno(pconn, PALMERR_TIMEOUT);
+	PConn_set_status(pconn, PCONNSTAT_LOST);
 	return -1;
 }
 

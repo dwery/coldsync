@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.19 2002-04-27 17:17:35 azummo Exp $
+ * $Id: netsync.c,v 1.20 2002-04-27 18:36:31 azummo Exp $
  */
 
 #include "config.h"
@@ -77,6 +77,7 @@ int net_trace = 0;		/* Debugging level for NetSync */
  *
  * The last 16 bytes are the md5 hash of the password ("123" in this case).
  */
+
 static ubyte ritual_resp1[] = {
 	0x90,				/* Command */
 	0x01,				/* argc */
@@ -84,9 +85,11 @@ static ubyte ritual_resp1[] = {
 	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
 	0x00, 0x00, 0x00, 0x08,		/* Arg length */
 	/* Arg data */
-	0x01, 0x00, 0x00, 0x00,
+	0x01, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00,
 };
+
+
 static const int ritual_resp1_size =
 	sizeof(ritual_resp1) / sizeof(ritual_resp1[0]);
 
@@ -113,7 +116,7 @@ static ubyte ritual_stmt2[] = {
 	0x3c, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
-	0xc0, 0xa8, 0xa5, 0x1f,		/* 192.168.165.31 */
+	0xc0, 0xa8, 0x01, 0x21,		/* 192.168.165.31 */
 	0x04, 0x27, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
@@ -167,10 +170,15 @@ static ubyte ritual_stmt3[] = {
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 
 };
 static const int ritual_stmt3_size =
 	sizeof(ritual_stmt3) / sizeof(ritual_stmt3[0]);
+
+/* resp3
+NET <<< 93 00 00 00 00 00 00 00
+	91 00 00 00 00 00 00 00
+*/
 
 static ubyte ritual_resp3[] = {
 	0x93,				/* Command */
@@ -203,7 +211,7 @@ ritual_exch_server(PConnection *pconn)
 	/* Receive ritual response 1 */
 	IO_TRACE(6)
 		fprintf(stderr, "ritual_exch_server: receiving "
-			"ritual packet 1\n");
+			"ritual response 1\n");
 	/* Agh! This is hideous! Apparently NetSync and m50x modes are
 	 * identical except for just this one packet!
 	 */
@@ -245,6 +253,9 @@ ritual_exch_server(PConnection *pconn)
 		return -1;
 
 	/* Send ritual statement 2 */
+	IO_TRACE(6)
+		fprintf(stderr, "sending ritual statement 2\n");
+
 	err = netsync_write(pconn, ritual_stmt2, ritual_stmt2_size);
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual stmt 2) returned %d\n",
@@ -254,6 +265,9 @@ ritual_exch_server(PConnection *pconn)
 		return -1;
 
 	/* Receive ritual response 2 */
+	IO_TRACE(6)
+		fprintf(stderr, "receiving ritual response 2\n");
+
 	err = netsync_read(pconn, &inbuf, &inlen);
 	IO_TRACE(5)
 	{
@@ -266,6 +280,10 @@ ritual_exch_server(PConnection *pconn)
 		return -1;
 
 	/* Send ritual statement 3 */
+	IO_TRACE(6)
+		fprintf(stderr, "sending ritual statement 3\n");
+
+
 	err = netsync_write(pconn, ritual_stmt3, ritual_stmt3_size);
 	IO_TRACE(5)
 		fprintf(stderr, "netsync_write(ritual stmt 3) returned %d\n",
@@ -275,6 +293,9 @@ ritual_exch_server(PConnection *pconn)
 		return -1;
 
 	/* Receive ritual response 3 */
+	IO_TRACE(6)
+		fprintf(stderr, "receiving ritual response 3\n");
+
 	err = netsync_read(pconn, &inbuf, &inlen);
 	IO_TRACE(5)
 	{
@@ -370,6 +391,7 @@ ritual_exch_client(PConnection *pconn)
 	IO_TRACE(6)
 		fprintf(stderr, "ritual_exch_client: sending "
 			"ritual response 3\n");
+
 	err = netsync_write(pconn, ritual_resp3, ritual_resp3_size);
 	/* XXX - Error-checking */
 	IO_TRACE(5)
@@ -476,23 +498,22 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		/* Wait for there to be something to read */
 		timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
 		timeout.tv_usec = 0L;
-		err = (*pconn->io_select)(pconn, forReading, &timeout);
+		err = PConn_select(pconn, forReading, &timeout);
 		if (err == 0)
 		{
 			/* select() timed out */
-			palm_errno = PALMERR_TIMEOUT2;
+			PConn_set_palmerrno(pconn, PALMERR_TIMEOUT2);
 			return -1;
 		}
 
 		/* Now we can read the packet */
-	  	err = (*pconn->io_read)(pconn, hdr_buf, NETSYNC_HDR_LEN);
+	  	err = PConn_read(pconn, hdr_buf, NETSYNC_HDR_LEN);
 		if (err < 0)
 		{
 			fprintf(stderr,
 				_("Error reading NetSync packet header.\n"));
 			perror("read");
-				/* XXX - Does (*pconn->io_read) set errno? */
-			palm_errno = PALMERR_SYSTEM;
+				/* XXX - Does PConn_read set errno? */
 			return -1;
 		} else if (err != NETSYNC_HDR_LEN)
 		{
@@ -500,14 +521,14 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 				_("Error: only read %d bytes of NetSync "
 				  "packet header.\n"),
 				err);
-			palm_errno = PALMERR_SYSTEM;
+			PConn_set_palmerrno(pconn, PALMERR_SYSTEM);
 			return -1;
 		}
 
 		NET_TRACE(7)
 		{
-			fprintf(stderr, "Read %d bytes:\n", err);
-			debug_dump(stderr, "NS<<", hdr_buf, err);
+			fprintf(stderr, "netsync_read: read %d bytes:\n", err);
+			debug_dump(stderr, "NET <<<", hdr_buf, err);
 		}
 
 		/* Parse the header */
@@ -547,7 +568,7 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 
 	/* Read the payload */
 	NET_TRACE(5)
-		fprintf(stderr, "Reading packet data\n");
+		fprintf(stderr, "netsync_read: Reading packet data\n");
 	want = hdr.len;
 	got = 0;
 	while (want > got)
@@ -555,35 +576,33 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 		/* Wait for there to be something to read */
 		timeout.tv_sec = NETSYNC_WAIT_TIMEOUT;
 		timeout.tv_usec = 0L;
-		err = (*pconn->io_select)(pconn, forReading, &timeout);
+		err = PConn_select(pconn, forReading, &timeout);
 		if (err == 0)
 		{
 			/* select() timed out */
-			palm_errno = PALMERR_TIMEOUT2;
+			PConn_set_palmerrno(pconn, PALMERR_TIMEOUT2);
 			return -1;
 		}
 
 		/* Now we can read the packet */
-		err = (*pconn->io_read)(pconn, pconn->net.inbuf+got, want-got);
+		err = PConn_read(pconn, pconn->net.inbuf+got, want-got);
 		if (err < 0)
 		{
-			perror("netsync_read: read");
-			palm_errno = PALMERR_SYSTEM;
+			perror("netsync_read_method: read");
 			return -1;
 		}
-		if (err == 0)
+		else if (err == 0)
 		{
 			NET_TRACE(5)
 				fprintf(stderr, "EOF in packet.\n");
-			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 
-		NET_TRACE(5)
-			debug_dump(stderr, "<<  ", pconn->net.inbuf+got, err);
+		NET_TRACE(8)
+			debug_dump(stderr, "NET <<<", pconn->net.inbuf+got, err);
 		got += err;
-		NET_TRACE(6)
-			fprintf(stderr, "want: %ld, got: %ld\n", want, got);
+		NET_TRACE(7)
+			fprintf(stderr, "netsync_read: want: %ld, got: %ld\n", want, got);
 	}
 
 	NET_TRACE(6)
@@ -629,10 +648,10 @@ netsync_write(PConnection *pconn,
 	{
 		fprintf(stderr, "Sending NetSync header (%d bytes)\n",
 			NETSYNC_HDR_LEN);
-		debug_dump(stderr, "NET -->", out_hdr, NETSYNC_HDR_LEN);
+		debug_dump(stderr, "NET >>>", out_hdr, NETSYNC_HDR_LEN);
 	}
 
-	err = (*pconn->io_write)(pconn, out_hdr, NETSYNC_HDR_LEN);
+	err = PConn_write(pconn, out_hdr, NETSYNC_HDR_LEN);
 	NET_TRACE(7)
 		fprintf(stderr, "write() returned %d\n", err);
 	if (err < 0)
@@ -644,18 +663,17 @@ netsync_write(PConnection *pconn,
 	/* Send the packet data */
 	NET_TRACE(5)
 	{
-		fprintf(stderr, "Sending NetSync data\n");
+		fprintf(stderr, "Sending NetSync data (%d bytes)\n", len);
 		debug_dump(stderr, "NET >>>", buf, len);
 	}
 	want = len;
 	sent = 0;
 	while (sent < want)
 	{
-		err = (*pconn->io_write)(pconn, buf+sent, want-sent);
+		err = PConn_write(pconn, buf+sent, want-sent);
 		if (err < 0)
 		{
 			perror("netsync_write: write");
-			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		sent += err;
