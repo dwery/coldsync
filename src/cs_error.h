@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.h,v 2.7 2002-09-03 19:21:22 azummo Exp $
+ * $Id: cs_error.h,v 2.8 2002-09-04 09:45:23 azummo Exp $
  */
 #ifndef _cs_error_h_
 #define _cs_error_h_
@@ -19,9 +19,9 @@ typedef enum CSErrno {
 				 * further into "cancelled by Palm" and
 				 * "killed by Ctrl-C on the desktop"?
 				 */
-	CSE_NOCONN		/* Lost connection to Palm */,
+	CSE_NOCONN,		/* Lost connection to Palm */
 	CSE_PALMERR,		/* Protocol error */
-	CSE_DLPERR,		/* DLP error */
+	CSE_DLPERR		/* DLP error */
 } CSErrno;
 
 extern CSErrno cs_errno;		/* ColdSync error status */
