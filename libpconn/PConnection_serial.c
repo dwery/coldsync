@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.16 2000-12-17 06:18:08 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.17 2000-12-24 09:44:32 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -233,6 +233,14 @@ bps_entry(const udword bps)
 }
 
 static int
+serial_bind(struct PConnection *pconn,
+	    const void *addr,
+	    const int addrlen)
+{
+	return slp_bind(pconn, (const struct slp_addr *) addr);
+}
+
+static int
 serial_read(struct PConnection *p, unsigned char *buf, int len)
 {
 	return read(p->fd, buf, len);
@@ -315,6 +323,12 @@ serial_accept(struct PConnection *pconn)
 }
 
 static int
+serial_connect(struct PConnection *p, const void *addr, const int addrlen)
+{
+	return -1;		/* Not applicable to serial connection */
+}
+
+static int
 serial_drain(struct PConnection *p)
 {
 	int err = 0;
@@ -387,9 +401,11 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 	}
 
 	/* Set the methods used by the serial connection */
+	pconn->io_bind = &serial_bind;
 	pconn->io_read = &serial_read;
 	pconn->io_write = &serial_write;
 	pconn->io_accept = &serial_accept;
+	pconn->io_connect = &serial_connect;
 	pconn->io_close = &serial_close;
 	pconn->io_select = &serial_select;
 	pconn->io_drain = &serial_drain;
