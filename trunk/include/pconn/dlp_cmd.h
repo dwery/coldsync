@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.14 2001-01-09 16:33:04 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.15 2001-03-16 14:07:18 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -821,7 +821,7 @@ extern int DlpCreateDB(
 	ubyte *dbhandle);
 extern int DlpCloseDB(
 	PConnection *pconn,
-	const ubyte dbhandle);
+	ubyte dbhandle);
 	/* XXX - This should probably be separated into two functions:
 	 * DlpCloseDB(handle) and DlpCloseAllDBs()
 	 */
