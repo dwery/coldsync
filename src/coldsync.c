@@ -4,15 +4,13 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.53 2000-10-22 03:11:47 arensb Exp $
+ * $Id: coldsync.c,v 1.54 2000-11-05 00:57:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), atoi() */
 #include <fcntl.h>		/* For open() */
 #include <sys/param.h>		/* For MAXPATHLEN */
-#include <sys/types.h>		/* For stat() */
-#include <sys/stat.h>		/* For stat() */
 #include <termios.h>		/* Experimental */
 #include <dirent.h>		/* For opendir(), readdir(), closedir() */
 #include <string.h>		/* For strrchr() */
@@ -120,6 +118,7 @@ static struct {
 #ifdef B1200
 	{  1200,	 B1200 },
 #endif	/* B1200 */
+	/* I doubt anyone wants to go any slower than 1200 bps */
 };
 #define num_speeds	sizeof(speeds) / sizeof(speeds[0])
 
@@ -128,9 +127,11 @@ int need_slow_sync;
 
 int cs_errno;			/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
-struct config config;		/* Main configuration */
+struct sync_config *sync_config = NULL;
+				/* Configuration for the current sync */
 struct pref_item *pref_cache;	/* Preference cache */
 
+#if 0	/* Old version of main(), before reorganization */
 int
 main(int argc, char *argv[])
 {
@@ -768,6 +769,1034 @@ main(int argc, char *argv[])
 
 	/* NOTREACHED */
 }
+#endif	/* 0 */
+
+int
+main(int argc, char *argv[])
+{
+	int err;
+
+	/* Initialize the global options to sane values */
+	global_opts.mode		= mode_None;
+	global_opts.conf_fname		= NULL;
+	global_opts.conf_fname_given	= False;
+	global_opts.devname		= NULL;
+	global_opts.devtype		= -1;
+	global_opts.do_backup		= False;
+	global_opts.backupdir		= NULL;
+	global_opts.do_restore		= False;
+	global_opts.restoredir		= NULL;
+	global_opts.force_install	= False;
+
+	/* Initialize the debugging levels to 0 */
+	slp_trace	= 0;
+	cmp_trace	= 0;
+	padp_trace	= 0;
+	dlp_trace	= 0;
+	dlpc_trace	= 0;
+	sync_trace	= 0;
+	pdb_trace	= 0;
+	misc_trace	= 0;
+	io_trace	= 0;
+
+#if HAVE_GETTEXT
+	/* Set things up so that i18n works. The constants PACKAGE and
+	 * LOCALEDIR are strings set up in ../config.h by 'configure'.
+	 */
+	setlocale(LC_ALL, "");
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+#endif	/* HAVE_GETTEXT */
+
+	/* Make sure that file descriptors 0-2 (stdin, stdout, stderr) are
+	 * in use. This avoids some nasty problems that can occur when
+	 * these file descriptors are initially closed (e.g., if ColdSync
+	 * is run from a daemon). Specifically, open() opens the
+	 * lowest-numbered available file descriptor. If stdin is closed,
+	 * then a file that ColdSync opens might have file descriptor 0.
+	 * Then, when ColdSync fork()s to run a conduit, it shuffles its
+	 * file descriptors around to set stdin and stdout to specific
+	 * values. If file descriptors 0 or 1 are important file
+	 * descriptors, they will get clobbered.
+	 *
+	 * Stevens[1] addresses this problem to some extent, but his
+	 * solution is limited to checking known file descriptors to make
+	 * sure that they're not 0 (for stdin) or 1 (for stdout). This is
+	 * fine for his example programs, but ColdSync opens too many files
+	 * for this approach to work. Hence, we opt for a somewhat uglier
+	 * solution and just make sure from the start that file descriptors
+	 * 0-2 are in use.
+	 *
+	 * [1] Stevens, W. Richard, "Advanced Programming in the UNIX
+	 * Environment", Addison-Wesley, 1993
+	 */
+	if (reserve_fd(0, O_RDONLY) < 0)
+	{
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 0);
+		exit(1);
+	}
+	if (reserve_fd(1, O_WRONLY) < 0)
+	{
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 1);
+		exit(1);
+	}
+	if (reserve_fd(2, O_RDONLY) < 0)
+	{
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 2);
+		exit(1);
+	}
+
+	/* Parse command-line arguments */
+	err = parse_args(argc, argv);
+	if (err < 0)
+	{
+		/* Error in command-line arguments */
+		fprintf(stderr, _("Error parsing command-line arguments.\n"));
+		exit(1);
+	}
+	if (err == 0)
+		/* Not an error, but no need to go on (e.g., the user just
+		 * wanted the usage message.
+		 */
+		exit(0);
+
+	argc -= err;		/* Skip the parsed command-line options */
+	argv += err;
+
+	/* Load the configuration: read /etc/coldsync.conf, followed by
+	 * ~/.coldsyncrc .
+	 */
+	if ((err = load_config()) < 0)
+	{
+		fprintf(stderr, _("Error loading configuration.\n"));
+		exit(1);
+	}
+
+	MISC_TRACE(1)
+		/* So I'll know what people are running when they send me
+		 * stderr.
+		 */
+		print_version();
+
+	MISC_TRACE(2)
+	{
+		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "\tMode: ");
+		switch (global_opts.mode) {
+		    case mode_None:
+			fprintf(stderr, "* NONE *\n");
+			break;
+		    case mode_Standalone:
+			fprintf(stderr, "Standalone\n");
+			break;
+		    case mode_Backup:
+			fprintf(stderr, "Backup\n");
+			break;
+		    case mode_Restore:
+			fprintf(stderr, "Restore\n");
+			break;
+		    case mode_Daemon:
+			fprintf(stderr, "Daemon\n");
+			break;
+		    case mode_Getty:
+			fprintf(stderr, "Getty\n");
+			break;
+		    case mode_Init:
+			fprintf(stderr, "Init\n");
+			break;
+		    default:
+			fprintf(stderr, "* UNKNOWN *\n");
+			break;
+		}
+		fprintf(stderr, "\tconf_fname: \"%s\"\n",
+			global_opts.conf_fname == NULL ?
+			"(null)" : global_opts.conf_fname);
+		fprintf(stderr, "\tconf_fname_given: %s\n",
+			global_opts.conf_fname_given ? "True" : "False");
+		fprintf(stderr, "\tdevname: %s\n",
+			global_opts.devname == NULL ?
+			"(null)" : global_opts.devname);
+		fprintf(stderr, "\tdevtype: %d\n",
+			global_opts.devtype);
+		fprintf(stderr, "\tdo_backup: %s\n",
+			global_opts.do_backup ? "True" : "False");
+		fprintf(stderr, "\tbackupdir: \"%s\"\n",
+			global_opts.backupdir == NULL ?
+			"(null)" : global_opts.backupdir);
+		fprintf(stderr, "\tdo_restore: %s\n",
+			global_opts.do_restore ? "True" : "False");
+		fprintf(stderr, "\trestoredir: \"%s\"\n",
+			global_opts.restoredir == NULL ?
+				"(null)" : global_opts.restoredir);
+		fprintf(stderr, "\tforce_slow: %s\n",
+			global_opts.force_slow ? "True" : "False");
+		fprintf(stderr, "\tforce_fast: %s\n",
+			global_opts.force_fast ? "True" : "False");
+		fprintf(stderr, "\tcheck_ROM: %s\n",
+			global_opts.check_ROM ? "True" : "False");
+		fprintf(stderr, "\tinstall_first: %s\n",
+			global_opts.install_first ? "True" : "False");
+		fprintf(stderr, "\tforce_install: %s\n",
+			global_opts.force_install ? "True" : "False");
+	}
+
+	MISC_TRACE(3)
+	{
+		fprintf(stderr, "\nDebugging levels:\n");
+		fprintf(stderr, "\tSLP:\t%d\n", slp_trace);
+		fprintf(stderr, "\tCMP:\t%d\n", cmp_trace);
+		fprintf(stderr, "\tPADP:\t%d\n", padp_trace);
+		fprintf(stderr, "\tDLP:\t%d\n", dlp_trace);
+		fprintf(stderr, "\tDLPC:\t%d\n", dlpc_trace);
+		fprintf(stderr, "\tPDB:\t%d\n", pdb_trace);
+		fprintf(stderr, "\tSYNC:\t%d\n", sync_trace);
+		fprintf(stderr, "\tPARSE:\t%d\n", parse_trace);
+		fprintf(stderr, "\tIO:\t%d\n", io_trace);
+		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
+	}
+
+	switch (global_opts.mode) {
+	    case mode_None:		/* No mode specified */
+	    case mode_Standalone:
+		err = run_mode_Standalone(argc, argv);
+		break;
+	    case mode_Backup:
+		err = run_mode_Backup(argc, argv);
+		break;
+	    case mode_Restore:
+		err = run_mode_Restore(argc, argv);
+		break;
+	    default:
+		/* This should never happen */
+		fprintf(stderr,
+			_("Error: unknown mode: %d\n"
+			  "This is a bug. Please report it to the "
+			  "maintainer.\n"),
+			global_opts.mode);
+		err = -1;
+	}
+
+	if (sync_config != NULL)
+	{
+		free_sync_config(sync_config);
+		sync_config = NULL;
+	}
+
+	MISC_TRACE(6)
+		fprintf(stderr, "Freeing pref_cache\n");
+	FreePrefList(pref_cache);
+
+	MISC_TRACE(1)
+		fprintf(stderr, "ColdSync terminating normally\n");
+
+	if (err < 0)
+		exit(-err);
+	exit(0);
+
+	/* NOTREACHED */
+}
+
+int
+run_mode_Standalone(int argc, char *argv[])
+{
+	int err;
+	int i;
+	struct PConnection *pconn;	/* Connection to the Palm */
+	struct pref_item *pref_cursor;
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
+	 */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			sync_config->listen->device);
+
+	/* Set up a PConnection to the Palm */
+	/* XXX - set last parameter to zero to inhibit "Press HotSync
+	 *  button prompt" when in daemon mode
+	 */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 1))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+	pconn->speed = sync_config->listen->speed;
+
+	/* Connect to the Palm */
+	if ((err = Connect(pconn)) < 0)
+	{
+		fprintf(stderr, _("Can't connect to Palm\n"));
+		PConnClose(pconn);
+		return -1;
+	}
+
+	/* Get system, NetSync and user info */
+	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				/* XXX - I'm not sure this is quite right.
+				 * That is, if things are so screwed up
+				 * that we can't get the user info, then
+				 * I'm not sure that we can abort the
+				 * connection cleanly.
+				 */
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Read the Palm's serial number, if possible. */
+	/* XXX - The Visor does not appear to have a software-readable
+	 * serial number. It would be nice to have some way of detecting
+	 * this.
+	 */
+	if (palm.sysinfo.rom_version < 0x03000000)
+	{
+		/* Can't just try to read the serial number and let the RPC
+		 * call fail: the PalmPilot(Pro) panics when you do that.
+		 */
+		SYNC_TRACE(1)
+			fprintf(stderr, "This Palm is too old to have a "
+				"serial number in ROM\n");
+
+		/* Set the serial number to the empty string */
+		palm.serial[0] = '\0';
+		palm.serial_len = 0;
+	} else {
+		/* The Palm's ROM is v3.0 or later, so it has a serial
+		 * number.
+		 */
+		udword snum_ptr;	/* Palm pointer to serial number */
+		uword snum_len;		/* Length of serial number string */
+		char checksum;		/* Serial number checksum */
+
+		/* Get the location of the ROM serial number */
+		/* XXX - Move this into its own function? */
+		err = RDLP_ROMToken(pconn, CARD0, ROMToken_Snum,
+				    &snum_ptr, &snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't get location of "
+					  "serial number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		}
+
+		/* Sanity check: make sure we have space for the serial
+		 * number.
+		 */
+		if (snum_len > SNUM_MAX-1)
+		{
+			fprintf(stderr, _("Warning: ROM serial number is "
+					  "%d characters long. Please notify "
+					  "the\nmaintainer\n"),
+				snum_len);
+			snum_len = SNUM_MAX;
+		}
+
+		/* Read the serial number out of the location found above */
+		err = RDLP_MemMove(pconn, (ubyte *) palm.serial,
+				   snum_ptr, snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't read serial "
+					  "number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		}
+		palm.serial[snum_len] = '\0';
+		palm.serial_len = snum_len;
+
+		/* Calculate the checksum for the serial number */
+		checksum = snum_checksum(palm.serial, palm.serial_len);
+		SYNC_TRACE(2)
+			fprintf(stderr, "Serial number is \"%s-%c\"\n",
+				palm.serial, checksum);
+	}
+
+	/* Figure out which Palm we're dealing with, and initialize
+	 * per-palm config.
+	 */
+	/* XXX - This also creates ~/.palm/<stuff> . Perhaps that's not the
+	 * right place for it?
+	 */
+	if ((err = load_palm_config(&palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get per-Palm config.\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* XXX - In daemon mode, presumably load_palm_config() (or
+	 * something) should tell us which user to run as. Therefore fork()
+	 * an instance, have it setuid() to the appropriate user, and load
+	 * that user's configuration.
+	 */
+
+	/* Initialize (per-user) conduits */
+	MISC_TRACE(1)
+		fprintf(stderr, "Initializing conduits\n");
+
+	if ((err = GetMemInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Initialize preference cache */
+	MISC_TRACE(1)
+		fprintf(stderr,"Initializing preference cache\n");
+	if ((err = CacheFromConduits(sync_config->conduits, pconn)) < 0)
+	{
+		fprintf(stderr,
+			_("CacheFromConduits() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Find out whether we need to do a slow sync or not */
+	/* XXX - Actually, it's not as simple as this (see comment below) */
+	if (hostid == palm.userinfo.lastsyncPC)
+		/* We synced with this same machine last time, so we can do
+		 * a fast sync this time.
+		 */
+		need_slow_sync = 0;
+	else
+		/* The Palm synced with some other machine, the last time
+		 * it synced. We need to do a slow sync.
+		 */
+		need_slow_sync = 1;
+
+	/* XXX - The desktop needs to keep track of other hosts that it has
+	 * synced with, preferably on a per-database basis.
+	 * Scenario: I sync with the machine at home, whose hostID is 1.
+	 * While I'm driving in to work, the machine at home talks to the
+	 * machine at work, whose hostID is 2. I come in to work and sync
+	 * with the machine there. The machine there should realize that
+	 * even though the Palm thinks it has last synced with machine 1,
+	 * everything is up to date on machine 2, so it's okay to do a fast
+	 * sync.
+	 * This is actually a good candidate for optimization, since it
+	 * reduces the amount of time the user has to wait.
+	 */
+
+	/* Get a list of all databases on the Palm */
+	if ((err = ListDBs(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("ListDBs returned %d\n"), err);
+
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+
+		FreePrefList(pref_cache);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		exit(1);
+	}
+
+	MISC_TRACE(1)
+		fprintf(stderr, "Doing a sync.\n");
+
+	/* Install new databases */
+	/* XXX - It should be configurable whether new databases get
+	 * installed at the beginning or the end.
+	 */
+	err = InstallNewFiles(pconn, &palm, installdir, True);
+
+	/* XXX - It should be possible to specify a list of directories to
+	 * look in: that way, the user can put new databases in
+	 * ~/.palm/install, whereas in a larger site, the sysadmin can
+	 * install databases in /usr/local/stuff; they'll be uploaded from
+	 * there, but not deleted.
+	 */
+	/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
+			      False);*/
+	if (err < 0)
+	{
+		fprintf(stderr, _("Error installing new files.\n"));
+
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+
+		FreePrefList(pref_cache);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* For each database, walk config.fetch, looking for applicable
+	 * conduits for each database.
+	 */
+	/* XXX - This should be redone: run_Fetch_conduits should be run
+	 * _before_ opening the device. That way, they can be run even if
+	 * we don't intend to sync with an actual Palm. Presumably, the
+	 * Right Thing is to run the appropriate Fetch conduit for each
+	 * file in ~/.palm/backup.
+	 * OTOH, if you do it this way, then things won't work right the
+	 * first time you sync: say you have a .coldsyncrc that has
+	 * pre-fetch and post-dump conduits to sync with the 'kab'
+	 * addressbook; you're syncing for the first time, so there's no
+	 * ~/.palm/backup/AddressDB.pdb. In this case, the pre-fetch
+	 * conduit doesn't get run, and the post-dump conduit overwrites
+	 * the existing 'kab' database.
+	 * Perhaps do things this way: run the pre-fetch conduits for the
+	 * databases in ~/.palm/backup. Then, during the main sync, if a
+	 * new database needs to be created on the workstation, run its
+	 * pre-fetch conduit. (Or maybe this would be a good time to run
+	 * the install conduit.)
+	 */
+	for (i = 0; i < palm.num_dbs; i++)
+	{
+		err = run_Fetch_conduits(&(palm.dblist[i]));
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error %d running pre-fetch "
+					  "conduits.\n"),
+				err);
+
+			MISC_TRACE(6)
+				fprintf(stderr,
+					"Freeing pref_cache\n");
+			FreePrefList(pref_cache);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			pconn = NULL;
+			return -1;
+		}
+	}
+
+	/* Synchronize the databases */
+	for (i = 0; i < palm.num_dbs; i++)
+	{
+		/* Run the Sync conduits for this database. This includes
+		 * built-in conduits.
+		 */
+		err = run_Sync_conduits(&(palm.dblist[i]), pconn);
+		if (err < 0)
+		{
+			switch (cs_errno)
+			{
+			    case CSE_CANCEL:
+				fprintf(stderr,
+					_("Sync cancelled.\n"));
+				add_to_log(_("*Cancelled*\n"));
+				DlpAddSyncLogEntry(pconn, synclog);
+					/* Doesn't really matter if it
+					 * fails, since we're terminating
+					 * anyway.
+					 */
+				break;
+				/* XXX - Other reasons for premature
+				 * termination.
+				 */
+			    default:
+				fprintf(stderr,
+					_("Conduit failed for unknown "
+					  "reason\n"));
+				/* Continue, and hope for the best */
+				/*  break; */
+				continue;
+			}
+
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+
+			MISC_TRACE(6)
+				fprintf(stderr, "Freeing pref_cache\n");
+			FreePrefList(pref_cache);
+			return -1;
+		}
+	}
+
+	/* XXX - If it's configured to install new databases last, install
+	 * new databases now.
+	 */
+
+	/* Get list of local files: if there are any that aren't on the
+	 * Palm, it probably means that they existed once, but were deleted
+	 * on the Palm. Assuming that the user knew what he was doing,
+	 * these databases should be deleted. However, just in case, they
+	 * should be saved to an "attic" directory.
+	 */
+	err = CheckLocalFiles(&palm);
+
+	/* XXX - Write updated NetSync info */
+	/* Write updated user info */
+	if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
+	{
+		fprintf(stderr, _("Error writing user info\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+		pconn = NULL;
+
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+		FreePrefList(pref_cache);
+		return -1;
+	}
+
+	/* Upload sync log */
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
+		{
+			fprintf(stderr, _("Error writing sync log.\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+
+			MISC_TRACE(6)
+				fprintf(stderr, "Freeing pref_cache\n");
+			FreePrefList(pref_cache);
+			exit(1);
+		}
+	}
+
+	/* There might still be pref items that are not yet cached.
+	 * The dump conduits are going to try to download them if not cached,
+	 * but with a closed connection, they are gonna fail. Although ugly,
+	 * we will manually fill the cache here.
+	 */
+	for (pref_cursor = pref_cache;
+	     pref_cursor != NULL;
+	     pref_cursor = pref_cursor->next)
+	{
+		MISC_TRACE(5)
+			fprintf(stderr, "Fetching preference 0x%08lx/%d\n",
+				pref_cursor->description.creator,
+				pref_cursor->description.id);
+
+		if (pref_cursor->contents_info == NULL &&
+		    pconn == pref_cursor->pconn)
+			FetchPrefItem(pconn, pref_cursor);
+	}
+
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	{
+		fprintf(stderr, _("Error disconnecting\n"));
+		exit(1);
+	}
+
+	pconn = NULL;
+
+	/* Run Dump conduits */
+	for (i = 0; i < palm.num_dbs; i++)
+	{
+		err = run_Dump_conduits(&(palm.dblist[i]));
+		if (err < 0)
+		{
+			fprintf(stderr,
+				_("Error %d running post-dump conduits.\n"),
+				err);
+			break;
+		}
+	}
+
+	return 0;
+}
+
+int
+run_mode_Backup(int argc, char *argv[])
+{
+	int err;
+	const char *backupdir = NULL;	/* Where to put backup */
+	struct PConnection *pconn;	/* Connection to the Palm */
+
+	/* Parse arguments:
+	 *	dir		- Dump everything to <dir>
+	 *	dir file...	- Dump <file...> to <dir>
+	 */
+	if (global_opts.do_backup)
+	{
+		/* Compatibility mode: the user specified "-b <dir>" rather
+		 * than the newer "-mb ... <stuff>". Back everything up to
+		 * the specified backup directory.
+		 */
+		backupdir = global_opts.backupdir; 
+	} else {
+		if (argc == 0)
+		{
+			fprintf(stderr,
+				_("Error: no backup directory specified.\n"));
+			return -1;
+		}
+
+		backupdir = argv[0];
+		argc--;
+		argv++;
+	}
+
+	SYNC_TRACE(2)
+		fprintf(stderr, "Backup directory: \"%s\"\n", backupdir);
+	if (!is_directory(backupdir))
+	{
+		/* It would be easy enough to create the directory if it
+		 * doesn't exist. However, this would be fragile: if the
+		 * user meant to back up databases "a", "b" and "c", and
+		 * erroneously said
+		 *	coldsync -mb a b c
+		 * then ColdSync would silently create the directory "a"
+		 * and surprise the user.
+		 */
+		if (exists(NULL))
+		{
+			fprintf(stderr,
+				_("Error: \"%s\" exists, but is not a "
+				  "directory.\n"),
+				backupdir);
+		} else {
+			fprintf(stderr,
+				_("Error: no such directory: \"%s\"\n"),
+				backupdir);
+		}
+
+		return -1;
+	}
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
+	 */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			sync_config->listen->device);
+
+	/* Set up a PConnection to the Palm */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 1))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+	pconn->speed = sync_config->listen->speed;
+
+	/* Connect to the Palm */
+	if ((err = Connect(pconn)) < 0)
+	{
+		fprintf(stderr, _("Can't connect to Palm\n"));
+		PConnClose(pconn);
+		return -1;
+	}
+
+	/* Get system, NetSync and user info */
+	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				/* XXX - I'm not sure this is quite right.
+				 * That is, if things are so screwed up
+				 * that we can't get the user info, then
+				 * I'm not sure that we can abort the
+				 * connection cleanly.
+				 */
+		pconn = NULL;
+		return -1;
+	}
+
+	/* XXX - Would it be a Good Thing to get the Palm serial number? */
+
+	/* Read memory info */
+	if ((err = GetMemInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Get a list of all databases on the Palm */
+	if ((err = ListDBs(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("ListDBs returned %d\n"), err);
+
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+
+		FreePrefList(pref_cache);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		exit(1);
+	}
+
+	/* Do the backup */
+	if (argc == 0)
+	{
+		/* No databases named on the command line. Back everything
+		 * up.
+		 */
+		SYNC_TRACE(2)
+			fprintf(stderr, "Backing everything up.\n");
+
+		err = full_backup(pconn, &palm, backupdir);
+	} else {
+		/* Individual databases were listed on the command line.
+		 * Back them up.
+		 */
+		int i;
+
+		for (i = 0; i < argc; i++)
+		{
+			struct dlp_dbinfo *db;
+
+			SYNC_TRACE(2)
+				fprintf(stderr,
+					"Backing up database \"%s\"\n",
+					argv[i]);
+
+			db = find_dbentry(&palm, argv[i]);
+					/* Find the dlp_dbentry for this
+					 * database.
+					 */
+			if (db == NULL)
+			{
+				fprintf(stderr,
+					_("Warning: no such database: "
+					  "\"%s\"\n"),
+					argv[i]);
+				add_to_log(_("Backup "));
+				add_to_log(argv[i]);
+				add_to_log(" - ");
+				add_to_log(_("No such database\n"));
+				continue;
+			}
+
+			/* Back up the database */
+			err = backup(pconn, db, backupdir);
+			/* XXX - Error-checking */
+		}
+	}
+
+	/* Upload sync log */
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
+		{
+			fprintf(stderr, _("Error writing sync log.\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+			return -1;
+		}
+	}
+
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	{
+		fprintf(stderr, _("Error disconnecting\n"));
+		return -1;
+	}
+	pconn = NULL;
+
+	return 0;
+}
+
+int
+run_mode_Restore(int argc, char *argv[])
+{
+	int err;
+	int i;
+	struct PConnection *pconn;	/* Connection to the Palm */
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
+	 */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			sync_config->listen->device);
+
+	/* Set up a PConnection to the Palm */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 1))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+	pconn->speed = sync_config->listen->speed;
+
+	/* Connect to the Palm */
+	if ((err = Connect(pconn)) < 0)
+	{
+		fprintf(stderr, _("Can't connect to Palm\n"));
+		PConnClose(pconn);
+		return -1;
+	}
+
+	/* Get system, NetSync and user info */
+	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				/* XXX - I'm not sure this is quite right.
+				 * That is, if things are so screwed up
+				 * that we can't get the user info, then
+				 * I'm not sure that we can abort the
+				 * connection cleanly.
+				 */
+		pconn = NULL;
+		return -1;
+	}
+
+	/* XXX - Would it be a Good Thing to get the Palm serial number? */
+
+	/* Read memory info */
+	if ((err = GetMemInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Get a list of all databases on the Palm */
+	if ((err = ListDBs(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("ListDBs returned %d\n"), err);
+
+		MISC_TRACE(6)
+			fprintf(stderr, "Freeing pref_cache\n");
+
+		FreePrefList(pref_cache);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		exit(1);
+	}
+
+	/* Parse arguments: for each argument, if it's a file, upload that
+	 * file. If it's a directory, upload all databases in that
+	 * directory.
+	 */
+	if (global_opts.do_restore)
+	{
+		/* Compatibility mode: the user has specified "-mr <dir>".
+		 * Restore everything in <dir>.
+		 */
+		err = restore_dir(pconn, &palm, global_opts.backupdir);
+		/* XXX - Error-checking */
+	} else {
+		for (i = 0; i < argc; i++)
+		{
+			if (is_directory(argv[i]))
+			{
+				/* Restore all databases in argv[i] */
+
+				err = restore_dir(pconn, &palm, argv[i]);
+				/* XXX - Error-checking */
+			} else {
+				/* Restore the file argv[i] */
+
+				err = restore_file(pconn, &palm, argv[i]);
+				/* XXX - Error-checking */
+			}
+		}
+	}
+
+	/* Upload sync log */
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
+		{
+			fprintf(stderr, _("Error writing sync log.\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+			return -1;
+		}
+	}
+
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	{
+		fprintf(stderr, _("Error disconnecting\n"));
+		return -1;
+	}
+	pconn = NULL;
+
+	return 0;
+}
+
+/* XXX - run_mode_Daemon() */
+/* XXX
+int
+run_mode_Daemon()
+{
+	XXX - Read command-line arguments
+	XXX - Read /etc/coldsync.conf
+	XXX - Find listen block(s)
+	XXX - Listen; wait for connection
+	XXX - Get connection
+	XXX - fork()
+	XXX - Identify Palm (serial number?)
+	XXX - Identify user (Palm userid?)
+	XXX - setuid()
+	XXX - Read ~user/.coldsyncrc
+	XXX - Find appropriate PDA block
+	XXX - Sync normally
+}
+*/
+/* XXX - run_mode_Getty() */
+/* XXX
+int
+run_mode_Getty()
+{
+	XXX - Read command-line arguments
+	XXX - Read /etc/coldsync.conf
+	XXX - Find listen block (mainly for speed)
+	XXX - Listen; wait for connection
+	XXX - Get connection
+	XXX - Identify Palm (serial number?)
+	XXX - Identify user (Palm userid?)
+	XXX - setuid()
+	XXX - Read ~user/.coldsyncrc
+	XXX - Find appropriate PDA block
+	XXX - Sync normally
+}
+*/
+/* XXX - run_mode_Init() */
 
 /* Connect
  * Wait for a Palm to show up on the other end.
@@ -1024,8 +2053,10 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		{
 			/* XXX - Fix this */
 			fprintf(stderr,
-				_("### Error: you have an old Palm, one that doesn't say how many\n"
-				"databases it has. I can't cope with this.\n"));
+				_("### Error: you have an old Palm, one that "
+				  "doesn't say how many\n"
+				  "databases it has. I can't cope with "
+				  "this.\n"));
 			return -1;
 		}
 
@@ -1083,6 +2114,57 @@ ListDBs(struct PConnection *pconn, struct Palm *palm)
 		}
 	}
 
+	/* Print out the list of databases, for posterity */
+	SYNC_TRACE(2)
+	{
+		int i;
+
+		fprintf(stderr, "\nDatabase list:\n");
+		fprintf(stderr,
+			"Name                            flags type crea ver mod. num\n"
+			"        ctime                mtime                baktime\n");
+		for (i = 0; i < palm->num_dbs; i++)
+		{
+			fprintf(stderr,
+				"%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
+				PDB_DBNAMELEN,
+				palm->dblist[i].name,
+				palm->dblist[i].db_flags,
+				(char) (palm->dblist[i].type >> 24),
+				(char) (palm->dblist[i].type >> 16),
+				(char) (palm->dblist[i].type >> 8),
+				(char) palm->dblist[i].type,
+				(char) (palm->dblist[i].creator >> 24),
+				(char) (palm->dblist[i].creator >> 16),
+				(char) (palm->dblist[i].creator >> 8),
+				(char) palm->dblist[i].creator,
+				palm->dblist[i].version,
+				palm->dblist[i].modnum);
+			fprintf(stderr, "        "
+				"%02d:%02d:%02d %02d/%02d/%02d  "
+				"%02d:%02d:%02d %02d/%02d/%02d  "
+				"%02d:%02d:%02d %02d/%02d/%02d\n",
+				palm->dblist[i].ctime.hour,
+				palm->dblist[i].ctime.minute,
+				palm->dblist[i].ctime.second,
+				palm->dblist[i].ctime.day,
+				palm->dblist[i].ctime.month,
+				palm->dblist[i].ctime.year,
+				palm->dblist[i].mtime.hour,
+				palm->dblist[i].mtime.minute,
+				palm->dblist[i].mtime.second,
+				palm->dblist[i].mtime.day,
+				palm->dblist[i].mtime.month,
+				palm->dblist[i].mtime.year,
+				palm->dblist[i].baktime.hour,
+				palm->dblist[i].baktime.minute,
+				palm->dblist[i].baktime.second,
+				palm->dblist[i].baktime.day,
+				palm->dblist[i].baktime.month,
+				palm->dblist[i].baktime.year);
+		}
+	}
+
 	return 0;
 }
 
@@ -1130,7 +2212,6 @@ CheckLocalFiles(struct Palm *palm)
 					/* Pathname to which we'll move the
 					 * database.
 					 */
-		struct stat statbuf;	/* Used to see if a file exists */
 		int n;
 
 
@@ -1209,26 +2290,10 @@ CheckLocalFiles(struct Palm *palm)
 		 * symlink, we don't want to clobber that symlink if it
 		 * exists.
 		 */
-		err = lstat(toname, &statbuf);
-		if (err < 0)
+		if (!lexists(toname))
 		{
-			/* If stat() failed because the file doesn't exist,
-			 * that's good. Anything else is a genuine error,
-			 * and is bad.
-			 */
-			if (errno != ENOENT)
-			{
-				fprintf(stderr, _("%s: Error in checking for "
-						  "\"%s\"\n"),
-					"CheckLocalFiles",
-					toname);
-				perror("stat");
-				closedir(dir);
-				return -1;
-			}
-
-			/* stat() failed because the file doesn't exist.
-			 * Move the database to the attic.
+			/* The file doesn't exist. Move the database to the
+			 * attic.
 			 */
 			MISC_TRACE(5)
 				fprintf(stderr,
@@ -1272,28 +2337,11 @@ CheckLocalFiles(struct Palm *palm)
 				MAXPATHLEN - strlen(toname));
 
 			/* Check to see whether this file exists */
-			err = lstat(toname, &statbuf);
-			if (err == 0)
-				/* The file exists */
+			if (lexists(toname))
 				continue;
 
-			/* If stat() failed because the file doesn't exist,
-			 * that's good. Anything else is a genuine error,
-			 * and is bad.
-			 */
-			if (errno != ENOENT)
-			{
-				fprintf(stderr, _("%s: Error in checking for "
-						  "\"%s\"\n"),
-					"CheckLocalFiles",
-					toname);
-				perror("stat");
-				closedir(dir);
-				return -1;
-			}
-
-			/* stat() failed because the file doesn't exist.
-			 * Move the database to the attic.
+			/* The file doesn't exist. Move the database to the
+			 * attic.
 			 */
 			MISC_TRACE(5)
 				fprintf(stderr,
@@ -1483,6 +2531,17 @@ UpdateUserInfo(struct PConnection *pconn,
 	/* XXX - Is it a mistake to update the userid/username if it
 	 * doesn't match?
 	 */
+	/* XXX - For now, don't update the userid if there's an existing
+	 * one on the Palm, but doesn't match. This is primarily because
+	 * I've taken out the global 'userinfo' variable, but also partly
+	 * because it may be a mistake to update it: changing the userid
+	 * can break things if the user is also using HotSync under
+	 * Windows.
+	 */
+	/* XXX - Should update the userid, but from the PDA block in
+	 * .coldsyncrc, not from /etc/passwd.
+	 */
+#if 0
 	if ((palm->userinfo.userid == 0) ||
 	    (palm->userinfo.userid != userinfo.uid))
 	{
@@ -1494,6 +2553,7 @@ UpdateUserInfo(struct PConnection *pconn,
 		uinfo.modflags |= DLPCMD_MODUIFLAG_USERID;
 					/* Set modification flag */
 	}
+#endif	/* 0 */
 
 	/* Fill in this machine's host ID as the last sync PC */
 	MISC_TRACE(3)
@@ -1516,6 +2576,10 @@ UpdateUserInfo(struct PConnection *pconn,
 
 	/* Fill in the user name if there isn't one, or if it has changed
 	 */
+	/* XXX - Ought to update the user name, but from the PDA block in
+	 * .coldsyncrc, not from /etc/passwd.
+	 */
+#if 0
 	if ((palm->userinfo.usernamelen == 0) ||
 	    (strcmp(palm->userinfo.username, userinfo.fullname) != 0))
 	{
@@ -1529,6 +2593,7 @@ UpdateUserInfo(struct PConnection *pconn,
 			fprintf(stderr, "User name length == %d\n",
 				uinfo.usernamelen);
 	}
+#endif	/* 0 */
 
 	/* Send the updated user info to the Palm */
 	err = DlpWriteUserInfo(pconn,
