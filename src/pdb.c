@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.3 1999-08-23 08:46:11 arensb Exp $
+ * $Id: pdb.c,v 1.4 1999-08-25 08:07:48 arensb Exp $
  */
 
 #include "config.h"
@@ -2230,18 +2230,29 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		/* Fill in the data size entry */
 		rec->data_len = recinfo.size;
 
-		/* Allocate space in 'rec' for the record data itself */
-		if ((rec->data = (ubyte *) malloc(rec->data_len)) == NULL)
+		if (rec->data_len == 0)
 		{
-			fprintf(stderr, "pdb_DownloadRecords: out of memory.\n");
-			free(recids);
-			return -1;
-		}
+			rec->data = NULL;
+			PDB_TRACE(6)
+				fprintf(stderr, "REC: No record data\n");
+		} else {
+			/* Allocate space in 'rec' for the record data
+			 * itself
+			 */
+			if ((rec->data = (ubyte *) malloc(rec->data_len))
+			    == NULL)
+			{
+				fprintf(stderr, "pdb_DownloadRecords: out of memory.\n");
+				free(recids);
+				return -1;
+			}
 
-		/* Copy the record data to 'rec' */
-		memcpy(rec->data, rptr, rec->data_len);
-		PDB_TRACE(6)
-			debug_dump(stderr, "REC", rec->data, rec->data_len);
+			/* Copy the record data to 'rec' */
+			memcpy(rec->data, rptr, rec->data_len);
+			PDB_TRACE(6)
+				debug_dump(stderr, "REC", rec->data,
+					   rec->data_len);
+		}
 
 		/* Append the record to the database */
 		pdb_AppendRecord(db, rec);
