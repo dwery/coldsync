@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.25 2001-03-29 05:33:39 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.26 2001-03-30 06:26:15 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -95,6 +95,8 @@ static struct {
 #endif	/* B14400 */
 #ifdef B9600
 	{ 1,	  9600,	  B9600 },
+#else	/* B9600 */
+#  error B9600 must be defined for initial handshake.
 #endif	/* B9600 */
 #ifdef B7200
 	{ 1,	  7200,	  B7200 },
