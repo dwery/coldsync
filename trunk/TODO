@@ -65,9 +65,6 @@
 	They return a DLPSTAT_* error code, but this makes
   error-checking rather hairy. Would it be better if they just set
   palm_errno and returned -1?
-- Consider adding a "transient" keyword to listen{} blocks, to
-  indicate that failed open()s mean that the Visor hasn't been plugged
-  in yet, so just sleep and retry until it's okay.
 - Under Solaris, defining _XPG4_2 might induce standards-compliance,
   and make things happier. There's a comment in PConnection_net.c that
   says that this causes all sorts of other problems, though.
