@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.17 2002-11-03 16:37:32 azummo Exp $
+# $Id: SPC.pm,v 1.18 2002-11-09 16:08:29 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.17 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.18 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -217,6 +217,7 @@ use constant DLPCMD_ReadRecordStream			=> 0x61;
 	dlp_ReadOpenDBInfo
 	dlp_CleanUpDatabase
 	dlp_ReadUserInfo
+	dlp_WriteUserInfo
 	dlp_ReadRecordByIndex
 	dlp_ReadRecordById
 	dlp_AddSyncLogEntry
@@ -956,7 +957,7 @@ sub dlp_ReadUserInfo
 			 # XXX - These are bogus: this is Perl, so
 			 # there's no need to store the length of
 			 # anything. Don't return it. If the caller
-			 # cares, ve can measure it again.
+			 # cares, he can measure it again.
 			 $retval->{'usernamelen'},
 			 $retval->{'passwordlen'},
 
@@ -1012,6 +1013,59 @@ sub dlp_ReadUserInfo
 
 	return $retval;
 }
+
+sub dlp_WriteUserInfo
+{
+	my $ui = shift;	# User info hash reference
+			# See dlp_ReadUserInfo for the format. If you don't
+			# want to modify a value, don't put it in the hash.
+
+	my $modflags = 0;
+
+	# Some useful constants
+
+	use constant dlpUserInfoModUserID	=> 0x80;  # changing the user id
+	use constant dlpUserInfoModSyncPC	=> 0x40;  # changing the last sync PC id
+	use constant dlpUserInfoModSyncDate	=> 0x20;  # changing sync date
+	use constant dlpUserInfoModName		=> 0x10;  # changing user name
+	use constant dlpUserInfoModViewerID	=> 0x08;  # changing the viewer id
+
+	# Check what values we should modify.
+
+	$modflags |= dlpUserInfoModName		if defined $ui->{'username'};
+	$modflags |= dlpUserInfoModViewerID	if defined $ui->{'viewer'};
+	$modflags |= dlpUserInfoModUserID	if defined $ui->{'userid'};
+	$modflags |= dlpUserInfoModSyncPC	if defined $ui->{'lastsyncpc'};
+#	$modflags |= dlpUserInfoModSyncDate	if defined $ui->{'lastsyncdate'};
+
+	# XXX - Changing the last sync date is not (yet) supported.
+
+	# Adjust undefined values.
+
+	$ui->{'userid'}		= $ui->{'userid'} or 0;
+	$ui->{'viewer'}		= $ui->{'viewer'} or 0;
+	$ui->{'lastsyncpc'}	= $ui->{'lastsyncpc'} or 0;
+	$ui->{'username'}	= $ui->{'username'} or '';
+	$ui->{'usernamelen'}	= length $ui->{'username'} + 1;
+
+	# XXX - Check for the maximum length of an username.
+
+	my ($err, @argv) = dlp_req(DLPCMD_WriteUserInfo,
+			{
+				id	=> dlpFirstArgID,
+				data	=> pack("N N N xxxxxxxx C C Z$ui->{'usernamelen'}",
+						$ui->{'userid'},
+						$ui->{'viewer'},
+						$ui->{'lastsyncpc'},
+						$modflags,
+						$ui->{'usernamelen'},
+						$ui->{'username'}
+				),
+			});
+
+	return $err;
+}
+
 
 =head2 dlp_DeleteRecord
 
