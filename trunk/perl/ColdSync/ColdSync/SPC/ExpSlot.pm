@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.5 2003-06-24 14:49:45 azummo Exp $
+# $Id: ExpSlot.pm,v 1.6 2003-06-25 19:48:28 azummo Exp $
 
 # XXX - Write POD
 
@@ -38,7 +38,7 @@ use Exporter;
 
 
 @ColdSync::SPC::ExpSlot::ISA	 = qw( Exporter );
-$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.5 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::ExpSlot::VERSION = do { my @r = (q$Revision: 1.6 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 @ColdSync::SPC::ExpSlot::EXPORT = qw( 
@@ -74,6 +74,22 @@ sub dlp_ExpSlotMediaType
 	}
 
 	return ($err, $retval);
+}
+
+sub dlp_ExpCardPresent
+{
+	my $slotnum = shift;	# Slot number
+
+	my ($err, @argv) = dlp_req(DLPCMD_ExpCardPresent,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("n", $slotnum),
+				 }
+				 );
+
+	return undef unless defined $err;
+
+	return $err;
 }
 
 sub dlp_ExpSlotEnumerate
@@ -139,7 +155,7 @@ sub dlp_ExpCardInfo
 				$retval->{'capabilities'},
 				$retval->{'numstrings'},
 				$data
-			) = unpack("N n a*",$arg->{data});
+			) = unpack("N n a*", $arg->{data});
 
 			# Workaround for buggy 5.x devices: returned values
 			# are in little-endian byte sex ;)
@@ -151,7 +167,7 @@ sub dlp_ExpCardInfo
 					$retval->{'capabilities'},
 					$retval->{'numstrings'},
 					$data
-				) = unpack("V v a*",$arg->{data});
+				) = unpack("V v xx a*", $arg->{data});
 			}
 
 			# Retrieve the strings
@@ -159,7 +175,6 @@ sub dlp_ExpCardInfo
 
 			# Store them
 			$retval->{'strings'} = \@s;
-
 
 			# Expand capability flags
 
