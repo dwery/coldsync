@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.2 1999-07-12 07:46:03 arensb Exp $
+# $Id: Makefile.in,v 1.2.2.1 1999-07-14 13:30:56 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -7,6 +7,9 @@ VERSION =	@VERSION@
 SRCDIR =	@srcdir@
 CURDIR =	${SRCDIR}
 SUBDIRS =	src doc
+
+TAR =		@TAR@
+GZIP =		@GZIP@
 
 # List of recursive targets, i.e., those where you build the target in
 # each subdirectory.
@@ -25,7 +28,7 @@ DISTFILES =	AUTHORS \
 
 DISTDIR =	${SRCDIR}/${PACKAGE}-${VERSION}
 TARBALL =	${DISTDIR}.tar.gz
-TAR_CMD =	GZIP=--best tar chozf
+TAR_CMD =	GZIP=--best ${TAR} chozf
 COMPRESS =	true ${TARBALL}
 
 # Additional files to delete when making 'clean', 'distclean' and
@@ -48,7 +51,7 @@ distdir::	${DISTFILES}
 	cp -p ${DISTFILES} ${DISTDIR}
 
 dist::	distdir
-	GZIP="--best" tar chozf ${TARBALL} ${DISTDIR}
+	GZIP="--best" ${TAR} chozf ${TARBALL} ${DISTDIR}
 	rm -rf ${DISTDIR}
 
 ${RECURSIVE_TARGETS}::
