@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.12 2000-09-03 22:41:26 arensb Exp $
+ * $Id: conduit.c,v 2.13 2000-09-08 15:59:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -78,6 +78,36 @@ static INLINE Bool crea_type_matches(
 	const conduit_block *cond,
 	const udword creator,
 	const udword type);
+
+typedef int (*ConduitFunc)(struct PConnection *pconn,
+			   struct dlp_dbinfo *dbinfo,
+			   const conduit_block *block);
+
+int run_DummyConduit(struct PConnection *pconn,
+		     struct dlp_dbinfo *dbinfo,
+		     const conduit_block *block);
+extern int run_GenericConduit(
+	struct PConnection *pconn,
+	struct dlp_dbinfo *dbinfo,
+	const conduit_block *block);
+struct ConduitDef *findConduitByName(const char *name);
+
+struct ConduitDef
+{
+	char *name;
+	ConduitFunc func;
+	unsigned short flavors;
+	/* XXX - Whether this conduit handles resources, records, or both.
+	 */
+	/* XXX - Other stuff */
+};
+
+struct ConduitDef builtin_conduits[] = {
+	{ "[dummy]", run_DummyConduit,
+	  FLAVORFL_FETCH | FLAVORFL_DUMP | FLAVORFL_SYNC, },
+	{ "[generic]", run_GenericConduit, FLAVORFL_SYNC, },
+};
+#define num_builtin_conduits	sizeof(builtin_conduits) / sizeof(builtin_conduits[0])
 
 /* The following variables describe the state of the conduit process. They
  * are global variables because this data is set and used in different
@@ -338,7 +368,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	if (old_sigchld == SIG_ERR)
 	{
 		fprintf(stderr, _("%s: Can't set signal handler\n"),
-			"run_conduits");
+			"run_conduit");
 		perror("signal");
 		return -1;
 	}
@@ -392,7 +422,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	if (pid < 0)
 	{
 		fprintf(stderr, "%s: Can't spawn conduit\n",
-			"run_conduits");
+			"run_conduit");
 
 		/* Let's hope that this isn't a fatal problem */
 		goto abort;
@@ -995,6 +1025,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 					 * just a default) matching conduit
 					 * was found.
 					 */
+	struct ConduitDef *builtin;
 
 	def_conduit = NULL;		/* No default conduit yet */
 	found_conduit = False;
@@ -1053,7 +1084,17 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		}
 
 		found_conduit = True;
-		err = run_conduit(dbinfo, flavor, conduit, with_spc, pconn);
+
+		/* See if it's a built-in conduit */
+		if ((builtin = findConduitByName(conduit->path)) == NULL)
+			/* It's an external program. Run it */
+			err = run_conduit(dbinfo, flavor, conduit, with_spc,
+					  pconn);
+		else
+			/* It's a built-in conduit. Run the appropriate
+			 * function.
+			 */
+			err = (*builtin->func)(pconn, dbinfo, conduit);
 
 		/* XXX - Error-checking. Report the conduit's exit status
 		 */
@@ -1077,8 +1118,16 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(4)
 			fprintf(stderr, "Running default conduit\n");
 
-		err = run_conduit(dbinfo, flavor, def_conduit, with_spc,
-				  pconn);
+		/* See if it's a built-in conduit */
+		if ((builtin = findConduitByName(def_conduit->path)) == NULL)
+			/* It's an external program. Run it */
+			err = run_conduit(dbinfo, flavor, def_conduit,
+					  with_spc, pconn);
+		else
+			/* It's a built-in conduit. Run the appropriate
+			 * function.
+			 */
+			(*builtin->func)(pconn, dbinfo, def_conduit);
 	}
 
 	return 0;
@@ -1642,9 +1691,6 @@ cond_readstatus(FILE *fromchild)
 /* XXX - Make sure this contains only reentrant functions (Stevens, AUP,
  * 10.6)
  */
-/* XXX - Save and restore errno: this signal may have interrupted some
- * other function that uses errno.
- */
 static RETSIGTYPE
 sigchld_handler(int sig)
 {
@@ -1818,6 +1864,33 @@ crea_type_matches(const conduit_block *cond,
 	SYNC_TRACE(7)
 		fprintf(stderr, "crea_type_matches: No match found.\n");
 	return False;
+}
+
+/* XXX - Experimental */
+int run_DummyConduit(struct PConnection *pconn,
+		     struct dlp_dbinfo *dbinfo,
+		     const conduit_block *block)
+{
+	fprintf(stderr, "Inside run_DummyConduit\n");
+	return 0;
+}
+
+struct ConduitDef *
+findConduitByName(const char *name)
+{
+	int i;
+
+	for (i = 0; i < num_builtin_conduits; i++)
+	{
+		if (strcmp(name, builtin_conduits[i].name) == 0)
+		{
+			fprintf(stderr, "Found builtin conduit\n");
+			/* Found it */
+			return &(builtin_conduits[i]);
+		}
+	}
+
+	return NULL;		/* Not found */
 }
 
 /* This is for Emacs's benefit:
