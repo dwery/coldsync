@@ -206,7 +206,6 @@
 	A simpler way is just to have a command-line argument
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
-- Add libraries to dependencies?
 - Perl: methods: $pdb->append($record). $pdb->find($ID) or
   $pdb->find($record). The latter should use
   $pdb->cmp($record1,$record2) to see if two records are equal.
@@ -217,6 +216,7 @@
 - Rewrite GenericConduit in C, for simplicity. That way, don't have to
   check for C++ in 'configure', and can simplify the 'make depend'
   targets.
+	Then again, that might make it harder to subclass.
 - Perl: write a ColdSync module, to simplify writing conduits.
 - Open a Unix domain socket that a client can listen on. Send
   conduits' messages to that socket. Define error codes like 22z =
@@ -242,12 +242,6 @@
   that describes the otherwise occult internals.
 - "Thought of the Day" conduit: add a fortune-style message as an
   event for today, and for the next week.
-- All of the 'make's that I've tested (FreeBSD/Solaris/DU/AIX make,
-  and GNU make) appear to grok
-	include Make.defs
-  syntax. Rewrite the Makefiles to make use of this. Might even get
-  rid of all of the "Makefile.in"s, and just have a top-level
-  "Make.defs.in"
 - Conduit for MH alias file: look for lines of the form
 	alias:	<address> Firstname Lastname
   (where the "<" and ">" are literal). If $record->{firstName} . " " .
