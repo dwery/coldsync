@@ -1,10 +1,17 @@
+/* GenericConduit.cc
+ *
+ * Methods and such for the generic conduit.
+ *
+ * $Id: GenericConduit.cc,v 1.2 1999-07-04 02:27:32 arensb Exp $
+ */
 #include <iostream.h>
 #include <iomanip.h>		// Probably only needed for debugging
 #include <stdio.h>		// For perror()
 				// XXX - This may turn out to be a Bad Thing
 #include <stdlib.h>		// For free()
-				// XXX - This may turn out to be a Bad Thing
+#include <fcntl.h>		// For open()
 #include <sys/stat.h>
+#include <sys/param.h>		// For MAXPATHLEN
 #include <string.h>		// XXX - Is this C++-safe everywhere?
 #include <errno.h>		// XXX - Is this C++-safe everywhere?
 #include "GenericConduit.hh"
@@ -22,6 +29,7 @@ extern int SyncRecord(struct PConnection *pconn,
 		      struct pdb *localdb,
 		      struct pdb_record *localrec,
 		      const struct pdb_record *remoterec);
+extern int add_to_log(char *msg);
 }
 
 #define SYNC_DEBUG	1
@@ -61,13 +69,21 @@ GenericConduit::GenericConduit(
 {}
 
 /* XXX - Redo this: see where the redundancies and such lie. See how much
- * redundancy and such can be eliminated. See about 
+ * redundancy and such can be eliminated. See about splitting sensibly into
+ * methods.
+ */
+/* XXX - Look through the interaction between this and SyncRecord(): in
+ * particular, when a record is archived, one(?) of the records (localrec?)
+ * gets free()d twice. Presumably need to set up a contract, e.g.,
+ * SyncRecord() will not free anything that was passed to it.
  */
 int
 GenericConduit::run()
 {
 	int err;
 
+add_to_log(_dbinfo->name);
+add_to_log(" - ");
 	/* See if it's a ROM database. If so, just ignore it, since it
 	 * can't be modified and hence need not be synced.
 	 */
@@ -75,16 +91,18 @@ GenericConduit::run()
 	{
 		// XXX - This ought to be configurable
 cerr << "\"" << _dbinfo->name << "\" is a ROM database. Ignoring it." << endl;
+		add_to_log("ROM\n"); 
 		return 0; 
 	}
 cerr << "\"" << _dbinfo->name << "\" is not a ROM database." << endl;
 
-/* XXX - This ought to cope with resource databases, but not yet. */
-if (DBINFO_ISRSRC(_dbinfo))
-{
-cerr << "I don't deal with resource databases (yet)." <<endl;
-return 0;
-}
+	/* Resource databases are entirely different beasts. */
+	if (DBINFO_ISRSRC(_dbinfo))
+	{
+		cerr << "I don't deal with resource databases." << endl;
+		add_to_log("Not synced\n");
+		return -1;
+	}
 
 	/* XXX - Actually, the entire business of loading the backup file
 	 * ought to be handled by a read_backup() method. That way, it can
@@ -97,23 +115,49 @@ return 0;
 	 * to errors in case some day there are multiple conduits running
 	 * concurrently.
 	 */
-	char *bakfname = 0;		// Backup filename
+	/* XXX - Should these be 'static'? How does that work across
+	 * classes, and subclasses?
+	 */
+	char bakfname[MAXPATHLEN+1];	// Backup filename
+	char stage_fname[MAXPATHLEN+1];	// Staging file name
+	// XXX - ARGH. Really need to convert this XXXXXX into a unique
+	// temporary file name. Or maybe just use mkstemp() later on.
+	const char* stage_ext = ".XXXXXX";	// Staging file extension
+	const int stage_ext_len = strlen(stage_ext);
+					// Length of staging file extension
+	int outfd;			// Output file descriptor
 	struct pdb_record *remoterec;	// Record in remote database
 	struct pdb_record *localrec;	// Record in local database
 
-	bakfname = strdup(mkbakfname(_dbinfo));
-				// XXX - strdup() uses malloc(). Is this a
-				// Bad Thing in C++?
-				// XXX - Probably mkbakfname() also ought
-				// to be a method, so that it can be
-				// overridden by subclasses.
+	/* Construct the full pathname of the backup file */
+	strncpy(bakfname, mkbakfname(_dbinfo), MAXPATHLEN);
+	bakfname[MAXPATHLEN] = '\0';	// Terminate pathname, just in case
 
-	if (bakfname == 0)
+	/* Construct the full pathname of the file we'll use for staging
+	 * the write.
+	 */
+	strncpy(stage_fname, bakfname, MAXPATHLEN-stage_ext_len);
+	strncat(stage_fname, stage_ext, stage_ext_len);
+	if (mktemp(stage_fname) == 0)
 	{
-		cerr << "GenericConduit Error: Can't make copy of backup file name." << endl;
+		cerr << "GenericConduit error: Can't create staging file name"
+		     << endl;
+		add_to_log("Error\n");
 		return -1;
 	}
-cerr << "bakfname == \"" << bakfname << '"' << endl;
+
+	/* Open the output file. Open it now, so that if there are any
+	 * errors, we don't waste time downloading the database.
+	 */
+	if ((outfd = open(stage_fname,
+			  O_WRONLY | O_CREAT | O_EXCL,
+			  0600)) < 0)
+	{
+		cerr << "GenericSync error: Can't create staging file \""
+		     << stage_fname << "\"" << endl;
+		add_to_log("Error\n");
+		return -1;
+	}
 
 	/* See if the backup file exists */
 	struct stat statbuf;
@@ -133,25 +177,10 @@ perror("GenericConduit: stat");
 			 */
 			cerr << "GenericConduit Error: can't stat() \""
 			     << bakfname << "\". Aborting." << endl;
-			free(bakfname);
+			add_to_log("Error\n");
 			return -1;
 		}
 
-		/* XXX - Oh, blargh. Under FreeBSD, at least, directories
-		 * aren't just weird files. That is, if you own a
-		 * directory, but it has, say, permission 0100, you can
-		 * still stat() the directory and find out that the backup
-		 * file doesn't exist. But you can't create it, so you'll
-		 * get an error at the end.
-		 * I guess the solution is to create a "placeholder" backup
-		 * file at the top, here. This way, a) you find out at the
-		 * beginning whether you can create the backup file at all
-		 * (so that if you can't, you don't waste time downloading
-		 * the database from the Palm, only to find out at the end
-		 * that you can't save the data anywhere), and b) you have
-		 * a file that you can lock to prevent other processes from
-		 * clobbering it.
-		 */
 cerr << "Backup file doesn't exist. Doing a FirstSync()" << endl;
 
 		/* Tell the Palm we're beginning a new sync. */
@@ -161,7 +190,7 @@ cerr << "Backup file doesn't exist. Doing a FirstSync()" << endl;
 		if (err != DLPSTAT_NOERR)
 		{
 cerr << "DlpOpenConduit() returned " << err << endl;
-			free(bakfname);
+			add_to_log("Error\n");
 			return -1; 
 		}
 
@@ -194,7 +223,7 @@ cerr << "DlpOpenConduit() returned " << err << endl;
 			cerr << "GenericConduit error: Can't open \""
 			     << _dbinfo->name << "\": "
 			     << err << endl;
-			free(bakfname);
+			add_to_log("Error\n");
 			return -1;
 		    default:
 			/* Some other error, which probably means the sync
@@ -203,7 +232,7 @@ cerr << "DlpOpenConduit() returned " << err << endl;
 			cerr << "GenericConduit fatal error: Can't open \""
 			     << _dbinfo->name << "\": "
 			     << err << endl;
-			free(bakfname);
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -214,8 +243,8 @@ cerr << "DlpOpenConduit() returned " << err << endl;
 		if (_remotedb == 0)
 		{
 cerr << "pdb_Download() failed." << endl;
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);	// Close the database
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -280,29 +309,46 @@ cerr << "Need to save this record" << endl;
 		this->close_archive();
 
 		// Write the database to its backup file
-		err = pdb_Write(_remotedb, bakfname);
+		err = pdb_Write(_remotedb, outfd);
 		if (err < 0)
 		{
 cerr << "GenericSync error: Can't write \"" << bakfname << '"' << endl;
 			if (_remotedb != 0)
 				free_pdb(_remotedb);
 			_remotedb = 0;
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);	// Close the database
+			add_to_log("Error\n");
+			return -1;
+		}
+
+		// Move staging output file to real backup file
+		if ((err = rename(stage_fname, bakfname)) < 0)
+		{
+			cerr << "GenericSync error: Can't rename staging file."
+			     << endl;
+			perror("rename");
+			if (_remotedb != 0)
+				free_pdb(_remotedb);
+			_remotedb = 0;
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 
 		/* Post-sync cleanup */
 		if (!IS_RSRC_DB(_remotedb))
 		{
+			/* XXX - This function doesn't sync resource files,
+			 * so shouldn't this if-statement be deleted?
+			 */
 cerr << "### Cleaning up database." << endl;
 			err = DlpCleanUpDatabase(_pconn, dbh);
 			if (err != DLPSTAT_NOERR)
 			{
 cerr << "GenericSync error: Can't clean up database: " << err << endl;
 				free_pdb(_remotedb);
-				free(bakfname);
 				err = DlpCloseDB(_pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 		}
@@ -313,8 +359,8 @@ cerr << "### Resetting sync flags." << endl;
 		{
 cerr << "GenericSync error: Can't reset sync flags: " << err << endl;
 			free_pdb(_remotedb);
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -323,18 +369,26 @@ cerr << "GenericSync error: Can't reset sync flags: " << err << endl;
 			free_pdb(_remotedb);
 		_remotedb = 0;
 
-		free(bakfname);
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
 
+		add_to_log("OK\n");
 		return 0; 
 	}
 
 	/* Load backup file to localdb */
-	_localdb = pdb_Read(bakfname);
+	int fd;			// File descriptor for backup file
+	if ((fd = open(bakfname, O_RDONLY)) < 0)
+	{
+		cerr << "GenericSync error: Can't open " << bakfname << endl;
+		add_to_log("Error\n");
+		return -1;
+	}
+	_localdb = pdb_Read(fd);
+
 	if (_localdb == 0)
 	{
 cerr << "GenericSync error: can't load \"" << bakfname << '"' << endl;
-		free(bakfname);
+		add_to_log("Error\n");
 		return -1; 
 	}
 
@@ -346,7 +400,7 @@ cerr << "GenericSync error: can't load \"" << bakfname << '"' << endl;
 	{
 cerr << "DlpOpenConduit() returned " << err << endl;
 		free_pdb(_localdb);
-		free(bakfname);
+		add_to_log("Error\n");
 		return -1; 
 	}
 
@@ -382,7 +436,7 @@ cerr << "DlpOpenConduit() returned " << err << endl;
 		cerr << "GenericConduit error: Can't open \""
 		     << _dbinfo->name << "\": " << err << endl;
 		free_pdb(_localdb);
-		free(bakfname);
+		add_to_log("Error\n");
 		return -1;
 	    default:
 		/* Some other error, which probably means the sync can't
@@ -391,12 +445,11 @@ cerr << "DlpOpenConduit() returned " << err << endl;
 		cerr << "GenericConduit fatal error: Can't open \""
 		     << _dbinfo->name << "\": " << err << endl;
 		free_pdb(_localdb);
-		free(bakfname);
+		add_to_log("Error\n");
 		return -1;
 	}
 
-//  need_slow_sync = 1;		// XXX - Just for testing
-	if (need_slow_sync)
+	if (global_opts.force_slow || need_slow_sync)
 	{
 cerr << "Doing a slow sync." << endl;
 cerr << "*** Phase 1:" << endl;
@@ -407,149 +460,146 @@ cerr << "*** Phase 1:" << endl;
 cerr << "GenericSync error: Can't download \"" << _dbinfo->name << '"' << endl;
 			DlpCloseDB(_pconn, dbh);
 			free_pdb(_localdb);
-			free(bakfname);
+			add_to_log("Error\n");
 			return -1;
 		}
 
-		// XXX - Check each remote record in turn, and compare it
-		// to the copy in the local database.
-		if (IS_RSRC_DB(_remotedb))
-		{
-cerr << "I don't deal with resource databases (yet)" << endl;
-		} else {
+		/* Check each remote record in turn, and compare it
+		 * to the copy in the local database.
+		 */
 cerr << "Checking remote database entries." << endl;
-			for (remoterec = _remotedb->rec_index.rec;
-			     remoterec != 0;
-			     remoterec = remoterec->next)
+		for (remoterec = _remotedb->rec_index.rec;
+		     remoterec != 0;
+		     remoterec = remoterec->next)
+		{
+			cerr << "Remote Record:" << endl;
+			cerr << "\tID: 0x"
+			     << hex << setw(8) << setfill('0')
+			     << remoterec->id << endl;
+			cerr << "\tattributes: 0x" << hex << setw(2)
+			     << setfill('0')
+			     << static_cast<int>(remoterec->attributes)
+			     << " ";
+			if (remoterec->attributes & PDB_REC_EXPUNGED)
+				cerr << "EXPUNGED ";
+			if (remoterec->attributes & PDB_REC_DIRTY)
+				cerr << "DIRTY ";
+			if (remoterec->attributes & PDB_REC_DELETED)
+				cerr << "DELETED ";
+			if (remoterec->attributes & PDB_REC_PRIVATE)
+				cerr << "PRIVATE ";
+			if (remoterec->attributes & PDB_REC_ARCHIVE)
+				cerr << "ARCHIVE ";
+			cerr << endl;
+			debug_dump(stderr, "REM", remoterec->data,
+				   remoterec->data_len > 64 ? 64 : remoterec->data_len);
+
+			/* Look the record up in the local database. */
+			localrec = pdb_FindRecordByID(_localdb,
+						      remoterec->id);
+			if (localrec == 0)
 			{
-				cerr << "Remote Record:" << endl;
-				cerr << "\tID: 0x"
-				     << hex << setw(8) << setfill('0')
-				     << remoterec->id << endl;
-				cerr << "\tattributes: 0x" << hex << setw(2)
-				     << setfill('0')
-				     << static_cast<int>(remoterec->attributes)
-				     << " ";
-				if (remoterec->attributes & PDB_REC_EXPUNGED)
-					cerr << "EXPUNGED ";
-				if (remoterec->attributes & PDB_REC_DIRTY)
-					cerr << "DIRTY ";
-				if (remoterec->attributes & PDB_REC_DELETED)
-					cerr << "DELETED ";
-				if (remoterec->attributes & PDB_REC_PRIVATE)
-					cerr << "PRIVATE ";
-				if (remoterec->attributes & PDB_REC_ARCHIVE)
-					cerr << "ARCHIVE ";
-				cerr << endl;
-debug_dump(stderr, "REM", remoterec->data,
-	   remoterec->data_len > 64 ? 64 : remoterec->data_len);
-
-				/* Look the record up in the local database. */
-				localrec = pdb_FindRecordByID(_localdb,
-							      remoterec->id);
-				if (localrec == 0)
-				{
-					/* This record is new. Mark it as
-					 * modified in the remote database.
-					 */
-					cerr << "New record 0x" << hex
-					     << setw(8) << setfill('0')
-					     << remoterec->id
-					     << " is new." << endl;
-					remoterec->attributes |= PDB_REC_DIRTY;
-					continue;
-				}
-
-				/* The remote record exists in the local
-				 * database.
+				/* This record is new. Mark it as modified
+				 * in the remote database.
 				 */
-				cerr << "Local Record:" << endl;
-				cerr << "\tID: 0x"
-				     << hex << setw(8) << setfill('0')
-				     << localrec->id << endl;
-				cerr << "\tattributes: 0x" << hex << setw(2)
-				     << setfill('0')
-				     << static_cast<int>(localrec->attributes)
-				     << " ";
-				if (localrec->attributes & PDB_REC_EXPUNGED)
-					cerr << "EXPUNGED ";
-				if (localrec->attributes & PDB_REC_DIRTY)
-					cerr << "DIRTY ";
-				if (localrec->attributes & PDB_REC_DELETED)
-					cerr << "DELETED ";
-				if (localrec->attributes & PDB_REC_PRIVATE)
-					cerr << "PRIVATE ";
-				if (localrec->attributes & PDB_REC_ARCHIVE)
-					cerr << "ARCHIVE ";
-				cerr << endl;
-debug_dump(stderr, "LOC", localrec->data,
-	   localrec->data_len > 64 ? 64 : localrec->data_len);
+				cerr << "New record 0x" << hex
+				     << setw(8) << setfill('0')
+				     << remoterec->id
+				     << " is new." << endl;
+				remoterec->attributes |= PDB_REC_DIRTY;
+				continue;
+			}
 
-				if (this->compare_rec(localrec, remoterec) == 0)
-				{
-cerr << "The local and remote records are equal." << endl;
-					/* Mark both of the records as clean */
-					remoterec->attributes &= ~PDB_REC_DIRTY;
-					localrec->attributes &= ~PDB_REC_DIRTY;
-					continue;
-				} else {
-cerr << "The local and remote records are NOT equal." << endl;
-					/* Mark the remote record as dirty */
-					remoterec->attributes |= PDB_REC_DIRTY;
-					continue;
-				}
+			/* The remote record exists in the local database. */
+			cerr << "Local Record:" << endl;
+			cerr << "\tID: 0x"
+			     << hex << setw(8) << setfill('0')
+			     << localrec->id << endl;
+			cerr << "\tattributes: 0x" << hex << setw(2)
+			     << setfill('0')
+			     << static_cast<int>(localrec->attributes)
+			     << " ";
+			if (localrec->attributes & PDB_REC_EXPUNGED)
+				cerr << "EXPUNGED ";
+			if (localrec->attributes & PDB_REC_DIRTY)
+				cerr << "DIRTY ";
+			if (localrec->attributes & PDB_REC_DELETED)
+				cerr << "DELETED ";
+			if (localrec->attributes & PDB_REC_PRIVATE)
+				cerr << "PRIVATE ";
+			if (localrec->attributes & PDB_REC_ARCHIVE)
+				cerr << "ARCHIVE ";
+			cerr << endl;
+			debug_dump(stderr, "LOC", localrec->data,
+				   localrec->data_len > 64 ? 64 : localrec->data_len);
 
-				/* Look up each record in the local
-				 * database and see if it exists in the
-				 * remote database.
+			if (this->compare_rec(localrec, remoterec) == 0)
+			{
+				cerr << "The local and remote records are equal." << endl;
+				/* Mark both of the records as clean */
+				remoterec->attributes &= ~PDB_REC_DIRTY;
+				localrec->attributes &= ~PDB_REC_DIRTY;
+				continue;
+			} else {
+				cerr << "The local and remote records are NOT equal." << endl;
+				/* Mark the remote record as dirty */
+				remoterec->attributes |= PDB_REC_DIRTY;
+				continue;
+			}
+		}
+
+		/* Look up each record in the local database and
+		 * see if it exists in the remote database.
+		 */
+		cerr << "Checking local database entries." << endl;
+		for (localrec = _localdb->rec_index.rec;
+		     localrec != 0;
+		     localrec = localrec->next)
+		{
+			/* Try to look this record up in the remote
+			 * database.
+			 */
+			remoterec = pdb_FindRecordByID(_remotedb,
+						       localrec->id);
+			if (remoterec != 0)
+			{
+				cerr << "Seen this record already" << endl;
+				/* This local record exists in the remote
+				 * database. We've dealt with it already,
+				 * so we can skip it now.
 				 */
-cerr << "Checking local database entries." << endl;
-				for (localrec = _localdb->rec_index.rec;
-				     localrec != 0;
-				     localrec = localrec->next)
-				{
-					/* Try to look this record up in
-					 * the remote database.
-					 */
-					remoterec = pdb_FindRecordByID(_remotedb,
-								       localrec->id);
-					if (remoterec != 0)
-					{
-cerr << "Seen this record already" << endl;
-						/* This local record exists
-						 * in the remote database.
-						 * We've dealt with it
-						 * already, so we can skip
-						 * it now.
-						 */
-						continue;
-					}
+				continue;
+			}
 
-					/* The local record doesn't exist
-					 * in the remote database. If its
-					 * dirty flag is set, that means it
-					 * was added locally since the last
-					 * sync, and should be added to the
-					 * remote database. If the local
-					 * record isn't dirty, that means
-					 * it was deleted on the Palm (and,
-					 * presumably, archived someplace
-					 * else if it needed to be
-					 * archived); delete it from the
-					 * local database.
-					 */
-					if ((localrec->attributes & PDB_REC_DIRTY)
-					    == 0)
-					{
-						/* Delete this record from
-						 * the local database;
-						 * presumably it was
-						 * archived elsewhere.
-						 */
-cerr << "Deleting this record: it's clean locally but doesn't exist in the remote database." << endl;
-						pdb_DeleteRecordByID(_localdb, localrec->id);
-					}
-				}
+			/* The local record doesn't exist in the remote
+			 * database. If its dirty flag is set, that means
+			 * it was added locally since the last sync, and
+			 * should be added to the remote database. If the
+			 * local record isn't dirty, that means it was
+			 * deleted on the Palm (and, presumably, archived
+			 * someplace else if it needed to be archived);
+			 * delete it from the local database.
+			 */
+			/* XXX - This is incorrect behavior: Scenario:
+			 * user's Palm is stolen. He gets a replacement and
+			 * sync. Now the desktop has all of the bogus
+			 * "Welcome" records, but all of the old data has
+			 * been deleted.
+			 * At the very least, should archive these records
+			 * just in case. In the theft scenario, it would be
+			 * best to upload them automatically, but this is
+			 * wrong in the more ordinary case (user deleted
+			 * them, ad they were archived elsewhere).
+			 */
+			if ((localrec->attributes & PDB_REC_DIRTY)
+			    == 0)
+			{
+				/* Delete this record from the local
+				 * database; presumably it was archived
+				 * elsewhere.
+				 */
+				cerr << "Deleting this record: it's clean locally but doesn't exist in the remote database." << endl;
+				pdb_DeleteRecordByID(_localdb, localrec->id);
 			}
 		}
 
@@ -618,6 +668,7 @@ cerr << "Adding record 0x" << hex << setw(8) << setfill('0')
 				if (newrec == NULL)
 				{
 cerr << "Can't copy a new record." << endl;
+					add_to_log("Error\n");
 					return -1;
 				}
 
@@ -653,7 +704,7 @@ cerr << "SyncRecord returned " << err << endl;
 		this->close_archive();
 
 		/* Write the local database to the backup file */
-		err = pdb_Write(_localdb, bakfname);
+		err = pdb_Write(_localdb, outfd);
 		if (err < 0)
 		{
 			cerr << "GenericSync error: Can't write \"" << bakfname << '"' << endl;
@@ -665,8 +716,22 @@ cerr << "SyncRecord returned " << err << endl;
 				free_pdb (_localdb);
 			_localdb = 0;
 
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);	// Close the database
+			add_to_log("Error\n");
+			return -1;
+		}
+
+		// Move staging output file to real backup file
+		if ((err = rename(stage_fname, bakfname)) < 0)
+		{
+			cerr << "GenericSync error: Can't rename staging file."
+			     << endl;
+			perror("rename");
+			if (_remotedb != 0)
+				free_pdb(_remotedb);
+			_remotedb = 0;
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -679,8 +744,8 @@ cerr << "### Cleaning up database." << endl;
 			{
 cerr << "GenericSync error: Can't clean up database: " << err << endl;
 				free_pdb(_remotedb);
-				free(bakfname);
 				err = DlpCloseDB(_pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 		}
@@ -691,8 +756,8 @@ cerr << "### Resetting sync flags." << endl;
 		{
 cerr << "GenericSync error: Can't reset sync flags: " << err << endl;
 			free_pdb(_remotedb);
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 	} else {
@@ -723,13 +788,22 @@ cerr << "Doing a fast sync." << endl;
 				if (_localdb != 0) free_pdb(_localdb);
 				_localdb = 0;
 
-				free(bakfname);
 				DlpCloseDB(_pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 cerr << "Created new record from downloaded record" << endl;
 
-			/* Look up the modified record in the local database */
+			/* Look up the modified record in the local database
+			 * Contract: 'localrec', here, is effectively
+			 * read-only: it is only a pointer into the local
+			 * database. It will be SyncRecord()'s
+			 * responsibility to free it if necessary, so this
+			 * function should not.
+			 * However, 'remoterec' is "owned" by this
+			 * function, so this function should free it if
+			 * necessary. SyncRecord() may not.
+			 */
 			localrec = pdb_FindRecordByID(_localdb, remoterec->id);
 			if (localrec == 0)
 			{
@@ -769,10 +843,10 @@ cerr << "GenericSync error: Can't append new record to database: " << err << end
 						free_pdb(_localdb);
 					_localdb = 0;
 
-					free(bakfname);
 					DlpCloseDB(_pconn, dbh);
 
 					this->close_archive();
+					add_to_log("Error\n");
 					return -1;
 				}
 
@@ -790,8 +864,6 @@ cerr << "SyncRecord() returned " << err << endl;
 			if (err < 0)
 			{
 				cerr << "GenericSync Error: SyncRecord returned " << err << endl;
-				pdb_FreeRecord(localrec);
-
 				if (_remotedb != 0)
 					free_pdb(_remotedb);
 				_remotedb = 0;
@@ -800,15 +872,13 @@ cerr << "SyncRecord() returned " << err << endl;
 					free_pdb(_localdb);
 				_localdb = 0;
 
-				free(bakfname);
 				DlpCloseDB(_pconn, dbh);
 
 				this->close_archive();
+				add_to_log("Error\n");
 				return -1;
 			}
 
-			if (localrec != 0)	// XXX - Is this right?
-				pdb_FreeRecord(localrec);
 			pdb_FreeRecord(remoterec);
 					// We're done with this record
 		}
@@ -834,10 +904,10 @@ cerr << "GenericSync: DlpReadNextModifiedRec returned " << err << endl;
 				free_pdb(_localdb);
 			_localdb = 0;
 
-			free(bakfname);
 			DlpCloseDB(_pconn, dbh);
 
 			this->close_archive();
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -848,7 +918,7 @@ cerr << "GenericSync: DlpReadNextModifiedRec returned " << err << endl;
 		this->close_archive(); 
 
 		/* Write the local database to the backup file */
-		err = pdb_Write(_localdb, bakfname);
+		err = pdb_Write(_localdb, outfd);
 		if (err < 0)
 		{
 cerr << "GenericSync error: Can't write \"" << bakfname << '"' << endl;
@@ -856,8 +926,22 @@ cerr << "GenericSync error: Can't write \"" << bakfname << '"' << endl;
 				free_pdb (_localdb);
 			_localdb = 0;
 
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);	// Close the database
+			add_to_log("Error\n");
+			return -1;
+		}
+
+		// Move staging output file to real backup file
+		if ((err = rename(stage_fname, bakfname)) < 0)
+		{
+			cerr << "GenericSync error: Can't rename staging file."
+			     << endl;
+			perror("rename");
+			if (_remotedb != 0)
+				free_pdb(_remotedb);
+			_remotedb = 0;
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 
@@ -869,8 +953,8 @@ cerr << "### Cleaning up database." << endl;
 			if (err != DLPSTAT_NOERR)
 			{
 cerr << "GenericSync error: Can't clean up database: " << err << endl;
-				free(bakfname);
 				err = DlpCloseDB(_pconn, dbh);
+				add_to_log("Error\n");
 				return -1;
 			}
 		}
@@ -880,14 +964,14 @@ cerr << "### Resetting sync flags." << endl;
 		if (err != DLPSTAT_NOERR)
 		{
 cerr << "GenericSync error: Can't reset sync flags: " << err << endl;
-			free(bakfname);
 			err = DlpCloseDB(_pconn, dbh);
+			add_to_log("Error\n");
 			return -1;
 		}
 	}
 
 	/* Clean up */
-	if (_remotedb != 0)		// XXX - This doesn't exist for fast sync
+	if (_remotedb != 0)	// XXX - This doesn't exist for fast sync
 		free_pdb(_remotedb);
 	_remotedb = 0;
 
@@ -895,13 +979,16 @@ cerr << "GenericSync error: Can't reset sync flags: " << err << endl;
 		free_pdb(_localdb);
 	_localdb = 0;
 
-	free(bakfname);
 	err = DlpCloseDB(_pconn, dbh);
+	add_to_log("OK\n");
 	return 0;
 }
 
-/* GenericConduit::SyncRecord()
+/* GenericConduit::SyncRecord
  * Sync a record in the local database with a remote record.
+ *
+ * Contract: This function is responsible for freeing 'localrec' if
+ * necessary. However, it may not free 'remoterec'.
  */
 int
 GenericConduit::SyncRecord(
@@ -918,6 +1005,7 @@ GenericConduit::SyncRecord(
 	 *	    check each possible case for 'localrec'
 	 */
 /* Some convenience macros */
+/* XXX - These should probably be 'static inline _expunged()' etc. */
 #define EXPUNGED(r)	(((r)->attributes & PDB_REC_EXPUNGED) != 0)
 #define DIRTY(r)	(((r)->attributes & PDB_REC_DIRTY) != 0)
 #define DELETED(r)	(((r)->attributes & PDB_REC_DELETED) != 0)
@@ -926,7 +1014,7 @@ GenericConduit::SyncRecord(
 	/* For each record, there are only four cases to consider:
 	 * - DELETED ARCHIVE
 	 *	This record has been deleted with archving.
-	 * - DELETED EXPUNGE
+	 * - (DELETED) EXPUNGE
 	 *	This record has been deleted without archiving.
 	 * - DIRTY
 	 *	This record has been modified.
@@ -934,22 +1022,24 @@ GenericConduit::SyncRecord(
 	 *	This record hasn't changed.
 	 * All other flag combinations are either absurd or redundant. They
 	 * should probably be flagged.
+	 *
+	 * Note: apparently, not all applications are polite enough to set
+	 * the DELETED flag when a record is expunged, so need to just
+	 * check that flag by itself. However, the ARCHIVE flag overlaps
+	 * the category field, so a record that has been deleted with
+	 * archiving must have both the DELETED and ARCHIVE flags set.
+	 *
+	 * If DELETED is set, but neither EXPUNGE nor ARCHIVE are set, then
+	 * treat the record as if the ARCHIVE flag had been set.
+	 * XXX - Rewrite all of the conditionals to deal with this case.
 	 */
-	/* XXX - Apparently, not all applications are polite enough to set
-	 * the DELETED flag when a record is deleted, so just check ARCHIVE
-	 * and EXPUNGE.
-	 */
-	/* Go through all of the cases: if DELETED is set, but neither
-	 * ARCHIVE nor EXPUNGE are, then treat it as if it were DELETE |
-	 * ARCHIVE (or, more simply, just rewrite all of the conditionals).
-	 */
-	if (/*DELETED(remoterec) && */ARCHIVE(remoterec))
+	if (DELETED(remoterec) && ARCHIVE(remoterec))
 	{
 		SYNC_TRACE(5, "Remote: deleted, archived\n");
 		/* Remote record has been deleted; user wants an
 		 * archive copy.
 		 */
-		if (/*DELETED(localrec) && */ARCHIVE(localrec))
+		if (DELETED(localrec) && ARCHIVE(localrec))
 		{
 			SYNC_TRACE(5, "Local:  deleted, archived\n");
 			/* Local record has been deleted; user wants an
@@ -1084,7 +1174,7 @@ GenericConduit::SyncRecord(
 		/* Remote record has been deleted without a trace. */
 		SYNC_TRACE(5, "Remote: deleted, expunged\n");
 
-		if (/*DELETED(localrec) && */ARCHIVE(localrec))
+		if (DELETED(localrec) && ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
@@ -1190,7 +1280,7 @@ GenericConduit::SyncRecord(
 		 * archive it first.
 		 * XXX - In fact, can this be done throughout?
 		 */
-		if (/*DELETED(localrec) && */ARCHIVE(localrec))
+		if (DELETED(localrec) && ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
@@ -1406,7 +1496,7 @@ GenericConduit::SyncRecord(
 		/* Remote record has not changed */
 		SYNC_TRACE(5, "Remote: clean\n");
 
-		if (/*DELETED(localrec) && */ARCHIVE(localrec))
+		if (DELETED(localrec) && ARCHIVE(localrec))
 		{
 			/* Local record has been deleted; user wants an
 			 * archive copy.
@@ -1543,7 +1633,7 @@ GenericConduit::compare_rec(const struct pdb_record *rec1,
  * since there may not be anything to archive, in which case we don't want
  * an empty archive file lying around.
  */
-/* XXX - This approach may be flawed, in that we may not find out until the
+/* XXX - This approach is flawed, in that we may not find out until the
  * middle of the sync that the archive file can't be opened (e.g.,
  * permissions problem or something). It may be better to open the archive
  * file now and, if it had to be created, remember this fact. Then, if
