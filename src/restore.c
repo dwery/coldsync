@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.12 2000-11-04 23:01:44 arensb Exp $
+ * $Id: restore.c,v 2.13 2000-11-14 16:39:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -212,8 +212,6 @@ restore_dir(struct PConnection *pconn,
 	/* Look at each file in turn */
 	while ((file = readdir(dir)) != NULL)
 	{
-		char *extptr;		/* Pointer to filename extension */
-
 		SYNC_TRACE(3)
 			fprintf(stderr, "Examining %s/%s\n",
 				dirname, file->d_name);
@@ -242,29 +240,15 @@ restore_dir(struct PConnection *pconn,
 #endif	/* !HAVE_DIRENT_TYPE */
 #endif	/* 0 */
 
-		/* Make sure the file name ends in ".prc" or ".pdb" */
-		extptr = strrchr(file->d_name, '.');
-					/* Get the last dot in the name */
-		if (extptr == NULL)
-		{
-			/* This file's name doesn't have an extension */
-			SYNC_TRACE(5)
-				fprintf(stderr,
-					"  Ignoring %s: no extension\n",
-					file->d_name);
-			continue;
-		}
-
-		/* Now that we know that it has an extension, make
-		 * sure it's one of the approved ones.
+		/* Make sure this file has the proper extension for a Palm
+		 * database of some sort. If not, ignore it.
 		 */
-		if ((strcasecmp(extptr, ".prc") != 0) &&
-		    (strcasecmp(extptr, ".pdb") != 0))
+		if (!is_database_name(file->d_name))
 		{
-			/* Nope. Wrong extension */
-			SYNC_TRACE(5)
+			SYNC_TRACE(6)
 				fprintf(stderr,
-					"  Ignoring %s: bad extension\n",
+					"Ignoring \"%s\": not a valid "
+					"filename extension.\n",
 					file->d_name);
 			continue;
 		}
