@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.4 2000-02-03 02:47:32 arensb Exp $
+# $Id: Make.rules.in,v 1.5 2000-02-06 22:33:45 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -19,6 +19,7 @@ BINDIR =	@bindir@
 SBINDIR =	@sbindir@
 LIBEXECDIR =	@libexecdir@
 DATADIR =	@datadir@
+LOCALEDIR =	${DATADIR}/locale
 SYSCONFDIR =	@sysconfdir@
 LIBDIR =	@libdir@
 INCLUDEDIR =	@includedir@
@@ -60,6 +61,12 @@ TEXI2HTML =	@TEXI2HTML@
 DVIPS =		@DVIPS@
 MKID =		@MKID@
 
+# I18n-related utilities
+XGETTEXT =	@XGETTEXT@
+GETTEXT =	@GETTEXT@
+MSGMERGE =	@MSGMERGE@
+MSGFMT =	@MSGFMT@
+
 TOPDISTDIR =	${TOP}/${PACKAGE}-${VERSION}
 DISTDIR =	${TOPDISTDIR}/${SUBDIR}
 TARBALL =	${TOPDISTDIR}.tar.gz
@@ -84,6 +91,7 @@ INSTALL_MAN =		${INSTALL_DATA}
 .c.ln:
 	${LINT} ${LINTARGS} -i $<
 
+# Documentation-related rules
 .SUFFIXES:	.dvi .info .ps .texi .html
 
 .texi.info:
@@ -94,6 +102,12 @@ INSTALL_MAN =		${INSTALL_DATA}
 
 .dvi.ps:
 	${DVIPS} -o $@ $<
+
+# I18n-related rules
+.SUFFIXES:	.po .mo
+
+.po.mo:
+	${MSGFMT} -v --statistics --strict -o $@ $<
 
 LIBRARY =	lib${LIBNAME}.a
 
