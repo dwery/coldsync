@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.7 1999-11-10 09:07:20 arensb Exp $
+ * $Id: conduit.c,v 1.8 1999-11-20 05:16:06 arensb Exp $
  */
 /* XXX - At some point, the API for built-in conduits should become much
  * simpler. A lot of the crap in this file will disappear, since it's
@@ -24,9 +24,6 @@ extern int run_GenericConduit(struct PConnection *pconn,
 			      struct Palm *palm,
 			      struct dlp_dbinfo *db);
 struct conduit_spec *getconduitbyname(const char *name);
-int cond_MemoDB(struct PConnection *pconn,
-		struct Palm *palm,
-		struct dlp_dbinfo *db);
 
 /* XXX - This static array is bogus: it should be dynamically grown.
  * In fact, this should probably be a hash table, keyed by conduit
@@ -52,9 +49,7 @@ static int cond_list_len = 0;	/* # elements in cond_list */
 
 /* Initial values for conduit pool */
 static struct conduit_spec init_conduit_list[] = {
-/*  	{ "Generic", "", 0L, 0L, cond_generic, }, */
 	{ "Generic C++", "", 0L, 0L, run_GenericConduit, },
-	{ "Memo", "MemoDB", 0L, 0L, cond_MemoDB, },
 };
 static const int init_conduit_list_len = 
 	sizeof(init_conduit_list) / sizeof(init_conduit_list[0]);
@@ -63,7 +58,7 @@ static const int init_conduit_list_len =
  * Initialize everything conduit-related.
  */
 int
-init_conduits(struct Palm *palm)
+init_conduits(struct Palm *palm)	/* XXX - Unused argument */
 {
 	int i;
 
@@ -98,19 +93,6 @@ load_conduit(struct conduit_spec *spec)
 	cond_pool[num_conduits] = spec;
 	num_conduits++;
 
-	return 0;
-}
-
-/* unload_conduit
- * Remove a conduit from the pool.
- * XXX - Is this really necessary?
- * XXX - The conduit will also need to be removed from cond_list (as
- * well as the pre-fetch and post-dump lists, if those are used).
- */
-int
-unload_conduit(const char *name)
-{
-	/* XXX */
 	return 0;
 }
 
@@ -276,13 +258,6 @@ register_conduit(const char *name,
 	return 0;
 }
 
-int
-unregister_conduit(const char *name)
-{
-	/* XXX */
-	return 0;
-}
-
 /* find_conduit
  * Find the conduit to run for the database 'db'. Returns a pointer to
  * the conduit spec, or NULL if no appropriate conduit was found.
@@ -329,22 +304,12 @@ find_conduit(const struct dlp_dbinfo *db)
 				 * any */
 }
 
-/* XXX - Very experimental */
-int
-cond_MemoDB(struct PConnection *pconn,
-	    struct Palm *palm,
-	    struct dlp_dbinfo *db)
-{
-	fprintf(stderr, "Inside cond_MemoDB()\n");
-	return 0;
-}
-
 /* run_Fetch_conduits
  * Go through the list of Fetch conduits and run whichever ones are
  * applicable for the database 'dbinfo'.
  */
 int
-run_Fetch_conduits(struct Palm *palm,
+run_Fetch_conduits(struct Palm *palm,	/* XXX - Unused argument */
 		   struct dlp_dbinfo *dbinfo)
 {
 	conduit_block *conduit;
@@ -401,7 +366,7 @@ run_Fetch_conduits(struct Palm *palm,
  * applicable for the database 'dbinfo'.
  */
 int
-run_Dump_conduits(struct Palm *palm,
+run_Dump_conduits(struct Palm *palm,	/* XXX - Unused argument */
 		  struct dlp_dbinfo *dbinfo)
 {
 	conduit_block *conduit;
@@ -415,7 +380,7 @@ run_Dump_conduits(struct Palm *palm,
 	     conduit = conduit->next)
 	{
 		SYNC_TRACE(3)
-		fprintf(stderr, "Trying conduit...\n");
+			fprintf(stderr, "Trying conduit...\n");
 
 		/* See if the creator matches */
 		if ((conduit->dbcreator != 0) &&
