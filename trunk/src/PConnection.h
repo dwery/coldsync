@@ -1,9 +1,13 @@
 /* PConnection.h
  *
  * Defines the PConnection abstraction, which embodies a connection
- * to a P device.
+ * to a Palm device.
  *
- * $Id: PConnection.h,v 1.2 1999-08-25 08:19:46 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: PConnection.h,v 1.3 1999-08-26 14:24:24 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_

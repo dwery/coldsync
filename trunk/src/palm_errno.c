@@ -2,7 +2,11 @@
  *
  * Error-related stuff for libpalm.
  *
- * $Id: palm_errno.c,v 1.2 1999-08-01 08:06:20 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: palm_errno.c,v 1.3 1999-08-26 14:19:10 arensb Exp $
  */
 #include "config.h"
 #include "palm_errno.h"

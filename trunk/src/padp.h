@@ -3,6 +3,10 @@
  * Types and definitions for Palm Packet Assembly/Disassembly Protocol
  * (PADP).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Structure of a PADP data packet:
  *	+------+------+
  *	| type |flags |
@@ -51,7 +55,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: padp.h,v 1.2 1999-08-26 14:19:22 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_

@@ -5,7 +5,11 @@
  * An archive file consists of a file header followed by zero or more
  * records. Each record consists of 
  *
- * $Id: archive.h,v 1.2 1999-08-25 08:19:54 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: archive.h,v 1.3 1999-08-26 14:24:00 arensb Exp $
  */
 #ifndef _archive_h_
 #define _archive_h_

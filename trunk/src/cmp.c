@@ -2,7 +2,11 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.3 1999-08-01 08:02:36 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: cmp.c,v 1.4 1999-08-26 14:23:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

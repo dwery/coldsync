@@ -3,12 +3,16 @@
  * Implementation of the Palm PADP (Packet Assembly/Disassembly
  * Protocol).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Note on nomenclature: the term 'packet' is used somewhat loosely
  * throughout this file, and can mean "data passed from a protocol
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.3 1999-07-14 13:53:19 arensb Exp $
+ * $Id: padp.c,v 1.4 1999-08-26 14:19:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>

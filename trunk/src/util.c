@@ -2,13 +2,17 @@
  *
  * Misc. utility functions.
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * The get_*() functions are used to extract values out of strings of
  * ubytes and convert them to the native format.
  * The put_*() functions, conversely, are used to take a value in the
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.5 1999-08-25 08:20:27 arensb Exp $
+ * $Id: util.c,v 1.6 1999-08-26 14:17:44 arensb Exp $
  */
 
 #include "config.h"
