@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.3 2002-11-02 13:14:48 azummo Exp $
+$Id: README.usb,v 1.4 2002-11-09 21:51:24 azummo Exp $
 
 Linux
 =====
@@ -31,6 +31,12 @@ Linux
 		coldsync --listen linux-usb
 	or
 		coldsync --listen linux-usb-devfs
+
+	For some Handspring Visor units, you have to use
+	
+		protocol: full;
+
+	in your listen serial block.
 
 *BSD
 ====
