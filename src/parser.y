@@ -6,10 +6,9 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.18 2000-05-20 16:33:21 arensb Exp $
+ * $Id: parser.y,v 2.19 2000-05-20 19:17:15 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
-/* XXX - Error-checking */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
@@ -25,14 +24,32 @@
 int parse_trace = 0;		/* Debugging level for config file parser */
 #define PARSE_TRACE(n)	if (parse_trace >= (n))
 
+#define ANOTHER_ERROR \
+	{ if (++num_errors > 10) \
+	  { \
+		  fprintf(stderr, _("Too many errors. Aborting.\n")); \
+		  return -1; \
+	  } \
+	}
+
 extern int yylex(void);
 extern int yyparse(void);
 
 extern FILE *yyin;
 
+extern char *yytext;			/* Reaching in to lex's namespace */
+
 int yyerror(const char *msg);
 
+static const char *conf_fname;		/* Name of config file. Used for
+					 * error-reporting.
+					 */
 static int num_errors = 0;		/* # of errors seen during parsing */
+static Bool warned_colon = False;	/* Has the user been warned about
+					 * missing colon in "type: cccc/tttt"?
+					 * XXX - This should go away when
+					 * colons become mandatory.
+					 */
 static listen_block *cur_listen;	/* Currently-open listen block. The
 					 * various listen_directive rules
 					 * will fill in the fields.
@@ -197,15 +214,21 @@ comm_type:
 			fprintf(stderr, "Found commtype: USB\n");
 		$$ = LISTEN_USB;
 	}
-	| WORD error
+	| error
 	{
-		num_errors++;
-		fprintf(stderr, _("Unrecognized listen type at line %d\n"),
-			lineno);
-		fprintf(stderr, "Word is \"%s\"\n", $1);
-		free($1);	$1 = NULL;
-		yyerrok;
-		lex_expect(0);
+		ANOTHER_ERROR;
+		if (yytext[0] == '{')
+		{
+			fprintf(stderr,
+				_("\tMissing listen block type\n"));
+		} else {
+			fprintf(stderr,
+				_("\tUnrecognized listen type "
+				  "\"%s\"\n"),
+				yytext);
+			yyclearin; 
+		}
+		$$ = LISTEN_SERIAL;
 	}
 	;
 
@@ -225,22 +248,32 @@ listen_directives:
 	;
 
 listen_directive:
-	DEVICE STRING semicolon
+	DEVICE opt_colon STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: device [%s]\n", $2);
+			fprintf(stderr, "Listen: device [%s]\n", $3);
 
-		cur_listen->device = $2;
+		cur_listen->device = $3;
 	}
-	| SPEED NUMBER semicolon
+	| SPEED opt_colon NUMBER semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Listen: speed %d\n", $2);
+			fprintf(stderr, "Listen: speed %d\n", $3);
 
-		cur_listen->speed = $2;
+		cur_listen->speed = $3;
 	}
+	| error
+	{
+		fprintf(stderr,
+			_("\tError near \"%s\"\n"),
+			yytext);
+		ANOTHER_ERROR;
+		yyclearin;
+	}
+	';'
 	;
 
+ /* XXX - Might be nice to allow a comma-separated list of flavors */
 conduit_stmt:	CONDUIT conduit_flavor '{'
 	{
 		cur_conduit = new_conduit_block();
@@ -249,7 +282,6 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			fprintf(stderr,
 				_("%s: Can't allocate conduit_block!\n"),
 				"yyparse");
-			/* XXX - Try to recover gracefully */
 			return -1;
 		}
 		cur_conduit->flavor = $2;
@@ -262,6 +294,10 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		    case Sync:
 			PARSE_TRACE(4)
 				fprintf(stderr, "Sync");
+			fprintf(stderr,
+				_("%s: %d: Warning: Sync conduits are not "
+				  "implemented.\n"),
+				conf_fname, lineno);
 			break;
 		    case Fetch:
 			PARSE_TRACE(4)
@@ -274,15 +310,24 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 		    case Install:
 			PARSE_TRACE(4)
 				fprintf(stderr, "Install");
+			fprintf(stderr,
+				_("%s: %d: Warning: Install conduits are not "
+				  "implemented.\n"),
+				conf_fname, lineno);
 			break;
 		    case Uninstall:
 			PARSE_TRACE(4)
 				fprintf(stderr, "Uninstall");
+			fprintf(stderr,
+				_("%s: %d: Warning: Uninstall conduits are not "
+				  "implemented.\n"),
+				conf_fname, lineno);
 			break;
 		    default:
-			fprintf(stderr, _("Unknown conduit flavor: %d"),
-				cur_conduit->flavor);
-			num_errors++;
+			fprintf(stderr,
+				_("%s: %d: Unknown conduit flavor %d\n"),
+				conf_fname, lineno, cur_conduit->flavor);
+			ANOTHER_ERROR;
 			YYERROR;
 		}
 		PARSE_TRACE(4)
@@ -311,11 +356,10 @@ conduit_stmt:	CONDUIT conduit_flavor '{'
 			list = &(file_config->uninstall_q);
 			break;
 		    default:
-			fprintf(stderr, _("%s: line %d: Unknown conduit "
-					  "flavor %d\n"),
-				"yyparse",
-				lineno, cur_conduit->flavor);
-			num_errors++;
+			fprintf(stderr,
+				_("%s: %d: Unknown conduit flavor %d\n"),
+				conf_fname, lineno, cur_conduit->flavor);
+			ANOTHER_ERROR;
 			YYERROR;
 		}
 
@@ -375,6 +419,17 @@ conduit_flavor:
 			fprintf(stderr, "Found a conduit_flavor: Uninstall\n");
 		$$ = Uninstall;
 	}
+	| error
+	{
+		ANOTHER_ERROR;
+		fprintf(stderr,
+			_("\tUnrecognized conduit flavor \"%s\"\n"),
+			yytext);
+		yyclearin;
+		$$ = Fetch;	/* Some generic value, just so that parsing
+				 * can go on.
+				 */
+	}
 	;
 
 conduit_block:
@@ -387,11 +442,7 @@ conduit_directives:
 	;
 
 conduit_directive:
-	/* XXX - There ought to be a colon between "type" and the database
-	 * type, for consistency with the user-supplied headers. For now,
-	 * make this colon optional and complain if it's missing.
-	 */
-	TYPE creator_type semicolon
+	TYPE opt_colon creator_type semicolon
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
@@ -399,32 +450,31 @@ conduit_directive:
 		PARSE_TRACE(4)
 		{
 			fprintf(stderr, "Conduit creator: 0x%08ld (%c%c%c%c)\n",
-				$2.creator,
-				(char) (($2.creator >> 24) & 0xff),
-				(char) (($2.creator >> 16) & 0xff),
-				(char) (($2.creator >>  8) & 0xff),
-				(char) ($2.creator & 0xff));
+				$3.creator,
+				(char) (($3.creator >> 24) & 0xff),
+				(char) (($3.creator >> 16) & 0xff),
+				(char) (($3.creator >>  8) & 0xff),
+				(char) ($3.creator & 0xff));
 			fprintf(stderr, "Conduit type: 0x%08ld (%c%c%c%c)\n",
-				$2.type,
-				(char) (($2.type >> 24) & 0xff),
-				(char) (($2.type >> 16) & 0xff),
-				(char) (($2.type >>  8) & 0xff),
-				(char) ($2.type & 0xff));
+				$3.type,
+				(char) (($3.type >> 24) & 0xff),
+				(char) (($3.type >> 16) & 0xff),
+				(char) (($3.type >>  8) & 0xff),
+				(char) ($3.type & 0xff));
 		}
-		cur_conduit->dbcreator = $2.creator;
-		cur_conduit->dbtype = $2.type;
+		cur_conduit->dbcreator = $3.creator;
+		cur_conduit->dbtype = $3.type;
 	}
-	/* XXX - These ought to take a colon, just like the "type". */
-	| NAME STRING semicolon	/* XXX - Is this used? */
-	| PATH STRING semicolon
+	| PATH opt_colon STRING semicolon
 	{
 		/* Path to the conduit program. If this is a relative
 		 * pathname, look for it in the path.
 		 * XXX - There should be a ConduitPath directive to specify
 		 * where to look for conduits.
+		 * XXX - Or else allow the user to set $PATH, or something.
 		 */
-		cur_conduit->path = $2;
-		$2 = NULL;
+		cur_conduit->path = $3;
+		$3 = NULL;
 
 		PARSE_TRACE(4)
 			fprintf(stderr, "Conduit path: [%s]\n",
@@ -446,8 +496,17 @@ conduit_directive:
 		/* Mark this conduit as being final: if it matches, don't
 		 * even look through the rest of the queue.
 		 */
-		cur_conduit->flags |= CONDFL_FINAL;	/* XXX - Test this */
+		cur_conduit->flags |= CONDFL_FINAL;
 	}
+	| error
+	{
+		fprintf(stderr,
+			_("\tError near \"%s\"\n"),
+			yytext);
+		ANOTHER_ERROR;
+		yyclearin;
+	}
+	';'
 	;
 
 creator_type:	STRING '/' STRING
@@ -462,13 +521,11 @@ creator_type:	STRING '/' STRING
 			if (strlen($1) != 4)
 			{
 				fprintf(stderr,
-					_("%s: Bogus creator \"%s\", line "
-					  "%d\n"),
-					"yyparse",
-					$1, lineno);
+					_("%s: %d: Bogus creator \"%s\"\n"),
+					conf_fname, lineno, $1);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
-				num_errors++;
+				ANOTHER_ERROR;
 				YYERROR;
 			}
 			$$.creator =
@@ -488,13 +545,11 @@ creator_type:	STRING '/' STRING
 			if (strlen($3) != 4)
 			{
 				fprintf(stderr,
-					_("%s: Bogus type \"%s\", line "
-					  "%d\n"),
-					"yyparse",
-					$3, lineno);
+					_("%s: %d: Bogus type \"%s\"\n"),
+					conf_fname, lineno, $3);
 				free($1); $1 = NULL;
 				free($3); $3 = NULL;
-				num_errors++;
+				ANOTHER_ERROR;
 				YYERROR;
 			}
 			$$.type =
@@ -685,17 +740,17 @@ pda_directives:
 	;
 
 pda_directive:
-	SNUM STRING semicolon
+	SNUM opt_colon STRING semicolon
 	{
 		/* Serial number from ROM */
 		char *csum_ptr;		/* Pointer to checksum character */
 		unsigned char checksum;	/* Calculated checksum */
 
 		PARSE_TRACE(4)
-			fprintf(stderr, "Serial number \"%s\"\n", $2);
+			fprintf(stderr, "Serial number \"%s\"\n", $3);
 
-		cur_pda->snum = $2;
-		$2 = NULL;
+		cur_pda->snum = $3;
+		$3 = NULL;
 
 		/* Verify the checksum */
 		csum_ptr = strrchr(cur_pda->snum, '-');
@@ -714,9 +769,11 @@ pda_directive:
 			 */
 			checksum = snum_checksum(cur_pda->snum,
 						 strlen(cur_pda->snum));
-			fprintf(stderr, _("Warning: serial number \"%s\" "
-					  "has no checksum. You may want\n"
-					  "to rewrite it as \"%s-%c\"\n"),
+			fprintf(stderr,
+				_("%s: %d: Warning: serial number \"%s\" "
+				  "has no checksum.\n"
+				  "You may want to rewrite it as \"%s-%c\"\n"),
+				conf_fname, lineno,
 				cur_pda->snum, cur_pda->snum, checksum);
 		} else {
 			/* Checksum specified in the config file. Make sure
@@ -735,21 +792,23 @@ pda_directive:
 			if (toupper(checksum) != toupper((int) *csum_ptr))
 			{
 				fprintf(stderr,
-					_("Warning: incorrect checksum for "
-					  "serial number \"%s-%c\".\n"
+					_("%s: %d: Warning: incorrect "
+					  "checksum\n"
+					  "for serial number \"%s-%c\". "
 					  "Should be \"%s-%c\"\n"),
+					conf_fname, lineno,
 					cur_pda->snum, *csum_ptr,
 					cur_pda->snum, checksum);
 			}
 		}
 	}
-	| DIRECTORY STRING semicolon
+	| DIRECTORY opt_colon STRING semicolon
 	{
 		PARSE_TRACE(4)
-			fprintf(stderr, "Directory \"%s\"\n", $2);
+			fprintf(stderr, "Directory \"%s\"\n", $3);
 
-		cur_pda->directory = $2;
-		$2 = NULL;
+		cur_pda->directory = $3;
+		$3 = NULL;
 	}
 	| DEFAULT semicolon
 	{
@@ -757,26 +816,51 @@ pda_directive:
 			fprintf(stderr, "This is a default PDA\n");
 
 		/* Mark this PDA as being the fallback default */
-		cur_pda->flags |= PDAFL_DEFAULT;	/* XXX - Test this */
+		cur_pda->flags |= PDAFL_DEFAULT;
+	}
+	| error
+	{
+		fprintf(stderr,
+			_("\tError near \"%s\"\n"),
+			yytext);
+		ANOTHER_ERROR;
+		yyclearin;
+	}
+	';'
+	;
+
+ /* XXX - Added in 1.1.10, Sat May 20 14:21:43 2000. Make the colon
+  * mandatory at some point.
+  */
+opt_colon:	':'
+	|	/* Empty */
+	{
+		if (!warned_colon)
+		{
+			fprintf(stderr,
+				_("%s: %d: Warning: missing ':'\n"
+				  "\tColons are now required after most "
+				  "directives.\n"
+				  "\t(This warning will only be shown "
+				  "once.)\n"),
+				conf_fname, lineno);
+			warned_colon = True;
+		}
 	}
 	;
 
 open_brace:	'{'
 	| error
 	{
-		num_errors++;
-		fprintf(stderr, _("Warning: Missing '{' at line %d\n"),
-			lineno);
-		yyerrok;
+		ANOTHER_ERROR;
+		fprintf(stderr, _("\tMissing '{'\n"));
 	}
 
 semicolon:	';'
 	| error
 	{
-		num_errors++;
-		fprintf(stderr, _("Warning: Missing ';' at line %d\n"),
-			lineno);
-		yyerrok;
+		ANOTHER_ERROR;
+		fprintf(stderr, _("\tMissing ';'\n"));
 	}
 
 %%
@@ -787,7 +871,7 @@ semicolon:	';'
 int
 yyerror(const char *msg)
 {
-	fprintf(stderr, _("Yacc error: \"%s\" at line %d\n"), msg, lineno);
+	fprintf(stderr, "%s: %d: %s\n", conf_fname, lineno, gettext(msg));
 	return 1;
 }
 
@@ -809,6 +893,7 @@ int parse_config(const char *fname,
 	}
 
 	yyin = infile;
+	conf_fname = fname;
 	lineno = 1;
 	file_config = conf;
 	num_errors = 0;
