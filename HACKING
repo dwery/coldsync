@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.6 2000-06-03 04:16:24 arensb Exp $
+  $Id: HACKING,v 1.7 2001-02-24 17:08:18 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -46,8 +46,8 @@
 - Don't name any files "errs.*". They'll get clobbered by "make
   spotless".
 
-- Portability: some printf()s check to see whether the argument to a
-  %s is NULL. Others don't. Always check.
+- Portability: On some OSes, printf() checks to see whether the
+  argument to a %s is NULL. On others, it doesn't. Always check.
 
 - Portability: uid_t, off_t, and other types vary widely across
   systems. This can cause problems with printf(): under FreeBSD, off_t
@@ -77,7 +77,7 @@
   language.
 	Function names should not be translated. by and large,
   perror()'s argument need not be translated, since it's usually of
-  the form "<system call>" or "<fuction name>: <system call>".
+  the form "<system call>" or "<function name>: <system call>".
 
 - I18N: when printing an error message of the form "<function-name>:
   <message>", print the function name as a separate argument, e.g.,
@@ -102,3 +102,6 @@
   Rather, write
 	fprintf(stderr, _("Can't read the %dth record\n"),
 	        somestruct->n);
+
+- When making changes to a file, respect the existing indentation
+  style.
