@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.27 2001-10-18 01:35:03 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.28 2001-12-09 22:42:21 arensb Exp $
  */
 /* XXX - When using serial-to-USB under Linux, a lot of these can hang.
  * It's possible to fix the netsync read/write functions to time out and
@@ -113,25 +113,11 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, NULL);
+	err = dlp_dlpc_req(pconn,
+			   &header, NULL,
+			   &resp_header, &ret_argv);
 	if (err < 0)
-		return err;	/* Error */
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadUserInfo: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadUserInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;	/* Error */
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
+		return err;
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -290,25 +276,11 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteUserInfo: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteUserInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -354,22 +326,11 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, NULL);
+	err = dlp_dlpc_req(pconn,
+			   &header, NULL,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadSysInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -459,21 +420,11 @@ DlpGetSysDateTime(PConnection *pconn,
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, NULL);
+	err = dlp_dlpc_req(pconn,
+			   &header, NULL,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_GetSysDateTime,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -547,25 +498,11 @@ DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpSetSysDateTime: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_SetSysDateTime,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -623,25 +560,11 @@ DlpReadStorageInfo(PConnection *pconn,
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadStorageInfo: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadStorageInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -804,25 +727,11 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadDBList: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadDBList,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1012,25 +921,11 @@ DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpOpenDB: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_OpenDB,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1120,25 +1015,11 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpCreateDB: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CreateDB,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1212,25 +1093,11 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 	}
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpCloseDB: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CloseDB,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1296,25 +1163,11 @@ DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpDeleteDB: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteDB,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1378,25 +1231,11 @@ DlpReadAppBlock(PConnection *pconn,	/* Connection */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadAppBlock: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadAppBlock,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1481,30 +1320,13 @@ DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	free(outbuf);			/* We're done with it now */
 	outbuf = NULL;
-
-	/* Get a response */
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpWriteAppBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteAppBlock,
-			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1568,24 +1390,11 @@ DlpReadSortBlock(PConnection *pconn,	/* Connection */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	/* Get a response */
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadSortBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadSortBlock,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1662,29 +1471,13 @@ DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	free(outbuf);			/* We're done with it now */
 	outbuf = NULL;
-
-	/* Get a response */
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteSortBlock: waiting for response\n");
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteSortBlock,
-			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1739,26 +1532,11 @@ DlpReadNextModifiedRec(
 	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadNextModifiedRec: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextModifiedRec,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1853,25 +1631,11 @@ DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadRecordByID: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecord,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -1975,26 +1739,11 @@ DlpReadRecordByIndex(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadRecordByIndex: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecord,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2115,36 +1864,15 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
+	free(outbuf);			/* We're done with it now */
+	outbuf = NULL;
 	if (err < 0)
-	{
-		free(outbuf);
 		return err;
-	}
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteRecord: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteRecord,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
-	{
-		free(outbuf);
 		return resp_header.error;
-	}
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2165,7 +1893,6 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 		}
 	}
 
-	free(outbuf);
 	return 0;		/* Success */
 }
 
@@ -2214,25 +1941,11 @@ DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpDeleteRecord: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteRecord,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2299,26 +2012,11 @@ DlpReadResourceByIndex(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadResourceByIndex: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadResource,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2407,26 +2105,11 @@ DlpReadResourceByType(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadResourceByType: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadResource,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2529,36 +2212,14 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
+	free(outbuf);
 	if (err < 0)
-	{
-		free(outbuf);
 		return err;
-	}
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteResource: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteResource,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
-	{
-		free(outbuf);
 		return resp_header.error;
-	}
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2575,7 +2236,6 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 		}
 	}
 
-	free(outbuf);
 	return 0;		/* Success */
 }
 
@@ -2625,25 +2285,11 @@ DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpDeleteResource: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_DeleteResource,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2694,26 +2340,12 @@ DlpCleanUpDatabase(
 	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpCleanUpDatabase: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CleanUpDatabase,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
-	if (resp_header.error != (uword) DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2761,25 +2393,11 @@ DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpResetSyncFlags: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetSyncFlags,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2887,30 +2505,12 @@ DlpCallApplication(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
-	free(outbuf);			/* We're done with it now */
-	outbuf = NULL;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpCallApplication: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_CallApplication,
-			    &resp_header, &ret_argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
+	free(outbuf);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -2974,25 +2574,11 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, NULL);
+	err = dlp_dlpc_req(pconn,
+			   &header, NULL,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpResetSystem: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetSystem,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3062,24 +2648,11 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 			(int) argv[0].size, argv[0].data);
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpAddSyncLogEntry: waiting for response\n");
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_AddSyncLogEntry,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3130,24 +2703,11 @@ DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 	argv[0].data = &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	/* Get a response */
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadOpenDBInfo: waiting for response\n");
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadOpenDBInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3210,25 +2770,11 @@ DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpMoveCategory: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_MoveCategory,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3269,25 +2815,11 @@ DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, NULL);
+	err = dlp_dlpc_req(pconn,
+			   &header, NULL,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpOpenConduit: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_OpenConduit,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3339,24 +2871,11 @@ DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = status_buf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	/* Get a response */
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpEndOfSync: waiting for response\n");
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_EndOfSync,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3405,25 +2924,11 @@ DlpResetRecordIndex(
 	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpResetRecordIndex: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ResetRecordIndex,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3515,25 +3020,11 @@ DlpReadRecordIDList(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadRecordIDList: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadRecordIDList,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3612,26 +3103,11 @@ DlpReadNextRecInCategory(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadNextRecInCategory: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextRecInCategory,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3723,27 +3199,11 @@ DlpReadNextModifiedRecInCategory(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadNextModifiedRecInCategory: waiting for "
-			"response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNextModifiedRecInCategory,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3841,26 +3301,11 @@ DlpReadAppPreference(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr,
-			"DlpReadAppPreference: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadAppPreference,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -3950,30 +3395,13 @@ DlpWriteAppPreference(
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
-	if (err < 0)
-	{
-		free(outbuf);
-		return err;
-	}
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	free(outbuf);			/* We don't need this anymore */
 	outbuf = NULL;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "WriteAppPreference: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteAppPreference,
-			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -4020,25 +3448,11 @@ DlpReadNetSyncInfo(PConnection *pconn,
 	header.argc = 0;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadNetSyncInfo: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadNetSyncInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -4182,25 +3596,11 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpWriteNetSyncInfo: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteNetSyncInfo,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
@@ -4268,25 +3668,11 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
-	err = dlp_send_req(pconn, &header, argv);
+	err = dlp_dlpc_req(pconn,
+			   &header, argv,
+			   &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
-
-	DLPC_TRACE(10)
-		fprintf(stderr, "DlpReadFeature: waiting for response\n");
-
-	/* Get a response */
-	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_ReadFeature,
-			    &resp_header, &ret_argv);
-	if (err < 0)
-		return err;
-
-	DLPC_TRACE(2)
-		fprintf(stderr,
-			"Got response, id 0x%02x, args %d, status %d\n",
-			resp_header.id,
-			resp_header.argc,
-			resp_header.error);
 	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
