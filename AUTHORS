@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.11 2000-06-03 08:10:06 arensb Exp $
+# $Id: AUTHORS,v 1.12 2000-07-18 16:01:10 arensb Exp $
 
 Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
 	benevolent dictator.
@@ -24,3 +24,4 @@ Patches and such:
 	Dirk-Willem van Gulik <dirkx@covalent.net>.
 	Johnny C. Lam <lamj@stat.cmu.edu>.
 	Andrew J. Korty <ajk@iu.edu>: Patch for setting username.
+	Hollis Blanchard <hollis@amulet.co.jp>: Portability and install patch.
