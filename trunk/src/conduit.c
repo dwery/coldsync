@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.53 2002-05-03 15:12:03 arensb Exp $
+ * $Id: conduit.c,v 2.54 2002-05-14 16:02:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -103,11 +103,6 @@ int run_DummyConduit(PConnection *pconn,
 		     const conduit_block *block,
 		     const pda_block *pda);
 extern int run_GenericConduit(
-	PConnection *pconn,
-	const struct dlp_dbinfo *dbinfo,
-	const conduit_block *block,
-	const pda_block *pda);
-extern int run_GroupConduit(
 	PConnection *pconn,
 	const struct dlp_dbinfo *dbinfo,
 	const conduit_block *block,
