@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.4 1999-08-23 09:03:51 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.5 1999-08-25 04:11:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -18,8 +18,14 @@
 #include "dlp.h"
 #include "dlp_cmd.h"
 #include "util.h"
+#include "pack.h"
 #include "palm_errno.h"
 
+/* XXX - Finish plugging buffer overflows. */
+
+/* XXX - These two functions will become obsolete when ppack() and
+ * punpack() are known to work properly.
+ */
 /* dlpcmd_gettime
  * Just a convenience function for reading a Palm date from a data buffer.
  */
@@ -118,6 +124,31 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			/* XXX - Potential buffer overflow */
 			memcpy(userinfo->passwd, rptr, userinfo->passwdlen);
 			rptr += userinfo->passwdlen;
+#if 0
+			/* XXX - It would be nice to just have one call to
+			 * punpack() here, but the number of bytes to read
+			 * for the username and password depend on previous
+			 * arguments.
+			 * One solution might be to define PACK_IUBYTES(n)
+			 * (I == Indirect), where the argument is a pointer
+			 * to the number of bytes to read.
+			 */
+			err = punpack(
+				ret_argv[i].data,
+				PACK_UDWORD,	&(userinfo->userid),
+				PACK_UDWORD,	&(userinfo->viewerid),
+				PACK_UDWORD,	&(userinfo->lastsyncPC),
+				PACK_TIME,	&(userinfo->lastgoodsync),
+				PACK_TIME,	&(userinfo->lastsync),
+				PACK_UBYTE,	&(userinfo->usernamelen),
+				PACK_UBYTE,	&(userinfo->passwdlen),
+				PACK_UBYTES(0/* XXX */),
+						&(userinfo->username),
+				PACK_UBYTES(0/* XXX */),
+						&(userinfo->passwd),
+				PACK_END);
+fprintf(stderr, "after punpack(), err == %d\n", err);
+#endif	/* 0 */
 
 			DLPC_TRACE(1)
 			{
