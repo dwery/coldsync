@@ -113,7 +113,7 @@ is believed to work on all platforms with a Uniforum-compliant libintl
 
 COMPATIBILITY NOTES
 
-* ColdSync 2.2.0
+* ColdSync 2.2.1
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x/4.x, and compiles
