@@ -52,7 +52,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.6 2001-06-26 05:46:49 arensb Exp $
+ * $Id: slp.h,v 1.7 2001-09-07 10:57:37 arensb Exp $
  */
 #ifndef _slp_h_
 #define _slp_h_
@@ -60,15 +60,17 @@
 #include "palm.h"
 
 /* Predefined port numbers (Palm calls them Socket IDs) */
-#define SLP_PORT_DEBUGGER	0	/* Debugger port */
-#define SLP_PORT_CONSOLE	1	/* Console port */
-#define SLP_PORT_REMOTEUI	2	/* Remote UI port */
-#define SLP_PORT_DLP		3	/* Desktop Link port */
-#define SLP_PORT_FIRSTDYNAMIC	4	/* First dynamic port */
+typedef enum {
+	SLP_PORT_DEBUGGER	= 0,	/* Debugger port */
+	SLP_PORT_CONSOLE	= 1,	/* Console port */
+	SLP_PORT_REMOTEUI	= 2,	/* Remote UI port */
+	SLP_PORT_DLP		= 3,	/* Desktop Link port */
+	SLP_PORT_FIRSTDYNAMIC	= 4	/* First dynamic port */
 /* Ports 0x04-0xcf are reserved for dynamic assignment (a la RPC port
  * mapper).
  */
 /* Ports 0xd0-0xdf are reserved for testing (?) */
+} slp_port;
 
 /* Define the various packet types that SLP packets can encapsulate.
  * That is, the various protocols
