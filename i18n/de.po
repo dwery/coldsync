@@ -5,13 +5,50 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 1.1.4\n"
-"POT-Creation-Date: 2000-05-19 07:09-0400\n"
+"POT-Creation-Date: 2000-05-21 16:30-0400\n"
 "PO-Revision-Date: 2000-03-27 16:57+02:00\n"
 "Last-Translator: Christian Kirsch<ck@held.mind.de>\n"
 "Language-Team:  de <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8-bit\n"
+
+#: src/parser.y:289 src/parser.y:559 src/parser.y:938
+#, fuzzy, c-format
+msgid "\tError near \"%s\"\n"
+msgstr "Fehler beim Öffnen von \"%s\"\n"
+
+#: src/parser.y:970
+msgid "\tMissing ':'\n"
+msgstr ""
+
+#: src/parser.y:985
+msgid "\tMissing ';'\n"
+msgstr ""
+
+#: src/parser.y:978
+msgid "\tMissing '{'\n"
+msgstr ""
+
+#: src/parser.y:715
+#, fuzzy, c-format
+msgid "\tMissing argument name near \": %s\".\n"
+msgstr "Fehlendes Argument nach \"%s\"\n"
+
+#: src/parser.y:222
+#, fuzzy
+msgid "\tMissing listen block type\n"
+msgstr "Option \"%s\" nicht erkannt.\n"
+
+#: src/parser.y:449
+#, fuzzy, c-format
+msgid "\tUnrecognized conduit flavor \"%s\"\n"
+msgstr "Option \"%s\" nicht erkannt.\n"
+
+#: src/parser.y:225
+#, fuzzy, c-format
+msgid "\tUnrecognized listen type \"%s\"\n"
+msgstr "Option \"%s\" nicht erkannt.\n"
 
 #: src/coldsync.c:1552
 #, c-format
@@ -167,37 +204,109 @@ msgstr ""
 msgid "%s version %s\n"
 msgstr "%s Version %s\n"
 
-#: src/parser.y:465
-#, c-format
-msgid "%s: Bogus creator \"%s\", line %d\n"
+#: src/parser.y:579
+#, fuzzy, c-format
+msgid "%s: %d: Bogus creator \"%s\"\n"
 msgstr "%s: Falscher Creator \"%s\", Zeile %d\n"
 
-#: src/parser.y:491
-#, c-format
-msgid "%s: Bogus type \"%s\", line %d\n"
+#: src/parser.y:603
+#, fuzzy, c-format
+msgid "%s: %d: Bogus type \"%s\"\n"
 msgstr "%s: Falscher Typ \"%s\", Zeile %d\n"
+
+#: src/parser.y:349 src/parser.y:383
+#, fuzzy, c-format
+msgid "%s: %d: Unknown conduit flavor %d\n"
+msgstr "%s: Zeile %d: Unbekannter Conduit-Typ %d\n"
+
+#: src/parser.y:335
+#, c-format
+msgid "%s: %d: Warning: Install conduits are not implemented.\n"
+msgstr ""
+
+#: src/parser.y:319
+#, c-format
+msgid "%s: %d: Warning: Sync conduits are not implemented.\n"
+msgstr ""
+
+#: src/parser.y:343
+#, c-format
+msgid "%s: %d: Warning: Uninstall conduits are not implemented.\n"
+msgstr ""
+
+#: src/parser.y:264
+#, c-format
+msgid "%s: %d: Warning: device already defined.\n"
+msgstr ""
+
+#: src/parser.y:918
+#, c-format
+msgid "%s: %d: Warning: directory already defined.\n"
+msgstr ""
+
+#: src/parser.y:894
+#, c-format
+msgid ""
+"%s: %d: Warning: incorrect checksum\n"
+"for serial number \"%s-%c\". Should be \"%s-%c\"\n"
+msgstr ""
+
+#: src/parser.y:955
+#, c-format
+msgid ""
+"%s: %d: Warning: missing ':'\n"
+"\tColons are now required after most directives.\n"
+"\t(This warning will only be shown once.)\n"
+msgstr ""
+
+#: src/parser.y:520
+#, c-format
+msgid "%s: %d: Warning: path already defined.\n"
+msgstr ""
+
+#: src/parser.y:872
+#, c-format
+msgid ""
+"%s: %d: Warning: serial number \"%s\" has no checksum.\n"
+"You may want to rewrite it as \"%s-%c\"\n"
+msgstr ""
+
+#: src/parser.y:845
+#, c-format
+msgid "%s: %d: Warning: serial number already defined.\n"
+msgstr ""
+
+#: src/parser.y:280
+#, c-format
+msgid "%s: %d: Warning: speed already defined.\n"
+msgstr ""
+
+#: src/parser.y:502
+#, c-format
+msgid "%s: %d: Warning: type already defined.\n"
+msgstr ""
 
 #: libpconn/dlp.c:144
 #, c-format
 msgid "%s: Can't allocate %ld-byte buffer\n"
 msgstr "%s: Kann keinen %ld Byte großen Puffer anlegen\n"
 
-#: src/parser.y:601
+#: src/parser.y:739
 #, c-format
 msgid "%s: Can't allocate PDA block\n"
 msgstr "%s: Kann keinen PDA block anlegen\n"
 
-#: src/parser.y:551
+#: src/parser.y:673
 #, fuzzy, c-format
 msgid "%s: Can't allocate conduit header\n"
 msgstr "%s: Kann keinen conduit_block anlegen!\n"
 
-#: src/parser.y:250
+#: src/parser.y:304
 #, c-format
 msgid "%s: Can't allocate conduit_block!\n"
 msgstr "%s: Kann keinen conduit_block anlegen!\n"
 
-#: src/parser.y:143
+#: src/parser.y:159
 #, c-format
 msgid "%s: Can't allocate listen block\n"
 msgstr "%s: Kann keinen listen block anlegen\n"
@@ -259,7 +368,7 @@ msgid "%s: Can't make child's stdout be line-buffered\n"
 msgstr ""
 "%s: Kann Standardausgabe des Kindprozesses nicht auf line-buffered setzen.\n"
 
-#: src/archive.c:125 src/install.c:118 src/parser.y:806
+#: src/archive.c:125 src/install.c:118 src/parser.y:1012
 #, c-format
 msgid "%s: Can't open \"%s\"\n"
 msgstr "%s: Kann \"%s\" nicht öffnen.\n"
@@ -545,11 +654,6 @@ msgstr "%s: excevp(%s) gescheitert, Rückgabewert %d\n"
 msgid "%s: header cannot be longer than %d characters long\n"
 msgstr "%s: Kopfteil kann nicht länger als %d Zeichen sein.\n"
 
-#: src/parser.y:314
-#, c-format
-msgid "%s: line %d: Unknown conduit flavor %d\n"
-msgstr "%s: Zeile %d: Unbekannter Conduit-Typ %d\n"
-
 #: src/log.c:101
 #, c-format
 msgid "%s: realloc failed\n"
@@ -674,7 +778,7 @@ msgstr "Kann System/Benutzer/NetSync-Information nicht bekommen.\n"
 msgid "Can't get user info\n"
 msgstr "Kann Benutzerdaten nicht bekommen.\n"
 
-#: src/config.c:1159
+#: src/config.c:1179
 msgid "Can't get user's full name.\n"
 msgstr "Kann Benutzernamen nicht bekommen.\n"
 
@@ -1069,11 +1173,6 @@ msgstr "Zu viele Dateien heißen \"%s\".\n"
 msgid "Transfer aborted"
 msgstr "Übertragung abgebrochen."
 
-#: src/parser.y:283
-#, c-format
-msgid "Unknown conduit flavor: %d"
-msgstr "Unbekannter Conduit-Flavor: %d"
-
 #: src/config.c:265
 #, c-format
 msgid "Unknown device type: \"%s\"\n"
@@ -1083,11 +1182,6 @@ msgstr "Unbekannter Gerätetpy: \"%s\"\n"
 #, c-format
 msgid "Unknown facility \"%s\"\n"
 msgstr "Unbekannter Debug-Schalter \"%s\"\n"
-
-#: src/parser.y:203
-#, fuzzy, c-format
-msgid "Unrecognized listen type at line %d\n"
-msgstr "Option \"%s\" nicht erkannt.\n"
 
 #: src/config.c:277
 #, c-format
@@ -1135,16 +1229,6 @@ msgstr ""
 "Warnung: AppInfo-Block nicht an der erwarteten Stelle gefunden.\n"
 "Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx.\n"
 
-#: src/parser.y:778
-#, c-format
-msgid "Warning: Missing ';' at line %d\n"
-msgstr ""
-
-#: src/parser.y:769
-#, c-format
-msgid "Warning: Missing '{' at line %d\n"
-msgstr ""
-
 #: src/coldsync.c:286
 #, c-format
 msgid ""
@@ -1166,13 +1250,6 @@ msgstr ""
 "Warnung: Konfigurationsdatei \"%s\" existiert nicht. Voreinstellungen werden "
 "benutzt.\n"
 
-#: src/parser.y:739
-#, c-format
-msgid ""
-"Warning: incorrect checksum for serial number \"%s-%c\".\n"
-"Should be \"%s-%c\"\n"
-msgstr ""
-
 #: libpdb/pdb.c:2108
 #, c-format
 msgid ""
@@ -1191,13 +1268,6 @@ msgstr ""
 "Warnung: Ressource %d nicht an der erwarteten Stelle gefunden.\n"
 "Sollte an 0x%lx stehen, Dateizeiger befindet sich aber an 0x%lx\n"
 
-#: src/parser.y:718
-#, c-format
-msgid ""
-"Warning: serial number \"%s\" has no checksum. You may want\n"
-"to rewrite it as \"%s-%c\"\n"
-msgstr ""
-
 #: libpdb/pdb.c:1916
 #, c-format
 msgid ""
@@ -1210,11 +1280,6 @@ msgstr ""
 #: libpconn/padp.c:614
 msgid "Write timeout. Attempting to resend.\n"
 msgstr "Zeitablauf beim Schreiben. Neuer Sendeversuch.\n"
-
-#: src/parser.y:791
-#, c-format
-msgid "Yacc error: \"%s\" at line %d\n"
-msgstr "Yacc-Fehler: \"%s\" in Zeile %d\n"
 
 #: src/config.c:294
 #, c-format
@@ -1244,8 +1309,18 @@ msgid "usb: trying to fill a non-empty buffer\n"
 msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 
 #, fuzzy
-#~ msgid "Malformed listen statement at line %d\n"
+#~ msgid "\tMangled header near \"%s\"\n"
+#~ msgstr "Fehlendes Argument nach \"%s\"\n"
+
+#, fuzzy
+#~ msgid "\tMalformed conduit argument near \"%s\".\n"
 #~ msgstr "Option \"%s\" nicht erkannt.\n"
+
+#~ msgid "Unknown conduit flavor: %d"
+#~ msgstr "Unbekannter Conduit-Flavor: %d"
+
+#~ msgid "Yacc error: \"%s\" at line %d\n"
+#~ msgstr "Yacc-Fehler: \"%s\" in Zeile %d\n"
 
 #~ msgid "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n"
 #~ msgstr "!!! Ein Conduit hat nicht funktioniert! Programmabbruch\n"
