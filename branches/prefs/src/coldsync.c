@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.44.2.1 2000-08-31 15:37:45 arensb Exp $
+ * $Id: coldsync.c,v 1.44.2.2 2000-09-01 06:13:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -372,14 +372,17 @@ main(int argc, char *argv[])
 	}
 
 	/* Create preference cache */
+	/* XXX - Only do this in "normal sync" mode, i.e., not if we're
+	 * doing a backup or restore.
+	 */
 	MISC_TRACE(1)
 		fprintf(stderr,"Initializing preference cache\n");
-	if((err = CacheFromConduits(config.conduits,pconn)) < 0)
+	if ((err = CacheFromConduits(config.conduits,pconn)) < 0)
 	{
-	    fprintf(stderr,"CacheFromConduits() returned %d\n",err);
-	    Disconnect(pconn,DLPCMD_SYNCEND_CANCEL);
-	    pconn = NULL;
-	    exit(1);
+		fprintf(stderr, _("CacheFromConduits() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		exit(1);
 	}
 
 	/* Find out whether we need to do a slow sync or not */
@@ -632,8 +635,6 @@ main(int argc, char *argv[])
 		}
 	}
 
-	/* Finally, close the connection */
-	SYNC_TRACE(3)
 	/* There might still be pref items that are not yet cached.
 	 * The dump conduits are going to try to download them if not cached,
 	 * but with a closed connection, they are gonna fail. Although ugly,
@@ -643,11 +644,13 @@ main(int argc, char *argv[])
 	    pref_cursor != NULL;
 	    pref_cursor = pref_cursor->next)
 	{
-		if(pref_cursor->contents_info == NULL &&
-		   pconn == pref_cursor->pconn)
-		FetchPrefItem(pconn,pref_cursor);
+		if (pref_cursor->contents_info == NULL &&
+		    pconn == pref_cursor->pconn)
+			FetchPrefItem(pconn, pref_cursor);
 	}
 
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
@@ -679,8 +682,6 @@ main(int argc, char *argv[])
 			}
 		}
 	}
-
-	MISC_TRACE(1)
 
 	MISC_TRACE(1)
 		fprintf(stderr,"Removing preference cache\n");
