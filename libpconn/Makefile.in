@@ -1,0 +1,137 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.1 1999-10-22 02:37:47 arensb Exp $
+
+# XXX - Explicitly write .c.o , .cc.o and executable targets:
+# different compilers have different default rules, and I don't want
+# to deal with them.
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	libpconn
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+# Compatibility functions, included for systems that don't have them.
+# XXX - Bleah. This probably needs to be broken up into individual
+# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
+# the like.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		dlp_cmd.c \
+		util.c \
+		dlp.c \
+		palm_errno.c \
+		padp.c \
+		slp.c \
+		cmp.c \
+		PConnection.c \
+		${COMPAT}
+
+OBJS =		dlp_cmd.o \
+		util.o \
+		dlp.o \
+		palm_errno.o \
+		padp.o \
+		slp.o \
+		cmp.o \
+		PConnection.o \
+		${COMPATOBJS}
+
+# HEADERS =	dlp_cmd.h \
+# 		util.h \
+# 		dlp.h \
+# 		palm_errno.h \
+# 		padp.h \
+# 		slp.h \
+# 		cmp.h \
+# 		PConnection.h
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in \
+		cfmakeraw.c
+
+CLEAN =		libpconn.a *.o *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# XXX - Figure out where to put this. Also, allow for -R flag if ever
+# decide to build shared libraries.
+#LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
+#LIBPDB =	-L${top_srcdir}/libpdb -lpdb
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+RANLIB =	@RANLIB@
+
+.SUFFIXES:	.c .o .cc
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+# XXX - "libpconn.a" should probably be a 'make' symbol, in case we
+# decide to build shared libraries. Don't forget to change it
+# throughout.
+all:	libpconn.a
+
+# XXX - This is probably very OS-dependent.
+# XXX - Redhat(?) doesn't have lorder or tsort.
+libpconn.a:	${OBJS}
+	ar cq $@ ${OBJS}
+	${RANLIB} $@
+#	ar cq ${.TARGET} `lorder ${OBJS} | tsort -q`
+
+install:	libpconn.a
+	${INSTALL} ${INSTALLARGS} libpconn.a ${BINDIR}
+
+# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
+# specify -I/usr/include/g++
+# Actually, 'gcc -M' generates a dependency list the right way. This
+# may be exploited, but the sources then need to be separated into
+# C_SRCS and CXX_SRCS.
+
+depend:
+	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
+
+distdir:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}

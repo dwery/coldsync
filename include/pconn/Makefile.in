@@ -1,0 +1,113 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.1 1999-10-22 02:37:39 arensb Exp $
+
+# XXX - Explicitly write .c.o , .cc.o and executable targets:
+# different compilers have different default rules, and I don't want
+# to deal with them.
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+SRCDIR =	@srcdir@
+subdir =	include/pconn
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+INCLUDEDIR =	@includedir@
+
+SUBDIRS =	
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+# List of recursive targets, i.e., those where you build the target in
+# each subdirectory.
+RECURSIVE_TARGETS = \
+		all depend clean distclean spotless distdir install
+
+HEADERS =	PConnection.h \
+		cmp.h \
+		dlp.h \
+		dlp_cmd.h \
+		padp.h \
+		palm_errno.h \
+		palm_types.h \
+		pconn.h \
+		slp.h \
+		util.h
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in
+
+CLEAN =		*.o *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	@CPPFLAGS@ ${DEFINES} ${INCLUDES}
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+
+.SUFFIXES:	.c .o .cc
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+# XXX - "libpdb.a" should probably be a 'make' symbol, in case we
+# decide to build shared libraries. Don't forget to change it
+# throughout.
+all::	
+
+install::	${HEADERS}
+	if test -d "${INCLUDEDIR}/pconn"; then \
+		true; \
+	else \
+		mkdir "${INCLUDEDIR}/pconn"; \
+	fi
+	for i in ${HEADERS}; do
+		${INSTALL} ${INSTALLARGS} "$$i" ${INCLUDEDIR}/pconn/"$$i";
+	done
+
+depend::
+
+distdir::	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+clean::
+	-rm -f ${CLEAN}
+distclean::
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless::
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+${RECURSIVE_TARGETS}::
+	@for dir in ${SUBDIRS}; do \
+		echo "$@: Entering directory \`${curdir}/$$dir'"; \
+		(cd $$dir && ${MAKE} $@); \
+		echo "$@: Leaving directory \`${curdir}/$$dir'"; \
+	done
