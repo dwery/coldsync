@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.7 1999-11-27 05:53:59 arensb Exp $
+ * $Id: install.c,v 2.8 2000-01-27 03:59:58 arensb Exp $
  */
 
 #include "config.h"
@@ -87,8 +87,7 @@ InstallNewFiles(struct PConnection *pconn,
 		struct pdb *pdb;	/* The database */
 		static char fname[MAXPATHLEN+1];
 					/* The database's full pathname */
-		static char bakfname[MAXPATHLEN+1];
-					/* The database's full pathname in
+		const char *bakfname;	/* The database's full pathname in
 					 * the backup directory.
 					 */
 		int outfd;		/* File descriptor for writing the
@@ -254,13 +253,18 @@ InstallNewFiles(struct PConnection *pconn,
 		/* Construct the pathname to this database in the backup
 		 * directory.
 		 */
-		strncpy(bakfname, backupdir, MAXPATHLEN);
-		strncat(bakfname, "/", MAXPATHLEN - strlen(fname));
-		strncat(bakfname, pdb->name, MAXPATHLEN - strlen(fname));
-		if (IS_RSRC_DB(pdb))
-			strncat(bakfname, ".prc", MAXPATHLEN - strlen(fname));
-		else
-			strncat(bakfname, ".pdb", MAXPATHLEN - strlen(fname));
+		{
+			struct dlp_dbinfo dummy;
+				/* Gross hack. mkbakfname() is very
+				 * convenient, but takes a struct
+				 * dlp_dbinfo. Use a dummy with the
+				 * relevant fields filled in.
+				 */
+
+			strncpy(dummy.name, pdb->name, DLPCMD_DBNAME_LEN);
+			dummy.db_flags = pdb->attributes;
+			bakfname = mkbakfname(&dummy);
+		}
 
 		SYNC_TRACE(5)
 			fprintf(stderr, "Checking for \"%s\"\n",
