@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.19 2000-06-11 07:00:40 arensb Exp $
+ * $Id: lexer.l,v 2.20 2000-06-15 07:32:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -83,6 +83,9 @@ static int nextstate = 0;	/* State in which to start the next yylex()
 
  /* Creator/type pair (two four-character words with a slash in between) */
 %s CTPAIR
+
+ /* Four-character identifier */
+%s ID4
 
  /* Character classes */
 
@@ -170,13 +173,19 @@ ID		[-a-zA-Z_0-9]
 "path"		{ KEYWORD(PATH);	}
 "pda"		{ KEYWORD(PDA);		}
 "palm"		{ KEYWORD(PDA);		/* Synonym */	}
+"preference"	{ KEYWORD(PREFERENCE);	}
+"pref"		{ KEYWORD(PREFERENCE);	/* Synonym */	}
 "serial"	{ KEYWORD(SERIAL);	}
 "usb"		{ KEYWORD(USB);		}
+"saved"		{ KEYWORD(SAVED);	}
 "snum"		{ KEYWORD(SNUM);	}
 "speed"		{ KEYWORD(SPEED);	}
 "type"		{ KEYWORD(TYPE);	}
+"unsaved"	{ KEYWORD(UNSAVED);	}
 "userid"	{ KEYWORD(USERID);	}
 "username"	{ KEYWORD(USERNAME);	}
+"Chosen"	{ KEYWORD(SAVED);	}
+"Heathen"	{ KEYWORD(UNSAVED);	}
 
  /* Conduit flavors */
 "sync"		{ KEYWORD(SYNC);	}
@@ -248,6 +257,19 @@ ID		[-a-zA-Z_0-9]
 	yylval.crea_type.creator = 0L;
 	yylval.crea_type.type = 0L;
 	return CREA_TYPE;
+	}
+
+<ID4>{ALNUM}{4} {
+	PARSE_TRACE(5)
+		fprintf(stderr, "(lex) Found ID4 [%s]\n", yytext);
+
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		fprintf(stderr, _("%s: Can't make copy of string.\n"),
+			"yylex");
+		return -1;
+	}
+	return STRING;
 	}
 
  /* XXX - This should be capable of handling strings longer than
@@ -360,8 +382,12 @@ lex_expect(const int state)
 	    case LEX_CTPAIR:
 		nextstate = CTPAIR;
 		break;
+	    case LEX_ID4:
+		nextstate = ID4;
+		break;
 	    default:
-		fprintf(stderr, _("%s: unknown start state %d\n"),
+		fprintf(stderr, _("%s: unknown start state %d\n"
+			"Please tell the maintainer to fix `lexer.l'.\n"),
 			"lex_expect", state);
 	}
 	have_nextstate = True;
