@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.112 2002-11-26 00:15:32 azummo Exp $
+ * $Id: config.c,v 1.113 2002-11-26 18:30:44 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -442,6 +442,25 @@ load_config(const Bool read_user_config)
 			return -1;
 		}
 	}
+	else
+	if (exists(DEFAULT_GLOBAL_CONFIG_OLD))
+	{
+		Warn(_("PLEASE MOVE your coldsync.conf file to %s\n"
+			"or it will not work with the next ColdSync release."),
+			DEFAULT_GLOBAL_CONFIG);
+
+		err = parse_config_file(DEFAULT_GLOBAL_CONFIG_OLD, sync_config);
+		if (err < 0)
+		{
+			Error(_("Couldn't read configuration file \"%s\"."),
+			      DEFAULT_GLOBAL_CONFIG_OLD);
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+	}
+	
+
 
 	/* Read ~/.coldsyncrc */
 	if (read_user_config)

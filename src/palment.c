@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.9 2002-11-09 22:42:19 azummo Exp $
+ * $Id: palment.c,v 2.10 2002-11-26 18:30:44 azummo Exp $
  */
 
 #include "config.h"
@@ -20,6 +20,12 @@
 #include "palm.h"
 #include "palment.h"
 #include "cs_error.h"
+
+/* Include I18N-related stuff, if necessary */
+#if HAVE_LIBINTL_H
+#  include <locale.h>		/* For setlocale() and friends */
+#  include <libintl.h>
+#endif  /* HAVE_LIBINTL_H */
 
 /* The functions in this file try to look like the getpwent(),
  * getgrent(), getnetent(), get*ent() ... families of functions, and
@@ -72,7 +78,14 @@ getpalment(void)
 	{
 		/* Open /etc/palms */
 		if ((palmsfd = fopen(_PATH_PALMS, "r")) == NULL)
-			return NULL;
+		{
+			if ((palmsfd = fopen(_PATH_PALMS_OLD, "r")) == NULL)
+				return NULL;
+			else
+		                Warn(_("PLEASE MOVE your %s file to %s\n"           
+                                        "or it will not work with the next ColdSync release."), 
+					_PATH_PALMS_OLD, _PATH_PALMS);
+		}                                                                
 	}
 
 	/* Read a line */
