@@ -32,16 +32,8 @@
   convenience.
 - Add identd support?
 - PAM for security throughout?
-- Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
 - Add robustness. Ideally, ColdSync should recover from everything
   that's recoverable.
-- Need functions to begin and end pause: if the desktop pops up a
-  dialog box or something, it can take an arbitrary amount of time to
-  complete. During that time, 'coldsync' should send regular tickle
-  packets to the Palm to keep it from timing out. These should
-  probably return an error if the sync is being run in batch
-  (non-interactive) mode, i.e. when there's no one there to respond to
-  the dialog.
 - Installing new databases: make it possible to install an older
   version of a database. (Actually, this is already possible with
   restoring.)
@@ -122,13 +114,6 @@
 	Fix: when opening a database with DlpOpenDB, if the database
   is read-only (ROM), don't open it for writing. In fact, Backup()
   probably shouldn't open databases read-write at all.
-- Might be nice if there were some "canned" debug levels, so you could
-  say "-d3" and that would give you a fair amount of information,
-  without you having to specify each level independently.
-- Add a log when doing a backup or restore. Need not be anything
-  complicated, just something better than the default "All records
-  successfully synchronized." Maybe just "Backup successful" or
-  something.
 - BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - FreeBSD's /bin/sh is still broken:
@@ -153,6 +138,11 @@
 	A worse problem, however, is that there can be any number of
   conduits to do any number of weird things. If there are a dozen
   conduits, how does ColdSync decide which one(s) to run?
+	Maybe just have a post-dump conduit installed as default for
+  everything; checks its list of conduits (or maybe ~/.coldsyncrc); if
+  there's no conduit listed for this database type, check some central
+  repository and send mail to the user. If the entry is over a month
+  old (or something), check for a newer version of the conduit.
 - Should all of the .h files be lumped under #include <palm/foo.h> ?
 - Perl: Write helper function to parse/pack category blocks, for
   well-behaved applications (i.e., the ones that store categories the
@@ -247,3 +237,18 @@
 - Variables set in .coldsyncrc should simply be propagated to the
   environment. Should this be done immediately, though?
 - Should send mail to the user with a report of the sync.
+- Merge pdb.texi and libpalm.texi into a more general TeXinfo file
+  that describes the otherwise occult internals.
+- "Thought of the Day" conduit: add a fortune-style message as an
+  event for today, and for the next week.
+- It might be able to use CVS for network syncs: CVS can deal with
+  binary files. Furthermore, its time stamps have second resolution.
+  Thus, a server could keep, say, a month's worth of history under
+  CVS. A client can then connect to the server and say, "I have a
+  database with modification time 2000-02-19". The server can then
+  create a diff of the file between 2000-02-12 and the present, and
+  send it back to the client.
+	The problem with this is that it doesn't allow for two-way
+  syncing. Yes, CVS can detect conflicts, but then ColdSync would have
+  to automatically resolve these conflicts. It'd probably be easier to
+  just write a custom protocol.
