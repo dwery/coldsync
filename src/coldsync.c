@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.112 2001-11-28 15:48:44 arensb Exp $
+ * $Id: coldsync.c,v 1.113 2001-12-09 19:51:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -167,13 +167,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* Get this host's hostid */
-	if ((err = get_hostinfo()) < 0)
-	{
-		Error(_("Can't get host ID."));
-		goto done;
-	}
-
 	/* Initialize the global symbol table. */
 	symboltable_init();
 
@@ -230,6 +223,13 @@ main(int argc, char *argv[])
 	if (err < 0)
 	{
 		Error(_("Can't load configuration."));
+		goto done;
+	}
+
+	/* Get this host's hostid, unless it was set by the config file */
+	if ((hostid == 0L) && (err = get_hostinfo()) < 0)
+	{
+		Error(_("Can't get host ID."));
 		goto done;
 	}
 
