@@ -1,6 +1,6 @@
 /* PConnection_net.c
  *
- * $Id: PConnection_net.c,v 1.17 2001-07-30 07:25:36 arensb Exp $
+ * $Id: PConnection_net.c,v 1.18 2001-08-06 00:29:02 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -9,9 +9,13 @@
 #include <netinet/in.h>		/* For sockaddr_in, htonl() etc. */
 #include <arpa/inet.h>		/* For inet_pton() */
 #include <netdb.h>		/* For getservbyname() */
-#include <string.h>		/* For bzero() */
+#include <string.h>		/* For memset() */
 #include <arpa/nameser.h>	/* Solaris's <resolv.h> requires this */
 #include <resolv.h>		/* For inet_ntop() under Solaris */
+
+#if HAVE_STRINGS_H
+#  include <strings.h>		/* For bzero() */
+#endif	/* HAVE_STRINGS_H */
 
 #if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
