@@ -37,7 +37,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.2 1999-02-22 10:46:24 arensb Exp $
+ * $Id: cmp.h,v 1.3 1999-06-24 02:45:43 arensb Exp $
  */
 #ifndef _cmp_h_
 #define _cmp_h_
@@ -86,3 +86,9 @@ extern int cmp_write(struct PConnection *pconn,
 		     const struct cmp_packet *packet);
 
 #endif	/* _cmp_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

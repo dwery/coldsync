@@ -2,7 +2,7 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.2 1999-02-22 10:45:44 arensb Exp $
+ * $Id: cmp.c,v 1.3 1999-06-24 02:45:35 arensb Exp $
  */
 #include <stdio.h>
 #include "palm/palm_types.h"
@@ -89,3 +89,9 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
 
 	return err;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */

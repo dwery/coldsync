@@ -1,6 +1,6 @@
 /* archive.c
  *
- * $Id: archive.c,v 1.2 1999-05-31 20:49:07 arensb Exp $
+ * $Id: archive.c,v 1.3 1999-06-24 02:51:25 arensb Exp $
  */
 
 #include <stdio.h>
@@ -198,3 +198,9 @@ arch_writerecord(int fd,
 
 	return 0;
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
