@@ -143,6 +143,10 @@ Solaris 2.7:
 	ColdSync should detect this, and disable i18n.
 
 Digital Unix 4.0:
+	(as of ColdSync v2.4.4-20011113)
+	DEC's linker chokes on the overly-long identifiers produced by
+	the STL. GNU ld might work.
+
 	(as of ColdSync v1.6.6-20010130)
 	Compiles with gcc 2.7.2. Compilation prints several warnings;
 	they appear to be benign:
