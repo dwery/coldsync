@@ -2,7 +2,7 @@
  *
  * Functions to manipulate Palm connections (PConnection).
  *
- * $Id: PConnection.c,v 1.2 1999-02-21 08:53:51 arensb Exp $
+ * $Id: PConnection.c,v 1.3 1999-02-22 10:43:57 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>
@@ -11,33 +11,13 @@
 #include <termios.h>
 #include "PConnection.h"
 
-static struct PConnection *pconn_list = NULL;
-
-/* PConnLookup
- * Given a file descriptor, return the 'struct PConnection' associated
- * with it, or NULL if it can't be found.
- */
-struct PConnection *
-PConnLookup(int fd)
-{
-	struct PConnection *cur;
-
-	/* Iterate over the list of all PConnections */
-	for (cur = pconn_list; cur != NULL; cur = cur->next)
-		/* See if 'cur's file descriptor matches the one we're
-		 * looking for.
-		 */
-		if (cur->fd == fd)
-			return cur;
-
-	return NULL;		/* Nope, couldn't find it */
-}
+/*  static struct PConnection *pconn_list = NULL; */
 
 /* new_PConnection
  * Opens a new connection on the named port. Returns a handle to the
  * new connection, or NULL in case of error.
  */
-int
+struct PConnection */*int*/
 new_PConnection(char *fname)
 {
 	struct PConnection *pconn;	/* New connection */
@@ -55,7 +35,7 @@ new_PConnection(char *fname)
 	if (slp_init(pconn) < 0)
 	{
 		free(pconn);
-		return -1;
+		return NULL;
 	}
 
 	/* Initialize the PADP part of the PConnection */
@@ -63,7 +43,7 @@ new_PConnection(char *fname)
 	{
 		padp_tini(pconn);
 		slp_tini(pconn);
-		return -1;
+		return NULL;
 	}
 
 	/* Initialize the DLP part of the PConnection */
@@ -72,7 +52,7 @@ new_PConnection(char *fname)
 		dlp_tini(pconn);
 		padp_tini(pconn);
 		slp_tini(pconn);
-		return -1;
+		return NULL;
 	}
 
 	/* Open the file */
@@ -83,34 +63,27 @@ new_PConnection(char *fname)
 		padp_tini(pconn);
 		slp_tini(pconn);
 		free(pconn);
-		return -1;
+		return NULL;
 	}
 
 	/* Set up the terminal characteristics */
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
 	cfsetspeed(&term, B9600);	/* Set initial rate. 9600 bps required
 					 * for handshaking */
-	/* XXX - Solaris 2.5 does not have cfmakeraw() */
 	cfmakeraw(&term);		/* Make it raw */
 	tcsetattr(pconn->fd, TCSANOW, &term);
 					/* Make it so */
 
-	/* Put the new PConnection on the list */
-	pconn->next = pconn_list;
-	pconn_list = pconn;
-
-	return pconn->fd;
+	return pconn;
 }
 
 int
-PConnClose(int fd)
+PConnClose(struct PConnection *pconn)
 {
 	int err;
-	struct PConnection *pconn;
 
-	/* Look up the PConnection */
-	if ((pconn = PConnLookup(fd)) == NULL)
-		return -1;	/* Couldn't find the PConnection */
+	if (pconn == NULL)
+		return 0;
 
 	/* Clean up the DLP part of the PConnection */
 	dlp_tini(pconn);
@@ -124,27 +97,6 @@ PConnClose(int fd)
 	/* Close the file descriptor */
 	err = close(pconn->fd);
 
-	/* Take the PConnection off of the master list */
-	if (pconn_list == pconn)
-	{
-		/* 'pconn' is at the head of the list */
-		pconn_list = pconn->next;
-		pconn->next = NULL;
-	} else {
-		struct PConnection *it;		/* Iterator */
-		for (it = pconn_list; it != NULL; it = it->next)
-			if (it->next == pconn)
-			{
-				/* 'it' is the PConnection just before
-				 * 'pconn'. Take 'pconn' out of the
-				 * linked list.
-				 */
-				it->next = pconn->next;
-				pconn->next = NULL;
-				break;
-			}
-	}
-
 	/* Free the PConnection */
 	free(pconn);
 
@@ -157,7 +109,7 @@ PConnClose(int fd)
  * bogus.
  */
 int
-PConn_bind(int fd, struct slp_addr *addr)
+PConn_bind(struct PConnection *pconn, struct slp_addr *addr)
 {
-	return slp_bind(fd, addr);
+	return slp_bind(pconn, addr);
 }
