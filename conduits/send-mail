@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.4 2000-08-13 04:47:11 arensb Exp $
+# $Id: send-mail,v 1.5 2000-08-13 10:27:58 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -21,7 +21,7 @@ use Text::Wrap;
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.4 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.5 $ ))[1];	# Conduit version
 
 StartConduit("dump");
 
@@ -71,7 +71,7 @@ foreach $record (@{$PDB->{records}})
 	$body .= "\n" if $body !~ /\n$/m;	# Make sure message ends in \n
 
 	# Wrap the text if requested
-	$body = wrap($HEADERS{"Paragraph", $HEADERS{"Line-Indent"},
+	$body = wrap($HEADERS{"Paragraph"}, $HEADERS{"Line-Indent"},
 			$record->{body})
 		if $HEADERS{Wrap} > 0;
 
