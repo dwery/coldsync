@@ -2,14 +2,15 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.3 1999-01-31 22:16:30 arensb Exp $
+ * $Id: slp.c,v 1.4 1999-02-14 04:48:26 arensb Exp $
  */
 
 #include <stdio.h>
 #include <sys/types.h>	/* For read() */
 #include <sys/uio.h>	/* For read() */
 #include <unistd.h>	/* For read() */
-#include <string.h>	/* For memcpy() */
+#include <stdlib.h>	/* For malloc(), realloc() */
+#include "palm_errno.h"
 #include "slp.h"
 #include "util.h"
 #include "PConnection.h"
@@ -24,16 +25,6 @@ int slp_debug = 0;
 
 #endif	/* SLP_DEBUG */
 
-int slp_errno;			/* Error code */
-
-char *slp_errlist[] = {
-	"No error",				/* SLPERR_NOERR */
-	"End of file",				/* SLPERR_EOF */
-	"Bad connection/file descriptor",	/* SLPERR_BADFD */
-	"System call error",			/* SLPERR_SEP */
-	"Input buffer too small",		/* SLPERR_ISIZE */
-};
-
 /* slp_preamble
  * This is the preamble of every SLP packet. It never changes, so it
  * and its CRC are here to save time.
@@ -45,441 +36,55 @@ static const ubyte slp_preamble_checksum = 0x9a;
 	/* Sum of the preamble elements, mod 0xff */
 static const uword slp_preamble_crc = 0xc9f1;	/* CRC of the preamble */
 
-#if 0
-/* XXX - bogus name */
-static uword
-palm_crc(uword sofar, uword len, const ubyte *data)
-{
-	/* XXX - Just insert the code here */
-	extern uword Crc16CalcBlock(const ubyte *data, uword len, uword sofar);
-
-	return Crc16CalcBlock(data, len, sofar);
-}
-
-/* slp_recv
- * Receive a SLP packet for protocol 'protocol'.
+/* slp_init
+ * Initialize a new PConnection.
  */
 int
-slp_recv(int/*PConnHandle*/ ph, ubyte *buf, uword len,
-	 struct slp_header *header)
+slp_init(struct PConnection *pconn)
 {
-	int i;
-	int err;
-	ubyte c;		/* Preamble will be read into here */
-	static ubyte header_buf[7];
-				/* Buffer into which to read the
-				 * header */
-	static ubyte body_buf[SLP_MAX_BODY_LEN];
-				/* Buffer into which to read the body */
-				/* XXX - This is arbitrarily limited */
-	static ubyte crc_buf[2];
-				/* Buffer into which to read the CRC */
-	int want;		/* How many bytes we still want to read */
-	int got;		/* How many bytes we've got so far */
-	ubyte checksum;		/* Checksum calculated from the
-				 * received data */
-	uword got_crc;		/* CRC received in packet */
-	uword my_crc;		/* CRC calculated from packet data */
-
-  redo:		/* May the programming gods forgive me for using
-		 * gotos, but SLP is a protocol whose error-control
-		 * mechanism consists of dropping the offending packet
-		 * on the floor. As such, the easiest thing to do is
-		 * to just restart from the top.
-		 */
-	/* Read the preamble */
-
-	/* First byte */
-	err = read(ph->fd, &c, 1);
-	if (err < 0)
+	/* Allocate the initial input and output buffers */
+	pconn->slp.inbuf = (ubyte *) malloc(SLP_INIT_INBUF_LEN);
+	if (pconn->slp.inbuf == NULL)
 	{
-		perror("slp_recv: read1");
+		/* Memory allocation failed */
 		return -1;
 	}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 1\n");
-	if (c != 0xbe)
-	{
-		SLP_TRACE(1, "read1: got unexpected value 0x%02x\n", c);
-		goto redo;
-	}
-	SLP_TRACE(3, "slp_recv: got 0xbe\n");
+	pconn->slp.inbuf_len = SLP_INIT_INBUF_LEN;
 
-	/* Second byte */
-	err = read(ph->fd, &c, 1);
-	if (err < 0)
+	pconn->slp.outbuf = (ubyte *) malloc(SLP_INIT_OUTBUF_LEN);
+	if (pconn->slp.outbuf == NULL)
 	{
-		perror("slp_read: read2");
+		/* Memory allocation failed */
+		free(pconn->slp.inbuf);
 		return -1;
 	}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 2\n");
-	if (c != 0xef)
-	{
-		SLP_TRACE(1, "read2: got unexpected value 0x%02x\n",
-			  c);
-		goto redo;
-	}
-	SLP_TRACE(3, "slp_recv: got 0xef\n");
+	pconn->slp.outbuf_len = SLP_INIT_OUTBUF_LEN;
 
-	/* Third byte */
-	err = read(ph->fd, &c, 1);
-	if (err < 0)
-	{
-		perror("slp_read: read3");
-		return -1;
-	}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 3\n");
-	if (c != 0xed)
-	{
-		SLP_TRACE(1, "read3: got unexpected value 0x%02x\n",
-			  c);
-		goto redo;
-	}
-	SLP_TRACE(3, "Got a preamble\n");
-
-	/* Read the header */
-	want = 7;
-	got = 0;
-	while (got < want)
-	{
-		err = read(ph->fd, &header_buf[got], want-got);
-		if (err < 0)
-		{
-			perror("slp_read: read header");
-			slp_errno = SLPERR_SEP;
-			return -1;
-		}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 4\n");
-		got += err;
-	}
-	/* Dissect 'header_buf' and put the parts in '*header' */
-	header->dest = header_buf[0];
-	header->src = header_buf[1];
-	header->type = header_buf[2];
-	header->size = ((uword) header_buf[3] << 8) |
-		header_buf[4];
-	header->xid = header_buf[5];
-	header->checksum = header_buf[6];
-
-	/* Show the contents of the header */
-	SLP_TRACE(1, "<   SLP: %d->%d, type %d, size %d, ID 0x%02x, sum 0x%02x\n",
-		  header->src,
-		  header->dest,
-		  header->type,
-		  header->size,
-		  header->xid,
-		  header->checksum);
-
-	/* Make sure the checksum is good */
-	checksum = preamble_checksum;
-	for (i = 0; i < sizeof(header_buf)-1; i++)
-		checksum += header_buf[i];
-	if (checksum != header->checksum)
-	{
-		fprintf(stderr, "SLP: bad checksum: expected %d, got %d\n",
-			checksum, header->checksum);
-		goto redo;
-	}
-
-	/* Read the body */
-	want = header->size;
-	got = 0;
-	while (got < want)
-	{
-		err = read(ph->fd, &body_buf[got], want-got);
-		if (err < 0)
-		{
-			perror("slp_read: read body");
-			return -1;
-		}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 5\n");
-		got += err; 
-	}
-#ifdef SLP_DEBUG
-	if (slp_debug >= 2)
-		/* Dump the body, for debugging */
-		if (header->size > 0)
-		{
-			for (i = 0; i < header->size; i++)
-			{
-				fprintf(stderr, "%02x ", body_buf[i]);
-				if ((i % 16) == 15)
-					fprintf(stderr, "\n");
-			}
-			if ((i % 16) != 0)
-				fprintf(stderr, "\n");
-		}
-#endif	/* SLP_DEBUG */
-
-	/* Read the CRC */
-	want = 2;
-	got = 0;
-	while (got < want)
-	{
-		err = read(ph->fd, &crc_buf[got], want-got);
-		if (err < 0)
-		{
-			perror("slp_read: read CRC");
-			return -1;
-		}
-if (err == 0)
-fprintf(stderr, "read() returned 0 at 6\n");
-		got += err; 
-	}
-
-	/* Check the CRC */
-	got_crc = ((uword) crc_buf[0] << 8) | crc_buf[1];
-	my_crc = preamble_crc;
-	my_crc = palm_crc(my_crc, sizeof(header_buf), header_buf);
-	my_crc = palm_crc(my_crc, header->size, body_buf);
-	if (got_crc != my_crc)
-	{
-		fprintf(stderr, "CRC mismatch: expected 0x%04x, got 0x%04x\n",
-			my_crc, got_crc);
-		goto redo;
-	}
-SLP_TRACE(2, "Good CRC\n");
-if (header->type == slpp_loopback)
-goto redo;
-
-	/* Now make sure this is the kind of packet the caller wanted */
-#if 0
-	if (header->type != control->type)
-	{
-		SLP_TRACE(2, "SLP mismatch: wanted type %d, got %d\n",
-			  control->type, header->type);
-		goto redo;
-	}
-#else
-	if (header->type == slpp_loopback)
-	{
-		SLP_TRACE(2, "SLP: ignoring loopback packet\n");
-		goto redo;
-	}
-#endif
-
-	/* Check the size */
-	if (len < header->size)
-	{
-		fprintf(stderr, "SLP: buffer too small for packet (%d can't fit in %d)\n",
-			header->size, len);
-		return -1;
-	}
-
-	/* Everything looks fine. */
-	memcpy(buf, body_buf, header->size);
-	return header->size;
+	return 0;		/* Success */
 }
 
+/* slp_tini
+ * Clean up a PConnection that's being closed.
+ */
 int
-slp_send(int/*PConnHandle*/ ph, ubyte *buf, uword len,
-	struct slp_header *header)
+slp_tini(struct PConnection *pconn)
 {
-#if 0
-	int i;
-	int err;
-	static ubyte outbuf[10];	/* Buffer for preamble and
-					 * header, and later CRC. */
-	ubyte checksum;
-	uword my_crc;
+	if (pconn == NULL)
+		return 0;		/* Nothing to do */
 
-	header->size = len;
+	/* Free the input and output buffers. Set their length to 0,
+	 * too, just on general principle.
+	 */
+	if (pconn->slp.inbuf != NULL)
+		free(pconn->slp.inbuf);
+	pconn->slp.inbuf_len = 0;
 
-	/* Calculate the checksum */
-	checksum = preamble_checksum +
-		header->dst +
-		header->src +
-		header->type +
-		((header->size >> 8) & 0xff) +
-		(header->size & 0xff);
-
-	/* Create a header in 'outbuf' */
-	memcpy(outbuf, preamble, sizeof(preamble));
-	/* XXX - Perhaps the source and destination ought to be
-	 * swapped here? */
-	outbuf[3] = header->dst;
-	outbuf[4] = header->src;
-	outbuf[5] = header->type;
-	outbuf[6] = (header->size >> 8) & 0xff;
-	outbuf[7] = header->size & 0xff;
-	outbuf[8] = checksum;
-
-	/* Calculate the CRC now, since it's handy */
-	my_crc = palm_crc/*slp_crc*/(preamble_crc, 9, outbuf);
-	my_crc = palm_crc/*slp_crc*/(my_crc, len, buf);
-
-	/* Show the contents of the header */
-	SLP_TRACE(1, ">   SLP: %d->%d, type %d, size %d, ID 0x%02x, sum 0x%02x\n",
-		  header->src,
-		  header->dst,
-		  header->type,
-		  header->size,
-		  header->xid,
-		  /*header->*/checksum);
-
-#ifdef SLP_DEBUG
-	if (slp_debug >= 2)
-	{
-		for (i = 0; i < 9; i++)
-		{
-			fprintf(stderr, "%02x ", outbuf[i]);
-		}
-		fprintf(stderr, "\n");
-	}
-#endif	/* SLP_DEBUG */
-
-	/* Send the SLP header */
-	err = write(ph->fd, outbuf, 9);
-SLP_TRACE(2, "wrote %d/%d bytes\n", err, 9);
-	if (err != 9)
-	{
-		perror("slp_send (header): write");
-		return -1;
-	}
-
-#ifdef SLP_DEBUG
-	if (slp_debug >= 2)
-	{
-		for (i = 0; i < len; i++)
-		{
-			fprintf(stderr, "%02x ", buf[i]);
-			if ((i % 16) == 15)
-				fprintf(stderr, "\n");
-		}
-		if ((i % 16) != 0)
-			fprintf(stderr, "\n");
-	}
-#endif	/* SLP_DEBUG */
-
-	/* Now send the body */
-	err = write(ph->fd, buf, len);
-SLP_TRACE(2, "wrote %d/%d bytes\n", err, len);
-	if (err != len)
-	{
-		perror("slp_send (body): write");
-		return -1;
-	}
-
-	/* Now send the CRC */
-	outbuf[0] = (my_crc >> 8) & 0xff;
-	outbuf[1] = my_crc & 0xff;
-
-	SLP_TRACE(2, "%02x %02x\n", outbuf[0], outbuf[1]);
-
-	err = write(ph->fd, outbuf, 2);
-SLP_TRACE(2, "wrote %d/%d bytes\n", err, 2);
-	if (err != 2)
-	{
-		perror("slp_send (crc): write");
-		return -1;
-	}
+	if (pconn->slp.outbuf != NULL)
+		free(pconn->slp.outbuf);
+	pconn->slp.outbuf_len = 0;
 
 	return 0;
-#endif	/* 0 */
-	int i;
-	int err;
-	static ubyte outbuf[7+SLP_MAX_BODY_LEN+2];
-	ubyte *pos;
-	ubyte checksum;
-	uword my_crc;
-header->size = len;
-
-#ifdef SLP_DEBUG
-if (slp_debug >= 1)
-{
-	if (header->size != len)
-		fprintf(stderr, "*** Warning: header->size == %d, len == %d\n",
-			header->size, len);
 }
-#endif	/* SLP_DEBUG */
-	/* Construct an outgoing packet */
-	pos = &outbuf[0];
-	memcpy(pos, preamble, sizeof(preamble));
-	pos += sizeof(preamble);
-	*pos++ = header->src;	/* These two are reversed */
-	*pos++ = header->dest;
-	*pos++ = header->type;
-	*pos++ = (header->size >> 8) & 0xff;
-	*pos++ = header->size & 0xff;
-	*pos++ = header->xid;
-
-	/* Calculate checksum */
-	checksum = 0;
-	for (i = 0; i < (pos - outbuf); i++)
-		checksum += outbuf[i];
-	*pos++ = checksum;
-
-	/* Copy the caller's message to 'outbuf' */
-	memcpy(pos, buf, len);
-	pos += len;
-
-	my_crc = palm_crc/*slp_crc*/(0, len+10/*pos-outbuf*/, outbuf);
-	*pos++ = (my_crc >> 8) & 0xff;
-	*pos++ = my_crc & 0xff;
-#ifdef SLP_DEBUG
-{
-	struct slp_header header;
-
-	/* Dissect 'header_buf' and put the parts in '*header' */
-	header.dest = outbuf[3];
-	header.src = outbuf[4];
-	header.type = outbuf[5];
-	header.size = ((uword) outbuf[6] << 8) |
-		outbuf[7];
-	header.xid = outbuf[8];
-	header.checksum = outbuf[9];
-
-	/* Show the contents of the header */
-	SLP_TRACE(1, ">   SLP: %d->%d, type %d, size %d, ID 0x%02x, sum 0x%02x\n",
-		header.src,
-		header.dest,
-		header.type,
-		header.size,
-		header.xid,
-		header.checksum);
-
-	/* Make sure the checksum is good */
-	checksum = 0;
-	for (i = 0; i < 9; i++)
-		checksum += outbuf[i];
-	if (checksum != header.checksum)
-	{
-		fprintf(stderr, "SLP: bad checksum: expected %d, got %d\n",
-			checksum, header.checksum);
-	}
-
-	if (slp_debug >= 2)
-	{
-		/* Dump the body, for debugging */
-		if (len > 0)
-		{
-			for (i = 0; i < 10+len+2; i++)
-			{
-				fprintf(stderr, "%02x ", outbuf[i]);
-				if ((i % 16) == 15)
-					fprintf(stderr, "\n");
-			}
-			if ((i % 16) != 0)
-				fprintf(stderr, "\n");
-		}
-	}
-}
-#endif	/* SLP_DEBUG */
-
-	err = write(ph->fd, outbuf, 10+len+2);
-	SLP_TRACE(2, "wrote %d/%d bytes\n", err, 10+len+2);
-	if (err < 0)
-	{
-		perror("slp_send: write");
-		return -1;
-	}
-	return err;
-}
-#endif	/* 0 */
 
 /* slp_bind
  * Bind a PConnection to an SLP address; that is, set up a port at
@@ -494,13 +99,13 @@ slp_bind(int fd, struct slp_addr *addr)
 {
 	struct PConnection *pconn;
 
-	slp_errno = SLPERR_NOERR;
+	palm_errno = PALMERR_NOERR;
 
 	/* Find the PConnection for this connection */
 	if ((pconn = PConnLookup(fd)) == NULL)
 	{
 		fprintf(stderr, "Can't find a PConnection for fd %d\n", fd);
-		slp_errno = SLPERR_BADFD;
+		palm_errno = PALMERR_BADF;
 		return -1;
 	}
 
@@ -513,28 +118,26 @@ slp_bind(int fd, struct slp_addr *addr)
 }
 
 /* slp_read
- * Read a packet from the given file descriptor and put the data read
- * (minus the SLP protocol stuff) into the buffer 'buf'. No more than
- * 'len' characters will be written to 'buf'.
+ * Read a packet from the given file descriptor. A pointer to the
+ * packet data (without the SLP header) is put in `*buf'. The length
+ * of the data (not counting the SLP overhead) is put in `*len'.
  *
- * If successful, returns the number of data bytes read (i.e., not
- * counting the SLP overhead). On end-of-file returns 0 and sets
- * 'slp_errno' to SLPERR_EOF. In case of error, returns -1 and sets
- * 'slp_errno' to indicate the error.
+ * If successful, returns a positive value. On end-of-file returns 0
+ * and sets 'palm_errno' to PALMERR_EOF. In case of error, returns a
+ * negative value and sets 'palm_errno' to indicate the error.
  *
- * If slp_read() does not exit normally (either through EOF or an
- * error), the contents of the data buffer ('buf') is undetermined.
+ * If slp_read() does not exit normally (i.e., either through EOF or
+ * an error), the return values in `*buf' and `*len' are undefined and
+ * should not be used.
  */
 int
 slp_read(int fd,		/* File descriptor to read from */
-	 ubyte *buf,		/* Buffer to put the data into */
-	 uword len)		/* Max # ubytes to read */
+	 const ubyte **buf,	/* Pointer to the data read */
+	 uword *len)		/* Length of received message */
 {
 	int i;
-	int err;
-	static ubyte header_buf[SLP_HEADER_LEN];
-	static ubyte crc_buf[SLP_CRC_LEN];
-	ubyte *ptr;		/* Pointer into various buffers */
+	ssize_t err;		/* Length of read, and error code */
+	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	struct PConnection *pconn;	/* The connection */
 	struct slp_header header;	/* Parsed incoming header */
 	ubyte checksum;		/* Packet checksum, for checking */
@@ -543,13 +146,13 @@ slp_read(int fd,		/* File descriptor to read from */
 	bool ignore;		/* Are we ignoring this packet? */
 	uword my_crc;		/* Computed CRC for the packet */
 
-	slp_errno = SLPERR_NOERR;
+	palm_errno = PALMERR_NOERR;
 
 	/* Get the PConnection from the file descriptor */
 	if ((pconn = PConnLookup(fd)) == NULL)
 	{
 		fprintf(stderr, "slp_read: can't find PConnection for %d\n", fd);
-		slp_errno = SLPERR_BADFD;
+		palm_errno = PALMERR_BADF;
 		return -1;
 	}
 
@@ -562,44 +165,44 @@ slp_read(int fd,		/* File descriptor to read from */
 	/* Read the preamble. */
 	for (i = 0; i < sizeof(slp_preamble); i++)
 	{
-		err = read(pconn->fd, header_buf+i, 1);
+		err = read(pconn->fd, pconn->slp.header_inbuf+i, 1);
 		if (err < 0)
 		{
 			perror("slp_read: read");
-			slp_errno = SLPERR_SEP;
+			palm_errno = PALMERR_SYSTEM;
 			return err;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(10, "EOF in preamble\n");
-			slp_errno = SLPERR_EOF;
+			palm_errno = PALMERR_EOF;
 			return 0;
 		}
-		if (header_buf[i] != slp_preamble[i])
+		if (pconn->slp.header_inbuf[i] != slp_preamble[i])
 		{
 			SLP_TRACE(5, "Got bogus character 0x%02x\n",
-				  header_buf[i]);
+				  pconn->slp.header_inbuf[i]);
 			goto redo;
 		}
 	}
-	SLP_TRACE(5, "Got a preamble\n");
+/*  	SLP_TRACE(5, "Got a preamble\n"); */
 
 	/* Read the header */
 	want = SLP_HEADER_LEN;
 	got = SLP_PREAMBLE_LEN;
 	while (want > got)
 	{
-		err = read(pconn->fd, header_buf+got, want-got);
+		err = read(pconn->fd, pconn->slp.header_inbuf+got, want-got);
 		if (err < 0)
 		{
-			perror("slp_read: read2");
-			slp_errno = SLPERR_SEP;
+			perror("slp_read: read");
+			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(10, "EOF in header\n");
-			slp_errno = SLPERR_EOF;
+			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
@@ -607,17 +210,17 @@ slp_read(int fd,		/* File descriptor to read from */
 
 #if SLP_DEBUG
 	if (slp_debug >= 6)
-		debug_dump("SLP(h) <<<", header_buf, got);
+		debug_dump("SLP(h) <<<", pconn->slp.header_inbuf, got);
 #endif	/* SLP_DEBUG */
 
 	/* Parse the header */
-	ptr = header_buf+SLP_PREAMBLE_LEN;
-	header.dest	= get_ubyte(&ptr);
-	header.src	= get_ubyte(&ptr);
-	header.type	= get_ubyte(&ptr);
-	header.size	= get_uword(&ptr);
-	header.xid	= get_ubyte(&ptr);
-	header.checksum	= get_ubyte(&ptr);
+	rptr = pconn->slp.header_inbuf+SLP_PREAMBLE_LEN;
+	header.dest	= get_ubyte(&rptr);
+	header.src	= get_ubyte(&rptr);
+	header.type	= get_ubyte(&rptr);
+	header.size	= get_uword(&rptr);
+	header.xid	= get_ubyte(&rptr);
+	header.checksum	= get_ubyte(&rptr);
 	SLP_TRACE(5, "Got a header: %d->%d, type %d, size %d, xid 0x%02x, sum 0x%02x\n",
 		  header.src,
 		  header.dest,
@@ -639,7 +242,7 @@ slp_read(int fd,		/* File descriptor to read from */
 	checksum = 0;
 	/* Sum up everything except for the checksum byte */
 	for (i = 0; i < SLP_HEADER_LEN-1; i++)
-		checksum += header_buf[i];
+		checksum += pconn->slp.header_inbuf[i];
 
 	if (checksum != header.checksum)
 	{
@@ -659,107 +262,78 @@ slp_read(int fd,		/* File descriptor to read from */
 	else
 		SLP_TRACE(6, "Not ignoring packet\n");
 
-	/* Read the body. */
-	if (ignore)
+	/* Before reading the body of the packet, see if the input buffer
+	 * in the PConnection is big enough to hold it. If not, resize it.
+	 */
+	if (header.size > pconn->slp.inbuf_len)
 	{
-		/* This packet is being ignored; just read it and toss
-		 * the results.
-		 */
-		want = header.size;
-		got = 0;
+		ubyte *eptr;	/* Pointer to reallocated buffer */
 
-		/* We have a buffer handy, so might as well use that */
-		while (want > 0)
-		{
-			if (want > len)
-				err = read(pconn->fd, buf, len);
-			else
-				err = read(pconn->fd, buf, want);
-			if (err < 0)
-			{
-				perror("slp_read: read 3");
-				slp_errno = SLPERR_SEP;
-				return -1;
-			}
-			if (err == 0)
-			{
-				SLP_TRACE(10, "EOF in ignored body\n");
-				slp_errno = SLPERR_EOF;
-				return 0;
-			}
-#if SLP_DEBUG
-		/* Dump the body, for debugging */
-		if (slp_debug >= 6)
-			debug_dump("SLP(i) <<<", buf, err);
-#endif	/* SLP_DEBUG */
-			got += err;
-			want -= err;
-		}
-	} else {
-		/* This packet is not being ignored. Read it for real.
+		/* Reallocate the input buffer. We use the temporary
+		 * variable `eptr' in case realloc() fails: we don't
+		 * want to lose the existing buffer.
 		 */
-
-		/* Make sure the buffer has enough room to read this
-		 * packet.
-		 */
-		if (header.size > len)
+		eptr = (ubyte *) realloc(pconn->slp.inbuf, header.size);
+		if (eptr == NULL)
 		{
-			fprintf(stderr, "slp_read: 'len' not big enough for packet (%d bytes can't fit in %d)\n",
-				header.size, len);
-			slp_errno = SLPERR_ISIZE;
+			/* Reallocation failed */
+			palm_errno = PALMERR_NOMEM;
 			return -1;
 		}
-
-		/* Read the body */
-		want = header.size;
-		got = 0;
-		while (want > got)
-		{
-			err = read(pconn->fd, buf+got, want-got);
-			if (err < 0)
-			{
-				perror("slp_read: read2");
-				slp_errno = SLPERR_SEP;
-				return -1;
-			}
-			if (err == 0)
-			{
-				SLP_TRACE(10, "EOF in body\n");
-				slp_errno = SLPERR_EOF;
-				return 0;
-			}
-			got += err;
-		}
-#if SLP_DEBUG
-		/* Dump the body, for debugging */
-		if (slp_debug >= 5)
-			debug_dump("SLP(b) <<<", buf, got);
-#endif	/* SLP_DEBUG */
+		pconn->slp.inbuf = eptr;	/* Set the new buffer */
+		pconn->slp.inbuf_len = header.size;
+						/* and record its new size */
 	}
+
+	/* Read the body */
+	want = header.size;
+	got = 0;
+	while (want > got)
+	{
+		err = read(pconn->fd, pconn->slp.inbuf+got, want-got);
+		if (err < 0)
+		{
+			perror("slp_read: read2");
+			palm_errno = PALMERR_SYSTEM;
+			return -1;
+		}
+		if (err == 0)
+		{
+			SLP_TRACE(10, "EOF in body\n");
+			palm_errno = PALMERR_EOF;
+			return 0;
+		}
+		got += err;
+	}
+#if SLP_DEBUG
+	/* Dump the body, for debugging */
+	if (slp_debug >= 5)
+		debug_dump("SLP(b) <<<", pconn->slp.inbuf, got);
+#endif	/* SLP_DEBUG */
 
 	/* Read the CRC */
 	want = SLP_CRC_LEN;
 	got = 0;
 	while (want > got)
 	{
-		err = read(pconn->fd, crc_buf+got, want-got);
+		err = read(pconn->fd, pconn->slp.crc_inbuf+got, want-got);
 		if (err < 0)
 		{
-			perror("slp_read: read4");
-			slp_errno = SLPERR_SEP;
+			perror("slp_read: read");
+			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		if (err == 0)
 		{
 			SLP_TRACE(10, "EOF in CRC\n");
-			slp_errno = SLPERR_EOF;
+			palm_errno = PALMERR_EOF;
 			return 0;
 		}
 		got += err;
 	}
 #if SLP_DEBUG
 	if (slp_debug >= 6)
-		debug_dump("SLP(c) <<<", crc_buf, SLP_CRC_LEN);
+		debug_dump("SLP(c) <<<", pconn->slp.crc_inbuf, SLP_CRC_LEN);
 #endif	/* SLP_DEBUG */
 	SLP_TRACE(10, "Got CRC\n");
 
@@ -775,17 +349,17 @@ slp_read(int fd,		/* File descriptor to read from */
 	 * the previous step's output as its own starting CRC, thus
 	 * obtaining the CRC of the entire SLP packet.
 	 *
-	 * The test relies on a property of CRCs: if CRC(s1s2...sN) ==
-	 * c1c2, then CRC(s1s2...sNc1c2) == 0.
+	 * The test relies on a property of CRCs: if CRC(s1, s2, ...
+	 * sN) == c1, c2, then CRC(s1, s2, ... sN, c1, c2) == 0.
 	 */
-	my_crc = crc16(header_buf, SLP_HEADER_LEN, 0);
-	my_crc = crc16(buf, header.size, my_crc);
-	my_crc = crc16(crc_buf, SLP_CRC_LEN, my_crc);
+	my_crc = crc16(pconn->slp.header_inbuf, SLP_HEADER_LEN, 0);
+	my_crc = crc16(pconn->slp.inbuf, header.size, my_crc);
+	my_crc = crc16(pconn->slp.crc_inbuf, SLP_CRC_LEN, my_crc);
 	if (my_crc != 0)
 	{
-		ptr = crc_buf;
+		rptr = pconn->slp.crc_inbuf;
 		fprintf(stderr, "SLP: bad CRC: expected 0x%04x, got 0x%04x\n",
-			my_crc, peek_uword(ptr));
+			my_crc, peek_uword(rptr));
 		goto redo;
 	}
 	SLP_TRACE(6, "Good CRC\n");
@@ -794,19 +368,21 @@ slp_read(int fd,		/* File descriptor to read from */
 				/* Set the transaction ID so the next
 				 * protocol up knows it.
 				 */
-	return header.size;
+	*buf = pconn->slp.inbuf;	/* Tell the caller where to find the
+					 * data */
+	*len = header.size;		/* and how much of it there was */
+	return 1;		/* Success */
 }
 
 /* slp_write
  * Write a SLP packet on the given file descriptor, with contents
  * 'buf' and length 'len'.
-
  * Returns the number of bytes written (excluding SLP overhead)
  */
 int
 slp_write(int fd,
-	  ubyte *buf,
-	  uword len)
+	  const ubyte *buf,
+	  const uword len)
 {
 	int i;
 	int err;
@@ -815,32 +391,32 @@ slp_write(int fd,
 				/* Buffer to hold the SLP header on output */
 	static ubyte crc_buf[SLP_CRC_LEN];
 				/* Buffer to hold the CRC on output */
-	ubyte *ptr;		/* Pointer into buffers */
+	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	uword sent;		/* How many bytes have been sent so far */
 	uword want;		/* How many bytes we still want to send */
 	ubyte checksum;		/* Header checksum */
 	uword crc;		/* Computed CRC of the packet */
 
-	slp_errno = SLPERR_NOERR;
+	palm_errno = PALMERR_NOERR;
 
 	/* Get the PConnection from the file descriptor */
 	if ((pconn = PConnLookup(fd)) == NULL)
 	{
 		fprintf(stderr, "slp_write: can't find PConnection for %d\n", fd);
-		slp_errno = SLPERR_BADFD;
+		palm_errno = PALMERR_BADF;
 		return -1;
 	}
 
 	/* Build a packet header in 'header_buf' */
-	ptr = header_buf;
-	put_ubyte(&ptr, slp_preamble[0]);
-	put_ubyte(&ptr, slp_preamble[1]);
-	put_ubyte(&ptr, slp_preamble[2]);
-	put_ubyte(&ptr, pconn->slp.remote_addr.port);	/* dest */
-	put_ubyte(&ptr, pconn->slp.local_addr.port);	/* src */
-	put_ubyte(&ptr, pconn->slp.local_addr.protocol);/* type */
-	put_uword(&ptr, len);/* size */
-	put_ubyte(&ptr, pconn->padp.xid);		/* xid */
+	wptr = header_buf;
+	put_ubyte(&wptr, slp_preamble[0]);
+	put_ubyte(&wptr, slp_preamble[1]);
+	put_ubyte(&wptr, slp_preamble[2]);
+	put_ubyte(&wptr, pconn->slp.remote_addr.port);	/* dest */
+	put_ubyte(&wptr, pconn->slp.local_addr.port);	/* src */
+	put_ubyte(&wptr, pconn->slp.local_addr.protocol);/* type */
+	put_uword(&wptr, len);				/* size */
+	put_ubyte(&wptr, pconn->padp.xid);		/* xid */
 			/* XXX - It's unfortunate that the SLP layer
 			 * has to reach into the PADP layer this way,
 			 * but the SLP and PADP protocols are so
@@ -851,15 +427,15 @@ slp_write(int fd,
 	checksum = 0;
 	for (i = 0; i < SLP_HEADER_LEN-1; i++)
 		checksum += header_buf[i];
-	put_ubyte(&ptr, checksum);			/* checksum */
+	put_ubyte(&wptr, checksum);			/* checksum */
 
 	/* Compute the CRC of the message */
 	crc = crc16(header_buf, SLP_HEADER_LEN, 0);
 	crc = crc16(buf, len, crc);
 
 	/* Construct the CRC buffer */
-	ptr = crc_buf;
-	put_uword(&ptr, crc);
+	wptr = crc_buf;
+	put_uword(&wptr, crc);
 
 	/* Send the header */
 	want = SLP_HEADER_LEN;
@@ -870,7 +446,7 @@ slp_write(int fd,
 		if (err < 0)
 		{
 			perror("slp_write: write header");
-			slp_errno = SLPERR_SEP;
+			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		sent += err;
@@ -889,7 +465,7 @@ slp_write(int fd,
 		if (err < 0)
 		{
 			perror("slp_write: write body");
-			slp_errno = SLPERR_SEP;
+			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		sent += err;
@@ -908,7 +484,7 @@ slp_write(int fd,
 		if (err < 0)
 		{
 			perror("slp_write: write CRC");
-			slp_errno = SLPERR_SEP;
+			palm_errno = PALMERR_SYSTEM;
 			return -1;
 		}
 		sent += err;
