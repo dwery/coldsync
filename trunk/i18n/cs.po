@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 2.1.3\n"
-"POT-Creation-Date: 2002-03-10 13:19+0100\n"
+"POT-Creation-Date: 2002-03-10 17:49+0100\n"
 "PO-Revision-Date: 2001-12-07 00:01+0100\n"
 "Last-Translator: Petr Kubánek <petr@kubanek.net>\n"
 "Language-Team: cs <cs@li.org>\n"
@@ -429,12 +429,12 @@ msgstr "%s: Nemohu vyèistit databázi: %d."
 msgid "%s: Can't copy record."
 msgstr "%s: Nemohu nakopírovat záznam."
 
-#: ../src/conduit.c:1540
+#: ../src/conduit.c:1541
 #, c-format
 msgid "%s: Can't create file handle to child's stdin."
 msgstr "%s: Nemohu vytvoøit file handle pro stdin potomka."
 
-#: ../src/conduit.c:1568
+#: ../src/conduit.c:1569
 #, c-format
 msgid "%s: Can't create file handle to child's stdout."
 msgstr "%s: Nemohu vytvoøit file handle pro stdout potomka."
@@ -454,7 +454,7 @@ msgstr "%s: Nemohu vytvoøit jméno staging souboru."
 msgid "%s: Can't download \"%s\"."
 msgstr "%s: Nemohu nahrát \"%s\"."
 
-#: ../src/conduit.c:2035
+#: ../src/conduit.c:2057
 #, c-format
 msgid "%s: Can't get child process status."
 msgstr "%s: Nemohu získat stav potomka."
@@ -479,7 +479,7 @@ msgstr "%s: Nemohu nahrát \"%s\"."
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Nemohu nahrát databázi \"%s\"."
 
-#: ../src/conduit.c:1586
+#: ../src/conduit.c:1587
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered."
 msgstr "%s: Nemohu zmìnit buffrování stdout potomka na linkové."
@@ -634,7 +634,7 @@ msgstr "%s: Nemohu zapsat staging soubor \"%s\"."
 msgid "%s: Can't write the two useless NULs to \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat dva neu¾iteèné NULy.\n"
 
-#: ../src/conduit.c:1858
+#: ../src/conduit.c:1880
 #, c-format
 msgid "%s: Conduit exited unexpectedly."
 msgstr "%s: Conduit neoèekávanì skonèil."
@@ -648,7 +648,7 @@ msgstr ""
 "%s: Handler conduitu je v nekonzistentním stavu v\n"
 "%s, øádce %d. Prosím, upozornìte o tom maintainera."
 
-#: ../src/conduit.c:1849
+#: ../src/conduit.c:1871
 #, c-format
 msgid ""
 "%s: Conduit is running happily, but hasn't printed anything.\n"
@@ -661,6 +661,11 @@ msgstr ""
 #, c-format
 msgid "%s: Could not find HotSync endpoint on Visor.\n"
 msgstr "%s: Nemohu najít endpoint HotSyncu na Visoru.\n"
+
+#: ../src/conduit.c:1681
+#, fuzzy, c-format
+msgid "%s: Couldn't change directory to \"%s\"\n"
+msgstr "%s: Nemohu otevøít adresáø \"%s\"."
 
 #: ../src/restore.c:109
 #, c-format
@@ -753,7 +758,7 @@ msgstr ""
 "%s: V definici \"%s\"\n"
 "\tnení ¾ádný `type:' øádek."
 
-#: ../src/conduit.c:1662
+#: ../src/conduit.c:1663
 #, c-format
 msgid "%s: No executable \"%s\" in $CONDUIT_PATH or $CONDUITDIR.\n"
 msgstr ""
@@ -854,7 +859,7 @@ msgstr "%s: chyba pøi ètení index záznamu polo¾ky (%d bytù): %d.\n"
 msgid "%s: error sending SPC response header."
 msgstr "%s: chyba pøi posílání SPC odpovìdní hlavièky."
 
-#: ../src/conduit.c:1672
+#: ../src/conduit.c:1694
 #, fuzzy, c-format
 msgid "%s: execv(%s) failed and returned %d."
 msgstr "%s: selhalo execv(%s). Jeho návratová hodnota: %d."
@@ -869,7 +874,7 @@ msgstr "%s: realloc(%d) selhal."
 msgid "%s: select() returned 0. I'm puzzled."
 msgstr "%s: select() vrátil 0. Nevím, co dál."
 
-#: ../src/conduit.c:1795
+#: ../src/conduit.c:1817
 #, c-format
 msgid ""
 "%s: select() returned 0. This should never happen. Please notify the "
@@ -878,7 +883,7 @@ msgstr ""
 "%s: select() vrátil 0. To by se nikdy nemìlo stát. Prosím upozornìte na to "
 "maintainera."
 
-#: ../src/conduit.c:1752
+#: ../src/conduit.c:1774
 #, c-format
 msgid "%s: select() returned an unexpected error. This should never happen."
 msgstr "%s: select() vrátil neoèekávanou chybu. To by se nikdy nemìlo stát."
@@ -1509,7 +1514,7 @@ msgstr ""
 "Mám nový smazaný záznam, který není ani archivován, ani vyprázdnìn\n"
 "Co mám dìlat?"
 
-#: ../src/conduit.c:2169
+#: ../src/conduit.c:2191
 msgid "Inside run_DummyConduit.\n"
 msgstr "V run_DummyConduit.\n"
 

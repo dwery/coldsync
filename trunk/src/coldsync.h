@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.59 2001-11-12 05:50:04 arensb Exp $
+ * $Id: coldsync.h,v 1.60 2002-03-11 23:12:14 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -218,6 +218,7 @@ typedef struct conduit_block
 
 	unsigned char flags;	/* CONDFL_* flags */
 	char *path;		/* Path to conduit */
+	char *cwd;		/* Conduit working directory */
 	struct cond_header *headers;	/* User-supplied headers */
 
 	struct pref_desc *prefs;	/* Array of preferences that this

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.57 2001-12-09 19:51:55 arensb Exp $
+ * $Id: parser.y,v 2.58 2002-03-11 23:12:14 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -85,6 +85,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token LISTEN
 %token OPTIONS
 %token PATH
+%token CWD
 %token PDA
 %token PREFERENCE
 %token SAVED
@@ -525,6 +526,28 @@ conduit_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Conduit path: [%s]\n",
 				cur_conduit->path);
+	}
+	| CWD colon
+	{
+		lex_expect(LEX_BSTRING);
+	}
+	STRING semicolon
+	{
+		lex_expect(LEX_NONE);
+
+		if (cur_conduit->cwd != NULL)
+		{
+			Warn(_("%s: %d: Cwd already defined."),
+			     conf_fname, lineno);
+			free(cur_conduit->cwd);
+		}
+
+		cur_conduit->cwd = $4;
+		$4 = NULL;
+
+		PARSE_TRACE(4)
+			fprintf(stderr, "Conduit cwd: [%s]\n",
+				cur_conduit->cwd);
 	}
 	| PREFERENCE colon
 	{

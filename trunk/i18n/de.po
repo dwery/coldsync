@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 1.1.4\n"
-"POT-Creation-Date: 2002-03-10 13:19+0100\n"
+"POT-Creation-Date: 2002-03-10 17:49+0100\n"
 "PO-Revision-Date: 2000-03-27 16:57+02:00\n"
 "Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
 "Language-Team:  de <de@li.org>\n"
@@ -419,12 +419,12 @@ msgstr "%s Fehler: Kann Datenbank nicht aufräumen: %d."
 msgid "%s: Can't copy record."
 msgstr "%s: Kann Datensatz nicht kopieren."
 
-#: ../src/conduit.c:1540
+#: ../src/conduit.c:1541
 #, c-format
 msgid "%s: Can't create file handle to child's stdin."
 msgstr "%s: Kann keine Datei mit Standardeingabe des Kindprozesses verbinden."
 
-#: ../src/conduit.c:1568
+#: ../src/conduit.c:1569
 #, c-format
 msgid "%s: Can't create file handle to child's stdout."
 msgstr "%s: Kann keine Datei mit Standardausgabe des Kindprozesses verbinden."
@@ -444,7 +444,7 @@ msgstr "%s: Kann den Namen der temporären Datei nicht erzeugen."
 msgid "%s: Can't download \"%s\"."
 msgstr "%s: Kann \"%s\" nicht herunterladen."
 
-#: ../src/conduit.c:2035
+#: ../src/conduit.c:2057
 #, c-format
 msgid "%s: Can't get child process status."
 msgstr "%s: Kann den Status des Kindprozesses nicht feststellen."
@@ -469,7 +469,7 @@ msgstr "%s: Kann \"%s\" nicht laden."
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Kann Datenbank \"%s\" nicht laden."
 
-#: ../src/conduit.c:1586
+#: ../src/conduit.c:1587
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered."
 msgstr ""
@@ -626,7 +626,7 @@ msgstr "%s: Kann temporäre Datei \"%s\" nicht schreiben."
 msgid "%s: Can't write the two useless NULs to \"%.*s\".\n"
 msgstr "%s: Kann die zwei nutzlosen NULlen nach \"%.*s\" nicht schreiben.\n"
 
-#: ../src/conduit.c:1858
+#: ../src/conduit.c:1880
 #, c-format
 msgid "%s: Conduit exited unexpectedly."
 msgstr "%s: Conduit unerwartet beendet."
@@ -642,7 +642,7 @@ msgstr ""
 "%s, line %d."
 
 # Again, send original message to the maintainer
-#: ../src/conduit.c:1849
+#: ../src/conduit.c:1871
 #, c-format
 msgid ""
 "%s: Conduit is running happily, but hasn't printed anything.\n"
@@ -657,6 +657,11 @@ msgstr ""
 #, c-format
 msgid "%s: Could not find HotSync endpoint on Visor.\n"
 msgstr "%s: Konnte keinen Endpunkt für HotSync auf dem Visor finden.\n"
+
+#: ../src/conduit.c:1681
+#, fuzzy, c-format
+msgid "%s: Couldn't change directory to \"%s\"\n"
+msgstr "%s: Kann Verzeichnis \"%s\" nicht öffnen."
 
 #: ../src/restore.c:109
 #, c-format
@@ -750,7 +755,7 @@ msgstr ""
 "%s: Warnung: Keine 'type:' Zeile\n"
 "in der Definition von \"%s\"."
 
-#: ../src/conduit.c:1662
+#: ../src/conduit.c:1663
 #, c-format
 msgid "%s: No executable \"%s\" in $CONDUIT_PATH or $CONDUITDIR.\n"
 msgstr ""
@@ -849,7 +854,7 @@ msgstr "%s: Fehler beim Lesen der Indexeintrags für \"%.*s\" (%d Bytes): %d.\n"
 msgid "%s: error sending SPC response header."
 msgstr "%s: Fehler beim Sender des SPC Antwortkopfes."
 
-#: ../src/conduit.c:1672
+#: ../src/conduit.c:1694
 #, fuzzy, c-format
 msgid "%s: execv(%s) failed and returned %d."
 msgstr "%s: excevp(%s) gescheitert, Rückgabewert %d."
@@ -864,7 +869,7 @@ msgstr "%s: realloc gescheitert."
 msgid "%s: select() returned 0. I'm puzzled."
 msgstr "%s: select() lieferte 0."
 
-#: ../src/conduit.c:1795
+#: ../src/conduit.c:1817
 #, c-format
 msgid ""
 "%s: select() returned 0. This should never happen. Please notify the "
@@ -874,7 +879,7 @@ msgstr ""
 "Meldung an den Entwickler des Programms.\n"
 "%s: select() returned 0. This should never happen."
 
-#: ../src/conduit.c:1752
+#: ../src/conduit.c:1774
 #, c-format
 msgid "%s: select() returned an unexpected error. This should never happen."
 msgstr "%s: select() gabe einen unerwarteten Fehler zurück."
@@ -1499,7 +1504,7 @@ msgid ""
 "What am I supposed to do?"
 msgstr ""
 
-#: ../src/conduit.c:2169
+#: ../src/conduit.c:2191
 msgid "Inside run_DummyConduit.\n"
 msgstr "Innerhalb von run_DummyConduit.\n"
 
