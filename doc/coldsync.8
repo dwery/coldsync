@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.11 2000-02-07 01:39:49 arensb Exp $
+.\" $Id: coldsync.8,v 1.12 2000-02-07 04:45:00 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -118,7 +118,8 @@ level is not specified, it defaults to 1. Thus,
 is equivalent to
 .Li -dmisc:1 .
 Facilities currently include
-.Dv SLP , CMP , PADP , DLP , DLPC , SYNC ,
+.Dv SLP , CMP , PADP , DLP , DLPC ,
+.Dv SYNC , PARSE , IO ,
 and
 .Dv MISC .
 The
@@ -169,7 +170,7 @@ directives are of the form
 .Bd -literal -offset indent
 conduit <flavor> {
 	path "/path/to/conduit";
-	type "<creator>"/"<type>";
+	type <creator>/<type>;
 }
 .Ed
 where
@@ -197,13 +198,17 @@ For instance:
 .Bd -literal -offset indent
 conduit fetch {
 	path "/usr/local/libexec/coldsync/addressbook-fetch";
-	type "addr"/"DATA";
+	type addr/DATA;
 }
 .Ed
 The database creator and type should be specified in the documentation
-for each conduit. You may also use the empty string (
+for each conduit. You may also use either the empty string (
 .Li \&"\&"
-) for the type or creator, to indicate a wildcard. This is not
+) or an asterisk (
+.Li *
+) for the type or creator, to indicate a wildcard:
+.Dl type addr/*;
+This is not
 generally useful, though.
 .Pp
 If a device was specified on the command line,
@@ -286,11 +291,11 @@ you'd add the following to your
 .Bd -literal -offset indent
 conduit fetch {
 	path "/usr/local/libexec/coldsync/kab-fetch";
-	type "addr"/"DATA";
+	type addr/DATA;
 }
 conduit dump {
 	path "/usr/local/libexec/coldsync/kab-fetch";
-	type "addr"/"DATA";
+	type addr/DATA;
 }
 .Ed
 .Pp

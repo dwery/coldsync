@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.7 2000-02-03 03:23:55 arensb Exp $
+@c $Id: conduits.texi,v 1.8 2000-02-07 04:45:09 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -226,32 +226,32 @@ file:
 @cartouche
 conduit fetch @{
         path "/usr/local/libexec/coldsync/kab-fetch";
-        type "addr"/"DATA";
+        type addr/DATA;
 @}
 @end cartouche
 @end example
 
 @cindex Wildcards
-	If you leave the type empty:
+	An asterisk in a creator or type specification acts as a wildcard:
 @example
-        type "addr"/"";
+        type addr/*;
 @end example
 
 @noindent
 the conduit will be run for every database with creator @samp{addr},
-regardless of type. Likewise, if you leave the creator empty:
+regardless of type. Likewise:
 
 @example
-        type ""/"DATA";
+        type */DATA;
 @end example
 
 @noindent
 the conduit will be run for every database with type @samp{DATA},
 regardless of creator (though this isn't usually very useful). Finally,
-you can leave both the creator and type empty:
+you can specify wildcards for both the creator and type:
 
 @example
-        type ""/"";
+        type */*;
 @end example
 
 @noindent
@@ -285,7 +285,7 @@ reflected on your Palm.
 @cartouche
 conduit fetch @{
         path "/usr/local/libexec/coldsync/get-meetings";
-        type "date"/"DATA";
+        type date/DATA;
 @}
 @end cartouche
 @end example
@@ -317,7 +317,7 @@ address book application's format.
 @cartouche
 conduit dump @{
         path "/usr/local/libexec/coldsync/save-meetings";
-        type "date"/"DATA";
+        type date/DATA;
 @}
 @end cartouche
 @end example
