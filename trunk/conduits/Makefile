@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2003-06-28 14:31:43 azummo Exp $
+# $Id: Makefile,v 1.15 2003-06-28 21:07:26 azummo Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -30,7 +30,10 @@ DISTFILES =	Makefile \
 		dump-vfs \
 		zire71-photo \
 		recat \
-		dump-dlpdbs
+		dump-dlpdbs \
+		dump-vfs-root-dir \
+		vfs-read-test \
+		vfs-write-test
 
 all::
 
