@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2004-02-25 12:08:22 azummo Exp $
+# $Id: Makefile,v 1.17 2004-10-11 23:52:27 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -9,7 +9,8 @@ PERL_CONDUITS =	copy-appinfo \
 		send-mail \
 		send-mail-2 \
 		mbox-inbox \
-		todo-text
+		todo-text \
+		archive-sync
 
 # XXX - memo-text and std-categories aren't ready for prime time, so
 # they're listed under DISTFILES so they won't be installed.
@@ -33,7 +34,10 @@ DISTFILES =	Makefile \
 		dump-dlpdbs \
 		dump-vfs-root-dir \
 		vfs-read-test \
-		vfs-write-test
+		vfs-write-test \
+		archive-sync \
+		memo-conduit.c \
+		time-conduit.c
 
 all::
 

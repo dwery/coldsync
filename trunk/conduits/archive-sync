@@ -1,0 +1,153 @@
+#!/usr/bin/perl
+#
+# ColdSync sync conduit to put archived records into a .pdb
+#
+# $Id: archive-sync,v 1.1 2004-10-11 23:52:27 christophe Exp $
+#
+
+use strict;
+
+use ColdSync;
+use Palm::PDB;
+use Palm::Raw;
+use ColdSync::SPC;
+use ColdSync::PDB;
+
+# Default values for headers (none)
+%HEADERS = (
+	'ArchiveAll' => 0,
+	'ArchiveSecret' => 1,
+);
+
+my $VERSION = (qw( $Revision: 1.1 $ ))[1];	# Conduit version
+
+###################################################################
+sub clean_record_flags($)
+{
+	my $record = shift;
+
+	# ensure that a record isn't deleted or dirty or any of that.
+	# the only flag we want to keep is private/Secret.
+	for (keys %{$record->{'attributes'}})
+	{
+		next if $_ eq "private";
+		next if $_ eq "secret";
+		$record->{'attributes'}{$_} = 0;
+	}
+}
+
+###################################################################
+StartConduit("sync");
+
+$HEADERS{'CS-AutoSave'} = 0;	# we don't want to save the local, ever
+
+my $db = ColdSync::PDB->Current("r" . ($HEADERS{'ArchiveSecret'} ? "s" : ""));
+
+EndConduit( 200, "Resource Database $db->{'name'} not archived" )
+	if $db->{'db_flags'}&0x1;
+
+$db->{'name'} =~ s/\0.*$//;
+my $filename = "$ENV{HOME}/.palm/archive/$db->{name}.pdb";
+
+my $archive = new Palm::Raw();
+$archive->Load($filename) if -f $filename;
+
+while (my $record = $db->nextModifiedRec())
+{
+	next unless $record->{attributes}{deleted}
+		or $record->{attributes}{archive}
+		or $record->{attributes}{expunged};
+	next unless $record->{attributes}{archive} or $HEADERS{'ArchiveAll'};
+
+	# prep the record for archiving. We want to clear the id since it's
+	# no longer valid in any real sense. We also want to clear all the flags
+	# except secret since it's supposed to be valid in the archive. We
+	# also clear the category... a year from now, there's a good chance that
+	# it'll no longer be valid in the archive.
+
+	$record->{'id'} = 0;
+	$record->{'category'} = 0;
+	clean_record_flags( $record );
+
+	$archive->append_Record( $record );
+}
+
+if ($archive->is_Dirty())
+{
+	# copy the app info from the remote to the archive.
+	# this only works because both the archive and remote will have the
+	# same Palm::PDB helper.
+	$archive->{'appinfo'} = $db->{'appinfo'};
+
+	$archive->Write($filename);
+}
+
+# NOTE: no database cleanup, flag resets, etc. If we do that sort of thing
+# the generic sync won't see changes on the PDA.
+
+&dlp_AddSyncLogEntry( "Archived '$db->{name}'\n" );
+
+EndConduit;
+
+__END__
+
+=head1 NAME
+
+archive-sync - ColdSync conduit to archive deleted records into a .pdb/.prc
+database.
+
+=head1 SYNOPSIS
+
+    conduit sync {
+        type: */DATA;
+        path: "<...>/archive-sync";
+      arguments:
+		  ArchiveAll: 1;
+		  ArchiveSecret: 0;
+    }
+
+=head1 DESCRIPTION
+
+This conduit, when run before the generic sync, archives all
+deleted records into PalmOS databases in the C<~/.palm/archive> directory.
+
+ColdSync, by default, archives records into its own internal archive
+format. While this may be useful in the long run, tools to manage these
+archives aren't available. On the other hand, a multitude of tools for
+managing PalmOS databases are available, including the Palm::PDB perl
+bindings. Hence we have this conduit.
+
+In addition, it's capable of archiving records not set for archival. It's
+also capable of selectively archiving secret records (ColdSync always
+archives secret records).
+
+=head1 OPTIONS
+
+=item C<ArchiveAll>
+
+When non-zero, C<archive-sync> will archive B<all> deleted records, even
+those not flagged for archiving. This is useful for enforcing 
+a global retention policy or, for individual users, to allow for a more
+relaxed approach to record purging on the PDA. By default, C<ArchiveAll>
+is disabled.
+
+=item C<ArchiveSecret>
+
+When non-zero, C<archive-sync> will archive records marked as
+private/secret. This is enabled by default. Because C<ColdSync's> normal
+generic archiving will always archive secret records you shouldn't think of
+this as a way to keep confidential records from reaching the server.
+
+=head1 BUGS
+
+Probably. The appinfo stuff is an accident waiting to happen.
+
+=head1 AUTHOR
+
+E<lt>christophe.beauregard@sympatico.caE<gt>
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+F<ColdSync Conduits>, in the ColdSync documentation.
