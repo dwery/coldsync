@@ -4,11 +4,12 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.37 2000-06-03 07:02:31 arensb Exp $
+ * $Id: coldsync.c,v 1.38 2000-06-03 08:06:44 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), atoi() */
+#include <fcntl.h>		/* For open() */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
@@ -1660,6 +1661,55 @@ snum_checksum(const char *snum, int len)
 	return (char) (checksum < 10 ?
 		       checksum + '0' :
 		       checksum - 10 + 'A');
+}
+
+/* open_tempfile
+ * Given a filename template (similar, not coincidentally, to mktemp()),
+ * generates a unique filename and opens it for writing.
+ * Returns a file descriptor for this file. It is the caller's
+ * responsibility to close it.
+
+ * NB: 'name_template' is a 'char *', and not a 'const char *', since
+ * mktemp() modifies it.
+ */
+int
+open_tempfile(char *name_template)
+{
+	int retval;
+
+#if HAVE_MKSTEMP
+
+	retval =  mkstemp(name_template);
+	if (retval < 0)
+	{
+		fprintf(stderr, _("%s: Can't create staging file \"%s\"\n"),
+			"open_tempfile", name_template);
+		perror("mkstemp");
+		return -1;
+	}
+
+#else	/* HAVE_MKSTEMP */
+
+	if (mktemp(name_template) == 0)
+	{
+		fprintf(stderr, _("%s: Can't create staging file name\n"),
+			"open_tempfile");
+		return -1;
+	}
+
+	/* Open the output file */
+	if ((retval = open(name_template,
+			   O_WRONLY | O_CREAT | O_EXCL,
+			   0600)) < 0)
+	{
+		fprintf(stderr, _("%s: Can't create staging file \"%s\"\n"),
+			"open_tempfile", name_template);
+		return -1;
+	}
+
+#endif	/* HAVE_MKSTEMP */
+
+	return retval;
 }
 
 /* This is for Emacs's benefit:
