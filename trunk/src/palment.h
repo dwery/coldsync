@@ -21,12 +21,13 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.3 2001-03-28 04:55:36 arensb Exp $
+ * $Id: palment.h,v 2.4 2002-03-30 16:11:43 azummo Exp $
  */
 #ifndef _palment_h_
 #define _palment_h_
 
 #include "config.h"
+#include "pconn/pconn.h"	/* For Palm types */
 
 /* Path to /etc/palms */
 #define _PATH_PALMS	SYSCONFDIR "/palms"
@@ -48,6 +49,8 @@ extern const struct palment *getpalment(void);
 /* XXX - extern const struct palment *getpalmbyname(const char *name); */
 extern void setpalment(int stayopen);
 extern void endpalment(void);
+extern struct palment * find_palment(const char *p_snum,
+	const char *p_username, const udword p_userid);
 
 #endif	/* _palment_h_ */
 

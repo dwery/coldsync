@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.1 2001-02-16 11:05:27 arensb Exp $
+ * $Id: palment.c,v 2.2 2002-03-30 16:11:43 azummo Exp $
  */
 
 #include "config.h"
@@ -14,6 +14,7 @@
 #include <stdlib.h>		/* For strtoul() */
 #include <limits.h>		/* For strtoul() */
 #include <string.h>		/* For strchr() */
+#include "coldsync.h"
 #include "palment.h"
 
 /* The functions in this file try to look like the getpwent(),
@@ -184,6 +185,101 @@ endpalment(void)
 		fclose(palmsfd);
 		palmsfd = NULL;
 	}
+}
+
+
+/* find_palment
+ * When given a serial numer, an username and an userid, this routine
+ * tries to find a matching palment entry.
+ */
+
+struct palment *
+find_palment(const char *p_snum, const char *p_username, const udword p_userid)
+{
+	struct palment *palment;
+
+	while ((palment = getpalment()) != NULL)
+	{
+		char entserial[SNUM_MAX];	/* Serial number from
+						 * /etc/palms, but without
+						 * the checksum.
+						 */
+		char *dashp;			/* Pointer to "-" */
+
+		/* Get the serial number, but without the checksum */
+		/* XXX - Actually, this should look for the pattern
+		 *	/-[A-Z]$/
+		 * since in the future, there might be a special serial
+		 * number like "*Visor-Plus*" which would match.
+		 */
+		if (palment->serial != NULL)
+		{
+			strncpy(entserial, palment->serial, SNUM_MAX);
+			dashp = strrchr(entserial, '-');
+			if (dashp != NULL)
+				*dashp = '\0';
+		} else {
+			entserial[0] = '\0';
+		}
+
+		SYNC_TRACE(3)
+			fprintf(stderr,
+				" Evaluating serial [%s], username [%s], "
+				"userid %lu\n",
+				palment->serial, palment->username,
+				palment->userid);
+
+		if (strncasecmp(entserial, p_snum, SNUM_MAX) != 0)
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr,
+					" Serial number [%s] doesn't match with [%s].\n",
+					palment->serial, p_snum);
+			continue;
+		}
+		SYNC_TRACE(5)
+			fprintf(stderr, " Serial number [%s] matches with [%s].\n",
+				palment->serial, p_snum);
+
+		if ((palment->username != NULL) &&
+		    (palment->username[0] != '\0') &&
+		    strncmp(palment->username, p_username,
+			    DLPCMD_USERNAME_LEN) != 0)
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr,
+					" Username [%s] doesn't match\n",
+					palment->username);
+			continue;
+		}
+		SYNC_TRACE(5)
+			fprintf(stderr, " Username [%s] matches\n",
+				palment->username);
+
+		if (palment->userid != p_userid)
+		{
+			SYNC_TRACE(4)
+				fprintf(stderr,
+					" Userid %lu doesn't match %lu\n",
+					palment->userid,
+					p_userid);
+			continue;
+		}
+		SYNC_TRACE(5)
+			fprintf(stderr, " Userid %lu matches\n",
+				palment->userid);
+
+		SYNC_TRACE(3)
+			fprintf(stderr,
+				"Found a match: luser [%s], name [%s], "
+				"conf_fname [%s]\n",
+				palment->luser, palment->name, palment->conf_fname);
+
+		break;	/* If we get this far, this entry matches */
+	}
+	endpalment();
+
+	return palment;
 }
 
 /* This is for Emacs's benefit:
