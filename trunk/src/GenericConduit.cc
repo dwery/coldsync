@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.47 2000-12-24 21:24:43 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.48 2000-12-30 11:01:44 arensb Exp $
  */
 
 /* Note on I/O:
@@ -1029,65 +1029,62 @@ GenericConduit::FastSync()
 			SYNC_TRACE(6)
 				fprintf(stderr, "localrec == 0\n");
 
-			/* If the record was created and deleted since the
-			 * last sync, it requires special handling.
-			 */
+			if (ARCHIVE(remoterec))
+			{
+				/* This record was created, deleted, and
+				 * marked for archival, all since the last
+				 * sync. Add it to the archive file.
+				 */
+				SYNC_TRACE(5)
+					fprintf(stderr,
+						"New archived record: "
+						"0x%08lx\n",
+						remoterec->id);
+				remoterec->flags &= PDB_REC_PRIVATE;
+
+				SYNC_TRACE(5)
+					fprintf(stderr,
+						"Archiving record 0x%08lx\n",
+						remoterec->id);
+				this->archive_record(remoterec);
+				pdb_FreeRecord(remoterec);
+				remoterec = NULL;
+				continue;
+			}
+
+			if (EXPUNGED(remoterec))
+			{
+				/* This record was created, deleted, and
+				 * expunged, all since the last sync.
+				 * Ignore it.
+				 */
+				SYNC_TRACE(5)
+					fprintf(stderr,
+						"New expunged record: "
+						"0x%08lx\n",
+						remoterec->id);
+				pdb_FreeRecord(remoterec);
+				remoterec = NULL;
+				continue;
+			}
+
 			if (DELETED(remoterec))
 			{
-				if (ARCHIVE(remoterec))
-				{
-					/* This record was created,
-					 * deleted, and marked for
-					 * archival, all since the last
-					 * sync. Add it to the archive
-					 * file.
-					 */
-					SYNC_TRACE(5)
-						fprintf(stderr,
-							"New archived record: "
-							"0x%08lx\n",
-							remoterec->id);
-					remoterec->flags &= PDB_REC_PRIVATE;
-
-					SYNC_TRACE(5)
-						fprintf(stderr,
-							"Archiving record "
-							"0x%08lx\n",
-							remoterec->id);
-					this->archive_record(remoterec);
-					pdb_FreeRecord(remoterec);
-					continue;
-				}
-
-				if (EXPUNGED(remoterec))
-				{
-					/* This record was created,
-					 * deleted, and expunged, all since
-					 * the last sync. Ignore it.
-					 */
-					SYNC_TRACE(5)
-						fprintf(stderr,
-							"New expunged record: "
-							"0x%08lx\n",
-							remoterec->id);
-					pdb_FreeRecord(remoterec);
-					continue;
-				}
-
+				/* XXX - Actually, this *has* happened,
+				 * with "System MIDI Sounds.pdb".
+				 */
 				fprintf(stderr,
 					"I have a new, deleted record that "
 					"is neither archived nor expunged\n"
 					"What am I supposed to do?\n");
 			}
 
-			/* XXX - Check the case where remoterec is EXPUNGED
-			 * (and possibly DIRTY), but not DELETED.
-			 * Back-patch version 1.4.6.
-			 */
-
 			/* This record is new. Add it to the local
 			 * database.
 			 */
+			SYNC_TRACE(5)
+				fprintf(stderr, "New clean record: 0x%08lx\n",
+					remoterec->id);
 
 			/* Clear the flags in remoterec before adding
 			 * it to the local database: it's fresh and
@@ -1104,10 +1101,13 @@ GenericConduit::FastSync()
 					"GenericConduit::FastSync",
 					err);
 				pdb_FreeRecord(remoterec);
+				remoterec = NULL;
 				DlpCloseDB(_pconn, dbh);
 				add_to_log(_("Error\n"));
 				return -1;
 			}
+
+			remoterec = NULL;
 
 			/* Success. Go on to the next modified record */
 			continue;
