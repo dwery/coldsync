@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.1 2000-08-08 14:25:26 arensb Exp $
+# $Id: SPC.pm,v 1.2 2000-08-29 11:15:21 arensb Exp $
 
 # XXX - Write POD
 
@@ -34,10 +34,15 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT );
-($VERSION) = '$Revision: 1.1 $ ' =~ /\$Revision:\s+([^\s]+)/;
+($VERSION) = '$Revision: 1.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
 @ISA = qw( Exporter );
 @EXPORT = qw( spc_req *SPC
 	spc_get_dbinfo
+	dlp_ReadSysInfo
+	dlp_OpenDB
+	dlp_CloseDB
+	dlp_ReadAppBlock
+	dlp_WriteAppBlock
 );
 
 # Various useful constants
@@ -103,6 +108,15 @@ sub spc_req
 	return ($status, $buf);
 }
 
+# dlp_req
+# Send a DLP request over SPC.
+#
+# ($err, @argv) = &dlp_req($reqno, @args)
+# where
+# $err is the return status,
+# @argv are the (unparsed) returned arguments
+# $reqno is the DLPCMD_* request number
+# @args are the (unparsed) parameters
 sub dlp_req
 {
 	my $cmd = shift;	# DLP command
@@ -282,7 +296,9 @@ sub spc_get_dbinfo
 	 $retval->{baktime}{hour},
 	 $retval->{baktime}{minute},
 	 $retval->{baktime}{second},
-	) = unpack("C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx", $data);
+	 $retval->{db_index},
+	 $retval->{name},
+	) = unpack("C C n a4 a4 n N nCCCCCx nCCCCCx nCCCCCx n a*", $data);
 
 	# XXX - Consider parsing db_flags and misc_flags further (make
 	# them hashes with keys named after flags, with boolean
@@ -345,4 +361,131 @@ sub dlp_ReadSysInfo
 	return $retval;
 }
 
+sub dlp_OpenDB
+{
+	my $dbname = shift;	# Name of database to open
+	my $mode = shift;	# Mode
+				# XXX - For now, numeric. Be nice to allow
+				# words or something
+	my $cardNo = shift;	# (optional) Memory card number
+
+	# Sanity checks on arguments
+	$dbname = substr($dbname, 0, 31);
+				# XXX - Hard-coded constants are bad, m'kay?
+	$mode &= 0xff;
+	$cardNo = 0 if !defined($cardNo);
+
+	# Send the request
+	my $err;
+	my @args;
+
+	($err, @args) = &dlp_req(DLPCMD_OpenDB,
+			{
+				id	=> 0x20,
+				data	=> pack("C C a*x",
+					$cardNo, $mode, $dbname),
+			});
+
+	return undef if !defined($err);
+
+	# Parse the return arguments
+	my $retval;
+
+	for (@args)
+	{
+		if ($_->{id} == 0x20)
+		{
+			$retval = unpack("C", $_->{data});
+		} else {
+			# XXX - Now what? Barf or something?
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_CloseDB
+{
+	my $dbh = shift;	# Database handle
+	my $err;
+	my @args;
+
+	($err, @args) = &dlp_req(DLPCMD_CloseDB,
+			{
+				id	=> 0x20,
+				data	=> pack("C", $dbh),
+			});
+	return $err;
+}
+
+sub dlp_ReadAppBlock
+{
+	my $dbh = shift;	# Database handle
+	my $offset = shift;	# Offset into AppInfo block. Optional,
+				# defaults to 0
+	my $len = shift;	# # bytes to read. Optional, defaults
+				# to "to end of AppInfo block".
+
+	$offset = 0 if !defined($offset);
+	$len = -1 if !defined($len);
+
+	my $err;
+	my @args;
+
+	($err, @args) = &dlp_req(DLPCMD_ReadAppBlock,
+			{
+				id	=> 0x20,
+				data	=> pack("Cx n n",
+						$dbh, $offset, $len),
+			});
+
+	# Parse the return arguments
+	my $retval;
+
+	for (@args)
+	{
+		if ($_->{id} == 0x20)
+		{
+			my $dummy;
+
+			$retval = substr($_->{data}, 2);
+		} else {
+			# XXX - Now what? Barf or something?
+		}
+	}
+
+	return $retval;
+}
+
+sub dlp_WriteAppBlock
+{
+	my $dbh = shift;	# Database handle
+	my $data = shift;	# AppInfo block to upload
+	my $err;
+	my @args;
+
+	($err, @args) = &dlp_req(DLPCMD_WriteAppBlock,
+			{
+				id	=> 0x20,
+				data	=> pack("Cx n a*",
+						$dbh, length($data),
+						$data),
+			});
+	# No return arguments to parse
+
+	return $err;
+}
+
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
+
+=head1 BUGS
+
+``SPC'' is a stupid name.
+
+=cut
