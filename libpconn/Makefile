@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000-02-03 02:53:16 arensb Exp $
+# $Id: Makefile,v 1.4 2000-04-09 14:16:23 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -7,6 +7,7 @@ LIBNAME =	pconn
 
 LIBSRCS =	cfmakeraw.c \
 		dlp_cmd.c \
+		dlp_rpc.c \
 		util.c \
 		dlp.c \
 		palm_errno.c \
@@ -19,6 +20,7 @@ LIBSRCS =	cfmakeraw.c \
 
 LIBOBJS =	cfmakeraw.o \
 		dlp_cmd.o \
+		dlp_rpc.o \
 		util.o \
 		dlp.o \
 		palm_errno.o \
