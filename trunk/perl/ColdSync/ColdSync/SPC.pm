@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.27 2004-02-25 11:33:53 azummo Exp $
+# $Id: SPC.pm,v 1.28 2004-02-25 11:36:55 azummo Exp $
 
 # XXX - Write POD
 
@@ -53,7 +53,7 @@ use Exporter;
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.28 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 
@@ -2006,6 +2006,8 @@ sub dlp_FindDBByName
 
 	$card = 0 unless defined $card;
 	$getsize = 0 unless defined $getsize;
+
+	$card = 0 unless defined $card;
 
 	# XXX The Palm OS 5 sdk DLCommon.h suggests that the FindByName request
 	# has a 4 byte header followed by a NUL terminated name. Of the 4 bytes,
