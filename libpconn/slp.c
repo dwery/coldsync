@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.18 2001-04-15 04:43:17 arensb Exp $
+ * $Id: slp.c,v 1.19 2001-07-06 05:42:40 arensb Exp $
  */
 
 #include "config.h"
@@ -21,10 +21,7 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-#include "pconn/palm_errno.h"
-#include "pconn/slp.h"
-#include "pconn/util.h"
-#include "pconn/PConnection.h"
+#include "pconn/pconn.h"
 
 int slp_trace = 0;		/* Debugging level for SLP stuff */
 
