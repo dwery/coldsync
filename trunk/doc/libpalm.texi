@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.3 1999-02-04 09:21:38 arensb Exp $
-@c $Revision: 1.3 $
+@c $Id: libpalm.texi,v 1.4 1999-02-04 10:01:03 arensb Exp $
+@c $Revision: 1.4 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -29,6 +29,13 @@
 @ifhtml
 @set html
 @end ifhtml
+
+@tex
+% Set the manual edition number to the RCS revision number, and have it
+% be automatically generated, just to keep things simple.
+@xdef@setedition$Revision: 1.4 ${#1}
+@xdef@edition{@setedition$Revision: 1.4 $}
+@end tex
 @c %** End of header
 
 @ifinfo
@@ -45,6 +52,9 @@ are preserved on all copies.
 @titlepage
 @title The @code{libpalm} Library
 @subtitle Synching With PalmOS Devices
+@iftex
+@subtitle Edition @edition
+@end iftex
 @author Andrew Arensburger
 
 @page
