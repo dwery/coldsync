@@ -6,11 +6,13 @@ coldsync_SOURCES = \
 	handledb.c \
 	pdb.c
 
+coldsync_DEPENDENCIES = $(top_builddir)/pconn/libpconn.a
+
 INCLUDES = \
 	-I$(top_srcdir)
 
 EXTRA_DIST = \
-	Makefile
+	coldsync.h
 
 ## INCLUDES = -I$(srcdir)
 LIBS = -L$(top_builddir)/pconn -lpconn
