@@ -4,19 +4,16 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.cc,v 2.1 2001-10-12 02:23:14 arensb Exp $
+ * $Id: symboltable.cc,v 2.2 2001-10-18 01:38:55 arensb Exp $
  */
 
-#include <config.h>
-
+#include "config.h"
 #include <string>
 #include <map>
-#include <stdlib.h>
-
-extern "C" {
-#include <stdlib.h>		/* For malloc() */
+#include <cstdlib>		// For malloc() and friends
 #include "symboltable.h"
-}
+
+static char *make_c_string(const string &s);
 
 map<string,string> table;	/* XXX - Is this going to cause problems on
 				 * machines where the assembler or linker
@@ -31,6 +28,7 @@ map<string,string> table;	/* XXX - Is this going to cause problems on
 	 * the sysadmin to mandate certain variables' values ($CONDUITDIR,
 	 * perhaps?)
 	 */
+	/* XXX - Free the map before exiting */
 /* XXX - In these functions, it it worth checking to see whether the key is
  * the empty string?
  */
@@ -61,7 +59,9 @@ get_symbol(const string &key)
 	return value;
 }
 
-/* Get a symbol from the table that matches the given key. */
+/* Get a symbol from the table that matches the given key.
+ * Note that caller is responsible for freeing the returned string.
+ */
 /* XXX - Should be inline */
 char *
 get_symbol(const char *name)
@@ -72,8 +72,9 @@ get_symbol(const char *name)
 
 /* make_c_string
  * C helper function: convert an STL string to a C-style "char *".
+ * Note that caller is responsible for freeing the returned string.
  */
-char *
+static char *
 make_c_string(const string &s)
 {
 	char *ret = (char *) malloc(s.length() + 1);
@@ -88,6 +89,7 @@ make_c_string(const string &s)
 
 /* Get a symbol from the table that matches the given key. The key has
  * length len, and does not have to be null terminated.
+ * Note that caller is responsible for freeing the returned string.
  */
 char *
 get_symbol_n(const char *name, int len)
@@ -105,6 +107,7 @@ get_symbol_n(const char *name, int len)
 void
 put_symbol(const char *name, const char *value)
 {
+	/* XXX - Free table[name] if it's already set */
 	table[name] = value;
 }
 
