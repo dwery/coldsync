@@ -1,3 +1,13 @@
+- Bug: dumps core in FreePrefList() when no matching PDA.
+- Problem: old Palms, and Visors, don't have serial numbers. Hence, if
+  a user has two Visors,
+	coldsync -mI
+  will find the first Visor PDA block listed in .coldsyncrc , and will
+  (transparently and incorrectly) initialize from that, possibly
+  clobbering existing information.
+	Perhaps ought to be able to give the name of a PDA on the
+  command line, e.g.:
+	coldsync -mI "Second Visor"
 - It might be nice to allow a conduit block to specify a name, rather
   than a creator/type pair, since those are usually more intuitive.
 	Problem:
