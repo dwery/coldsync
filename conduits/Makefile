@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000-07-18 15:59:42 arensb Exp $
+# $Id: Makefile,v 1.6 2000-09-03 04:59:29 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -6,7 +6,8 @@ SUBDIR =	conduits
 # Conduits are grouped by interpreter, since the #! path is munged at
 # install time.
 PERL_CONDUITS =	send-mail \
-		todo-text
+		todo-text \
+		std-categories
 # XXX - memo-text is still incomplete. Don't install it
 # memo-text
 CONDUITS =	${PERL_CONDUITS}
