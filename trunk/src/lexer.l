@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.26 2000-12-16 19:51:56 arensb Exp $
+ * $Id: lexer.l,v 2.27 2000-12-16 23:23:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -298,7 +298,7 @@ ID		[-a-zA-Z_0-9]
 \"([^\"]|\\\")*\"	{
 	PARSE_TRACE(3)
 		fprintf(stderr, "Found string [%s]\n", yytext);
-	if ((yylval.string = malloc(yyleng-1)) == NULL)
+	if ((yylval.string = (char *) malloc(yyleng-1)) == NULL)
 	{
 		fprintf(stderr, _("%s: Can't malloc copy of string\n"),
 			"yylex");
