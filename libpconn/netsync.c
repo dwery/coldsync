@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.17 2001-12-09 22:43:40 arensb Exp $
+ * $Id: netsync.c,v 1.18 2001-12-10 07:27:46 arensb Exp $
  */
 
 #include "config.h"
@@ -100,8 +100,11 @@ static ubyte ritual_stmt2[] = {
 	0x12,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
+	0x00, 0x00,
+
+	0x00, 0x20,			/* Arg ID */
 	0x00, 0x00, 0x00, 0x24,		/* Arg length */
+
 	/* Arg data */
 	0xff, 0xff, 0xff, 0xff,
 	0x3c, 0x00,			/* These are reversed in the
@@ -147,8 +150,11 @@ static ubyte ritual_stmt3[] = {
 	0x13,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x20,		/* Arg ID */
+	0x00, 0x00,
+
+	0x00, 0x20,			/* Arg ID */
 	0x00, 0x00, 0x00, 0x20,		/* Arg length */
+
 	/* Arg data
 	 * This is very similar to ritual statement/response 2.
 	 */
