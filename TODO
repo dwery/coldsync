@@ -37,13 +37,13 @@
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
-- Add functions InitPalmLog(), AddToPalmLog(char *), WritePalmLog(),
-  to make logging work more or less the way you expect.
-- AddToPalmLog() should probably also use printf() syntax, for
+- Clean up the logging code.
+- add_to_log() should probably also use printf() syntax, for
   convenience.
 - Make the *_TRACE stuff go to a separate debugging log file.
 - It should be possible to sync two Palms with each other if you have
   two cradles, or over the net.
+	Naah. Just sync to an intermediate file.
 - Add identd support?
 - PAM for security throughout?
 - Add code to check ~/.palm/backup to look for databases that aren't
@@ -67,10 +67,6 @@
 - Write a utility to just dump the contents of a pdb file.
 - Add CTRACE() macro for debugging, like the *_TRACE() ones.
 - Turn the pdb stuff into its own library.
-- Config: not all printfs recognize %q (or else the types printed out
-  as %q are really long longs). Should either figure out how to get
-  the size of those variables ('off_t's, generally) or get rid of
-  those printf() statements.
 - Test with xcopilot (and real Palm) under Linux and other OSes.
 - Test under Purify.
 - Installing new databases: if the database to be installed already
@@ -136,9 +132,6 @@
   hasn't changed, so there's no need to open the database, send a
   "send me the next modified record" request that we know is going to
   fail, and close the database.
-- Optimization: when requesting the list of databases on the Palm,
-  don't bother requesting the ones in ROM, since those don't get
-  synced anyway (this should be optional, though).
 - Lock files while syncing.
 - Separate the distribution into 'coldsync' and 'coldsync-doc', since
   the documentation is almost three times as large as everything else.
@@ -166,5 +159,30 @@
   bother downloading the database from the Palm.
 - Add convenience functions for the various RPC calls, or at least the
   more useful ones. See SysTraps.h for list of traps.
-- Where appropriate, replace memcpy() with strncpy(): the former
-  copies N bytes no matter what; the latter copies _up to_ N bytes.
+- Get rid of the variable-argument trace macros. 'egcs' complains
+  about them.
+- For files that include <string.h>, fix them according to the
+  'autoconf' documentation:
+	#if STDC_HEADERS
+	# include <string.h>
+	#else
+	# ifndef HAVE_STRCHR
+	#  define strchr index
+	#  define strrchr rindex
+	# endif
+	char *strchr (), *strrchr ();
+	# ifndef HAVE_MEMCPY
+	#  define memcpy(d, s, n) bcopy ((s), (d), (n))
+	#  define memmove(d, s, n) bcopy ((s), (d), (n))
+	# endif
+	#endif
+- Fix core dumps under Linux.
+- Combine the documentation: there's no 'libpalm' anymore, and I'm
+  probably not going to have time to maintain the documentation for
+  all of the various functions defined in
+  {slp,padp,cmp,dlp,dlp_cmd}.c, so just strip out the function
+  descriptions, and combine "libpalm.texi" with "pdb.texi" into a
+  single, more general document that describes all sorts of things
+  programmers ought to know about Palm formats.
+- Write a few tutorials on writing conduits.
+- Perl PDB library for manipulating .pdb and .prc files.
