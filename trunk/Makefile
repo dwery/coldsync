@@ -4,7 +4,9 @@ LIBSRCS =	slp.c \
 		cmp.c \
 		dlp.c dlp_cmd.c \
 		util.c \
-		PConnection.c
+		PConnection.c \
+		palm_errno.c
+
 LIBOBJS =	${LIBSRCS:R:S/$/.o/g}
 
 SUBDIR =	doc
@@ -38,5 +40,13 @@ clean::
 .for dir in ${SUBDIR}
 	cd ${dir}; ${MAKE} ${.TARGET}
 .endfor
+
+tags:	TAGS
+TAGS:
+	${RM} ${.TARGET}
+	find . -name '*.[ch]' -print | xargs etags -a -o ${.TARGET}
+
+clean::
+	${RM} TAGS
 
 .include <bsd.subdir.mk>
