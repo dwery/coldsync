@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.7 1999-05-31 20:57:39 arensb Exp $
+ * $Id: coldsync.h,v 1.8 1999-06-24 02:51:52 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -86,6 +86,7 @@ extern int FastSync(struct PConnection *pconn,
 		    char *bakfname);
 extern struct pdb *DownloadRecordDB(struct PConnection *pconn,
 				    struct dlp_dbinfo *dbinfo);
+extern const char *mkbakfname(const struct dlp_dbinfo *dbinfo);
 
 #endif	/* _coldsync_h_ */
 
