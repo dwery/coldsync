@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.88 2002-03-18 08:25:18 arensb Exp $
+ * $Id: config.c,v 1.89 2002-03-18 10:05:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -106,7 +106,7 @@ static void set_debug_level(const char *str);
 static int set_mode(const char *str);
 static void usage(int argc, char *argv[]);
 static pconn_listen_t name2listen_type(const char *str);
-static int name2protocol(const char *str);
+static pconn_proto_t name2protocol(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
