@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.21 2000-11-24 22:55:42 arensb Exp $
+ * $Id: backup.c,v 2.22 2000-11-27 09:53:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -98,6 +98,18 @@ backup(struct PConnection *pconn,
 
 	/* Download the database from the Palm */
 	pdb = pdb_Download(pconn, dbinfo, dbh);
+	if (pdb == NULL)
+	{
+		/* Error downloading the file.
+		 * We don't send an error message to the Palm because
+		 * typically the problem is that the connection to the Palm
+		 * was lost.
+		 */
+		unlink(bakfname);	/* Delete the zero-length backup
+					 * file */
+		close(bakfd);
+		return -1;
+	}
 	SYNC_TRACE(7)
 		fprintf(stderr, "After pdb_Download\n");
 	DlpCloseDB(pconn, dbh);
@@ -153,7 +165,16 @@ full_backup(struct PConnection *pconn,
 			fprintf(stderr, "%s: Error backing up \"%s\"\n",
 				"full_backup",
 				cur_db->name);
-			/* But try to continue anyway */
+
+			/* If the problem is that we've lost the connection
+			 * to the Palm, then abort. Otherwise, hope that
+			 * the problem was transient, and continue.
+			 */
+			/* XXX - Ought to make sure that 'palm_errno' is
+			 * set.
+			 */
+			if (palm_errno == PALMERR_TIMEOUT)
+				return -1;
 		}
 	}
 	return 0;
