@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.6 1999-11-20 05:16:24 arensb Exp $
+ * $Id: conduit.h,v 1.7 2000-01-13 18:18:47 arensb Exp $
  */
 #ifndef _conduit_h_
 #define _conduit_h_
@@ -39,6 +39,27 @@
 #include "pconn/pconn.h"
 #include "coldsync.h"
 #include "parser.h"
+
+#define COND_MAXHFIELDLEN	32	/* Max allowable length of a header
+					 * field label. That is, when
+					 * sending the header
+					 *    Foo: bar baz
+					 * the "Foo" part may not be longer
+					 * than this.
+					 */
+#define COND_MAXLINELEN		255	/* Max allowable length of a header
+					 * line, including the label. That
+					 * is, when sending the header
+					 *    Foo: bar baz
+					 * that entire line may not be
+					 * longer than COND_MAXLINELEN.
+					 */
+/* Sanity check: the max length of a line should be at least long enough to
+ * hold the longest field label, ": ", and one character of data.
+ */
+#if COND_MAXLINELEN < COND_MAXHFIELDLEN + 3
+#  error COND_MAXLINELEN is too small!
+#endif
 
 /* XXX - These are old-API functions. Most of them should probably go away */
 extern int init_conduits(struct Palm *palm);
