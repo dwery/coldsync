@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.16 2002-06-22 19:14:27 azummo Exp $
+# $Id: SPC.pm,v 1.17 2002-11-03 16:37:32 azummo Exp $
 
 # XXX - Write POD
 
@@ -51,7 +51,9 @@ use ColdSync;
 use Exporter;
 
 use vars qw( $VERSION @ISA *SPC @EXPORT %EXPORT_TAGS );
-$VERSION = sprintf "%d.%03d", '$Revision: 1.16 $ ' =~ m{(\d+)\.(\d+)};
+
+# One liner, to allow MakeMaker to work.
+$VERSION = do { my @r = (q$Revision: 1.17 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw( Exporter );
 

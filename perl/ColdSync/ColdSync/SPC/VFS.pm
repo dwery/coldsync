@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.4 2002-06-22 14:09:57 azummo Exp $
+# $Id: VFS.pm,v 1.5 2002-11-03 16:37:32 azummo Exp $
 
 # XXX - Write POD
 
@@ -36,9 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= sprintf "%d.%03d", '$Revision: 1.4 $ ' =~ m{(\d+)\.(\d+)};
-
-
+$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.5 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 # File Origin constants: (for the origins of relative offsets passed to 'seek' type routines)
