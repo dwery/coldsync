@@ -1,4 +1,6 @@
-- Document the filter_dbs .coldsyncrc option.
+- Document the SyncType conduit header.
+- Document the noprompt config file option.
+- Document the filter_dbs config file option.
 - Investigate the exact meaning of modnum.
 - Built-in conduits receive information about the PDA block (Keni's
   patch), but external conduits don't. It'd be nice if they did. The
