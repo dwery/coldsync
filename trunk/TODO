@@ -1,5 +1,6 @@
-- Move CRC-related stuff out of lib*/util.c and into its own file.
-  libpdb doesn't use it.
+- Fix API bogosities in libpdb, libpconn.
+- Man pages for libpconn, libpdb functions.
+- 'make install' should install libraries, headers.
 - Redo error return status in {upload,download}_database() and
   friends, as per XXX comments.
 - Separate i18n stuff for libpconn/libpdb into separate files. Figure
