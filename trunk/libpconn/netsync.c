@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.20 2002-04-27 18:36:31 azummo Exp $
+ * $Id: netsync.c,v 1.21 2002-05-03 17:31:13 azummo Exp $
  */
 
 #include "config.h"
@@ -615,11 +615,11 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	return 1;			/* Success */
 }
 
-/* netsync_write
+/* netsync_write_old - Old version.
  * Write a NetSync message.
  */
 int
-netsync_write(PConnection *pconn,
+netsync_write_old(PConnection *pconn,
 	      const ubyte *buf,
 	      const uword len)		/* XXX - Is this enough? */
 {
@@ -678,6 +678,78 @@ netsync_write(PConnection *pconn,
 		}
 		sent += err;
 	}
+
+	return len;		/* Success */
+}
+
+/* netsync_write - New version. 
+ * Write a NetSync message. The same packet will have header and data.
+ * Very useful when debugging and comparing packets...
+ */
+
+int
+netsync_write(PConnection *pconn,
+	      const ubyte *buf,
+	      const uword len)		/* XXX - Is this enough? */
+{
+	int err;
+	ubyte *wptr;			/* Pointer into buffer, for writing */
+	ubyte *outbuf;
+	udword sent;			/* How many bytes we've sent */
+	udword want;			/* How many bytes we want to send */
+
+	NET_TRACE(3)
+		fprintf(stderr, "Inside netsync_write()\n");
+
+	outbuf = malloc(len + 6);
+
+	if(outbuf == NULL)
+		return -1; /* XXX - Maybe -ENOMEM would be better? */
+
+	/* Construct the NetSync header */
+
+	if (pconn->whosonfirst == 0)
+		bump_xid(pconn);	/* Get the XID for new request */
+
+	wptr = outbuf;
+	put_ubyte(&wptr, 1);
+	put_ubyte(&wptr, pconn->net.xid);
+	put_udword(&wptr, len);
+
+	/* Copy the payload */
+	memcpy( outbuf + NETSYNC_HDR_LEN, buf, len);
+
+
+	/* Send the NetSync header */
+	NET_TRACE(5)
+	{
+		fprintf(stderr, "Sending NetSync header (6 bytes)\n");
+		debug_dump(stderr, "NET >>>", outbuf, NETSYNC_HDR_LEN);
+	}
+
+	/* Send the packet data */
+	NET_TRACE(5)
+	{
+		fprintf(stderr, "Sending NetSync data (%d bytes)\n", len);
+		debug_dump(stderr, "NET >>>", buf, len);
+	}
+
+
+	want = len+6;
+	sent = 0;
+	while (sent < want)
+	{
+		err = PConn_write(pconn, outbuf+sent, want-sent);
+		if (err < 0)
+		{
+			perror("netsync_write: write");
+			free(outbuf);
+			return -1;
+		}
+		sent += err;
+	}
+
+	free(outbuf);
 
 	return len;		/* Success */
 }
