@@ -2,7 +2,7 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- * $Id: coldsync.h,v 1.2 1999-02-22 10:38:21 arensb Exp $
+ * $Id: coldsync.h,v 1.3 1999-02-24 13:20:04 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -10,6 +10,11 @@
 #include "pconn/PConnection.h"
 
 #define BACKUP_DIR	"palm_backup"	/* XXX - This should be gotten from
+					 * the password info and the config
+					 * file. It should also be an
+					 * absolute pathname.
+					 */
+#define INSTALL_DIR	"palm_install"	/* XXX - This should be gotten from
 					 * the password info and the config
 					 * file. It should also be an
 					 * absolute pathname.
@@ -50,6 +55,10 @@ extern int Cold_RecordBackup(struct PConnection *pconn,
 			     struct ColdPalm *palm,
 			     struct dlp_dbinfo *dbinfo,
 			     char *bakfname);
+extern int Cold_ResourceBackup(struct PConnection *pconn,
+			       struct ColdPalm *palm,
+			       struct dlp_dbinfo *dbinfo,
+			       char *bakfname);
 
 #endif	/* _coldsync_h_ */
 
