@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.10 2002-11-13 12:10:20 azummo Exp $
+# $Id: sample.coldsync.rc,v 1.11 2004-06-24 10:27:45 azummo Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -56,7 +56,7 @@ listen usb "usb-bsd" {
 # as "the visor kernel module", you should use "serial"
 # anyway:
 
-# NOTE: You need to use "protocol: full;" for some Visor units.
+# NOTE: You need to use "protocol: full;" for some Visor/Treo units
 
 listen serial "usb-linux" {
 	protocol: net;
