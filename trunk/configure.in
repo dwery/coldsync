@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.70 2000-05-21 00:11:06 arensb Exp $
+dnl # $Id: configure.in,v 1.71 2000-05-21 07:58:09 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -164,25 +164,34 @@ if test x"$with_i18n" = x"no"; then
 	MSGMERGE=true
 	MSGFMT=true
 else
+
+	# Under Redhat Linux, gettext() is in libc. On other systems,
+	# it's in libintl. The following looks for it in both places,
+	# and defines HAVE_GETTEXT if gettext() is defined anywhere.
 	AC_CHECK_LIB(intl, gettext)
 	if test "$ac_cv_lib_intl_gettext" = yes; then
-		# See if the user specified a $LOCALEDIR. If not, use
-		# the default.
-		if test -z "${LOCALEDIR}"; then
-			LOCALEDIR="`eval echo \"${datadir}/locale\"`"
-		fi
-		AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
+		AC_DEFINE_UNQUOTED(HAVE_GETTEXT)
+	else
+		AC_CHECK_FUNCS(gettext)
 	fi
+
 	# I18n-related utilities
 	AC_CHECK_PROGS(XGETTEXT, xgettext, true)
 	AC_CHECK_PROGS(GETTEXT, gettext, true)
 	AC_CHECK_PROGS(MSGMERGE, msgmerge, true)
 	AC_CHECK_PROGS(MSGFMT, msgfmt, true)
 fi
+
 AC_SUBST(XGETTEXT)
 AC_SUBST(GETTEXT)
 AC_SUBST(MSGMERGE)
 AC_SUBST(MSGFMT)
+
+# See if the user specified a $LOCALEDIR. If not, use the default.
+if test -z "${LOCALEDIR}"; then
+	LOCALEDIR="`eval echo \"${datadir}/locale\"`"
+fi
+AC_DEFINE_UNQUOTED(LOCALEDIR, "${LOCALEDIR}")
 
 # I'm not using AC_PROG_YACC here because that doesn't actually make
 # sure that there is a working yacc.
@@ -276,6 +285,7 @@ AC_HEADER_DIRENT
 CS_DIRENT_TYPE
 AC_CHECK_HEADERS([\
 	fcntl.h \
+	libintl.h \
 	locale.h \
 	strings.h \
 	termios.h \
