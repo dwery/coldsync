@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.13 2002-11-09 22:42:19 azummo Exp $
+ * $Id: spalm.c,v 2.14 2002-12-10 13:54:23 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -602,57 +602,62 @@ ListDBs(struct Palm *palm)
 
 	/* Print out the list of databases, for posterity */
 	SYNC_TRACE(2)
-	{
-		int i;
-
-		fprintf(stderr, "\nDatabase list:\n");
-		fprintf(stderr,
-			"Name                            flags type crea ver mod. num\n"
-			"        ctime                mtime                baktime\n");
-		for (i = 0; i < palm->num_dbs_; i++)
-		{
-			fprintf(stderr,
-				"%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
-				PDB_DBNAMELEN,
-				palm->dblist_[i].name,
-				palm->dblist_[i].db_flags,
-				(char) (palm->dblist_[i].type >> 24),
-				(char) (palm->dblist_[i].type >> 16),
-				(char) (palm->dblist_[i].type >> 8),
-				(char) palm->dblist_[i].type,
-				(char) (palm->dblist_[i].creator >> 24),
-				(char) (palm->dblist_[i].creator >> 16),
-				(char) (palm->dblist_[i].creator >> 8),
-				(char) palm->dblist_[i].creator,
-				palm->dblist_[i].version,
-				palm->dblist_[i].modnum);
-			fprintf(stderr, "        "
-				"%02d:%02d:%02d %02d/%02d/%02d  "
-				"%02d:%02d:%02d %02d/%02d/%02d  "
-				"%02d:%02d:%02d %02d/%02d/%02d\n",
-				palm->dblist_[i].ctime.hour,
-				palm->dblist_[i].ctime.minute,
-				palm->dblist_[i].ctime.second,
-				palm->dblist_[i].ctime.day,
-				palm->dblist_[i].ctime.month,
-				palm->dblist_[i].ctime.year,
-				palm->dblist_[i].mtime.hour,
-				palm->dblist_[i].mtime.minute,
-				palm->dblist_[i].mtime.second,
-				palm->dblist_[i].mtime.day,
-				palm->dblist_[i].mtime.month,
-				palm->dblist_[i].mtime.year,
-				palm->dblist_[i].baktime.hour,
-				palm->dblist_[i].baktime.minute,
-				palm->dblist_[i].baktime.second,
-				palm->dblist_[i].baktime.day,
-				palm->dblist_[i].baktime.month,
-				palm->dblist_[i].baktime.year);
-		}
-	}
+		palm_print_dbs(palm, stderr);
 
 	return 0;
 }
+
+void
+palm_print_dbs(struct Palm *palm, FILE *fd)
+{
+	int i;
+
+	fprintf(fd, "\nDatabase list:\n");
+ 	fprintf(fd,
+		"Name                            flags type crea ver mod. num\n"
+		"        ctime                mtime                baktime\n");
+	for (i = 0; i < palm->num_dbs_; i++)
+	{
+		fprintf(fd,
+			"%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
+			PDB_DBNAMELEN,
+			palm->dblist_[i].name,
+			palm->dblist_[i].db_flags,
+			(char) (palm->dblist_[i].type >> 24),
+			(char) (palm->dblist_[i].type >> 16),
+			(char) (palm->dblist_[i].type >> 8),
+			(char) palm->dblist_[i].type,
+			(char) (palm->dblist_[i].creator >> 24),
+			(char) (palm->dblist_[i].creator >> 16),
+			(char) (palm->dblist_[i].creator >> 8),
+			(char) palm->dblist_[i].creator,
+			palm->dblist_[i].version,
+			palm->dblist_[i].modnum);
+		fprintf(fd, "        "
+			"%02d:%02d:%02d %02d/%02d/%02d  "
+			"%02d:%02d:%02d %02d/%02d/%02d  "
+			"%02d:%02d:%02d %02d/%02d/%02d\n",
+			palm->dblist_[i].ctime.hour,
+			palm->dblist_[i].ctime.minute,
+			palm->dblist_[i].ctime.second,
+			palm->dblist_[i].ctime.day,
+			palm->dblist_[i].ctime.month,
+			palm->dblist_[i].ctime.year,
+			palm->dblist_[i].mtime.hour,
+			palm->dblist_[i].mtime.minute,
+			palm->dblist_[i].mtime.second,
+			palm->dblist_[i].mtime.day,
+			palm->dblist_[i].mtime.month,
+			palm->dblist_[i].mtime.year,
+			palm->dblist_[i].baktime.hour,
+			palm->dblist_[i].baktime.minute,
+			palm->dblist_[i].baktime.second,
+			palm->dblist_[i].baktime.day,
+			palm->dblist_[i].baktime.month,
+			palm->dblist_[i].baktime.year);
+	}
+}
+
 
 /* palm_pconn
  * Gives back a PConnection pointer.
