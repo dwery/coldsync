@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.5 2000-05-03 04:38:51 arensb Exp $
+ * $Id: pdb.h,v 1.6 2000-11-14 16:23:09 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -259,6 +259,7 @@ struct pdb_record *pdb_CopyRecord(
 struct pdb_resource *pdb_CopyResource(
 	const struct pdb *db,
 	const struct pdb_resource *rsrc);
+extern int pdb_LoadHeader(int fd, struct pdb *db);
 
 /* XXX - Functions to write:
 pdb_setAppInfo		set the appinfo block
