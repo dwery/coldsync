@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.2 2001-10-12 02:18:45 arensb Exp $
+ * $Id: spc_client.c,v 1.3 2001-11-07 15:17:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -46,7 +46,8 @@ spc_client_bind(PConnection *pconn,
 	    const void *addr,
 	    const int addrlen)
 {
-	fprintf(stderr, "--- TRYING TO BIND A CLIENT! --\n");
+	IO_TRACE(2)
+		fprintf(stderr, "--- TRYING TO BIND A CLIENT! --\n");
 	return -1;
 }
 
@@ -75,14 +76,16 @@ spc_client_write(PConnection *p, unsigned const char *buf, int len)
 static int
 spc_client_accept(PConnection *pconn)
 {
-	fprintf(stderr, "--- TRYING TO ACCEPT FOR CLIENT! --\n");
+	IO_TRACE(2)
+		fprintf(stderr, "--- TRYING TO ACCEPT FOR CLIENT! --\n");
 	return -1;
 }
 
 static int
 spc_client_connect(PConnection *p, const void *addr, const int addrlen)
 {
-	fprintf(stderr, "spc_client: trying to connect --\n");
+	IO_TRACE(2)
+		fprintf(stderr, "spc_client: trying to connect --\n");
 	return -1;		/* Not applicable to serial connection */
 }
 
@@ -95,6 +98,7 @@ spc_client_drain(PConnection *p)
 static int
 spc_client_close(PConnection *p)
 {
+	/* XXX - Ought to check protocol */
 	dlp_tini(p);
 	padp_tini(p);
 	slp_tini(p);
@@ -214,7 +218,8 @@ new_spc_client(int fd)
 	if ((pconn = (PConnection *) malloc(sizeof(PConnection)))
 	    == NULL)
 	{
-		fprintf(stderr, _("XXX Can't allocate new connection.\n"));
+		/* XXX */
+		fprintf(stderr, _("Can't allocate new connection.\n"));
 		return NULL;
 	}
 
