@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.21 2000-11-14 16:36:45 arensb Exp $
+ * $Id: lexer.l,v 2.22 2000-12-08 06:31:55 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -50,6 +50,7 @@
 extern int fileno(FILE *);
 #endif  /* fileno */
 
+/* XXX - Is this hack still necessary? */
 /* Hack for Linux: "../config.h" contains magic to that makes the
  * declaration of strdup() be included, but "../config.h" is included only
  * after <stdio.h>, which includes <features.h>, which controls whether
@@ -170,6 +171,8 @@ ID		[-a-zA-Z_0-9]
 "device"	{ KEYWORD(DEVICE);	}
 "directory"	{ KEYWORD(DIRECTORY);	}
 "listen"	{ KEYWORD(LISTEN);	}
+"net"		{ KEYWORD(NET);	}
+"network"	{ KEYWORD(NET);		/* Synonym */	}
 "path"		{ KEYWORD(PATH);	}
 "pda"		{ KEYWORD(PDA);		}
 "palm"		{ KEYWORD(PDA);		/* Synonym */	}
