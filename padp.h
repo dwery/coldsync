@@ -51,36 +51,10 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.2 1999-01-31 22:07:29 arensb Exp $
+ * $Id: padp.h,v 1.3 1999-02-14 04:51:32 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
-
-#if 0
-#include "palm_types.h"
-#include "slp.h"
-
-#define PADP_DEFAULT_TIMEOUT		4000	/* Timeout, in ms */
-#define PADP_DEFAULT_RETRIES		140	/* # retries */
-
-#define PADP_MAX_PACKET_LEN	1024	/* Max total length of a packet */
-
-struct padp_header
-{
-	ubyte type;		/* Fragment type (PADP_FRAGMENT_TYPE_*) */
-	ubyte flags;		/* Flags */
-	uword size;		/* Size of packet, or offset of fragment */
-};
-
-extern int padp_send(PConnHandle ph, ubyte *outbuf, uword len);
-extern int padp_recv(PConnHandle ph, ubyte *packet, uword len);
-extern int padp_send_ack(PConnHandle ph,
-			 struct padp_header *header,
-			 struct slp_header *slp_head);
-extern int padp_get_ack(PConnHandle ph,
-			struct padp_header *header,
-			struct slp_header *slp_head);
-#endif	/* 0 */
 
 #include "palm_types.h"
 
@@ -89,7 +63,7 @@ extern int padp_get_ack(PConnHandle ph,
 #define PADP_FRAGTYPE_ACK	2	/* Acknowledgement */
 #define PADP_FRAGTYPE_NAK	3	/* No longer used */
 #define PADP_FRAGTYPE_TICKLE	4	/* Prevent timeouts */
-#define PADP_FRAGTYPE_ABORT	8	/* ? Abort */
+#define PADP_FRAGTYPE_ABORT	8	/* Abort (1.1 extension) */
 
 /* PADP header flags */
 #define PADP_FLAG_LONGHDR	0x10	/* This is a long header */
@@ -130,10 +104,13 @@ struct padp_header
 	uword size;		/* Size of packet, or offset of fragment */
 };
 
-extern int padp_errno;		/* Error code */
-extern char *padp_errlist[];	/* Error messages */
+struct PConnection;		/* Forward declaration */
 
-extern int padp_read(int fd, ubyte *buf, uword len);
+extern int padp_init(struct PConnection *pconn);
+extern int padp_tini(struct PConnection *pconn);
+
+/*  extern int padp_read(int fd, ubyte *buf, uword len); */
+extern int padp_read(int fd, const ubyte **buf, uword *len);
 extern int padp_write(int fd, ubyte *buf, uword len);
 extern int padp_unget(int fd);	/* XXX - Is this desirable? */
 
