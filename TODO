@@ -248,7 +248,6 @@
   GenericConduit) to make sense in this situation.
 	Presumably this is the equivalent of a slow sync, but don't
   bother downloading the database from the Palm.
-- Maybe add (optional) support for long arguments with libgnugetopt?
 - FreeBSD's /bin/sh is still broken (as of 4.0):
 	echo "before"
 	for dir in a b c; do
