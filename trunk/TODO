@@ -39,6 +39,12 @@
 - PConnection_net.c uses tini_slp() et al. even when it isn't
   appropriate. Better to add a pconn->tini() or pconn->unwind()
   method.
+- Perhaps initialize $CONDUIT_PATH to $PATH (from the environment).
+- Test $CONDUIT_PATH, $CONDUITDIR stuff.
+- Document $CONDUIT_PATH.
+- It'd be nice to add types to distinguish between bytes and letters,
+  and between arrays of arbitrary data and strings of characters. This
+  is for i18n and for the benefit of Japanese users and such.
 - Document the -P <protocol> option. Add it to the usage string.
 - Get rid of the usb_m50x listen type.
 - Use iconv(3) to convert command-line arguments to the appropriate
