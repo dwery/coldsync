@@ -2,11 +2,11 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.32 2000-12-24 21:24:42 arensb Exp $
+ * $Id: pdb.c,v 1.33 2001-01-05 06:15:18 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -15,6 +15,11 @@
  * records to the Palm, b) warn the user if they're written to a file, c)
  * provide a utility (in the p5-Palm package) to delete zero-length
  * records.
+ */
+/* XXX - This is a library. It shouldn't print error messages.
+ * Add 'int pdb_errno'; define error numbers and error messages that go
+ * with them.
+ * Debugging messages should go to 'FILE *pdb_logfile'.
  */
 
 #include "config.h"
@@ -600,8 +605,8 @@ pdb_Write(const struct pdb *db,
 			if (write(fd, rec->data, rec->data_len) !=
 			    rec->data_len)
 			{
-				fprintf(stderr, _("%s: Can't write "
-						  "record data\n"),
+				fprintf(stderr,
+					_("%s: Can't write record data\n"),
 					"pdb_Write");
 				perror("write");
 				return -1;
