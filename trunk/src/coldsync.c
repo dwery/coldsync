@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.128 2002-03-30 17:21:21 azummo Exp $
+ * $Id: coldsync.c,v 1.129 2002-03-30 17:32:11 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -573,8 +573,17 @@ palm_Disconnect( struct Palm *palm, ubyte status )
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
 
-	if((err = Disconnect(palm_pconn(palm), status)) < 0)
-		Error(_("Couldn't disconnect."));
+	/* ... only if the last error wan't CSE_NOCONN */
+
+	if (cs_errno != CSE_NOCONN)
+	{
+		if((err = Disconnect(palm_pconn(palm), status)) < 0)
+			Error(_("Couldn't disconnect."));
+	}
+	else
+	{
+		Error(_("Lost connection to Palm."));
+	}
 }
 
 static void
@@ -958,20 +967,10 @@ do_sync( pda_block *pda, struct Palm *palm )
 	/* Install new databases before sync, if the config says so */
 	if (global_opts.install_first)
 	{
-		err = conduits_install( palm);
-		if (err < 0)
+		if ((err = conduits_install(palm)) < 0)
 		{
-			switch( cs_errno )
-			{
-				case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
-					return -1;
-		
-				default:
-					palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-					return -1;
-			}
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1;
 		}
 	}
 
@@ -1006,20 +1005,10 @@ do_sync( pda_block *pda, struct Palm *palm )
 	 * pre-fetch conduit. (Or maybe this would be a good time to run
 	 * the install conduit.)
 	 */
-	err = conduits_fetch( palm );
-	if (err < 0)
+	if ((err = conduits_fetch(palm)) < 0)
 	{
-		switch( cs_errno )
-		{
-			case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
-				palm_Free(palm);
-				return -1;
-		
-			default:
-				palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-				return -1;
-		}
+		palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+		return -1;
 	}
 
 
@@ -1155,20 +1144,10 @@ do_sync( pda_block *pda, struct Palm *palm )
 	/* Install new databases after sync */
 	if (!global_opts.install_first)
 	{
-		err = conduits_install( palm );
-		if (err < 0)
+		if ((err = conduits_install(palm)) < 0)
 		{
-			switch( cs_errno )
-			{
-				case CSE_NOCONN:
-					Error(_("Lost connection to Palm."));
-					palm_Free(palm);
-					return -1;
-		
-				default:
-					palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
-					return -1;
-			}
+			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_CANCEL);
+			return -1;
 		}
 	}
 
