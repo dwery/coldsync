@@ -28,13 +28,16 @@
  * it is incremented directly to 0x01. It remains to be seen whether this
  * is necessary.
  *
+ * 0xff could be a magic value used in the first packet of a connection.
+ * The client is then supposed to match the XID used by the server.
+ *
  * The data portion of the packet typically appears to be a DLP packet
  * (except for the beginning of the session).
  *
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.7 2001-12-09 22:40:33 arensb Exp $
+ * $Id: netsync.h,v 1.8 2002-04-27 13:12:11 azummo Exp $
  */
 
 #ifndef _netsync_h_
