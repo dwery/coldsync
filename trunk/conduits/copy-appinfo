@@ -4,10 +4,15 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: copy-appinfo,v 3.2 2001-06-04 02:28:04 arensb Exp $
+# $Id: copy-appinfo,v 3.3 2001-06-04 10:19:18 arensb Exp $
 
 # This conduit simply copies the AppInfo block from the database on the
 # Palm to the desktop.
+
+# XXX - Make this work (or make sure it works) with databases that don't
+# have an AppInfo block.
+
+# XXX - Perhaps make this do nothing (but gracefully) with PRCs?
 
 use strict;
 use ColdSync;
@@ -56,8 +61,19 @@ Add the following to your F<.coldsyncrc> file:
 		type: memo/DATA;
 		type: todo/DATA;
 		...
-		path: "<...>/todo-text";
+		path: <...>/copy-appinfo;
 	}
+
+	conduit sync {
+		type: addr/DATA;
+		type: memo/DATA;
+		type: todo/DATA;
+		...
+		path: [generic];
+	}
+
+(the "[generic]" block is so that the databases in question will be synced
+the normal way, in addition to having their AppInfo blocks copied.)
 
 =head1 DESCRIPTION
 
