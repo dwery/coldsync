@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.7 1999-03-11 04:15:15 arensb Exp $
+ * $Id: pdb.c,v 1.8 1999-03-11 05:22:21 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -610,7 +610,7 @@ fprintf(stderr, "\tlen: %d\n", retval->reclist_header.len);
 					/* Copy the AppInfo block */
 		retval->appinfo_len = appinfo_len;
 fprintf(stderr, "pdb_Download: got an AppInfo block\n");
-debug_dump(stderr, "APP", retval->appinfo, retval->appinfo_len);
+/*  debug_dump(stderr, "APP", retval->appinfo, retval->appinfo_len); */
 		break;
 	    case DLPSTAT_NOTFOUND:
 		/* This database doesn't have an AppInfo block */
@@ -712,6 +712,44 @@ pdb_FindRecordByIndex(
 		return &(db->rec_index.rec[index]);
 
 	return NULL;		/* No such record */
+}
+
+/* XXX - pdb_FindNextRecord(db *, record *)
+ * Find the next record after this one. This makes more sense with a
+ * linked-list implementation.
+ */
+
+/* pdb_DeleteRecordByID
+ * Find the record whose unique ID is 'id' and delete it from 'db'. If the
+ * record isn't found, well, that's okay; we wanted to delete it anyway.
+ * Returns 0 if successful, -1 in case of error.
+ */
+/* XXX - This really ought to be redone with a linked list */
+int
+pdb_DeleteRecordByID(
+	const struct pdb *db,
+	const udword id)
+{
+	int i;
+
+	if (IS_RSRC_DB(db))
+		/* This only works with record databases */
+		return -1;
+
+	/* Look through the list of records */
+	for (i = 0; i < db->reclist_header.len; i++)
+	{
+		/* See if the uniqueID matches */
+		if (db->rec_index.rec[i].uniqueID == id)
+		{
+			/* Found it */
+			db->data[i] = NULL;
+			return 0;	/* Success */
+		}
+	}
+
+	/* Couldn't find it. Oh, well. */
+	return 0;
 }
 
 /*** Helper functions ***/
@@ -1399,7 +1437,6 @@ pdb_LoadRecords(int fd,
 /*  printf("Contents of record %d:\n", i); */
 /*  debug_dump(stdout, "<REC", db->data[i], db->data_len[i]); */
 	}
-/*  fprintf(stderr, "After all records, offset is %qd\n", lseek(fd, 0, SEEK_CUR)); */
 
 	return 0;		/* Success */
 }
@@ -1497,7 +1534,7 @@ fprintf(stderr, "\tsize: %d\n", resinfo.size);
 
 		/* Copy the resource data to 'db' */
 		memcpy(db->data[i], rptr, db->data_len[i]);
-debug_dump(stderr, "RES", db->data[i], db->data_len[i]);
+/*  debug_dump(stderr, "RES", db->data[i], db->data_len[i]); */
 	}
 
 	return 0;	/* Success */
@@ -1635,7 +1672,7 @@ fprintf(stderr, "\tcategory: %d\n", recinfo.category);
 
 		/* Copy the record data to 'db' */
 		memcpy(db->data[i], rptr, db->data_len[i]);
-debug_dump(stderr, "REC", db->data[i], db->data_len[i]);
+/*  debug_dump(stderr, "REC", db->data[i], db->data_len[i]); */
 	}
 
 	free(recids);	/* Clean up */
