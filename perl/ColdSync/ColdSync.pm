@@ -5,12 +5,12 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.11 2000-09-17 21:22:40 arensb Exp $
+# $Id: ColdSync.pm,v 1.12 2000-09-19 15:18:58 arensb Exp $
 package ColdSync;
 
 use vars qw( $VERSION );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.11 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.12 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -162,40 +162,37 @@ sub DumpConfig
 		}
 	}
 
-	foreach $flavor (@flavors)
+	print "conduit ", join(",", @flavors), " {\n";
+			# Print the "conduit" directive and the list of
+			# flavors
+	print "\tpath: \"$0\";\n";
+			# Print path to the conduit
+
+	# Print the list of types that this conduit supports.
+	foreach $typestring (@typestrings)
 	{
-		foreach $typestring (@typestrings)
+		print "\ttype: $typestring;\n";
+	}
+
+	# If %HEADERS contains any default values, list them.
+	# XXX - Doesn't deal properly with some headers: if the header has
+	# leading or trailing whitespace, it should be quoted. This
+	# requires a rewrite of the corresponding lex/yacc code to accept
+	# quotes, though.
+
+	if (%HEADERS ne ())
+	{
+		my $key;
+		my $value;
+
+		print "    arguments:\n";
+		while (($key, $value) = each %HEADERS)
 		{
-			# XXX - The $0 may be incorrect
-			print <<EOT;
-conduit $flavor {
-	path "$0";
-	type $typestring;
-EOT
-			# If %HEADERS contains any default values, list
-			# them.
-
-			# XXX - Doesn't deal properly with some headers: if
-			# the header has leading or trailing whitespace, it
-			# should be quoted. This requires a rewrite of the
-			# corresponding lex/yacc code to accept quotes,
-			# though.
-
-			if (%HEADERS ne ())
-			{
-				my $key;
-				my $value;
-
-				print "    arguments:\n";
-				while (($key, $value) = each %HEADERS)
-				{
-					print "#\t$key:\t$value\n";
-				}
-			}
-
-			print "}\n";
+			print "#\t$key:\t$value\n";
 		}
 	}
+
+	print "}\n";
 
 	# XXX - Now do the same thing for resource databases, once
 	# those become supported.
