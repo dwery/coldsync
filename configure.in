@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.14 1999-06-29 14:48:01 arensb Exp $
+dnl # $Id: configure.in,v 1.15 1999-07-04 02:03:24 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -11,8 +11,13 @@ dnl #	if test "$var1" = value; then var2=true; fi
 dnl # XXX - Test to see whether cpp accepts macro definitions with
 dnl # "..." as argument.
 
+dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
+dnl # XXX - See if printf() and friends accept %q format.
+dnl # XXX - Under Solaris 2.5, gcc fusses if you print a 'uid_t' with
+dnl # %ld. Figure out how to set this properly.
+
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.3.1)
+AM_INIT_AUTOMAKE(coldsync, 0.3.2)
 AM_CONFIG_HEADER(config.h)
 
 dnl # Checks for programs.
@@ -29,10 +34,20 @@ AC_PROG_CXX
 
 # I know how to be pedantic with gcc. Other compilers, I'm not sure.
 if test x"$GCC" = x"yes" ; then
-	CPPFLAGS="-g -Wall -ansi -pedantic"
+	if test x"$CPPFLAGS" = x ; then
+		CPPFLAGS="-g -Wall -ansi -pedantic"
+	else
+		AC_MSG_RESULT(dnl
+[	At this point, I would have turned on the following gcc options:
+		-g -Wall -ansi -pedantic
+	but since you've specified a CPPFLAGS variable, I'll go with
+	what you said, instead:
+		$CPPFLAGS])
+
+	fi
 else
 	AC_MSG_RESULT(dnl
-[	You don't seem to be using gcc, so various anal-retentive
+[	You don't seem to be using gcc, so various anal retentive
 	compiler options won't be turned on. If you know what they
 	are for your compiler, you may wish to turn them on, e.g.
 		CFLAGS=\"-Wall -ansi -pedantic\" ./configure])
@@ -46,7 +61,6 @@ dnl # Checks for libraries.
 dnl # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h)
-dnl # echo "HAVE_FCNTL == $ac_cv_header_fcntl_h"
 
 dnl # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
