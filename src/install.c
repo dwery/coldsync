@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.20 2000-11-20 05:25:41 arensb Exp $
+ * $Id: install.c,v 2.21 2000-11-24 23:01:36 arensb Exp $
  */
 
 #include "config.h"
@@ -195,7 +195,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 		{
 			fprintf(stderr,
 				_("%s: Can't open install directory\n"),
-				"run_Install_conduits");
+				"NextInstallFile");
 			perror("opendir");
 			return -1;
 		}
@@ -218,7 +218,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
                 if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
                 {
                         fprintf(stderr, _("%s: Can't open \"%s\"\n"),
-                                "run_Install_conduits",
+                                "NextInstallFile",
                                 fname);
                         continue;
                 }
@@ -273,8 +273,7 @@ InstallNewFiles(struct PConnection *pconn,
 		struct pdb *pdb;	/* The database */
 		static char fname[MAXPATHLEN+1];
 					/* The database's full pathname */
-		const volatile char *bakfname;
-					/* The database's full pathname in
+		const char *bakfname;	/* The database's full pathname in
 					 * the backup directory.
 					 */
 		int outfd;		/* File descriptor for writing the
