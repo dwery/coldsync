@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.55 2000-11-14 16:41:41 arensb Exp $
+ * $Id: coldsync.c,v 1.56 2000-11-18 23:03:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -59,7 +59,6 @@ extern char *synclog;		/* Log that'll be uploaded to the Palm. See
 
 extern int load_palm_config(struct Palm *palm);
 int CheckLocalFiles(struct Palm *palm);
-int GetPalmInfo(struct PConnection *pconn, struct Palm *palm);
 int UpdateUserInfo(struct PConnection *pconn,
 		   const struct Palm *palm, const int success);
 int reserve_fd(int fd, int flags);
@@ -122,8 +121,9 @@ static struct {
 };
 #define num_speeds	sizeof(speeds) / sizeof(speeds[0])
 
-struct Palm palm;
-int need_slow_sync;
+int need_slow_sync;	/* XXX - This is bogus. Presumably, this should be
+			 * another field in 'struct Palm' or something.
+			 */
 
 int cs_errno;			/* ColdSync error code. */
 struct cmd_opts global_opts;	/* Command-line options */
@@ -1012,10 +1012,13 @@ int
 run_mode_Standalone(int argc, char *argv[])
 {
 	int err;
-	int i;
 	struct PConnection *pconn;	/* Connection to the Palm */
 	struct pref_item *pref_cursor;
+	const struct dlp_dbinfo *cur_db;
+					/* Used when iterating over all
+					 * databases */
 	struct dlp_dbinfo dbinfo;	/* Used when installing files */
+	struct Palm *palm;
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -1052,91 +1055,25 @@ run_mode_Standalone(int argc, char *argv[])
 		return -1;
 	}
 
-	/* Get system, NetSync and user info */
-	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	/* Allocate a new Palm description */
+	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		fprintf(stderr, _("Error: can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-				/* XXX - I'm not sure this is quite right.
-				 * That is, if things are so screwed up
-				 * that we can't get the user info, then
-				 * I'm not sure that we can abort the
-				 * connection cleanly.
-				 */
-		pconn = NULL;
 		return -1;
 	}
 
-	/* Read the Palm's serial number, if possible. */
-	/* XXX - The Visor does not appear to have a software-readable
-	 * serial number. It would be nice to have some way of detecting
-	 * this.
-	 */
-	/* XXX - Move this whole section into a separate get_snum(&palm)
-	 * function.
-	 */
-	if (palm.sysinfo.rom_version < 0x03000000)
+	/* Get the Palm's serial number, if possible */
+	if (palm_serial_len(palm) > 0)
 	{
-		/* Can't just try to read the serial number and let the RPC
-		 * call fail: the PalmPilot(Pro) panics when you do that.
-		 */
-		SYNC_TRACE(1)
-			fprintf(stderr, "This Palm is too old to have a "
-				"serial number in ROM\n");
-
-		/* Set the serial number to the empty string */
-		palm.serial[0] = '\0';
-		palm.serial_len = 0;
-	} else {
-		/* The Palm's ROM is v3.0 or later, so it has a serial
-		 * number.
-		 */
-		udword snum_ptr;	/* Palm pointer to serial number */
-		uword snum_len;		/* Length of serial number string */
 		char checksum;		/* Serial number checksum */
 
-		/* Get the location of the ROM serial number */
-		/* XXX - Move this into its own function? */
-		err = RDLP_ROMToken(pconn, CARD0, ROMToken_Snum,
-				    &snum_ptr, &snum_len);
-		if (err < 0)
-		{
-			fprintf(stderr, _("Error: Can't get location of "
-					  "serial number\n"));
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			return -1;
-		}
-
-		/* Sanity check: make sure we have space for the serial
-		 * number.
-		 */
-		if (snum_len > SNUM_MAX-1)
-		{
-			fprintf(stderr, _("Warning: ROM serial number is "
-					  "%d characters long. Please notify "
-					  "the\nmaintainer\n"),
-				snum_len);
-			snum_len = SNUM_MAX;
-		}
-
-		/* Read the serial number out of the location found above */
-		err = RDLP_MemMove(pconn, (ubyte *) palm.serial,
-				   snum_ptr, snum_len);
-		if (err < 0)
-		{
-			fprintf(stderr, _("Error: Can't read serial "
-					  "number\n"));
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			return -1;
-		}
-		palm.serial[snum_len] = '\0';
-		palm.serial_len = snum_len;
-
 		/* Calculate the checksum for the serial number */
-		checksum = snum_checksum(palm.serial, palm.serial_len);
+		checksum = snum_checksum(palm_serial(palm),
+					 palm_serial_len(palm));
 		SYNC_TRACE(2)
 			fprintf(stderr, "Serial number is \"%s-%c\"\n",
-				palm.serial, checksum);
+				palm_serial(palm), checksum);
 	}
 
 	/* Figure out which Palm we're dealing with, and initialize
@@ -1145,9 +1082,10 @@ run_mode_Standalone(int argc, char *argv[])
 	/* XXX - This also creates ~/.palm/<stuff> . Perhaps that's not the
 	 * right place for it?
 	 */
-	if ((err = load_palm_config(&palm)) < 0)
+	if ((err = load_palm_config(palm)) < 0)
 	{
 		fprintf(stderr, _("Can't get per-Palm config.\n"));
+		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		pconn = NULL;
 		return -1;
@@ -1163,14 +1101,6 @@ run_mode_Standalone(int argc, char *argv[])
 	MISC_TRACE(1)
 		fprintf(stderr, "Initializing conduits\n");
 
-	if ((err = GetMemInfo(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
 	/* Initialize preference cache */
 	MISC_TRACE(1)
 		fprintf(stderr,"Initializing preference cache\n");
@@ -1178,6 +1108,7 @@ run_mode_Standalone(int argc, char *argv[])
 	{
 		fprintf(stderr,
 			_("CacheFromConduits() returned %d\n"), err);
+		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		pconn = NULL;
 		return -1;
@@ -1185,7 +1116,7 @@ run_mode_Standalone(int argc, char *argv[])
 
 	/* Find out whether we need to do a slow sync or not */
 	/* XXX - Actually, it's not as simple as this (see comment below) */
-	if (hostid == palm.userinfo.lastsyncPC)
+	if (hostid == palm_lastsyncPC(palm))
 		/* We synced with this same machine last time, so we can do
 		 * a fast sync this time.
 		 */
@@ -1209,19 +1140,11 @@ run_mode_Standalone(int argc, char *argv[])
 	 * reduces the amount of time the user has to wait.
 	 */
 
-	/* Get a list of all databases on the Palm */
-	if ((err = ListDBs(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("ListDBs returned %d\n"), err);
-
-		MISC_TRACE(6)
-			fprintf(stderr, "Freeing pref_cache\n");
-
-		FreePrefList(pref_cache);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
+	palm_fetch_all_DBs(palm);	/* We're going to be looking at all
+					 * of the databases on the Palm, so
+					 * make sure we get them all.
+					 */
+	/* XXX - Error-checking */
 
 	MISC_TRACE(1)
 		fprintf(stderr, "Doing a sync.\n");
@@ -1241,6 +1164,7 @@ run_mode_Standalone(int argc, char *argv[])
 				fprintf(stderr,
 					"Freeing pref_cache\n");
 			FreePrefList(pref_cache);
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			pconn = NULL;
 			return -1;
@@ -1251,7 +1175,7 @@ run_mode_Standalone(int argc, char *argv[])
 	/* XXX - It should be configurable whether new databases get
 	 * installed at the beginning or the end.
 	 */
-	err = InstallNewFiles(pconn, &palm, installdir, True);
+	err = InstallNewFiles(pconn, palm, installdir, True);
 
 	/* XXX - It should be possible to specify a list of directories to
 	 * look in: that way, the user can put new databases in
@@ -1269,6 +1193,7 @@ run_mode_Standalone(int argc, char *argv[])
 			fprintf(stderr, "Freeing pref_cache\n");
 
 		FreePrefList(pref_cache);
+		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		pconn = NULL;
 		return -1;
@@ -1295,9 +1220,10 @@ run_mode_Standalone(int argc, char *argv[])
 	 * pre-fetch conduit. (Or maybe this would be a good time to run
 	 * the install conduit.)
 	 */
-	for (i = 0; i < palm.num_dbs; i++)
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
-		err = run_Fetch_conduits(&(palm.dblist[i]));
+		err = run_Fetch_conduits(cur_db);
 		if (err < 0)
 		{
 			fprintf(stderr, _("Error %d running pre-fetch "
@@ -1308,6 +1234,7 @@ run_mode_Standalone(int argc, char *argv[])
 				fprintf(stderr,
 					"Freeing pref_cache\n");
 			FreePrefList(pref_cache);
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 			pconn = NULL;
 			return -1;
@@ -1315,12 +1242,13 @@ run_mode_Standalone(int argc, char *argv[])
 	}
 
 	/* Synchronize the databases */
-	for (i = 0; i < palm.num_dbs; i++)
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
 		/* Run the Sync conduits for this database. This includes
 		 * built-in conduits.
 		 */
-		err = run_Sync_conduits(&(palm.dblist[i]), pconn);
+		err = run_Sync_conduits(cur_db, pconn);
 		if (err < 0)
 		{
 			switch (cs_errno)
@@ -1347,6 +1275,7 @@ run_mode_Standalone(int argc, char *argv[])
 				continue;
 			}
 
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
 
@@ -1367,13 +1296,14 @@ run_mode_Standalone(int argc, char *argv[])
 	 * these databases should be deleted. However, just in case, they
 	 * should be saved to an "attic" directory.
 	 */
-	err = CheckLocalFiles(&palm);
+	err = CheckLocalFiles(palm);
 
 	/* XXX - Write updated NetSync info */
 	/* Write updated user info */
-	if ((err = UpdateUserInfo(pconn, &palm, 1)) < 0)
+	if ((err = UpdateUserInfo(pconn, palm, 1)) < 0)
 	{
 		fprintf(stderr, _("Error writing user info\n"));
+		free_Palm(palm);
 		Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 		pconn = NULL;
 
@@ -1392,6 +1322,7 @@ run_mode_Standalone(int argc, char *argv[])
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
 			fprintf(stderr, _("Error writing sync log.\n"));
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
 
@@ -1434,9 +1365,10 @@ run_mode_Standalone(int argc, char *argv[])
 	pconn = NULL;
 
 	/* Run Dump conduits */
-	for (i = 0; i < palm.num_dbs; i++)
+	palm_resetdb(palm);
+	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
-		err = run_Dump_conduits(&(palm.dblist[i]));
+		err = run_Dump_conduits(cur_db);
 		if (err < 0)
 		{
 			fprintf(stderr,
@@ -1445,6 +1377,8 @@ run_mode_Standalone(int argc, char *argv[])
 			break;
 		}
 	}
+
+	free_Palm(palm);
 
 	return 0;
 }
@@ -1455,6 +1389,7 @@ run_mode_Backup(int argc, char *argv[])
 	int err;
 	const char *backupdir = NULL;	/* Where to put backup */
 	struct PConnection *pconn;	/* Connection to the Palm */
+	struct Palm *palm;
 
 	/* Parse arguments:
 	 *	dir		- Dump everything to <dir>
@@ -1539,44 +1474,12 @@ run_mode_Backup(int argc, char *argv[])
 		return -1;
 	}
 
-	/* Get system, NetSync and user info */
-	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	/* Allocate a new Palm description */
+	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		fprintf(stderr, _("Error: can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-				/* XXX - I'm not sure this is quite right.
-				 * That is, if things are so screwed up
-				 * that we can't get the user info, then
-				 * I'm not sure that we can abort the
-				 * connection cleanly.
-				 */
-		pconn = NULL;
 		return -1;
-	}
-
-	/* XXX - Would it be a Good Thing to get the Palm serial number? */
-
-	/* Read memory info */
-	if ((err = GetMemInfo(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
-	/* Get a list of all databases on the Palm */
-	if ((err = ListDBs(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("ListDBs returned %d\n"), err);
-
-		MISC_TRACE(6)
-			fprintf(stderr, "Freeing pref_cache\n");
-
-		FreePrefList(pref_cache);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		exit(1);
 	}
 
 	/* Do the backup */
@@ -1588,7 +1491,7 @@ run_mode_Backup(int argc, char *argv[])
 		SYNC_TRACE(2)
 			fprintf(stderr, "Backing everything up.\n");
 
-		err = full_backup(pconn, &palm, backupdir);
+		err = full_backup(pconn, palm, backupdir);
 	} else {
 		/* Individual databases were listed on the command line.
 		 * Back them up.
@@ -1597,14 +1500,14 @@ run_mode_Backup(int argc, char *argv[])
 
 		for (i = 0; i < argc; i++)
 		{
-			struct dlp_dbinfo *db;
+			const struct dlp_dbinfo *db;
 
 			SYNC_TRACE(2)
 				fprintf(stderr,
 					"Backing up database \"%s\"\n",
 					argv[i]);
 
-			db = find_dbentry(&palm, argv[i]);
+			db = palm_find_dbentry(palm, argv[i]);
 					/* Find the dlp_dbentry for this
 					 * database.
 					 */
@@ -1636,6 +1539,7 @@ run_mode_Backup(int argc, char *argv[])
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
 			fprintf(stderr, _("Error writing sync log.\n"));
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
 			return -1;
@@ -1645,6 +1549,9 @@ run_mode_Backup(int argc, char *argv[])
 	/* Finally, close the connection */
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
+
+	free_Palm(palm);
+	palm = NULL;
 
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
@@ -1662,6 +1569,7 @@ run_mode_Restore(int argc, char *argv[])
 	int err;
 	int i;
 	struct PConnection *pconn;	/* Connection to the Palm */
+	struct Palm *palm;
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -1695,44 +1603,12 @@ run_mode_Restore(int argc, char *argv[])
 		return -1;
 	}
 
-	/* Get system, NetSync and user info */
-	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	/* Allocate a new Palm description */
+	if ((palm = new_Palm(pconn)) == NULL)
 	{
-		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		fprintf(stderr, _("Error: can't allocate struct Palm.\n"));
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-				/* XXX - I'm not sure this is quite right.
-				 * That is, if things are so screwed up
-				 * that we can't get the user info, then
-				 * I'm not sure that we can abort the
-				 * connection cleanly.
-				 */
-		pconn = NULL;
 		return -1;
-	}
-
-	/* XXX - Would it be a Good Thing to get the Palm serial number? */
-
-	/* Read memory info */
-	if ((err = GetMemInfo(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
-	/* Get a list of all databases on the Palm */
-	if ((err = ListDBs(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("ListDBs returned %d\n"), err);
-
-		MISC_TRACE(6)
-			fprintf(stderr, "Freeing pref_cache\n");
-
-		FreePrefList(pref_cache);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		exit(1);
 	}
 
 	/* Parse arguments: for each argument, if it's a file, upload that
@@ -1744,7 +1620,7 @@ run_mode_Restore(int argc, char *argv[])
 		/* Compatibility mode: the user has specified "-mr <dir>".
 		 * Restore everything in <dir>.
 		 */
-		err = restore_dir(pconn, &palm, global_opts.backupdir);
+		err = restore_dir(pconn, palm, global_opts.backupdir);
 		/* XXX - Error-checking */
 	} else {
 		for (i = 0; i < argc; i++)
@@ -1753,12 +1629,12 @@ run_mode_Restore(int argc, char *argv[])
 			{
 				/* Restore all databases in argv[i] */
 
-				err = restore_dir(pconn, &palm, argv[i]);
+				err = restore_dir(pconn, palm, argv[i]);
 				/* XXX - Error-checking */
 			} else {
 				/* Restore the file argv[i] */
 
-				err = restore_file(pconn, &palm, argv[i]);
+				err = restore_file(pconn, palm, argv[i]);
 				/* XXX - Error-checking */
 			}
 		}
@@ -1773,6 +1649,7 @@ run_mode_Restore(int argc, char *argv[])
 		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
 		{
 			fprintf(stderr, _("Error writing sync log.\n"));
+			free_Palm(palm);
 			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 			pconn = NULL;
 			return -1;
@@ -1790,228 +1667,10 @@ run_mode_Restore(int argc, char *argv[])
 	}
 	pconn = NULL;
 
-	return 0;
-}
-
-#if 0
-int
-run_mode_Install(int argc, char *argv[])
-{
-	int err;
-	int i;
-	struct PConnection *pconn;	/* Connection to the Palm */
-
-	/* Get listen block */
-	if (sync_config->listen == NULL)
-	{
-		fprintf(stderr, _("Error: no port specified.\n"));
-		return -1;
-	}
-
-	/* XXX - If we're listening on a serial port, figure out fastest
-	 * speed at which it will run.
-	 */
-	SYNC_TRACE(2)
-		fprintf(stderr, "Opening device [%s]\n",
-			sync_config->listen->device);
-
-	/* Set up a PConnection to the Palm */
-	/* XXX - set last parameter to zero to inhibit "Press HotSync
-	 *  button prompt" when in daemon mode
-	 */
-	if ((pconn = new_PConnection(sync_config->listen->device,
-				     sync_config->listen->listen_type, 1))
-	    == NULL)
-	{
-		fprintf(stderr, _("Error: can't open connection.\n"));
-		return -1;
-	}
-	pconn->speed = sync_config->listen->speed;
-
-	/* Connect to the Palm */
-	if ((err = Connect(pconn)) < 0)
-	{
-		fprintf(stderr, _("Can't connect to Palm\n"));
-		PConnClose(pconn);
-		return -1;
-	}
-
-	/* Get system, NetSync and user info */
-	if ((err = GetPalmInfo(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-				/* XXX - I'm not sure this is quite right.
-				 * That is, if things are so screwed up
-				 * that we can't get the user info, then
-				 * I'm not sure that we can abort the
-				 * connection cleanly.
-				 */
-		pconn = NULL;
-		return -1;
-	}
-
-	/* Read the Palm's serial number, if possible. */
-	/* XXX - The Visor does not appear to have a software-readable
-	 * serial number. It would be nice to have some way of detecting
-	 * this.
-	 */
-	if (palm.sysinfo.rom_version < 0x03000000)
-	{
-		/* Can't just try to read the serial number and let the RPC
-		 * call fail: the PalmPilot(Pro) panics when you do that.
-		 */
-		SYNC_TRACE(1)
-			fprintf(stderr, "This Palm is too old to have a "
-				"serial number in ROM\n");
-
-		/* Set the serial number to the empty string */
-		palm.serial[0] = '\0';
-		palm.serial_len = 0;
-	} else {
-		/* The Palm's ROM is v3.0 or later, so it has a serial
-		 * number.
-		 */
-		udword snum_ptr;	/* Palm pointer to serial number */
-		uword snum_len;		/* Length of serial number string */
-		char checksum;		/* Serial number checksum */
-
-		/* Get the location of the ROM serial number */
-		/* XXX - Move this into its own function? */
-		err = RDLP_ROMToken(pconn, CARD0, ROMToken_Snum,
-				    &snum_ptr, &snum_len);
-		if (err < 0)
-		{
-			fprintf(stderr, _("Error: Can't get location of "
-					  "serial number\n"));
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			return -1;
-		}
-
-		/* Sanity check: make sure we have space for the serial
-		 * number.
-		 */
-		if (snum_len > SNUM_MAX-1)
-		{
-			fprintf(stderr, _("Warning: ROM serial number is "
-					  "%d characters long. Please notify "
-					  "the\nmaintainer\n"),
-				snum_len);
-			snum_len = SNUM_MAX;
-		}
-
-		/* Read the serial number out of the location found above */
-		err = RDLP_MemMove(pconn, (ubyte *) palm.serial,
-				   snum_ptr, snum_len);
-		if (err < 0)
-		{
-			fprintf(stderr, _("Error: Can't read serial "
-					  "number\n"));
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			return -1;
-		}
-		palm.serial[snum_len] = '\0';
-		palm.serial_len = snum_len;
-
-		/* Calculate the checksum for the serial number */
-		checksum = snum_checksum(palm.serial, palm.serial_len);
-		SYNC_TRACE(2)
-			fprintf(stderr, "Serial number is \"%s-%c\"\n",
-				palm.serial, checksum);
-	}
-
-	/* Figure out which Palm we're dealing with, and initialize
-	 * per-palm config.
-	 */
-	/* XXX - This also creates ~/.palm/<stuff> . Perhaps that's not the
-	 * right place for it?
-	 */
-	if ((err = load_palm_config(&palm)) < 0)
-	{
-		fprintf(stderr, _("Can't get per-Palm config.\n"));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
-	/* XXX - In daemon mode, presumably load_palm_config() (or
-	 * something) should tell us which user to run as. Therefore fork()
-	 * an instance, have it setuid() to the appropriate user, and load
-	 * that user's configuration.
-	 */
-
-	/* Initialize (per-user) conduits */
-	MISC_TRACE(1)
-		fprintf(stderr, "Initializing conduits\n");
-
-	if ((err = GetMemInfo(pconn, &palm)) < 0)
-	{
-		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
-	MISC_TRACE(1)
-		fprintf(stderr, "Installing files.\n");
-
-	/* Install new databases */
-	/* XXX - Iterate over argv[]; for directories, install all
-	 * databases in that directory. For files, just install that file.
-	 */
-	err = InstallNewFiles(pconn, &palm, installdir, True);
-
-	/* XXX - It should be possible to specify a list of directories to
-	 * look in: that way, the user can put new databases in
-	 * ~/.palm/install, whereas in a larger site, the sysadmin can
-	 * install databases in /usr/local/stuff; they'll be uploaded from
-	 * there, but not deleted.
-	 */
-	/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
-			      False);*/
-	if (err < 0)
-	{
-		fprintf(stderr, _("Error installing new files.\n"));
-
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		pconn = NULL;
-		return -1;
-	}
-
-	/* Upload sync log */
-	if (synclog != NULL)
-	{
-		SYNC_TRACE(2)
-			fprintf(stderr, "Writing log to Palm\n");
-
-		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
-		{
-			fprintf(stderr, _("Error writing sync log.\n"));
-			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
-			pconn = NULL;
-
-			MISC_TRACE(6)
-				fprintf(stderr, "Freeing pref_cache\n");
-			FreePrefList(pref_cache);
-			exit(1);
-		}
-	}
-
-	/* Finally, close the connection */
-	SYNC_TRACE(3)
-		fprintf(stderr, "Closing connection to Palm\n");
-
-	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
-	{
-		fprintf(stderr, _("Error disconnecting\n"));
-		exit(1);
-	}
-
-	pconn = NULL;
+	free_Palm(palm);
 
 	return 0;
 }
-#endif	/* 0 */
 
 /* XXX - run_mode_Daemon() */
 /* XXX
@@ -2204,225 +1863,6 @@ Disconnect(struct PConnection *pconn, const ubyte status)
 	return 0;
 }
 
-/* GetMemInfo
- * Get info about the memory on the Palm and record it in 'palm'.
- */
-int
-GetMemInfo(struct PConnection *pconn,
-		struct Palm *palm)
-{
-	int err;
-	ubyte last_card;
-	ubyte more;
-
-	/* Allocate space for the card info */
-	if ((palm->cardinfo = (struct dlp_cardinfo *)
-	     malloc(sizeof(struct dlp_cardinfo))) == NULL)
-		return -1;
-
-	/* Ask the Palm about each memory card in turn */
-	/* XXX - Actually, it doesn't: it just asks about memory card 0;
-	 * the 'more' return value should be non-zero if there are more
-	 * cards to be read, but it's always one on every Palm I've tried
-	 * this on.
-	 */
-	if ((err = DlpReadStorageInfo(pconn, CARD0, &last_card, &more,
-				      palm->cardinfo)) < 0)
-		return -1;
-
-	palm->num_cards = 1;	/* XXX - Hard-wired, for the reasons above */
-
-	MISC_TRACE(4)
-	{
-		fprintf(stderr, "===== Got memory info:\n");
-		fprintf(stderr, "\tTotal size:\t%d\n",
-			palm->cardinfo[0].totalsize);
-		fprintf(stderr, "\tCard number:\t%d\n",
-			palm->cardinfo[0].cardno);
-		fprintf(stderr, "\tCard version: %d (0x%02x)\n",
-			palm->cardinfo[0].cardversion,
-			palm->cardinfo[0].cardversion);
-		fprintf(stderr, "\tCreation time: %02d:%02d:%02d %d/%d/%d\n",
-			palm->cardinfo[0].ctime.second,
-			palm->cardinfo[0].ctime.minute,
-			palm->cardinfo[0].ctime.hour,
-			palm->cardinfo[0].ctime.day,
-			palm->cardinfo[0].ctime.month,
-			palm->cardinfo[0].ctime.year);
-		fprintf(stderr, "\tROM: %ld (0x%04lx)\n",
-			palm->cardinfo[0].rom_size,
-			palm->cardinfo[0].rom_size);
-		fprintf(stderr, "\tRAM: %ld (0x%04lx)\n",
-			palm->cardinfo[0].ram_size,
-			palm->cardinfo[0].ram_size);
-		fprintf(stderr, "\tFree RAM: %ld (0x%04lx)\n",
-			palm->cardinfo[0].free_ram,
-			palm->cardinfo[0].free_ram);
-		fprintf(stderr, "\tCard name (%d) \"%s\"\n",
-			palm->cardinfo[0].cardname_size,
-			palm->cardinfo[0].cardname);
-		fprintf(stderr, "\tManufacturer name (%d) \"%s\"\n",
-			palm->cardinfo[0].manufname_size,
-			palm->cardinfo[0].manufname);
-
-		fprintf(stderr, "\tROM databases: %d\n",
-			palm->cardinfo[0].rom_dbs);
-		fprintf(stderr, "\tRAM databases: %d\n",
-			palm->cardinfo[0].ram_dbs);
-	}
-
-	/* XXX - Check DLP version */
-
-	return 0;
-}
-
-/* ListDBs
- * Fetch the list of database info records from the Palm, both for ROM and
- * RAM.
- * This function must be called after GetMemInfo().
- */
-int
-ListDBs(struct PConnection *pconn, struct Palm *palm)
-{
-	int err;
-	int card;		/* Memory card number */
-
-	/* Iterate over each memory card */
-	for (card = 0; card < palm->num_cards; card++)
-	{
-		int i;
-		ubyte iflags;		/* ReadDBList flags */
-		uword start;		/* Database index to start reading
-					 * at */
-		uword last_index;	/* Index of last database read */
-		ubyte oflags;
-		ubyte num;
-
-		/* Get total # of databases */
-		palm->num_dbs =
-			palm->cardinfo[card].ram_dbs;
-		if (global_opts.check_ROM)	/* Also considering ROM */
-			palm->num_dbs += palm->cardinfo[card].rom_dbs;
-		if (palm->num_dbs <= 0)
-		{
-			/* XXX - Fix this */
-			fprintf(stderr,
-				_("### Error: you have an old Palm, one that "
-				  "doesn't say how many\n"
-				  "databases it has. I can't cope with "
-				  "this.\n"));
-			return -1;
-		}
-
-		/* Allocate space for the array of database info blocks */
-		if ((palm->dblist = (struct dlp_dbinfo *)
-		     calloc(palm->num_dbs, sizeof(struct dlp_dbinfo)))
-		    == NULL)
-			return -1;
-
-		/* XXX - If the Palm uses DLP >= 1.2, get multiple
-		 * databases at once.
-		 */
-		iflags = DLPCMD_READDBLFLAG_RAM;
-		if (global_opts.check_ROM)
-			iflags |= DLPCMD_READDBLFLAG_ROM;
-				/* Flags: read at least RAM databases. If
-				 * we're even considering the ROM ones,
-				 * grab those, too.
-				 */
-
-		start = 0;	/* Index at which to start reading */
-
-		/* Collect each database in turn. */
-		/* XXX - Should handle older devices that don't return the
-		 * number of databases. The easiest thing to do in this
-		 * case is probably to resize palm->dblist dynamically
-		 * (realloc()) as necessary. In this case, preallocating
-		 * its size above becomes just an optimization for the
-		 * special case where DLP >= 1.1.
-		 */
-		for (i = 0; i < palm->num_dbs; i++)
-		{
-			err = DlpReadDBList(pconn, iflags, card, start,
-					    &last_index, &oflags, &num,
-					    &(palm->dblist[i]));
-			/* XXX - Until we can get the DLP status code from
-			 * palm_errno, we'll need to ignore 'err'.
-			 */
-			if (err < 0)
-				return -1;
-
-			/* Sanity check: if there are no more databases to
-			 * be read, stop reading now. This shouldn't
-			 * happen, but you never know.
-			 */
-			if ((oflags & 0x80) == 0)	/* XXX - Need const */
-				/* There are no more databases */
-				break;
-
-			/* For the next iteration, set the start index to
-			 * the index of the database just read, plus one.
-			 */
-			start = last_index + 1;
-			start = last_index+1; 
-		}
-	}
-
-	/* Print out the list of databases, for posterity */
-	SYNC_TRACE(2)
-	{
-		int i;
-
-		fprintf(stderr, "\nDatabase list:\n");
-		fprintf(stderr,
-			"Name                            flags type crea ver mod. num\n"
-			"        ctime                mtime                baktime\n");
-		for (i = 0; i < palm->num_dbs; i++)
-		{
-			fprintf(stderr,
-				"%-*s %04x %c%c%c%c %c%c%c%c %3d %08lx\n",
-				PDB_DBNAMELEN,
-				palm->dblist[i].name,
-				palm->dblist[i].db_flags,
-				(char) (palm->dblist[i].type >> 24),
-				(char) (palm->dblist[i].type >> 16),
-				(char) (palm->dblist[i].type >> 8),
-				(char) palm->dblist[i].type,
-				(char) (palm->dblist[i].creator >> 24),
-				(char) (palm->dblist[i].creator >> 16),
-				(char) (palm->dblist[i].creator >> 8),
-				(char) palm->dblist[i].creator,
-				palm->dblist[i].version,
-				palm->dblist[i].modnum);
-			fprintf(stderr, "        "
-				"%02d:%02d:%02d %02d/%02d/%02d  "
-				"%02d:%02d:%02d %02d/%02d/%02d  "
-				"%02d:%02d:%02d %02d/%02d/%02d\n",
-				palm->dblist[i].ctime.hour,
-				palm->dblist[i].ctime.minute,
-				palm->dblist[i].ctime.second,
-				palm->dblist[i].ctime.day,
-				palm->dblist[i].ctime.month,
-				palm->dblist[i].ctime.year,
-				palm->dblist[i].mtime.hour,
-				palm->dblist[i].mtime.minute,
-				palm->dblist[i].mtime.second,
-				palm->dblist[i].mtime.day,
-				palm->dblist[i].mtime.month,
-				palm->dblist[i].mtime.year,
-				palm->dblist[i].baktime.hour,
-				palm->dblist[i].baktime.minute,
-				palm->dblist[i].baktime.second,
-				palm->dblist[i].baktime.day,
-				palm->dblist[i].baktime.month,
-				palm->dblist[i].baktime.year);
-		}
-	}
-
-	return 0;
-}
-
-
 /* CheckLocalFiles
  * Clean up the backup directory: if there are any database files in it
  * that aren't installed on the Palm, move them to the attic directory, out
@@ -2457,7 +1897,7 @@ CheckLocalFiles(struct Palm *palm)
 	/* Check each file in the directory in turn */
 	while ((file = readdir(dir)) != NULL)
 	{
-		struct dlp_dbinfo *db;
+		const struct dlp_dbinfo *db;
 		const char *dbname;	/* Database name, built from file
 					 * name */
 		static char fromname[MAXPATHLEN+1];
@@ -2493,7 +1933,7 @@ CheckLocalFiles(struct Palm *palm)
 			fprintf(stderr,
 				"Checking for \"%s\" on the Palm\n",
 				dbname);
-		if ((db = find_dbentry(palm, dbname)) != NULL)
+		if ((db = palm_find_dbentry(palm, dbname)) != NULL)
 				/* It exists. Ignore it */
 			continue;
 
@@ -2632,132 +2072,6 @@ CheckLocalFiles(struct Palm *palm)
 	return 0;
 }
 
-/* GetPalmInfo
- * Get system and user info from the Palm, and put it in 'palm'.
- */
-int
-GetPalmInfo(struct PConnection *pconn,
-	       struct Palm *palm)
-{
-	int err;
-
-	/* Get system information about the Palm */
-	if ((err = DlpReadSysInfo(pconn, &(palm->sysinfo))) < 0)
-	{
-		fprintf(stderr, _("Can't get system info\n"));
-		return -1;
-	}
-	MISC_TRACE(3)
-	{
-		fprintf(stderr, "System info:\n");
-		fprintf(stderr, "\tROM version: 0x%08lx\n",
-			palm->sysinfo.rom_version);
-		fprintf(stderr, "\tLocalization: 0x%08lx\n",
-			palm->sysinfo.localization);
-		fprintf(stderr, "\tproduct ID: 0x%08lx\n",
-			palm->sysinfo.prodID);
-		fprintf(stderr, "\tDLP version: %d.%d\n",
-			palm->sysinfo.dlp_ver_maj,
-			palm->sysinfo.dlp_ver_min);
-		fprintf(stderr, "\tProduct compatibility version: %d.%d\n",
-			palm->sysinfo.comp_ver_maj,
-			palm->sysinfo.comp_ver_min);
-		fprintf(stderr, "\tMax. record size: %ld (0x%08lx)\n",
-			palm->sysinfo.max_rec_size,
-			palm->sysinfo.max_rec_size);
-	}
-
-	/* Get NetSync information from the Palm */
-	/* XXX - Need to check some stuff, first: if it's a pre-1.1 Palm,
-	 * it doesn't know about NetSync. HotSync tries to
-	 * OpenDB("NetSync"), then it tries ReadFeature('netl',0), before
-	 * calling ReadNetSyncInfo().
-	 */
-	err = DlpReadNetSyncInfo(pconn, &(palm->netsyncinfo));
-	switch (err)
-	{
-	    case DLPSTAT_NOERR:
-		MISC_TRACE(3)
-		{
-			fprintf(stderr, "NetSync info:\n");
-			fprintf(stderr, "\tLAN sync on: %d\n",
-				palm->netsyncinfo.lansync_on);
-			fprintf(stderr, "\thostname: \"%s\"\n",
-				palm->netsyncinfo.hostname);
-			fprintf(stderr, "\thostaddr: \"%s\"\n",
-				palm->netsyncinfo.hostaddr);
-			fprintf(stderr, "\tnetmask: \"%s\"\n",
-				palm->netsyncinfo.hostnetmask);
-		}
-		break;
-	    case DLPSTAT_NOTFOUND:
-		printf(_("No NetSync info.\n"));
-		break;
-	    default:
-		fprintf(stderr, _("Error reading NetSync info\n"));
-		return -1;
-	}
-
-	/* Get user information from the Palm */
-	if ((err = DlpReadUserInfo(pconn, &(palm->userinfo))) < 0)
-	{
-		fprintf(stderr, _("Can't get user info\n"));
-		return -1;
-	}
-	MISC_TRACE(3)
-	{
-		fprintf(stderr, "User info:\n");
-		fprintf(stderr, "\tUserID: 0x%08lx\n", palm->userinfo.userid);
-		fprintf(stderr, "\tViewerID: 0x%08lx\n",
-			palm->userinfo.viewerid);
-		fprintf(stderr, "\tLast sync PC: 0x%08lx (%d.%d.%d.%d)\n",
-			palm->userinfo.lastsyncPC,
-			(int) ((palm->userinfo.lastsyncPC >> 24) & 0xff),
-			(int) ((palm->userinfo.lastsyncPC >> 16) & 0xff),
-			(int) ((palm->userinfo.lastsyncPC >>  8) & 0xff),
-			(int) (palm->userinfo.lastsyncPC & 0xff));
-		if (palm->userinfo.lastgoodsync.year == 0)
-		{
-			fprintf(stderr, "\tLast good sync: never\n");
-		} else {
-			fprintf(stderr, "\tLast good sync: %02d:%02d:%02d "
-				"%02d/%02d/%02d\n",
-				palm->userinfo.lastgoodsync.hour,
-				palm->userinfo.lastgoodsync.minute,
-				palm->userinfo.lastgoodsync.second,
-				palm->userinfo.lastgoodsync.day,
-				palm->userinfo.lastgoodsync.month,
-				palm->userinfo.lastgoodsync.year);
-		}
-		if (palm->userinfo.lastsync.year == 0)
-		{
-			fprintf(stderr, "\tLast sync attempt: never\n");
-		} else {
-			fprintf(stderr,
-				"\tLast sync attempt: %02d:%02d:%02d "
-				"%02d/%02d/%02d\n",
-				palm->userinfo.lastsync.hour,
-				palm->userinfo.lastsync.minute,
-				palm->userinfo.lastsync.second,
-				palm->userinfo.lastsync.day,
-				palm->userinfo.lastsync.month,
-				palm->userinfo.lastsync.year);
-		}
-		fprintf(stderr, "\tUser name length: %d\n",
-			palm->userinfo.usernamelen);
-		fprintf(stderr, "\tUser name: \"%s\"\n",
-			palm->userinfo.username == NULL ?
-			"(null)" : palm->userinfo.username);
-		fprintf(stderr, "\tPassword: <%d bytes>\n",
-			palm->userinfo.passwdlen);
-		MISC_TRACE(6)
-			debug_dump(stderr, "PASS", palm->userinfo.passwd,
-				   palm->userinfo.passwdlen);
-	}
-
-	return 0;
-}
-
 /* UpdateUserInfo
  * Update the Palm's user info. 'success' indicates whether the sync was
  * successful.
@@ -2887,63 +2201,6 @@ find_max_speed(struct PConnection *pconn)
 
 	return -1;
 }
-
-/* find_dbentry
- * XXX - This really doesn't belong in this file.
- * Look through the list of databases in 'palm' and try to find the one
- * named 'name'. Returns a pointer to its entry in 'palm->dblist' if it
- * exists, or NULL otherwise.
- */
-struct dlp_dbinfo *
-find_dbentry(struct Palm *palm,
-	     const char *name)
-{
-	int i;
-
-	if (palm == NULL)
-		return NULL;		/* Paranoia */
-
-	for (i = 0; i < palm->num_dbs; i++)
-	{
-		if (strncmp(name, palm->dblist[i].name,
-			    DLPCMD_DBNAME_LEN) == 0)
-			/* Found it */
-			return &(palm->dblist[i]);
-	}
-
-	return NULL;		/* Couldn't find it */
-}
-
-/* append_dbentry
- * Append an entry for 'pdb' to palm->dblist.
- */
-int
-append_dbentry(struct Palm *palm,
-	       struct pdb *pdb)
-{
-	struct dlp_dbinfo *newdblist;
-	struct dlp_dbinfo *dbinfo;
-
-	MISC_TRACE(4)
-		fprintf(stderr, "append_dbentry: adding \"%s\"\n",
-			pdb->name);
-
-	/* Resize the existing 'dblist'. */
-	newdblist = realloc(palm->dblist,
-			    (palm->num_dbs+1) * sizeof(struct dlp_dbinfo));
-	if (newdblist == NULL)
-	{
-		fprintf(stderr, _("Error resizing palm->dblist\n"));
-		return -1;
-	}
-	palm->dblist = newdblist;
-	palm->num_dbs++;
-
-	/* Fill in the new entry */
-	dbinfo = &(palm->dblist[palm->num_dbs-1]);
-	return dbinfo_fill(dbinfo, pdb);
-}
-
 
 /* dbinfo_fill
  * Fill in a dbinfo record from a pdb record header.
