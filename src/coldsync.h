@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.41 2000-11-24 22:56:26 arensb Exp $
+ * $Id: coldsync.h,v 1.42 2000-11-28 00:46:24 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -324,8 +324,11 @@ extern int InstallNewFiles(struct PConnection *pconn,
 			   Bool deletep);
 extern void usage(int argc, char *argv[]);
 extern void print_version(void);
-extern pda_block *find_pda_block(struct Palm *palm);
-extern int load_palm_config(struct Palm *palm);
+extern void print_pda_block(FILE *outfile,
+			    const pda_block *pda,
+			    struct Palm *palm);
+extern pda_block *find_pda_block(struct Palm *palm,
+				 const Bool check_user);
 extern int make_sync_dirs(const char *basedir);
 extern void set_debug_level(const char *str);
 extern int set_mode(const char *str);
