@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.23 2000-06-03 08:04:32 arensb Exp $
+ * $Id: coldsync.h,v 1.24 2000-06-11 06:52:07 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -82,13 +82,6 @@ struct Palm
 	struct dlp_dbinfo *dblist;	/* Database list */
 };
 
-/* XXX - ConduitFunc() should disappear once the conduit API has been
- * rebuilt.
- */
-typedef int (*ConduitFunc)(struct PConnection *pconn,
-			   struct Palm *palm,
-			   struct dlp_dbinfo *db);
-
 typedef enum { Standalone, Daemon } run_mode;
 				/* XXX - Daemon mode hasn't been
 				 * implemented yet.
@@ -156,7 +149,22 @@ typedef struct listen_block
 } listen_block;
 
 /* conduit_flavor
- * Conduits come in five flavors:
+ */
+
+/* cond_header
+ * A (name, value) pair that will be passed to a conduit.
+ */
+struct cond_header {
+	struct cond_header *next;	/* Next header on the list */
+	char *name;
+	char *value;
+};
+
+/* conduit_block
+ * The information specified in a 'conduit' block: its type, pathname,
+ * arguments, and so forth.
+ *
+ * Conduits come in several flavors:
  * - 'Sync' is the conduit we all know and love: it has an open connection
  *   to the Palm that it can use to read the contents of a database, upload
  *   and download records, and generally make sure that whatever's on the
@@ -180,42 +188,14 @@ typedef struct listen_block
  *   to wherever it likes. Some other conduit is responsible for putting
  *   the information in that .pdb file. This is useful for implementing
  *   "Handheld Overwrites Desktop" rules.
- *
- * - 'Install' is not very well fleshed out at the moment, and is not
- *   expected to be very useful in the future. The idea is that if a new
- *   application has just appeared, an Install conduit can create the
- *   corresponding dot files on your workstation. Or something.
- *
- * - 'Uninstall' is not very well fleshed out at the moment, and is not
- *   expected to be very useful in the future. The idea is if that some
- *   application has disappeared from your Palm, the Uninstall conduit can
- *   do any required cleanup. Or something.
- */
-typedef enum {
-	Sync,
-	Fetch,
-	Dump,
-	Install,
-	Uninstall
-} conduit_flavor;
-
-/* cond_header
- * A (name, value) pair that will be passed to a conduit.
- */
-struct cond_header {
-	struct cond_header *next;	/* Next header on the list */
-	char *name;
-	char *value;
-};
-
-/* conduit_block
- * The information specified in a 'conduit' block: its type, pathname,
- * arguments, and so forth.
  */
 typedef struct conduit_block
 {
 	struct conduit_block *next;
-	conduit_flavor flavor;	/* What flavor of conduit is this? */
+	unsigned short flavors;	/* Bitmap of flavors that this conduit
+				 * implements. See FLAVORFL_*, below.
+				 */
+	/* XXX - Should have list of creator/type pairs */
 	udword dbtype;		/* What database types does it apply to? */
 	udword dbcreator;
 	unsigned char flags;	/* CONDFL_* flags */
@@ -229,6 +209,10 @@ typedef struct conduit_block
 #define CONDFL_FINAL	0x02	/* If this conduit matches, don't run any
 				 * other conduits for this database.
 				 */
+/* Conduit flavor flags */
+#define FLAVORFL_FETCH	(1 << 0)
+#define FLAVORFL_DUMP	(1 << 1)
+#define FLAVORFL_SYNC	(1 << 2)
 
 /* pda_block
  * The information specified in a 'pda' block in the config file: the
@@ -246,6 +230,7 @@ typedef struct pda_block
 	char *username;			/* Owner's full name */
 	udword userid;			/* Owner's user ID */
 	unsigned char flags;		/* PDAFL_* flags */
+	/* XXX - List of preferences that the conduit is interested in */
 } pda_block;
 
 #define PDAFL_DEFAULT	0x01		/* This is the default PDA
@@ -258,11 +243,8 @@ struct config
 	run_mode mode;
 	listen_block *listen;		/* List of listen blocks */
 	pda_block *pda;			/* List of known PDAs */
-	conduit_block *sync_q;		/* List of sync conduits */
-	conduit_block *fetch_q;		/* List of fetch conduits */
-	conduit_block *dump_q;		/* List of dump conduits */
-	conduit_block *install_q;	/* List of install conduits */
-	conduit_block *uninstall_q;	/* List of uninstall conduits */
+	conduit_block *the_q;		/* List of all conduits */
+			/* XXX - Rename this */
 };
 
 extern int sys_maxfds;			/* Max # of file descriptors
