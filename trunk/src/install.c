@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.14 2000-09-03 07:31:42 arensb Exp $
+ * $Id: install.c,v 2.15 2000-11-10 03:46:00 arensb Exp $
  */
 
 #include "config.h"
@@ -294,6 +294,10 @@ InstallNewFiles(struct PConnection *pconn,
 			else
 				add_to_log(_("OK\n"));
 		}
+
+		/* XXX - Run Install conduits:
+		 * err = run_Install_conduits(pdb);
+		 */
 
 		/* Delete the newly-uploaded file, if appropriate */
 		if (deletep && (err == 0))
