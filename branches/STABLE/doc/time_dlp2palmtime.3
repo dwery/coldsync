@@ -1,0 +1,107 @@
+.\" time_dlp2palmtime.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: time_dlp2palmtime.3,v 1.1 2001-09-05 07:29:53 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt time_dlp2palmtime 3
+.Sh NAME
+.Nm time_dlp2palmtime ,
+.Nm time_dlp2time_t ,
+.Nm time_palmtime2dlp ,
+.Nm time_time_t2dlp
+.Nd PalmOS time-conversion functions
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <time.h>
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft udword
+.Fn time_dlp2palmtime "const struct dlp_time *dlpt"
+.Ft time_t
+.Fn time_dlp2time_t "const struct dlp_time *dlpt"
+.Ft void
+.Fn time_palmtime2dlp "const udword palmt" "struct dlp_time *dlpt"
+.Ft void
+.Fn time_time_t2dlp "const time_t t" "struct dlp_time *dlpt"
+.Sh DESCRIPTION
+Palms use two different representations of time in different contexts.
+The first, Palm-style
+.Ft time_t ,
+is an integer indicating the number of seconds elapsed since Jan. 1,
+1904 (the Palm epoch).
+.Pp
+The second representation is a structure listing the individual time
+fields, similar to a
+.Ft struct tm
+:
+.Bd -literal -offset indent
+struct dlp_time
+{
+	uword year;
+	ubyte month;
+	ubyte day;
+	ubyte hour;
+	ubyte minute;
+	ubyte second;
+};
+.Ed
+(Note that
+.Fa year
+is the four-digit year number, \fIe.g.\fR, 2001.)
+.Pp
+.Nm time_dlp2palmtime
+takes a
+.Ft dlp_time
+and converts it to a Palm-style
+.Ft time_t .
+.Pp
+.Nm time_dlp2time_t
+takes a
+.Ft dlp_time
+and converts it to a Unix-style
+.Ft time_t .
+.Pp
+.Nm time_palmtime2dlp
+takes a Palm-style
+.Ft time_t
+and converts it to a
+.Ft dlp_time
+structure, writing the results to
+.Fa dlpt .
+.Pp
+.Nm time_time_t2dlp
+takes a Unix-style
+.Ft time_t
+and converts it to a
+.Ft dlp_time
+structure, writing the results to
+.Fa dlpt .
+.Sh RETURN VALUE
+.Nm time_dlp2palmtime
+returns a Palm-style
+.Ft time_t .
+.Pp
+.Nm time_dlp2time_t
+returns a Unix-style
+.Ft time_t .
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
+.Sh BUGS
+Palm-style
+.Ft time_t\fRs
+appear to count the number of seconds since the Palm epoch in the
+Palm's local time zone. However, it is not obvious how to find out
+which time zone the Palm thinks it is in, nor whether this is even
+possible.
+.Pp
+Hence, these functions largely ignore the time zone, and hope for the
+best.

@@ -1,0 +1,68 @@
+.\" pdb_CopyRecord.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: pdb_CopyRecord.3,v 1.1 2001-11-20 14:35:20 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt pdb_CopyRecord 3
+.Sh NAME
+.Nm pdb_CopyRecord
+.Nm pdb_CopyResource
+.Nd short description
+.Sh LIBRARY
+.Pa libpdb
+.Sh SYNOPSIS
+.Fd #include <pdb.h>
+.Ft struct pdb_record *
+.Fn pdb_CopyRecord "const struct pdb *db" "const struct pdb_record *rec"
+.Ft struct pdb_resource *
+.Fn pdb_CopyResource "const struct pdb *db" "const struct pdb_resource *rsrc"
+.Sh DESCRIPTION
+.Nm pdb_CopyRecord
+allocates a new
+.Ft struct pdb_record ,
+copies to it the record pointed to by
+.Fa rec
+in database
+.Fa db ,
+and returns a pointer to the newly-allocated
+.Ft struct pdb_record .
+This pointer must later be freed with
+.Fn pdb_FreeRecord ,
+unless it is added to another database using a function such as
+.Fn pdb_AppendRecord .
+.Pp
+.Nm pdb_CopyResource
+allocates a new
+.Ft struct pdb_resource ,
+copies to it the resource pointed to by
+.Fa rsrc
+in database
+.Fa db ,
+and returns a pointer to the newly-allocated
+.Ft struct pdb_resource .
+This pointer must later be freed with
+.Fn pdb_FreeResource ,
+unless it is added to another database using a function such as
+.Fn pdb_AppendResource .
+.Sh RETURN VALUE
+.Nm pdb_CopyRecord
+and
+.Nm pdb_CopyResource
+return a pointer to the newly-allocated
+.Ft struct pdb_record
+or
+.Ft struct pdb_resource
+if successful, or NULL otherwise.
+.Sh SEE ALSO
+.Xr libpdb 3 ,
+.Xr pdb_FreeRecord 3 ,
+.Xr pdb_FreeResource 3 .
+.Sh AUTHORS
+.An Andrew Arensburger Aq arensb@ooblick.com

@@ -1,0 +1,56 @@
+.\" DlpReadSysDateTime.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: DlpGetSysDateTime.3,v 1.1 2001-09-05 07:29:05 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt DlpReadSysDateTime 3
+.Sh NAME
+.Nm DlpGetSysDateTime ,
+.Nm DlpSetSysDateTime
+.Nd read and write date/time to/from a PalmOS device
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn DlpGetSysDateTime "PConnection *pconn" "struct dlp_time *ptime"
+.Ft int
+.Fn DlpSetSysDateTime "PConnection *pconn" "const struct dlp_time *ptime"
+.Sh DESCRIPTION
+.Fn DlpGetSysDateTime
+reads the date and time
+.Fa pconn
+and stores it in
+.Fa ptime .
+.Fn DlpSetSysDateTime
+sets the date and time on the Palm.
+The
+.Ft dlp_time
+structure is defined as
+.Bd -literal -offset indent
+struct dlp_time
+{
+        uword year;
+        ubyte month;
+        ubyte day;
+        ubyte hour;
+        ubyte minute;
+        ubyte second;
+};
+.Ed
+.Sh RETURN VALUE
+.Fn DlpGetSysDateTime
+and
+.Fn DlpSetSysDateTime
+return 0 if successful, or a negative value in case of error.
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
