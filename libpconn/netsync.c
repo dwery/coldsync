@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.9 2001-07-30 07:19:48 arensb Exp $
+ * $Id: netsync.c,v 1.9.2.1 2001-10-10 23:41:31 arensb Exp $
  */
 
 #include "config.h"
@@ -37,7 +37,7 @@ int net_trace = 0;		/* Debugging level for NetSync */
  * to keep in mind the underlying protocol, the one with the (other) XIDs,
  * implemented by netsync_read() and netsync_write().
  */
-ubyte ritual_resp1[] = {
+static ubyte ritual_resp1[] = {
 	0x90,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
@@ -48,7 +48,7 @@ ubyte ritual_resp1[] = {
 	0x80, 0x00, 0x00, 0x00,
 };
 
-ubyte ritual_stmt2[] = {
+static ubyte ritual_stmt2[] = {
 	0x12,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
@@ -68,7 +68,7 @@ ubyte ritual_stmt2[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-ubyte ritual_resp2[] = {
+static ubyte ritual_resp2[] = {
 	0x92,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
@@ -91,7 +91,7 @@ ubyte ritual_resp2[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-ubyte ritual_stmt3[] = {
+static ubyte ritual_stmt3[] = {
 	0x13,				/* Command */
 	0x01,				/* argc */
 	0x00, 0x00, 0x00, 0x00,
@@ -111,7 +111,7 @@ ubyte ritual_stmt3[] = {
 	0x00, 0x00, 0x00, 0x00,
 };
 
-ubyte ritual_resp3[] = {
+static ubyte ritual_resp3[] = {
 	0x93,				/* Command */
 	0x00,				/* argc? */
 	0x00, 0x00, 0x00, 0x00,
