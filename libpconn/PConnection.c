@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.33 2002-11-23 17:08:25 azummo Exp $
+ * $Id: PConnection.c,v 1.34 2003-03-02 13:37:14 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -75,6 +75,8 @@ new_PConnection(char *device,
 	}
 
 	/* Initialize the common part, if only in case the constructor fails */
+	bzero((void *)pconn, sizeof(PConnection));
+
 	pconn->fd		= -1;
 	pconn->flags		= flags;
 	pconn->io_bind		= NULL;

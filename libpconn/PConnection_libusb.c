@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.5 2003-03-02 12:11:37 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.6 2003-03-02 13:37:14 azummo Exp $
  */
 
 #include "config.h"
@@ -505,20 +505,6 @@ pconn_libusb_open(PConnection *pconn,
 			netsync_tini(pconn);
 			return -1;
 		}
-
-		/* Initialize the PADP part of the PConnection.
-		 * This isn't actually used, but keeps ElectricFence from
-		 * complaining when padp_tini() tries to free a non-NULL
-		 * pointer.
-		 */
-		padp_init(pconn);
-
-		/* Initialize the SLP part of the PConnection.
-		 * This isn't actually used, but keeps ElectricFence from
-		 * complaining when slp_tini() tries to free a non-NULL
-		 * pointer.
-		 */
-		slp_init(pconn);
 		break;
 
 	    case PCONN_STACK_NONE:
