@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2003-06-24 12:34:02 azummo Exp $
+# $Id: Makefile,v 1.14 2003-06-28 14:31:43 azummo Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -7,6 +7,8 @@ SUBDIR =	conduits
 # install time.
 PERL_CONDUITS =	copy-appinfo \
 		send-mail \
+		send-mail-2 \
+		mbox-inbox \
 		todo-text
 
 # XXX - memo-text and std-categories aren't ready for prime time, so
@@ -26,7 +28,9 @@ DISTFILES =	Makefile \
 		dump-dbs \
 		dump-expslots \
 		dump-vfs \
-		zire71-photo
+		zire71-photo \
+		recat \
+		dump-dlpdbs
 
 all::
 
