@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.21 2001-01-25 07:48:00 arensb Exp $
+ * $Id: restore.c,v 2.22 2001-01-28 22:39:30 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -65,7 +65,7 @@ restore_file(PConnection *pconn,
 	{
 		Error(_("Can't open %s."),
 		      fname);
-		perror("open");
+		Perror("open");
 		return -1;
 	}
 
@@ -214,7 +214,7 @@ restore_dir(PConnection *pconn,
 	{
 		Error(_("Can't read contents of directory %s."),
 		      dirname);
-		perror("opendir");
+		Perror("opendir");
 		return -1;
 	}
 

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.29 2001-01-25 07:47:47 arensb Exp $
+ * $Id: backup.c,v 2.30 2001-01-28 22:38:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,7 +57,7 @@ backup(PConnection *pconn,
 			"It may already exist."),
 		      "backup",
 		      bakfname);
-		perror("open");
+		Perror("open");
 		add_to_log(_("Error\n"));
 		return -1;
 	}

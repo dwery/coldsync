@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.26 2001-01-25 07:47:50 arensb Exp $
+ * $Id: install.c,v 2.27 2001-01-28 22:38:56 arensb Exp $
  */
 
 #include "config.h"
@@ -192,7 +192,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 		{
 			Error(_("%s: Can't open install directory."),
 			      "NextInstallFile");
-			perror("opendir");
+			Perror("opendir");
 			return -1;
 		}
 	}
@@ -258,7 +258,7 @@ InstallNewFiles(PConnection *pconn,
 	{
 		Error(_("%s: Can't open install directory."),
 		      "InstallNewFiles");
-		perror("opendir");
+		Perror("opendir");
 		return -1;
 	}
 
@@ -463,7 +463,7 @@ InstallNewFiles(PConnection *pconn,
 			} else {
 				Error(_("Error opening \"%s\"."),
 				      bakfname);
-				perror("open");
+				Perror("open");
 				add_to_log(_("Problem\n"));
 				err = -1;	/* XXX */
 			}
@@ -500,7 +500,7 @@ InstallNewFiles(PConnection *pconn,
 			{
 				Warn(_("Error deleting \"%s\"."),
 				     fname);
-				perror("unlink");
+				Perror("unlink");
 			}
 		}
 
