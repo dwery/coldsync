@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.33 2000-05-06 11:36:12 arensb Exp $
+ * $Id: coldsync.c,v 1.34 2000-05-20 16:32:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1644,7 +1644,7 @@ snum_checksum(const char *snum, int len)
 	checksum = 0;
 	for (i = 0; i < len; i++)
 	{
-		checksum += toupper(snum[i]);
+		checksum += toupper((int) snum[i]);
 		checksum = (checksum << 1) |
 			(checksum & 0x80 ? 1 : 0);
 	}
