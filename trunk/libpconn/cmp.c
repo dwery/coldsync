@@ -6,19 +6,18 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.1 1999-09-09 05:17:38 arensb Exp $
+ * $Id: cmp.c,v 1.2 1999-11-04 10:44:31 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
-/*  #include "coldsync.h" */
 #include <pconn/palm_types.h>
 #include <pconn/palm_errno.h>
 #include <pconn/padp.h>
 #include <pconn/cmp.h>
 #include <pconn/util.h>
 
-#define CMP_TRACE(n)	if (0)	/* XXX - Figure out how best to put
-				 * this back in. */
+int cmp_trace = 0;		/* Debugging level for CMP */
+#define CMP_TRACE(n)	if (cmp_trace >= (n))
 
 int
 cmp_read(struct PConnection *pconn,
@@ -48,7 +47,7 @@ cmp_read(struct PConnection *pconn,
 
 	CMP_TRACE(5)
 		fprintf(stderr,
-			"Got a message: type %d, flags 0x%02x, "
+			"CMP: Got a message: type %d, flags 0x%02x, "
 			"v%d.%d, rate %ld\n",
 			packet->type,
 			packet->flags,
@@ -71,7 +70,8 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
 
 	CMP_TRACE(5)
 		fprintf(stderr,
-			"Sending type %d, flags 0x%02x, v%d.%d, rate %ld\n",
+			"CMP: Sending type %d, flags 0x%02x, v%d.%d, "
+			"rate %ld\n",
 			packet->type,
 			packet->flags,
 			packet->ver_major,
