@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.28 2000-09-08 15:53:57 arensb Exp $
+ * $Id: coldsync.h,v 1.29 2000-09-09 21:27:12 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -330,7 +330,7 @@ extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int GetMemInfo(struct PConnection *pconn, struct Palm *palm);
 extern int ListDBs(struct PConnection *pconn, struct Palm *palm);
 extern int backup(struct PConnection *pconn,
-		  struct dlp_dbinfo *dbinfo,
+		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
 extern int full_backup(struct PConnection *pconn,
 		       struct Palm *palm);
@@ -356,7 +356,7 @@ extern int append_dbentry(struct Palm *palm,
 extern char snum_checksum(const char *snum, int len);
 extern int open_tempfile(char *name_template);
 extern int get_config(int argc, char *argv[]);
-extern int add_to_log(char *msg);
+extern int add_to_log(const char *msg);
 
 #endif	/* _coldsync_h_ */
 
