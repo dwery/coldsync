@@ -1,6 +1,6 @@
 	Some notes on running ColdSync as a daemon
 
-$Id: README.daemon,v 2.4 2002-08-31 19:26:02 azummo Exp $
+$Id: README.daemon,v 2.5 2002-11-02 17:17:19 azummo Exp $
 
 Introduction
 ============
@@ -14,6 +14,7 @@ you want to connect to the Palm:
 	- For a serial connection, ColdSync behaves in a getty-like
 	  manner. Setting it up is similar to setting up a dumb
 	  terminal on a serial line, or incoming PPP.
+	  This is also used for USB under Linux. 
 
 	- For a USB connection under FreeBSD, you'll need to add an
 	  entry to /etc/usbd.conf . See README.usb for more details.
@@ -91,7 +92,7 @@ USB Connection
 
 	Under Linux, the connection is done through /dev/ttyUSB<n>,
 which really behaves like a serial connection. See "Serial
-Connection", above.
+Connection", above, and the file README.usb.
 
 * FreeBSD:
 
@@ -109,14 +110,21 @@ then kill and restart 'usbd'.
 Network Connection
 ======= ==========
 
-	This is by far the flakiest connection type, but you're
-welcome to play with it.
 	A network connection allows your machine to accept incoming
 HotSync requests. A Palm can have a "primary PC." If you sync on some
 machine other than your primary PC, the host on which you're syncing
 can forward the connection to your primary PC.
 
-	ColdSync can be run from inetd. To set this up, you'll need to
+
+	You can run ColdSync either in standalone or in inetd mode.
+If you use network hotsync frequently the inetd mode will be your best
+option, otherwise you can use standalone.
+
+
+Inetd
+=====
+
+	To run ColdSync from inetd you'll need to
 edit two files: /etc/services and /etc/inetd.conf .
 
 	/etc/services (or /etc/inet/services under Solaris): Add the
@@ -130,8 +138,42 @@ these ports, so the names "netsync-wakeup" and "netsync" are made up.
 
 	/etc/inetd.conf: Add the following line:
 
-netsync-wakeup	dgram	udp	wait	root	/usr/local/bin/coldsync coldsync -md -t net -s -
-netsync	dgram	tcp	wait	root	/usr/local/bin/coldsync coldsync -md -t
-serial  -s -
+netsync	stream tcp nowait root /usr/local/bin/coldsync coldsync -md --listen netsync-inetd -l /var/log/netsync.log
 
-then kill -HUP inetd.
+	then kill -HUP inetd.
+
+Don't omit the '-l /var/log/netsync.log' section, as it's required to redirect
+the standard error stream to the logfile. If omitted, the stderr will be connected
+to the network socket and will break your connection.
+
+Obviously you should have a suitable netsync-inetd profile in your
+/usr/local/etc/coldsync.conf , just like this one:
+
+	listen serial "netsync-inetd" {
+		protocol: net;
+		device: stdin;
+		noprompt;
+	}
+
+This configuration has been tested with success. If you have any problem,
+please write us a mail or check the mailing list archives for a solution.
+
+Some users reported us they had to use the utility pi-csd from the
+pilot-link package along with ColdSync to be able to succesfully
+sync from the network. 
+
+
+Standalone
+==========
+
+	To run ColdSync in standalone (one-shot) mode, you'll need a profile
+like this one:
+
+	listen net "netsync-standalone" {
+	}
+
+and launch ColdSync with
+
+	coldsync -md --listen netsync-standalone
+
+
