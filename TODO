@@ -17,3 +17,10 @@
   desktop is just a specific subclass. Allow subclasses to override
   retrieving, comparing, storing, the logic underlying what to copy
   where, etc.
+- Add a Makefile target to build a distribution tarball. The tarball
+  should consist of everyting Joe Average needs to build `coldsync',
+  without requiring any of the fancy tools developers need. That is,
+  the distribution tarball should contain a Makefile (built from
+  Makefile.in by `autoconf') and a PostScript version of the info
+  documentation (with index), so that he doesn't have to get
+  `autoconf' or `makeinfo'.
