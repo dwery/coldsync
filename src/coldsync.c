@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.129 2002-03-30 17:32:11 azummo Exp $
+ * $Id: coldsync.c,v 1.130 2002-03-30 17:46:32 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -612,6 +612,7 @@ forward(pda_block *pda, struct Palm *palm )
 	 * local, in which case we really need to continue doing a
 	 * normal sync.
 	 */
+
 	struct sockaddr *sa;
 	socklen_t sa_len;
 	PConnection *pconn_forw;
@@ -753,7 +754,6 @@ conduits_dump( struct Palm *palm )
 					/* Used when iterating over all
 					 * databases */
 
-
 	Verbose(1, _("Running Dump conduits"));
 
 	palm_resetdb(palm);
@@ -781,7 +781,9 @@ conduits_fetch( struct Palm *palm )
 					 * databases */
 
 	Verbose(1, _("Running Fetch conduits"));
+
 	palm_resetdb(palm);
+
 	while ((cur_db = palm_nextdb(palm)) != NULL)
 	{
 		err = run_Fetch_conduits(cur_db);
@@ -826,7 +828,7 @@ do_sync( pda_block *pda, struct Palm *palm )
 	 */
 	if ((pda != NULL) && pda->forward)
 	{
-		if( forward(pda, palm) == 0 )	
+		if (forward(pda, palm) == 0)	
 		{
 			palm_DisconnectAndFree(palm, DLPCMD_SYNCEND_NORMAL);
 			return 0;
@@ -851,6 +853,7 @@ do_sync( pda_block *pda, struct Palm *palm )
 			mkfname(userinfo.homedir, "/.palm", NULL),
 			MAXPATHLEN);
 	}
+	
 	MISC_TRACE(3)
 		fprintf(stderr, "Base directory is [%s]\n", palmdir);
 
@@ -876,6 +879,7 @@ do_sync( pda_block *pda, struct Palm *palm )
 	/* Initialize preference cache */
 	MISC_TRACE(1)
 		fprintf(stderr,"Initializing preference cache\n");
+
 	if ((err = CacheFromConduits(sync_config->conduits, palm_pconn(palm))) < 0)
 	{
 		Error(_("CacheFromConduits() returned %d."), err);
@@ -906,9 +910,9 @@ do_sync( pda_block *pda, struct Palm *palm )
 
 	/* Print verbose message here so it only gets printed once */
 	if (global_opts.force_slow)
-		Verbose(1, _("Doing a slow sync."));
+		Verbose(1, _("Doing a (forced) slow sync."));
 	else if (global_opts.force_fast)
-		Verbose(1, _("Doing a fast sync."));
+		Verbose(1, _("Doing a (forced) fast sync."));
 	else if (need_slow_sync)
 		Verbose(1, _("Doing a slow sync."));
 	else
@@ -962,7 +966,6 @@ do_sync( pda_block *pda, struct Palm *palm )
 
 	MISC_TRACE(1)
 		fprintf(stderr, "Doing a sync.\n");
-
 
 	/* Install new databases before sync, if the config says so */
 	if (global_opts.install_first)
