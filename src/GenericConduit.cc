@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.18 2000-01-27 04:20:07 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.18.4.1 2000-04-05 05:33:44 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -832,7 +832,7 @@ GenericConduit::FastSync()
 		/* Can't complete this particular operation, but it's
 		 * not a show-stopper. The sync can go on.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
+		cerr << "GenericConduit::FastSync: Can't open \""
 		     << _dbinfo->name << "\": "
 		     << err << endl;
 		add_to_log("Error\n");
@@ -841,7 +841,7 @@ GenericConduit::FastSync()
 		/* Some other error, which probably means the sync
 		 * can't continue.
 		 */
-		cerr << "GenericConduit::FirstSync: Can't open \""
+		cerr << "GenericConduit::FastSync: Can't open \""
 		     << _dbinfo->name << "\": "
 		     << err << endl;
 		add_to_log("Error\n");
@@ -894,11 +894,10 @@ GenericConduit::FastSync()
 			     << endl;
 
 		/* Look up the modified record in the local database
-		 * Contract: 'localrec', here, is effectively
-		 * read-only: it is only a pointer into the local
-		 * database. It will be SyncRecord()'s responsibility
-		 * to free it if necessary, so this function should
-		 * not.
+		 * Contract for the first pass: 'localrec', here, is
+		 * effectively read-only: it is only a pointer into the
+		 * local database. It will be SyncRecord()'s responsibility
+		 * to free it if necessary, so this function should not.
 		 * However, 'remoterec' is "owned" by this function,
 		 * so this function should free it if necessary.
 		 * SyncRecord() may not.
@@ -1071,13 +1070,59 @@ GenericConduit::FastSync()
 			// Archive this record
 			SYNC_TRACE(5)
 				cerr << "Archiving this record" << endl;
+
 			this->archive_record(localrec);
+
+			err = DlpDeleteRecord(_pconn, dbh, 0, localrec->id);
+			switch (err)
+			{
+			    case DLPSTAT_NOERR:
+				// No error
+				// * Fall through *
+
+			    case DLPSTAT_NOTFOUND:
+				/* No record with this record ID on the
+				 * Palm. But that's okay, since we're
+				 * deleting it anyway.
+				 */
+
+				pdb_DeleteRecordByID(_localdb, localrec->id);
+				break;
+
+			    default:
+				cerr << "FastSync: Error deleting record 0x"
+				     << hex << setw(8) << setfill('0')
+				     << ": " << err << endl;
+				break;
+			}
 		} else if (EXPUNGED(localrec))
 		{
 			/* The local record has been completely deleted */
 			SYNC_TRACE(5)
 				cerr << "Deleting this record" << endl;
-			pdb_DeleteRecordByID(_localdb, localrec->id);
+
+			err = DlpDeleteRecord(_pconn, dbh, 0, localrec->id);
+			switch (err)
+			{
+			    case DLPSTAT_NOERR:
+				// No error
+				// * Fall through *
+
+			    case DLPSTAT_NOTFOUND:
+				/* No record with this record ID on the
+				 * Palm. But that's okay, since we're
+				 * deleting it anyway.
+				 */
+
+				pdb_DeleteRecordByID(_localdb, localrec->id);
+				break;
+
+			    default:
+				cerr << "FastSync: Error deleting record 0x"
+				     << hex << setw(8) << setfill('0')
+				     << ": " << err << endl;
+				continue;
+			}
 		} else if (DIRTY(localrec))
 		{
 			udword newID;	// ID of uploaded record
@@ -1141,7 +1186,7 @@ GenericConduit::FastSync()
 	err = this->write_backup(_localdb);
 	if (err < 0)
 	{
-		cerr << "GenericConduit::SlowSync: Can't write backup file."
+		cerr << "GenericConduit::FastSync: Can't write backup file."
 		     << endl;
 		err = DlpCloseDB(_pconn, dbh);	// Close the database
 		add_to_log("Error\n");
@@ -1575,6 +1620,7 @@ GenericConduit::SyncRecord(
 				cerr << "> Archiving local record"
 				     << endl;
 			this->archive_record(localrec);
+			pdb_DeleteRecordByID(localdb, localrec->id);
 
 			/* Copy remoterec to localdb */
 			SYNC_TRACE(6)
@@ -1845,6 +1891,19 @@ GenericConduit::SyncRecord(
 				     << endl;
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
+			err = DlpDeleteRecord(_pconn, dbh, 0,
+					      remoterec->id);
+			if (err != DLPSTAT_NOERR)
+			{
+				cerr << "SlowSync: Warning: can't delete record "
+				     << hex << setw(8) << setfill('0')
+				     << remoterec->id << ": " << err << endl;
+				/* XXX - For now, just ignore this,
+				 * since it's probably not a show
+				 * stopper.
+				 */
+			}
+
 		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
@@ -1857,6 +1916,19 @@ GenericConduit::SyncRecord(
 				cerr << "> Deleting record in local database"
 				     << endl;
 			pdb_DeleteRecordByID(localdb, localrec->id);
+
+			err = DlpDeleteRecord(_pconn, dbh, 0,
+					      remoterec->id);
+			if (err != DLPSTAT_NOERR)
+			{
+				cerr << "SlowSync: Warning: can't delete record "
+				     << hex << setw(8) << setfill('0')
+				     << remoterec->id << ": " << err << endl;
+				/* XXX - For now, just ignore this,
+				 * since it's probably not a show
+				 * stopper.
+				 */
+			}
 
 		} else if (DIRTY(localrec))
 		{
