@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.5 1999-02-04 10:19:30 arensb Exp $
-@c $Revision: 1.5 $
+@c $Id: libpalm.texi,v 1.6 1999-02-14 05:24:15 arensb Exp $
+@c $Revision: 1.6 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -36,9 +36,12 @@
 % This is rather kludgy, actually: argument #1 is the colon from the RCS
 % string. It's only there so that RCS/CVS won't expand the wrong thing.
 @xdef@seteditionone$Revision#1 #2 ${#2}
-@xdef@edition{@seteditionone$Revision: 1.5 $}
+@xdef@edition{@seteditionone$Revision: 1.6 $}
 @end tex
 @c %** End of header
+
+@c XXX - PConnection functions
+@c XXX - palm_errno et al.
 
 @ifinfo
 This file documents the `libpalm' library, as well as the protocol
@@ -53,7 +56,7 @@ are preserved on all copies.
 
 @titlepage
 @title The @code{libpalm} Library
-@subtitle Synching With PalmOS Devices
+@subtitle Syncing With PalmOS Devices
 @iftex
 @subtitle Edition @edition
 @end iftex
@@ -133,6 +136,12 @@ DLP Request
 * DLP Response::                
 * DLP Arguments::               
 
+DLP Commands
+
+* User Info::                   
+* System Info::                 
+* Other Commands::              
+
 @end detailmenu
 @end menu
 
@@ -141,6 +150,7 @@ DLP Request
 @comment  node-name,  next,  previous,  up
 @chapter Introduction
 
+@c ==================================================
 @section Overview
 @cindex Overview
 @cindex Protocol stack
@@ -160,25 +170,29 @@ CMP DLP
 @cindex Data integrity
         The @dfn{Serial Link Protocol} (SLP) is responsible for reading
 from and writing to the serial device. It ensures data integrity and not
-much else. @xref{SLP}.
+much else. @xref{SLP, , Serial Link Protocol}.
 
 @cindex Reliability
         The @dfn{Packet Assembly/Disassembly Protocol} (PADP) sits on
 top of SLP, and ensures reliability, @i{i.e.}, it makes sure that if a
-packet is sent, it was received by the other side. @xref{PADP}.
+packet is sent, it was received by the other side. @xref{PADP, , Packet
+Assembly/Disassembly Protocol}.
 
 @cindex Sync
 @cindex Line discipline
         The @dfn{Connection Management Protocol} (CMP) is built on top
 of PADP. It is only used briefly at the beginning of a sync, to provide
 some high-level handshaking and to establish a rate at which the sync
-will take place. @xref{CMP}.
+will take place. @xref{CMP, , Connection Management Protocol}.
 
         Finally, the @dfn{Desktop Link Protocol} (DLP) also sits on top
 of PADP, on the same level as CMP. This is the protocol that we're most
 interested in, since a sync is a series of DLP exchanges between the
-Palm and the desktop machine. @xref{DLP}.
+Palm and the desktop machine. @xref{DLP, Desktop Link Protocol}.
 
+@cindex Desktop machine
+@cindex Computationally-expensive tasks
+@cindex Protocol asymmetry
         A central tenet of the Palm philosophy is that the desktop
 machine has infinitely more memory and computing resources than the
 Palm. Consequently, these protocols are designed so as to make things
@@ -190,6 +204,7 @@ native byte ordering.
 * Types::                       Types, alignment, and portability issues
 @end menu
 
+@c ==================================================
 @node Types,  , Introduction, Introduction
 @comment  node-name,  next,  previous,  up
 @section Types and Alignment
@@ -217,6 +232,8 @@ byte, word (2 bytes) and double word (4 bytes) or dword.
 @tyindex ubyte
 @tyindex uword
 @tyindex udword
+@cindex Integer types
+@cindex Types
         The file @file{palm_types.h} defines several integer types:
 
 @table @code
@@ -239,7 +256,7 @@ byte, word (2 bytes) and double word (4 bytes) or dword.
 @cindex Serial Link Protocol
 
         The Serial Link Protocol (SLP) is at the bottom of the Palm
-protocol stack.
+protocol stack. It provides data integrity and not much else.
 
 @menu
 * SLP Structure::               Structure of SLP packets
@@ -304,8 +321,9 @@ bar
 @end tex
 @end ignore
 
-The @dfn{preamble} consists of the three bytes 0xbe, 0xef, 0xed, and
-serves to identify the incoming packet as an SLP packet.
+The @dfn{preamble} consists of the three bytes @code{0xbe}, @code{0xef},
+@code{0xed}, and serves to identify the incoming packet as an SLP
+packet.
 
 The @dfn{dest} and @dfn{src} bytes correspond to IP port numbers (the
 Palm documentation calls them ``socket numbers''). They are well-known
@@ -328,11 +346,14 @@ but rather is for the benefit of protocols higher up the stack. The PADP
 protocol, in particular, expects ACK packets to have the same
 transaction ID as the packet that they are in response to.
 
+        Transaction IDs @code{0xff} and @code{0x00}(?) are reserved for
+system functions.
+
 @cindex Checksum
 The @dfn{sum} byte is a checksum of the preamble and header, not
 including the checksum byte itself.
 
-The header is followed by <size> bytes of packet data.
+The header is followed by @var{size} bytes of packet data.
 
 @cindex CRC
 @cindex Cyclic redundancy check
@@ -367,6 +388,7 @@ at the other end of the connection. Other protocols have to do that.
 way---if it has a bad header checksum, a bad CRC, an invalid header
 field, or whatever---it is simply dropped.
 
+@c ==================================================
 @node SLP Functions,  , SLP in action, SLP
 @comment  node-name,  next,  previous,  up
 @section SLP Functions
@@ -374,7 +396,39 @@ field, or whatever---it is simply dropped.
 @findex slp_read
 @findex slp_write
 
-@c XXX
+        @strong{NB:} this section is included merely for completeness
+(and may therefore be inaccurate). You should never need to call these
+functions, as all the interesting functionality is provided by the
+high-level @samp{Dlp*} functions. @xref{DLP Commands}.
+
+@cindex Reading SLP packets
+@cindex Low-level functions
+@deftypefun int slp_read (int @var{fd}, const ubyte **@var{buf}, uword @var{len})
+        Read an SLP packet from the Palm. The file descriptor @var{fd}
+must be a handle returned by @samp{new_PConnection()}. A pointer to the
+packet data (without the SLP overhead) is put in @var{buf}, and the
+length of the packet (not counting the length of the SLP overhead) is
+put in @var{len}.
+
+@cindex End of file
+@cindex EOF
+        If a packet was successfully read, returns a positive value. On
+end of file, returns 0 and sets @var{palm_errno} to @code{PALMERR_EOF}.
+In case of error, returns a negative value and sets @var{palm_errno} to
+indicate the error; in this case, the values of @var{buf} and @var{len}
+are undefined.
+@end deftypefun
+
+@cindex Writing SLP packets
+@deftypefun int slp_write (int @var{fd}, const ubyte *@var{buf}, const uword @var{len})
+        Write a SLP packet on file descriptor @var{fd}; this must be the
+handle returned by @samp{new_PConnection()}. Writes @var{len} bytes of
+the data pointed to by @var{buf}.
+
+        If successful, returns the number of bytes written (not counting
+SLP overhead). Otherwise, returns a negative value and sets
+@var{palm_errno} to indicate the error.
+@end deftypefun
 
 @c ************************************************************
 @node PADP, CMP, SLP, Top
@@ -421,13 +475,14 @@ The @dfn{flags} field specifies flags for the packet. The main ones are
 0x80, which indicates that this is the first packet in a message, and
 0x40, which indicatest that this is the last packet in a message.
 
-The header is followed by <size> bytes of data.
+The header is followed by @code{size} bytes of data.
 
 @c ==================================================
 @node PADP Exchanges, PADP Functions, PADP Structure, PADP
 @comment  node-name,  next,  previous,  up
 @section PADP Exchanges
 
+@c ----------------------------------------
 @subsection Packet Acknowledgment
 @cindex ACK
 @cindex Acknowledgement
@@ -444,6 +499,7 @@ packet.
 ACK, it knows that the packet was received correctly. Note that PADP
 does not ensure data integrity: that is done by SLP.
 
+@c ----------------------------------------
 @subsection Retransmission
 @cindex Timeout
 @cindex Retransmit
@@ -457,6 +513,7 @@ the other end is dead and gives up.
 * Fragmentation::               
 @end menu
 
+@c ----------------------------------------
 @node Fragmentation,  , PADP Exchanges, PADP Exchanges
 @comment  node-name,  next,  previous,  up
 @subsection Fragmentation and Reassembly
@@ -503,14 +560,44 @@ are clear.
 of the fragment in the full message. In the @code{flags} field, the
 `first fragment' flag is clear, and the `last fragment' flag is set.
 
+@c ==================================================
 @node PADP Functions,  , PADP Exchanges, PADP
 @comment  node-name,  next,  previous,  up
 @section PADP Functions
 @cindex PADP functions
-@findex padp_read
-@findex padp_write
 
-@c XXX
+        @strong{NB:} This section is included merely for completeness
+(and may therefore be inaccurate). You should never need to call these
+functions, as all the interesting functionality is provided by the
+high-level @samp{Dlp*} functions. @xref{DLP Commands}.
+
+@cindex Reading PADP packets
+@cindex Low-level functions
+@deftypefun int padp_read (int @var{fd}, const ubyte **@var{buf}, uword *@var{len})
+        Reads a PADP packet from file descriptor @var{fd}; this must be
+a handle returned by @samp{new_PConnection()}. A pointer to the packet
+data (without the PADP header) is put in @var{buf}, and the length of
+the data (not counting the PADP header) is put in @var{len}.
+
+@cindex Acknowledgement
+@cindex ACK packet
+        @samp{padp_read()} takes care of sending a PADP ACK to the Palm.
+
+        If successful, returns a non-negative value. In case of error,
+returns a negative value and sets @var{palm_errno} to indicate the
+error.
+@end deftypefun
+
+@cindex Writing PADP packets
+@deftypefun int padp_write (int @var{fd}, ubyte *@var{buf}, uword @var{len})
+        Writes a PADP packet to file descriptor @var{fd}; this must be a
+handle returned by @samp{new_PConnection()}. Writes @var{len} bytes of
+the data pointed to by @var{buf}.
+
+        If successful, returns a non-negative value. In case of error,
+returns a negative value and sets @var{palm_errno} to indicate the
+error.
+@end deftypefun
 
 @c ************************************************************
 @node CMP, DLP, PADP, Top
@@ -655,16 +742,24 @@ packet, it must set the `rate change' flag (0x80) in its `init' packet.
 meaning ``whatever we're using right now.'' This leaves the speed at
 9600 bps.
 
+@c ==================================================
 @node CMP Functions,  , CMP Negotiation, CMP
 @comment  node-name,  next,  previous,  up
 @section CMP Functions
 @cindex CMP functions
+
+        @strong{NB:} this section is included merely for completeness
+(and may therefore be inaccurate). You should never need to call these
+functions, as all the interesting functionality is provided by the
+high-level @samp{Dlp*} functions. @xref{DLP Commands}.
 
 @tyindex cmp_packet
         The @code{libpalm} library defines several functions for sending
 and receiving CMP packets. Each takes a pointer to a @code{struct
 cmp_packet}, defined in @file{cmp.h}.
 
+@cindex Low-level functions
+@cindex Reading CMP packets
 @deftypefun int cmp_read (int @var{fd}, struct cmp_packet *@var{packet})
         Reads a CMP packet from the Palm, and fills in the fields in
 @var{packet}.
@@ -674,6 +769,7 @@ cmp_packet}, defined in @file{cmp.h}.
 @c XXX
 @end deftypefun
 
+@cindex Writing CMP packets
 @deftypefun int cmp_write (int @var{fd}, const struct cmp_packet *@var{packet})
         Sends a CMP packet to the Palm, constructing it from the values
 in @var{packet}.
@@ -722,13 +818,13 @@ The client then responds with
 The number of arguments in both the request and response is specified in
 the request and response headers.
 
-@c ==================================================
 @menu
 * DLP Structure::               
 * DLP Response::                
 * DLP Arguments::               
 @end menu
 
+@c ==================================================
 @node DLP Structure, DLP Functions, DLP Exchange, DLP
 @comment  node-name,  next,  previous,  up
 @section Structure of DLP packets
@@ -751,12 +847,12 @@ The @var{code} field identifies the type of request.
 
 The @var{argc} field specifies how many arguments follow the header.
 
-@c ----------------------------------------
 @menu
 * DLP Response::                
 * DLP Arguments::               
 @end menu
 
+@c ----------------------------------------
 @node DLP Response, DLP Arguments, DLP Structure, DLP Structure
 @comment  node-name,  next,  previous,  up
 @subsection DLP Response
@@ -827,6 +923,7 @@ specifying the type of a function argument in a language like C.
 The @var{size} field specifies the length of the data following the
 argument header.
 
+@c ----------------------------------------
 @subsection Differentiating Argument Types
 
 @cindex Argument size
@@ -847,10 +944,15 @@ two most significant bits are set to @code{00} and @code{01}
 respectively. Long arguments' IDs are two bytes long, and their two most
 significant bits are @code{11}.
 
-@c ************************************************************
+@c ==================================================
 @node DLP Functions, DLP Commands, DLP Structure, DLP
 @comment  node-name,  next,  previous,  up
 @section DLP Functions
+
+        @strong{NB:} This section is included merely for completeness
+(and may therefore be inaccurate). You should never need to call these
+functions, as all the interesting functionality is provided by the
+high-level @samp{Dlp*} functions. @xref{DLP Commands}.
 
 @tyindex dlp_req_header
 @tyindex dlp_arg
@@ -860,14 +962,15 @@ significant bits are @code{11}.
 
 @tyindex dlp_resp_header
 @tyindex dlp_arg
-@deftypefun int dlp_recv_resp (int @var{fd}, struct dlp_resp_header *@var{header}, int argc, struct dlp_arg @var{argv}[])
+@deftypefun int dlp_recv_resp (int @var{fd}, const ubyte @var{id}, struct dlp_resp_header *@var{header}, int argc, struct dlp_arg @var{argv}[])
 @c XXX
 @end deftypefun
 
-@c ************************************************************
+@c ==================================================
 @node DLP Commands,  , DLP Functions, DLP
 @comment  node-name,  next,  previous,  up
 @section DLP Commands
+@cindex High-level functions
 
 @cindex DLP command data structures
         In each of these commands, the first argument @var{fd} refers to
@@ -876,7 +979,17 @@ is generally a custom data structure that holds all of the information
 involved in the command. These data structures are defined in
 @file{dlp_cmd.h}.
 
-@cindex User info
+@menu
+* User Info::                   
+* System Info::                 
+* Other Commands::              
+@end menu
+
+@c ----------------------------------------
+@node User Info, System Info, DLP Commands, DLP Commands
+@comment  node-name,  next,  previous,  up@cindex User info
+@subsection User Info
+
 @tyindex dlp_userinfo
 @deftypefun int DlpReadUserInfo (int @var{fd}, struct dlp_userinfo *@var{userinfo})
         Read the user info from the Palm, and put the information in
@@ -888,6 +1001,11 @@ involved in the command. These data structures are defined in
 @deftypefun int DlpWriteUserInfo (int @var{fd}, struct dlp_setuserinfo *@var{userinfo})
         Writes the information in @var{userinfo} to the Palm.
 @end deftypefun
+
+@c ----------------------------------------
+@node System Info, Other Commands, User Info, DLP Commands
+@comment  node-name,  next,  previous,  up
+@subsection System Info
 
 @cindex System info
 @tyindex dlp_sysinfo
@@ -924,6 +1042,11 @@ Palm.
 @deftypefun int DlpReadStorageInfo
 @c XXX
 @end deftypefun
+
+@c ----------------------------------------
+@node Other Commands,  , System Info, DLP Commands
+@comment  node-name,  next,  previous,  up
+@subsection Other commands
 
 @deftypefun int DlpReadDBList
 @c XXX
