@@ -2,12 +2,13 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.6 1999-05-31 21:05:57 arensb Exp $
+ * $Id: handledb.c,v 1.7 1999-06-27 05:57:58 arensb Exp $
  */
 
 #include <stdio.h>
 #include <unistd.h>		/* For chdir() */
 #include <stdlib.h>		/* For getenv() */
+#include <string.h>		/* For strncpy() and friends */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
@@ -15,6 +16,7 @@
 #include "coldsync.h"
 #include "pconn/dlp_cmd.h"
 #include "pdb.h"
+#include "conduit.h"
 
 /* HandleDB
  * Sync database number 'dbnum' with the desktop. If the database doesn't
@@ -33,12 +35,22 @@ HandleDB(struct PConnection *pconn,
 	struct stat statbuf;		/* For finding out whether the
 					 * file exists */
 	struct pdb *localdb;		/* Local copy of the database */
+	const struct conduit_spec *conduit;
+					/* Conduit for this database */
 
 	dbinfo = &(palm->dblist[dbnum]);	/* Convenience pointer */
 
-	/* XXX - See if there's a conduit for this database. If so, invoke
-	 * it and let it do all the work.
+	/* See if there's a conduit for this database. If so, invoke it and
+	 * let it do all the work.
 	 */
+	if ((conduit = find_conduit(dbinfo)) != NULL)
+	{
+		fprintf(stderr, "Found a conduit for \"%s\"\n",
+			dbinfo->name);
+		err = (*(conduit->run))(pconn, palm, dbinfo);
+		fprintf(stderr, "Conduit returned %d\n", err);
+		return err;
+	}
 
 	/* If we get this far, then we need to do a generic backup or sync.
 	 * XXX - Actually, the remainder of this function should *be* the
@@ -46,6 +58,9 @@ HandleDB(struct PConnection *pconn,
 	 */
 
 	/* XXX - Use 'backupdir', from coldsync.h */
+	/* XXX - This directory creation ought to happen fairly early on,
+	 * probably as soon as it is determined whose Palm is being synced.
+	 */
 	if ((err = chdir(getenv("HOME"))) < 0)
 	{
 		fprintf(stderr, "Can't cd to home directory. Check $HOME.\n");
@@ -133,10 +148,31 @@ HandleDB(struct PConnection *pconn,
 	if (err < 0)
 	{
 		fprintf(stderr, "### SlowSync returned %d\n", err);
+		free_pdb(localdb);
 		return -1;
 	}
 
+	free_pdb(localdb);
 	return 0;
+}
+
+/* mkbakfname
+ * Given a database, construct the standard backup filename for it, and
+ * return a pointer to it.
+ * The caller need not free the string. OTOH, if ve wants to do anything
+ * with it later, ve needs to make a copy.
+ */
+const char *
+mkbakfname(const struct dlp_dbinfo *dbinfo)
+{
+	static char buf[MAXPATHLEN+1];
+
+	strncpy(buf, backupdir, MAXPATHLEN);
+	strncat(buf, "/", MAXPATHLEN-strlen(buf));
+	strncat(buf, dbinfo->name, MAXPATHLEN-strlen(buf));
+	strncat(buf, (DBINFO_ISRSRC(dbinfo) ? ".prc" : ".pdb"),
+		MAXPATHLEN-strlen(buf));
+	return buf;
 }
 
 /* This is for Emacs's benefit:
