@@ -2,12 +2,13 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.5 1999-03-11 20:38:03 arensb Exp $
+ * $Id: pdb.h,v 1.6 1999-03-16 11:06:16 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
 
 #include <palm/palm_types.h>
+#include "pconn/dlp_cmd.h"
 
 /* XXX - Add a type (and support functions) for those ubitquitous
  * 4-character IDs.
@@ -44,18 +45,56 @@
 					 * database is installed */
 #define PDB_ATTR_OPEN		0x0040	/* Database is open */
 
-/* Record attributes */
-#define PDB_REC_DELETED		0x80	/* Delete this record next sync */
-#define PDB_REC_DIRTY		0x40	/* Record has been modified */
-#define PDB_REC_BUSY		0x20	/* Record is currently in use */
+/* Record attributes
+ * These are the attributes that individual records in a database can have.
+ * I've taken the liberty of giving them different names from Palm's, since
+ * Palm's names are rather confusing.
+ *
+ * PDB_REC_PRIVATE is set on a record that has been marked "private" by the
+ * user. It is not encrypted, and if the desktop asks for this record, the
+ * Palm will not refuse or ask for a password. In short, the Palm needs to
+ * trust the desktop.
+ *
+ * PDB_REC_DIRTY is set on a record whose contents have been modified since
+ * the last sync. If the user deletes a record without modifying it,
+ * PDB_REC_DIRTY will not be set, but if he modifies it, then deletes it,
+ * then both PDB_REC_DIRTY and PDB_REC_DELETED will be set.
+ *
+ * PDB_REC_DELETED is set on a record that has been deleted by the user
+ * since the last sync.
+ *
+ * If the user chose the "Save archive copy on PC" option when deleting a
+ * record, then the PDB_REC_ARCHIVE bit will be set on the record (as will
+ * PDB_REC_DELETED).
+ *
+ * If the user did not choose the "Save archive copy on PC" option when
+ * deleting a record, the PDB_REC_EXPUNGED bit will be set on the record
+ * (as will PDB_REC_DELETED). Apparently, what happens is this: when the
+ * user deletes a record, a copy is left around so that HotSync will know
+ * to delete this record. However, if the user chose not to keep a copy,
+ * then, in order to conserve memory, the Palm will delete the record data,
+ * although it will keep a copy of the record header for HotSync.
+ */
+#define PDB_REC_EXPUNGED	0x80	/* The contents of this record have
+					 * been deleted, leaving only the
+					 * record info. (Palm calls this
+					 * 'dlpRecAttrDeleted'.)
+					 */
+#define PDB_REC_DIRTY		0x40	/* Record has been modified. (Palm
+					 * calls this 'dlpRecAttrDirty'.)
+					 */
+#define PDB_REC_DELETED		0x20	/* This record has been deleted.
+					 * (Palm calls this
+					 * 'dlpRecAttrBusy'.)
+					 */
 #define PDB_REC_PRIVATE		0x10	/* Record is private: don't show to
 					 * anyone without asking for a
-					 * password.
+					 * password. (Palm calls this
+					 * 'dlpRecAttrSecret'.)
 					 */
-#define PDB_REC_ARCHIVED	0x08	/* Archived record */
-					/* XXX - What does this mean? Is
-					 * this something that only gets
-					 * set on the desktop?
+#define PDB_REC_ARCHIVE		0x08	/* This record should be archived
+					 * at the next sync. (Palm calls
+					 * this 'dlpRecAttrArchived'.)
 					 */
 
 typedef udword localID;			/* Local (card-relative) chunk ID */
@@ -73,6 +112,10 @@ struct pdb_record
 	struct pdb_record *next;	/* Next record on linked list */
 	localID offset;			/* Offset of record in file */
 	ubyte attributes;		/* Record attributes */
+		/* XXX - The record's category is the bottom nybble of the
+		 * attributes byte. Deal with this: separate them when the
+		 * record is read, combine them when it's written.
+		 */
 	udword uniqueID;		/* Record's unique ID. Actually,
 					 * only the bottom 3 bytes are
 					 * stored in the file, but for
@@ -173,6 +216,8 @@ struct pdb
 
 extern struct pdb *new_pdb();
 extern void free_pdb(struct pdb *db);
+extern void pdb_FreeRecord(struct pdb_record *rec);
+extern void pdb_FreeResource(struct pdb_resource *rsrc);
 extern struct pdb *pdb_Read(char *fname);
 extern int pdb_Write(const struct pdb *db, const char *fname);
 extern struct pdb *pdb_Download(
@@ -191,26 +236,31 @@ extern int pdb_DeleteRecordByID(
 extern int UploadDatabase(struct PConnection *pconn, const struct pdb *db);
 extern int pdb_AppendRecord(struct pdb *db, struct pdb_record *newrec);
 extern int pdb_AppendResource(struct pdb *db, struct pdb_resource *newrsrc);
-extern int pdb_InsertRecord(struct pdb *db,
-			    struct pdb_record *prev,
-			    struct pdb_record *newrec);
-extern int pdb_InsertResource(struct pdb *db,
-			      struct pdb_resource *prev,
-			      struct pdb_resource *newrsrc);
-struct pdb_record *pdb_CopyRecord(const struct pdb *db,
-				  const struct pdb_record *rec);
-struct pdb_resource *pdb_CopyResource(const struct pdb *db,
-				      const struct pdb_resource *rsrc);
+extern int pdb_InsertRecord(
+	struct pdb *db,
+	struct pdb_record *prev,
+	struct pdb_record *newrec);
+extern int pdb_InsertResource(
+	struct pdb *db,
+	struct pdb_resource *prev,
+	struct pdb_resource *newrsrc);
+struct pdb_record *new_Record(
+	const ubyte attributes,
+	const udword uniqueID,
+	const uword len,
+	const ubyte *data);
+struct pdb_record *pdb_CopyRecord(
+	const struct pdb *db,
+	const struct pdb_record *rec);
+struct pdb_resource *pdb_CopyResource(
+	const struct pdb *db,
+	const struct pdb_resource *rsrc);
 
 /* XXX - Functions to write:
 pdb_Upload		upload to Palm
 pdb_Download		download from Palm
 pdb_setAppInfo		set the appinfo block
 pdb_setSortInfo		set the sortinfo block
-pdb_getRecordByID	return a pointer to a pdb_record, given its ID
-pdb_getResourceByID	return a pointer to a pdb_resource, given its ID
-pdb_appendRecord	append a record to the list
-pdb_appendResource	append a resource to the list
 */
 
 #endif	/* _pdb_h_ */
