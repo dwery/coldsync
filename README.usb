@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with USB support
 
-$Id: README.usb,v 1.1 2002-08-31 19:27:48 azummo Exp $
+$Id: README.usb,v 1.2 2002-09-10 18:26:59 azummo Exp $
 
 Linux
 =====
@@ -25,6 +25,10 @@ Linux
 		device: /dev/usb/tts/1;
 		transient;
 	}
+
+	The "simple" works fine for the m500/m505, while 
+	you will need the "net" protocol for the m515/m130
+	(untested with the m130). 
 
 *BSD
 ====
