@@ -7,12 +7,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.45 2002-03-11 23:12:14 azummo Exp $
+ * $Id: conduit.c,v 2.46 2002-03-12 18:43:44 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>			/* For malloc(), free() */
 #include <string.h>
+#include <libgen.h>			/* For dirname() */
+#include <pwd.h>			/* For getpwuid() */
 #include <sys/types.h>			/* For pid_t, for select(); write() */
 #include <sys/uio.h>			/* For write() */
 #include <sys/time.h>			/* For select() */
@@ -1485,6 +1487,14 @@ find_in_path(const char *conduit)
 	return NULL;
 }
 
+void
+mychdir( const char *d )
+{
+	if (chdir(d) != 0)
+		Error(_("%s: Couldn't change directory to \"%s\"\n"),
+		      "spawn_conduit", d);
+}
+
 /* spawn_conduit
  * Spawn a conduit. Runs the program named by 'path', passing it the
  * command-line arguments (including argv[0], the name of the program)
@@ -1506,7 +1516,7 @@ find_in_path(const char *conduit)
 static pid_t
 spawn_conduit(
 	const char *path,	/* Path to program to run */
-	const char *cwd,	/* Conduit working directory */
+	const char *cwd,		/* Conduit working directory */
 	char * const argv[],	/* Child's command-line arguments */
 	FILE **tochild,		/* File descriptor to child's stdin */
 	FILE **fromchild,	/* File descriptor to child's stdout */
@@ -1521,7 +1531,6 @@ spawn_conduit(
 	sigset_t sigmask;	/* Mask of signals to block. Used by
 				 * {,un}block_sigchld() */
 	const char *fname;	/* (Usually full) pathname to conduit */
-	char *dpath;		/* Path to the directory part of the conduit's path */
 
 	/* Set up the pipes for communication with the child */
 	/* Child's stdin */
@@ -1671,9 +1680,43 @@ spawn_conduit(
 	
 	if (cwd != NULL)
 	{
-		if (chdir(cwd) != 0)
-			Error(_("%s: Couldn't change directory to \"%s\"\n"),
-			      "spawn_conduit", cwd);
+		/* cwd to the directory in which the conduit resides */
+		if (strcmp(cwd, "conduit"))
+		{
+			char *dpath;
+			
+			if ((dpath = strdup(path)) != NULL ) /* Preserve path since dirname will modify it */
+			{
+				char *newdir;
+			
+				if ((newdir = dirname(dpath)) != NULL )
+					mychdir( newdir );	
+
+				free( dpath );
+			}			
+		}
+		/* cwd to the user's home directory */
+		else if (strcmp(cwd, "home"))
+		{
+			struct passwd *pw;
+
+			uid_t uid = getuid();
+			
+			if ((pw = getpwuid(uid)) != NULL)
+			{
+				if (pw->pw_dir)
+					mychdir(pw->pw_dir);
+				else
+					Error(_("%s: No home directory for %s.\n"),
+						"spawn_conduit", pw->pw_name );
+			}
+			else
+			 	Error(_("%s: getpwuid(%d) failed.\n"),
+ 	        	 	      "spawn_conduit", uid );
+		}
+		else
+		/* cwd to cwd ;) */
+			mychdir(cwd);
 	}
 
 	err = execv(fname, argv);
