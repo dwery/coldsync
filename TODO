@@ -284,3 +284,5 @@
 - Configure: make sure that C++ compiler groks 'bool' and 'static_cast'.
 - Bug: the (TM) character in database names doesn't come out right:
   it's character 0x99, but in filenames it becomes %FF.
+- The 'prompt_for_hotsync' argument to new_PConnection() is a hack.
+  That whole function needs to be rethought.
