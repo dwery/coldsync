@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.7 2000-12-10 01:07:55 arensb Exp $
+ * $Id: misc.c,v 2.8 2000-12-15 06:09:50 arensb Exp $
  */
 
 #include "config.h"
@@ -457,7 +457,9 @@ is_database_name(const char *fname)
     * "config.h", so that we can use them for real.
     */
 #  undef malloc
+#  undef calloc
 #  undef realloc
+#  undef strdup
 #  undef free
 
 void *
@@ -473,6 +475,18 @@ my_malloc(const int size, const char *file, const int line)
 }
 
 void *
+my_calloc(const int num, const int size, const char *file, const int line)
+{
+	extern void *calloc(const int num, const int size);
+	void *retval;
+
+	retval = calloc(num, size);
+	fprintf(stderr, "MEM: %s: %d: calloc(%d, %d) returns 0x%08lx\n",
+		file, line, num, size, (unsigned long) retval);
+	return retval;
+}
+
+void *
 my_realloc(const void *ptr,
 	   const int size,
 	   const char *file,
@@ -484,6 +498,18 @@ my_realloc(const void *ptr,
 	retval = realloc(ptr, size);
 	fprintf(stderr, "MEM: %s: %d: realloc(0x%08lx, %d) returns 0x%08lx\n",
 		file, line, (unsigned long) ptr, size, (unsigned long) retval);
+	return retval;
+}
+
+char *
+my_strdup(const char *str, const char *file, const int line)
+{
+	extern char *strdup(const char *str);
+	char *retval;
+
+	retval = strdup(str);
+	fprintf(stderr, "MEM: %s: %d: strdup(%s) returns 0x%08lx\n",
+		file, line, str, (unsigned long) retval);
 	return retval;
 }
 

@@ -253,10 +253,15 @@
 extern "C" {
 #  endif
 extern void *my_malloc(const int size, const char *file, const int line);
+extern void *my_calloc(const int num,
+		       const int size,
+		       const char *file,
+		       const int line);
 extern void *my_realloc(const void *ptr,
 			const int size,
 			const char *file,
 			const int line);
+extern char *my_strdup(const char *str, const char *file, const int line);
 extern void my_free(void *ptr, const char *file, const int line);
 #  ifdef __cplusplus
 }
@@ -264,7 +269,9 @@ extern void my_free(void *ptr, const char *file, const int line);
 
    /* The my_*() functions are defined in "src/misc.c" */
 #  define malloc(s)	my_malloc(s, __FILE__, __LINE__)
+#  define calloc(n,s)	my_calloc(n, s, __FILE__, __LINE__)
 #  define realloc(p,s)	my_realloc(p, s, __FILE__, __LINE__)
+#  define strdup(str)	my_strdup(str, __FILE__, __LINE__)
 #  define free(p)	my_free(p, __FILE__, __LINE__)
 #endif	/* WITH_LEAK_DETECTION */
 

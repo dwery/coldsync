@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: find-leaks,v 2.1 2000-12-10 01:07:08 arensb Exp $
+# $Id: find-leaks,v 2.2 2000-12-15 06:09:38 arensb Exp $
 
 # This script helps implement a very primitive form of memory allocation.
 # See the comments in "config.h.in". Basically, if you configure ColdSync
@@ -12,6 +12,9 @@
 # free() is called. You then run the output of 'coldsync' through this
 # script, and it'll (hopefully) give you some clue as to what's being
 # leaked where.
+
+# XXX - When adding to the leaks, ought to also mention where it was
+# allocated
 
 %alloc = ();
 @leaks = ();
@@ -27,6 +30,16 @@ while (<>)
 			push @leaks, $alloc{$ptr};
 		}
 		$alloc{$ptr} = [$file, $line, $size];
+	} elsif (m{MEM: ([^:]+): (\d+): calloc\((\d+), (\d+)\) returns (0x[0-9a-fA-F]+)})
+	{
+		# calloc()
+		($file, $line, $num, $size, $ptr) = ($1, $2, $3, $4, $5);
+
+		if (defined($alloc{$ptr}))
+		{
+			push @leaks, $alloc{$ptr};
+		}
+		$alloc{$ptr} = [$file, $line, $num * $size];
 	} elsif (m{MEM: ([^:]+): (\d+): realloc\((0x[0-9a-fA-F]+), (\d+)\) returns (0x[0-9a-fA-F]+)})
 	{
 		# realloc(). Note that realloc() might not return the
@@ -34,12 +47,19 @@ while (<>)
 		# a leak.
 		delete $alloc{$3};
 		$alloc{$5} = [$1, $2, $4];
+	} elsif (m{MEM: ([^:]+): (\d+): strdup\(([^\)]*)\) returns (0x[0-9a-fA-F]+)})
+	{
+		if (defined($alloc{$4}))
+		{
+			push @leaks, $alloc{$4};
+		}
+		$alloc{$4} = [$1, $2, length($3)];
 	} elsif (m{MEM: ([^:]+): (\d+): free\((0x[0-9a-fA-F]+)\)})
 	{
 		# free()
 		if (!defined($alloc{$3}))
 		{
-			print "Freeing unallocated memory: $1: $2\n";
+			print "Freeing unallocated memory: $1: $2 ($3)\n";
 		}
 		delete $alloc{$3};
 	}
