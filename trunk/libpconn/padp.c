@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.6 2000-03-04 12:05:23 arensb Exp $
+ * $Id: padp.c,v 1.7 2000-05-06 11:26:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -657,8 +657,12 @@ padp_write(struct PConnection *pconn,
 			ack_header.size = get_uword(&rptr);
 
 			PADP_TRACE(7)
-				debug_dump(stderr, "ACK <<<", rptr,
-					   ack_header.size);
+				debug_dump(stderr, "ACK <<<", ack_buf,
+					   /* An ACK packet is basically
+					    * just a PADP header, so ignore
+					    * the size field.
+					    */
+					   PADP_HEADER_LEN);
 
 			switch (ack_header.type)
 			{
