@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.8 2001-03-28 04:55:56 arensb Exp $
+ * $Id: spc.c,v 2.9 2001-03-29 05:39:09 arensb Exp $
  */
 
 #include "config.h"
@@ -135,19 +135,16 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 				    "spc_send: padp_resplen == %d\n",
 				    padp_resplen);
 		    }
-		    if (err == 0)
+		    if (err < 0)	/* Problem with padp_read */
 		    {
-			    /* EOF. In practical terms, this means the
-			     * connection to the Palm was lost.
-			     */
 			    if (palm_errno == PALMERR_EOF)
+				    /* EOF. In practical terms, this
+				     * means the connection to the
+				     * Palm was lost.
+				     */
 				    cs_errno = CSE_NOCONN;
 			    return -1;
-		    } else if (err < 0)	/* Problem with padp_read */
-			    /* XXX - Ought to give more information
-			     * than just "it failed".
-			     */
-			    return -1;
+		    }
 
 		    *outbuf = malloc(padp_resplen);
 		    if (*outbuf == NULL)	/* Out of memory */
