@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.22 2002-11-03 16:37:32 azummo Exp $
+# $Id: ColdSync.pm,v 1.23 2002-11-07 20:46:52 azummo Exp $
 package ColdSync;
 use strict;
 
@@ -13,7 +13,7 @@ use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS
 	@HEADERS %PREFERENCES $PDB );
 
 # One liner, to allow MakeMaker to work.
-$VERSION = do { my @r = (q$Revision: 1.22 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 1.23 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -186,6 +186,9 @@ sub DumpConfig
 	{
 		print "\ttype: $typestring;\n";
 	}
+
+	# Conduits with no types will be dumped as type: none;
+	print "\ttype: none;\n" unless scalar @typestrings > 0;
 
 	# If %HEADERS contains any default values, list them.
 	# XXX - Doesn't deal properly with some headers: if the header has
