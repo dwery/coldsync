@@ -22,3 +22,5 @@ ColdSync 3.0
 	- N-palms -> single-unix-user mapping in daemon mode.
 	- Linux capabilities support (libcap).
 	- Configuration files moved to /etc/coldsync .
+	- More sample conduits
+	- VFS and ExpSlot support in the perl modules
