@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.54 2000-11-05 00:57:10 arensb Exp $
+ * $Id: coldsync.c,v 1.55 2000-11-14 16:41:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -898,6 +898,9 @@ main(int argc, char *argv[])
 		    case mode_Restore:
 			fprintf(stderr, "Restore\n");
 			break;
+		    case mode_Install:
+			fprintf(stderr, "Install\n");
+			break;
 		    case mode_Daemon:
 			fprintf(stderr, "Daemon\n");
 			break;
@@ -958,6 +961,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tMISC:\t%d\n", misc_trace);
 	}
 
+	/* Perform mode-specific actions */
 	switch (global_opts.mode) {
 	    case mode_None:		/* No mode specified */
 	    case mode_Standalone:
@@ -969,6 +973,11 @@ main(int argc, char *argv[])
 	    case mode_Restore:
 		err = run_mode_Restore(argc, argv);
 		break;
+#if 0
+	    case mode_Install:
+		err = run_mode_Install(argc, argv);
+		break;
+#endif	/* 0 */
 	    default:
 		/* This should never happen */
 		fprintf(stderr,
@@ -1006,6 +1015,7 @@ run_mode_Standalone(int argc, char *argv[])
 	int i;
 	struct PConnection *pconn;	/* Connection to the Palm */
 	struct pref_item *pref_cursor;
+	struct dlp_dbinfo dbinfo;	/* Used when installing files */
 
 	/* Get listen block */
 	if (sync_config->listen == NULL)
@@ -1061,6 +1071,9 @@ run_mode_Standalone(int argc, char *argv[])
 	/* XXX - The Visor does not appear to have a software-readable
 	 * serial number. It would be nice to have some way of detecting
 	 * this.
+	 */
+	/* XXX - Move this whole section into a separate get_snum(&palm)
+	 * function.
 	 */
 	if (palm.sysinfo.rom_version < 0x03000000)
 	{
@@ -1207,11 +1220,32 @@ run_mode_Standalone(int argc, char *argv[])
 		FreePrefList(pref_cache);
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		pconn = NULL;
-		exit(1);
+		return -1;
 	}
 
 	MISC_TRACE(1)
 		fprintf(stderr, "Doing a sync.\n");
+
+
+	/* Run any install conduits on the dbs in install directory Notice
+	 * that install conduits are *not* run on files named for install
+	 * on the command line.
+	 */
+	while (NextInstallFile(&dbinfo)>=0) {
+		err = run_Install_conduits(&dbinfo);
+		if (err < 0) {
+			fprintf(stderr, 
+				_("Error %d running install conduits.\n"),
+				err);
+			MISC_TRACE(6)
+				fprintf(stderr,
+					"Freeing pref_cache\n");
+			FreePrefList(pref_cache);
+			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+			pconn = NULL;
+			return -1;
+		}
+	}
 
 	/* Install new databases */
 	/* XXX - It should be configurable whether new databases get
@@ -1364,7 +1398,7 @@ run_mode_Standalone(int argc, char *argv[])
 			MISC_TRACE(6)
 				fprintf(stderr, "Freeing pref_cache\n");
 			FreePrefList(pref_cache);
-			exit(1);
+			return -1;
 		}
 	}
 
@@ -1394,7 +1428,7 @@ run_mode_Standalone(int argc, char *argv[])
 	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
 	{
 		fprintf(stderr, _("Error disconnecting\n"));
-		exit(1);
+		return -1;
 	}
 
 	pconn = NULL;
@@ -1758,6 +1792,226 @@ run_mode_Restore(int argc, char *argv[])
 
 	return 0;
 }
+
+#if 0
+int
+run_mode_Install(int argc, char *argv[])
+{
+	int err;
+	int i;
+	struct PConnection *pconn;	/* Connection to the Palm */
+
+	/* Get listen block */
+	if (sync_config->listen == NULL)
+	{
+		fprintf(stderr, _("Error: no port specified.\n"));
+		return -1;
+	}
+
+	/* XXX - If we're listening on a serial port, figure out fastest
+	 * speed at which it will run.
+	 */
+	SYNC_TRACE(2)
+		fprintf(stderr, "Opening device [%s]\n",
+			sync_config->listen->device);
+
+	/* Set up a PConnection to the Palm */
+	/* XXX - set last parameter to zero to inhibit "Press HotSync
+	 *  button prompt" when in daemon mode
+	 */
+	if ((pconn = new_PConnection(sync_config->listen->device,
+				     sync_config->listen->listen_type, 1))
+	    == NULL)
+	{
+		fprintf(stderr, _("Error: can't open connection.\n"));
+		return -1;
+	}
+	pconn->speed = sync_config->listen->speed;
+
+	/* Connect to the Palm */
+	if ((err = Connect(pconn)) < 0)
+	{
+		fprintf(stderr, _("Can't connect to Palm\n"));
+		PConnClose(pconn);
+		return -1;
+	}
+
+	/* Get system, NetSync and user info */
+	if ((err = GetPalmInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get system/user/NetSync info\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+				/* XXX - I'm not sure this is quite right.
+				 * That is, if things are so screwed up
+				 * that we can't get the user info, then
+				 * I'm not sure that we can abort the
+				 * connection cleanly.
+				 */
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Read the Palm's serial number, if possible. */
+	/* XXX - The Visor does not appear to have a software-readable
+	 * serial number. It would be nice to have some way of detecting
+	 * this.
+	 */
+	if (palm.sysinfo.rom_version < 0x03000000)
+	{
+		/* Can't just try to read the serial number and let the RPC
+		 * call fail: the PalmPilot(Pro) panics when you do that.
+		 */
+		SYNC_TRACE(1)
+			fprintf(stderr, "This Palm is too old to have a "
+				"serial number in ROM\n");
+
+		/* Set the serial number to the empty string */
+		palm.serial[0] = '\0';
+		palm.serial_len = 0;
+	} else {
+		/* The Palm's ROM is v3.0 or later, so it has a serial
+		 * number.
+		 */
+		udword snum_ptr;	/* Palm pointer to serial number */
+		uword snum_len;		/* Length of serial number string */
+		char checksum;		/* Serial number checksum */
+
+		/* Get the location of the ROM serial number */
+		/* XXX - Move this into its own function? */
+		err = RDLP_ROMToken(pconn, CARD0, ROMToken_Snum,
+				    &snum_ptr, &snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't get location of "
+					  "serial number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		}
+
+		/* Sanity check: make sure we have space for the serial
+		 * number.
+		 */
+		if (snum_len > SNUM_MAX-1)
+		{
+			fprintf(stderr, _("Warning: ROM serial number is "
+					  "%d characters long. Please notify "
+					  "the\nmaintainer\n"),
+				snum_len);
+			snum_len = SNUM_MAX;
+		}
+
+		/* Read the serial number out of the location found above */
+		err = RDLP_MemMove(pconn, (ubyte *) palm.serial,
+				   snum_ptr, snum_len);
+		if (err < 0)
+		{
+			fprintf(stderr, _("Error: Can't read serial "
+					  "number\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			return -1;
+		}
+		palm.serial[snum_len] = '\0';
+		palm.serial_len = snum_len;
+
+		/* Calculate the checksum for the serial number */
+		checksum = snum_checksum(palm.serial, palm.serial_len);
+		SYNC_TRACE(2)
+			fprintf(stderr, "Serial number is \"%s-%c\"\n",
+				palm.serial, checksum);
+	}
+
+	/* Figure out which Palm we're dealing with, and initialize
+	 * per-palm config.
+	 */
+	/* XXX - This also creates ~/.palm/<stuff> . Perhaps that's not the
+	 * right place for it?
+	 */
+	if ((err = load_palm_config(&palm)) < 0)
+	{
+		fprintf(stderr, _("Can't get per-Palm config.\n"));
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* XXX - In daemon mode, presumably load_palm_config() (or
+	 * something) should tell us which user to run as. Therefore fork()
+	 * an instance, have it setuid() to the appropriate user, and load
+	 * that user's configuration.
+	 */
+
+	/* Initialize (per-user) conduits */
+	MISC_TRACE(1)
+		fprintf(stderr, "Initializing conduits\n");
+
+	if ((err = GetMemInfo(pconn, &palm)) < 0)
+	{
+		fprintf(stderr, _("GetMemInfo() returned %d\n"), err);
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	MISC_TRACE(1)
+		fprintf(stderr, "Installing files.\n");
+
+	/* Install new databases */
+	/* XXX - Iterate over argv[]; for directories, install all
+	 * databases in that directory. For files, just install that file.
+	 */
+	err = InstallNewFiles(pconn, &palm, installdir, True);
+
+	/* XXX - It should be possible to specify a list of directories to
+	 * look in: that way, the user can put new databases in
+	 * ~/.palm/install, whereas in a larger site, the sysadmin can
+	 * install databases in /usr/local/stuff; they'll be uploaded from
+	 * there, but not deleted.
+	 */
+	/* err = InstallNewFiles(pconn, &palm, "/tmp/palm-install",
+			      False);*/
+	if (err < 0)
+	{
+		fprintf(stderr, _("Error installing new files.\n"));
+
+		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
+		pconn = NULL;
+		return -1;
+	}
+
+	/* Upload sync log */
+	if (synclog != NULL)
+	{
+		SYNC_TRACE(2)
+			fprintf(stderr, "Writing log to Palm\n");
+
+		if ((err = DlpAddSyncLogEntry(pconn, synclog)) < 0)
+		{
+			fprintf(stderr, _("Error writing sync log.\n"));
+			Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
+			pconn = NULL;
+
+			MISC_TRACE(6)
+				fprintf(stderr, "Freeing pref_cache\n");
+			FreePrefList(pref_cache);
+			exit(1);
+		}
+	}
+
+	/* Finally, close the connection */
+	SYNC_TRACE(3)
+		fprintf(stderr, "Closing connection to Palm\n");
+
+	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
+	{
+		fprintf(stderr, _("Error disconnecting\n"));
+		exit(1);
+	}
+
+	pconn = NULL;
+
+	return 0;
+}
+#endif	/* 0 */
 
 /* XXX - run_mode_Daemon() */
 /* XXX
@@ -2687,6 +2941,17 @@ append_dbentry(struct Palm *palm,
 
 	/* Fill in the new entry */
 	dbinfo = &(palm->dblist[palm->num_dbs-1]);
+	return dbinfo_fill(dbinfo, pdb);
+}
+
+
+/* dbinfo_fill
+ * Fill in a dbinfo record from a pdb record header.
+ */
+int
+dbinfo_fill(struct dlp_dbinfo *dbinfo,
+	    struct pdb *pdb)
+{
 	dbinfo->size = 0;		/* XXX - Bogus, but I don't think
 					 * this is used anywhere.
 					 */
