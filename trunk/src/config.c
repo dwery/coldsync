@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.93 2002-03-30 17:21:59 azummo Exp $
+ * $Id: config.c,v 1.94 2002-03-30 18:01:59 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1554,7 +1554,7 @@ find_listen_block(char *name)
  	 	listen_block *l;
  	
  		MISC_TRACE(2)
- 		        fprintf(stderr, "Searching for listen block: %s\n",
+ 		        fprintf(stderr, "Searching for listen block: \"%s\"\n",
  		                name);   
 
 		for (l = sync_config->listen; l != NULL; l = l->next)
@@ -1563,7 +1563,7 @@ find_listen_block(char *name)
 		 	        continue;   
 
 			MISC_TRACE(3)
-			        fprintf(stderr, " evaluating %s.\n", l->name);
+			        fprintf(stderr, " evaluating block \"%s\".\n", l->name);
 
 			if (strcmp(l->name, name) == 0)
 			{
