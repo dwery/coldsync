@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.12 2000-01-25 11:26:10 arensb Exp $
+ * $Id: parser.y,v 2.13 2000-02-07 04:44:30 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -46,6 +46,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 
 %token <integer>	NUMBER
 %token <string>		STRING
+%token <crea_type>	CREA_TYPE
 %token CONDUIT
 %token DEFAULT
 %token DEVICE
@@ -60,6 +61,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token USB
 
 %type <commtype> comm_type
+%type <crea_type> creator_type
 
 /* Conduit flavors */
 %token SYNC
@@ -75,6 +77,7 @@ static struct config *file_config;	/* As the parser runs, it will fill
 	char *string;
 	conduit_flavor flavor;
 	comm_type commtype;
+	crea_type_pair crea_type;
 }
 
 %%
@@ -354,62 +357,28 @@ conduit_directives:
 	;
 
 conduit_directive:
-	TYPE STRING '/' STRING ';'
+	TYPE creator_type ';'
 	/* XXX - This ought to take an optional argument saying that this
 	 * conduit applies to just resource or record databases.
 	 */
 	{
-		if (strcmp($2, "*") == 0)
-		{
-			/* Wildcard creator */
-			cur_conduit->dbcreator = 0L;
-		} else {
-			/* Stated type */
-			if (strlen($2) != 4)
-			{
-				fprintf(stderr,
-					_("%s: Bogus creator \"%s\", line "
-					  "%d\n"),
-					"yyparse",
-					$2, lineno);
-				free($2); $2 = NULL;
-				free($4); $4 = NULL;
-				YYERROR;
-			}
-			cur_conduit->dbcreator =
-				(($2[0]) << 24) |
-				(($2[1]) << 16) |
-				(($2[2]) << 8) |
-				($2[3]);
-		}
-
-		if (strcmp($4, "*") == 0)
-		{
-			/* Wildcard type */
-			cur_conduit->dbtype = 0L;
-		} else {
-			/* Stated type */
-			if (strlen($4) != 4)
-			{
-				fprintf(stderr,
-					_("%s: Bogus type \"%s\", line %d\n"),
-					"yyparse",
-					$4, lineno);
-				cur_conduit->dbtype = 0L;
-				free($2); $2 = NULL;
-				free($4); $4 = NULL;
-				YYERROR;
-			}
-			cur_conduit->dbtype =
-				(($4[0]) << 24) |
-				(($4[1]) << 16) |
-				(($4[2]) << 8) |
-				($4[3]);
-		}
 		PARSE_TRACE(4)
-			fprintf(stderr, "Conduit type: [%s]/[%s]\n", $2, $4);
-		free($2); $2 = NULL;
-		free($4); $4 = NULL;
+		{
+			fprintf(stderr, "Conduit creator: 0x%08ld (%c%c%c%c)\n",
+				$2.creator,
+				(char) (($2.creator >> 24) & 0xff),
+				(char) (($2.creator >> 16) & 0xff),
+				(char) (($2.creator >>  8) & 0xff),
+				(char) ($2.creator & 0xff));
+			fprintf(stderr, "Conduit type: 0x%08ld (%c%c%c%c)\n",
+				$2.type,
+				(char) (($2.type >> 24) & 0xff),
+				(char) (($2.type >> 16) & 0xff),
+				(char) (($2.type >>  8) & 0xff),
+				(char) ($2.type & 0xff));
+		}
+		cur_conduit->dbcreator = $2.creator;
+		cur_conduit->dbtype = $2.type;
 	}
 	| NAME STRING ';'	/* XXX - Is this used? */
 	| PATH STRING ';'
@@ -428,15 +397,82 @@ conduit_directive:
 	}
 	| DEFAULT ';'
 	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "This is a default conduit\n");
+
 		/* Mark this conduit as being a fall-back default */
 		cur_conduit->flags |= CONDFL_DEFAULT;	/* XXX - Test this */
 	}
 	| FINAL ';'
 	{
+		PARSE_TRACE(4)
+			fprintf(stderr, "This is a final conduit\n");
+
 		/* Mark this conduit as being final: if it matches, don't
 		 * even look through the rest of the queue.
 		 */
 		cur_conduit->flags |= CONDFL_FINAL;	/* XXX - Test this */
+	}
+	;
+
+creator_type:	STRING '/' STRING
+	{
+		/* Creator */
+		if (strcmp($1, "*") == 0)
+		{
+			/* Wildcard creator */
+			$$.creator = 0L;
+		} else {
+			/* Stated creator */
+			if (strlen($1) != 4)
+			{
+				fprintf(stderr,
+					_("%s: Bogus creator \"%s\", line "
+					  "%d\n"),
+					"yyparse",
+					$1, lineno);
+				free($1); $1 = NULL;
+				free($3); $3 = NULL;
+				YYERROR;
+			}
+			$$.creator =
+				(($1[0]) << 24) |
+				(($1[1]) << 16) |
+				(($1[2]) << 8) |
+				($1[3]);
+		}
+
+		/* Type */
+		if (strcmp($3, "*") == 0)
+		{
+			/* Wildcard creator */
+			$$.type = 0L;
+		} else {
+			/* Stated type */
+			if (strlen($3) != 4)
+			{
+				fprintf(stderr,
+					_("%s: Bogus type \"%s\", line "
+					  "%d\n"),
+					"yyparse",
+					$3, lineno);
+				free($1); $1 = NULL;
+				free($3); $3 = NULL;
+				YYERROR;
+			}
+			$$.creator =
+				(($3[0]) << 24) |
+				(($3[1]) << 16) |
+				(($3[2]) << 8) |
+				($3[3]);
+		}
+		free($1); $1 = NULL;
+		free($3); $3 = NULL;
+	}
+	| CREA_TYPE
+	{
+		$$.creator = $1.creator;
+		$$.type = $1.type;
 	}
 	;
 
