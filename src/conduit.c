@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.12 2000-01-22 05:14:19 arensb Exp $
+ * $Id: conduit.c,v 1.13 2000-01-22 12:56:24 arensb Exp $
  */
 /* XXX - At some point, the API for built-in conduits should become much
  * simpler. A lot of the crap in this file will disappear, since it's
@@ -624,12 +624,17 @@ cond_sendline(const char *data,	/* Data to send */
 			 * the line.
 			 */
 			static char buf[1024];
-fprintf(stderr, "Child has written something\n");
+/*  fprintf(stderr, "Child has written something\n"); */
 			/* XXX - Read what the child has to say, and do
 			 * something intelligent about it.
 			 */
 err = read(fromchild_fd, buf, 1024);
+SYNC_TRACE(5)
+{
 fprintf(stderr, "<<< \"%s\"\n", buf);
+}
+
+/* XXX */
 if (err <= 0)
 {
 	fprintf(stderr, "read() returned %d\n", err);
@@ -993,10 +998,9 @@ cond_readline(char *buf,	/* Buffer to read into */
  *	1yz - Informational messages. These may be logged, or shown to the
  *	      user.
  *	2yz - Success.
- *	3yz - ?
- *	4yz - Error
- *	5yz - Error
- * XXX - Clarify 3yz, 4yz, 5yz.
+ *	3yz - Warning
+ *	4yz - ColdSync (caller) Error
+ *	5yz - Conduit Error
  * XXX - Perhaps 11z can be used for progress reports: the message will
  * sent to the user (presumably across a Unix domain socket to a listening
  * application). "111 23% done" can be used to display a progress bar.
@@ -1063,7 +1067,7 @@ cond_readstatus(FILE *fromchild)
 	}
 
 	/* XXX - Do something intelligent */
-fprintf(stderr, "CONDUIT: %d - %s\n", errcode, errmsg);
+/*  fprintf(stderr, "CONDUIT: %d - %s\n", errcode, errmsg); */
 
 	return errcode; 
 }
