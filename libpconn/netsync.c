@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.25 2002-11-02 12:52:53 azummo Exp $
+ * $Id: netsync.c,v 1.26 2002-11-03 14:12:11 azummo Exp $
  */
 
 #include "config.h"
@@ -500,6 +500,10 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	if (err == 0)
 	{
 		/* select() timed out */
+
+		NET_TRACE(3)
+			fprintf(stderr, "netsync_read: read timeout.\n");
+
 		PConn_set_palmerrno(pconn, PALMERR_TIMEOUT2);
 		return -1;
 	}
