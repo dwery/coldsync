@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.22 2001-08-22 06:42:51 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.23 2001-09-07 10:40:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -96,7 +96,7 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, ">>> ReadUserInfo\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadUserInfo;
+	header.id = (ubyte) DLPCMD_ReadUserInfo;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -250,7 +250,7 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteUserInfo;
+	header.id = (ubyte) DLPCMD_WriteUserInfo;
 	header.argc = 1;
 
 	/* Construct the argument buffer */
@@ -334,7 +334,7 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, ">>> ReadSysInfo\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadSysInfo;
+	header.id = (ubyte) DLPCMD_ReadSysInfo;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -438,7 +438,7 @@ DlpGetSysDateTime(PConnection *pconn,
 		fprintf(stderr, ">>> GetSysDateTime\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_GetSysDateTime;
+	header.id = (ubyte) DLPCMD_GetSysDateTime;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -517,7 +517,7 @@ DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 			ptime->year);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_SetSysDateTime;
+	header.id = (ubyte) DLPCMD_SetSysDateTime;
 	header.argc = 1;
 
 	/* Construct the argument buffer */
@@ -592,7 +592,7 @@ DlpReadStorageInfo(PConnection *pconn,
 		fprintf(stderr, ">>> ReadStorageInfo(%d)\n", card);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadStorageInfo;
+	header.id = (ubyte) DLPCMD_ReadStorageInfo;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -772,7 +772,7 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 			iflags, card, start);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadDBList;
+	header.id = (ubyte) DLPCMD_ReadDBList;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -968,7 +968,7 @@ DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 			card, name, mode);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_OpenDB;
+	header.id = (ubyte) DLPCMD_OpenDB;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1077,7 +1077,7 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 			newdb->name);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_CreateDB;
+	header.id = (ubyte) DLPCMD_CreateDB;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1171,7 +1171,7 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, ">>> CloseDB(%d)\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_CloseDB;
+	header.id = (ubyte) DLPCMD_CloseDB;
 	header.argc = 1;
 
 	/* Decide which argument to send, depending on whether we're
@@ -1254,7 +1254,7 @@ DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 			card, name);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_DeleteDB;
+	header.id = (ubyte) DLPCMD_DeleteDB;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1340,7 +1340,7 @@ DlpReadAppBlock(PConnection *pconn,	/* Connection */
 		fprintf(stderr, ">>> ReadAppBlock\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadAppBlock;
+	header.id = (ubyte) DLPCMD_ReadAppBlock;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1442,7 +1442,7 @@ DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 		fprintf(stderr, ">>> WriteAppBlock\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteAppBlock;
+	header.id = (ubyte) DLPCMD_WriteAppBlock;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1530,7 +1530,7 @@ DlpReadSortBlock(PConnection *pconn,	/* Connection */
 		fprintf(stderr, ">>> ReadSortBlock\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadSortBlock;
+	header.id = (ubyte) DLPCMD_ReadSortBlock;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1623,7 +1623,7 @@ DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, ">>> WriteSortBlock\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteSortBlock;
+	header.id = (ubyte) DLPCMD_WriteSortBlock;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1708,7 +1708,7 @@ DlpReadNextModifiedRec(
 		fprintf(stderr, ">>> ReadNextModifiedRec: db %d\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadNextModifiedRec;
+	header.id = (ubyte) DLPCMD_ReadNextModifiedRec;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -1814,7 +1814,7 @@ DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 			handle, id, offset, len);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadRecord;
+	header.id = (ubyte) DLPCMD_ReadRecord;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -1935,7 +1935,7 @@ DlpReadRecordByIndex(
 			index);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadRecord;
+	header.id = (ubyte) DLPCMD_ReadRecord;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2064,7 +2064,7 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 	}
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteRecord;
+	header.id = (ubyte) DLPCMD_WriteRecord;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2175,7 +2175,7 @@ DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 			handle, flags, recid);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_DeleteRecord;
+	header.id = (ubyte) DLPCMD_DeleteRecord;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2257,7 +2257,7 @@ DlpReadResourceByIndex(
 			handle, index, offset, len);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadResource;
+	header.id = (ubyte) DLPCMD_ReadResource;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2364,7 +2364,7 @@ DlpReadResourceByType(
 			handle, type, id, offset, len);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadResource;
+	header.id = (ubyte) DLPCMD_ReadResource;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2477,7 +2477,7 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 			id, size);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteResource;
+	header.id = (ubyte) DLPCMD_WriteResource;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2583,7 +2583,7 @@ DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 			id);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_DeleteResource;
+	header.id = (ubyte) DLPCMD_DeleteResource;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2659,7 +2659,7 @@ DlpCleanUpDatabase(
 		fprintf(stderr, ">>> CleanUpDatabase: handle %d\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_CleanUpDatabase;
+	header.id = (ubyte) DLPCMD_CleanUpDatabase;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -2725,7 +2725,7 @@ DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 		fprintf(stderr, ">>> ResetSyncFlags: handle %d\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ResetSyncFlags;
+	header.id = (ubyte) DLPCMD_ResetSyncFlags;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -2827,7 +2827,7 @@ DlpCallApplication(
 			paramsize);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_CallApplication;
+	header.id = (ubyte) DLPCMD_CallApplication;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -2943,7 +2943,7 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 		fprintf(stderr, ">>> ResetSystem\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ResetSystem;
+	header.id = (ubyte) DLPCMD_ResetSystem;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -3025,7 +3025,7 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 		msg += (msglen - DLPC_MAXLOGLEN + 1);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_AddSyncLogEntry;
+	header.id = (ubyte) DLPCMD_AddSyncLogEntry;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -3093,7 +3093,7 @@ DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 		fprintf(stderr, ">>> ReadOpenDBInfo(%d)\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadOpenDBInfo;
+	header.id = (ubyte) DLPCMD_ReadOpenDBInfo;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -3166,7 +3166,7 @@ DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 			handle, from, to);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_MoveCategory;
+	header.id = (ubyte) DLPCMD_MoveCategory;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3237,7 +3237,7 @@ DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 		fprintf(stderr, ">>> OpenConduit:\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_OpenConduit;
+	header.id = (ubyte) DLPCMD_OpenConduit;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -3298,7 +3298,7 @@ DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 		fprintf(stderr, ">>> EndOfSync status %d\n", status);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_EndOfSync;
+	header.id = (ubyte) DLPCMD_EndOfSync;
 	header.argc = 1;
 
 	/* Construct the status buffer */
@@ -3367,7 +3367,7 @@ DlpResetRecordIndex(
 		fprintf(stderr, ">>> ResetRecordIndex: handle %d\n", handle);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ResetRecordIndex;
+	header.id = (ubyte) DLPCMD_ResetRecordIndex;
 	header.argc = 1;
 
 	/* Fill in the argument */
@@ -3470,7 +3470,7 @@ DlpReadRecordIDList(
 			max);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadRecordIDList;
+	header.id = (ubyte) DLPCMD_ReadRecordIDList;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3569,7 +3569,7 @@ DlpReadNextRecInCategory(
 			handle, category);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadNextRecInCategory;
+	header.id = (ubyte) DLPCMD_ReadNextRecInCategory;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3680,7 +3680,7 @@ DlpReadNextModifiedRecInCategory(
 			handle, category);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadNextModifiedRecInCategory;
+	header.id = (ubyte) DLPCMD_ReadNextModifiedRecInCategory;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3795,7 +3795,7 @@ DlpReadAppPreference(
 			id, len, flags);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadAppPreference;
+	header.id = (ubyte) DLPCMD_ReadAppPreference;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3901,7 +3901,7 @@ DlpWriteAppPreference(
 		fprintf(stderr, ">>> WriteAppPreference: XXX\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteAppPreference;
+	header.id = (ubyte) DLPCMD_WriteAppPreference;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -3987,7 +3987,7 @@ DlpReadNetSyncInfo(PConnection *pconn,
 		fprintf(stderr, ">>> ReadNetSyncInfo\n");
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadNetSyncInfo;
+	header.id = (ubyte) DLPCMD_ReadNetSyncInfo;
 	header.argc = 0;
 
 	/* Send the DLP request */
@@ -4121,7 +4121,7 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 			newinfo->hostnetmask);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_WriteNetSyncInfo;
+	header.id = (ubyte) DLPCMD_WriteNetSyncInfo;
 	header.argc = 1;
 
 	/* Construct the argument */
@@ -4225,7 +4225,7 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 			featurenum);
 
 	/* Fill in the header values */
-	header.id = DLPCMD_ReadFeature;
+	header.id = (ubyte) DLPCMD_ReadFeature;
 	header.argc = 1;
 
 	/* Construct the argument */
