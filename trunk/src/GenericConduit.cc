@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.12 2000-01-13 17:20:21 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.13 2000-01-19 06:11:19 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -516,7 +516,7 @@ GenericConduit::SlowSync()
 			{
 				/* This record has been completely deleted */
 				SYNC_TRACE(5)
-					cerr << "Deleting this record" << endl;
+					cerr << "Deleting this record (local record doesn't exist, remote record expunged)" << endl;
 				pdb_DeleteRecordByID(_remotedb, remoterec->id);
 			} else {
 				struct pdb_record *newrec;
@@ -659,7 +659,7 @@ GenericConduit::SlowSync()
 		{
 			/* The local record has been completely deleted */
 			SYNC_TRACE(5)
-				cerr << "Deleting this record" << endl;
+				cerr << "Deleting this record (local record deleted or something)" << endl;
 			pdb_DeleteRecordByID(_localdb, localrec->id);
 		} else if (DIRTY(localrec))
 		{
@@ -675,7 +675,9 @@ GenericConduit::SlowSync()
 				  PDB_REC_ARCHIVE);
 
 			SYNC_TRACE(6)
-				cerr << "> Sending local record to Palm"
+				cerr << "> Sending local record (ID 0x"
+				     << hex << setw(8) << setfill('0')
+				     << ") to Palm"
 				     << endl;
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
@@ -1062,7 +1064,9 @@ GenericConduit::FastSync()
 				  PDB_REC_ARCHIVE);
 
 			SYNC_TRACE(6)
-				cerr << "> Sending local record to Palm"
+				cerr << "> Sending local record (ID 0x"
+				     << hex << setw(8) << setfill('0')
+				     << ") to Palm"
 				     << endl;
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
@@ -1327,7 +1331,9 @@ GenericConduit::SyncRecord(
 
 			/* Upload localrec to Palm */
 			SYNC_TRACE(6)
-				cerr << "> Sending local record to Palm"
+				cerr << "> Sending local record (ID 0x"
+				     << hex << setw(8) << setfill('0')
+				     << ") to Palm"
 				     << endl;
 			err = DlpWriteRecord(_pconn, dbh, 0x80,
 					     localrec->id,
@@ -2025,6 +2031,9 @@ GenericConduit::read_backup()
 		{
 			/* The backup file doesn't exist. This isn't
 			 * technically an error.
+			 */
+			/* XXX - Perhaps run the appropriate Fetch conduit
+			 * to create the database.
 			 */
 			_localdb = 0;
 			return 0;
