@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.6 1999-11-20 05:12:31 arensb Exp $
+ * $Id: pdb.c,v 1.7 1999-11-27 05:49:19 arensb Exp $
  */
 
 #include "config.h"
@@ -31,6 +31,10 @@
 #  define memmove(d,s,n)	bcopy ((s), (d), (n))
 # endif	/* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
+
+#if HAVE_LIBINTL
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL */
 
 #include "pconn/pconn.h"
 #include "pdb.h"
@@ -191,7 +195,7 @@ pdb_Read(int fd)
 	if (retval->file_size == ~0)
 	{
 		/* The file isn't seekable */
-		fprintf(stderr, "File isn't seekable.\n");
+		fprintf(stderr, _("File isn't seekable.\n"));
 		free_pdb(retval);
 		return NULL;
 	}
@@ -199,7 +203,7 @@ pdb_Read(int fd)
 	/* Load the header */
 	if ((err = pdb_LoadHeader(fd, retval)) < 0)
 	{
-		fprintf(stderr, "Can't load header\n");
+		fprintf(stderr, _("Can't load header\n"));
 		free_pdb(retval);
 		return NULL;
 	}
@@ -207,7 +211,7 @@ pdb_Read(int fd)
 	/* Load the record list header */
 	if ((err = pdb_LoadRecListHeader(fd, retval)) < 0)
 	{
-		fprintf(stderr, "Can't load header\n");
+		fprintf(stderr, _("Can't load header\n"));
 		free_pdb(retval);
 		return NULL;
 	}
@@ -218,7 +222,7 @@ pdb_Read(int fd)
 		/* Read the resource index */
 		if ((err = pdb_LoadRsrcIndex(fd, retval)) < 0)
 		{
-			fprintf(stderr, "Can't read resource index\n");
+			fprintf(stderr, _("Can't read resource index\n"));
 			free_pdb(retval);
 			return NULL;
 		}
@@ -226,7 +230,7 @@ pdb_Read(int fd)
 		/* Read the record index */
 		if ((err = pdb_LoadRecIndex(fd, retval)) < 0)
 		{
-			fprintf(stderr, "Can't read record index\n");
+			fprintf(stderr, _("Can't read record index\n"));
 			free_pdb(retval);
 			return NULL;
 		}
@@ -235,7 +239,7 @@ pdb_Read(int fd)
 	/* Skip the dummy two bytes */
 	if ((err = read(fd, useless_buf, 2)) != 2)
 	{
-		fprintf(stderr, "Can't read the useless two bytes");
+		fprintf(stderr, _("Can't read the useless two bytes\n"));
 		perror("LoadDatabase: read");
 		free_pdb(retval);
 		return NULL;
@@ -244,7 +248,7 @@ pdb_Read(int fd)
 	if ((useless_buf[0] != '\0') ||
 	    (useless_buf[1] != '\0'))
 	{
-		fprintf(stderr, "The useless two bytes contain 0x%02x%02x instead of NULs. This is unexpected.\n",
+		fprintf(stderr, _("The useless two bytes contain 0x%02x%02x instead of NULs. This is unexpected.\n"),
 			useless_buf[0],
 			useless_buf[1]);
 	}
@@ -252,7 +256,7 @@ pdb_Read(int fd)
 	/* Load the AppInfo block, if any */
 	if ((err = pdb_LoadAppBlock(fd, retval)) < 0)
 	{
-		fprintf(stderr, "Can't read AppInfo block\n");
+		fprintf(stderr, _("Can't read AppInfo block\n"));
 		free_pdb(retval);
 		return NULL;
 	}
@@ -260,7 +264,7 @@ pdb_Read(int fd)
 	/* Load the sort block, if any */
 	if ((err = pdb_LoadSortBlock(fd, retval)) < 0)
 	{
-		fprintf(stderr, "Can't read sort block\n");
+		fprintf(stderr, _("Can't read sort block\n"));
 		free_pdb(retval);
 		return NULL;
 	}
@@ -271,7 +275,7 @@ pdb_Read(int fd)
 		/* Read the resources */
 		if ((err = pdb_LoadResources(fd, retval)) < 0)
 		{
-			fprintf(stderr, "Can't read resources.\n");
+			fprintf(stderr, _("Can't read resources.\n"));
 			free_pdb(retval);
 			return NULL;
 		}
@@ -279,7 +283,7 @@ pdb_Read(int fd)
 		/* Read the records */
 		if ((err = pdb_LoadRecords(fd, retval)) < 0)
 		{
-			fprintf(stderr, "Can't read records.\n");
+			fprintf(stderr, _("Can't read records.\n"));
 			free_pdb(retval);
 			return NULL;
 		}
@@ -366,7 +370,8 @@ pdb_Write(const struct pdb *db,
 	/* Write the database header */
 	if (write(fd, header_buf, PDB_HEADER_LEN) != PDB_HEADER_LEN)
 	{
-		fprintf(stderr, "pdb_Write: can't write database header\n");
+		fprintf(stderr, _("%s: can't write database header\n"),
+			"pdb_Write");
 		perror("write");
 		close(fd);
 		return -1;
@@ -383,7 +388,8 @@ pdb_Write(const struct pdb *db,
 	/* Write the record list header */
 	if (write(fd, rlheader_buf, PDB_RECORDLIST_LEN) != PDB_RECORDLIST_LEN)
 	{
-		fprintf(stderr, "pdb_Write: can't write record list header\n");
+		fprintf(stderr, _("%s: can't write record list header\n"),
+			"pdb_Write");
 		perror("write");
 		return -1;
 	}
@@ -414,8 +420,9 @@ pdb_Write(const struct pdb *db,
 			if (write(fd, rsrcbuf, PDB_RESOURCEIX_LEN) !=
 			    PDB_RESOURCEIX_LEN)
 			{
-				fprintf(stderr, "pdb_Write: "
-					"Can't write resource index entry\n");
+				fprintf(stderr, _("%s: Can't write "
+						  "resource index entry\n"),
+					"pdb_Write");
 				perror("write");
 				return -1;
 			}
@@ -449,8 +456,9 @@ pdb_Write(const struct pdb *db,
 			if (write(fd, recbuf, PDB_RECORDIX_LEN) !=
 			    PDB_RECORDIX_LEN)
 			{
-				fprintf(stderr, "pdb_Write: "
-					"Can't write RECORD index entry\n");
+				fprintf(stderr, _("%s: Can't write "
+						  "record index entry\n"),
+					"pdb_Write");
 				perror("write");
 				return -1;
 			}
@@ -466,8 +474,8 @@ pdb_Write(const struct pdb *db,
 	nul_buf[0] = nul_buf[1] = '\0';
 	if (write(fd, nul_buf, 2) != 2)
 	{
-		fprintf(stderr, "pdb_Write: "
-			"Can't write the two useless NULs\n");
+		fprintf(stderr, _("%s: Can't write the two useless NULs\n"),
+			"pdb_Write");
 		perror("write");
 		return -1;
 	}
@@ -478,8 +486,8 @@ pdb_Write(const struct pdb *db,
 		if (write(fd, db->appinfo, db->appinfo_len) !=
 		    db->appinfo_len)
 		{
-			fprintf(stderr, "pdb_Write: "
-				"Can't write AppInfo block\n");
+			fprintf(stderr, _("%s: Can't write AppInfo block\n"),
+				"pdb_Write");
 			perror("write");
 			return -1;
 		}
@@ -491,7 +499,8 @@ pdb_Write(const struct pdb *db,
 		if (write(fd, db->sortinfo, db->sortinfo_len) !=
 		    db->sortinfo_len)
 		{
-			fprintf(stderr, "pdb_Write: Can't write sort block\n");
+			fprintf(stderr, _("%s: Can't write sort block\n"),
+				"pdb_Write");
 			perror("write");
 			return -1;
 		}
@@ -514,8 +523,9 @@ pdb_Write(const struct pdb *db,
 			if (write(fd, rsrc->data, rsrc->data_len) !=
 			    rsrc->data_len)
 			{
-				fprintf(stderr, "pdb_Write: "
-					"Can't write resource data\n");
+				fprintf(stderr, _("%s: Can't write "
+						  "resource data\n"),
+					"pdb_Write");
 				perror("write");
 				return -1;
 			}
@@ -531,8 +541,9 @@ pdb_Write(const struct pdb *db,
 			if (write(fd, rec->data, rec->data_len) !=
 			    rec->data_len)
 			{
-				fprintf(stderr, "pdb_Write: "
-					"Can't write record data\n");
+				fprintf(stderr, _("%s: Can't write "
+						  "record data\n"),
+					"pdb_Write");
 				perror("write");
 				return -1;
 			}
@@ -566,7 +577,8 @@ pdb_Download(struct PConnection *pconn,
 	/* Allocate the return value */
 	if ((retval = new_pdb()) == NULL)
 	{
-		fprintf(stderr, "pdb_Download: can't allocate pdb\n");
+		fprintf(stderr, _("%s: can't allocate pdb\n"),
+			"pdb_Download");
 		return NULL;
 	}
 
@@ -619,7 +631,8 @@ pdb_Download(struct PConnection *pconn,
 	err = DlpReadOpenDBInfo(pconn, dbh, &opendbinfo);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "pdb_Download: Can't read database info: %d\n",
+		fprintf(stderr, _("%s: Can't read database info: %d\n"),
+			"pdb_Download",
 			err);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
@@ -644,7 +657,8 @@ pdb_Download(struct PConnection *pconn,
 		if ((retval->appinfo = (ubyte *) malloc(appinfo_len))
 		    == NULL)
 		{
-			fprintf(stderr, "** Out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_Download");
 			DlpCloseDB(pconn, dbh);	/* Don't really care if
 						 * this fails */
 			free_pdb(retval);
@@ -669,7 +683,8 @@ pdb_Download(struct PConnection *pconn,
 				"an AppInfo block\n");
 		break;
 	    default:
-		fprintf(stderr, "*** Can't read AppInfo block for %s: %d\n",
+		fprintf(stderr, _("%s: Can't read AppInfo block for %s: %d\n"),
+			"pdb_Download",
 			dbinfo->name, err);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
@@ -687,7 +702,8 @@ pdb_Download(struct PConnection *pconn,
 		if ((retval->sortinfo = (ubyte *) malloc(sortinfo_len))
 		    == NULL)
 		{
-			fprintf(stderr, "** Out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_Download");
 			DlpCloseDB(pconn, dbh);	/* Don't really care if
 						 * this fails */
 			free_pdb(retval);
@@ -703,7 +719,8 @@ pdb_Download(struct PConnection *pconn,
 		retval->sortinfo = NULL;
 		break;
 	    default:
-		fprintf(stderr, "*** Can't read sort block for %s: %d\n",
+		fprintf(stderr, _("%s: Can't read sort block for %s: %d\n"),
+			"pdb_Download",
 			dbinfo->name, err);
 		DlpCloseDB(pconn, dbh);	/* Don't really care if this fails */
 		free_pdb(retval);
@@ -721,7 +738,7 @@ pdb_Download(struct PConnection *pconn,
 			err);
 	if (err < 0)
 	{
-		fprintf(stderr, "Can't download record or resource index\n");
+		fprintf(stderr, _("Can't download record or resource index\n"));
 		DlpCloseDB(pconn, dbh);
 		free_pdb(retval);
 		return NULL;
@@ -757,7 +774,7 @@ pdb_Upload(struct PConnection *pconn,
 	err = DlpOpenConduit(pconn);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "Can't open conduit for \"%s\", err == %d\n",
+		fprintf(stderr, _("Can't open conduit for \"%s\", err == %d\n"),
 			db->name, err);
 		return -1;
 	}
@@ -774,7 +791,7 @@ pdb_Upload(struct PConnection *pconn,
 	err = DlpCreateDB(pconn, &newdb, &dbh);
 	if (err != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "Error creating database \"%s\", err == %d\n",
+		fprintf(stderr, _("Error creating database \"%s\", err == %d\n"),
 			db->name, err);
 		return -1;
 	}
@@ -1169,7 +1186,8 @@ new_Record(const ubyte attributes,
 	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
 	    == NULL)
 	{
-		fprintf(stderr, "new_Record: out of memory\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"new_Record");
 		return NULL;
 	}
 
@@ -1183,7 +1201,8 @@ new_Record(const ubyte attributes,
 	if ((retval->data = (ubyte *) malloc(len)) == NULL)
 	{
 		/* Couldn't allocate data portion of record */
-		fprintf(stderr, "new_Record: can't allocate data\n");
+		fprintf(stderr, _("%s: can't allocate data\n"),
+			"new_Record");
 		free(retval);
 		return NULL;
 	}
@@ -1213,7 +1232,8 @@ struct pdb_record *pdb_CopyRecord(
 	if ((retval = (struct pdb_record *) malloc(sizeof(struct pdb_record)))
 	    == NULL)
 	{
-		fprintf(stderr, "pdb_CopyRecord: out of memory.\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"pdb_CopyRecord");
 		return NULL;
 	}
 
@@ -1227,7 +1247,8 @@ struct pdb_record *pdb_CopyRecord(
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rec->data_len)) == NULL)
 	{
-		fprintf(stderr, "pdb_CopyRecord: can't allocate record data.\n");
+		fprintf(stderr, _("%s: can't allocate record data.\n"),
+			"pdb_CopyRecord");
 		free(retval);
 		return NULL;
 	}
@@ -1255,7 +1276,8 @@ struct pdb_resource *pdb_CopyResource(
 	if ((retval = (struct pdb_resource *)
 	     malloc(sizeof(struct pdb_resource))) == NULL)
 	{
-		fprintf(stderr, "pdb_CopyResource: out of memory.\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"pdb_CopyResource");
 		return NULL;
 	}
 
@@ -1269,8 +1291,8 @@ struct pdb_resource *pdb_CopyResource(
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 	{
-		fprintf(stderr,
-			"pdb_CopyResource: can't allocate resource data.\n");
+		fprintf(stderr, _("%s: can't allocate resource data.\n"),
+			"pdb_CopyResource");
 		free(retval);
 		return NULL;
 	}
@@ -1549,7 +1571,8 @@ pdb_LoadRecIndex(int fd,
 		     malloc(sizeof(struct pdb_record)))
 		    == NULL)
 		{
-			fprintf(stderr, "Out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_LoadRecIndex");
 			return -1;
 		}
 
@@ -1560,7 +1583,9 @@ pdb_LoadRecIndex(int fd,
 		if ((err = read(fd, inbuf, PDB_RECORDIX_LEN)) !=
 		    PDB_RECORDIX_LEN)
 		{
-			fprintf(stderr, "LoadRecIndex: error reading record index entry (%d bytes): %d\n",
+			fprintf(stderr, _("%s: error reading record index "
+					  "entry (%d bytes): %d\n"),
+				"LoadRecIndex",
 				PDB_RECORDIX_LEN,
 				err);
 			perror("read");
@@ -1655,7 +1680,8 @@ pdb_LoadAppBlock(int fd,
 	 */
 	if ((db->appinfo = (ubyte *) malloc(db->appinfo_len)) == NULL)
 	{
-		fprintf(stderr, "Out of memory\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"pdb_LoadAppBlock");
 		return -1;
 	}
 
@@ -1666,8 +1692,9 @@ pdb_LoadAppBlock(int fd,
 	if (offset != db->appinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
-		fprintf(stderr, "Warning: AppInfo block isn't where I thought it would be.\n"
-			"Expected 0x%lx, but we're at 0x%lx\n",
+		fprintf(stderr, _("Warning: AppInfo block isn't where I "
+				  "thought it would be.\n"
+				  "Expected 0x%lx, but we're at 0x%lx\n"),
 			db->appinfo_offset, (long) offset);
 
 		/* Try to recover */
@@ -1677,7 +1704,7 @@ pdb_LoadAppBlock(int fd,
 		if (offset < 0)
 		{
 			/* Something's wrong */
-			fprintf(stderr, "Can't find the AppInfo block!\n");
+			fprintf(stderr, _("Can't find the AppInfo block!\n"));
 			return -1;
 		}
 	}
@@ -1755,7 +1782,8 @@ pdb_LoadSortBlock(int fd,
 	 */
 	if ((db->sortinfo = (ubyte *) malloc(db->sortinfo_len)) == NULL)
 	{
-		fprintf(stderr, "Out of memory\n");
+		fprintf(stderr, _("%s: Out of memory.\n"),
+			"pdb_LoadSortBlock");
 		return -1;
 	}
 
@@ -1766,8 +1794,9 @@ pdb_LoadSortBlock(int fd,
 	if (offset != db->sortinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
-		fprintf(stderr, "Warning: sort block isn't where I thought it would be.\n"
-			"Expected 0x%lx, but we're at 0x%lx\n",
+		fprintf(stderr, _("Warning: sort block isn't where I "
+				  "thought it would be.\n"
+				  "Expected 0x%lx, but we're at 0x%lx\n"),
 			db->sortinfo_offset, (long) offset);
 
 		/* Try to recover */
@@ -1777,7 +1806,7 @@ pdb_LoadSortBlock(int fd,
 		if (offset < 0)
 		{
 			/* Something's wrong */
-			fprintf(stderr, "Can't find the sort block!\n");
+			fprintf(stderr, _("Can't find the sort block!\n"));
 			return -1;
 		}
 	}
@@ -1821,7 +1850,8 @@ pdb_LoadResources(int fd,
 		 */
 		if (rsrc == NULL)
 		{
-			fprintf(stderr, "Hey! I can't find the %dth resource!\n",
+			fprintf(stderr, _("Hey! I can't find the %dth "
+					  "resource!\n"),
 				i);
 			return -1;
 		}
@@ -1839,8 +1869,10 @@ pdb_LoadResources(int fd,
 					/* Find out where we are now */
 		if (offset != rsrc->offset)
 		{
-			fprintf(stderr, "Warning: resource %d isn't where I thought it would be.\n"
-				"Expected 0x%lx, but we're at 0x%lx\n",
+			fprintf(stderr, _("Warning: resource %d isn't where "
+					  "I thought it would be.\n"
+					  "Expected 0x%lx, but we're at "
+					  "0x%lx\n"),
 				i,
 				rsrc->offset, (long) offset);
 			/* Try to recover */
@@ -1851,7 +1883,7 @@ pdb_LoadResources(int fd,
 			if (offset < 0)
 			{
 				/* Something's wrong */
-				fprintf(stderr, "Can't find resource %d\n",
+				fprintf(stderr, _("Can't find resource %d\n"),
 					i);
 				return -1;
 			}
@@ -1888,7 +1920,8 @@ pdb_LoadResources(int fd,
 		/* Allocate space for this resource */
 		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 		{
-			fprintf(stderr, "Out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_LoadResources");
 			return -1;
 		}
 
@@ -1896,13 +1929,13 @@ pdb_LoadResources(int fd,
 		if ((err = read(fd, rsrc->data, rsrc->data_len)) !=
 		    rsrc->data_len)
 		{
-			fprintf(stderr, "Can't read resource %d\n", i);
+			fprintf(stderr, _("Can't read resource %d\n"), i);
 			perror("pdb_LoadResources: read");
 			return -1;
 		}
 		PDB_TRACE(6)
 		{
-			printf("Contents of resource %d:\n", i);
+			printf(_("Contents of resource %d:\n"), i);
 			debug_dump(stdout, "<RSRC", rsrc->data,
 				   rsrc->data_len);
 		}
@@ -1937,7 +1970,8 @@ pdb_LoadRecords(int fd,
 		 */
 		if (rec == NULL)
 		{
-			fprintf(stderr, "Hey! I can't find the %dth record!\n",
+			fprintf(stderr, _("Hey! I can't find the %dth "
+					  "record!\n"),
 				i);
 			return -1;
 		}
@@ -1950,8 +1984,10 @@ pdb_LoadRecords(int fd,
 					/* Find out where we are now */
 		if (offset != rec->offset)
 		{
-			fprintf(stderr, "Warning: record %d isn't where I thought it would be.\n"
-				"Expected 0x%lx, but we're at 0x%lx\n",
+			fprintf(stderr, _("Warning: record %d isn't where I "
+					  "thought it would be.\n"
+					  "Expected 0x%lx, but we're at "
+					  "0x%lx\n"),
 				i,
 				rec->offset, (long) offset);
 			/* Try to recover */
@@ -1961,7 +1997,7 @@ pdb_LoadRecords(int fd,
 			if (offset < 0)
 			{
 				/* Something's wrong */
-				fprintf(stderr, "Can't find record %d\n",
+				fprintf(stderr, _("Can't find record %d\n"),
 					i);
 				return -1;
 			}
@@ -1998,7 +2034,8 @@ pdb_LoadRecords(int fd,
 		/* Allocate space for this record */
 		if ((rec->data = (ubyte *) malloc(rec->data_len)) == NULL)
 		{
-			fprintf(stderr, "Out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_LoadRecords");
 			return -1;
 		}
 
@@ -2006,7 +2043,7 @@ pdb_LoadRecords(int fd,
 		if ((err = read(fd, rec->data, rec->data_len)) !=
 		    rec->data_len)
 		{
-			fprintf(stderr, "Can't read record %d\n", i);
+			fprintf(stderr, _("Can't read record %d\n"), i);
 			perror("pdb_LoadRecords: read");
 			return -1;
 		}
@@ -2071,7 +2108,8 @@ pdb_DownloadResources(struct PConnection *pconn,
 		     malloc(sizeof(struct pdb_resource)))
 		    == NULL)
 		{
-			fprintf(stderr, "pdb_DownloadResources: out of memory\n");
+			fprintf(stderr, _("%s: out of memory.\n"),
+				"pdb_DownloadResources");
 			return -1;
 		}
 
@@ -2083,7 +2121,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 
 		if (err != DLPSTAT_NOERR)
 		{
-			fprintf(stderr, "Can't read resource %d: %d\n",
+			fprintf(stderr, _("Can't read resource %d: %d\n"),
 				i, err);
 			return -1;
 		}
@@ -2113,7 +2151,8 @@ pdb_DownloadResources(struct PConnection *pconn,
 		/* Allocate space in 'rsrc' for the resource data itself */
 		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
 		{
-			fprintf(stderr, "pdb_DownloadResources: out of memory.\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_DownloadResources");
 			return -1;
 		}
 
@@ -2173,7 +2212,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	if ((recids = (udword *) calloc(totalrecs, sizeof(udword)))
 	    == NULL)
 	{
-		fprintf(stderr, "Can't allocate list of record IDs\n");
+		fprintf(stderr, _("Can't allocate list of record IDs\n"));
 		return -1;
 	}
 
@@ -2183,7 +2222,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 				       &numrecs, recids))
 	    != DLPSTAT_NOERR)
 	{
-		fprintf(stderr, "Can't read record ID list\n");
+		fprintf(stderr, _("Can't read record ID list\n"));
 		free(recids);
 		return -1;
 	}
@@ -2191,7 +2230,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	/* Sanity check */
 	if (numrecs != totalrecs)
 	{
-		fprintf(stderr, "### Whoa! numrecs is %d, but ReadRecordIDList says %d!\n",
+		fprintf(stderr, _("### Whoa! numrecs is %d, but "
+				  "ReadRecordIDList says %d!\n"),
 			totalrecs, numrecs);
 		/* XXX - What to do in this case? For now, just punt. */
 		free(recids);
@@ -2213,7 +2253,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		     malloc(sizeof(struct pdb_record)))
 		    == NULL)
 		{
-			fprintf(stderr, "pdb_DownloadRecords: out of memory\n");
+			fprintf(stderr, _("%s: Out of memory.\n"),
+				"pdb_DownloadRecords");
 			free(recids);
 			return -1;
 		}
@@ -2226,7 +2267,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 					&rptr);
 		if (err != DLPSTAT_NOERR)
 		{
-			fprintf(stderr, "Can't read record %d: %d\n",
+			fprintf(stderr, _("Can't read record %d: %d\n"),
 				i, err);
 			free(recids);
 			return -1;
@@ -2264,7 +2305,8 @@ pdb_DownloadRecords(struct PConnection *pconn,
 			if ((rec->data = (ubyte *) malloc(rec->data_len))
 			    == NULL)
 			{
-				fprintf(stderr, "pdb_DownloadRecords: out of memory.\n");
+				fprintf(stderr, _("%s: Out of memory.\n"),
+					"pdb_DownloadRecords");
 				free(recids);
 				return -1;
 			}
