@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.38 2000-01-19 06:09:12 arensb Exp $
+dnl # $Id: configure.in,v 1.39 2000-01-22 05:02:54 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -25,6 +25,13 @@ EXIT_STATUS=0
 PACKAGE="coldsync"
 VERSION="0.5.6"
 
+dnl # XXX - The three-argument version of AC_DEFINE_UNQUOTED was
+dnl # introduced in 2.13, and doesn't work in earlier version (the
+dnl # PACKAGE and VERSION macros are defined to be 1 in "config.h").
+dnl # Check for this. The check ought to be in m4, so that it'll only
+dnl # show up for people who run 'automake', and not people who just
+dnl # run the configure file from the distribution.
+dnl # The version of automake is in AC_ACVERSION.
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
 if test x"$EDITION" = x ; then
@@ -159,6 +166,14 @@ AC_CHECK_PROG(DVIPS, dvips, dvips, true)
 if test -z "$ac_cv_prog_DVIPS" -o x"$ac_cv_prog_DVIPS" = x"true"; then
 	AC_MSG_WARN([
 	The dvips program could not be found. This isn't critical,
+	but it means that you won't be able to create releases with
+	\"make dist\".])
+fi
+
+AC_CHECK_PROGS(TEXI2HTML, texi2html, true)
+if test -z "$ac_cv_prog_TEXI2HTML" -o x"$ac_cv_prog_TEXI2HTML" = x"true"; then
+	AC_MSG_WARN([
+	The texi2html program could not be found. This isn't critical,
 	but it means that you won't be able to create releases with
 	\"make dist\".])
 fi
