@@ -9,6 +9,17 @@
 				 * ever is.
 				 */
 
+/* Debugging variables */
+extern int slp_trace;		/* Debugging level for Serial Link Protocol */
+extern int cmp_trace;		/* Debugging level for Connection
+				 * Management Protocol */
+extern int padp_trace;		/* Debugging level for Packet
+				 * Assembly/Disassembly Protocol. */
+extern int dlp_trace;		/* Debugging level for Desktop Link
+				 * Protocol */
+extern int dlpc_trace;		/* Debugging level for Desktop Link
+				 * Protocol commands */
+
 #include <pconn/dlp_cmd.h>
 
 /* XXX - Instead of including a bunch of files here, should just put
