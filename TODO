@@ -1,3 +1,12 @@
+- Bug: interaction with HotSync:
+	HotSync gets cranky if you give it a Palm with a user ID
+  assigned by ColdSync. The Right Thing appears to be:
+	During sync, read user info from the Palm. If it doesn't match
+  what ColdSync expects (the username/userid given in .coldsyncrc, or
+  getpwuid(getuid()) if unspecified), complain and refuse to sync. At
+  the end of the sync, does _not_ set the user name or ID.
+	To set the username/userid, run ColdSync in Init mode.
+- Add default flag to listen blocks.
 - "-r <dir> -dsync:1" should print each database as it is uploaded.
   Ditto for "-d <dir> -dsync:1".
 - Ideally, you should be able to use Pilot VT100 and HotSync on the
