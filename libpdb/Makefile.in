@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.2 1999-11-02 03:40:23 arensb Exp $
+# $Id: Makefile.in,v 1.3 1999-11-12 09:48:51 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -23,6 +23,8 @@ INSTALLARGS =	-m 555
 
 MKDEP =		@MKDEP@
 
+LIBNAME =	pdb
+
 # Compatibility functions, included for systems that don't have them.
 # XXX - Bleah. This probably needs to be broken up into individual
 # files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
@@ -34,11 +36,13 @@ SRCS =		pdb.c
 
 OBJS =		pdb.o
 
+LINTOBJS =	pdb.ln
+
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
 		Makefile.in
 
-CLEAN =		libpdb.a *.o *.bak *~ core *.core
+CLEAN =		lib${LIBNAME}.a *.o *.ln *.bak *~ core *.core
 DISTCLEAN =	Makefile .depend
 SPOTLESS =
 
@@ -55,8 +59,10 @@ CXXFLAGS =	${CFLAGS}
 LIBS =		@LIBS@
 LDFLAGS =	@LDFLAGS@ ${LIBS}
 RANLIB =	@RANLIB@
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
 
-.SUFFIXES:	.c .o .cc
+.SUFFIXES:	.c .o .cc .ln
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
@@ -64,21 +70,21 @@ RANLIB =	@RANLIB@
 .cc.o:
 	${CXX} ${CXXFLAGS} -c $<
 
-# XXX - "libpdb.a" should probably be a 'make' symbol, in case we
-# decide to build shared libraries. Don't forget to change it
-# throughout.
-all:	libpdb.a
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
 
-libpdb.a:	${OBJS}
+all:	lib${LIBNAME}.a
+
+lib${LIBNAME}.a:	${OBJS}
 	ar cq $@ ${OBJS}
 	${RANLIB} $@
 
-install:	libpdb.a
+install:	lib${LIBNAME}.a
 	if test ! -d ${LIBDIR}; then \
 		mkdir ${LIBDIR}; \
 		chmod 755 ${LIBDIR}; \
 	fi
-	${INSTALL} ${INSTALLARGS} libpdb.a ${LIBDIR}
+	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
 
 depend:
 	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
@@ -95,3 +101,7 @@ distclean:
 	-rm -f ${CLEAN} ${DISTCLEAN}
 spotless:
 	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+lint:	${LINTOBJS}
+lint:	${LINTOBJS}
+	${LINT} ${LINTARGS} -u -C${LIBNAME} ${LINTOBJS}
