@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.4 2000-12-11 09:08:05 arensb Exp $
+ * $Id: cmp.c,v 1.5 2000-12-13 16:28:53 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -42,6 +42,12 @@ cmp_read(struct PConnection *pconn,
 	 */
 	if (err < 0)
 		return err;	/* Error */
+
+	CMP_TRACE(7)
+	{
+		fprintf(stderr, "CMP: Received a packet:\n");
+		debug_dump(stderr, "CMP <<<", inbuf, inlen);
+	}
 
 	/* Parse the packet */
 	rptr = inbuf;
@@ -96,6 +102,12 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
 	put_udword(&wptr, packet->rate);
 
 	/* Send the packet as a PADP packet */
+	CMP_TRACE(7)
+	{
+		fprintf(stderr, "CMP: Sending a packet:\n");
+		debug_dump(stderr, "CMP >>>", outbuf, CMP_PACKET_LEN);
+	}
+
 	err = padp_write(pconn, outbuf, CMP_PACKET_LEN);
 	/* XXX - Error-handling */
 
@@ -136,7 +148,6 @@ cmp_accept(struct PConnection *pconn, udword bps)
 		fprintf(stderr, "===== Got a wakeup packet\n");
 
 	/* Compose a reply */
-	/* XXX - This ought to be in a separate function in cmp.c */
 	cmpp.type = CMP_TYPE_INIT;
 	cmpp.ver_major = CMP_VER_MAJOR;
 	cmpp.ver_minor = CMP_VER_MINOR;
@@ -154,6 +165,9 @@ cmp_accept(struct PConnection *pconn, udword bps)
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Finished sending INIT packet\n");
 
+	CMP_TRACE(4)
+		fprintf(stderr, "Initialized CMP, returning speed %ld\n",
+			cmpp.rate);
 	return cmpp.rate;
 }
 

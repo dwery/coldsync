@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.c,v 2.6 2000-12-09 09:29:44 arensb Exp $
+ * $Id: palm.c,v 2.7 2000-12-13 16:32:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -357,6 +357,8 @@ fetch_serial(struct Palm *palm)
 	/* The Palm's ROM is v3.0 or later, so it has a serial number. */
 
 	/* Get the location of the ROM serial number */
+	SYNC_TRACE(7)
+		fprintf(stderr, "Getting location of serial number in ROM.\n");
 	/* XXX - Move this into its own function? */
 	err = RDLP_ROMToken(palm->pconn_, CARD0, ROMToken_Snum,
 			    &snum_ptr, &snum_len);
@@ -366,6 +368,9 @@ fetch_serial(struct Palm *palm)
 				  "serial number\n"));
 		return -1;
 	}
+	SYNC_TRACE(7)
+		fprintf(stderr, "Serial number is at 0x%08lx, length %d\n",
+			snum_ptr, snum_len);
 
 	/* Sanity check: make sure we have space for the serial number. */
 	if (snum_len > SNUM_MAX-1)
@@ -378,6 +383,8 @@ fetch_serial(struct Palm *palm)
 	}
 
 	/* Read the serial number out of the location found above */
+	SYNC_TRACE(7)
+		fprintf(stderr, "Reading serial number.\n");
 	err = RDLP_MemMove(palm->pconn_, (ubyte *) palm->serial_,
 			   snum_ptr, snum_len);
 	if (err < 0)
@@ -385,6 +392,9 @@ fetch_serial(struct Palm *palm)
 		fprintf(stderr, _("Error: Can't read serial number\n"));
 		return -1;
 	}
+	SYNC_TRACE(7)
+		fprintf(stderr, "Serial number is \"%*s\"\n",
+			snum_len, palm->serial_);
 	palm->serial_[snum_len] = '\0';
 	palm->serial_len_ = snum_len;
 
