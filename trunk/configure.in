@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.99 2000-12-10 01:14:02 arensb Exp $
+dnl # $Id: configure.in,v 1.100 2000-12-10 21:22:09 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -12,6 +12,12 @@ dnl #	tar cf ${TARBALL} ${DISTDIR}
 dnl #	${COMPRESS} ${TARBALL}
 dnl # So also check for 'gzip'; if it doesn't exist, fall back on
 dnl # 'compress'
+
+dnl # XXX - Check for memset() and bzero(). Might need to define one
+dnl # in terms of the other.
+
+dnl # XXX - Might want to check for socket(), <netinet/in.h> etc., and
+dnl # turn off NetSync if they don't exist.
 
 AC_INIT(src/coldsync.c)
 
