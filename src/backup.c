@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.38 2002-08-31 19:26:03 azummo Exp $
+ * $Id: backup.c,v 2.39 2002-09-08 12:14:04 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -281,18 +281,6 @@ download_resources(PConnection *pconn,
 						 */
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
 
-
-		/* Allocate the new resource */
-		if ((rsrc = (struct pdb_resource *)
-		     malloc(sizeof(struct pdb_resource)))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"download_resources");
-			/* XXX - Set cs_errno? */
-			return -1;
-		}
-
 		/* Download the 'i'th resource from the Palm */
 		err = DlpReadResourceByIndex(pconn, dbh, i, 0,
 					     DLPC_RESOURCE_TOEND,
@@ -305,7 +293,6 @@ download_resources(PConnection *pconn,
 			Error(_("Can't read resource %d."),
 				i);
 			print_latest_dlp_error(pconn);
-			free(rsrc);
 			return -1;
 		}
 
@@ -322,33 +309,21 @@ download_resources(PConnection *pconn,
 			fprintf(stderr, "\tsize: %d\n", resinfo.size);
 		}
 
-		/* Fill in the resource index data */
-		/* XXX - Probably ought to use new_Resource() */
-		rsrc->type = resinfo.type;
-		rsrc->id = resinfo.id;
-		rsrc->offset = 0L;	/* For now */
-
-		/* Fill in the data size entry */
-		rsrc->data_len = resinfo.size;
-
-		/* Allocate space in 'rsrc' for the resource data itself */
-		if ((rsrc->data = (ubyte *) malloc(rsrc->data_len)) == NULL)
+		if ((rsrc = new_Resource(resinfo.type, resinfo.id,
+					resinfo.size, rptr)) != NULL)
 		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"download_resources");
-			free(rsrc);
-			/* XXX - Set cs_errno */
+			SYNC_TRACE(6)
+				debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
+
+			/* Append the resource to the database */
+			pdb_AppendResource(db, rsrc);	/* XXX - Error-checking */
+			db->numrecs = totalrsrcs;	/* Kludge */
+		}
+		else
+		{
+			/* XXX - Print something */
 			return -1;
 		}
-
-		/* Copy the resource data to 'rsrc' */
-		memcpy(rsrc->data, rptr, rsrc->data_len);
-		SYNC_TRACE(6)
-			debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
-
-		/* Append the resource to the database */
-		pdb_AppendResource(db, rsrc);	/* XXX - Error-checking */
-		db->numrecs = totalrsrcs;	/* Kludge */
 	}
 
 	return 0;	/* Success */
@@ -370,7 +345,7 @@ download_records(PConnection *pconn,
 	totalrecs = db->numrecs;	/* Get the number of records in the
 					 * database. It is necessary to
 					 * remember this here because
-					 * pdb_AppendResource() increments
+					 * pdb_AppendRecord() increments
 					 * db->numrecs in the name of
 					 * convenience.
 					 */
@@ -452,17 +427,6 @@ download_records(PConnection *pconn,
 						 */
 		const ubyte *rptr;	/* Pointer into buffers, for reading */
 
-		/* Allocate the new record */
-		if ((rec = (struct pdb_record *)
-		     malloc(sizeof(struct pdb_record)))
-		    == NULL)
-		{
-			fprintf(stderr, _("%s: Out of memory.\n"),
-				"download_records");
-			free(recids);
-			return -1;
-		}
-
 		/* Download the 'i'th record from the Palm */
 		err = DlpReadRecordByID(pconn, dbh,
 					recids[i],
@@ -490,45 +454,28 @@ download_records(PConnection *pconn,
 			fprintf(stderr, "\tcategory: %d\n", recinfo.category); 
 		}
 
-		/* Fill in the record index data */
-		rec->offset = 0L;	/* For now */
-					/* XXX - Should this be filled in? */
-		rec->flags = recinfo.attributes;
-		rec->category = recinfo.category;
-		rec->id = recinfo.id;
-
-		/* Fill in the data size entry */
-		rec->data_len = recinfo.size;
-
-		if (rec->data_len == 0)
+		if ((rec = new_Record(recinfo.attributes, recinfo.category,
+					recinfo.id, recinfo.size, rptr)) != NULL)
 		{
-			rec->data = NULL;
-			SYNC_TRACE(6)
-				fprintf(stderr, "REC: No record data\n");
-		} else {
-			/* Allocate space in 'rec' for the record data
-			 * itself
-			 */
-			if ((rec->data = (ubyte *) malloc(rec->data_len))
-			    == NULL)
+			SYNC_TRACE(7)
 			{
-				fprintf(stderr, _("%s: Out of memory.\n"),
-					"download_records");
-				free(recids);
-				/* XXX - Set cs_errno? */
-				return -1;
+				if (rec->data_len == 0)
+					fprintf(stderr, "REC: No record data\n");
+				else
+					debug_dump(stderr, "REC", rec->data,
+						   rec->data_len);
 			}
 
-			/* Copy the record data to 'rec' */
-			memcpy(rec->data, rptr, rec->data_len);
-			SYNC_TRACE(6)
-				debug_dump(stderr, "REC", rec->data,
-					   rec->data_len);
+			/* Append the record to the database */
+			pdb_AppendRecord(db, rec);	/* XXX - Error-checking */
+			db->numrecs = totalrecs;	/* Kludge */
 		}
-
-		/* Append the record to the database */
-		pdb_AppendRecord(db, rec);	/* XXX - Error-checking */
-		db->numrecs = totalrecs;	/* Kludge */
+		else
+		{
+			/* XXX - Print something */
+			free(recids);
+			return -1;
+		}
 	}
 
 	free(recids);
