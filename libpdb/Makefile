@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000-02-03 02:53:24 arensb Exp $
+# $Id: Makefile,v 1.4 2000-02-05 06:08:32 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -6,7 +6,7 @@ SUBDIR =	libpdb
 LIBNAME =	pdb
 
 LIBSRCS =	pdb.c
-LIBOBJS =	pdb.o
+LIBOBJS =	${LIBSRCS:.c=.o}
 
 CLEAN =		${LIBOBJS} ${LIBRARY} \
 		*.ln *.bak *~ core *.core .depend

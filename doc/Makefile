@@ -1,22 +1,22 @@
-# $Id: Makefile,v 1.5 2000-02-03 02:50:04 arensb Exp $
+# $Id: Makefile,v 1.6 2000-02-05 06:08:31 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
 
-INFOFILES =	conduits.info \
-		pdb.info
+# XXX - This ought to include 'libpalm.texi', or whatever it mutates
+# into, at some point.
+TEXIFILES =	conduits.texi \
+		pdb.texi
 
-DVIFILES =	conduits.dvi \
-		pdb.dvi
-
-PSFILES =	conduits.ps \
-		pdb.ps
+INFOFILES =	${TEXIFILES:.texi=.info}
+DVIFILES =	${TEXIFILES:.texi=.dvi}
+PSFILES =	${TEXIFILES:.texi=.ps}
+PDFFILES =	${TEXIFILES:.texi=.pdf}
 
 DISTFILES =	Makefile \
 		coldsync.8 \
-		conduits.texi \
+		${TEXIFILES} \
 		libpalm.texi \
-		pdb.texi \
 		texinfo.tex \
 		version.texi.in
 
