@@ -157,3 +157,26 @@
 - Lock files while syncing.
 - Separate the distribution into 'coldsync' and 'coldsync-doc', since
   the documentation is almost three times as large as everything else.
+- Split up the doc directory into directories, one per document.
+- Man page for coldsync.
+- Write a license.
+- The daemon ought to have some way to communicate with actual users,
+  so that they can be notified when a sync starts, be asked questions,
+  and other fun stuff. OTOH, since this is Unix, it ought to be able
+  to run unattended.
+	Possibly the best way to do this is to have the daemon listen
+  on a "control" port. Clients can connect to this port and be
+  notified, or control the daemon.
+	Maybe a Unix domain socket is the obvious way to do it, since
+  then there's no question about which machine the connection comes
+  from. If it's a TCP or UDP socket, however, you can monitor syncs
+  going on on another machine (useful for nosy administrators?). Here
+  again, TCP is probably more secure, but UDP is less likely to cause
+  a problem if something dies.
+- When a new database is installed, it might contain dirty records. At
+  the very least, it needs to make its way to the backup directory. Of
+  course, it's silly to upload the database, then download it again
+  just for the sake of syncing it. Fix the conduit API (not just
+  GenericConduit) to make sense in this situation.
+	Presumably this is the equivalent of a slow sync, but don't
+  bother downloading the database from the Palm.
