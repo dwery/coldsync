@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.h,v 1.1.2.3 2000-09-03 02:12:55 arensb Exp $
+ * $Id: pref.h,v 1.1.2.4 2000-09-03 02:22:55 arensb Exp $
  */
 #ifndef _pref_h_
 #define _pref_h_
@@ -16,11 +16,6 @@
 
 #include "config.h"
 #include <coldsync.h>
-
-/* XXX - This shouldn't be everywhere. Move it to pref.c where it's
- * actually used. Consider making it an inline function.
- */
-#define prefdesccmp(x,y)	(((x).creator == (y).creator && (x).id == (y).id) ? 0 : 1)
 
 /* struct pref_item
  * Typically used for the cache. This contains an entire preference.
@@ -57,13 +52,13 @@ extern int DownloadPrefItem(struct PConnection *pconn,
 /* XXX - 'description' in the next few functions, is a struct that's passed
  * by value. Yuck! See if 'const struct pref_desc *description' will work.
  */
-extern const struct pref_item *FindPrefItem(
-	const struct pref_desc description,
-	const struct pref_item *list);
-extern const struct pref_item *GetPrefItem(
-	const struct pref_desc description);
+extern struct pref_item *FindPrefItem(
+	const struct pref_desc *description,
+	struct pref_item *list);
+extern struct pref_item *GetPrefItem(
+	struct pref_desc *description);
 extern void FreePrefItem(struct pref_item *prefitem);
-extern void FreePrefList(const struct pref_item *list);
+extern void FreePrefList(struct pref_item *list);
 
 #endif	/* _pref_h_ */
 
