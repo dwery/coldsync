@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.107 2001-10-18 01:36:07 arensb Exp $
+ * $Id: coldsync.c,v 1.108 2001-10-18 02:48:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -105,10 +105,6 @@ main(int argc, char *argv[])
 	global_opts.protocol		= PCONN_STACK_DEFAULT;
 	global_opts.use_syslog		= False;
 	global_opts.log_fname		= NULL;
-	global_opts.do_backup		= False;
-	global_opts.backupdir		= NULL;
-	global_opts.do_restore		= False;
-	global_opts.restoredir		= NULL;
 	global_opts.force_install	= False;
 	global_opts.install_first	= True;
 	global_opts.verbosity		= 0;
@@ -289,16 +285,6 @@ main(int argc, char *argv[])
 			(int) global_opts.devtype);
 		fprintf(stderr, "\tprotocol: %d\n",
 			(int) global_opts.protocol);
-		fprintf(stderr, "\tdo_backup: %s\n",
-			global_opts.do_backup ? "True" : "False");
-		fprintf(stderr, "\tbackupdir: \"%s\"\n",
-			global_opts.backupdir == NULL ?
-			"(null)" : global_opts.backupdir);
-		fprintf(stderr, "\tdo_restore: %s\n",
-			global_opts.do_restore ? "True" : "False");
-		fprintf(stderr, "\trestoredir: \"%s\"\n",
-			global_opts.restoredir == NULL ?
-				"(null)" : global_opts.restoredir);
 		fprintf(stderr, "\tforce_slow: %s\n",
 			global_opts.force_slow ? "True" : "False");
 		fprintf(stderr, "\tforce_fast: %s\n",
@@ -1296,24 +1282,15 @@ run_mode_Backup(int argc, char *argv[])
 	 *	dir		- Dump everything to <dir>
 	 *	dir file...	- Dump <file...> to <dir>
 	 */
-	if (global_opts.do_backup)
+	if (argc == 0)
 	{
-		/* Compatibility mode: the user specified "-b <dir>" rather
-		 * than the newer "-mb ... <stuff>". Back everything up to
-		 * the specified backup directory.
-		 */
-		backupdir = global_opts.backupdir; 
-	} else {
-		if (argc == 0)
-		{
-			Error(_("No backup directory specified."));
-			return -1;
-		}
-
-		backupdir = argv[0];
-		argc--;
-		argv++;
+		Error(_("No backup directory specified."));
+		return -1;
 	}
+
+	backupdir = argv[0];
+	argc--;
+	argv++;
 
 	SYNC_TRACE(2)
 		fprintf(stderr, "Backup directory: \"%s\"\n", backupdir);
@@ -1526,81 +1503,54 @@ run_mode_Restore(int argc, char *argv[])
 	 * file. If it's a directory, upload all databases in that
 	 * directory.
 	 */
-	if (global_opts.do_restore)
+	for (i = 0; i < argc; i++)
 	{
-		/* Compatibility mode: the user has specified "-r <dir>".
-		 * Restore everything in <dir>.
-		 */
-		err = restore_dir(pconn, palm, global_opts.backupdir);
-		if (err < 0)
+		if (is_directory(argv[i]))
 		{
-			switch (cs_errno)
+			/* Restore all databases in argv[i] */
+			err = restore_dir(pconn, palm, argv[i]);
+			if (err < 0)
 			{
-			    case CSE_CANCEL:
-				Error(_("Cancelled by Palm."));
-				goto done;
-			    case CSE_NOCONN:
-				Error(_("Lost connection to Palm."));
+				switch (cs_errno)
+				{
+				    case CSE_CANCEL:
+					Error(_("Cancelled by Palm."));
+					goto done;
+				    case CSE_NOCONN:
+					Error(_("Lost connection to "
+						"Palm."));
+					return -1;
+				    default:
+					Error(_("Can't restore "
+						"directory."));
+					break;
+				}
+				Disconnect(pconn,
+					   DLPCMD_SYNCEND_CANCEL);
 				return -1;
-			    default:
-				Error(_("Can't restore directory."));
-				break;
 			}
-			Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-			return -1;
-		}
-	} else {
-		for (i = 0; i < argc; i++)
-		{
-			if (is_directory(argv[i]))
+		} else {
+			/* Restore the file argv[i] */
+			err = restore_file(pconn, palm, argv[i]);
+			if (err < 0)
 			{
-				/* Restore all databases in argv[i] */
-
-				err = restore_dir(pconn, palm, argv[i]);
-				if (err < 0)
+				switch (cs_errno)
 				{
-					switch (cs_errno)
-					{
-					    case CSE_CANCEL:
-						Error(_("Cancelled by Palm."));
-						goto done;
-					    case CSE_NOCONN:
-						Error(_("Lost connection to "
-							"Palm."));
-						return -1;
-					    default:
-						Error(_("Can't restore "
-							"directory."));
-						break;
-					}
-					Disconnect(pconn,
-						   DLPCMD_SYNCEND_CANCEL);
+				    case CSE_CANCEL:
+					Error(_("Cancelled by Palm."));
+					goto done;
+				    case CSE_NOCONN:
+					Error(_("Lost connection to "
+						"Palm."));
 					return -1;
+				    default:
+					Error(_("Can't restore "
+						"directory."));
+					break;
 				}
-			} else {
-				/* Restore the file argv[i] */
-
-				err = restore_file(pconn, palm, argv[i]);
-				if (err < 0)
-				{
-					switch (cs_errno)
-					{
-					    case CSE_CANCEL:
-						Error(_("Cancelled by Palm."));
-						goto done;
-					    case CSE_NOCONN:
-						Error(_("Lost connection to "
-							"Palm."));
-						return -1;
-					    default:
-						Error(_("Can't restore "
-							"directory."));
-						break;
-					}
-					Disconnect(pconn,
-						   DLPCMD_SYNCEND_CANCEL);
-					return -1;
-				}
+				Disconnect(pconn,
+					   DLPCMD_SYNCEND_CANCEL);
+				return -1;
 			}
 		}
 	}
