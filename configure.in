@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.85 2000-09-03 07:39:24 arensb Exp $
+dnl # $Id: configure.in,v 1.86 2000-09-04 05:22:40 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -23,7 +23,7 @@ test "x$prefix" = xNONE && prefix=${ac_default_prefix}
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="1.4.1"
+VERSION="1.4.2"
 
 dnl # Autoconf 2.13 or higher required for the three-argument version
 dnl # of AC_DEFINE_UNQUOTED
@@ -342,11 +342,13 @@ AC_TRY_COMPILE(
 
 	AC_MSG_RESULT(no))
 
+AC_MSG_CHECKING([for socks behind the sofa])
+AC_MSG_RESULT([no])
+
 # Optional USB support
 # (Only works under FreeBSD 4.x, for now)
 AC_ARG_WITH(usb,dnl
-[  --with-usb              Enable USB support for Visor (experimental,
-                             FreeBSD 4.x only).],
+[  --with-usb              Enable USB support for Visor (FreeBSD 4.x only).],
 	# XXX - Should check to see whether /sys/dev/usb/usb.h exists,
 	# whether it contains 'struct usb_device_info', whether that
 	# struct contains a "release" field, and whether the cpp
@@ -389,7 +391,18 @@ fi
 # XXX - If this machine doesn't have socketpair(), would it be worth
 # checking to see if it has bidirectional pipe()s? See Stevens for a
 # test program.
-if test -z "$ac_cv_func_socketpair" -o x"$ac_cv_func_socketpair" = x"no"; then
+
+HAVE_SOCKETPAIR="$ac_cv_func_socketpair"
+if test x"$HAVE_SOCKETPAIR" != x"yes"; then
+	# If socketpair() wasn't found (in libc), look for it in
+	# libsocket; that's where Solaris puts it.
+	AC_CHECK_LIB(socket, socketpair,
+		LIBS="$LIBS -lsocket"
+		HAVE_SOCKETPAIR=yes)
+fi
+
+if test x"$HAVE_SOCKETPAIR" != x"yes"; then
+	# socketpair() wasn't found anywhere
 	AC_MSG_WARN([
 	The socketpair() function could not be found. This package
 	may not compile properly])
