@@ -3,7 +3,7 @@
  * Functions for synching a database on the Palm with one one the
  * desktop.
  *
- * $Id: sync.c,v 1.7 1999-03-28 09:55:23 arensb Exp $
+ * $Id: sync.c,v 1.8 1999-06-01 04:14:16 arensb Exp $
  */
 
 #include <stdio.h>
@@ -362,9 +362,8 @@ fprintf(stderr, "Adding record 0x%08lx to local database\n", remoterec->id);
 				 * pdb_record includes separate fields for
 				 * attributes and category.
 				 */
-				/* XXX - Actually, doesn't the "archived"
-				 * flag overlap the high bit of the
-				 * category?
+				/* XXX - Actually, the "archived" flag
+				 * overlaps the high bit of the category
 				 */
 			/* First, make a copy */
 			newrec = pdb_CopyRecord(remotedb, remoterec);
@@ -640,7 +639,6 @@ fprintf(stderr, "### Cleaning up database\n");
 	{
 		fprintf(stderr, "Can't clean up database: err = %d\n", err);
 		DlpCloseDB(pconn, dbh);
-/*  		free_pdb(remotedb); */
 		return -1;
 	}
 fprintf(stderr, "### Resetting sync flags 3\n");
@@ -649,7 +647,6 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 	{
 		fprintf(stderr, "Can't reset sync flags.\n");
 		DlpCloseDB(pconn, dbh);
-/*  		free_pdb(remotedb); */
 		return -1;
 	}
 #if 0
@@ -657,14 +654,12 @@ fprintf(stderr, "### Resetting sync flags 3\n");
 #endif	/* 0 */
 
 	/* Clean up */
-/*  	free_pdb(remotedb); */
 	DlpCloseDB(pconn, dbh);
 
 	return 0;		/* Success */
 }
 
 /* pdb_SyncRecord
-
  * Sync a record.
  */
 static int
@@ -850,7 +845,9 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			 */
 			SYNC_TRACE(5, "Local:  deleted, archived\n");
 
-			/* XXX - Fix flags */
+			/* Fix flags */
+			localrec->attributes &= 0x0f;
+
 			/* Archive localrec */
 			SYNC_TRACE(6, "> Archiving local record\n");
 			_archive_record(localrec);
@@ -878,7 +875,17 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 
 			/* Delete remoterec */
 			SYNC_TRACE(6, "> Deleting remote record\n");
-			/* XXX - DlpDeleteRecord(remoterec->id) */
+			err = DlpDeleteRecord(pconn, dbh, 0,
+					      remoterec->id);
+			if (err != DLPSTAT_NOERR)
+			{
+				fprintf(stderr, "SlowSync: Warning: can't delete record 0x%08lx: %d\n",
+					remoterec->id, err);
+				/* XXX - For now, just ignore this,
+				 * since it's probably not a show
+				 * stopper.
+				 */
+			}
 
 			/* Fix flags */
 			localrec->attributes &= 0x0f;
@@ -1015,13 +1022,95 @@ SyncRecord(struct PConnection *pconn,	/* Connection to Palm */
 			/* Local record has changed */
 			SYNC_TRACE(5, "Local:  dirty\n");
 
-			/* XXX - If the records are identical, do nothing
-			 * (unset dirty flags). Otherwise, copy remoterec
-			 * to localdb and copy localrec to remotedb.
-			 */
+			/* See if the records are identical */
+			if ((localrec->data_len == remoterec->data_len) &&
+			    (localrec->data != NULL) &&
+			    (remoterec->data != NULL) &&
+			    (memcmp(localrec->data, remoterec->data,
+				    localrec->data_len) == 0))
+			{
+				/* The records are identical.
+				 * Reset localrec's flags to clean, but
+				 * otherwise do nothing.
+				 */
+				localrec->attributes &= 0x0f;
+					/* XXX - This will just be 0 once
+					 * pdb_record includes separate
+					 * fields for attributes and
+					 * category.
+					 */
+			} else {
+				/* The records have both been modified, but
+				 * in different ways.
+				 */
+				udword newID;	/* ID of uploaded record */
+				struct pdb_record *newrec;
 
-			/* XXX - Fix flags */
-			SYNC_TRACE(6, "> I should do something here\n");
+				/* Fix flags on localrec */
+				localrec->attributes &= 0x0f;
+					/* XXX - This will just be 0 once
+					 * pdb_record includes separate
+					 * fields for attributes and
+					 * category.
+					 */
+
+				/* Upload localrec to Palm */
+				SYNC_TRACE(6, "> Uploading local record to Palm\n");
+				err = DlpWriteRecord(pconn, dbh, 0x80,
+						     localrec->id,
+						     /* XXX - The bottom
+						      * nybble of the
+						      * attributes byte is
+						      * the category. Fix
+						      * this throughout.
+						      */
+						     localrec->attributes & 0xf0,
+						     localrec->attributes & 0xf0,
+						     localrec->data_len,
+						     localrec->data,
+						     &newID);
+				if (err != DLPSTAT_NOERR)
+				{
+					fprintf(stderr,
+						"Error uploading record 0x%08lx: %d\n",
+						localrec->id,
+						err);
+					return -1;
+				}
+
+				/* The record was assigned a (possibly new)
+				 * unique ID when it was uploaded. Make
+				 * sure the local database reflects this.
+				 */
+				localrec->id = newID;
+				SYNC_TRACE(7, "newID == 0x%08lx\n", newID);
+
+				/* Add remoterec to local database */
+				SYNC_TRACE(7, "Adding remote record to local database.\n");
+				/* First, make a copy (with clean flags) */
+				newrec = new_Record(
+					remoterec->attributes & 0x0f,
+					remoterec->id,
+					remoterec->data_len,
+					remoterec->data);
+				if (newrec == NULL)
+				{
+					fprintf(stderr, "Can't copy a new record.\n");
+					return -1;
+				}
+
+				/* Now add the copy to the local database */
+				pdb_InsertRecord(localdb, localrec, newrec);
+				if (err < 0)
+				{
+					fprintf(stderr, "SlowSync: Can't insert record 0x%08lx\n",
+						newrec->id);
+					pdb_FreeRecord(newrec);
+					return -1;
+				}
+
+			}
+
 		} else {
 			/* Local record has not changed */
 			struct pdb_record *newrec;
