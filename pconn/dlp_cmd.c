@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.10 1999-06-04 00:54:11 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.11 1999-06-06 18:32:05 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -302,6 +302,7 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 				   sysinfo->prodIDsize,
 				   sysinfo->prodID);
 			break;
+		    /* XXX - Palm III returns 0x21 here */
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### DlpReadSysInfo: Unknown argument type: 0x%02x\n",
 				ret_argv[i].id);
@@ -458,7 +459,7 @@ DlpReadStorageInfo(struct PConnection *pconn,
 				/* XXX - Fixed size: bad! */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-	ubyte act_count;	/* # card info structs returned */
+	ubyte act_count = 0;	/* # card info structs returned */
 
 	DLPC_TRACE(1, ">>> ReadStorageInfo(%d)\n", card);
 
@@ -1334,6 +1335,7 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
 	{
+		rptr = ret_argv[i].data;
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadSortBlock_Blk:
