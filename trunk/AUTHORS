@@ -1,3 +1,5 @@
+# $Id: AUTHORS,v 1.3 1999-09-09 05:43:50 arensb Exp $
+
 Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
 	benevolent dictator.
 Mark Coletti <mcoletti@clark.net>: The original Makefile.am, which has
