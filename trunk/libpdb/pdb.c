@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.7 1999-11-27 05:49:19 arensb Exp $
+ * $Id: pdb.c,v 1.8 1999-11-29 02:53:07 arensb Exp $
  */
 
 #include "config.h"
@@ -1466,7 +1466,7 @@ pdb_LoadRsrcIndex(int fd,
 	totalrsrcs = db->numrecs;	/* Get the number of resources in
 					 * the database. It is necessary to
 					 * remember this here because
-					 * dlp_AppendResource() increments
+					 * pdb_AppendResource() increments
 					 * db->numrecs in the name of
 					 * convenience.
 					 */
@@ -1545,7 +1545,7 @@ pdb_LoadRecIndex(int fd,
 	totalrecs = db->numrecs;	/* Get the number of records in the
 					 * database. It is necessary to
 					 * remember this here because
-					 * dlp_AppendResource() increments
+					 * pdb_AppendResource() increments
 					 * db->numrecs in the name of
 					 * convenience.
 					 */
@@ -2086,7 +2086,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 
 	totalrsrcs = db->numrecs;	/* Get the number of resources now.
 					 * It is necessary to remember this
-					 * now because dlp_AppendResource()
+					 * now because pdb_AppendResource()
 					 * increments db->numrecs in the
 					 * name of convenience.
 					 */
@@ -2185,7 +2185,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 	totalrecs = db->numrecs;	/* Get the number of records in the
 					 * database. It is necessary to
 					 * remember this here because
-					 * dlp_AppendResource() increments
+					 * pdb_AppendResource() increments
 					 * db->numrecs in the name of
 					 * convenience.
 					 */
@@ -2216,26 +2216,42 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		return -1;
 	}
 
-	/* Get the list of record IDs, as described above */
-	if ((err = DlpReadRecordIDList(pconn, dbh, 0,
-				       0, DLPC_RRECIDL_TOEND,
-				       &numrecs, recids))
-	    != DLPSTAT_NOERR)
+	/* Read the list of record IDs. DlpReadRecordIDList() might not be
+	 * able to read all of them at once, so we might need to read them
+	 * a chunk at a time.
+	 */
+	numrecs = 0;
+	while (numrecs < totalrecs)
 	{
-		fprintf(stderr, _("Can't read record ID list\n"));
-		free(recids);
-		return -1;
-	}
+		uword num_read;		/* # of record IDs read this time */
 
-	/* Sanity check */
-	if (numrecs != totalrecs)
-	{
-		fprintf(stderr, _("### Whoa! numrecs is %d, but "
-				  "ReadRecordIDList says %d!\n"),
-			totalrecs, numrecs);
-		/* XXX - What to do in this case? For now, just punt. */
-		free(recids);
-		return -1;
+		PDB_TRACE(4)
+			fprintf(stderr, _("%s: Reading a chunk of record IDs "
+					  "starting at %d\n"),
+				"pdb_DownloadRecords",
+				numrecs);
+
+		/* Get the list of record IDs, as described above */
+		if ((err = DlpReadRecordIDList(pconn, dbh, 0,
+					       numrecs, totalrecs-numrecs,
+					       &num_read, recids+numrecs))
+		    != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, _("Can't read record ID list\n"));
+			free(recids);
+			return -1;
+		}
+
+		/* Sanity check */
+		if (num_read <= 0)
+		{
+			fprintf(stderr, _("DlpReadRecordIDList() read 0 "
+					  "records. What happened?\n"));
+			free(recids);
+			return -1;
+		}
+
+		numrecs += num_read;
 	}
 
 	/* Read each record in turn */
