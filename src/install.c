@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.36 2002-08-31 19:26:03 azummo Exp $
+ * $Id: install.c,v 2.37 2002-09-07 16:47:26 azummo Exp $
  */
 
 #include "config.h"
@@ -201,18 +201,7 @@ upload_database(PConnection *pconn, struct pdb *db)
 
 			err = DlpWriteRecord(pconn,
 					     dbh,
-					     0x80,	/* Mandatory magic */
-							/* XXX - Actually,
-							 * at some point
-							 * DlpWriteRecord
-							 * will get fixed
-							 * to make sure the
-							 * high bit is set,
-							 * at which point
-							 * this argument
-							 * will be allowed
-							 * to be 0.
-							 */
+					     0x00,
 					     rec->id,
 					     rec->flags,
 					     rec->category,
