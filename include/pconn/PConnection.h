@@ -7,14 +7,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.16 2001-04-15 04:32:50 arensb Exp $
+ * $Id: PConnection.h,v 1.17 2001-06-26 05:44:58 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
 
 #include "config.h"
 #include <termios.h>		/* For speed_t */
-#include "palm_types.h"
+#include "palm.h"
 #include "slp.h"
 #include "padp.h"
 #include "dlp.h"
