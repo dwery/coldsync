@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.34.2.2 2001-10-11 05:52:41 arensb Exp $
+ * $Id: lexer.l,v 2.34.2.3 2001-10-11 06:35:29 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -309,6 +309,28 @@ ID		[-a-zA-Z_0-9]
   * against accidentally-unterminated strings. That is, backslash-return
   * append a \n to the string, whereas <return> should generate a "runaway
   * string" error.
+  */
+ /* XXX - It would be intuitively good if "bare" variables were recognized.
+  * That is, currently you can have:
+  *	SomeOption: "$(VAR)";
+  * but not
+  *	SomeOption: $(VAR);
+  * Presumably a "bare" variable should be parsed as if it were a
+  * double-quoted string by itself.
+  * What about conduit arguments? Ought to do the intuitive thing for
+  *	conduit dump {
+  *		...
+  *	    arguments:
+  *		$(VARIABLE): $(VALUE);
+  *	}
+  * What about
+  *	options {
+  *		PATH: "path";
+  *	}
+  *	conduit dump {
+  *		$(PATH): /path/to/conduit
+  *	}
+  * Should this work? Seems like it should, but it'd be a bitch to parse.
   */
  /* Note that this accepts escaped double-quotes in strings */
 \"[^\"$\\]* {
