@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.59 2002-03-18 08:26:54 arensb Exp $
+ * $Id: parser.y,v 2.60 2002-03-18 10:08:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -123,7 +123,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 	pconn_listen_t commtype;
 	pconn_proto_t proto_type;
 	crea_type_pair crea_type;
-	Bool boolean;
+	Bool3 boolean;
 }
 
 %%
@@ -1178,11 +1178,11 @@ opt_string:	STRING
 
 boolean:	TRUE
 	{
-		$$ = True;
+		$$ = True3;
 	}
 	| FALSE
 	{
-		$$ = False;
+		$$ = False3;
 	}
 	;
 
