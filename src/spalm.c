@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.4 2001-08-22 06:44:16 arensb Exp $
+ * $Id: spalm.c,v 2.5 2001-09-08 00:22:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -268,7 +268,7 @@ fetch_netsyncinfo(struct Palm *palm)
 	 * calling ReadNetSyncInfo().
 	 */
 	err = DlpReadNetSyncInfo(palm->pconn_, &(palm->netsyncinfo_));
-	switch (err)
+	switch ((dlp_stat_t) err)
 	{
 	    case DLPSTAT_NOERR:
 		MISC_TRACE(3)

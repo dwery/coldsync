@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.24 2001-09-07 10:42:44 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.25 2001-09-08 00:21:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -119,7 +119,7 @@ DlpReadUserInfo(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -296,7 +296,7 @@ DlpWriteUserInfo(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -355,7 +355,7 @@ DlpReadSysInfo(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Before parsing the arguments, set the DLP 1.2 fields to 0, for
@@ -459,7 +459,7 @@ DlpGetSysDateTime(PConnection *pconn,
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -551,7 +551,7 @@ DlpSetSysDateTime(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -627,7 +627,7 @@ DlpReadStorageInfo(PConnection *pconn,
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Set the extended fields to zero, in case this Palm doesn't
@@ -808,7 +808,7 @@ DlpReadDBList(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1016,7 +1016,7 @@ DlpOpenDB(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1124,7 +1124,7 @@ DlpCreateDB(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1216,7 +1216,7 @@ DlpCloseDB(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1300,7 +1300,7 @@ DlpDeleteDB(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1382,7 +1382,7 @@ DlpReadAppBlock(PConnection *pconn,	/* Connection */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1490,7 +1490,7 @@ DlpWriteAppBlock(PConnection *pconn,	/* Connection */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1571,7 +1571,7 @@ DlpReadSortBlock(PConnection *pconn,	/* Connection */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1670,7 +1670,7 @@ DlpWriteSortBlock(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1744,7 +1744,7 @@ DlpReadNextModifiedRec(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1857,7 +1857,7 @@ DlpReadRecordByID(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -1980,7 +1980,7 @@ DlpReadRecordByIndex(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2125,7 +2125,7 @@ DlpWriteRecord(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 	{
 		free(outbuf);
 		return resp_header.error;
@@ -2218,7 +2218,7 @@ DlpDeleteRecord(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2304,7 +2304,7 @@ DlpReadResourceByIndex(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2412,7 +2412,7 @@ DlpReadResourceByType(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2539,7 +2539,7 @@ DlpWriteResource(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 	{
 		free(outbuf);
 		return resp_header.error;
@@ -2629,7 +2629,7 @@ DlpDeleteResource(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2698,7 +2698,7 @@ DlpCleanUpDatabase(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (uword) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2765,7 +2765,7 @@ DlpResetSyncFlags(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2896,7 +2896,7 @@ DlpCallApplication(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -2978,7 +2978,7 @@ DlpResetSystem(PConnection *pconn)		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3064,7 +3064,7 @@ DlpAddSyncLogEntry(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3132,7 +3132,7 @@ DlpReadOpenDBInfo(PConnection *pconn,		/* Connection */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3213,7 +3213,7 @@ DlpMoveCategory(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3272,7 +3272,7 @@ DlpOpenConduit(PConnection *pconn)		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3341,7 +3341,7 @@ DlpEndOfSync(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3408,7 +3408,7 @@ DlpResetRecordIndex(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3518,7 +3518,7 @@ DlpReadRecordIDList(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3616,7 +3616,7 @@ DlpReadNextRecInCategory(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3728,7 +3728,7 @@ DlpReadNextModifiedRecInCategory(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3845,7 +3845,7 @@ DlpReadAppPreference(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -3958,7 +3958,7 @@ DlpWriteAppPreference(
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -4023,7 +4023,7 @@ DlpReadNetSyncInfo(PConnection *pconn,
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -4185,7 +4185,7 @@ DlpWriteNetSyncInfo(PConnection *pconn,		/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
@@ -4271,7 +4271,7 @@ DlpReadFeature(PConnection *pconn,	/* Connection to Palm */
 			resp_header.id,
 			resp_header.argc,
 			resp_header.error);
-	if (resp_header.error != DLPSTAT_NOERR)
+	if (resp_header.error != (ubyte) DLPSTAT_NOERR)
 		return resp_header.error;
 
 	/* Parse the argument(s) */
