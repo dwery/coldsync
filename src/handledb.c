@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.13 2000-01-27 02:40:16 arensb Exp $
+ * $Id: handledb.c,v 1.14 2000-01-27 03:57:18 arensb Exp $
  */
 
 #include "config.h"
@@ -14,6 +14,19 @@
 #include <string.h>		/* For strncpy() and friends */
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <ctype.h>		/* For isprint() and friends */
+
+#if STDC_HEADERS
+# include <string.h>		/* For memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
@@ -137,18 +150,15 @@ mkfname(const char *dirname,
 		if (dbinfo->name[i] == '\0')
 			break;
 
-		/* XXX - The isgraph() is mainly for testing. isprint() is
-		 * a better test; spaces are allowed in filenames, and it
-		 * makes the result much more readable.
-		 */
-		if ((!/*isprint*/isgraph(dbinfo->name[i])) ||
+		/* Is this a weird character? */
+		if ((!isprint(dbinfo->name[i])) ||
 		    (dbinfo->name[i] == '/') ||	/* '/' is a weird character */
 		    (dbinfo->name[i] == '%'))	/* The escape character
 						 * needs to be escaped.
 						 */
 		{
 			/* Escape it */
-			sprintf(nptr, "%%%02x", dbinfo->name[i]);
+			sprintf(nptr, "%%%02X", dbinfo->name[i]);
 			nptr += 3;
 		} else {
 			/* Just a regular character */
@@ -186,6 +196,133 @@ const char *
 mkarchfname(const struct dlp_dbinfo *dbinfo)
 {
 	return mkfname(archivedir, dbinfo, False);
+}
+
+/* hex2int
+ * Quick and dirty utility function to convert a hex digit to its numerical
+ * equivalent.
+ */
+static int
+hex2int(const char hex)
+{
+	switch (hex)
+	{
+	    case '0':
+	    case '1':
+	    case '2':
+	    case '3':
+	    case '4':
+	    case '5':
+	    case '6':
+	    case '7':
+	    case '8':
+	    case '9':
+		return (int) hex - '0';
+	    case 'a':
+	    case 'b':
+	    case 'c':
+	    case 'd':
+	    case 'e':
+	    case 'f':
+		return (int) hex - 'a' + 0xa;
+	    case 'A':
+	    case 'B':
+	    case 'C':
+	    case 'D':
+	    case 'E':
+	    case 'F':
+		return (int) hex - 'A' + 0xa;
+	    default:
+		return -1;
+	}
+}
+
+/* fname2dbname
+ * Convert a file name to a database name: strip off the trailing ".prc" or
+ * ".pdb", if any, and convert any %HH sequences back to their
+ * corresponding values.
+ * Returns a string with the database name, or NULL if the pathname does
+ * not correspond to a database name.
+ */
+const char *
+fname2dbname(const char *fname)
+{
+	int i;
+	static char dbname[DLPCMD_DBNAME_LEN+1];
+	const char *baseptr;		/* Pointer to last '/' in pathname */
+	const char *dotptr;		/* Pointer to extension */
+
+	MISC_TRACE(3)
+		fprintf(stderr, "fname2dbname: Unescaping \"%s\"\n",
+			fname);
+
+	/* Clear the database name, just 'cos. */
+	memset(dbname, '\0', DLPCMD_DBNAME_LEN+1);
+
+	/* Find the beginning of the filename. This is either the character
+	 * just after the last '/', or the beginning of the string.
+	 */
+	baseptr = strrchr(fname, '/');
+	if (baseptr == NULL)
+		/* No directories, just a plain filename */
+		baseptr = fname;
+	else
+		baseptr++;
+
+	/* Find the extension (last '.' after the '/') */
+	dotptr = strrchr(baseptr, '.');
+	if (dotptr == NULL)
+		/* No dot. But there really should be a ".prc" or ".pdb"
+		 * extension, so this isn't a database name.
+		 */
+		return NULL;
+
+	/* See if the extension is ".prc" or ".pdb" */
+	if ((strcasecmp(dotptr, ".prc") != 0) &&
+	    (strcasecmp(dotptr, ".pdb") != 0))
+		/* Bad extension. It's not a database name */
+		return NULL;
+
+	/* Copy the base name, removing escapes, to 'dbname' */
+	for (i = 0; i < DLPCMD_DBNAME_LEN; i++)
+	{
+		if ((baseptr == dotptr) ||
+		    (*baseptr == '\0'))
+			break;	/* End of name */
+				/* We should never get to the end of the
+				 * string, mind.
+				 */
+
+		if (*baseptr == '%')
+		{
+			int first;	/* First hex digit */
+			int second;	/* Second hex digit */
+
+			/* Escaped character */
+
+			if ((first = hex2int(baseptr[1])) < 0)
+				/* Not a valid hex digit */
+				return NULL;
+			if ((second = hex2int(baseptr[2])) < 0)
+				/* Not a valid hex digit */
+				return NULL;
+
+			dbname[i] = (first << 4) | second;
+			baseptr += 3;
+
+			continue;
+		}
+
+		/* Just a normal character */
+		dbname[i] = *baseptr;
+		baseptr++;
+	}
+
+	/* Return 'dbname' */
+	MISC_TRACE(3)
+		fprintf(stderr, "fname2dbname: Returning  \"%s\"\n",
+			dbname);
+	return dbname;
 }
 
 /* This is for Emacs's benefit:
