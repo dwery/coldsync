@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.11 2000-12-11 09:24:04 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.12 2000-12-13 16:28:34 arensb Exp $
  */
 
 #include "config.h"
@@ -368,6 +368,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		perror("open");
 		free(u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;
 	}
 
@@ -379,6 +383,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		(void) close(usb_ep0);
 		free((void *)u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;
 	}
 
@@ -447,6 +455,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		(void) close(usb_ep0);
 		free((void *)u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;	  
 	}
 
@@ -484,6 +496,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		(void) close(usb_ep0);
 		free((void *)u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;	  
 	}
 
@@ -539,6 +555,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 	if ((hotsync_ep_name = malloc(strlen(device)+20)) == NULL) {
 		free((void *)u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;
 	}
 
@@ -554,6 +574,10 @@ pconn_usb_open(struct PConnection *pconn, char *device, int prompt)
 		free(hotsync_ep_name);
 		free((void *)u);
 		u = pconn->io_private = NULL;
+
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return -1;	  
 	}
 
