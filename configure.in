@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.23 1999-08-25 08:01:42 arensb Exp $
+dnl # $Id: configure.in,v 1.24 1999-09-04 20:51:37 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -16,15 +16,12 @@ dnl # 'compress'
 
 dnl # XXX - Check for gettext library
 
-dnl # XXX - Under Solaris 2.6, gethostbyname() requires -lnsl. Check
-dnl # for this.
-
 AC_INIT(src/PConnection.c)
 
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="0.4.5"
+VERSION="0.4.6"
 
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
@@ -87,6 +84,9 @@ AC_CHECK_PROG(DVIPS, dvips, dvips, true)
 
 dnl ## Checks for libraries.
 
+# XXX - RedHat 6.0 has gethostbyname() in libnsl, but also has it in
+# libc. This test adds "-lnsl" to $LIBS, even though it isn't
+# required.
 AC_CHECK_LIB(nsl,gethostbyname)
 
 # ElectricFence (optional)
@@ -98,6 +98,7 @@ if test "$ac_cv_lib_efence_malloc" = yes; then
 	AC_DEFINE_UNQUOTED(WITH_EFENCE)
 else
 	AC_MSG_WARN([Can't find ElectricFence library!])
+	#'
 fi])
 
 dnl ## Checks for header files.
@@ -140,58 +141,6 @@ AC_CHECK_FUNCS(getopt \
 	strcasecmp \
 	strncasecmp
 )
-
-# XXX - Under Redhat 6.0 (egcs), need to compile with -D_BSD_SOURCE
-# -D_XOPEN_SOURCE to kill a lot of the warnings. How to detect this?
-#
-# Under gcc, can use 'gcc -Werror', which turns all warnings into
-# errors.
-# Even with gcc, though, this could get mighty complex mighty fast.
-# Would it be better to just let the user define these symbols on the
-# "configure" command line?
-
-if test x"$GCC" = xyes; then
-	echo 1>&6 "	These next few tests try to figure out how to make your
-	compiler compile without warnings. Even if they fail, you
-	should still be able to compile."
-
-	OLDCFLAGS="$CFLAGS"		# Save old value of CFLAGS
-	CFLAGS="-Werror $CFLAGS"	# Warnings are now errors
-
-	# XXX - Check whether __EXTENSIONS__ helps
-
-	# Check whether getopt() requires _XOPEN_SOURCE (needed under
-	# Redhat 6.0)
-	AC_CACHE_CHECK([whether getopt() wants _XOPEN_SOURCE],cs_cv_anal_xopen_source,
-	AC_TRY_COMPILE([#include <unistd.h>],[char *foo = optarg; foo++],
-	cs_cv_anal_xopen_source="no",
-	AC_TRY_COMPILE([#define _XOPEN_SOURCE
-#include <unistd.h>],[char *foo = optarg; foo++],
-	cs_cv_anal_xopen_source="yes",
-	AC_MSG_WARN([I don't know how to satisfy your compiler!]))))
-
-	# Check whether strncasecmp() requires _BSD_SOURCE (needed
-	# under Redhat 6.0)
-	# XXX - Check whether strncasecmp() exists?
-	# XXX - Check whether to use <string.h> or <strings.h> ?
-	AC_CACHE_CHECK([whether strncasecmp() wants _BSD_SOURCE],cs_cv_anal_bsd_source,
-	AC_TRY_COMPILE([#include <string.h>],[int foo;
-	foo = strncasecmp("foo","bar",3)],
-	cs_cv_anal_bsd_source="no",
-	AC_TRY_COMPILE([#define _BSD_SOURCE
-#include <string.h>],[int foo;
-	foo = strncasecmp("foo","bar",3)],
-	cs_cv_anal_bsd_source="yes",
-	AC_MSG_WARN([I don't know how to satisfy your compiler!]))))
-
-	CFLAGS="$OLDCFLAGS"		# Restore old value of CFLAGS
-fi
-if test x"$cs_cv_anal_xopen_source" = xyes; then
-	AC_DEFINE_UNQUOTED(WANT_XOPEN_SOURCE)
-fi
-if test x"$cs_cv_anal_bsd_source" = xyes; then
-	AC_DEFINE_UNQUOTED(WANT_BSD_SOURCE)
-fi
 
 # Tell the various Makefiles to use the compatibility function provided
 if test -z "$ac_cv_func_cfmakeraw" -o x"$ac_cv_func_cfmakeraw" = xno ; then
