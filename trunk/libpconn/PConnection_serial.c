@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.22 2001-03-17 04:42:05 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.23 2001-03-18 22:07:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -302,7 +302,7 @@ serial_accept(PConnection *pconn)
 		return -1;
 	}
 
-	/* XXX - Find 'tcspeed' from 'newspeed' */
+	/* Find 'tcspeed' from 'newspeed' */
 	pconn->speed = newspeed;
 	speed_ix = bps_entry(newspeed);
 	/* XXX - Error-checking */
@@ -502,6 +502,10 @@ setspeed(PConnection *pconn, int speed)
 {
 	int err;
 	struct termios term;
+
+	IO_TRACE(5)
+		fprintf(stderr, "Setting serial device speed to %d\n",
+			speed);
 
 	err = tcgetattr(pconn->fd, &term);
 	if (err < 0)
