@@ -1,6 +1,6 @@
 /* coldsync.c
  *
- * $Id: coldsync.c,v 1.5 1999-07-14 13:53:13 arensb Exp $
+ * $Id: coldsync.c,v 1.6 1999-08-23 08:52:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -21,6 +21,13 @@
 #include "coldsync.h"
 #include "pdb.h"
 #include "conduit.h"
+
+#if !HAVE_STRCASECMP
+#  define	strcasecmp(s1,s2)	strcmp((s1),(s2))
+#endif	/* HAVE_STRCASECMP */
+#if !HAVE_STRNCASECMP
+#  define	strncasecmp(s1,s2,len)	strncmp((s1),(s2),(len))
+#endif	/* HAVE_STRNCASECMP */
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -140,8 +147,8 @@ main(int argc, char *argv[])
 		fprintf(stderr, "\tusername: \"%s\"\n",
 			global_opts.username == NULL ?
 				"(null)" : global_opts.username);
-		fprintf(stderr, "\tusername: %d\n",
-			(int) global_opts.uid);
+		fprintf(stderr, "\tuid: %ld\n",
+			(long) global_opts.uid);
 		fprintf(stderr, "\tcheck_ROM: %s\n",
 			global_opts.check_ROM ? "True" : "False");
 	}
@@ -318,8 +325,11 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Backup() returned %d\n", err);
 	} else if (global_opts.do_restore) {
 		MISC_TRACE(1)
-			fprintf(stderr, "I ought to do a restore from %s\n",
-	global_opts.restoredir);
+			fprintf(stderr, "Restoring from %s\n",
+				global_opts.restoredir);
+		err = Restore(pconn, &palm);
+		MISC_TRACE(2)
+			fprintf(stderr, "Restore() returned %d\n", err);
 	} else {
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a sync.\n");
@@ -969,25 +979,15 @@ find_max_speed(struct PConnection *pconn)
  */
 /* XXX - Command-line options to add or implement:
  * -u <user>:	run as <user>
- * -b <dir>:	perform a full backup to <dir>
- * -r <dir>:	perform a full restore from <dir>
- * -c:		With -b: remove any files in backup dir that aren't on Palm.
- *		With -r: remove any files on Palm that aren't in backup dir.
  * -i <file>:	upload (install) <file>
- * -D <level>:	set debugging to <level>. Probably want to do something
- *		like sendmail, and allow user to specify debugging level
- *		for various facilities.
  * -p:		print PID to stdout, like 'amd'. Or maybe just do this by
  *		default when running in daemon mode.
  * -d <dir>:	Sync with <dir> rather than ~/.palm
+ * -s <speed>:	Set sync speed.
  */
 int
 parse_args(int argc, char *argv[])
 {
-#if 0
-	extern char *optarg;	/* getopt() option argument */
-	extern int optind;	/* getopt() option index into argv[] */
-#endif	/* 0 */
 	int oldoptind;		/* Previous value of 'optind', to allow us
 				 * to figure out exactly which argument was
 				 * bogus, and thereby print descriptive
@@ -1117,9 +1117,6 @@ parse_args(int argc, char *argv[])
 
 	/* XXX - Check for trailing arguments. What to do? Barf? */
 
-	/* XXX - Sanity checks:
-	 * - Can't specify username and UID.
-	 */
 	/* Sanity checks */
 
 	/* Can't back up and restore at the same time */
@@ -1214,6 +1211,8 @@ set_debug_level(const char *str)
 		debug.dlp = lvl;
 	else if (strncasecmp(str, "sync:", 5) == 0)
 		debug.sync = lvl;
+	else if (strncasecmp(str, "pdb:", 4) == 0)
+		debug.pdb = lvl;
 	else if (strncasecmp(str, "misc:", 5) == 0)
 		debug.misc = lvl;
 	else {
@@ -1257,6 +1256,17 @@ print_version(void)
 	 * compile-time flags, optional packages, maybe OS name and
 	 * version, who compiled it and when, etc.
 	 */
+	printf("Compile-type options:\n"
+
+#if WITH_EFENCE
+"    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
+#endif	/* WITH_EFENCE */
+
+#if HAVE_STRCASECMP && HAVE_STRNCASECMP
+"    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
+"        to case, whenever possible.\n"
+#endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
+	       );
 }
 
 /* This is for Emacs's benefit:
