@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.16 2000-01-13 17:21:38 arensb Exp $
+# $Id: Makefile.in,v 1.17 2000-01-23 07:51:22 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -24,6 +24,7 @@ DISTFILES =	README \
 		Artistic \
 		AUTHORS \
 		ChangeLog \
+		ChangeLog.0 \
 		HACKING \
 		Makefile.in \
 		configure.in \
