@@ -149,6 +149,13 @@ A: As far as I've been able to determine, the Handspring Visor does not
    "snum" ROM token. However, the contents of this token are not a
    12-character string, but a set of 12 0xff bytes.
 
+Q: I initialized my Visor the way ColdSync said, and now it won't sync!
+A: If it told you to set the serial number with
+	pda {
+		snum: "*Visor*-G";
+	}
+   take out the "-G". This is due to a bug.
+
 Q: How can I find out the user name and user ID on my Palm, in order to set
    up my .coldsyncrc correctly?
 A: Two ways: the simplest is to run
