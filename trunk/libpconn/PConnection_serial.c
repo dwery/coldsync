@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.23 2001-03-18 22:07:24 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.24 2001-03-27 14:03:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -309,7 +309,6 @@ serial_accept(PConnection *pconn)
 	tcspeed = speeds[speed_ix].tcspeed;
 
 	/* Change the speed */
-/*  	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0) */
 	if ((err = setspeed(pconn, tcspeed)) < 0)
 	{
 		fprintf(stderr, _("Error trying to set speed.\n"));
