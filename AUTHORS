@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.25 2004-03-27 21:13:53 christophe Exp $
+# $Id: AUTHORS,v 2.26 2004-11-01 17:48:30 azummo Exp $
 
 Authors and Contributors:
 
@@ -51,6 +51,8 @@ Miguel Angelo Rozsas <miguel@rozsas.xx.nom.br>: Portuguese (Brazilian)
 	translation.
 Christophe Beauregard <christophe.beauregard@sympatico.ca>: assorted hackery
 Ferry Hendrikx <ferry.hendrikx@portal.govt.nz>: PDA side HotSync code.
+Allan Neal <allanneal@bellsouth.net>: todo-text patch
+Wim Heirman <wim.heirman@elis.ugent.be>: SyncType patch for conduit.c
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference
