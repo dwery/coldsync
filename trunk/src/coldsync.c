@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.42 2000-07-02 03:06:10 arensb Exp $
+ * $Id: coldsync.c,v 1.43 2000-07-06 04:01:24 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1436,13 +1436,10 @@ find_max_speed(struct PConnection *pconn)
 	 */
 	for (i = 0; i < num_speeds; i++)
 	{
-/*  fprintf(stderr, "Trying %ld bps\n", speeds[i].bps); */
 		if ((*pconn->io_setspeed)(pconn, speeds[i].tcspeed) == 0)
 			return i;
-/*  fprintf(stderr, "Nope\n"); */
 	}
 
-/*  fprintf(stderr, "Couldn't find a suitable speed.\n"); */
 	return -1;
 }
 
