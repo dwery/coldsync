@@ -5,11 +5,12 @@
  * An archive file consists of a file header followed by zero or more
  * records. Each record consists of 
  *
- * $Id: archive.h,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: archive.h,v 1.2 1999-08-25 08:19:54 arensb Exp $
  */
 #ifndef _archive_h_
 #define _archive_h_
 
+#include "config.h"
 #include <fcntl.h>		/* For mode_t */
 #include "palm_types.h"
 #include "pdb.h"
