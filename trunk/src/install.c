@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.33 2001-09-08 00:22:05 arensb Exp $
+ * $Id: install.c,v 2.34 2001-10-06 22:12:45 arensb Exp $
  */
 
 #include "config.h"
@@ -91,8 +91,11 @@ upload_database(PConnection *pconn, struct pdb *db)
 	newdb.creator = db->creator;
 	newdb.type = db->type;
 	newdb.card = CARD0;
-	newdb.flags = db->attributes;
-			/* XXX - Is this right? This is voodoo code */
+	newdb.flags = db->attributes & ~PDB_ATTR_RO;
+			/* Turn off read-only flag: since we're uploading,
+			 * this database evidently will reside in RAM, and
+			 * is therefore read-write.
+			 */
 	newdb.version = db->version;
 	memcpy(newdb.name, db->name, PDB_DBNAMELEN);
 
@@ -568,9 +571,6 @@ InstallNewFiles(PConnection *pconn,
 			fprintf(stderr, "InstallNewFiles: Uploading \"%s\"\n",
 				pdb->name);
 
-		add_to_log(_("Install "));
-		add_to_log(pdb->name);
-		add_to_log(" - ");
 		if (dbinfo != NULL)
 		{
 			/* Delete the existing database */
@@ -580,7 +580,10 @@ InstallNewFiles(PConnection *pconn,
 				Error(_("%s: Error deleting \"%s\"."),
 				      "InstallNewFiles",
 				      pdb->name);
-				add_to_log(_("Error\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Install"),
+					      pdb->name,
+					      _("Error"));
 				free_pdb(pdb);
 
 				switch (palm_errno)
@@ -609,7 +612,10 @@ InstallNewFiles(PConnection *pconn,
 			Error(_("%s: Error uploading \"%s\"."),
 			      "InstallNewFiles",
 			      pdb->name);
-			add_to_log(_("Error\n"));
+			va_add_to_log(pconn, "%s %s - %s\n",
+				      _("Install"),
+				      pdb->name,
+				      _("Error"));
 
 			/* XXX - This is rather ugly, due in part to the
 			 * fact that pdb_Upload (upload_database) isn't in
@@ -691,12 +697,18 @@ InstallNewFiles(PConnection *pconn,
 			if (errno == EEXIST)
 			{
 				/* File already exists. This isn't a problem */
-				add_to_log(_("OK\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Install"),
+					      pdb->name,
+					      _("OK"));
 			} else {
 				Error(_("Error opening \"%s\"."),
 				      bakfname);
 				Perror("open");
-				add_to_log(_("Problem\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Install"),
+					      pdb->name,
+					      _("Problem"));
 				err = -1;	/* XXX */
 			}
 			SYNC_TRACE(5)
@@ -712,9 +724,15 @@ InstallNewFiles(PConnection *pconn,
 					bakfname);
 			err = pdb_Write(pdb, outfd);
 			if (err < 0)
-				add_to_log(_("Error\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Install"),
+					      pdb->name,
+					      _("Error"));
 			else
-				add_to_log(_("OK\n"));
+				va_add_to_log(pconn, "%s %s - %s\n",
+					      _("Install"),
+					      pdb->name,
+					      _("OK"));
 		}
 
 		/* XXX - Run Install conduits:
