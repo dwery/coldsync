@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.16 2000-05-21 08:00:16 arensb Exp $
+ * $Id: log.c,v 1.17 2000-09-09 21:27:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -37,7 +37,7 @@ static int log_len = 0;		/* Length of log == strlen(synclog) */
  * Palm'.
  */
 int
-add_to_log(char *msg)
+add_to_log(const char *msg)
 {
 	int msglen;		/* Length of 'msg' */
 
