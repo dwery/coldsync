@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.120 2001-03-17 04:42:21 arensb Exp $
+dnl # $Id: configure.in,v 1.121 2001-03-19 09:24:46 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -38,7 +38,7 @@ test "x$prefix" = xNONE && prefix=${ac_default_prefix}
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="2.0.0"
+VERSION="2.0.1"
 
 dnl # Autoconf 2.13 or higher required for the three-argument version
 dnl # of AC_DEFINE_UNQUOTED
