@@ -114,7 +114,6 @@
 	Fix: when opening a database with DlpOpenDB, if the database
   is read-only (ROM), don't open it for writing. In fact, Backup()
   probably shouldn't open databases read-write at all.
-- BSD port.
 - Maybe add (optional) support for long arguments with libgnugetopt?
 - FreeBSD's /bin/sh is still broken:
 	echo "before"
@@ -234,6 +233,8 @@
 	   smart enough to cope with this. Make it an error to run a
 	   second Fetch conduit on this database unless that flag is
 	   set.
+	b) Ignore or document the problem. Tell people not to write
+	   crappy code.
 - Variables set in .coldsyncrc should simply be propagated to the
   environment. Should this be done immediately, though?
 - Should send mail to the user with a report of the sync.
@@ -241,14 +242,21 @@
   that describes the otherwise occult internals.
 - "Thought of the Day" conduit: add a fortune-style message as an
   event for today, and for the next week.
-- It might be able to use CVS for network syncs: CVS can deal with
-  binary files. Furthermore, its time stamps have second resolution.
-  Thus, a server could keep, say, a month's worth of history under
-  CVS. A client can then connect to the server and say, "I have a
-  database with modification time 2000-02-19". The server can then
-  create a diff of the file between 2000-02-12 and the present, and
-  send it back to the client.
-	The problem with this is that it doesn't allow for two-way
-  syncing. Yes, CVS can detect conflicts, but then ColdSync would have
-  to automatically resolve these conflicts. It'd probably be easier to
-  just write a custom protocol.
+- All of the 'make's that I've tested (FreeBSD/Solaris/DU/AIX make,
+  and GNU make) appear to grok
+	include Make.defs
+  syntax. Rewrite the Makefiles to make use of this. Might even get
+  rid of all of the "Makefile.in"s, and just have a top-level
+  "Make.defs.in"
+- Conduit for MH alias file: look for lines of the form
+	alias:	<address> Firstname Lastname
+  (where the "<" and ">" are literal). If $record->{firstName} . " " .
+  $record->{name} eq "Firstname Lastname", then update the e-mail
+  address.
+- Sync the AppInfo block. See comments in "GenericConduit.cc".
+- Sync resource databases, according to the same rules as AppInfo
+  blocks.
+- If I ever find out what sort blocks are for, it might be a good idea
+  to sync them as well.
+- Perhaps status codes 6xx can be used for machine-readable
+  informational messages, e.g., "NN% complete".
