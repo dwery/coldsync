@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.17 2001-01-11 08:27:14 arensb Exp $
+ * $Id: padp.c,v 1.18 2001-03-29 05:34:58 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -148,7 +148,11 @@ padp_read(PConnection *pconn,	/* Connection to Palm */
 	/* Read an SLP packet */
 	err = slp_read(pconn, &inbuf, &inlen);
 	if (err == 0)
-		return 0;		/* End of file: no data read */
+	{
+		PADP_TRACE(5)
+			fprintf(stderr, "padp_read: EOF\n");
+		return -1;		/* End of file: no data read */
+	}
 	if (err < 0)
 		/* XXX - Check to see if palm_errno == PALMERR_NOMEM.
 		 * If so, then send an ACK with the PADP_FLAG_ERRNOMEM

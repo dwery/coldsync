@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.9 2001-03-28 04:53:54 arensb Exp $
+ * $Id: cmp.c,v 1.10 2001-03-29 05:34:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -36,11 +36,7 @@ cmp_read(PConnection *pconn,
 
 	/* Read a PADP packet */
 	err = padp_read(pconn, &inbuf, &inlen);
-	if (err == 0)
-	{
-		/* EOF. Lost connection before initial packet. How sad. */
-		return 0;
-	} else if (err < 0)
+	if (err < 0)
 	{
 		CMP_TRACE(3)
 			fprintf(stderr, "cmp_read: padp_read() returned %d\n",
@@ -123,7 +119,7 @@ cmp_write(PConnection *pconn,			/* File descriptor */
  * Negotiate the CMP part of establishing a connection with the Palm. 'bps'
  * gives the desktop's desired speed. 0 means "I don't care. Whatever the
  * Palm suggests".
- * Returns the speed in bps if successful, or 0 in case of error.
+ * Returns the speed in bps if successful, or ~0 in case of error.
  * This function is here, and not in PConnection_* because it's used for
  * both serial and USB connections.
  */
@@ -138,20 +134,14 @@ cmp_accept(PConnection *pconn, udword bps)
 			fprintf(stderr, "===== Waiting for wakeup packet\n");
 
 		err = cmp_read(pconn, &cmpp);
-		if (err == 0)
-		{
-			/* EOF. Lost connection to Palm.
-			 * 'palm_errno' has already been set.
-			 */
-			return 0;
-		} else if (err < 0)
+		if (err < 0)
 		{
 			if (palm_errno == PALMERR_TIMEOUT)
 				continue;
 			fprintf(stderr, _("Error during cmp_read: (%d) %s.\n"),
 				palm_errno,
 				_(palm_errlist[palm_errno]));
-			return 0;
+			return ~0;
 		}
 	} while (cmpp.type != CMP_TYPE_WAKEUP);
 
@@ -173,7 +163,7 @@ cmp_accept(PConnection *pconn, udword bps)
 		fprintf(stderr, "===== Sending INIT packet\n");
 	err = cmp_write(pconn, &cmpp);
 	if (err < 0)
-		return 0;
+		return ~0;
 
 	CMP_TRACE(5)
 		fprintf(stderr, "===== Finished sending INIT packet\n");
