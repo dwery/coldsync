@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.7 2001-07-26 07:02:09 arensb Exp $
+ * $Id: netsync.c,v 1.8 2001-07-28 19:41:01 arensb Exp $
  */
 
 #include "config.h"
@@ -139,6 +139,7 @@ netsync_init(PConnection *pconn)
 	/* Set the functions to send and receive DLP packets */
 	pconn->dlp.read = netsync_read;
 	pconn->dlp.write = netsync_write;
+	pconn->net.inbuf = NULL;
 
 	return 0;
 }
@@ -196,11 +197,12 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 
 	if (!no_header) {
 		/* Read packet header */
-	  	err = read(pconn->fd, hdr_buf, NETSYNC_HDR_LEN);
+	  	err = (*pconn->io_read)(pconn, hdr_buf, NETSYNC_HDR_LEN);
 		if (err < 0)
 		{
 		  fprintf(stderr, _("Error reading NetSync packet header.\n"));
 		  perror("read");
+				/* XXX - Does (*pconn->io_read) set errno? */
 		  return -1;	/* XXX - Ought to retry */
 		} else if (err != NETSYNC_HDR_LEN)
 		{
@@ -245,7 +247,7 @@ netsync_read_method(PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = read(pconn->fd, pconn->net.inbuf+got, want-got);
+		err = (*pconn->io_read)(pconn, pconn->net.inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("netsync_read: read");
