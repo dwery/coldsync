@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.3 1999-11-12 09:50:45 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.4 1999-11-27 05:38:14 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -361,7 +361,9 @@ struct dlp_setuserinfo
 
 /** CallApplication **/
 #define DLPARG_CallApplication_V1	DLPARG_BASE
+#define DLPARGLEN_CallApplication_V1	6
 #define DLPARG_CallApplication_V2	DLPARG_BASE+1
+#define DLPARGLEN_CallApplication_V2	22
 
 #define DLPRET_CallApplication_V1	DLPRET_BASE
 #define DLPRETLEN_CallApplication_V1	6
@@ -956,7 +958,7 @@ extern int DlpReadRecordIDList(
 	const uword start,
 	const uword max,
 	uword *numread,
-	udword recids[]);	/* XXX - Should this allocate a list? */
+	udword recids[]);
 /* v1.1 functions */
 extern int DlpReadNextRecInCategory(		/* XXX - bogus API */
 	struct PConnection *pconn,
