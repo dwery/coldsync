@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.24 1999-09-04 20:51:37 arensb Exp $
+dnl # $Id: configure.in,v 1.25 1999-09-09 05:49:12 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -16,12 +16,12 @@ dnl # 'compress'
 
 dnl # XXX - Check for gettext library
 
-AC_INIT(src/PConnection.c)
+AC_INIT(src/coldsync.c)
 
 EXIT_STATUS=0
 
 PACKAGE="coldsync"
-VERSION="0.4.6"
+VERSION="0.5.0"
 
 AC_DEFINE_UNQUOTED(PACKAGE,["$PACKAGE"],[Name of package])
 AC_DEFINE_UNQUOTED(VERSION,["$VERSION"],[Version number of package])
