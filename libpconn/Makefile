@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2001-11-19 17:07:15 arensb Exp $
+# $Id: Makefile,v 1.13 2002-11-23 16:32:40 azummo Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -21,6 +21,7 @@ LIBSRCS =	cfmakeraw.c \
 		PConnection.c \
 		PConnection_serial.c \
 		PConnection_usb.c \
+		PConnection_libusb.c \
 		PConnection_net.c \
 		spc_client.c 
 

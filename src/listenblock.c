@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: listenblock.c,v 2.4 2002-11-02 12:51:18 azummo Exp $
+ * $Id: listenblock.c,v 2.5 2002-11-23 16:30:55 azummo Exp $
  */
 
 #include "config.h"
@@ -78,6 +78,8 @@ name2listen_type(const char *str)
 		return LISTEN_NET;
 	if (strcasecmp(str, "usb") == 0)
 		return LISTEN_USB;
+	if (strcasecmp(str, "libusb") == 0)
+		return LISTEN_LIBUSB;
 	return LISTEN_NONE;		/* None of the above */
 }
 

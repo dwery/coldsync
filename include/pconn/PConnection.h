@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.33 2002-08-31 19:26:03 azummo Exp $
+ * $Id: PConnection.h,v 1.34 2002-11-23 16:32:51 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -35,7 +35,8 @@ typedef enum {
 	LISTEN_SERIAL = 0,	/* Listen on serial port */
 	LISTEN_NET,		/* Listen on TCP/UDP port */
 	LISTEN_USB,		/* USB for Handspring Visor */
-	LISTEN_SPC		/* SPC over an existing file descriptor */
+	LISTEN_SPC,		/* SPC over an existing file descriptor */
+	LISTEN_LIBUSB		/* Listen using libusb*/
 				/* XXX - Not implemented yet */
 } pconn_listen_t;
 

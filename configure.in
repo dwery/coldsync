@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.151 2002-11-13 20:14:37 azummo Exp $
+dnl # $Id: configure.in,v 1.152 2002-11-23 16:33:17 azummo Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -480,7 +480,6 @@ fi
 # linux capability support.
 
 AC_CHECK_LIB(cap, cap_set_proc)
-AC_MSG_RESULT($ac_cv_lib_cap_cap_set_proc)
 
 AC_MSG_CHECKING([whether use of capabilities is requested])
 AC_ARG_WITH(capabilities,
@@ -492,10 +491,32 @@ AC_MSG_RESULT($use_capabilities)
 if test x"$use_capabilities" = x"yes"; then
 	if test x"$ac_cv_lib_cap_cap_set_proc"; then
 		AC_DEFINE(USE_CAPABILITIES)
-		LIBS="$LIBS -lcap"
 	else
 		AC_MSG_WARN([
 			libcap missing
+		])
+		EXIT_STATUS=1	
+	fi
+fi
+
+
+# libusb support.
+
+AC_CHECK_LIB(usb, usb_init)
+
+AC_MSG_CHECKING([whether use of libusb is requested])
+AC_ARG_WITH(libusb,
+	[  --with-libusb           Use libusb.],
+	[with_libusb="$withval"],
+	[with_libusb=$ac_cv_lib_usb_usb_init])
+AC_MSG_RESULT($with_libusb)
+
+if test x"$with_libusb" = x"yes"; then
+	if test x"$ac_cv_lib_usb_usb_init"; then
+		AC_DEFINE(WITH_LIBUSB)
+	else
+		AC_MSG_WARN([
+			libusb missing
 		])
 		EXIT_STATUS=1	
 	fi

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.72 2002-11-05 20:54:17 azummo Exp $
+ * $Id: parser.y,v 2.73 2002-11-23 16:30:55 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -102,6 +102,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 
 %token SERIAL
 %token USB
+%token LIBUSB
 %token NET
 
 %token PROTOCOL
@@ -251,8 +252,14 @@ comm_type:
 	| USB
 	{
 		PARSE_TRACE(5)
-			fprintf(stderr, "Listen: commtype  USB\n");
+			fprintf(stderr, "Listen: commtype USB\n");
 		$$ = LISTEN_USB;
+	}
+	| LIBUSB
+	{
+		PARSE_TRACE(5)
+			fprintf(stderr, "Listen: commtype LIBUSB\n");
+		$$ = LISTEN_LIBUSB;
 	}
 	| NET
 	{

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.110 2002-11-13 12:08:12 azummo Exp $
+ * $Id: config.c,v 1.111 2002-11-23 16:30:55 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -892,8 +892,8 @@ usage(int argc, char *argv[])
 	 */
 	/* XXX - This still isn't quite right: it would be nice to have
 	 * arguments: in the string
-	 *	-t <devtype>: Port type [serial|usb|net].
-	 * the substring "serial|usb|net" should not be translated. Hence,
+	 *	-t <devtype>: Port type [serial|usb|libusb|net].
+	 * the substring "serial|usb|libusb|net" should not be translated. Hence,
 	 * it would be nice to move it out of the translated string, so
 	 * that the range of values can be changed without having to be
 	 * retranslated every time.
@@ -902,7 +902,7 @@ usage(int argc, char *argv[])
 	 * Perhaps something like the following:
 	 * static char *usage_msg[][3] = {
 	 *	{ "plain\n" },
-	 *	{ "protocol [%s]\n", "serial|usb|net" },
+	 *	{ "protocol [%s]\n", "serial|usb|libusb|net" },
 	 *	{ "plain 2\n" },
 	 *	{ NULL }
 	 * };
@@ -951,7 +951,7 @@ usage(int argc, char *argv[])
 		N_("\t-F:\t\tForce fast sync.\n"),
 		N_("\t-R:\t\tCheck ROM databases.\n"),
 		N_("\t-p <port>:\tListen on device <port>.\n"),
-		N_("\t-t <devtype>:\tPort type [serial|usb|net].\n"),
+		N_("\t-t <devtype>:\tPort type [serial|usb|libusb|net].\n"),
 		N_("\t-P <protocol>:\tSoftware protocol "
 		   "[default|full|simple|net].\n"),
 		N_("\t-s:\t\tLog error messages to syslog.\n"),
@@ -989,8 +989,12 @@ print_version(FILE *outfile)
 
 #if WITH_USB
 	fprintf(outfile,
-_("    WITH_USB: USB support.\n"));
+_("    WITH_USB: USB (BSD) support.\n"));
 #endif	/* WITH_USB */
+#if WITH_LIBUSB
+	fprintf(outfile,
+_("    WITH_USB: USB (libusb) support.\n"));
+#endif	/* WITH_LIBUSB */
 #if WITH_EFENCE
 	fprintf(outfile,
 _("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
