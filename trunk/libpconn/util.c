@@ -12,14 +12,13 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.1 1999-09-09 05:18:33 arensb Exp $
+ * $Id: util.c,v 1.2 2000-05-03 03:32:21 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
 #include <ctype.h>	/* For isprint() */
 #include <pconn/util.h>
-/*#include "pdb.h"*/	/* For EPOCH_1904 */
 
 #ifndef EPOCH_1904
 #  define EPOCH_1904	2082844800L	/* Difference, in seconds, between
@@ -27,6 +26,10 @@
 					 * Unix's epoch (Jan. 1, 1970).
 					 */
 #endif	/* EPOCH_1904 */
+
+/* XXX - Most of the functions below really ought to be inlined. Not sure
+ * how to do this portably, though.
+ */
 
 INLINE ubyte
 peek_ubyte(const ubyte *buf)
