@@ -2,7 +2,7 @@
  *
  * Definitions and such for Palm databases.
  *
- * $Id: pdb.h,v 1.2 1999-02-24 13:15:32 arensb Exp $
+ * $Id: pdb.h,v 1.3 1999-02-24 14:12:39 arensb Exp $
  */
 #ifndef _pdb_h_
 #define _pdb_h_
@@ -133,7 +133,6 @@ struct pdb
 	void *appinfo;			/* Optional AppInfo block */
 	long sortinfo_len;		/* Length of sort block */
 	void *sortinfo;			/* Optional sort block */
-/*  	struct pdb_record *records; */	/* Array of records */
 	uword *data_len;		/* Array of resource/record sizes */
 	ubyte **data;			/* Array of resources/records */
 					/* XXX - This should also probably
