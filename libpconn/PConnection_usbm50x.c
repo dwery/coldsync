@@ -1,7 +1,7 @@
 /*
  * PConnection_usbm50x.c - Koen Deforche <kdf@irule.be>
  *
- * $Id: PConnection_usbm50x.c,v 1.5 2001-09-07 10:04:06 arensb Exp $
+ * $Id: PConnection_usbm50x.c,v 1.6 2001-10-18 01:34:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -17,6 +17,10 @@
 #include "pconn/PConnection.h"
 #include "pconn/netsync.h"
 #include "pconn/util.h"
+
+/* XXX - Solaris 2.6, 7 doesn't appear to have cfmakeraw(). Add a prototype:
+ *	extern void cfmakeraw(struct termios *t).
+ */
 
 static int
 usbm50x_bind(PConnection *pconn,

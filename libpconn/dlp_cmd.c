@@ -12,7 +12,20 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.26 2001-10-06 21:40:17 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.27 2001-10-18 01:35:03 arensb Exp $
+ */
+/* XXX - When using serial-to-USB under Linux, a lot of these can hang.
+ * It's possible to fix the netsync read/write functions to time out and
+ * set an error code when Linux drops data, but in the current
+ * implementation, it's not possible to restart the request.
+ *
+ * Add a dlpc_do_request() (or something) function that implements
+ *	err = dlp_send_req(pconn, &header, argv);
+ *	err = dlp_recv_resp(pconn, (ubyte) DLPCMD_WriteUserInfo,
+ *			    &resp_header, &ret_argv);
+ *
+ * and use it in all the functions below. This function can watch for a
+ * timeout while receiving the response, and resend the request.
  */
 #include "config.h"
 #include <stdio.h>
