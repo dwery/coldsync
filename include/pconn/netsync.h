@@ -34,7 +34,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.6 2001-08-02 05:56:34 arensb Exp $
+ * $Id: netsync.h,v 1.7 2001-12-09 22:40:33 arensb Exp $
  */
 
 #ifndef _netsync_h_
@@ -73,6 +73,11 @@ struct netsync_header
 };
 
 #define NETSYNC_HDR_LEN	6	/* Length of NetSync header */
+
+#define NETSYNC_WAIT_TIMEOUT	2	/* How long (in seconds) to wait
+					 * for incoming data before timing
+					 * out.
+					 */
 
 /* Protocol functions */
 extern int netsync_init(PConnection *pconn);
