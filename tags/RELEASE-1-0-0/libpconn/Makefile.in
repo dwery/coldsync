@@ -1,0 +1,142 @@
+# Makefile.in
+#
+#	Copyright (C) 1999, Andrew Arensburger.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: Makefile.in,v 1.9 2000-01-22 05:09:54 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+srcdir =	@srcdir@
+subdir =	libpconn
+top_srcdir =	@top_srcdir@
+curdir =	${top_srcdir}/${subdir}
+prefix =	@prefix@
+exec_prefix =	@exec_prefix@
+BINDIR =	@bindir@
+LIBDIR =	@libdir@
+
+INSTALL =	@INSTALL@
+INSTALLARGS =	-m 555
+
+MKDEP =		@MKDEP@
+
+LIBNAME =	pconn
+
+# Compatibility functions, included for systems that don't have them.
+# XXX - Bleah. This probably needs to be broken up into individual
+# files/symbols: $(CFMAKERAW_C), $(CFMAKERAW_O), $(CFMAKERAW_H), and
+# the like.
+COMPAT =	@COMPAT@
+COMPATOBJS =	@COMPATOBJS@
+
+SRCS =		dlp_cmd.c \
+		util.c \
+		dlp.c \
+		palm_errno.c \
+		padp.c \
+		slp.c \
+		cmp.c \
+		PConnection.c \
+		${COMPAT}
+
+OBJS =		dlp_cmd.o \
+		util.o \
+		dlp.o \
+		palm_errno.o \
+		padp.o \
+		slp.o \
+		cmp.o \
+		PConnection.o \
+		${COMPATOBJS}
+
+LINTOBJS =	dlp_cmd.ln \
+		util.ln \
+		dlp.ln \
+		palm_errno.ln \
+		padp.ln \
+		slp.ln \
+		cmp.ln \
+		PConnection.ln \
+		${COMPATLINTOBJS}
+
+DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
+DISTFILES =	${SRCS} ${HEADERS} \
+		Makefile.in \
+		cfmakeraw.c
+# Additional files to include in the official distribution, not included
+# in snapshots
+EXTRA_DISTFILES =
+
+CLEAN =		lib${LIBNAME}.a *.o *.ln *.bak *~ core *.core
+DISTCLEAN =	Makefile .depend
+SPOTLESS =
+
+# Explicitly say how things are to be compiled: the default varies
+# between systems.
+
+CC =		@CC@
+CXX =		@CXX@
+DEFINES =	@DEFS@
+INCLUDES =	-I. -I${top_srcdir} -I${top_srcdir}/include
+CPPFLAGS =	${DEFINES} ${INCLUDES} @CPPFLAGS@
+CFLAGS =	@CFLAGS@ ${CPPFLAGS}
+CXXFLAGS =	${CFLAGS}
+LIBS =		@LIBS@
+LDFLAGS =	@LDFLAGS@ ${LIBS}
+RANLIB =	@RANLIB@
+LINT =		@LINT@
+LINTARGS =	@LINTARGS@ ${CPPFLAGS}
+
+.SUFFIXES:	.c .o .cc .ln
+
+.c.o:
+	${CC} ${CFLAGS} -c $<
+
+.cc.o:
+	${CXX} ${CXXFLAGS} -c $<
+
+.c.ln:
+	${LINT} ${LINTARGS} -i $<
+
+all:	lib${LIBNAME}.a
+
+lib${LIBNAME}.a:	${OBJS}
+	ar cq $@ ${OBJS}
+	${RANLIB} $@
+
+install:	lib${LIBNAME}.a
+# XXX - It might be a good idea to install this stuff eventually, but not yet.
+# 	if test ! -d ${LIBDIR}; then\
+# 		mkdir ${LIBDIR}; \
+# 		chmod 755 ${LIBDIR}; \
+# 	fi
+# 	${INSTALL} ${INSTALLARGS} lib${LIBNAME}.a ${LIBDIR}
+
+depend:
+	${MKDEP} ${CPPFLAGS} ${SRCS}
+
+distdir-core:	${DISTFILES}
+	if test ! -d ${DISTDIR}/${subdir}; then \
+		mkdir ${DISTDIR}/${subdir}; \
+	fi
+	cp -p ${DISTFILES} ${DISTDIR}/${subdir}
+
+distdir::	distdir-core
+
+distdir::	${EXTRA_DISTFILES}
+	if test -s "${EXTRA_DISTFILES}"; then \
+		cp -p ${EXTRA_DISTFILES} ${DISTDIR}; \
+	fi
+
+clean:
+	-rm -f ${CLEAN}
+distclean:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+spotless:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+
+lint:	${LINTOBJS}
+	${LINT} ${LINTARGS} -u -C${LIBNAME} ${LINTOBJS}
