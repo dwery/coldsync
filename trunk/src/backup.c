@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.36 2001-10-06 21:58:00 arensb Exp $
+ * $Id: backup.c,v 2.37 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -581,14 +581,7 @@ backup(PConnection *pconn,
 			      _("Backup"), dbinfo->name, _("Cancelled"));
 		return -1;
 	    default:			/* All other errors */
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+	    	update_cs_errno_p(pconn);
 
 		Error(_("Can't open backup conduit."));
 		close(bakfd);
@@ -612,14 +605,7 @@ backup(PConnection *pconn,
 			&dbh);
 	if (err != (int) DLPSTAT_NOERR)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+	    	update_cs_errno_p(pconn);
 
 		Error(_("Can't open database \"%s\"."),
 		      dbinfo->name);
@@ -638,14 +624,7 @@ backup(PConnection *pconn,
 		 * typically the problem is that the connection to the Palm
 		 * was lost.
 		 */
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+	    	update_cs_errno_p(pconn);
 
 		err = DlpCloseDB(pconn, dbh);
 		unlink(bakfname);	/* Delete the zero-length backup

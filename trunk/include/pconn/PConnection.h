@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.28 2002-04-27 17:17:35 azummo Exp $
+ * $Id: PConnection.h,v 1.29 2002-04-27 18:00:07 azummo Exp $
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_
@@ -17,6 +17,7 @@
 #include "slp.h"
 #include "padp.h"
 #include "dlp.h"
+#include <pconn/palm_errno.h>
 
 /* XXX - which of these #includes actually belong here? */
 #include <sys/types.h>			/* For select() */
@@ -60,10 +61,20 @@ typedef enum {
 		 */
 } pconn_proto_t;
 
+/* Connection states
+ */
+typedef enum {
+	PCONNSTAT_NONE = 0,		/* Initial status */
+	PCONNSTAT_UP,			/* Connection established */
+	PCONNSTAT_LOST,			/* Connection lost */
+	PCONNSTAT_CLOSED		/* Connection closed */
+} pconn_stat;	
+
+
 /* Flags */
 #define PCONNFL_TRANSIENT	0x0001	/* The device might not exist */
-#define PCONNFL_PROMPT		0x0002	/* Prompt the user to press the
-					 * HotSync button once the
+#define PCONNFL_PROMPTAFTER	0x0002	/* Prompt the user to press the
+					 * HotSync button after the
 					 * connection has been established.
 					 */
 
@@ -118,6 +129,12 @@ typedef struct PConnection
 				 * such, or just give it its own space in
 				 * the struct, along with all the other
 				 * protocols.
+				 */
+
+	pconn_stat status;	/* Connection status
+				 */
+
+	palmerrno_t palm_errno;	/* Latest error code
 				 */
 
 	int whosonfirst;	/* If 1 the connection has been locally initiated */
@@ -217,6 +234,28 @@ extern int PConnClose(PConnection *pconn);
 extern int PConn_bind(PConnection *pconn,
 		      const void *addr,
 		      const int addrlen);
+
+extern int PConn_read(struct PConnection *p,
+                unsigned char *buf,
+                int len);
+extern int PConn_write(struct PConnection *p,
+                unsigned const char *buf,
+                const int len);
+extern int PConn_connect(struct PConnection *p,
+                  const void *addr, 
+                  const int addrlen);
+extern int PConn_accept(struct PConnection *p);
+extern int PConn_drain(struct PConnection *p);
+extern int PConn_close(struct PConnection *p);
+extern int PConn_select(struct PConnection *p,
+                 pconn_direction direction,
+                 struct timeval *tvp);
+extern palmerrno_t PConn_get_palmerrno(PConnection *p);
+extern void PConn_set_palmerrno(PConnection *p, palmerrno_t errno);
+extern void PConn_set_status(PConnection *p, pconn_stat status);
+extern pconn_stat PConn_get_status(PConnection *p);
+extern int PConn_isonline(PConnection *p);
+
 
 extern int io_trace;
 #define	IO_TRACE(n)	if (io_trace >= (n))

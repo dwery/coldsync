@@ -1,3 +1,6 @@
+- UDP wakeup packet support has been partially removed in one of the 
+  latest patches because my Palm Desktop doesn't support it (?).
+  It should eventually be re-implemented in an external program.
 - Add documentation for long command line options.
 - Add documentation for 'autoinit': option.
 - Update the coduits development documentation to reflect changes

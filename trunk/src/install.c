@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.34 2001-10-06 22:12:45 arensb Exp $
+ * $Id: install.c,v 2.35 2002-04-27 18:00:07 azummo Exp $
  */
 
 #include "config.h"
@@ -323,14 +323,7 @@ install_file(PConnection *pconn,
 		err = DlpDeleteDB(pconn, CARD0, pdb->name);
 		if (err < 0)
 		{
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				break;
-			    default:
-				break;
-			}
+			update_cs_errno_p(pconn);
 
 			Error(_("%s: Error deleting \"%s\"."),
 			      "install_file",
@@ -344,14 +337,7 @@ install_file(PConnection *pconn,
 	err = upload_database(pconn, pdb);
 	if (err < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno_p(pconn);
 
 		Error(_("%s: Error uploading \"%s\"."),
 		      "install_file",
@@ -586,28 +572,14 @@ InstallNewFiles(PConnection *pconn,
 					      _("Error"));
 				free_pdb(pdb);
 
-				switch (palm_errno)
-				{
-				    case PALMERR_TIMEOUT:
-					cs_errno = CSE_NOCONN;
-					return -1;
-				    default:
-					continue;
-				}
+				update_cs_errno_p(pconn);
 			}
 		}
 
 		err = upload_database(pconn, pdb);
 		if (err < 0)
 		{
-			switch (palm_errno)
-			{
-			    case PALMERR_TIMEOUT:
-				cs_errno = CSE_NOCONN;
-				break;
-			    default:
-				break;
-			}
+			update_cs_errno_p(pconn);
 
 			Error(_("%s: Error uploading \"%s\"."),
 			      "InstallNewFiles",

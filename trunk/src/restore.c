@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.30 2002-04-16 14:16:46 azummo Exp $
+ * $Id: restore.c,v 2.31 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -146,14 +146,7 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+	    	update_cs_errno_p(pconn);
 
 		Warn(_("Restore: Can't delete database \"%s\": %d."),
 		     pdb->name, err);
@@ -173,14 +166,7 @@ restore_file(PConnection *pconn,
 		fprintf(stderr, "pdb_Upload returned %d\n", err);  
 	if (err < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+	    	update_cs_errno_p(pconn);
 
 		/* XXX - Ugh. Hack-ptui! */
 		switch (cs_errno)

@@ -6,13 +6,14 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.8 2002-04-17 23:18:34 azummo Exp $
+ * $Id: spalm.c,v 2.9 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For malloc(), free() */
 #include <string.h>		/* For memcpy() */
 #include "coldsync.h"
+#include "cs_error.h"
 
 #if HAVE_STRINGS_H
 #  include <strings.h>		/* For bzero() */
@@ -138,15 +139,8 @@ fetch_meminfo(struct Palm *palm)
 	if ((err = DlpReadStorageInfo(palm->pconn_, CARD0, &last_card, &more,
 				      palm->cardinfo_)) < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
-
+		update_cs_errno(palm);
+	
 		return -1;
 	}
 
@@ -211,14 +205,7 @@ fetch_sysinfo(struct Palm *palm)
 	/* Get system information about the Palm */
 	if ((err = DlpReadSysInfo(palm->pconn_, &(palm->sysinfo_))) < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		/* XXX - This message doesn't really belong here */
 		Error(_("Can't get system info."));
@@ -288,14 +275,7 @@ fetch_netsyncinfo(struct Palm *palm)
 		printf(_("No NetSync info.\n"));
 		break;
 	    default:
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		Error(_("Can't read NetSync info."));
 		return -1;
@@ -323,15 +303,7 @@ fetch_userinfo(struct Palm *palm)
 	{
 		Error(_("Can't get user info."));
 
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		return -1;
 	}
@@ -439,14 +411,7 @@ fetch_serial(struct Palm *palm)
 			    &snum_ptr, &snum_len);
 	if (err < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		Error(_("Can't get location of serial number."));
 		return -1;
@@ -472,14 +437,7 @@ fetch_serial(struct Palm *palm)
 			   snum_ptr, snum_len);
 	if (err < 0)
 	{
-		switch (palm_errno)
-		{
-		    case PALMERR_TIMEOUT:
-			cs_errno = CSE_NOCONN;
-			break;
-		    default:
-			break;
-		}
+		update_cs_errno(palm);
 
 		Error(_("Can't read serial number."));
 		return -1;
@@ -601,15 +559,7 @@ ListDBs(struct Palm *palm)
 					    &num, &(palm->dblist_[i]));
 			if (err < 0)
 			{
-				switch (palm_errno)
-				{
-				    case PALMERR_TIMEOUT:
-					cs_errno = CSE_NOCONN;
-					break;
-				    default:
-					break;
-				}
-
+				update_cs_errno(palm);
 				return -1;
 			}
 

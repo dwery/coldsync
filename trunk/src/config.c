@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.99 2002-04-24 17:01:20 arensb Exp $
+ * $Id: config.c,v 1.100 2002-04-27 18:00:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -135,8 +135,10 @@ parse_args(int argc, char *argv[])
 					 * messages. */
 	int arg;			/* Current option */
 
+#if HAVE_GETOPT_LONG
+
 	/* Options: */
-#if HAVE_GETOPT_LONG	
+
 	static struct option longopts[] =
 	{
 		{"mode", 		required_argument, 	NULL, 'm'},
@@ -173,9 +175,15 @@ parse_args(int argc, char *argv[])
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
+
+#if HAVE_GETOPT_LONG
 	while ((arg = getopt_long(argc, argv, ":hvVSFRIaszf:l:m:p:t:P:d:n:",
 			&longopts[0], NULL))
 	       != -1)
+#else
+	while ((arg = getopt(argc, argv, ":hvVSFRIaszf:l:m:p:t:P:d:n:"))
+	       != -1)
+#endif
 	{
 		switch (arg)
 		{

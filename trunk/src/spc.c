@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.12 2002-04-02 15:29:49 azummo Exp $
+ * $Id: spc.c,v 2.13 2002-04-27 18:00:07 azummo Exp $
  */
 
 #include "config.h"
@@ -127,14 +127,7 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 				    err);
 		    if (err < 0)	/* Problem with padp_write */
 		    {
-			    switch (palm_errno)
-			    {
-				case PALMERR_TIMEOUT:
-				    cs_errno = CSE_NOCONN;
-				    break;
-				default:
-				    break;
-			    }
+			    update_cs_errno_p(pconn);
 			    return -1;
 		    }
 
@@ -150,7 +143,7 @@ spc_send(struct spc_hdr *header,		/* SPC header */
 		    }
 		    if (err < 0)	/* Problem with padp_read */
 		    {
-			    if (palm_errno == PALMERR_EOF)
+			    if (PConn_get_palmerrno(pconn) == PALMERR_EOF)
 				    /* EOF. In practical terms, this
 				     * means the connection to the
 				     * Palm was lost.
