@@ -9,7 +9,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.2 1999-05-31 21:03:41 arensb Exp $
+ * $Id: config.c,v 1.3 1999-07-04 02:42:05 arensb Exp $
  */
 #include <stdio.h>
 #include <unistd.h>		/* For getuid(), gethostname() */
@@ -49,8 +49,7 @@ static int get_fullname(char *buf, const int buflen,
  * Read the configuration for this instance of 'coldsync'.
  */
 int
-load_config(int argc,		/* Command-line arguments */
-	    char *argv[])
+load_config()
 {
 	int err;
 int i;
