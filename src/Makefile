@@ -1,7 +1,10 @@
-# $Id: Makefile,v 2.30 2002-09-04 09:46:53 azummo Exp $
+# $Id: Makefile,v 2.31 2002-12-10 12:04:40 azummo Exp $
 
 TOP =		..
 SUBDIR =	src
+
+SUBDIRS =	conduits
+
 
 CPROG =		
 CXXPROG =	coldsync
@@ -56,10 +59,10 @@ HEADERS =	archive.h \
 		netsync.h \
 		palmconn.h \
 		runmode.h \
-		sync.h
+		sync.h 
 
 OBJS =		${C_OBJS} ${CXX_OBJS} \
-		y.tab.o
+		y.tab.o conduits/*.o
 
 LIBPCONN = 	-L${TOP}/libpconn -lpconn
 LIBPDB = 	-L${TOP}/libpdb -lpdb
@@ -73,7 +76,7 @@ DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
 		lexer.l parser.y
 
-all::		${CXXPROG} ${CPROG}
+all::		conduits.h ${CXXPROG} ${CPROG}
 
 depend::	lex.yy.c
 depend::
@@ -98,6 +101,9 @@ coldsync:	${TOP}/libpdb/libpdb.a
 lexhack.o:	lex.yy.c
 lex.yy.c:	parser.h lexer.l
 y.tab.c y.tab.h:	parser.h parser.y
+
+conduits.h:	conduits/*.h
+		sh ./conduits2include.sh >conduits.h
 
 # This is for Emacs's benefit:
 # Local Variables:	***
