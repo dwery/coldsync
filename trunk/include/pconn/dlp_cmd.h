@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.5 2000-05-19 12:07:14 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.6 2000-08-07 00:35:29 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -554,7 +554,9 @@ struct dlp_dbinfo
 	char name[DLPCMD_DBNAME_LEN];
 				/* Database name, NUL-terminated */
 };
-#define DLPCMD_DBINFO_LEN	44
+#define DLPCMD_DBINFO_LEN	44	/* Size of 'struct dlp_dbinfo',
+					 * not counting 'name'
+					 */
 
 #define DBINFO_ISRSRC(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RESDB)
 #define DBINFO_ISROM(dbinfo)	((dbinfo)->db_flags & DLPCMD_DBFLAG_RO)
