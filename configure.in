@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.157 2002-12-28 01:11:10 azummo Exp $
+dnl # $Id: configure.in,v 1.158 2002-12-28 21:12:01 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -702,12 +702,14 @@ AC_DIVERT_POP()dnl
 # ElectricFence (optional)
 AC_ARG_WITH(efence,dnl
 [  --with-efence           Use Electric Fence memory checking library],dnl
-[AC_CHECK_LIB(efence,malloc)
-if test "$ac_cv_lib_efence_malloc" = yes; then
-	AC_DEFINE_UNQUOTED(WITH_EFENCE)
-else
-	AC_MSG_WARN([Can't find ElectricFence library!])
-dnl	#' # For Emacs
+[if test x"$withval" != xno; then
+	AC_CHECK_LIB(efence,malloc)
+	if test "$ac_cv_lib_efence_malloc" = yes; then
+		AC_DEFINE_UNQUOTED(WITH_EFENCE)
+	else
+		AC_MSG_WARN([Can\'t find ElectricFence library!])
+	dnl #' # For Emacs
+	fi
 fi])
 
 # Primitive memory leak detection
