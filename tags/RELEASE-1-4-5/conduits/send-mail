@@ -1,0 +1,156 @@
+#!/usr/bin/perl
+#
+# ColdSync Mail conduit
+#
+# $Id: send-mail,v 1.5 2000-08-13 10:27:58 arensb Exp $
+#
+use strict;
+use Palm::Mail;
+use ColdSync;
+use Text::Wrap;
+
+# Default values for headers
+%HEADERS = (
+	# XXX - This ought to be determined at configure-time
+	"Sendmail"	=> "/usr/sbin/sendmail",
+	"My-Address"	=> (getpwuid($>))[0],
+	"Wrap"		=> 74,
+
+	# XXX - There's no good way to set these to non-default values
+	"Paragraph"	=> "",		# Paragraph indent
+	"Line-Indent"	=> "",		# Line indentation
+);
+
+my $VERSION = (qw( $Revision: 1.5 $ ))[1];	# Conduit version
+
+StartConduit("dump");
+
+$Text::Wrap::columns = $HEADERS{Wrap};
+my $record;
+foreach $record (@{$PDB->{records}})
+{
+	# Skip everything excep the Outbox folder
+	next unless $PDB->{appinfo}{categories}[$record->{category}]
+		eq "Outbox";
+
+	my $whoami = $HEADERS{"My-Address"};
+	my @sm_args;		# Sendmail command-line arguments
+
+	@sm_args = ("-t", "-i");	# -t: get addressee from the
+					# body of the message
+					# -i: ignore lines consisting of
+					# a single dot.
+	if ($record->{confirm_delivery})
+	{
+		push @sm_args, "-N", "success,failure";
+	}
+
+	open SENDMAIL, "| $HEADERS{Sendmail} @sm_args" or
+		die "502 Can't run $HEADERS{SENDMAIL}: $!\n";
+	select SENDMAIL;
+
+	# XXX - Some of these headers are bogus. In particular, a "to"
+	# field that contains "arensb,\narnie" will not result in an
+	# RFC822-compliant header (the \n should be followed by
+	# whitespace).
+	print "From: $whoami\n";
+	print "To: ", $record->{to}, "\n" if $record->{to} ne "";
+	print "Cc: ", $record->{cc}, "\n" if $record->{cc} ne "";
+	print "Bcc: ", $record->{bcc}, "\n"
+		if $record->{bcc} ne "";
+	print "Reply-To: ", $record->{reply_to}, "\n"
+		if $record->{reply_to} ne "";
+	print "X-Sent-To: ", $record->{sent_to}, "\n"
+		if $record->{sent_to} ne "";
+	print "X-Mailer: $HEADERS{Daemon} $HEADERS{Version}/send-mail conduit $VERSION\n";
+	print "Subject: ", $record->{subject}, "\n"
+		if $record->{subject} ne "";
+
+	my $body = $record->{body};
+
+	$body .= "\n" if $body !~ /\n$/m;	# Make sure message ends in \n
+
+	# Wrap the text if requested
+	$body = wrap($HEADERS{"Paragraph"}, $HEADERS{"Line-Indent"},
+			$record->{body})
+		if $HEADERS{Wrap} > 0;
+
+	print "\n", $body;
+
+	select STDOUT;
+	close SENDMAIL;
+
+	$PDB->delete_Record($record, 1);
+}
+
+$PDB->Write($HEADERS{OutputDB} || $HEADERS{InputDB});
+
+EndConduit;
+
+__END__
+
+=head1 NAME
+
+send-mail - ColdSync conduit to send Palm mail
+
+=head1 SYNOPSIS
+
+    conduit dump {
+        type mail/DATA;
+        path "<...>/send-mail";
+      arguments:
+        Sendmail:	/path/to/sendmail;
+        My-Address:	user@my.dom.ain;
+    }
+
+=head1 DESCRIPTION
+
+The C<send-mail> conduit reads the Palm Mail database, finds the
+outgoing messages, and passes them on to C<sendmail> for further
+processing.
+
+Once each message has been successfully passed along to C<sendmail>,
+it is deleted.
+
+=head1 OPTIONS
+
+=over 4
+
+=item C<Sendmail>
+
+Specifies the path to the C<sendmail> executable. The default is
+F</usr/sbin/sendmail>.
+
+=item C<My-Address>
+
+Specifies the return address to put on outgoing messages. If omitted,
+defaults to your username (or, more precisely, the username of the
+first user with your uid).
+
+=item C<Wrap>
+
+Specifies the column at which to wrap long lines. Defaults to 74. A
+value of 0 specifies that text should not be wrapped.
+
+=head1 BUGS
+
+Messages that were successfully sent are not immediately deleted on
+the Palm, but remain until the next sync. This is a limitation of
+ColdSync's conduit model.
+
+The ``Confirm Read'' flag, as well as the various conduit-related
+options on the Palm, are ignored.
+
+The ``Signature'' option on the Palm is ignored; this will most likely
+not be fixed. Nor is there an option to include a F<.signature> file
+on the desktop machine; this will most likely be fixed.
+
+=head1 AUTHOR
+
+Andrew Arensburger E<lt>arensb@ooblick.comE<gt>
+
+=head1 SEE ALSO
+
+coldsync(1)
+
+F<ColdSync Conduits>, in the ColdSync documentation.
