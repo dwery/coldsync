@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.16 2000-01-13 18:16:42 arensb Exp $
+ * $Id: coldsync.c,v 1.17 2000-01-19 06:12:19 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -428,7 +428,7 @@ main(int argc, char *argv[])
 		 */
 		for (i = 0; i < palm.num_dbs; i++)
 		{
-			err = run_Fetch_conduits(&palm, &(palm.dblist[i]));
+			err = run_Fetch_conduits(&(palm.dblist[i]));
 			if (err < 0)
 			{
 				fprintf(stderr, _("Error %d running pre-fetch "
@@ -509,14 +509,11 @@ main(int argc, char *argv[])
 	}
 	pconn = NULL;
 
-	/* XXX - For each database in the palm, walk config.dump, looking
-	 * for applicable conduits. This is done after we've disconnected
-	 * from the Palm, since this shouldn't require the user to be
-	 * present.
+	/* Run the post-dump conduits.
 	 */
 	for (i = 0; i < palm.num_dbs; i++)
 	{
-		err = run_Dump_conduits(&palm, &(palm.dblist[i]));
+		err = run_Dump_conduits(&(palm.dblist[i]));
 		if (err < 0)
 		{
 			fprintf(stderr,
@@ -527,6 +524,9 @@ main(int argc, char *argv[])
 	}
 
 	/* XXX - Clean up conduits */
+	/* XXX - Is this still current, or is that left over from the old
+	 * conduit API?
+	 */
 	MISC_TRACE(3)
 		fprintf(stderr, "Cleaning up conduits\n");
 	if ((err = tini_conduits()) < 0)
