@@ -214,6 +214,8 @@
 
 #undef LOCALEDIR
 
+#undef CONDUITDIR
+
 /* Version number of package */
 #undef VERSION
 
