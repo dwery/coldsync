@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000-05-25 12:08:28 arensb Exp $
+# $Id: Makefile,v 1.4 2000-05-30 17:27:23 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -26,7 +26,7 @@ include ${TOP}/Make.rules
 # Extract man pages from Perl pods.
 manifypods:	${PERL_CONDUITS}
 	for i in ${PERL_CONDUITS}; do \
-		${POD2MAN} $$i > $$i.1; \
+		${POD2MAN_EXE} $$i > $$i.1; \
 	done
 
 # The sed script below replaces the path to the interpreter in the #!

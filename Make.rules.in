@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.10 2000-05-25 12:04:36 arensb Exp $
+# $Id: Make.rules.in,v 1.11 2000-05-30 17:27:12 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -55,7 +55,9 @@ RANLIB =	@RANLIB@
 
 # Other programs and utilities
 PERL =		@PERL@
-POD2MAN =	@POD2MAN@
+# The name "POD2MAN_EXE" is because Perl uses "POD2MAN" for the actual
+# rule that creates man pages from pods.
+POD2MAN_EXE =	@POD2MAN@
 SED =		@SED@
 TAR =		@TAR@
 GZIP =		@GZIP@
