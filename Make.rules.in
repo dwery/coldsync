@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.12 2000-12-02 02:42:15 arensb Exp $
+# $Id: Make.rules.in,v 1.13 2000-12-16 23:12:30 arensb Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -82,6 +82,7 @@ XGETTEXT =	@XGETTEXT@
 GETTEXT =	@GETTEXT@
 MSGMERGE =	@MSGMERGE@
 MSGFMT =	@MSGFMT@
+EXTRA_MSGFMT_ARGS =	@EXTRA_MSGFMT_ARGS@
 
 TOPDISTDIR =	${TOP}/${PACKAGE}-${VERSION}
 DISTDIR =	${TOPDISTDIR}/${SUBDIR}
@@ -123,7 +124,7 @@ INSTALL_MAN =		${INSTALL_DATA}
 .SUFFIXES:	.po .mo
 
 .po.mo:
-	${MSGFMT} -v --statistics --strict -o $@ $<
+	${MSGFMT} -v ${EXTRA_MSGFMT_ARGS} -o $@ $<
 
 LIBRARY =	lib${LIBNAME}.a
 
