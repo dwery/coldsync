@@ -132,6 +132,9 @@
 /* Defined if the package was compiled with the ElectricFence library */
 #undef WITH_EFENCE
 
+/* Defined if memory leak detection was enabled */
+#undef WITH_LEAK_DETECTION
+
 /* Define if you want USB support for the Handspring Visor */
 #undef WITH_USB
 
@@ -235,6 +238,35 @@
 #ifdef __osf__
 #  define _OSF_SOURCE
 #endif
+
+#if WITH_LEAK_DETECTION
+/* This memory leak detection is extremely primitive. All this does is to
+ * use wrappers around the memory-allocation functions (defined in
+ * "misc.c"), which print their arguments and return values to stderr.
+ *
+ * Run the program's output through 'find-leaks', which will try to find
+ * malloc()s with no corresponding free()s.
+ *
+ * Note that this doesn't do squat for C++-style allocation.
+ */
+#  ifdef __cplusplus
+extern "C" {
+#  endif
+extern void *my_malloc(const int size, const char *file, const int line);
+extern void *my_realloc(const void *ptr,
+			const int size,
+			const char *file,
+			const int line);
+extern void my_free(void *ptr, const char *file, const int line);
+#  ifdef __cplusplus
+}
+#  endif
+
+   /* The my_*() functions are defined in "src/misc.c" */
+#  define malloc(s)	my_malloc(s, __FILE__, __LINE__)
+#  define realloc(p,s)	my_realloc(p, s, __FILE__, __LINE__)
+#  define free(p)	my_free(p, __FILE__, __LINE__)
+#endif	/* WITH_LEAK_DETECTION */
 
 /* This is for Emacs's benefit:
  * Local Variables:	***
