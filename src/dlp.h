@@ -3,6 +3,10 @@
  * Structures and definitions and such for Palm's Desktop Link
  * Protocol (DLP).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Structure of a DLP request:
  *	[request header] [arg1] [arg2]...
  * A DLP request header is of the form
@@ -53,7 +57,7 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: dlp.h,v 1.2 1999-09-04 21:01:48 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
@@ -118,7 +122,7 @@ struct dlp_resp_header
 	ubyte id;		/* Function ID (what is this a
 				 * response to?) */
 	ubyte argc;		/* # args that follow */
-	uword errno;		/* Error code */
+	uword error;		/* Error code */
 };
 
 /* dlp_tiny_arg
