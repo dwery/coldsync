@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.2 2000-08-07 00:46:11 arensb Exp $
+ * $Id: spc.c,v 2.3 2000-09-03 07:29:33 arensb Exp $
  */
 
 #include "config.h"
@@ -26,7 +26,14 @@
 # endif /* HAVE_MEMCPY */
 #endif	/* STDC_HEADERS */
 
-#include <sys/param.h>		/* For htons() and friends */
+#if HAVE_SYS_PARAM_H
+#  include <sys/param.h>		/* For ntohs() and friends */
+#endif	/* HAVE_SYS_PARAM_H */
+#if HAVE_NETINET_IN_H
+#  include <netinet/in.h>		/* For ntohs() and friends, under
+					 * Linux */
+#endif	/* HAVE_NETINET_IN_H */
+
 #include "pconn/pconn.h"	/* For DLP and debug_dump() */
 #include "coldsync.h"
 #include "spc.h"
