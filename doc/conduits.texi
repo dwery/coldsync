@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.8 2000-02-07 04:45:09 arensb Exp $
+@c $Id: conduits.texi,v 1.9 2000-05-06 11:25:22 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -603,9 +603,9 @@ sub DoFetch
 
         while (<ALIASES>)
         @{
-                my $alias = $1;
-                my $addr = $2;
-                my $fullname = $3;
+                my $alias;
+                my $addr;
+                my $fullname;
                 my @@rest;
 
                 chomp;
