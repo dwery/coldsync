@@ -2,7 +2,7 @@
  *
  * Implementation of the Palm SLP (Serial Link Protocol)
  *
- * $Id: slp.c,v 1.1 1999-02-19 22:51:55 arensb Exp $
+ * $Id: slp.c,v 1.2 1999-02-21 08:14:02 arensb Exp $
  */
 
 #include <stdio.h>
@@ -496,3 +496,9 @@ slp_write(int fd,
 
 	return len;		/* Success */
 }
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
