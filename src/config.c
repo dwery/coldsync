@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.61 2001-01-30 08:11:28 arensb Exp $
+ * $Id: config.c,v 1.62 2001-01-30 16:54:56 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -385,18 +385,29 @@ load_config()
 			global_opts.conf_fname = conf_fname;
 		}
 
-		MISC_TRACE(3)
-			fprintf(stderr, "Reading \"%s\"\n",
-				global_opts.conf_fname);
-
-		err = parse_config_file(global_opts.conf_fname, sync_config);
-		if (err < 0)
+		if (exists(global_opts.conf_fname))
 		{
-			Error(_("Couldn't read configuration file \"%s\"."),
-			      global_opts.conf_fname);
-			free_sync_config(sync_config);
-			sync_config = NULL;
-			return -1;
+			/* We've already checked for the existence of a
+			 * user-specified config file above. This test is
+			 * so that ColdSync won't complain if no config
+			 * file was specified, and the default
+			 * ~/.coldsyncrc doesn't exist.
+			 */
+			MISC_TRACE(3)
+				fprintf(stderr, "Reading \"%s\"\n",
+					global_opts.conf_fname);
+
+			err = parse_config_file(global_opts.conf_fname,
+						sync_config);
+			if (err < 0)
+			{
+				Error(_("Couldn't read configuration file "
+					"\"%s\"."),
+				      global_opts.conf_fname);
+				free_sync_config(sync_config);
+				sync_config = NULL;
+				return -1;
+			}
 		}
 	}
 
