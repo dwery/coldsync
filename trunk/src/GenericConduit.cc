@@ -6,7 +6,11 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.9 1999-11-12 09:52:35 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.10 1999-11-27 05:49:35 arensb Exp $
+ */
+/* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
+ * construct doesn't lend itself well to this. It might be necessary to
+ * fall back on C-style I/O.
  */
 #include "config.h"
 #include <iostream.h>
@@ -1210,7 +1214,7 @@ GenericConduit::SyncRecord(
 				     << endl;
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
-		} else if (/*DELETED(localrec) && */EXPUNGED(localrec))
+		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)
@@ -1327,7 +1331,7 @@ GenericConduit::SyncRecord(
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
 		}
-	} else if (/*DELETED(remoterec) && */EXPUNGED(remoterec))
+	} else if (EXPUNGED(remoterec))
 	{
 		/* Remote record has been deleted without a trace. */
 		SYNC_TRACE(5)
@@ -1358,7 +1362,7 @@ GenericConduit::SyncRecord(
 				     << endl;
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
-		} else if (/*DELETED(localrec) && */EXPUNGED(localrec))
+		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)
@@ -1513,7 +1517,7 @@ GenericConduit::SyncRecord(
 
 			pdb_AppendRecord(localdb, newrec);
 
-		} else if (/*DELETED(localrec) && */EXPUNGED(localrec))
+		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			struct pdb_record *newrec;
@@ -1748,7 +1752,7 @@ GenericConduit::SyncRecord(
 				     << endl;
 			pdb_DeleteRecordByID(localdb, localrec->id);
 
-		} else if (/*DELETED(localrec) && */EXPUNGED(localrec))
+		} else if (EXPUNGED(localrec))
 		{
 			/* Local record has been deleted without a trace. */
 			SYNC_TRACE(5)

@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.12 1999-11-20 05:19:30 arensb Exp $
+ * $Id: config.c,v 1.13 1999-11-27 05:53:23 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -176,10 +176,6 @@ fprintf(stderr, "Reading site-wide config file [%s]\n",
  * get the user's home directory in order to build the full pathname to
  * ~/.coldsyncrc.
  */
-/* XXX - Home directory: should look at $HOME first. Look at getpw*() entry
- * only if $HOME isn't defined. This makes things work the way you expect
- * when using 'su -m'.
- */
 int
 get_config(int argc, char *argv[])
 {
@@ -289,15 +285,19 @@ get_config(int argc, char *argv[])
 				 * was given (e.g., "-u" instead of "-u
 				 * daemon").
 				 */
-			fprintf(stderr, _("Missing option argument after \"%s\"\n"),
+			fprintf(stderr, _("Missing option argument after "
+					  "\"%s\"\n"),
 				argv[oldoptind]);
 			usage(argc, argv);
 			return -1;
 
 		    default:
 			fprintf(stderr,
-				_("You specified an apparently legal option (\"-%c\"), but I don't know what\n"
-				"to do with it. This is a bug. Please notify the maintainer.\n"), arg);
+				_("You specified an apparently legal option "
+				  "(\"-%c\"), but I don't know what\n"
+				  "to do with it. This is a bug. Please "
+				  "notify the maintainer.\n"),
+				arg);
 			return -1;
 			break;
 		}
@@ -314,7 +314,8 @@ get_config(int argc, char *argv[])
 	if (global_opts.do_backup &&
 	    global_opts.do_restore)
 	{
-		fprintf(stderr, _("Error: Can't specify backup and restore at the same time.\n"));
+		fprintf(stderr, _("Error: Can't specify backup and restore "
+				  "at the same time.\n"));
 		usage(argc, argv);
 		return -1;
 	}
@@ -323,7 +324,8 @@ get_config(int argc, char *argv[])
 	if (global_opts.force_slow &&
 	    global_opts.force_fast)
 	{
-		fprintf(stderr, _("Error: Can't force slow and fast sync at the same time.\n"));
+		fprintf(stderr, _("Error: Can't force slow and fast sync "
+				  "at the same time.\n"));
 		usage(argc, argv);
 		return -1;
 	}
