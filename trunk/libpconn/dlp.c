@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.12 2001-02-21 11:19:49 arensb Exp $
+ * $Id: dlp.c,v 1.13 2001-06-26 05:47:26 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -34,7 +34,7 @@
 #  include <libintl.h>		/* For i18n */
 #endif	/* HAVE_LIBINTL_H */
 
-#include "pconn/palm_types.h"
+#include "palm.h"
 #include "pconn/palm_errno.h"
 #include "pconn/dlp.h"
 #include "pconn/util.h"

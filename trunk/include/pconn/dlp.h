@@ -57,12 +57,12 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.4 2001-01-09 16:32:35 arensb Exp $
+ * $Id: dlp.h,v 1.5 2001-06-26 05:45:12 arensb Exp $
  */
 #ifndef _dlp_h_
 #define _dlp_h_
 
-#include "palm_types.h"
+#include "palm.h"
 
 /* These define the version of the DLP protocol that this library
  * implements.

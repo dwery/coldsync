@@ -58,14 +58,14 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.2 2000-12-24 21:24:26 arensb Exp $
+ * $Id: netsync.h,v 1.3 2001-06-26 05:46:25 arensb Exp $
  */
 #ifndef _netsync_h_
 #define _netsync_h_
 
 #include <sys/param.h>		/* For MAXHOSTNAMELEN */
 #include "pconn.h"
-#include "pconn/palm_types.h"
+#include "palm.h"
 
 #define NETSYNC_WAKEUP_MAGIC	0xfade
 #define NETSYNC_WAKEUP_PORT	14237	/* UDP port on which the client
