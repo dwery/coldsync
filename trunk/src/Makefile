@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.29 2002-07-18 16:43:16 azummo Exp $
+# $Id: Makefile,v 2.30 2002-09-04 09:46:53 azummo Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -52,7 +52,11 @@ HEADERS =	archive.h \
 		pref.h \
 		net_compat.h \
 		trace.h \
-		GenericConduit.hh
+		GenericConduit.hh \
+		netsync.h \
+		palmconn.h \
+		runmode.h \
+		sync.h
 
 OBJS =		${C_OBJS} ${CXX_OBJS} \
 		y.tab.o
