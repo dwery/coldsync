@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.39 2000-11-20 05:26:42 arensb Exp $
+ * $Id: coldsync.h,v 1.40 2000-11-20 10:14:33 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -49,7 +49,6 @@ typedef enum {
 	mode_Standalone,	/* Single-shot mode: sync once, then exit */
 	mode_Backup,		/* Back up a Palm */
 	mode_Restore,		/* Restore from backups */
-	mode_Install,		/* Install only */
 	mode_Daemon,		/* Daemon mode: run continuously in the
 				 * background, waiting for connections and
 				 * forking as necessary.
@@ -241,6 +240,7 @@ typedef struct pda_block
 					 * directories will be created.
 					 */
 	char *username;			/* Owner's full name */
+	Bool userid_given;		/* Was a user ID specified? */
 	udword userid;			/* Owner's user ID */
 	unsigned char flags;		/* PDAFL_* flags */
 	/* XXX - List of preferences that the conduit is interested in */
@@ -267,9 +267,8 @@ struct sync_config {
 extern int need_slow_sync;
 extern udword hostid;			/* This host's ID */
 					/* XXX - This shouldn't be global */
-extern uid_t user_uid;			/* Owner's UID */
-extern char user_fullname[DLPCMD_USERNAME_LEN];
-					/* Owner's full name */
+extern struct userinfo userinfo;	/* Information about the (Unix)
+					 * user */
 
 /* Configuration variables */
 /* XXX - There's probably a better place to put them. 'sync_config',
@@ -305,7 +304,7 @@ extern int Disconnect(struct PConnection *pconn, const ubyte status);
 extern int run_mode_Standalone(int argc, char *argv[]);
 extern int run_mode_Backup(int argc, char *argv[]);
 extern int run_mode_Restore(int argc, char *argv[]);
-/*  extern int run_mode_Install(int argc, char *argv[]); */
+extern int run_mode_Init(int argc, char *argv[]);
 extern int backup(struct PConnection *pconn,
 		  const struct dlp_dbinfo *dbinfo,
 		  const char *dirname);
@@ -325,6 +324,8 @@ extern int InstallNewFiles(struct PConnection *pconn,
 			   Bool deletep);
 extern void usage(int argc, char *argv[]);
 extern void print_version(void);
+extern pda_block *find_pda_block(struct Palm *palm);
+extern int load_palm_config(struct Palm *palm);
 extern void set_debug_level(const char *str);
 extern int set_mode(const char *str);
 extern const volatile char *mkfname(const char *first, ...);
@@ -344,8 +345,8 @@ extern int dbinfo_fill(struct dlp_dbinfo *dbinfo,
 		       struct pdb *pdb);
 extern char snum_checksum(const char *snum, int len);
 extern int open_tempfile(char *name_template);
-extern int load_config(void);
 extern int parse_args(int argc, char *argv[]);
+extern int load_config(void);
 extern int add_to_log(const char *msg);
 
 #endif	/* _coldsync_h_ */
