@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.20 2001-02-21 11:19:25 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.21 2001-03-29 05:33:46 arensb Exp $
  */
 
 #include "config.h"
@@ -203,7 +203,7 @@ usb_accept(PConnection *pconn)
 	 * however fast it can.
 	 */
 	newspeed = cmp_accept(pconn, 0);
-	if (newspeed == 0)
+	if (newspeed == ~0)
 		return -1;
 
 	return 0;

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.24 2001-03-27 14:03:38 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.25 2001-03-29 05:33:39 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -296,7 +296,7 @@ serial_accept(PConnection *pconn)
 	}
 
 	newspeed = cmp_accept(pconn, pconn->speed);
-	if (newspeed == 0)
+	if (newspeed == ~0)
 	{
 		fprintf(stderr, _("Error establishing CMP connection.\n"));
 		return -1;
