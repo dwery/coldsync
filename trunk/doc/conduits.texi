@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.15 2001-05-05 05:02:42 arensb Exp $
+@c $Id: conduits.texi,v 1.16 2001-05-06 05:53:47 arensb Exp $
 @c
 @c %**start of header
 @setfilename conduits.info
@@ -40,7 +40,7 @@ this manual provided the copyright notice and this permission notice
 are preserved on all copies.
 
 For external use only. Do not attempt to read this manual while
-operating a motor vehicle, or on a date.
+operating a motor vehicle.
 
 @end titlepage
 
@@ -83,10 +83,11 @@ Overview
 * Creators and Types::          What is this database? Which application
 				 does it go with?
 * Overview-Flavors::            What the different flavors of conduit do.
+* Preferences::                 Application customizations.
 
 Tutorial
 
-* Conduit Workings::            
+* Conduit Workings::            An overview of how conduits work.
 * todo-dump::                   A simple conduit.
 * pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
@@ -95,7 +96,7 @@ Tutorial
 
 * &DoFetch::                    The Fetch part of the conduit
 * &DoDump::                     The Dump part of the conduit
-* Helper Functions::            
+* Helper Functions::            Useful functions
 * pine-aliases Limitations::    Real-world considerations
 
 Specification
@@ -112,9 +113,11 @@ Standard Input
 
 Conduit Flavors
 
+* Sync conduits::               Conduits that run during the main sync
 * Fetch Conduits::              Conduits that run before the main sync
 * Dump Conduits::               Conduits that run after the main sync
-* Sync conduits::               Conduits that run during the main sync
+* Install conduits::            Conduits that run before new databases are
+                                  installed.
 
 @end detailmenu
 @end menu
@@ -144,6 +147,7 @@ allows them to do the Right Thing for that particular application.
 * Creators and Types::          What is this database? Which application
 				 does it go with?
 * Overview-Flavors::            What the different flavors of conduit do.
+* Preferences::                 Application customizations.
 @end menu
 
 @node Kinds of Databases, Creators and Types, Overview, Overview
@@ -171,7 +175,7 @@ application.
 @cindex Resource type
 @cindex Resource identifier
 	Resource databases are a bit more organized: each entry has a
-four-letter, type and a numerical identifier. Most resource databases
+four-letter type, and a numerical identifier. Most resource databases
 are applications, containing one or more @samp{code} entries, perhaps a
 few @samp{Tbmp} (bitmap image) entries, and so forth. The types are
 documented strings that indicate what the resource is: @samp{code}
@@ -182,14 +186,6 @@ resources of the same type apart.
 @cindex Macintosh
 	Not coincidentally, resource databases are very similar to the
 resource fork in MacOS files.
-
-@cindex Email
-@cindex Signature, email
-	One big difference between record and resource databases is that
-the contents of resource databases are fairly static. For instance, the
-signature that the built-in Mail program appends to messages is actually
-a resource found in the @file{Saved Preferences} database: the signature
-resource has the type @samp{mail} and the identifier 2.
 
 	Note that, for technical reasons, resource datatabases do not
 lend themselves well to syncing, and ColdSync pretty much ignores them.
@@ -227,8 +223,8 @@ file:
 @example
 @cartouche
 conduit fetch @{
-        path "/usr/local/libexec/coldsync/kab-fetch";
-        type addr/DATA;
+        path: "/usr/local/libexec/coldsync/kab-fetch";
+        type: addr/DATA;
 @}
 @end cartouche
 @end example
@@ -236,7 +232,7 @@ conduit fetch @{
 @cindex Wildcards
 	An asterisk in a creator or type specification acts as a wildcard:
 @example
-        type addr/*;
+        type: addr/*;
 @end example
 
 @noindent
@@ -244,7 +240,7 @@ the conduit will be run for every database with creator @samp{addr},
 regardless of type. Likewise:
 
 @example
-        type */DATA;
+        type: */DATA;
 @end example
 
 @noindent
@@ -253,24 +249,42 @@ regardless of creator (though this isn't usually very useful). Finally,
 you can specify wildcards for both the creator and type:
 
 @example
-        type */*;
+        type: */*;
 @end example
 
 @noindent
 In this case, the conduit will be run for every database.
 
-@node Overview-Flavors,  , Creators and Types, Overview
+@node Overview-Flavors, Preferences, Creators and Types, Overview
 @comment  node-name,  next,  previous,  up
 @section Conduit Flavors
 
 @cindex Flavors
 	ColdSync defines several @emph{flavors} of conduits. Each flavor
 performs a different function and is designed for a different purpose.
-Currently, only two flavors are implemented. More flavors are planned,
-but these two should be sufficient for many purposes.
+Currently, four flavors are implemented.
+
+@cindex Flavor, Sync
+@cindex Sync conduits
+	@emph{Sync} conduits implement the synchronization between a
+database on the Palm and its backup copy on the desktop, what is
+referred to here as the main sync.
+
+	The generic default conduit is a Sync conduit. It reads records
+from the Palm, compares them to what's on the desktop, and uploads or
+downloads records as necessary to ensure that both the Palm and the
+desktop have identical, up-to-date data.
+
+	Since Sync conduits can talk directly to the Palm, they are the
+most powerful, but also the most complex type of conduit. In the most
+common case, where all you want to do is synchronize data between the
+Palm and a file or database, it is simpler to write a Fetch conduit and
+a Dump conduit. In some cases, however, this is not possible: if you
+want to set the time on the Palm, your conduit needs to do so while the
+Palm is connected. For this, you would need to use a Sync conduit.
 
 @cindex Flavor, Fetch
-@cindex Fetch
+@cindex Fetch conduits
 	@emph{Fetch} conduits run before the main sync. The idea is that
 a Fetch conduit will modify its database before ColdSync compares it to
 the version on the Palm. For instance, a conduit might read a list of
@@ -286,8 +300,8 @@ reflected on your Palm.
 @example
 @cartouche
 conduit fetch @{
-        path "/usr/local/libexec/coldsync/get-meetings";
-        type date/DATA;
+        path: "/usr/local/libexec/coldsync/get-meetings";
+        type: date/DATA;
 @}
 @end cartouche
 @end example
@@ -301,7 +315,7 @@ several conduits. Bear in mind, however, that they may interfere with
 each other
 
 @cindex Flavor, Dump
-@cindex Dump
+@cindex Dump conduits
 	@emph{Dump} conduits run after the main sync. The intended
 purpose of a Dump conduit is to read its database after ColdSync is done
 with it, and copy its contents to some other file, in some other format.
@@ -318,8 +332,8 @@ address book application's format.
 @example
 @cartouche
 conduit dump @{
-        path "/usr/local/libexec/coldsync/save-meetings";
-        type date/DATA;
+        path: "/usr/local/libexec/coldsync/save-meetings";
+        type: date/DATA;
 @}
 @end cartouche
 @end example
@@ -344,8 +358,43 @@ desktop are propagated to the Palm and vice versa. Since the logic of
 syncing can get rather hairy, especially in difficult cases, it's easier
 to write two simple conduits, a Fetch and a Dump, than it is to write a
 single conduit that does a two-way sync.
-@footnote{Especially since that type of conduit hasn't been implemented
-yet.}
+
+@cindex Flavor, Install
+@cindex Install conduits
+	@emph{Install} conduits provide a hook for manipulating
+databases before they're installed. In the installation phase, ColdSync
+looks for databases in the install directory (@file{~/.palm/install} by
+default) and runs any applicable Install conduits on them. After that,
+it installs any remaining files in the install directory.
+
+	If you don't like the built-in Datebook application, but people
+give you databases in this format, you could use an Install conduit to
+convert them to your favorite format. Or, depending on how bleak the
+future becomes, you may find it necessary to have an Install conduit
+check new databases for viruses, and delete them if they're infected.
+
+@node Preferences,  , Overview-Flavors, Overview
+@comment  node-name,  next,  previous,  up
+@section Preferences
+
+@cindex Preferences
+	The Palm has two special databases, ``Saved Preferences'' and
+``Unsaved Preferences,'' that contain preferences. Preferences are the
+PalmOS equivalent of dot files: they are neither applications nor data,
+but rather user preferences that affect how an application runs. The
+signature for outgoing mail in the Mail application is a preference. So
+is the ``Owned by'' text you can set in the Prefs application.
+
+	ColdSync conduits can request to be given the value of a
+preference and act accordingly. For instance, a mail conduit might
+request the signature preference and append it to outgoing messages.
+
+@cindex Saved preferences
+@cindex Unsaved preferences
+@cindex God
+	There are two types of preferences: saved and unsaved. I have no
+idea what the difference is between these two types. Perhaps saved
+preferences are those that have found God.
 
 @node Tutorial, Specification, Overview, Top
 @comment  node-name,  next,  previous,  up
@@ -363,7 +412,7 @@ module that's part of the ColdSync distribution, and also the
 @uref{http://www.ooblick.com/software/coldsync/}.
 
 @menu
-* Conduit Workings::            
+* Conduit Workings::            An overview of how conduits work.
 * todo-dump::                   A simple conduit.
 * pine-aliases::                A slightly more complex conduit.
 * Style and Warnings::          Tips on writing good conduits.
@@ -576,7 +625,7 @@ writes the contents of @code{$PDB} to the file specified by the
 @menu
 * &DoFetch::                    The Fetch part of the conduit
 * &DoDump::                     The Dump part of the conduit
-* Helper Functions::            
+* Helper Functions::            Useful functions
 * pine-aliases Limitations::    Real-world considerations
 @end menu
 
@@ -695,9 +744,9 @@ sub DoDump
         @{
                 chomp;
 
-                my $alias = $1;
-                my $addr = $2;
-                my $fullname = $3;
+                my $alias;
+                my $addr;
+                my $fullname;
                 my @@rest;
                 my $record;
 
@@ -1053,8 +1102,8 @@ the Palm to purge the deleted records.
 @cindex Stench
 	If you're writing to the backup file and simply fail to write a
 deleted record, ColdSync will never notice this record and won't tell
-the Palm to delete it. It will linger on the Palm like a bad smell, and
-you will have to delete it manually.
+the Palm to delete it. It will remain on the Palm, and you will have to
+delete it manually.
 @ifhtml
 <P>
 @end ifhtml
@@ -1178,13 +1227,13 @@ See @ref{Conduit Flavors}.
 	ColdSync communicates with conduits by sending information to
 the conduit's standard input (@pxref{Conduit Input}), and by reading
 results from the conduit's standard output (@pxref{Conduit Output}).
-This information is in human-readable text form.
+This information is mostly in human-readable text form.
 
 @c XXX - Define "backup directory".
 
 @cindex Sync overview
 @cindex Timeline
-	A sync consists of the following phases:
+	A sync consists of the following phases (somewhat simplified):
 
 @enumerate
 @item Initialization
@@ -1192,8 +1241,8 @@ This information is in human-readable text form.
 <BR>
 @end ifhtml
 
-	ColdSync starts up, reads its configuration file, and performs
-basic initialization.
+	ColdSync starts up, reads its configuration file(s), and
+performs basic initialization.
 
 @item User presses HotSync button
 @ifhtml
@@ -1210,15 +1259,32 @@ basic initialization.
 	ColdSync gathers information from the Palm, such as the list of
 databases.
 
-@item Install new databases
+@item Fetch preferences
 @ifhtml
 <BR>
 @end ifhtml
 
-	If there are any databases in the install directory, ColdSync
-uploads them to the Palm. If the upload was successful, ColdSync deletes
-the file from the install directory, and adds an entry for the new
-database to its list of databases installed on the Palm.
+	ColdSync fetches from the Palm any preferences specified in the
+conduit configuration. Note that in the current implementation, ColdSync
+fetches all preferences listed in all conduits' configuration, even if
+those conduits will not be run.
+
+@item Run Install conduits and install new databases (before sync)
+@ifhtml
+<BR>
+@end ifhtml
+
+	If ColdSync was told to install new databases before the main
+sync (the @code{-z} option was not specified), it now examines each
+database in the install directory and runs its Install conduits.
+@ifhtml
+<P>
+@end ifhtml
+
+	Afterwards, if any databases remain in the install directory,
+ColdSync uploads them to the Palm. If the upload was successful,
+ColdSync deletes the file from the install directory, and adds an entry
+for the new database to its list of databases installed on the Palm.
 
 @item Run Fetch conduits
 @ifhtml
@@ -1230,22 +1296,16 @@ been installed), ColdSync runs its Fetch conduits. Fetch conduits are
 expected to create or modify the databases in the backup directory.
 See @ref{Fetch Conduits}.
 
-@item Main sync and Sync conduits
+@item Run Sync conduits (main sync)
 @ifhtml
 <BR>
 @end ifhtml
 
-	ColdSync synchronizes the databases on the Palm with the ones in
-the backup directory. As each database is synchronized, the message
-``Synchronizing @var{Database}'' appears on the Palm. If no backup file
-exists, ColdSync creates one by downloading the database.
-@ifhtml
-<P>
-@end ifhtml
-
-	During this time, ColdSync runs Sync conduits for the databases
-it is synchronizing.
-
+	ColdSync runs Sync conduits for each database on the Palm. If no
+other conduit was specified for a given database, ColdSync defaults to
+running the generic conduit. As each database is synchronized, the
+message ``Synchronizing @var{Database}'' appears on the Palm. If no
+backup file exists, ColdSync creates one by downloading the database.
 @ifhtml
 <P>
 @end ifhtml
@@ -1257,8 +1317,22 @@ moved to the Attic directory.
 <P>
 @end ifhtml
 
-	Once this is done, the message ``HotSync complete'' appears on
-the Palm. The user may remove it from the cradle.
+@item Run Install conduits and install new databases (after sync)
+@ifhtml
+<BR>
+@end ifhtml
+
+	If ColdSync was invoked with the @code{-z} option, it will run
+Install conduits and install new databases after the main sync. See
+above.
+
+@item Close the connection
+@ifhtml
+<BR>
+@end ifhtml
+
+	The message ``HotSync complete'' appears on the Palm. The user
+may remove it from the cradle.
 
 @item Run Dump conduits
 @ifhtml
@@ -1301,9 +1375,14 @@ another database.
 @section Conduit Input
 
 @cindex Headers
+@cindex Preferences
+@cindex Standard input
+@cindex Stdin
+@cindex SPC
 	ColdSync passes information to conduits in three ways: as
-command-line arguments, in a series of @emph{headers} on standard input,
-and through a designated special file descriptor (@pxref{SPC}).
+command-line arguments, in a series of @emph{headers} and
+@emph{preferences} on standard input, and through a designated special
+file descriptor (@pxref{SPC}).
 
 @subsection Command-line Arguments
 @cindex Command-line arguments
@@ -1311,9 +1390,10 @@ and through a designated special file descriptor (@pxref{SPC}).
 is the string @code{conduit}. This argument will always be present when
 the conduit is run from ColdSync.
 
-	The second argument is either the string @file{fetch}, for Fetch
-conduits, the string @code{dump}, for Dump conduits, or the string
-@file{sync}, for Sync conduits. (@pxref{Conduit Flavors}).
+	The second argument designates the conduit flavor: the string
+@file{fetch}, for Fetch conduits, the string @code{dump}, for Dump
+conduits, the string @file{sync}, for Sync conduits, or the string
+@code{install} for Install conduits. (@pxref{Conduit Flavors}).
 
 @subsection Standard Input
 @cindex Standard input
@@ -1337,6 +1417,10 @@ case-sensitive: @code{Foo} is not the same as @code{FOO}.
 string, and a newline character. The entire line may not be more than
 255 characters in length, including the field, but not including the
 terminating newline character.
+
+	Note that a single space follows the colon. Any other whitespace
+is part of the value. This allows a conduit to accept an all-whitespace
+header value (e.g., a paragraph indentation string).
 
 	@var{Value} is a string. It may not contain any newline
 characters. No other restrictions are placed upon its contents, although
@@ -1395,12 +1479,13 @@ identified by @code{Daemon}.
 
 	The @code{InputDB} header specifies the full pathname to the
 database file that the conduit should use as its input. This header is
-mandatory for Dump conduits, and is optional for Fetch conduits.
+mandatory for Sync and Dump conduits, and is optional for Fetch and
+Install conduits.
 @ifhtml
 <P>
 @end ifhtml
 
-	The file specified by @code{InputDB} might not exist, and might
+	The file specified by @code{InputDB} might not exist, or might
 not be readable by the conduit. In such cases, the conduit should fail
 gracefully.
 @c XXX - Exit status
@@ -1409,13 +1494,15 @@ gracefully.
 
 	The @code{OutputDB} header specifies the full pathname to the
 database file that the conduit should use as its output. This header is
-mandatory for Fetch conduits, and is optional for Dump conduits.
+mandatory for Sync, Fetch, and Install conduits, and is optional for
+Dump conduits.
 @ifhtml
 <P>
 @end ifhtml
 
 	The file specified by @code{OutputDB} might not exist, in which
-case the conduit may create it.
+case the conduit may create it. If it exists but is not writable by the
+conduit, the conduit should fail gracefully.
 @c XXX - Exit status
 
 @item Preference
@@ -1531,8 +1618,9 @@ for @code{status}, see the @var{SPCERR_*} constants in that file.
 
 @itemize @bullet
 @item @code{NOP}
-	No-op. This does nothing, and is mainly useful as a connectivity
-test. The response to a @code{NOP} has 0 bytes of data.
+	No-op. This does nothing, neither sends nor receives any data
+from the Palm, and is mainly useful as a connectivity test between the
+conduit and ColdSync. The response to a @code{NOP} has 0 bytes of data.
 
 @item @code{DBINFO}
 	Get database information. Returns a @code{struct dlp_dbinfo},
@@ -1552,16 +1640,32 @@ The response is the raw response, as received from the Palm.
 @comment  node-name,  next,  previous,  up
 @section Conduit Flavors
 
-	There are currently three conduit flavors: Fetch, Dump, and
-Sync.
+	There are currently four conduit flavors: Sync, Fetch, Dump, and
+Install.
 
 @menu
+* Sync conduits::               Conduits that run during the main sync
 * Fetch Conduits::              Conduits that run before the main sync
 * Dump Conduits::               Conduits that run after the main sync
-* Sync conduits::               Conduits that run during the main sync
+* Install conduits::            Conduits that run before new databases are
+                                  installed.
 @end menu
 
-@node Fetch Conduits, Dump Conduits, Conduit Flavors, Conduit Flavors
+@node Sync conduits, Fetch Conduits, Conduit Flavors, Conduit Flavors
+@comment  node-name,  next,  previous,  up
+@subsection Sync conduits
+
+@cindex Sync conduits
+	Sync conduits run during the main sync. The intended purpose of
+a Sync conduit is to ensure that a database on the Palm and its backup
+on the desktop both contain identical, up-to-date information. The
+generic conduit is a special instance of a Sync conduit.
+
+	Sync conduits have the unique property that they run while
+ColdSync is connected to the Palm, and so may communicate with it by
+using the SPC protocol (@pxref{SPC}).
+
+@node Fetch Conduits, Dump Conduits, Sync conduits, Conduit Flavors
 @comment  node-name,  next,  previous,  up
 @subsection Fetch Conduits
 
@@ -1571,7 +1675,7 @@ Fetch conduit is to create or modify the backup copy of a database
 before ColdSync compares it to the copy on the Palm. The conduit may,
 for instance, add new records to be uploaded to the Palm.
 
-@node Dump Conduits, Sync conduits, Fetch Conduits, Conduit Flavors
+@node Dump Conduits, Install conduits, Fetch Conduits, Conduit Flavors
 @comment  node-name,  next,  previous,  up
 @subsection Dump Conduits
 
@@ -1587,20 +1691,16 @@ database. If necessary, however, it may modify the database. For
 instance, a Dump conduit for the Palm Mail application may send out
 every message in the Outbox, then delete it from the database.
 
-@node Sync conduits,  , Dump Conduits, Conduit Flavors
+@node Install conduits,  , Dump Conduits, Conduit Flavors
 @comment  node-name,  next,  previous,  up
-@subsection Sync conduits
+@subsection Install conduits
 
-@cindex Sync conduits
-	Sync conduits run during the main sync. As of this writing, the
-Sync conduits for a database are run immediately after the built-in
-generic conduit for that database has run. However, in a future version
-of ColdSync, the built-in generic conduit will be a special instance of
-a Sync conduit.
-
-	Sync conduits have the unique property that they run while
-ColdSync is connected to the Palm, and so may communicate with it by
-using the SPC protocol (@pxref{SPC}).
+@cindex Install conduits
+	@emph{Install conduits} run just before new databases are
+uploaded to the Palm, which may happen either before or after the main
+sync. The purpose of an Install conduit is to examine a database that is
+about to be installed, and possibly delete or modify it, or create a new
+one.
 
 @node Status Codes,  , Conduit Flavors, Specification
 @comment  node-name,  next,  previous,  up
@@ -1807,7 +1907,8 @@ not removed from a database until a sync.
 
 @item Dump conduit
 
-	A conduit that runs after the main sync.
+	A conduit that runs after the main sync, usually to convert a
+PDB to some other format.
 
 @item Export
 
@@ -1828,7 +1929,8 @@ The header, however, is not deleted until a sync.
 
 @item Fetch conduit
 
-	A conduit that runs before the main sync.
+	A conduit that runs before the main sync, usually to convert a
+file to a PDB.
 
 @item Flavor
 
@@ -1875,7 +1977,7 @@ database.
 	A database that contains resources, as opposed to a record
 database. Resource databases tend to have a static structure. Palm
 applications are resource databases. Resource databases have a
-@code{.pdb} extension.
+@code{.prc} extension.
 
 @item Resource identifier
 
