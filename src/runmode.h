@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.h,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id: runmode.h,v 2.2 2002-12-29 00:07:36 azummo Exp $
  */
 
 extern int run_mode_Standalone(int argc, char *argv[]);
@@ -13,4 +13,5 @@ extern int run_mode_Backup(int argc, char *argv[]);
 extern int run_mode_Restore(int argc, char *argv[]);
 extern int run_mode_Init(int argc, char *argv[]);   
 extern int run_mode_Daemon(int argc, char *argv[]);
+extern int run_mode_List(int argc, char *argv[]);
 
