@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.27 2000-06-03 06:35:05 arensb Exp $
+ * $Id: config.c,v 1.28 2000-06-03 07:02:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -57,7 +57,6 @@ udword hostid;			/* This machine's host ID, so you can tell
 				 * whether this was the last machine the
 				 * Palm synced with.
 				 */
-uid_t user_uid;
 char palmdir[MAXPATHLEN+1];	/* ~/.palm pathname */
 char backupdir[MAXPATHLEN+1];	/* ~/.palm/backup pathname */
 char atticdir[MAXPATHLEN+1];	/* ~/.palm/backup/Attic pathname */
@@ -930,10 +929,10 @@ load_palm_config(struct Palm *palm)
 		MISC_TRACE(4)
 			fprintf(stderr, "Overriding user ID: %ld\n",
 				pda->userid);
-		user_uid = pda->userid;
+		userinfo.uid = pda->userid;
 	} else {
 		/* Use the current user's UID */
-		user_uid = pwent->pw_uid;	/* Get the user's UID */
+		userinfo.uid = pwent->pw_uid;	/* Get the user's UID */
 	}
  
 	/* Make sure the various directories (~/.palm/...) exist, and create
