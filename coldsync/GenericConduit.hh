@@ -1,6 +1,6 @@
 /* GenericConduit.hh
  *
- * $Id: GenericConduit.hh,v 1.2 1999-07-04 07:00:28 arensb Exp $
+ * $Id: GenericConduit.hh,v 1.1 1999-06-24 02:54:46 arensb Exp $
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_
@@ -44,9 +44,6 @@ class GenericConduit
 	struct pdb *_localdb;		// Local database (from backup dir)
 	struct pdb *_remotedb;		// Remote database (from Palm)
 
-// XXX 	virtual int FirstSync();	// Sync a database for the first time
-// XXX 	virtual int SlowSync();		// Do a slow sync
-// XXX	virtual int FastSync();		// Do a fast sync
 	virtual int open_archive();
 	virtual int archive_record(const struct pdb_record *rec);
 	virtual int close_archive();

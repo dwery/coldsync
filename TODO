@@ -115,6 +115,7 @@
   but what about older ones (PalmPilot et al.)? Can the viewer ID be
   used for this? How does one create one? Generate a random number and
   hope for the best?
+- Add the vc-mode RCS/CVS Id headers everywhere.
 - Use syslog for logging.
 - Write pack()/unpack() functions a la Perl (see Kernighan and Pike,
   "The Practice of Programming," section 9.1). Use them in
@@ -158,7 +159,7 @@
   the documentation is almost three times as large as everything else.
 - Split up the doc directory into directories, one per document.
 - Man page for coldsync.
-- Write a license (Artistic? Adapt it?).
+- Write a license.
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
   and other fun stuff. OTOH, since this is Unix, it ought to be able
@@ -179,5 +180,3 @@
   GenericConduit) to make sense in this situation.
 	Presumably this is the equivalent of a slow sync, but don't
   bother downloading the database from the Palm.
-- Add convenience functions for the various RPC calls, or at least the
-  more useful ones. See SysTraps.h for list of traps.
