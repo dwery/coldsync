@@ -115,7 +115,7 @@ FreeBSD:
 	"serial", and use device /dev/ugen0.
 
 Redhat Linux 6.1:
-	(as of ColdSync v1.1.4)
+	(as of ColdSync v1.4.4)
 	egcs 2.91.66 appears to be of two minds as to whether chars
 	should be signed or unsigned. With no options, you'll get
 	errors about "/usr/include/bits/string2.h:611: warning:
