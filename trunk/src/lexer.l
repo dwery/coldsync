@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.48 2002-04-17 23:18:34 azummo Exp $
+ * $Id: lexer.l,v 2.49 2002-07-04 21:03:27 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -174,6 +174,7 @@ QSTR		[^\\\$\"\n]
 "autoinit"	{ KEYWORD(AUTOINIT);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "options"	{ KEYWORD(OPTIONS);	}
+"modem"		{ KEYWORD(MODEM);	}
 "path"		{ KEYWORD(PATH);	}
 "cwd"		{ KEYWORD(CWD);	}
 "pda"		{ KEYWORD(PDA);		}

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.137 2002-05-03 00:01:42 arensb Exp $
+ * $Id: coldsync.c,v 1.138 2002-07-04 21:03:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -217,10 +217,12 @@ main(int argc, char *argv[])
 
 	/* Load the configuration: in daemon mode, just load the global
 	 * configuration from /etc/coldsync.conf. In other modes, read the
-	 * current user's ~/.coldsyncrc as well.
+	 * current user's ~/.coldsyncrc as well.  On the other hand, if the
+	 * user has specified the config file name on the command line, they
+	 * really want it - even in Daemon mode..
 	 */
 	if (global_opts.mode == mode_Daemon)
-		err = load_config(False);
+		err = load_config(global_opts.conf_fname_given);
 	else
 		err = load_config(True);
 	if (err < 0)
@@ -536,7 +538,10 @@ palm_Connect( void )
 				     listen->protocol,
 				     PCONNFL_PROMPT |
 				     (listen->flags &
-				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
+				      LISTENFL_TRANSIENT ? PCONNFL_TRANSIENT :
+				      0) |
+				     (listen->flags &
+				      LISTENFL_MODEM ? PCONNFL_MODEM :
 				      0)
 		     ))
 	    == NULL)

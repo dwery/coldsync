@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.4 2002-05-03 00:01:03 arensb Exp $
+ * $Id: palment.c,v 2.5 2002-07-04 21:03:27 azummo Exp $
  */
 
 #include "config.h"
@@ -230,7 +230,16 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 
 		if (match_type & PMATCH_SERIAL)
 		{
-			if (strncasecmp(entserial, p_snum, SNUM_MAX) != 0)
+			/* NULL or "*" matches any entry 
+			 * but only if there's another match critera
+			 * - ok, lots of negatives in this logic, but it works!
+			 */
+			if ((
+				 (PMATCH_SERIAL == match_type) || (
+				  (entserial[0] != '\0') &&
+				  (strncasecmp(entserial, "*", SNUM_MAX) != 0)
+				 )
+				) && (strncasecmp(entserial, p_snum, SNUM_MAX) != 0))
 			{
 				SYNC_TRACE(4)
 					fprintf(stderr,
@@ -249,8 +258,11 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 
 		if (match_type & PMATCH_USERNAME)
 		{
+			/* NULL or "*" matches any entry */
 			if ((palment->username != NULL) &&
 			    (palment->username[0] != '\0') &&
+			    strncmp(palment->username, "*",
+				    DLPCMD_USERNAME_LEN) != 0 &&
 			    strncmp(palment->username, p_username,
 				    DLPCMD_USERNAME_LEN) != 0)
 			{
@@ -271,7 +283,15 @@ find_palment(const char *p_snum, const char *p_username, const udword p_userid, 
 
 		if (match_type & PMATCH_USERID)
 		{
-			if (palment->userid != p_userid)
+			/* unfortunately, the is an unsigned int, so * and -1
+			 * are not options - the only choice left is zero!
+			 * Since the documented behaviour is that root (0)
+			 * isn't allowed to be the user, testing for zero here
+			 * is fine.  We don't use this number to SETUID anyway.
+			 */
+
+			/* 0 matches any entry (in Daemon mode only) */
+			if ((palment->userid != 0) && (palment->userid != p_userid))
 			{
 				SYNC_TRACE(4)
 					fprintf(stderr,

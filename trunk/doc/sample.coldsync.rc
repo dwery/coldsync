@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.5 2001-10-12 02:16:26 arensb Exp $
+# $Id: sample.coldsync.rc,v 1.6 2002-07-04 21:03:26 azummo Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -32,6 +32,14 @@ listen serial {
 	device: "/dev/palm";
 	speed: 38400;
 }
+
+# OR, if you're using a modem with mgetty, disable the above listen block
+# and insert this one.
+# 
+# listen serial {
+#	device: stdin;
+#	modem;
+# }
 
 # If you're syncing a Visor over USB under FreeBSD, use "usb" instead
 # of "serial":

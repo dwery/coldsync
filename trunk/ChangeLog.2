@@ -1,3 +1,37 @@
+2002-06-21  Bron Gondwana  <brong@h-r-s.com>
+
+	* include/pconn/PConnection.h: Add flag PCONNFL_MODEM.
+
+	* libpconn/PConnection.c: Copy flags into pconn->flags rather than
+	passing it to the pconn_*_open functions, as it is required in other
+	functions for modem support.
+
+	* libpconn/Pconnection_net.c: Function definition change for open
+	and use pconn->flags rather than flags.
+
+	* libpconn/Pconnection_serial.c: Function definition change for open
+	and use pconn->flags rather than flags, serial_write to STDOUT_FILENO
+	if pconn->fd == STDIN_FILENO, don't do any setspeed if flags &
+	PCONNFL_MODEM.  Special case device string 'stdin' means read from 
+	stdin (note: linux has a /dev/stdin, but this is more portable)
+
+	* libpconn/Pconnection_usb.c: Function definition change for open
+	and use pconn->flags rather than flags.
+
+	* src/coldsync.c: Read the user config file in run_mode_Daemon if it's
+	provided on the command line, re-write flags from LISTENFL_* to 
+	PCONNFL_* during new_PConnection so they don't have to be kept in sync.
+
+	* src/coldsync.h: Added LISTENFL_MODEM for modem support.
+
+	* src/lexer.l: Added MODEM keyword literal string 'modem'.
+
+	* src/palment.c: Wildcards for the columns serial ('' or '*'),
+	username ('' or '*'), userid (0) such that they match any palm.
+
+	* src/parser.y: token MODEM sets flag LISTENFL_MODEM on the current
+	listen block if seen.
+
 2001-12-10  Andrew Arensburger  <arensb@baa.ooblick.com>
 
 	* libpconn/dlp_cmd.c: Removed a to-do comment. Yay!

@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 2.20 2002-05-03 00:08:00 arensb Exp $
+# $Id: AUTHORS,v 2.21 2002-07-04 21:03:26 azummo Exp $
 
 Authors and Contributors:
 
@@ -45,6 +45,8 @@ Alessandro Zummo <azummo-coldsync3@towertech.it>: new functions in SPC.pm,
 Kenneth Lorber <keni@his.com>: pda_block propagation patch.
 Michael Lestinsky <michael@lestinsky.de>: PCONNFL_PROMPT patch.
 Takeshi AIHANA <aihana@jcom.home.ne.jp>: Japanese translation.
+Bron Gondawna <brong@brong.net>: Modem support, command line config file
+	in daemon mode and wildcards in palms file.
 
 	A big thank you to Kenneth Albanowski and the rest of the
 authors of the pilot-link code, for providing a reference

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.27 2002-04-27 23:24:47 azummo Exp $
+ * $Id: PConnection_net.c,v 1.28 2002-07-04 21:03:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -538,8 +538,7 @@ net_drain(PConnection *p)
 int
 pconn_net_open(PConnection *pconn,
 	       const char *device,
-	       const pconn_proto_t protocol,
-	       const unsigned short flags)
+	       const pconn_proto_t protocol)
 {
 	IO_TRACE(1)
 		fprintf(stderr, "Opening net connection.\n");

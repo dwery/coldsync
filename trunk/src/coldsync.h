@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.64 2002-04-17 23:18:34 azummo Exp $
+ * $Id: coldsync.h,v 1.65 2002-07-04 21:03:27 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -134,6 +134,7 @@ typedef struct listen_block
 					 * fails with ENOENT isn't an
 					 * error.
 					 */
+#define LISTENFL_MODEM		0x04	/* This device is a modem */
 
 /* cond_header
  * A (name, value) pair that will be passed to a conduit.

@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: new_PConnection.3,v 1.3 2001-11-12 00:09:09 arensb Exp $
+.\" $Id: new_PConnection.3,v 1.4 2002-07-04 21:03:26 azummo Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -40,9 +40,9 @@ specifies the pathname of the Palm device, \fIe.g.\fR
 .Pa /dev/cuaa0
 for a serial port. If
 .Fa device
-is NULL,
+is NULL or the special string 'stdin', 
 .Nm
-uses standard input.
+uses standard input and standard output.
 .Pp
 .Fa listenType
 specifies the underlying connection to the Palm cradle. It is one of:
@@ -85,8 +85,10 @@ Use the DLP and NetSync protocols. This is the default for
 .Fa flags
 is the bitwise-or of
 .Dv PCONNFL_TRANSIENT
-and
+,
 .Dv PCONNFL_PROMPT .
+and
+.Dv PCONNFL_MODEM .
 If
 .Dv PCONN_TRANSIENT
 has been specified, the device may or may not exist at any given time,
@@ -100,6 +102,13 @@ has been specified,
 .Nm
 will prompt the user to press the HotSync button on the cradle, after
 the device has been opened.
+.Pp
+If
+.Dv PCONN_MODEM
+has been specified,
+.Nm
+will not attept to change the change the speed of the connection that
+specified by the palm, which breaks modem connections.
 .Sh RETURN VALUE
 .Nm
 returns a pointer to a new

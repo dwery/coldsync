@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.29 2002-04-27 18:36:31 azummo Exp $
+ * $Id: PConnection.c,v 1.30 2002-07-04 21:03:27 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -32,18 +32,15 @@ int	io_trace = 0;
 
 extern int pconn_serial_open(PConnection *pconn,
 			     const char *fname,
-			     const pconn_proto_t protocol,
-			     const Bool prompt_for_hotsync);
+			     const pconn_proto_t protocol);
 extern int pconn_net_open(PConnection *pconn,
 			  const char *fname,
-			  const pconn_proto_t protocol,
-			  const Bool prompt_for_hotsync);
+			  const pconn_proto_t protocol);
 
 #if WITH_USB
 extern int pconn_usb_open(PConnection *pconn,
 			  const char *fname,
-			  const pconn_proto_t protocol,
-			  const Bool prompt_for_hotsync);
+			  const pconn_proto_t protocol);
 #endif
 
 /* new_PConnection
@@ -67,7 +64,8 @@ new_PConnection(char *device,
 	}
 
 	/* Initialize the common part, if only in case the constructor fails */
-	pconn->fd		= -1;
+	pconn->fd			= -1;
+	pconn->flags	    = flags;
 	pconn->io_bind		= NULL;
 	pconn->io_read		= NULL;
 	pconn->io_write		= NULL;
@@ -82,7 +80,7 @@ new_PConnection(char *device,
 
 	switch (listenType) {
 	    case LISTEN_SERIAL:
-		if (pconn_serial_open(pconn, device, protocol, flags)
+		if (pconn_serial_open(pconn, device, protocol)
 		    < 0)
 		{
 			free(pconn);
@@ -91,7 +89,7 @@ new_PConnection(char *device,
 		break;
 
 	    case LISTEN_NET:
-		if (pconn_net_open(pconn, device, protocol, flags) < 0)
+		if (pconn_net_open(pconn, device, protocol) < 0)
 		{
 			free(pconn);
 			return NULL;
@@ -103,7 +101,7 @@ new_PConnection(char *device,
 		/* XXX - Should be able to specify "-" for the filename to
 		 * listen on stdin/stdout.
 		 */
-		if (pconn_usb_open(pconn, device, protocol, flags) < 0)
+		if (pconn_usb_open(pconn, device, protocol) < 0)
 		{
 			free(pconn);
 			return NULL;

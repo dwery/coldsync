@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.36 2002-05-09 13:50:59 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.37 2002-07-04 21:03:27 azummo Exp $
  */
 
 #include "config.h"
@@ -359,8 +359,7 @@ usb_drain(PConnection *p)
 int
 pconn_usb_open(PConnection *pconn,
 	       const char *device,
-	       const pconn_proto_t protocol,
-	       const unsigned short flags)
+	       const pconn_proto_t protocol)
 {
 	struct usb_data *u;
 	struct usb_device_info udi;
@@ -454,7 +453,7 @@ pconn_usb_open(PConnection *pconn,
 	 *  operation on the Visor logically plugs it into the USB
 	 *  hub port, where it's noticed and enumerated.
 	 */
-	if (flags & PCONNFL_PROMPT)
+	if (pconn->flags & PCONNFL_PROMPT)
 		printf(_("Please press the HotSync button.\n"));
 
 	/*
@@ -476,7 +475,7 @@ pconn_usb_open(PConnection *pconn,
 		IO_TRACE(1)
 			perror(device);
 
-		if ((errno == ENOENT) && ((flags & PCONNFL_TRANSIENT) != 0))
+		if ((errno == ENOENT) && ((pconn->flags & PCONNFL_TRANSIENT) != 0))
 			/* Just ignore this error */
 			;
 		else if (errno != ENXIO) {
@@ -730,7 +729,7 @@ pconn_usb_open(PConnection *pconn,
 		if (pconn->fd < 0)
 		{
 			if ((errno == ENOENT) &&
-			    ((flags & PCONNFL_TRANSIENT) != 0))
+			    ((pconn->flags & PCONNFL_TRANSIENT) != 0))
 			{
 				/* Ignore this error and try again */
 				sleep(1);
