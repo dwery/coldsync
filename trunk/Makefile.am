@@ -1,12 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.1 1999-02-19 22:35:06 arensb Exp $
+# $Id: Makefile.am,v 1.2 1999-03-16 11:57:12 arensb Exp $
 #
 
 ## XXX - Use shallow directory structure (then again, with all the
 ## crap that automake and stuff dumps in the top-level directory, deep
 ## might be better.
-## XXX - Strictness: foreign.
 
 SUBDIRS = palm pconn coldsync doc
 
