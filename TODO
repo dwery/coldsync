@@ -1,3 +1,7 @@
+- Devfs: At configure-time, check for the existence of /dev/.devfsd.
+  This is created by Linux's devfs daemon. If it exists, assume
+  HAVE_DEVFS.
+	In libpconn/PConnection_serial.c, when opening the device, if 
 - The Linux USB-to-serial driver appears to be flaky: I've seen it
   drop 3k characters at one point.
 	When this happens, the symptom is that ColdSync hangs until
@@ -21,8 +25,6 @@
   serial number. Is this possible here as well? If so, how to
   communicate this to the appropriate levels?
 - Would it be possible to implement a web clipping server?
-- Bug? The first real sync with the m500, it said it was doing a fast
-  sync. Did the userinfo get set during file backup or restore?
 - Add a ~/.palm/commands file, containing commands to execute on the
   next sync. If absent, this should default to "sync". That way, you
   don't have to kill 'usbd' or 'getty' to do a one-time backup.
