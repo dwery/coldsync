@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.4 2000-03-14 06:35:08 arensb Exp $
+ * $Id: PConnection.h,v 1.5 2000-06-03 06:29:48 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -59,8 +59,9 @@ struct PConnection
 			 struct timeval *tvp);
 	int (*io_setspeed)(struct PConnection *p, int speed);
 
-/* XXX - Experimental */
-int speed;
+	long speed;		/* Speed at which to listen, for serial
+				 * connections.
+				 */
 
 	void *io_private;	/* XXX - This is only used by the USB code.
 				 * It'd be cleaner to either declare it as
