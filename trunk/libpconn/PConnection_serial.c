@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.10 2000-12-11 09:01:29 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.11 2000-12-11 09:23:16 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -156,56 +156,47 @@ serial_accept(struct PConnection *pconn)
 	 * appears in the table: this is to make sure that there is a valid
 	 * B* speed to pass to cfsetspeed().
 	 */
-	for (i = 0; i < num_speeds; i++)
+	if (pconn->speed != 0)
 	{
-		/* XXX - Make sure the speed is usable (when
-		 * speeds[i].usable has been set).
-		 */
-		IO_TRACE(7)
-			fprintf(stderr, "Comparing %ld ==? %ld\n",
-				speeds[i].bps, pconn->speed);
-
-		if (speeds[i].bps == pconn->speed)
+		for (i = 0; i < num_speeds; i++)
 		{
-				/* Found it */
+			/* XXX - Make sure the speed is usable (when
+			 * speeds[i].usable has been set).
+			 */
 			IO_TRACE(7)
-				fprintf(stderr, "Found it\n");
-			bps = speeds[i].bps;
-			tcspeed = speeds[i].tcspeed;
-			break;
+				fprintf(stderr, "Comparing %ld ==? %ld\n",
+					speeds[i].bps, pconn->speed);
+
+			if (speeds[i].bps == pconn->speed)
+			{
+				/* Found it */
+				IO_TRACE(7)
+					fprintf(stderr, "Found it\n");
+				bps = speeds[i].bps;
+				tcspeed = speeds[i].tcspeed;
+				break;
+			}
+		}
+
+		if (i >= num_speeds)
+		{
+			/* The requested speed wasn't found */
+			fprintf(stderr, _("Warning: can't set the speed you "
+					  "requested (%ld bps).\nUsing "
+					  "default.\n"),
+				pconn->speed);
+			pconn->speed = 0L;
 		}
 	}
 
-	if (i >= num_speeds)
-	{
-		/* The requested speed wasn't found */
-		fprintf(stderr, _("Warning: can't set the speed you "
-				  "requested (%ld bps).\nUsing "
-				  "default (%ld bps)\n"),
-			pconn->speed,
-			SYNC_RATE);
-		pconn->speed = 0L;
-	}
-
-	if (pconn->speed == 0)
-	{
-		/* Either the .coldsyncrc didn't specify a speed, or else
-		 * the one that was specified was bogus.
-		 */
-		IO_TRACE(2)
-			fprintf(stderr, "Using default speed (%ld bps)\n",
-				SYNC_RATE);
-		bps = SYNC_RATE;
-		tcspeed = BSYNC_RATE;
-	}
-	IO_TRACE(2)
-		fprintf(stderr, "-> Setting speed to %ld (%ld)\n",
-			(long) bps, (long) tcspeed);
-
 	newspeed = cmp_accept(pconn, pconn->speed);
-	/* XXX - Error-checking */
-	/* XXX - Find 'tcspeed' from 'newspeed' */
+	if (newspeed == 0)
+	{
+		fprintf(stderr, _("Error establishing CMP connection.\n"));
+		return -1;
+	}
 
+	/* XXX - Find 'tcspeed' from 'newspeed' */
 	pconn->speed = newspeed;
 
 	/* Change the speed */
