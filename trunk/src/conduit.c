@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.13 2000-09-08 15:59:33 arensb Exp $
+ * $Id: conduit.c,v 2.14 2000-09-17 21:46:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -55,6 +55,12 @@
 #include "spc.h"
 #include "pref.h"
 
+#define MAX_SANE_FD	32	/* Highest-numbered file descriptor one
+				 * might get in a sane universe. Anything
+				 * higher than this means that there's a
+				 * file descriptor leak.
+				 */
+
 typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 					 * 'sig_t', but that's a BSDism.
 					 */
@@ -80,15 +86,15 @@ static INLINE Bool crea_type_matches(
 	const udword type);
 
 typedef int (*ConduitFunc)(struct PConnection *pconn,
-			   struct dlp_dbinfo *dbinfo,
+			   const struct dlp_dbinfo *dbinfo,
 			   const conduit_block *block);
 
 int run_DummyConduit(struct PConnection *pconn,
-		     struct dlp_dbinfo *dbinfo,
+		     const struct dlp_dbinfo *dbinfo,
 		     const conduit_block *block);
 extern int run_GenericConduit(
 	struct PConnection *pconn,
-	struct dlp_dbinfo *dbinfo,
+	const struct dlp_dbinfo *dbinfo,
 	const conduit_block *block);
 struct ConduitDef *findConduitByName(const char *name);
 
@@ -200,7 +206,6 @@ poll_fd(const int fd, const Bool for_writing)
 }
 
 /* format_header
-
  * A convenience function. Takes a buffer, a header name, and a header
  * value. Writes the header to 'buf', making sure that the result obeys the
  * rules for conduit headers:
@@ -359,6 +364,25 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 			fprintf(stderr, "spcpipe == (%d, %d)\n",
 				spcpipe[0], spcpipe[1]);
 		}
+
+		/* Sanity check */
+		if (spcpipe[1] > MAX_SANE_FD)
+		{
+			fprintf(stderr,
+				_("%s: I just got file descriptor %d. "
+				  "There appears to be a file\n"
+				  "descriptor leak. Please notify the "
+				  "maintainer.\n"),
+				"run_conduit", spcpipe[1]);
+		}
+		if (spcpipe[0] > 999)
+		{
+			fprintf(stderr,
+				_("%s: Too many file descriptors. "
+				  "Aborting.\n"),
+				"run_conduit");
+			return 502;
+		}
 	}
 
 	/* Set handler for SIGCHLD, so that we can keep track of what
@@ -370,7 +394,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		fprintf(stderr, _("%s: Can't set signal handler\n"),
 			"run_conduit");
 		perror("signal");
-		return -1;
+		return 503;
 	}
 
 	/* Before all the jumping stuff, make sure the pref_list is
@@ -508,8 +532,10 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	{
 		++last_header;
 		headers[last_header].name = "SPCPipe";
-		/* XXX - Should barf if spcpipe[0] > 999 */
+
 		sprintf(spcnumbuf, "%d", spcpipe[0]);
+				/* This will fail if spcpipe[0] > 999, but
+				 * we've checked for that already. */
 		headers[last_header].value = spcnumbuf;
 	}
 
@@ -638,8 +664,13 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				FD_SET(spcpipe[1], &out_fds);
 				break;
 			    default:
-				/* XXX - Should complain: this can't happen */
-				break;
+				fprintf(stderr,
+					_("%s: Error: conduit handler is in "
+					  "an inconsistent state at\n"
+					  "%s, line %d. Please notify the "
+					  "maintainer.\n"),
+					"run_conduit", __FILE__, __LINE__);
+				goto abort;
 			}
 
 			if (spcpipe[1] > max_fd)
@@ -678,11 +709,13 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 			}
 		}
 		if (err == 0)
+		{
 			/* This should never happen */
-			/* XXX - Should probably print an error message to
-			 * this effect.
-			 */
+			fprintf(stderr,
+				_("%s: select() returned 0. I'm puzzled.\n"),
+				"run_conduit");
 			continue;
+		}
 
 		/* Check fromchild, to see if the child has printed a
 		 * status message to stdout.
@@ -711,8 +744,8 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 			laststatus = err;
 		}
 
+		/* From here on in, everything has to do with SPC */
 		if (!with_spc)
-			/* From here on in, everything has to do with SPC */
 			continue;
 
 		/* Check the state of the SPC state machine, and figure out
@@ -937,12 +970,21 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	}
 
   abort:
-	/* The conduit has exited */
+	if (conduit_pid > 0)
+	{
+		/* Presumably, we're here because there was an internal
+		 * error, but the conduit isn't dead. Kill it.
+		 */
+		kill(conduit_pid, SIGTERM);
+				/* No error checking, at least for now,
+				 * since there was an internal error, and
+				 * we have bigger things to worry about
+				 * than whether the conduit caught its
+				 * SIGTERM.
+				 */
+	}
 
-	/* XXX - We may have jumped here because of an internal error, and
-	 * not because the child has died. It would be good to kill the
-	 * child if it isn't dead yet.
-	 */
+	/* The conduit has exited */
 
 	/* See if there is anything pending on 'fromchild' */
 	while (1)
@@ -1090,11 +1132,22 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 			/* It's an external program. Run it */
 			err = run_conduit(dbinfo, flavor, conduit, with_spc,
 					  pconn);
-		else
+		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
 			 */
+
+			/* Make sure the flavor is okay. */
+			if ((flavor_mask & builtin->flavors) == 0)
+			{
+				fprintf(stderr, _("Error: conduit %s is not "
+						  "a %s conduit\n"),
+					builtin->name, flavor);
+				continue;
+			}
+
 			err = (*builtin->func)(pconn, dbinfo, conduit);
+		}
 
 		/* XXX - Error-checking. Report the conduit's exit status
 		 */
@@ -1123,11 +1176,22 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 			/* It's an external program. Run it */
 			err = run_conduit(dbinfo, flavor, def_conduit,
 					  with_spc, pconn);
-		else
+		else {
 			/* It's a built-in conduit. Run the appropriate
 			 * function.
 			 */
+
+			/* Make sure the flavor is okay. */
+			if ((flavor_mask & builtin->flavors) == 0)
+			{
+				fprintf(stderr, _("Error: conduit %s is not "
+						  "a %s conduit\n"),
+					builtin->name, flavor);
+				return -1;
+			}
+
 			(*builtin->func)(pconn, dbinfo, def_conduit);
+		}
 	}
 
 	return 0;
@@ -1188,8 +1252,6 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 /* run_Sync_conduits
  * Go through the list of Sync conduits and run whichever ones are
  * applicable for the database 'dbinfo'.
- *
- * XXX - This is just an experimental first draft so far
  */
 int
 run_Sync_conduits(struct dlp_dbinfo *dbinfo,
@@ -1251,7 +1313,7 @@ spawn_conduit(
 	if ((err = pipe(inpipe)) < 0)
 	{
 		perror("pipe(inpipe)");
-		exit(1);	/* XXX - Shouldn't die so violently */
+		return -1;
 	}
 	SYNC_TRACE(6)
 		fprintf(stderr, "spawn_conduit: inpipe == %d, %d\n",
@@ -1268,6 +1330,9 @@ spawn_conduit(
 			_("%s: Can't create file handle to child's stdin\n"),
 			"spawn_conduit");
 		perror("fdopen");
+
+		close(inpipe[0]);
+		close(inpipe[1]);
 		return -1;
 	}
 	*tochild = fh;
@@ -1276,7 +1341,10 @@ spawn_conduit(
 	if ((err = pipe(outpipe)) < 0)
 	{
 		perror("pipe(outpipe)");
-		exit(1);	/* XXX - Shouldn't die so violently */
+
+		close(inpipe[0]);
+		close(inpipe[1]);
+		return -1;
 	}
 	SYNC_TRACE(6)
 		fprintf(stderr, "spawn_conduit: outpipe == %d, %d\n",
@@ -1291,6 +1359,11 @@ spawn_conduit(
 			_("%s: Can't create file handle to child's stdout\n"),
 			"spawn_conduit");
 		perror("fdopen");
+
+		close(inpipe[0]);
+		close(inpipe[1]);
+		close(outpipe[0]);
+		close(outpipe[1]);
 		return -1;
 	}
 
@@ -1305,6 +1378,11 @@ spawn_conduit(
 			_("%s: Can't make child's stdout be line-buffered\n"),
 			"spawn_conduit");
 		perror("setvbuf");
+
+		close(inpipe[0]);
+		close(inpipe[1]);
+		close(outpipe[0]);
+		close(outpipe[1]);
 		return -1;
 	}
 	*fromchild = fh;
@@ -1683,13 +1761,13 @@ cond_readstatus(FILE *fromchild)
  * Handler for SIGCHLD signal. It records the state of a child as soon as
  * it changes; that way, we have up-to-date information in other parts of
  * the code, and avoid nasty timing bugs.
+ *
+ * NB: When modifying this function, make sure that it contains only
+ * reentrant functions (Stevens, AUP, 10.6)
  */
 /* XXX - I think there are OSes that reset the signal handler to its
  * default value once a signal has been received. Find out about this, and
  * cope with it.
- */
-/* XXX - Make sure this contains only reentrant functions (Stevens, AUP,
- * 10.6)
  */
 static RETSIGTYPE
 sigchld_handler(int sig)
@@ -1868,7 +1946,7 @@ crea_type_matches(const conduit_block *cond,
 
 /* XXX - Experimental */
 int run_DummyConduit(struct PConnection *pconn,
-		     struct dlp_dbinfo *dbinfo,
+		     const struct dlp_dbinfo *dbinfo,
 		     const conduit_block *block)
 {
 	fprintf(stderr, "Inside run_DummyConduit\n");
@@ -1880,11 +1958,20 @@ findConduitByName(const char *name)
 {
 	int i;
 
+	SYNC_TRACE(5)
+		fprintf(stderr, "Looking for built-in conduit \"%s\"\n",
+			name);
 	for (i = 0; i < num_builtin_conduits; i++)
 	{
+		SYNC_TRACE(6)
+			fprintf(stderr, "Comparing to \"%s\"\n",
+				builtin_conduits[i].name);
+
 		if (strcmp(name, builtin_conduits[i].name) == 0)
 		{
-			fprintf(stderr, "Found builtin conduit\n");
+			SYNC_TRACE(6)
+				fprintf(stderr, "Found builtin conduit\n");
+
 			/* Found it */
 			return &(builtin_conduits[i]);
 		}
