@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id: cs_error.c,v 2.3 2002-09-03 08:10:47 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -25,6 +25,7 @@ update_cs_errno_pconn(PConnection *pconn, palmerrno_t palm_errno)
 		fprintf(stderr, "update_cs_errno_pconn: %d\n", palm_errno);
 
 	/* Avoid overwriting the current error */
+	/* XXX - Is this correct? */
 	if (cs_errno == CSE_NOERR)	
 	{
 		switch (palm_errno)
@@ -37,6 +38,7 @@ update_cs_errno_pconn(PConnection *pconn, palmerrno_t palm_errno)
 				cs_errno = CSE_NOCONN;
 				break;
 			default:
+				Warn(_("Setting CSE_OTHER due to palm_errno = %d"), palm_errno);
 				cs_errno = CSE_OTHER;
 				break;
 		}
@@ -50,6 +52,7 @@ update_cs_errno_dlp(PConnection *pconn)
 		fprintf(stderr, "update_cs_errno_dlp: %d\n", pconn->dlp.resp.error);
 
 	/* Avoid overwriting the current error */
+	/* XXX - Is this correct? */
 	if (cs_errno == CSE_NOERR)	
 	{
 		switch (pconn->dlp.resp.error)
@@ -61,6 +64,7 @@ update_cs_errno_dlp(PConnection *pconn)
 				cs_errno = CSE_CANCEL;
 				break;
 			default:
+				Warn(_("Setting CSE_OTHER due dlp error = %d"), pconn->dlp.resp.error);
 				cs_errno = CSE_OTHER;
 				break;
 		}
@@ -76,7 +80,7 @@ print_cs_errno(CSErrno cs_errno)
 			break;
 
 		case CSE_OTHER:
-			Error(_("Other error."));
+			Error(_("Other error"));
 			break;
 	
 		case CSE_NOCONN:
