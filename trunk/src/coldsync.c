@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.31 2000-04-09 14:27:32 arensb Exp $
+ * $Id: coldsync.c,v 1.32 2000-04-10 09:28:13 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -262,7 +262,7 @@ main(int argc, char *argv[])
 		 */
 		udword snum_ptr;	/* Palm pointer to serial number */
 		uword snum_len;		/* Length of serial number string */
-		ubyte checksum;		/* Serial number checksum */
+		char checksum;		/* Serial number checksum */
 
 		/* Get the location of the ROM serial number */
 		/* XXX - Move this into its own function? */
@@ -289,7 +289,8 @@ main(int argc, char *argv[])
 		}
 
 		/* Read the serial number out of the location found above */
-		err = RDLP_MemMove(pconn, palm.serial, snum_ptr, snum_len);
+		err = RDLP_MemMove(pconn, (ubyte *) palm.serial,
+				   snum_ptr, snum_len);
 		if (err < 0)
 		{
 			fprintf(stderr, _("Error: Can't read serial "
@@ -298,22 +299,13 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 		palm.serial[snum_len] = '\0';
+		palm.serial_len = snum_len;
 
 		/* Calculate the checksum for the serial number */
-		checksum = 0;
-		for (i = 0; i < snum_len; i++)
-		{
-			checksum += palm.serial[i];
-			checksum = (checksum << 1) |
-				(checksum & 0x80 ? 1 : 0);
-		}
-		checksum = (checksum >> 4) + (checksum & 0x0f) + 2;
-
+		checksum = snum_checksum(palm.serial, palm.serial_len);
 		SYNC_TRACE(1)
 			fprintf(stderr, "Serial number is \"%s-%c\"\n",
-				palm.serial,
-				((checksum < 10) ? (checksum + '0') :
-				 (checksum - 10 + 'A')));
+				palm.serial, checksum);
 	}
 
 	/* Figure out which Palm we're dealing with, and load per-palm
@@ -1624,6 +1616,35 @@ append_dbentry(struct Palm *palm,
 	strncpy(dbinfo->name, pdb->name, DLPCMD_DBNAME_LEN);
 
 	return 0;		/* Success */
+}
+
+/* snum_checksum
+ * Calculate and return the checksum character for a checksum 'snum' of
+ * length 'len'.
+ */
+char
+snum_checksum(const char *snum, int len)
+{
+	int i;
+	unsigned char checksum;
+
+	checksum = 0;
+	for (i = 0; i < len; i++)
+	{
+		checksum += toupper(snum[i]);
+		checksum = (checksum << 1) |
+			(checksum & 0x80 ? 1 : 0);
+	}
+	checksum = (checksum >> 4) + (checksum & 0x0f) + 2;
+		/* The "+2" is there so that the checksum won't be '0' or
+		 * '1', which are too easily confused with the characters
+		 * 'O' and 'I'.
+		 */
+
+	/* Convert to a character and return it */
+	return (char) (checksum < 10 ?
+		       checksum + '0' :
+		       checksum - 10 + 'A');
 }
 
 /* This is for Emacs's benefit:
