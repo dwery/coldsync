@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2000-12-18 08:08:04 arensb Exp $
+# $Id: Makefile,v 1.10 2000-12-23 11:34:47 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -47,12 +47,12 @@ INPUTFILES =	\
 	${TOP}/src/pref.c \
 	${TOP}/src/restore.c \
 	${TOP}/src/spc.c \
+	${TOP}/src/net_compat.c \
 	${TOP}/src/GenericConduit.cc
 
 DISTFILES =	Makefile \
 		messages.po \
-		${POFILES} \
-		FILES
+		${POFILES}
 
 CLEAN =		core *.core *.bak *~ errs errs.* ${MOFILES}
 SPOTLESS =	messages.po
