@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.c,v 2.4 2002-09-03 19:21:22 azummo Exp $
+ * $Id: cs_error.c,v 2.5 2002-09-04 14:19:09 azummo Exp $
  */
 #include "config.h"
 #include "coldsync.h"
@@ -69,7 +69,7 @@ update_cs_errno_dlp(PConnection *pconn)
 				break;
 			default:
 				/* XXX - Temp. debugging message */
-				Warn("Setting CSE_DLPERR due to dlp error = %d.", pconn->dlp.resp.error);
+				/* Warn("Setting CSE_DLPERR due to dlp error = %d.", pconn->dlp.resp.error); */
 				cs_errno = CSE_DLPERR;
 				break;
 		}
@@ -79,7 +79,6 @@ update_cs_errno_dlp(PConnection *pconn)
 	 * have an higher precedence than CSE_DLPERR, so maybe the only
 	 * DLP error we are interested in is DLPSTAT_CANCEL... ?
 	 */
-
 }
 
 void
