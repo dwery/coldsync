@@ -1,7 +1,15 @@
+- When a program is launched by 'inetd', its stderr is the socket.
+  This will break logging. Add a "-l <fname>" option. If <fname> is
+  "syslog", use syslog for logging. Can use snprintf() to format the
+  log message.
+	How will this break debug_dump()?
+	This will most likely make it harder to make lib{pconn,pdb}
+  standalone libraries.
+- Assume that snprintf() is available. This can be used to replace the
+  various mk*fname() functions.
 - Bug: zero-length records. See Simon Callan's email: if a
   Memo/ToDo/Datebook record is EXPUNGED and DIRTY, GenericConduit
   doesn't handle it correctly (saves it instead of deleting it).
-- Include Apache's snprintf().
 - Init mode should set the NetSync host and mask, if they're set in
   the pda block.
 - "forward:" line in pda block: this is of the form
@@ -15,9 +23,6 @@
   specify a network address and mask, e.g., "192.168.0.0/16"; or a
   network name, to be looked up with getnetbyname() (in this case,
   though, how do you get the mask?).
-- Include a inet_aton() based implementation of inet_pton() (ditto
-  inet_ntop()). The easiest thing to do is probably to borrow from
-  Stevens (again) and use the implementation from UNP1.
 - Would be nice to allow conduit headers consisting entirely of
   whitespace.
 	Actually, it appears that this already works: you can quote an
@@ -45,6 +50,19 @@
   select() on /dev/ugen0 is broken and always returns ready.
 - NetSync should time out after a while: if no TCP connection received
   N seconds after accepting a UDP connection, stop waiting and abort.
+	Should time out:
+	- After sending response to UDP wakeup packet (waiting for TCP
+  connection) (the wakeup may have been sent to a broadcast address,
+  and the client decided to talk to another machine that responded
+  first).
+	- After sending UDP wakeup packet (no servers responding). Log
+  this on the Palm.
+	- Trying to establish TCP connection to server (it may be
+  broken, only responding to UDP wakeup packets).
+	- During the main part of the sync (server or client may be
+  broken, stuck in infinite loop or something).
+	- Probably other cases as well.
+- Does NetSync support tickle packets? Or is this all handled by TCP?
 - Update FreeBSD port to include .mo files
 - Bug: run coldsync -mr ... . Kill xcopilot before running HotSync.
   ColdSync dumps core.
@@ -52,9 +70,6 @@
   knows about are in the distribution somewhere.
 - Add a SIGTERM handler, to catch Ctrl-C.
 - Add support for TCP wrappers. RTFM hosts_access().
-- FreeBSD bug: accept(2) man page doesn't say that you need to
-  #include <sys/socket.h> : sys/socket.h defines socklen_t, which is
-  used in that man page.
 - Bug?: If the serial number matches (and is a real serial number),
   but the username/userid doesn't, ColdSync proceeds to the next
   entry. Arguably, this should be a definitive non-match.
@@ -69,6 +84,8 @@
   the sync log exceeds this size? Send the first N bytes? The last N
   bytes (those most likely to contain any errors)?
 - It would be nice if add_to_log() took printf()-like arguments.
+	Reimplement this with snprintf(), now that it's always
+  available.
 - Persistent "Bad CRC" problems under Linux:
 	As far as I can tell, the Linux serial driver is buggy, and
   drops characters. 'pilot-link' also sees bad CRCs; it just doesn't
