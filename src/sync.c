@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.3 2002-09-04 14:19:09 azummo Exp $
+ * $Id: sync.c,v 2.4 2002-09-07 15:08:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -803,9 +803,8 @@ do_sync(pda_block *pda, struct Palm *palm)
 		if (err < 0)
 		{
 			Error(_("Can't fetch list of databases."));
-			/* print_cs_errno(cs_errno); */
-			palm_CSDisconnect(palm);
 
+			palm_CSDisconnect(palm);
 			return -1;
 		}
 	}
@@ -868,8 +867,6 @@ do_sync(pda_block *pda, struct Palm *palm)
 
 	if ((err = conduits_sync(palm, pda)) < 0)
 	{
-		/* print_cs_errno(cs_errno); */
-
 		if (cs_errno == CSE_CANCEL)
 		{
 			va_add_to_log(palm_pconn(palm), _("*Cancelled*\n"));
@@ -900,7 +897,6 @@ do_sync(pda_block *pda, struct Palm *palm)
 		switch (cs_errno)
 		{
 		    case CSE_NOCONN:
-		    	/* print_cs_errno(cs_errno); */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 			return -1;
 		    default:
@@ -941,9 +937,9 @@ do_sync(pda_block *pda, struct Palm *palm)
 				switch (cs_errno)
 				{
 				    case CSE_NOCONN:
-					/* print_cs_errno(cs_errno); */
 					palm_Disconnect(palm, DLPCMD_SYNCEND_OTHER);
 					return -1;
+
 				    default:
 					Warn(_("Can't fetch preference "
 					       "0x%08lx/%d."),
@@ -977,12 +973,8 @@ do_sync(pda_block *pda, struct Palm *palm)
 	/* Free palm! */
 	free_Palm(palm);
 	
-	/* XXX - Is this check still needed ? */
-	if (cs_errno == CSE_NOCONN)
-	{
-		/* print_cs_errno(cs_errno); */
+	if (cs_errno != CSE_NOERR)
 		return -1;
-	}
 
 	return 0;
 }

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.32 2002-08-31 19:26:03 azummo Exp $
+ * $Id: restore.c,v 2.33 2002-09-07 15:08:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -261,7 +261,6 @@ restore_dir(PConnection *pconn,
 
 		if (err < 0 && cs_errno_fatal(cs_errno))
 		{
-			/* print_cs_errno(cs_errno); */
 			closedir(dir);
 			return -1;
 		}
