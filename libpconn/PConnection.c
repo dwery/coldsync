@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.25 2001-09-07 09:43:09 arensb Exp $
+ * $Id: PConnection.c,v 1.26 2001-10-18 01:58:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -38,10 +38,6 @@ extern int pconn_net_open(PConnection *pconn,
 			  const char *fname,
 			  const pconn_proto_t protocol,
 			  const Bool prompt_for_hotsync);
-extern int pconn_usbm50x_open(PConnection *pconn,
-			      const char *fname,
-			      const pconn_proto_t protocol,
-			      const Bool prompt_for_hotsync);
 
 #if WITH_USB
 extern int pconn_usb_open(PConnection *pconn,
@@ -123,14 +119,6 @@ new_PConnection(char *device,
 		free(pconn);
 		return NULL;
 #endif
-	    case LISTEN_USB_M50x:
-	        if (pconn_usbm50x_open(pconn, device, protocol, promptHotSync)
-		    < 0)
-		{
-		    free(pconn);
-		    return NULL;
-		}
-		return pconn;
 	  
 	    default:
 		fprintf(stderr, _("%s: unknown listen type %d.\n"),
