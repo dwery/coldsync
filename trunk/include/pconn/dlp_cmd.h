@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.15 2001-03-16 14:07:18 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.16 2001-03-27 13:52:53 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -973,7 +973,6 @@ extern int DlpReadNextModifiedRecInCategory(	/* XXX - bogus API */
 	const ubyte handle,
 	const ubyte category,
 	struct dlp_readrecret *record);
-/* XXX - DlpReadAppPreference: untested */
 extern int DlpReadAppPreference(
 	PConnection *pconn,
 	const udword creator,
