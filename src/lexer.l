@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.34.2.3 2001-10-11 06:35:29 arensb Exp $
+ * $Id: lexer.l,v 2.34.2.4 2001-10-11 10:14:12 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -26,40 +26,34 @@
 		fprintf(stderr, "Found keyword " #k "\n"); \
 	return k;
 
-#define YY_NO_UNPUT	/* We never yyunput() anything, so this keeps
-			 * the compiler from complaining.
-			 */
 #undef YY_USES_REJECT	/* This makes the compiler shut up */
-#undef YY_NEED_STRLEN	/* This makes the compiler shut up */
-			/* XXX - This might need to be taken out when
-			 * strings are better developed: this
-			 * basically says that the lexer isn't using
-			 * yymore() or yyless(); these might be useful
-			 * with strings.
-			 */
 #ifdef ECHO
 #undef ECHO		/* <termios.h> also defines ECHO */
 #endif	/* ECHO */
 
-int lineno;
+static void qstr_clear(void);	/* Clear contents of 'qstring' */
+static int qstr_append(const char *data, const int len);
 
-/* This is used in QSTRING, to keep track of the buffer size, which is
-   the string length + 1 (for null terminal).  */
-/* XXX - Perhaps just define a type QString, with functions new_qstring(),
- * free_qstring(), qstring_append(char *, len), qstring_len(),
- * qstring_value(), etc.
- */
-static int string_size = 0;
+int lineno;
 
 static Bool have_nextstate = False;
 static int nextstate = 0;	/* State in which to start the next yylex()
 				 * call (see lex_expect(), below).
 				 */
+
+/* These variables help implement featureful double-quoted strings in
+ * <QSTRING> context.
+ */
+static char *qstring = NULL;	/* The string itself */
+static int qstr_startline = 0;	/* Line on which current qstring started */
+static int qstr_len = 0;	/* # of interesting characters in
+				 * 'qstring', not counting the terminating
+				 * NUL. */
+static int qstr_size = 0;	/* Amount of memory used by 'qstring' */
 %}
 
  /* We don't use yywrap(), and this option makes
   * things compile cleanly under Irix.
-  * XXX - This appears to be a 'flex'-ism, and makes non-flex lexes choke.
   */
 %option noyywrap
 
@@ -78,6 +72,9 @@ static int nextstate = 0;	/* State in which to start the next yylex()
 
  /* Four-character identifier */
 %s ID4
+
+ /* Variable name */
+%s VARNAME
 
 /* Quoted strings. */
 %x QSTRING
@@ -100,6 +97,12 @@ ALNUM		[a-zA-Z0-9]
 ID1		[a-zA-Z_]
  /* Subsequent characters for an identifier */
 ID		[-a-zA-Z_0-9]
+ /* Leading character for a variable name */
+VAR1		[a-zA-Z_]
+ /* Subsequent characters for a variable name */
+VAR		[a-zA-Z_0-9]
+ /* Ordinary characters in double-quoted strings */
+QSTR		[^\\\$\"\n]
 
 %%
 
@@ -140,6 +143,19 @@ ID		[-a-zA-Z_0-9]
 <BSTRING>{BWORD}+	{
 	PARSE_TRACE(3)
 		fprintf(stderr, "Found bareword string [%s]\n", yytext);
+	if ((yylval.string = strdup(yytext)) == NULL)
+	{
+		Error(_("%s: Can't make copy of string."),
+		      "yylex");
+		return -1;
+	}
+	BEGIN 0;
+	return STRING;
+	}
+
+<VARNAME>{VAR1}{VAR}*	{
+	PARSE_TRACE(3)
+		fprintf(stderr, "Found variable name [%s]\n", yytext);
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
 		Error(_("%s: Can't make copy of string."),
@@ -305,11 +321,6 @@ ID		[-a-zA-Z_0-9]
   * to process things "naively", then presumably the Right Thing to do is
   * to call iconv() at the end.
   */
- /* XXX - Shouldn't allow unescaped <return> inside strings, to guard
-  * against accidentally-unterminated strings. That is, backslash-return
-  * append a \n to the string, whereas <return> should generate a "runaway
-  * string" error.
-  */
  /* XXX - It would be intuitively good if "bare" variables were recognized.
   * That is, currently you can have:
   *	SomeOption: "$(VAR)";
@@ -333,115 +344,173 @@ ID		[-a-zA-Z_0-9]
   * Should this work? Seems like it should, but it'd be a bitch to parse.
   */
  /* Note that this accepts escaped double-quotes in strings */
-\"[^\"$\\]* {
+\"{QSTR}* {
+	int err;
+
 	PARSE_TRACE(5)
 		fprintf(stderr, "Started string [%s]\n", yytext);
-	string_size = yyleng;	/* the initial length. */
-	if((yylval.string = (char *) malloc(string_size)) == NULL)
+
+	qstr_clear();		/* Erase previous qstring, if any */
+
+	/* Append the current text */
+	if ((err = qstr_append(yytext+1, yyleng-1)) < 0)
 	{
-		Error(_("%s: Can't malloc copy of string."),
+		Error(_("%s: Can't append to qstring."),
 		      "yylex");
 		return -1;
 	}
-	strncpy(yylval.string, yytext+1, yyleng-1);
-	yylval.string[yyleng-1] = '\0';
+
 	BEGIN QSTRING;
         }
 
+ /* Octal character: \0123 */
+<QSTRING>\\0{ODIGIT}{1,3} {
+	int char_value;
+	char buf[2];		/* Dummy buffer, for qstr_append() */
+
+	sscanf(yytext+2, "%3o", &char_value);
+	buf[0] = (char_value & 0xff);
+	buf[1] = '\0';
+	qstr_append(buf, 1);
+	}
+
+ /* Hex characters: \xf0 */
+ /* XXX - What about wide characters? IIRC C9x and Perl allow \x1234 for
+  * wide characters. It'd be nice to support this, but it'd make sense to
+  * convert entirely to wide characters internally first.
+  */
+<QSTRING>\\x{XDIGIT}{2} {
+	int char_value;
+	char buf[2];		/* Dummy buffer, for qstr_append */
+
+	sscanf(yytext+2, "%2x", &char_value);
+	buf[0] = (char_value & 0xff);
+	buf[1] = '\0';
+	qstr_append(buf, 1);
+	}
 
  /* escaped characters: $, \", \n, \t, \r.
-  * XXX - Allow octal/hex numbers: \0123, \xf3 and so forth (do this in a
-  * separate rule)
-
-  * XXX - Actually, this should allow a backslash followed by any
-  * character: for \n, \t, and other special characters, perform the
-  * appropriate conversion. Otherwise, just use the character's value. That
-  * is, "\z" just becomes "z".
   */
-<QSTRING>\\[\\$\"nrt] {
+<QSTRING>\\(.|\n) {
 	PARSE_TRACE(5)
 		fprintf(stderr, "escaped string character [%s]\n", yytext);
-	/* XXX - Don't fuck around realloc()ing for just one byte: if
-	 * you're going to realloc(), at least increase the string's length
-	 * by 1024 or something. This also requires keeping track of the
-	 * string's length (# of characters in it) vs. its size (amount of
-	 * storage currently allocated for it).
-	 * Can probably crib a lot of code from the old version of
-	 * "src/log.c".
-	 */
-	string_size++;
-	if((yylval.string = (char *)realloc(yylval.string, string_size))
-	   == NULL )
-	{
-		Error(_("%s: Can't malloc copy of string."),
-		      "yylex");
-		return -1;
+	switch (yytext[1]) {
+		/* These are the same special characters as in C. */
+	    case 'a':			/* BEL */
+		qstr_append("\a", 1);
+		break;
+	    case 'b':			/* Backspace */
+		qstr_append("\b", 1);
+		break;
+	    case '\f':			/* Form feed */
+		qstr_append("\f", 1);
+		break;
+	    case 'n':			/* Newline */
+		qstr_append("\n", 1);
+		break;
+	    case 'r':			/* Carriage return */
+		qstr_append("\r", 1);
+		break;
+	    case 't':			/* Tab */
+		qstr_append("\t", 1);
+		break;
+	    case 'v':			/* Vertical tab */
+		qstr_append("\v", 1);
+		break;
+	    case '\n':
+		qstr_append("\n", 1);
+		lineno++;
+		break;
+	    default:			/* Any other character is just
+					 * itself */
+		qstr_append(yytext+1, 1);
+		break;
 	}
-	switch( yytext[1] ) {
-	case 'n':
-		yylval.string[string_size - 2] = '\n';
-		break;
-	case 't':
-		yylval.string[string_size - 2] = '\t';
-		break;
-	case 'r':
-		yylval.string[string_size - 2] = '\r';
-		break;
-	default:
-		yylval.string[string_size - 2] = yytext[1];
-		break;
 	}
-        }
 
- /* Variables that were defined elsewhere:  $(WORD).  */
- /* XXX - Should this allow ${WORD} as well? */
- /* XXX - This RE accepts too much: it should only match valid identifiers:
-  * [_A-Za-z][_A-Za-z0-9]*
-  * There should also be a rule to check for malformed variables. Thus,
-  *	foo $(VAR/bar
-  * should generate an error (and perhaps be replaced by "foo <value of
-  * VAR>/bar").
-  * Perhaps by reading an arbitrary character (.|\n) after the identifier,
-  * and checking to make sure that it's a ")". If it isn't, unput() it and
-  * complain.
+ /* Variables.
+  * Note that the second character can be either '(' or '{', to allow both
+  * $(VAR) and ${VAR}. The final character can be anything, even a newline.
+  * This will be checked to make sure it's the right closing character. If
+  * it isn't, print an error message.
   */
-<QSTRING>$\([^\)]+\) {
-	char *value = get_symbol_n(yytext + 2 , yyleng - 3);
-	int len = strlen(value);
+<QSTRING>\$[\(\{]{VAR1}{VAR}*(.|\n) {
+	char *value;		/* Variable value */
 
 	PARSE_TRACE(5)
-		fprintf(stderr, "variable [%s] -> [%s]\n", yytext, value);
-	if ((yylval.string = (char *) realloc(yylval.string,
-					      string_size + len)) == NULL)
-	{
-		Error(_("%s: Can't malloc copy of string."),
-		      "yylex");
-		return -1;
+		fprintf(stderr, "variable [%s]\n", yytext);
+
+	/* Make sure the variable substitution was closed, and with the
+	 * character that matches the starting one.
+	 */
+	switch (yytext[yyleng-1]) {
+	    case ')':
+		if (yytext[1] != '(')
+			/* XXX - It'd be nice to print the config file name
+			 * here, but parser.y:conf_fname is static.
+			 */
+			Warn(_("%d: Unexpected character near \"%s\".\n"
+			       "    You probably meant \"$(%.*s)\".\n"),
+			     lineno, yytext, yyleng-3, yytext+2);
+		break;
+	    case '}':
+		if (yytext[1] != '{')
+			/* XXX - It'd be nice to print the config file name
+			 * here, but parser.y:conf_fname is static.
+			 */
+			Warn(_("%d: Unexpected character near \"%s\".\n"
+			       "    You probably meant \"${%.*s}\".\n"),
+			     lineno, yytext, yyleng-3, yytext+2);
+		break;
+	    default:	/* Any other character */
+		Error(_("%d: Unterminated variable reference near \"%s\".\n"
+			"    You probably meant \"$(%.*s)\".\n"),
+		      lineno, yytext, yyleng-3, yytext+2);
+		yyless(yyleng-1);	/* Return last char to input */
 	}
-	strncpy(&(yylval.string[string_size-1]), value, len);
-	string_size += len;
+
+	/* Look up the variable */
+	value = get_symbol_n(yytext+2, yyleng-3);
+
+	PARSE_TRACE(5)
+		fprintf(stderr, "$(%.*s) == \"%s\"\n",
+			yyleng-3, yytext+2,
+			(value == NULL ? "(nil)" : value));
+
+	/* If the variable expands to the empty string, don't do anything.
+	 * Otherwise, append its value to 'qstring'.
+	 */
+	if ((value != NULL) && (value[0] != '\0'))
+		qstr_append(value, strlen(value));
 	free(value);
         }
 
  /* String of ordinary characters */
-<QSTRING>[^\"$\\]+ {
+<QSTRING>{QSTR}+ {
 	PARSE_TRACE(5)
 		fprintf(stderr, "more string [%s]\n", yytext);
-	if ((yylval.string = (char *) realloc(yylval.string,
-					      string_size + yyleng)) == NULL)
-	{
-		Error(_("%s: Can't malloc copy of string."),
-		      "yylex");
-		return -1;
-	}
-	strncpy(&(yylval.string[string_size-1]), yytext, yyleng);
-	string_size += yyleng;
+	qstr_append(yytext, yyleng);
         }
+
+ /* Unescaped newline */
+<QSTRING>\n {
+	Error(_("Unterminated string at line %d (string started "
+		"on line %d)\n"),
+	      lineno, qstr_startline);
+
+	/* Pretend the string was terminated here */
+	unput('\"');
+	}
 
  /* End quote of string. */
 <QSTRING>\" {
 	BEGIN INITIAL;
-	yylval.string[string_size-1] = '\0';
+	if ((yylval.string = strdup(qstring)) == NULL)
+	{
+		Error(_("%s: Can't make copy of string."),
+		      "yylex");
+		return -1;
+	}
 	PARSE_TRACE(2)
 		fprintf(stderr, "finished string [%s]\n", yylval.string);
 	return STRING;
@@ -548,6 +617,9 @@ lex_expect(const int state)
 	    case LEX_ID4:
 		nextstate = ID4;
 		break;
+	    case LEX_VAR:
+		nextstate = VARNAME;
+		break;
 	    default:
 		Error(_("%s: unknown start state %d.\n"
 			"Please tell the maintainer to fix `lexer.l'."),
@@ -555,6 +627,122 @@ lex_expect(const int state)
 		      state);
 	}
 	have_nextstate = True;
+}
+
+void
+lex_tini(void)
+{
+	/* Clean up 'qstring', if it was used */
+	if (qstring != NULL)
+	{
+		free(qstring);
+		qstring = NULL;
+		qstr_len = 0;
+		qstr_size = 0;
+	}
+}
+
+/* qstr_clear
+ * Clear the current contents of 'qstring'.
+ */
+static void
+qstr_clear(void)
+{
+	if (qstring == NULL)
+		return;
+	qstring[0] = '\0';
+	qstr_startline = lineno;
+	qstr_len = 0;
+	/* Don't change 'qstr_size', since we haven't freed any memory */
+}
+
+/* qstr_append
+ * Append a string to 'qstring'. If necessary, 'qstring' is realloc()ed and
+ * made larger. qstr_append() appends 'len' bytes from 'data' to 'qstring',
+ * and keeps a NUL at the end of the string. That is, if you're appending
+ * "foo", you should qstr_append("foo", 3). 'len' does not include the NUL.
+ *
+ * Returns 0 if successful, or a negative value in case of error.
+ */
+static int
+qstr_append(const char *data,		/* Data to append */
+	    const int len)		/* Length of 'data' */
+{
+	if (len <= 0)
+		return 0;
+
+	PARSE_TRACE(6)
+		fprintf(stderr, "qstr_append(\"%.*s\", %d)\n",
+			len, data, len);
+
+	/* Increase the size of 'qstring', if necessary */
+	if (qstr_len + len + 1 >= qstr_size)
+	{
+		char *newqstring;
+		int newsize;
+
+		if (qstr_size == 0)
+		{
+			/* First time around. Need to allocate a new string
+			 * buffer. Make it big enough for the current
+			 * string, rounded up to the nearest Kb.
+			 */
+			newsize = (len + 1 + 1023) & (~0x03ff);
+			PARSE_TRACE(7)
+				fprintf(stderr, "Creating initial qstring, "
+					"newsize == %d\n",
+					newsize);
+			if ((newqstring = malloc(newsize)) == NULL)
+			{
+				Error(_("%s: Out of memory."),
+					"qstr_append");
+				Perror("malloc");
+				return -1;
+			}
+
+			/* Initialize 'qstring' as an empty string. Its
+			 * length is 0, and its size is 'newsize'.
+			 */
+			qstring = newqstring;
+			qstring[0] = '\0';
+			qstr_len = 0;
+			qstr_size = newsize;
+			PARSE_TRACE(7)
+				fprintf(stderr,
+					"Now qstring == [%s] len %d size %d\n",
+					qstring, qstr_len, qstr_size);
+
+		} else {
+			/* Second through nth time around. 'qstring'
+			 * already exists, but it's too small. Add enough
+			 * for 'data', rounded up to the nearest Kb.
+			 */
+			newsize = (qstr_len + len + 1 + 1023) & (~0x03ff);
+			if ((newqstring = realloc(qstring, newsize)) == NULL)
+			{
+				Error(_("%s: realloc(%d) failed."),
+				      "qstr_append", newsize);
+				Perror("realloc");
+				return -1;
+			}
+
+			qstring = newqstring;
+			qstr_size = newsize;
+		}
+	}
+
+	/* Append the new string to 'qstring'. We use memcpy() and not
+	 * strncpy() because 'data' might contain weird characters and
+	 * NULs.
+	 */
+	memcpy(qstring+qstr_len, data, len);
+	qstr_len += len;
+	qstring[qstr_len] = '\0';
+
+	PARSE_TRACE(7)
+		fprintf(stderr, "Now qstring is [%.*s] len %d size %d\n",
+			qstr_len, qstring, qstr_len, qstr_size);
+	return 0;
 }
 
 /* This is for Emacs's benefit:
