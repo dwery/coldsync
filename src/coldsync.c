@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.119 2002-03-29 18:20:17 azummo Exp $
+ * $Id: coldsync.c,v 1.120 2002-03-30 14:24:13 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -520,18 +520,18 @@ find_listen_block( char *name )
 			if (l->name == NULL)
 				continue;
 
-			SYNC_TRACE(3)
+			MISC_TRACE(3)
 			        fprintf(stderr, " evaluating %s.\n", l->name);
 
 			if (strcmp(l->name, name) == 0)
 			{
-				SYNC_TRACE(2)
+				MISC_TRACE(2)
 				        fprintf(stderr, " found.\n");
 				return l;
 			}
 	 	}
 
-		SYNC_TRACE(2)
+		MISC_TRACE(2)
 		        fprintf(stderr, " failed.\n");
 	}
 
@@ -1354,9 +1354,7 @@ run_mode_Backup(int argc, char *argv[])
 {
 	int err;
 	const char *backupdir = NULL;	/* Where to put backup */
-	PConnection *pconn;		/* Connection to the Palm */
 	struct Palm *palm;
-	listen_block *listen;
 
 	/* Parse arguments:
 	 *	dir		- Dump everything to <dir>
@@ -1396,47 +1394,8 @@ run_mode_Backup(int argc, char *argv[])
 		return -1;
 	}
 
-	/* Get listen block */
-	if ( (listen = find_listen_block(global_opts.listen_name)) == NULL )
-	{
-		Error(_("No port specified."));
+	if( (palm = palm_Connect()) == NULL )
 		return -1;
-	}
-
-	SYNC_TRACE(2)
-		fprintf(stderr, "Opening device [%s]\n",
-			listen->device);
-
-	/* Set up a PConnection to the Palm */
-	if ((pconn = new_PConnection(listen->device,
-				     listen->listen_type,
-				     listen->protocol,
-				     PCONNFL_PROMPT |
-				     (listen->flags &
-				      LISTENFL_TRANSIENT ? LISTENFL_TRANSIENT :
-				      0)))
-	    == NULL)
-	{
-		Error(_("Can't open connection."));
-		return -1;
-	}
-	pconn->speed = listen->speed;
-
-	/* Connect to the Palm */
-	if ((err = Connect(pconn)) < 0)
-	{
-		Error(_("Can't connect to Palm."));
-		PConnClose(pconn);
-		return -1;
-	}
-
-	/* Allocate a new Palm description */
-	if ((palm = new_Palm(pconn)) == NULL)
-	{
-		Error(_("Can't allocate struct Palm."));
-		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
-		return -1;
-	}
 
 	/* Do the backup */
 	if (argc == 0)
@@ -1447,7 +1406,7 @@ run_mode_Backup(int argc, char *argv[])
 		SYNC_TRACE(2)
 			fprintf(stderr, "Backing everything up.\n");
 
-		err = full_backup(pconn, palm, backupdir);
+		err = full_backup(palm_pconn(palm), palm, backupdir);
 		if (err < 0)
 		{
 			switch (cs_errno)
@@ -1459,6 +1418,7 @@ run_mode_Backup(int argc, char *argv[])
 
 			    case CSE_NOCONN:
 				Error(_("Lost connection to Palm."));
+				palm_Free(palm);
 				return -1;
 			    default:
 				break;
@@ -1487,7 +1447,7 @@ run_mode_Backup(int argc, char *argv[])
 			{
 				Warn(_("No such database: \"%s\"."),
 				     argv[i]);
-				va_add_to_log(pconn, "%s %s - %s\n",
+				va_add_to_log(palm_pconn(palm), "%s %s - %s\n",
 					      _("Backup"),
 					      argv[i],
 					      _("No such database"));
@@ -1495,7 +1455,7 @@ run_mode_Backup(int argc, char *argv[])
 			}
 
 			/* Back up the database */
-			err = backup(pconn, db, backupdir);
+			err = backup(palm_pconn(palm), db, backupdir);
 			if (err < 0)
 			{
 				switch (cs_errno)
@@ -1507,6 +1467,7 @@ run_mode_Backup(int argc, char *argv[])
 
 				    case CSE_NOCONN:
 					Error(_("Lost connection to Palm."));
+					palm_Free(palm);
 					return -1;
 				    default:
 					Warn(_("Error backing up \"%s\"."),
@@ -1522,15 +1483,8 @@ run_mode_Backup(int argc, char *argv[])
 	SYNC_TRACE(3)
 		fprintf(stderr, "Closing connection to Palm\n");
 
-	free_Palm(palm);
-	palm = NULL;
-
-	if ((err = Disconnect(pconn, DLPCMD_SYNCEND_NORMAL)) < 0)
-	{
-		Error(_("Couldn't disconnect."));
-		return -1;
-	}
-	pconn = NULL;
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+	palm_Free(palm);
 
 	return 0;
 }
