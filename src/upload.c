@@ -2,15 +2,8 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: upload.c,v 1.2 1999-07-12 09:29:28 arensb Exp $
  */
-#include <stdio.h>
-#include <string.h>		/* For memcmp() */
-#include "coldsync.h"
-#include "PConnection.h"
-#include "dlp_cmd.h"
-#include "pdb.h"
-
 /* XXX - Include this in the documentation somewhere:
  * Note: merely uploading a database is no guarantee that it'll be
  * useful. In fact, uploading stuff without knowing what it is is
@@ -25,6 +18,13 @@
  * doesn't even bother to show it to you. So you have a database lying
  * around that you can't even delete.
  */
+#if 0
+#include <stdio.h>
+#include <string.h>		/* For memcmp() */
+#include "coldsync.h"
+#include "PConnection.h"
+#include "dlp_cmd.h"
+#include "pdb.h"
 
 int
 UploadDatabase(struct PConnection *pconn,
@@ -198,6 +198,7 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 
 	return 0;
 }
+#endif	/* 0 */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
