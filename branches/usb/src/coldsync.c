@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.19.2.1 2000-01-24 07:43:21 arensb Exp $
+ * $Id: coldsync.c,v 1.19.2.2 2000-01-25 10:24:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -45,6 +45,10 @@
 
 int sync_trace = 0;		/* Debugging level for sync-related stuff */
 int misc_trace = 0;		/* Debugging level for miscellaneous stuff */
+
+extern char *synclog;		/* Log that'll be uploaded to the Palm. See
+				 * rant in "log.c".
+				 */
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -118,9 +122,6 @@ static struct {
 
 struct Palm palm;
 int need_slow_sync;
-char *synclog = NULL;
-int log_size = 0;
-int log_len = 0;
 
 struct cmd_opts global_opts;	/* Command-line options */
 struct config config;		/* Main configuration */
