@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.38 2001-08-15 15:27:34 arensb Exp $
+ * $Id: conduit.c,v 2.39 2001-09-07 21:21:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -879,7 +879,10 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 
 			/* We're done with spc_inbuf */
 			if (spc_inbuf != NULL)
+			{
 				free(spc_inbuf);
+				spc_inbuf = NULL; /* Don't free it again. */
+			}
 			spc_towrite = spc_req.len;
 
 			/* Error-checking */
