@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.95 2001-05-06 07:19:07 arensb Exp $
+ * $Id: coldsync.c,v 1.96 2001-05-15 13:23:40 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1778,7 +1778,7 @@ run_mode_Init(int argc, char *argv[])
 				 * Palm; tell the user what's going on.
 				 */
 				do_update = False;
-				new_username = pda->username;
+				new_username = p_username;
 			} else {
 				/* .coldsyncrc doesn't specify a user name,
 				 * but what's on the Palm matches what's in
