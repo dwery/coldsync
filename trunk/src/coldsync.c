@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.41 2000-07-01 19:59:58 arensb Exp $
+ * $Id: coldsync.c,v 1.42 2000-07-02 03:06:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -1546,7 +1546,7 @@ print_version(void)
 	       PACKAGE,
 	       VERSION);
 	printf(_("ColdSync homepage at http://www.ooblick.com/software/"
-		 "coldsync/"));
+		 "coldsync/\n"));
 	/* XXX - Ought to print out other information, e.g., copyright,
 	 * compile-time flags, optional packages, maybe OS name and
 	 * version, who compiled it and when, etc.
