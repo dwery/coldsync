@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.25 2001-01-14 12:16:59 arensb Exp $
+ * $Id: install.c,v 2.26 2001-01-25 07:47:50 arensb Exp $
  */
 
 #include "config.h"
@@ -65,7 +65,7 @@ install_file(PConnection *pconn,
 	/* Open the file, and load it as a Palm database */
 	if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
 	{
-		Error(_("%s: Can't open \"%s\".\n"),
+		Error(_("%s: Can't open \"%s\"."),
 		      "install_file",
 		      fname);
 		return -1;
@@ -75,7 +75,7 @@ install_file(PConnection *pconn,
 	pdb = pdb_Read(fd);
 	if (pdb == NULL)
 	{
-		Error(_("%s: Can't load database \"%s\".\n"),
+		Error(_("%s: Can't load database \"%s\"."),
 		      "install_file",
 		      fname);
 		close(fd);
@@ -131,7 +131,7 @@ install_file(PConnection *pconn,
 		err = DlpDeleteDB(pconn, CARD0, pdb->name);
 		if (err < 0)
 		{
-			Error(_("%s: Error deleting \"%s\".\n"),
+			Error(_("%s: Error deleting \"%s\"."),
 			      "install_file",
 			      pdb->name);
 			add_to_log(_("Error\n"));
@@ -143,7 +143,7 @@ install_file(PConnection *pconn,
 	err = pdb_Upload(pconn, pdb);
 	if (err < 0)
 	{
-		Error(_("%s: Error uploading \"%s\".\n"),
+		Error(_("%s: Error uploading \"%s\"."),
 		      "install_file",
 		      pdb->name);
 		add_to_log(_("Error\n"));
@@ -190,7 +190,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 	{
 		if ((dir = opendir(installdir)) == NULL)
 		{
-			Error(_("%s: Can't open install directory.\n"),
+			Error(_("%s: Can't open install directory."),
 			      "NextInstallFile");
 			perror("opendir");
 			return -1;
@@ -213,7 +213,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 		/* Open the file */
                 if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
                 {
-                        Warn(_("%s: Can't open \"%s\".\n"),
+                        Warn(_("%s: Can't open \"%s\"."),
 			     "NextInstallFile",
 			     fname);
                         continue;
@@ -222,7 +222,7 @@ NextInstallFile(struct dlp_dbinfo *dbinfo)
 		/* Load its header a Palm database */
 		if ((err = pdb_LoadHeader(fd, &pdb)) < 0)
 		{
-			Error(_("Can't load header.\n"));
+			Error(_("Can't load header."));
 			continue;
 		}
 		
@@ -256,7 +256,7 @@ InstallNewFiles(PConnection *pconn,
 			newdir);
 	if ((dir = opendir(newdir)) == NULL)
 	{
-		Error(_("%s: Can't open install directory.\n"),
+		Error(_("%s: Can't open install directory."),
 		      "InstallNewFiles");
 		perror("opendir");
 		return -1;
@@ -306,7 +306,7 @@ InstallNewFiles(PConnection *pconn,
 		/* Open the file, and load it as a Palm database */
 		if ((fd = open(fname, O_RDONLY | O_BINARY)) < 0)
 		{
-			Error(_("%s: Can't open \"%s\".\n"),
+			Error(_("%s: Can't open \"%s\"."),
 			      "InstallNewFiles",
 			      fname);
 			continue;
@@ -316,7 +316,7 @@ InstallNewFiles(PConnection *pconn,
 		pdb = pdb_Read(fd);
 		if (pdb == NULL)
 		{
-			Error(_("%s: Can't load database \"%s\".\n"),
+			Error(_("%s: Can't load database \"%s\"."),
 			      "InstallNewFiles",
 			      fname);
 			close(fd);
@@ -373,7 +373,7 @@ InstallNewFiles(PConnection *pconn,
 			err = DlpDeleteDB(pconn, CARD0, pdb->name);
 			if (err < 0)
 			{
-				Error(_("%s: Error deleting \"%s\".\n"),
+				Error(_("%s: Error deleting \"%s\"."),
 				      "InstallNewFiles",
 				      pdb->name);
 				add_to_log(_("Error\n"));
@@ -385,7 +385,7 @@ InstallNewFiles(PConnection *pconn,
 		err = pdb_Upload(pconn, pdb);
 		if (err < 0)
 		{
-			Error(_("%s: Error uploading \"%s\".\n"),
+			Error(_("%s: Error uploading \"%s\"."),
 			      "InstallNewFiles",
 			      pdb->name);
 			add_to_log(_("Error\n"));
@@ -461,7 +461,7 @@ InstallNewFiles(PConnection *pconn,
 				/* File already exists. This isn't a problem */
 				add_to_log(_("OK\n"));
 			} else {
-				Error(_("Error opening \"%s\".\n"),
+				Error(_("Error opening \"%s\"."),
 				      bakfname);
 				perror("open");
 				add_to_log(_("Problem\n"));
@@ -498,7 +498,7 @@ InstallNewFiles(PConnection *pconn,
 			err = unlink(fname);
 			if (err < 0)
 			{
-				Warn(_("Error deleting \"%s\".\n"),
+				Warn(_("Error deleting \"%s\"."),
 				     fname);
 				perror("unlink");
 			}

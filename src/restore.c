@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.20 2001-01-11 08:27:37 arensb Exp $
+ * $Id: restore.c,v 2.21 2001-01-25 07:48:00 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -63,7 +63,7 @@ restore_file(PConnection *pconn,
 	/* Read the PDB file */
 	if ((bakfd = open(fname, O_RDONLY | O_BINARY)) < 0)
 	{
-		Error(_("Can't open %s.\n"),
+		Error(_("Can't open %s."),
 		      fname);
 		perror("open");
 		return -1;
@@ -72,7 +72,7 @@ restore_file(PConnection *pconn,
 	pdb = pdb_Read(bakfd);
 	if (pdb == NULL)
 	{
-		Error(_("Can't read %s.\n"), fname);
+		Error(_("Can't read %s."), fname);
 		close(bakfd);
 		return -1;
 	}
@@ -98,7 +98,7 @@ restore_file(PConnection *pconn,
 		fprintf(stderr, "Checking read-only attribute\n");
 	if (pdb->attributes & PDB_ATTR_RO)
 	{
-		Error(_("\"%s\" is a read-only database. Not uploading.\n"),
+		Error(_("\"%s\" is a read-only database. Not uploading."),
 		      fname);
 		return -1;
 	}
@@ -127,7 +127,7 @@ restore_file(PConnection *pconn,
 		    {
 			    /* This should never happen */
 			    Warn(_("%s: Database %s doesn't exist, "
-				   "yet it is open. Huh?\n"),
+				   "yet it is open. Huh?"),
 				 "Restore",
 				 pdb->name);
 			    /* But it shouldn't bother us any */
@@ -138,7 +138,7 @@ restore_file(PConnection *pconn,
 			== 0)
 		    {
 			    Warn(_("%s: Can't restore %s: it is "
-				   "opened by another application.\n"),
+				   "opened by another application."),
 				 "Restore",
 				 pdb->name);
 			    return -1;
@@ -157,7 +157,7 @@ restore_file(PConnection *pconn,
 	    }
 
 	    default:
-		Warn(_("Restore: Can't delete database \"%s\": %d.\n"),
+		Warn(_("Restore: Can't delete database \"%s\": %d."),
 		     pdb->name, err);
 		return -1;
 	}
@@ -212,7 +212,7 @@ restore_dir(PConnection *pconn,
 	dir = opendir(dirname);
 	if (dir == NULL)
 	{
-		Error(_("Can't read contents of directory %s.\n"),
+		Error(_("Can't read contents of directory %s."),
 		      dirname);
 		perror("opendir");
 		return -1;
