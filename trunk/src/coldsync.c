@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.9 1999-11-04 11:46:35 arensb Exp $
+ * $Id: coldsync.c,v 1.10 1999-11-09 04:08:34 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -125,28 +125,7 @@ main(int argc, char *argv[])
 	int err;
 	int i;
 
-	/* XXX - Getting the configuration:
-	 * Assume standalone mode.
-	 * Read command-line options.
-	 * If in daemon mode:
-	 *	read /etc/coldsync.conf; don't override command line
-	 * else
-	 *	read /etc/coldsync.conf; don't override command line
-	 *	read ~/.coldsyncrc; overrides /etc/coldsync.conf, but
-	 *		not command line.
-	 */
-
-#if 0
-	/* Parse arguments */
-	if (parse_args(argc, argv) < 0)
-		exit(1);
-
-	/* Read config files */
-	if ((err = load_config()) < 0)
-	{
-		exit(1);
-	}
-#endif	/* 0 */
+	/* Parse arguments and read config file(s) */
 	if ((err = get_config(argc, argv)) < 0)
 	{	
 		fprintf(stderr, "Error loading configuration\n");
@@ -213,8 +192,10 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
+	printf("Please press the HotSync button.\n");
+
 	/* Connect to the Palm */
-	if ((err = Connect(pconn, config.listen[0].device/*global_opts.port*/)) < 0)
+	if ((err = Connect(pconn, config.listen[0].device)) < 0)
 	{
 		fprintf(stderr, "Can't connect to Palm\n");
 		/* XXX - Clean up */
@@ -242,6 +223,7 @@ main(int argc, char *argv[])
 	/* Initialize (per-user) conduits */
 	MISC_TRACE(1)
 		fprintf(stderr, "Initializing conduits\n");
+
 	if ((err = init_conduits(&palm)) < 0)
 	{
 		fprintf(stderr, "Can't initialize conduits\n");
@@ -362,6 +344,10 @@ main(int argc, char *argv[])
 		MISC_TRACE(1)
 			fprintf(stderr, "Doing a sync.\n");
 
+		/* XXX - Make sure that all of the relevant directories
+		 * exist: ~/.palm/{backup,backup/Attic,archive,install}
+		 */
+
 		/* Install new databases */
 		/* XXX - It should be configurable whether new databases
 		 * get installed at the beginning or the end.
@@ -407,6 +393,12 @@ main(int argc, char *argv[])
 			if (err < 0)
 			{
 				fprintf(stderr, "!!! Oh, my God! A conduit failed! Mayday, mayday! Bailing!\n");
+				/* XXX - Ought to be able to recover from
+				 * this: if it's a problem with the conduit
+				 * or with the local copy of the backup
+				 * database, just print an error message
+				 * and go on to the next one.
+				 */
 				Disconnect(pconn, DLPCMD_SYNCEND_OTHER);
 				/* XXX - Error-handling */
 				exit(1);
@@ -497,6 +489,10 @@ main(int argc, char *argv[])
 
 /* Connect
  * Wait for a Palm to show up on the other end.
+ */
+/* XXX - This ought to be able to listen to a whole list of files and
+ * establish a connection with the first one that starts talking. This
+ * might also be the place to fork().
  */
 int
 Connect(struct PConnection *pconn,
