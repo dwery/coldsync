@@ -1,10 +1,15 @@
 #!/usr/bin/perl
+# $Id: std-categories,v 2.1 2000-11-23 03:43:45 arensb Exp $
 use lib "/folks/arensb/proj/coldsync/perl/ColdSync";
 use lib "/folks/arensb/proj/palm-perl";
 use strict;
 use ColdSync;
 use ColdSync::SPC;
 use Palm::StdAppInfo;
+
+use vars qw( %Pappinfo );
+
+use constant NumCategories => 16;
 
 # XXX - When you delete a category on the Palm, you get a category with an
 # empty name, the same ID as before, and "renamed" set to 0.
@@ -29,8 +34,8 @@ die "401 Error reading database info" if !defined($dbinfo);
 	or die "402 Can't open database";
 
 # Get the category list from the Palm
-my $Pappinfo_raw;		# Raw AppInfo block data
-my %Pappinfo;			# Parsed category information from AppInfo
+use vars qw( $Pappinfo_raw );	# Raw AppInfo block data
+use vars qw( %Pappinfo );	# Parsed category information from AppInfo
 				# block
 
 $Pappinfo_raw = dlp_ReadAppBlock($dbh);
@@ -143,24 +148,257 @@ print "* Desktop categories:\n";
 ##  }
 ##  $Pappinfo{renamed} = 0;
 
-for (@{$Pappinfo{categories}})
+#  print "* Renamed?\n";
+#  for (@{$Pappinfo{categories}})
+#  {
+#  	print "$_->{name} -> $_->{renamed}\n";
+#  	$_->{renamed} = undef;
+#  }
+
+# Phase 1: Underpants!
+
+# Phase 2: Get the names and IDs in sync between the Palm and Desktop
+# Phase 2.1: Look at the categories on the Palm
+print STDERR "Examining Palm categories:\n";
+for (my $i = 0; $i <= $#{$Pappinfo{categories}}; $i++)
 {
-	print "$_ -> $_->{renamed}\n";
-	$_->{renamed} = undef;
+	my $category = $Pappinfo{categories}->[$i];
+	print "Category $i:\n";
+	print "    Name: [$category->{name}]";
+	print " ", $category->{id};
+	print " RENAMED" if $category->{renamed};
+	print "\n";
+
+	my $Dcategory;		# Desktop category
+
+	# XXX - Deal with categories deleted on the Palm: id < 128 and name
+	# == ""
+
+	if ($category->{name} eq "")
+	{
+		# This category doesn't exist. It may have been deleted
+		$Dcategory = &find_cat_by_id($PDB->{appinfo},
+					     $category->{id});
+	}
+
+	if ($category->{renamed})
+	{
+		# This category has been renamed. Look for a category on
+		# the desktop with the same ID.
+
+		my $Dcategory;		# Desktop category
+
+		$Dcategory = &find_cat_by_id($PDB->{appinfo},
+					     $category->{id});
+
+		if (!defined($Dcategory))
+		{
+			print STDERR "\tThis category doesn't exist on the desktop.\n";
+			next;
+		}
+
+		print STDERR "\tThis category exists on the desktop.\n";
+		print STDERR "\tRenaming D[$Dcategory->{name}] to $category->{name}\n";
+		$Dcategory->{name} = $category->{name};
+		$category->{renamed} = 0;
+		$Dcategory->{renamed} = 0;
+
+		$Dcategory->{_goesto} = $i;	# Index of Palm category
+	} else {
+		# This category has not been renamed. Look for a category
+		# on the desktop with the same name.
+
+		my $Dcategory;		# Desktop category
+
+		$Dcategory = &find_cat_by_name($PDB->{appinfo},
+					       $category->{name});
+
+		if (!defined($Dcategory))
+		{
+			print STDERR "\tThis category doesn't exist on the desktop.\n";
+			next;
+		}
+
+		print STDERR "\tThis category exists on the desktop.\n";
+		if ($Dcategory->{renamed})
+		{
+			print STDERR "\tRenaming P[$category->{name}] to $Dcategory->{name}\n";
+			$category->{name} = $Dcategory->{name};
+			$Dcategory->{renamed} = 0;
+		}
+
+		$Dcategory->{_goesto} = $i;	# Index of Palm category
+	}
 }
 
-$Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
-#&hexdump("New app", $Pappinfo_raw);
+# Phase 2.2: Look at the categories on the desktop
+print STDERR "Examining Desktop categories:\n";
+for (my $i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
+{
+	my $category = $PDB->{appinfo}{categories}->[$i];
+	print "Category $i:\n";
+	print "    Name: [$category->{name}]";
+	print " ", $category->{id};
+	print " RENAMED" if $category->{renamed};
+	print "\n";
+
+	if (defined($category->{_goesto}))
+	{
+		print STDERR "\tSeen it already\n";
+		next;
+	}
+
+	next if $category->{name} eq "";
+				# Skip undefined categories
+
+	if ($category->{renamed})
+	{
+		# This category has been renamed. Look for a category on
+		# the desktop with the same ID.
+
+		my $Pcategory;		# Palm category
+
+		$Pcategory = &find_cat_by_id(\%Pappinfo,
+					     $category->{id});
+
+		if (!defined($Pcategory))
+		{
+			print STDERR "\tThis category doesn't exist on the Palm.\n";
+			next;
+		}
+
+		print STDERR "\tThis category exists on the Palm.\n";
+		print STDERR "\tRenaming D[$Pcategory->{name}] to $category->{name}\n";
+		$Pcategory->{name} = $category->{name};
+		$category->{renamed} = 0;
+		$Pcategory->{renamed} = 0;
+	} else {
+		# This category has not been renamed. Look for a category
+		# on the desktop with the same name.
+
+		my $Pcategory;		# Desktop category
+
+		$Pcategory = &find_cat_by_name(\%Pappinfo,
+					       $category->{name});
+
+		if (!defined($Pcategory))
+		{
+			print STDERR "\tThis category doesn't exist on the Palm.\n";
+			next;
+		}
+
+		print STDERR "\tThis category exists on the desktop.\n";
+		if ($Pcategory->{renamed})
+		{
+			print STDERR "\tRenaming P[$category->{name}] to $Pcategory->{name}\n";
+			$category->{name} = $Pcategory->{name};
+			$Pcategory->{renamed} = 0;
+		}
+	}
+}
+
+# Phase 2.3: Move new categories to the Palm.
+print STDERR "Moving new categories to the Palm:\n";
+for (my $i = 0; $i <= $#{$PDB->{appinfo}{categories}}; $i++)
+{
+	my $category = $PDB->{appinfo}{categories}->[$i];
+
+	next if $category->{name} eq "";
+
+	print "Category $i:\n";
+	print "    Name: [$category->{name}]";
+	print " ", $category->{id};
+	print " RENAMED" if $category->{renamed};
+	print "\n";
+
+	# XXX - This is the ugly part: if the category already exists on
+	# the Palm, it may be at a different index, so this one needs to be
+	# moved.
+	# Likewise, if this is a new category, need to find an empty slot
+	# for it, which also involves renumbering all records in this
+	# category.
+
+	if (!defined($category->{_goesto}))
+	{
+		if ($Pappinfo{categories}->[$i]{name} eq "")
+		{
+			print STDERR "This is a new category. It can stay at this index.\n";
+		} else {
+			print STDERR "This is a new category. Need to find a place for it.\n";
+			my $new_index = &find_empty_cat(\%Pappinfo);
+
+			if ($new_index < 0)
+			{
+				# Couldn't find a free slot. Move the records
+				# in this category to Unfiled.
+				# XXX
+			}
+		}
+	} elsif ($category->{_goesto} == $i)
+	{
+		# This category has been dealt with, and stays put
+		print STDERR "This category stays put.\n";
+	} else {
+		print STDERR "This category should move to $category->{_goesto}\n";
+	}
+}
+
+# Phase 3: Profits!
 
 # Upload the AppInfo block to the Palm.
 # XXX - Don't do this just yet
-$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
+#$Pappinfo_raw = &Palm::StdAppInfo::pack_StdAppInfo(\%Pappinfo);
+#$err = &dlp_WriteAppBlock($dbh, $Pappinfo_raw);
 
 $err = &dlp_CloseDB($dbh);
 
-#die "599 Dying for no good reason";
+die "599 Dying for no good reason";
 		# XXX - Just to avoid writing the database prematurely
 EndConduit;
+
+sub find_cat_by_name
+{
+	my $appinfo = shift;
+	my $name = shift;
+
+	for (@{$appinfo->{categories}})
+	{
+		next unless $_->{name} eq $name;
+		return $_;		# Found it
+	}
+
+	return undef;			# Can't find it
+}
+
+sub find_cat_by_id
+{
+	my $appinfo = shift;
+	my $id = shift;
+
+	for (@{$appinfo->{categories}})
+	{
+		next unless $_->{id} eq $id;
+		next if $_->{name} eq "";
+					# Skip empty categories
+		return $_;		# Found it
+	}
+
+	return undef;			# Can't find it
+}
+
+sub find_empty_cat
+{
+	my $appinfo = shift;
+	my $i;
+
+	for ($i = 0; $i < NumCategories; $i++)
+	{
+		next unless $appinfo->{categories}[$i]{name} eq "";
+		return $i;
+	}
+
+	return -1;
+}
 
 # XXX - Debugging functions
 sub hexdump
