@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.4 1999-08-26 14:21:10 arensb Exp $
+ * $Id: conduit.c,v 1.5 1999-11-04 10:51:06 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -331,6 +331,106 @@ cond_MemoDB(struct PConnection *pconn,
 {
 	fprintf(stderr, "Inside cond_MemoDB()\n");
 	return 0;
+}
+
+/* run_Fetch_conduits
+ * Go through the list of Fetch conduits and run whichever ones are
+ * applicable for the database 'dbinfo'.
+ */
+int
+run_Fetch_conduits(struct Palm *palm,
+		   struct dlp_dbinfo *dbinfo)
+{
+	conduit_block *conduit;
+
+	fprintf(stderr, "Running pre-fetch conduits for \"%s\".\n",
+		dbinfo->name);
+
+	for (conduit = config.fetch_q;
+	     conduit != NULL;
+	     conduit = conduit->next)
+	{
+		fprintf(stderr, "Trying conduit...\n");
+
+		/* See if the creator matches */
+		if ((conduit->dbcreator != 0) &&
+		    (conduit->dbcreator != dbinfo->creator))
+		{
+			fprintf(stderr, "  Creator: database is 0x%08lx, "
+				"conduit is 0x%08lx. Not applicable.\n",
+				dbinfo->creator,
+				conduit->dbcreator);
+			continue;
+		}
+
+		/* See if the creator matches */
+		if ((conduit->dbtype != 0) &&
+		    (conduit->dbtype != dbinfo->type))
+		{
+			fprintf(stderr, "  Type: database is 0x%08lx, "
+				"conduit is 0x%08lx. Not applicable.\n",
+				dbinfo->type,
+				conduit->dbtype);
+			continue;
+		}
+
+		/* This conduit matches */
+		fprintf(stderr, "  This conduit matches. "
+			"I ought to run \"%s\"\n",
+			(conduit->path == NULL ? "(null)" : conduit->path));
+	}
+
+	return 0;		/* XXX */
+}
+
+/* run_Dump_conduits
+ * Go through the list of Dump conduits and run whichever ones are
+ * applicable for the database 'dbinfo'.
+ */
+int
+run_Dump_conduits(struct Palm *palm,
+		  struct dlp_dbinfo *dbinfo)
+{
+	conduit_block *conduit;
+
+	fprintf(stderr, "Running post-dump conduits for \"%s\".\n",
+		dbinfo->name);
+
+	for (conduit = config.dump_q;
+	     conduit != NULL;
+	     conduit = conduit->next)
+	{
+		fprintf(stderr, "Trying conduit...\n");
+
+		/* See if the creator matches */
+		if ((conduit->dbcreator != 0) &&
+		    (conduit->dbcreator != dbinfo->creator))
+		{
+			fprintf(stderr, "  Creator: database is 0x%08lx, "
+				"conduit is 0x%08lx. Not applicable.\n",
+				dbinfo->creator,
+				conduit->dbcreator);
+			continue;
+		}
+
+		/* See if the creator matches */
+		if ((conduit->dbtype != 0) &&
+		    (conduit->dbtype != dbinfo->type))
+		{
+			fprintf(stderr, "  Type: database is 0x%08lx, "
+				"conduit is 0x%08lx. Not applicable.\n",
+				dbinfo->type,
+				conduit->dbtype);
+			continue;
+		}
+
+		/* This conduit matches */
+		fprintf(stderr, "  This conduit matches. "
+			"I ought to run \"%s\"\n",
+			(conduit->path == NULL ? "(null)" : conduit->path));
+	}
+
+	return 0;		/* XXX */
 }
 
 /* This is for Emacs's benefit:
