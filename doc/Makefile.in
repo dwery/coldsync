@@ -1,5 +1,5 @@
 # Makefile.in
-# $Id: Makefile.in,v 1.8 1999-12-01 06:13:07 arensb Exp $
+# $Id: Makefile.in,v 1.9 2000-01-22 05:05:24 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -11,26 +11,44 @@ curdir =	${top_srcdir}/${subdir}
 prefix =	@prefix@
 MANDIR =	@mandir@
 MAN8DIR =	${MANDIR}/man8
+INFODIR =	@infodir@
 
 INSTALL =	@INSTALL@
-INSTALLARGS =	-c -m 555
+INSTALLARGS =	-m 555
 
 MAKEINFO =	@MAKEINFO@
 TEXI2DVI =	@TEXI2DVI@
 DVIPS =		@DVIPS@
+TEXI2HTML =	@TEXI2HTML@
 
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 
 INFOFILES =	libpalm.info \
-		pdb.info
+		pdb.info \
+		conduits.info
 DVIFILES =	libpalm.dvi \
-		pdb.dvi
+		pdb.dvi \
+		conduits.dvi
 PSFILES =	libpalm.ps \
-		pdb.ps
+		pdb.ps \
+		conduits.ps
+
+# XXX - Should we include HTML documentation in the distribution? If
+# nothing else, it might be nice to set things up so that you can.
+# HTMLFILES =	conduits.html
+# ALLHTMLFILES =	${HTMLFILES} \
+# 		conduits_1.html \
+# 		conduits_2.html \
+# 		conduits_3.html \
+# 		conduits_4.html \
+# 		conduits_5.html \
+# 		conduits_foot.html \
+# 		conduits_toc.html
 
 DISTFILES =	Makefile.in \
 		libpalm.texi \
 		pdb.texi \
+		conduits.texi \
 		version.texi.in \
 		texinfo.tex \
 		coldsync.8
@@ -42,11 +60,12 @@ EXTRA_DISTFILES = \
 
 CLEAN =		${INFOFILES} ${DVIFILES} ${PSFILES} \
 		*.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.ty *.vr \
-		*.bak *~ errs errs.*
+		*.bak *~ errs errs.* \
+		*.html
 DISTCLEAN =	Makefile version.texi .depend
 SPOTLESS =
 
-.SUFFIXES:	.dvi .info .ps .texi
+.SUFFIXES:	.dvi .info .ps .texi .html
 
 .texi.info:
 	${MAKEINFO} $<
@@ -56,12 +75,21 @@ SPOTLESS =
 
 .dvi.ps:
 	${DVIPS} -o $@ $<
+# .texi.html:
+# 	${TEXI2HTML} -split_chapter $<
+# 	-rm -f $@
+# 	ln -s `echo "$<" | sed 's/\.texi$$//'`_toc $@
 
 all:	${INFOFILES}
 all-doc:	info dvi ps
 info:	${INFOFILES}
 dvi:	${DVIFILES}
 ps:	${PSFILES}
+
+# XXX
+html:	conduits_toc.html
+conduits_toc.html:	conduits.texi
+	${TEXI2HTML} -split_chapter conduits.texi
 
 depend:
 
