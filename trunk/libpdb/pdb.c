@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.11 2000-01-22 05:36:06 arensb Exp $
+ * $Id: pdb.c,v 1.12 2000-01-23 21:16:18 arensb Exp $
  */
 
 #include "config.h"
@@ -1410,45 +1410,48 @@ pdb_LoadHeader(int fd,
 	{
 		time_t t;
 
-		printf("\tname: \"%s\"\n", db->name);
-		printf("\tattributes: 0x%04x", db->attributes);
-		if (db->attributes & PDB_ATTR_RESDB) printf(" RESDB");
-		if (db->attributes & PDB_ATTR_RO) printf(" RO");
+		fprintf(stderr, "\tname: \"%s\"\n", db->name);
+		fprintf(stderr, "\tattributes: 0x%04x", db->attributes);
+		if (db->attributes & PDB_ATTR_RESDB)
+			fprintf(stderr, " RESDB");
+		if (db->attributes & PDB_ATTR_RO) fprintf(stderr, " RO");
 		if (db->attributes & PDB_ATTR_APPINFODIRTY)
-			printf(" APPINFODIRTY");
-		if (db->attributes & PDB_ATTR_BACKUP) printf(" BACKUP");
-		if (db->attributes & PDB_ATTR_OKNEWER) printf(" OKNEWER");
-		if (db->attributes & PDB_ATTR_RESET) printf(" RESET");
-		if (db->attributes & PDB_ATTR_OPEN) printf(" OPEN");
-		printf("\n");
-		printf("\tversion: %u\n", db->version);
+			fprintf(stderr, " APPINFODIRTY");
+		if (db->attributes & PDB_ATTR_BACKUP)
+			fprintf(stderr, " BACKUP");
+		if (db->attributes & PDB_ATTR_OKNEWER)
+			fprintf(stderr, " OKNEWER");
+		if (db->attributes & PDB_ATTR_RESET) fprintf(stderr, " RESET");
+		if (db->attributes & PDB_ATTR_OPEN) fprintf(stderr, " OPEN");
+		fprintf(stderr, "\n");
+		fprintf(stderr, "\tversion: %u\n", db->version);
 		t = db->ctime - EPOCH_1904;
-		printf("\tctime: %lu %s", db->ctime,
-		       ctime(&t));
+		fprintf(stderr, "\tctime: %lu %s", db->ctime,
+			ctime(&t));
 		t = db->mtime - EPOCH_1904;
-		printf("\tmtime: %lu %s", db->mtime,
-		       ctime(&t));
+		fprintf(stderr, "\tmtime: %lu %s", db->mtime,
+			ctime(&t));
 		t = db->baktime - EPOCH_1904;
-		printf("\tbaktime: %lu %s", db->baktime,
-		       ctime(&t));
-		printf("\tmodnum: %ld\n", db->modnum);
-		printf("\tappinfo_offset: 0x%08lx\n",
-		       db->appinfo_offset);
-		printf("\tsortinfo_offset: 0x%08lx\n",
-		       db->sortinfo_offset);
-		printf("\ttype: '%c%c%c%c' (0x%08lx)\n",
-		       (char) (db->type >> 24) & 0xff,
-		       (char) (db->type >> 16) & 0xff,
-		       (char) (db->type >> 8) & 0xff,
-		       (char) db->type & 0xff,
-		       db->type);
-		printf("\tcreator: '%c%c%c%c' (0x%08lx)\n",
-		       (char) (db->creator >> 24) & 0xff,
-		       (char) (db->creator >> 16) & 0xff,
-		       (char) (db->creator >> 8) & 0xff,
-		       (char) db->creator & 0xff,
-		       db->creator);
-		printf("\tuniqueIDseed: %ld\n", db->uniqueIDseed);
+		fprintf(stderr, "\tbaktime: %lu %s", db->baktime,
+			ctime(&t));
+		fprintf(stderr, "\tmodnum: %ld\n", db->modnum);
+		fprintf(stderr, "\tappinfo_offset: 0x%08lx\n",
+			db->appinfo_offset);
+		fprintf(stderr, "\tsortinfo_offset: 0x%08lx\n",
+			db->sortinfo_offset);
+		fprintf(stderr, "\ttype: '%c%c%c%c' (0x%08lx)\n",
+			(char) (db->type >> 24) & 0xff,
+			(char) (db->type >> 16) & 0xff,
+			(char) (db->type >> 8) & 0xff,
+			(char) db->type & 0xff,
+			db->type);
+		fprintf(stderr, "\tcreator: '%c%c%c%c' (0x%08lx)\n",
+			(char) (db->creator >> 24) & 0xff,
+			(char) (db->creator >> 16) & 0xff,
+			(char) (db->creator >> 8) & 0xff,
+			(char) db->creator & 0xff,
+			db->creator);
+		fprintf(stderr, "\tuniqueIDseed: %ld\n", db->uniqueIDseed);
 	}
 
 	return 0;		/* Success */
@@ -1480,8 +1483,8 @@ pdb_LoadRecListHeader(int fd,
 
 	PDB_TRACE(6)
 	{
-		printf("\tnextID: %ld\n", db->next_reclistID);
-		printf("\tlen: %u\n", db->numrecs);
+		fprintf(stderr, "\tnextID: %ld\n", db->next_reclistID);
+		fprintf(stderr, "\tlen: %u\n", db->numrecs);
 	}
 
 	return 0;
@@ -1546,7 +1549,7 @@ pdb_LoadRsrcIndex(int fd,
 
 		PDB_TRACE(6)
 		{
-			printf("\tResource %d: type '%c%c%c%c' (0x%08lx), "
+			fprintf(stderr, "\tResource %d: type '%c%c%c%c' (0x%08lx), "
 			       "id %u, offset 0x%04lx\n",
 			       i,
 			       (char) (rsrc->type >> 24) & 0xff,
@@ -1641,7 +1644,7 @@ pdb_LoadRecIndex(int fd,
 			((udword) get_ubyte(&rptr));
 
 		PDB_TRACE(6)
-			printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, "
+			fprintf(stderr, "\tRecord %d: offset 0x%04lx, attr 0x%02x, "
 			       "ID 0x%08lx\n",
 			       i,
 			       rec->offset,
@@ -1754,7 +1757,7 @@ pdb_LoadAppBlock(int fd,
 		return -1;
 	}
 	PDB_TRACE(6)
-		debug_dump(stdout, "<APP", db->appinfo, db->appinfo_len);
+		debug_dump(stderr, "<APP", db->appinfo, db->appinfo_len);
 
 	return 0; 
 }
@@ -1857,7 +1860,7 @@ pdb_LoadSortBlock(int fd,
 		return -1;
 	}
 	PDB_TRACE(6)
-		debug_dump(stdout, "<SORT", db->sortinfo, db->sortinfo_len); 
+		debug_dump(stderr, "<SORT", db->sortinfo, db->sortinfo_len); 
 
 	return 0; 
 }
@@ -1895,12 +1898,13 @@ pdb_LoadResources(int fd,
 		}
 
 		PDB_TRACE(5)
-			printf("Reading resource %d (type '%c%c%c%c')\n",
-			       i,
-			       (char) (rsrc->type >> 24) & 0xff,
-			       (char) (rsrc->type >> 16) & 0xff,
-			       (char) (rsrc->type >> 8) & 0xff,
-			       (char) rsrc->type & 0xff);
+			fprintf(stderr,
+				"Reading resource %d (type '%c%c%c%c')\n",
+				i,
+				(char) (rsrc->type >> 24) & 0xff,
+				(char) (rsrc->type >> 16) & 0xff,
+				(char) (rsrc->type >> 8) & 0xff,
+				(char) rsrc->type & 0xff);
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0L, SEEK_CUR);
@@ -1973,8 +1977,8 @@ pdb_LoadResources(int fd,
 		}
 		PDB_TRACE(6)
 		{
-			printf(_("Contents of resource %d:\n"), i);
-			debug_dump(stdout, "<RSRC", rsrc->data,
+			fprintf(stderr, "Contents of resource %d:\n", i);
+			debug_dump(stderr, "<RSRC", rsrc->data,
 				   rsrc->data_len);
 		}
 	}
@@ -2015,7 +2019,8 @@ pdb_LoadRecords(int fd,
 		}
 
 		PDB_TRACE(5)
-			printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
+			fprintf(stderr, "Reading record %d (id 0x%08lx)\n",
+				i, rec->id);
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0L, SEEK_CUR);
@@ -2088,8 +2093,8 @@ pdb_LoadRecords(int fd,
 
 		PDB_TRACE(6)
 		{
-			printf("Contents of record %d:\n", i);
-			debug_dump(stdout, "<REC", rec->data, rec->data_len);
+			fprintf(stderr, "Contents of record %d:\n", i);
+			debug_dump(stderr, "<REC", rec->data, rec->data_len);
 		}
 	}
 
