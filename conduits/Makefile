@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001-12-09 19:29:43 arensb Exp $
+# $Id: Makefile,v 1.12 2002-11-02 22:27:58 azummo Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -20,7 +20,8 @@ CLEAN =		*.1 \
 DISTFILES =	Makefile \
 		${CONDUITS} \
 		memo-text \
-		std-categories
+		std-categories \
+		dump-headers
 
 all::
 

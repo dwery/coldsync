@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+#
+#	Copyright (C) 2002, Alessandro Zummo.
+#	You may distribute this file under the terms of the Artistic
+#	License, as specified in the README file.
+#
+# $Id: dump-headers,v 1.1 2002-11-02 22:27:58 azummo Exp $
+
+# This conduit dumps the headers received from ColdSync.
+
+use strict;
+use ColdSync;
+use ColdSync::SPC;
+
+StartConduit("sync");
+
+	print STDERR "dump-headers conduit\n";
+
+	foreach my $h ( keys %ColdSync::HEADERS)
+	{
+		print "\t$h: $ColdSync::HEADERS{$h}\n";
+	}
+
+EndConduit;
+
+__END__
+
+=head1 NAME
+
+dump-headers - Dump the headers received from ColdSync
+
+=head1 SYNOPSIS
+
+Add the following to your F<.coldsyncrc> file:
+
+	conduit sync {
+		type: none;
+		...
+		path: <...>/dump-headers;
+	}
+
+	or
+
+	conduit sync {
+		type: memo/DATA;
+		...
+		path: <...>/dump-headers;
+	}
+
+This is only a test conduit. You also have to add an entry like this one
+
+	conduit sync {
+		type: memo/DATA;
+		...
+		path: [generic];
+	}
+
+
+if you want your database to be synced the normal way.
+
+=head1 DESCRIPTION
+
+This conduit dumps the headers received from ColdSync.
+
+=head1 BUGS
+
+None known.
+
+=head1 SEE ALSO
+
+coldsync(8)
+
+=cut
+#'
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
