@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.56 2002-12-30 17:05:39 azummo Exp $
+ * $Id: lexer.l,v 2.57 2002-12-30 18:15:03 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -711,15 +711,16 @@ qstr_clear(void)
  * and keeps a NUL at the end of the string. That is, if you're appending
  * "foo", you should qstr_append("foo", 3). 'len' does not include the NUL.
  *
+ * Yes, this function works with len == 0. In fact, it's desirable to use
+ * it with zero-length strings, to ensure that 'qstring' is non-NULL and
+ * doesn't cause segfaults later on.
+ *
  * Returns 0 if successful, or a negative value in case of error.
  */
 static int
 qstr_append(const char *data,		/* Data to append */
 	    const int len)		/* Length of 'data' */
 {
-/*	if (len <= 0)
-		return 0;
-*/
 	PARSE_TRACE(7)
 		fprintf(stderr, "qstr_append(\"%.*s\", %d)\n",
 			len, data, len);
