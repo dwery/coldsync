@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.42 2001-05-06 06:00:15 arensb Exp $
+.\" $Id: coldsync.8,v 1.42.6.1 2001-07-28 18:05:31 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -177,6 +177,7 @@ Specifies the device type for the
 option. Legal values are
 .Dv serial ,
 .Dv usb ,
+.Dv usb_m50x
 and
 .Dv net .
 .It Fl s
@@ -412,6 +413,10 @@ is slower.
 .Li listen usb
 is used to sync a Handspring Visor using native USB mode. This only
 works under *BSD.
+.Pp
+.Li listen usb_m50x
+is used to sync a Palm m50x from its USB cradle. This only works under Linux
+using the visor.o kernel module.
 .Pp
 The
 .Li device
