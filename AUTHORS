@@ -1,4 +1,4 @@
-# $Id: AUTHORS,v 1.8 2000-04-09 13:45:02 arensb Exp $
+# $Id: AUTHORS,v 1.9 2000-05-03 03:31:46 arensb Exp $
 
 Andrew Arensburger <arensb@ooblick.com>: Project coordinator and
 	benevolent dictator.
@@ -20,3 +20,4 @@ Patches and such:
 	Christian Kirsch <ck@ix.heise.de>: German translation.
 	Ward Vandewege <ward@penguinpowered.com>.
 	Charles Lepple <clepple@vt.edu>
+	Shawn Sorichetti <ssoriche@home.com>: Explained about USB under Linux.
