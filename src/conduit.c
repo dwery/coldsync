@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.8 2000-07-31 09:15:52 arensb Exp $
+ * $Id: conduit.c,v 2.9 2000-08-07 00:55:47 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -53,7 +53,8 @@ typedef RETSIGTYPE (*sighandler) (int);	/* This is equivalent to FreeBSD's
 static int run_conduits(struct dlp_dbinfo *dbinfo,
 			char *flavor,
 			unsigned short flavor_mask,
-			const Bool with_spc);
+			const Bool with_spc,
+			struct PConnection *pconn);
 static pid_t spawn_conduit(const char *path,
 			   char * const argv[],
 			   FILE **tochild,
@@ -212,14 +213,9 @@ static int
 run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	    char *flavor,		/* Name of the flavor */
 	    conduit_block *conduit,	/* Conduit to be run */
-	    const Bool with_spc)	/* Allow SPC calls? */
+	    const Bool with_spc,	/* Allow SPC calls? */
+	    struct PConnection *pconn)	/* Connection to Palm */
 {
-	/* In most cases below, if a variable is declared 'volatile', it's
-	 * because 'gcc' complains that the variable might get clobbered by
-	 * longjmp() (presumably these are register variables, since these
-	 * warnings go away when optimization is turned off). This
-	 * shouldn't matter, but it shuts the compiler up.
-	 */
 	int err;
 	int i;
 	static char * argv[4];	/* Conduit's argv */
@@ -263,15 +259,21 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 
 	struct spc_hdr spc_req;
 				/* SPC request header */
-	unsigned char *spc_inbuf = NULL;
+	/* These next few variables are declared 'volatile' mainly to make
+	 * gcc shut up: it complains that they might get clobbered by
+	 * longjmp(). This is true, but we don't care.
+	 * Note the order for pointers, though: it is the pointer that is
+	 * volatile, not what it points to.
+	 */
+	unsigned char * volatile spc_inbuf = NULL;
 				/* SPC input buffer */
-	unsigned long spc_toread = 0;
+	volatile unsigned long spc_toread = 0;
 				/* # bytes of an SPC request left to read */
-	unsigned char *spc_outbuf = NULL;
+	unsigned char * volatile spc_outbuf = NULL;
 				/* SPC output buffer */
-	unsigned long spc_towrite = 0;
+	volatile unsigned long spc_towrite = 0;
 				/* # bytes of an SPC response left to write */
-	unsigned char *spcp = NULL;
+	unsigned char * volatile spcp = NULL;
 				/* Pointer into spc_inbuf or spc_outbuf */
 	sigset_t sigmask;
 				/* Signal mask for {,un}block_sigchld() */
@@ -545,6 +547,15 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				max_fd = spcpipe[1];
 		}
 
+		/* XXX - This really ought to time out: a buggy conduit
+		 * might not send the right amount of data, in which case
+		 * this will currently hang forever.
+		 * The proper timeout depends on the context, of course:
+		 * for a Dump conduit, it might be okay to wait 30 seconds
+		 * for status info. In SPC_Read_Data state, 1 second should
+		 * be enough. Try to find some balance that's reasonable
+		 * but doesn't make the user wait forever.
+		 */
 		err = select(max_fd+1, &in_fds, &out_fds, NULL, NULL);
 		SYNC_TRACE(7)
 			fprintf(stderr,
@@ -667,7 +678,15 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 
 			spc_state = SPC_Read_Data;
 
-			continue;
+			/* XXX - This is rather a gross hack: if there are
+			 * no data following the request, then we don't
+			 * want to wait on data that's not going to come.
+			 * By not continuing, we fall through directly to
+			 * the next case, which will immediately send the
+			 * request.
+			 */
+			if (spc_req.len > 0)
+				continue;
 		}
 
 		/* State 1: Expecting to read SPC data. */
@@ -705,8 +724,21 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 			 */
 			block_sigchld(&sigmask);
 			err = spc_send(&spc_req,
+				       pconn,
+				       dbinfo,
 				       spc_inbuf,
-				       &spc_outbuf);
+				       (unsigned char **) &spc_outbuf);
+				/* NB: The cast of '&spc_outbuf' is utterly
+				 * bogus, but is required to shut the
+				 * compiler up. The compiler is required to
+				 * complain by a technicality in the ANSI C
+				 * spec.
+				 * For more details, see Peter van der
+				 * Linden, "Expert C Programming: Deep C
+				 * Secrets", Prentice-Hall, 1994, Chap. 1,
+				 * "Reading the ANSI C Standard for Fun,
+				 * Pleasure, and Profit"
+				 */
 			unblock_sigchld(&sigmask);
 
 			/* We're done with spc_inbuf */
@@ -774,7 +806,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 
 			if (spc_towrite > 0)
 			{
-fprintf(stderr, "spc_outbuf == 0x%08lx, spcp == 0x%08lx\n", spc_outbuf, spcp);
+				SYNC_TRACE(6)
+					fprintf(stderr, "Sending SPC data\n");
+
 				/* Send the next chunk */
 				err = write(spcpipe[1], spcp, spc_towrite);
 
@@ -871,7 +905,8 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 					 * conduit.
 					 */
 	     unsigned short flavor_mask,
-	     const Bool with_spc)	/* Allow SPC calls? */
+	     const Bool with_spc,	/* Allow SPC calls? */
+	     struct PConnection *pconn)	/* Connection to Palm */
 {
 	int err;
 	conduit_block *conduit;
@@ -938,7 +973,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		}
 
 		found_conduit = True;
-		err = run_conduit(dbinfo, flavor, conduit, with_spc);
+		err = run_conduit(dbinfo, flavor, conduit, with_spc, pconn);
 
 		/* XXX - Error-checking. Report the conduit's exit status
 		 */
@@ -962,7 +997,8 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(4)
 			fprintf(stderr, "Running default conduit\n");
 
-		err = run_conduit(dbinfo, flavor, def_conduit, with_spc);
+		err = run_conduit(dbinfo, flavor, def_conduit, with_spc,
+				  pconn);
 	}
 
 	return 0;
@@ -988,7 +1024,7 @@ run_Fetch_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False);
+	return run_conduits(dbinfo, "fetch", FLAVORFL_FETCH, False, NULL);
 }
 
 /* run_Dump_conduits
@@ -1017,7 +1053,7 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False);
+	return run_conduits(dbinfo, "dump", FLAVORFL_DUMP, False, NULL);
 }
 
 /* run_Sync_conduits
@@ -1027,7 +1063,8 @@ run_Dump_conduits(struct dlp_dbinfo *dbinfo)
  * XXX - This is just an experimental first draft so far
  */
 int
-run_Sync_conduits(struct dlp_dbinfo *dbinfo)
+run_Sync_conduits(struct dlp_dbinfo *dbinfo,
+		  struct PConnection *pconn)
 {
 	SYNC_TRACE(1)
 		fprintf(stderr, "Running sync conduits for \"%s\".\n",
@@ -1042,7 +1079,7 @@ run_Sync_conduits(struct dlp_dbinfo *dbinfo)
 	 * descriptor table.
 	 */
 
-	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True);
+	return run_conduits(dbinfo, "sync", FLAVORFL_SYNC, True, pconn);
 }
 
 /* spawn_conduit
