@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9.2.1 2000-08-31 15:41:31 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.2 2000-09-01 06:14:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -293,7 +293,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		 */
 		return 201;		/* Success (trivially) */
 
-
 	/* If this conduit might understand SPC, set up a pipe for the
 	 * child to communicate to the parent.
 	 */
@@ -336,8 +335,10 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		return -1;
 	}
 
-	/* Before all the jumping stuff, make sure the pref_list is allocated */
-	pref_list = calloc(sizeof *pref_list,conduit->num_prefs);
+	/* Before all the jumping stuff, make sure the pref_list is
+	 * allocated
+	 */
+	pref_list = calloc(sizeof *pref_list, conduit->num_prefs);
 
 	/* When the child exits, sigchld_handler() will longjmp() back to
 	 * here. This way, none of the other code has to worry about
@@ -345,9 +346,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	 */
 	if ((err = sigsetjmp(chld_jmpbuf, 1)) != 0)
 	{
-		/* XXX - NB: Both FreeBSD's and the Open Group's manual
-		 * entries say that longjmp() restores the environment
-		 * saved by _the most recent_ invocation of setjmp().
+		/* NB: Both FreeBSD's and the Open Group's manual entries
+		 * say that longjmp() restores the environment saved by
+		 * _the most recent_ invocation of setjmp().
 		 *
 		 * Furthermore, Stevens says that you can't call longjmp()
 		 * if the function that called setjmp() has already
@@ -418,25 +419,31 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				 * from complaining. */
 
 	/* Then we add the preference items as headers */
-	for(i = 0; i < conduit->num_prefs; i++)
+	for (i = 0; i < conduit->num_prefs; i++)
 	{
-	    char tmpvalue[20];
+		static char tmpvalue[20];
 
-	    /* Set the pointer to the right preference in the cache list
-	     * and if necessary, download it */
-	    pref_list[i] = GetPrefItem(conduit->prefs[i]);
+		/* Set the pointer to the right preference in the cache
+		 * list and if necessary, download it
+		 */
+		pref_list[i] = GetPrefItem(conduit->prefs[i]);
 
-	    /* Set the header */
-	    ++last_header;
-	    headers[last_header].name = "Preference";
-	    snprintf(tmpvalue,20,"%c%c%c%c/%d/%d\n",
-		    (char) (conduit->prefs[i].creator >> 24) & 0xff,
-		    (char) (conduit->prefs[i].creator >> 16) & 0xff,
-		    (char) (conduit->prefs[i].creator >> 8) & 0xff,
-		    (char) conduit->prefs[i].creator & 0xff,
-		    conduit->prefs[i].id,
-		    pref_list[i]->contents_info->len);
-	    headers[last_header].value = tmpvalue;
+		/* Set the header */
+		++last_header;
+		headers[last_header].name = "Preference";
+		/* XXX - snprintf() isn't portable. Do this some other way.
+		 * In this case, it should be sufficient to use sprintf()
+		 * and use a buffer large enough to hold the string when
+		 * everything is MAXINT.
+		 */
+		snprintf(tmpvalue,20,"%c%c%c%c/%d/%d\n",
+			 (char) (conduit->prefs[i].creator >> 24) & 0xff,
+			 (char) (conduit->prefs[i].creator >> 16) & 0xff,
+			 (char) (conduit->prefs[i].creator >> 8) & 0xff,
+			 (char) conduit->prefs[i].creator & 0xff,
+			 conduit->prefs[i].id,
+			 pref_list[i]->contents_info->len);
+		headers[last_header].value = tmpvalue;
 	}
 
 	/* If the conduit might understand SPC, tell it what file
@@ -927,6 +934,9 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	}
 
 	/* Let's not hog memory */
+	/* XXX - This is an array of pointers, but the individual elements
+	 * are not freed. Does this leak memory?
+	 */
 	free(pref_list);
 
 	return laststatus;
