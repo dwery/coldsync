@@ -55,7 +55,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.7 2001-06-26 05:46:38 arensb Exp $
+ * $Id: padp.h,v 1.8 2001-09-07 23:49:23 arensb Exp $
  */
 #ifndef _padp_h_
 #define _padp_h_
@@ -63,11 +63,13 @@
 #include "palm.h"
 
 /* PADP fragment types */
-#define PADP_FRAGTYPE_DATA	1	/* User data */
-#define PADP_FRAGTYPE_ACK	2	/* Acknowledgement */
-#define PADP_FRAGTYPE_NAK	3	/* No longer used */
-#define PADP_FRAGTYPE_TICKLE	4	/* Prevent timeouts */
-#define PADP_FRAGTYPE_ABORT	8	/* Abort (1.1 extension) */
+typedef enum {
+	PADP_FRAGTYPE_DATA	= 1,	/* User data */
+	PADP_FRAGTYPE_ACK	= 2,	/* Acknowledgement */
+	PADP_FRAGTYPE_NAK	= 3,	/* No longer used */
+	PADP_FRAGTYPE_TICKLE	= 4,	/* Prevent timeouts */
+	PADP_FRAGTYPE_ABORT	= 8	/* Abort (1.1 extension) */
+} padp_frag_t;
 
 /* PADP header flags */
 #define PADP_FLAG_LONGHDR	0x10	/* This is a long header */
