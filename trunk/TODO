@@ -221,9 +221,6 @@
 - Perl: methods: $pdb->append($record). $pdb->find($ID) or
   $pdb->find($record). The latter should use
   $pdb->cmp($record1,$record2) to see if two records are equal.
-- Find all of the messages of the form "<function-name>: <message>"
-  and print the function name as a separate argument. This should
-  reduce the number of messages to translate.
 - Fix error messages to give some idea which database is involved.
 - With BSD make, always reruns 'ar' in the library directories. Why?
   According to 'make -dm', it seems to recognize the target as a
@@ -247,3 +244,6 @@
 	   smart enough to cope with this. Make it an error to run a
 	   second Fetch conduit on this database unless that flag is
 	   set.
+- Variables set in .coldsyncrc should simply be propagated to the
+  environment. Should this be done immediately, though?
+- Should send mail to the user with a report of the sync.
