@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.27 2000-05-06 11:34:02 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.28 2000-05-17 12:46:29 arensb Exp $
  */
 
 /* Note on I/O:
@@ -390,19 +390,24 @@ GenericConduit::FirstSync()
 		}
 	}
 
-	SYNC_TRACE(3)
-		fprintf(stderr, "### Resetting sync flags.\n");
-	/* XXX - This appears to cause a reset on the Palm if the database
-	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
-	 */
-	err = DlpResetSyncFlags(_pconn, dbh);
-	if (err != DLPSTAT_NOERR)
+	if ((_dbinfo->db_flags & DLPCMD_DBFLAG_OPEN) != 0)
 	{
-		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
-			"GenericConduit", err);
-		err = DlpCloseDB(_pconn, dbh);
-		add_to_log(_("Error\n"));
-		return -1;
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Database is open. Not resetting "
+				"sync flags.\n");
+	} else {
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Resetting sync flags.\n");
+		err = DlpResetSyncFlags(_pconn, dbh);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, _("%s error: Can't reset sync flags: "
+					  "%d\n"),
+				"GenericConduit", err);
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log(_("Error\n"));
+			return -1;
+		}
 	}
 
 	/* Clean up */
@@ -816,19 +821,24 @@ GenericConduit::SlowSync()
 		return -1;
 	}
 
-	SYNC_TRACE(3)
-		fprintf(stderr, "### Resetting sync flags.\n");
-	/* XXX - This appears to cause a reset on the Palm if the database
-	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
-	 */
-	err = DlpResetSyncFlags(_pconn, dbh);
-	if (err != DLPSTAT_NOERR)
+	if ((_dbinfo->db_flags & DLPCMD_DBFLAG_OPEN) != 0)
 	{
-		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
-			"GenericConduit", err);
-		err = DlpCloseDB(_pconn, dbh);
-		add_to_log(_("Error\n"));
-		return -1;
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Database is open. Not resetting "
+				"sync flags.\n");
+	} else {
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Resetting sync flags.\n");
+		err = DlpResetSyncFlags(_pconn, dbh);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, _("%s error: Can't reset sync flags: "
+					  "%d\n"),
+				"GenericConduit", err);
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log(_("Error\n"));
+			return -1;
+		}
 	}
 
 	/* Clean up */
@@ -1270,19 +1280,24 @@ GenericConduit::FastSync()
 		}
 	}
 
-	SYNC_TRACE(3)
-		fprintf(stderr, "### Resetting sync flags.\n");
-	/* XXX - This appears to cause a reset on the Palm if the database
-	 * is open (has the DLPCMD_DBFLAG_OPEN flag set).
-	 */
-	err = DlpResetSyncFlags(_pconn, dbh);
-	if (err != DLPSTAT_NOERR)
+	if ((_dbinfo->db_flags & DLPCMD_DBFLAG_OPEN) != 0)
 	{
-		fprintf(stderr, _("%s error: Can't reset sync flags: %d\n"),
-			"GenericConduit", err);
-		err = DlpCloseDB(_pconn, dbh);
-		add_to_log(_("Error\n"));
-		return -1;
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Database is open. Not resetting "
+				"sync flags.\n");
+	} else {
+		SYNC_TRACE(3)
+			fprintf(stderr, "### Resetting sync flags.\n");
+		err = DlpResetSyncFlags(_pconn, dbh);
+		if (err != DLPSTAT_NOERR)
+		{
+			fprintf(stderr, _("%s error: Can't reset sync flags: "
+					  "%d\n"),
+				"GenericConduit", err);
+			err = DlpCloseDB(_pconn, dbh);
+			add_to_log(_("Error\n"));
+			return -1;
+		}
 	}
 
 	/* Clean up */
