@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.25 2000-06-11 07:00:08 arensb Exp $
+ * $Id: parser.y,v 2.26 2000-06-11 07:01:36 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 #include "config.h"
@@ -99,8 +99,6 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token SYNC
 %token FETCH
 %token DUMP
-%token INSTALL
-%token UNINSTALL
 
 %union {
 	long integer;
