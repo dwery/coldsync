@@ -1,5 +1,5 @@
    * * Guidelines for contributors, most important ones first: * *
-  $Id: HACKING,v 1.4 1999-09-09 05:44:12 arensb Exp $
+  $Id: HACKING,v 1.5 1999-11-27 05:35:29 arensb Exp $
 
 - Try to leave this code as clean as you wish you had found it.
 
@@ -55,3 +55,38 @@
   'off_t' to 'long' will remove precision in the cases where it's a
   'long long'. In this particular package, however, I don't expect any
   files to be longer than a few Kb, to say nothing of 4Gb.
+
+- I18N: when printing a message for the user's benefit, remember to
+  enclose the string in _(), so that it can be translated, and show up
+  in the user's native language.
+	This does not apply to debugging messages; those are assumed
+  to be temporary, and of interest mainly to the developer who wrote
+  that chunk of code, so they can be in the developer's native
+  language.
+	Function names should not be translated. by and large,
+  perror()'s argument need not be translated, since it's usually of
+  the form "<system call>" or "<fuction name>: <system call>".
+
+- I18N: when printing an error message of the form "<function-name>:
+  <message>", print the function name as a separate argument, e.g.,
+	fprintf(stderr, _("%s: I'm unhappy!\n"),
+	        "my_function");
+  instead of
+	fprintf(stderr, _("my_function: I'm unhappy!\n"));
+
+	Function names should not be translated into other languages,
+  so this rule reduces the number of strings that a translator needs
+  to deal with, especially with common error messages like "Out of
+  memory".
+
+- I18N: to make things easy on the translator, every string that you
+  print should be at least one full sentence. Let's say that you want
+  to print "Can't read the 12th record". In some languages, this might
+  be better expressed as "Can't read record number 12" or "The 12th
+  record cannot be read". So don't write
+	fprintf(stderr, _("Can't read the "));
+	fprintf(stderr, somestruct->n);
+	fprintf(stderr, _("th record\n"));
+  Rather, write
+	fprintf(stderr, _("Can't read the %dth record\n"),
+	        somestruct->n);
