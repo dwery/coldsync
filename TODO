@@ -237,23 +237,6 @@
 		type memo/DATA;
 	That way, parsing regular lines and header lines is more
   similar.
-- Config file: break things down further. Don't just look for an
-  entire header line. Split it up with lex states if need be. This
-  allows better error-detection (if given
-		Foo,bar:	somevalue
-  it can say "bad header field" instead of just "parse error").
-	Also, it would be nice, both in the ordinary lines and header
-  lines, to make quotes optional:
-		path: /foo/bar/baz;
-  instead of
-		path: "/foo/bar/baz";
-  This is the same in both types of lines (in header fields, might
-  want to specify values consisting of spaces, e.g.
-		Prefix:	"   ";
-  ) so the only real difference in how the two types of lines are
-  processed is that in ordinary lines, the left side has to be a
-  predefined token, whereas in header lines it can be any legal
-  identifier.
 - If a memo dies (e.g., "memo-kjots" with flavor "fetch"), should
   print an error message giving some indication of which conduit said
   that.
@@ -273,13 +256,9 @@
   which records will be restored, etc.
 	Ought to be able to delete records.
 	A GUI front end would be nice.
-- Parser: if user specifies multiple "path", "type", etc. directives
-  in a block, the old value is not freed properly. This should also
-  generate a warning.
 - When (after?) reading config file, check the specified conduits to
   make sure they exist and are executable. Warn if they aren't.
-- Update man page
-	Colons after directives.
-	BUGS: error-reporting is misleading.
-- Parser: if something is specified twice (e.g., "path"), the former
-  value isn't freed, which causes a memory leak.
+- Would be nice to allow conduit headers consisting entirely of
+  whitespace.
+- Install .mo files in
+	${LOCALEDIR}/${LANG}/LC_MESSAGES/coldsync.mo
