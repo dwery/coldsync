@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 1.1.4\n"
-"POT-Creation-Date: 2002-01-01 21:48-0500\n"
+"POT-Creation-Date: 2002-03-10 13:19+0100\n"
 "PO-Revision-Date: 2000-03-27 16:57+02:00\n"
 "Last-Translator: Philipp Matthias Hahn <pmhahn@titan.lahn.de>\n"
 "Language-Team:  de <de@li.org>\n"
@@ -850,8 +850,8 @@ msgid "%s: error sending SPC response header."
 msgstr "%s: Fehler beim Sender des SPC Antwortkopfes."
 
 #: ../src/conduit.c:1672
-#, c-format
-msgid "%s: execvp(%s) failed and returned %d."
+#, fuzzy, c-format
+msgid "%s: execv(%s) failed and returned %d."
 msgstr "%s: excevp(%s) gescheitert, Rückgabewert %d."
 
 #: ../src/config.c:1224 lexer.l:731
@@ -990,22 +990,22 @@ msgstr "Kann Zeichenkette nicht kopieren."
 msgid "Can't create \"%s\"."
 msgstr "Kann \"%s\" nicht erzeugen."
 
-#: ../src/config.c:1626
+#: ../src/config.c:1627
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Kann Aufbewahrungsverzeichnis %s nicht anlegen."
 
-#: ../src/config.c:1608
+#: ../src/config.c:1609
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Kann Verzeichnis %s für alte Einträge nicht anlegen."
 
-#: ../src/config.c:1590
+#: ../src/config.c:1591
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Kann Sicherungsverzeichnis %s nicht anlegen."
 
-#: ../src/config.c:1572
+#: ../src/config.c:1573
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Kann Basisverzeichnis %s zum Synchronisieren nicht anelegen."
@@ -1014,7 +1014,7 @@ msgstr "Kann Basisverzeichnis %s zum Synchronisieren nicht anelegen."
 msgid "Can't create connection to forwarding host."
 msgstr "Keine Verbindung zum weiterleitenden Rechner."
 
-#: ../src/config.c:1644
+#: ../src/config.c:1645
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Kann Installationsverzeichnis %s nicht anlegen."
@@ -1100,7 +1100,7 @@ msgstr "Kann Benutzerdaten nicht feststellen."
 msgid "Can't get user name from Palm."
 msgstr "Kann Benutzernamen nicht feststellen."
 
-#: ../src/config.c:1798
+#: ../src/config.c:1799
 msgid "Can't get user's full name."
 msgstr "Kann vollständigen Benutzernamen nicht feststellen."
 
@@ -1679,8 +1679,8 @@ msgid ""
 msgstr ""
 "Dieser Palm hat die BenutzerID %ld (Erwartet wurde %ld).\n"
 "Synchronisieren würde wahrscheinlich wertvolle Daten zerstören. Bitte\n"
-"die Konfigurationsdatei aktualisieren und/oder den Palm (mit 'coldsync "
-"-mI')\n"
+"die Konfigurationsdatei aktualisieren und/oder den Palm (mit 'coldsync -"
+"mI')\n"
 "vor dem fortfahren initialisieren.\n"
 "\tDie Konfigurationsdatei sollte einen PDA Abschnitt enthalten, der\n"
 "etwa so aussieht:"
@@ -1697,8 +1697,8 @@ msgid ""
 msgstr ""
 "Dieser Palm hat den Benutzernamen \"%.*s\" (Erwartet wurde \"%.*s\").\n"
 "Synchronisieren würde wahrscheinlich wertvolle Daten zerstören. Bitte\n"
-"die Konfigurationsdatei aktualisieren und/oder den Palm (mit 'coldsync "
-"-mI')\n"
+"die Konfigurationsdatei aktualisieren und/oder den Palm (mit 'coldsync -"
+"mI')\n"
 "vor dem fortfahren initialisieren.\n"
 "\tDie Konfigurationsdatei sollte einen PDA Abschnitt enthalten, der\n"
 "etwa so aussieht:"
@@ -1710,6 +1710,11 @@ msgstr "Dieser Rechner hat anscheinend keine IP-Adresse."
 #: ../libpconn/palm_errno.c:46
 msgid "Timeout"
 msgstr "Zeit abgelaufen"
+
+#: ../src/parser.y:32
+#, fuzzy
+msgid "Too many errors. Aborting."
+msgstr "%s: Zu viele offene Dateien. Abbruch."
 
 #: ../src/coldsync.c:3103
 #, c-format
@@ -2028,10 +2033,6 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ msgstr "Kann Sort-Block nicht lesen.\n"
 
 #, fuzzy
-#~ msgid "Too many errors. Aborting."
-#~ msgstr "%s: Zu viele offene Dateien. Abbruch."
-
-#, fuzzy
 #~ msgid "Lost connection with Palm."
 #~ msgstr "Keine Verbindung zum Palm\n"
 
@@ -2194,8 +2195,8 @@ msgstr "usb: Versuch, einen nicht-leeren Puffer zu füllen.\n"
 #~ "The useless two bytes contain 0x%02x%02x instead of NULs. This is "
 #~ "unexpected.\n"
 #~ msgstr ""
-#~ "Die beiden unbenutzten Bytes enthalten 0x%02x%02x statt NUL. Das ist nicht "
-#~ "vorgesehen.\n"
+#~ "Die beiden unbenutzten Bytes enthalten 0x%02x%02x statt NUL. Das ist "
+#~ "nicht vorgesehen.\n"
 
 #~ msgid "I don't deal with resource databases.\n"
 #~ msgstr "Dieses Programm verarbeitet keine Ressource-Datenbanken.\n"
