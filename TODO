@@ -1,3 +1,9 @@
+- Bug: run coldsync -mr ... . Kill xcopilot before running HotSync.
+  ColdSync dumps core.
+- Memory leaks: when specifying bogus device, the strings strdup()ed
+  from the config file don't get freed.
+	When specifying a bogus config file, the standard stuff
+  doesn't get freed.
 - Perhaps move all of the "this software includes code contributed by
   UCBerkeley" etc. to "AUTHORS"?
 - It'd be nice to have a tool to make sure i18n/FILES contains all of
@@ -11,8 +17,6 @@
   used in that man page.
 - Bug: the <protocol>_tini() functions need to be more paranoid: check
   stuff before free()ing, closing, etc.
-- Get rid of memset(x, 0, y) in favor of bzero(). The latter can be
-  implemented in terms of the former, but not the other way around.
 - Bug?: If the serial number matches (and is a real serial number),
   but the username/userid doesn't, ColdSync proceeds to the next
   entry. Arguably, this should be a definitive non-match.
