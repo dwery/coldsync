@@ -1,7 +1,7 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.8 1999-02-22 10:40:36 arensb Exp $
-@c $Revision: 1.8 $
+@c $Id: libpalm.texi,v 1.9 1999-07-04 14:38:18 arensb Exp $
+@c $Revision: 1.9 $
 @c
 @c %** Start of header
 @setfilename libpalm.info
@@ -50,8 +50,8 @@ are preserved on all copies.
 @title The @code{libpalm} Library
 @subtitle Syncing With PalmOS Devices
 @subtitle Version @value{VERSION}
-@subtitle Edition @value{EDITION}
-@subtitle Updated @value{UPDATED}
+@c @subtitle Edition @value{EDITION}
+@c @subtitle Updated @value{UPDATED}
 @author Andrew Arensburger
 
 @page

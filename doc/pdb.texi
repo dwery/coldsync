@@ -1,5 +1,5 @@
 \input texinfo          @c -*- texinfo -*-
-@c $Id: pdb.texi,v 1.2 1999-07-04 02:51:13 arensb Exp $
+@c $Id: pdb.texi,v 1.3 1999-07-04 14:38:29 arensb Exp $
 @c %**start of header
 @setfilename pdb.info
 @settitle Palm Database Files
@@ -23,8 +23,8 @@ are preserved on all copies.
 @title Palm Database Files
 @subtitle Structure of @file{.pdb} and @file{.prc} files
 @subtitle Version @value{VERSION}
-@subtitle Edition @value{EDITION}
-@subtitle Updated @value{UPDATED}
+@c @subtitle Edition @value{EDITION}
+@c @subtitle Updated @value{UPDATED}
 @author Andrew Arensburger
 
 @page
