@@ -7,7 +7,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: todo-text,v 1.1 2000-05-06 11:21:03 arensb Exp $
+# $Id: todo-text,v 1.2 2000-05-11 15:57:08 arensb Exp $
 
 # XXX - Make sure this works when Note-Indent and/or Item-Cont are empty
 # strings
@@ -31,7 +31,7 @@ use vars qw( @SORTED );	# List of records, sorted by category and priority
 					# yes == archive
 );
 
-my $VERSION = (qw( $Revision: 1.1 $ ))[1];	# Cute hack for conduit version
+my $VERSION = (qw( $Revision: 1.2 $ ))[1];	# Cute hack for conduit version
 
 ConduitMain(
 	"fetch"		=> \&DoFetch,
@@ -139,7 +139,6 @@ sub DoFetch
 	}
 
 	# Delete all unseen records
-	# XXX - Only if $HEADERS{Delete} is set to an appropriate value
 	my $record;
 
 	return 1 if ($HEADERS{Delete} eq "no");
