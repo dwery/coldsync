@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.8 2000-11-20 09:10:38 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.9 2000-11-24 04:52:01 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -131,11 +131,10 @@ struct dlp_time
 struct dlp_userinfo
 {
 	udword userid;		/* User ID number (0 if none) */
-	udword viewerid;	/* ID assigned to viewer by desktop (?) */
-			/* XXX - I have no idea what the viewer is, nor
-			 * does anyone else, as far as I can tell. Perhaps
-			 * this field can be reused for some other purpose.
-			 */
+	udword viewerid;	/* ID assigned to viewer by desktop. Not
+				 * currently used, according to Palm:
+				 * http://oasis.palm.com/dev/kb/manuals/1706.cfm
+				 */
 	udword lastsyncPC;	/* Last sync PC ID (0 if none) */
 	struct dlp_time lastgoodsync;
 				/* Time of last successful sync */
