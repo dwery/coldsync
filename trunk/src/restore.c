@@ -3,13 +3,21 @@
  * Functions for restoring Palm databases (both .pdb and .prc) from
  * the desktop to the Palm.
  *
- * $Id: restore.c,v 2.1 1999-08-01 08:07:47 arensb Exp $
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
+ * $Id: restore.c,v 2.2 1999-09-04 21:07:11 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
 #include <string.h>		/* For strlen() and friends */
-				/* XXX - Might need <strings.h> */
+
+#if HAVE_STRINGS_H
+#  include <strings.h>		/* For strcasecmp() under AIX */
+#endif	/* HAVE_STRINGS_H */
+
 #include <sys/types.h>
 
 #if HAVE_DIRENT_H
