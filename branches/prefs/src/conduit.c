@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9.2.2 2000-09-01 06:14:01 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.3 2000-09-03 02:12:08 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -278,7 +278,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				/* Pointer into spc_inbuf or spc_outbuf */
 	sigset_t sigmask;
 				/* Signal mask for {,un}block_sigchld() */
-	struct pref_item **pref_list;
+	const struct pref_item **pref_list;
 				/* Array of pointers to preference items in
 				 * the cache */
 
