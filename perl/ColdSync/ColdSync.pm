@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.14 2000-09-27 15:07:27 arensb Exp $
+# $Id: ColdSync.pm,v 1.15 2000-11-14 16:23:49 arensb Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.14 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.15 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -35,9 +35,10 @@ Multi-flavor conduits:
     use ColdSync;
 
     ConduitMain(
-        "dump"	=> \&doDump,
-        "fetch"	=> \&doFetch,
-        "sync"	=> \&doSync,
+        "dump"		=> \&doDump,
+        "fetch"		=> \&doFetch,
+        "sync"		=> \&doSync,
+	"install"	=> \&doInstall,
         );
 
     sub doDump...
@@ -105,9 +106,10 @@ $FLAVOR = undef;		# Flavor with which this conduit was invoked
 
 # Lists the headers that are required for each flavor of conduit
 %MANDATORY_HEADERS = (
-	"fetch"	=> [ qw( Daemon Version OutputDB ) ],
-	"dump"	=> [ qw( Daemon Version InputDB ) ],
-	"sync"	=> [ qw( Daemon Version InputDB OutputDB ) ],
+	"fetch"		=> [ qw( Daemon Version OutputDB ) ],
+	"dump"		=> [ qw( Daemon Version InputDB ) ],
+	"sync"		=> [ qw( Daemon Version InputDB OutputDB ) ],
+	"install"	=> [ qw( Daemon Version InputDB ) ],
 );
 
 # Warn
@@ -245,6 +247,9 @@ sub ParseArgs
 	} elsif (lc($ARGV[1]) eq "sync")
 	{
 		$FLAVOR = "sync";
+	} elsif (lc($ARGV[1]) eq "install")
+	{
+		$FLAVOR = "install";
 	} else {
 		print STDOUT "402 Invalid conduit flavor: $ARGV[1]\n";
 		exit 1;
