@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.2 1999-11-04 10:45:17 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.3 1999-11-09 05:32:51 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -39,8 +39,6 @@
 int dlpc_trace = 0;		/* Debugging level for DLP commands */
 
 #define DLPC_TRACE(n)	if (dlpc_trace >= (n))
-
-/* XXX - Finish plugging buffer overflows. */
 
 /* XXX - These two functions will become obsolete when ppack() and
  * punpack() are known to work properly.
@@ -90,6 +88,7 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	struct dlp_resp_header resp_header;	/* Response header */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> ReadUserInfo\n");
@@ -136,12 +135,17 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			dlpcmd_gettime(&rptr, &(userinfo->lastsync));
 			userinfo->usernamelen = get_ubyte(&rptr);
 			userinfo->passwdlen = get_ubyte(&rptr);
-			/* XXX - Potential buffer overflow */
-			memcpy(userinfo->username, rptr,
-			       userinfo->usernamelen);
+
+			max = sizeof(userinfo->username);
+			if (userinfo->usernamelen < max)
+				max = userinfo->usernamelen;
+			memcpy(userinfo->username, rptr, max);
 			rptr += userinfo->usernamelen;
-			/* XXX - Potential buffer overflow */
-			memcpy(userinfo->passwd, rptr, userinfo->passwdlen);
+
+			max = sizeof(userinfo->passwd);
+			if (userinfo->passwdlen < max)
+				max = userinfo->passwdlen;
+			memcpy(userinfo->passwd, rptr, max);
 			rptr += userinfo->passwdlen;
 #if 0
 			/* XXX - It would be nice to just have one call to
@@ -194,12 +198,12 @@ fprintf(stderr, "after punpack(), err == %d\n", err);
 					userinfo->lastsync.day,
 					userinfo->lastsync.month,
 					userinfo->lastsync.year);
-				/* XXX - Check for NULL string pointer */
 				fprintf(stderr,
 					"User name: (%d bytes) \"%*s\"\n",
 					userinfo->usernamelen,
 					userinfo->usernamelen-1,
-					userinfo->username);
+					(userinfo->username == NULL ?
+					 "(null)" : userinfo->username));
 				fprintf(stderr, "DLPC: Password (%d bytes):\n",
 					userinfo->passwdlen);
 				debug_dump(stderr, "DLPC:",
@@ -232,6 +236,7 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	static ubyte outbuf[DLPARGLEN_WriteUserInfo_UserInfo +
 		DLPCMD_USERNAME_LEN];	/* Buffer holding outgoing arg */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> WriteUserInfo\n");
@@ -267,9 +272,12 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	put_ubyte(&wptr, userinfo->usernamelen);
 	if (userinfo->usernamelen > 0)
 	{
-		/* XXX - Potential buffer overflow */
-		memcpy(wptr, userinfo->username, userinfo->usernamelen);
-		wptr += userinfo->usernamelen;
+		max = userinfo->usernamelen < sizeof(userinfo->username) ?
+			userinfo->usernamelen :
+			sizeof(userinfo->usernamelen);
+
+		memcpy(wptr, userinfo->username, max);
+		wptr += max;
 	}
 
 	/* Fill in the argument */
@@ -937,7 +945,9 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 	static ubyte *outbuf = NULL;	/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+	int max;		/* Prevents buffer overflows */
 
+	/* XXX */
 	if (outbuf == NULL)
 		outbuf = malloc(128);
 
@@ -3626,6 +3636,7 @@ DlpReadAppPreference(
 					/* Output buffer */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
+	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr,
@@ -3689,8 +3700,9 @@ DlpReadAppPreference(
 			pref->version = get_uword(&rptr);
 			pref->size = get_uword(&rptr);
 			pref->len = get_uword(&rptr);
-			/* XXX - Potential buffer overflow */
-			memcpy(data, rptr, pref->len);
+
+			max = len < pref->len ? len : pref->len;
+			memcpy(data, rptr, max);
 			rptr += pref->len;
 
 			DLPC_TRACE(3)
@@ -3812,6 +3824,7 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
+	int max;		/* Prevents buffer overflows */
 
 	DLPC_TRACE(1)
 		fprintf(stderr, ">>> ReadNetSyncInfo\n");
@@ -3861,15 +3874,22 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 			netsyncinfo->hostnetmasksize = get_uword(&rptr);
 
 			/* Fill in the address and hostname */
-			/* XXX - Possible buffer overflows */
-			memcpy(netsyncinfo->hostname, rptr,
-			       netsyncinfo->hostnamesize);
+			max = sizeof(netsyncinfo->hostname);
+			if (netsyncinfo->hostnamesize < max)
+				max = netsyncinfo->hostnamesize;
+			memcpy(netsyncinfo->hostname, rptr, max);
 			rptr += netsyncinfo->hostnamesize;
-			memcpy(netsyncinfo->hostaddr, rptr,
-			       netsyncinfo->hostaddrsize);
+
+			max = sizeof(netsyncinfo->hostaddr);
+			if (netsyncinfo->hostaddrsize < max)
+				max = netsyncinfo->hostaddrsize;
+			memcpy(netsyncinfo->hostaddr, rptr, max);
 			rptr += netsyncinfo->hostaddrsize;
-			memcpy(netsyncinfo->hostnetmask, rptr,
-			       netsyncinfo->hostnetmasksize);
+
+			max = sizeof(netsyncinfo->hostnetmask);
+			if (netsyncinfo->hostnetmasksize < max)
+				max = netsyncinfo->hostnetmasksize;
+			memcpy(netsyncinfo->hostnetmask, rptr, max);
 			rptr += netsyncinfo->hostnetmasksize;
 
 			DLPC_TRACE(6)
