@@ -1,3 +1,4 @@
+- Document CS-AutoLoad and CS-AutoSave conduit headers/arguments
 - Add and document "init" type conduits.
 - Document the SyncType conduit header.
 - Document the noprompt config file option.
