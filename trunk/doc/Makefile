@@ -1,3 +1,5 @@
+# $Id: Makefile,v 1.5 2000-02-03 02:50:04 arensb Exp $
+
 TOP =		..
 SUBDIR =	doc
 
@@ -34,8 +36,13 @@ include ${TOP}/Make.rules
 all::	${INFOFILES}
 
 install::	coldsync.8 ${INFOFILES}
-	${INSTALL_MAN} coldsync.8 ${MANDIR}/coldsync.8
+	${INSTALL_MAN} coldsync.8 ${MAN8DIR}/coldsync.8
 	@for file in ${INFOFILES}; do \
 		echo "${INSTALL_DATA} $${file} ${INFODIR}/$${file}"; \
 		${INSTALL_DATA} $${file} ${INFODIR}/$${file}; \
 	done
+
+dvi:	${DVIFILES}
+ps:	${PSFILES}
+html:	${HTMLFILES}
+pdf:	${PDFFILES}
