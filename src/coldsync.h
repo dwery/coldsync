@@ -2,11 +2,11 @@
  *
  * Data structures and such needed by 'coldsync'.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.11 2000-01-13 18:17:49 arensb Exp $
+ * $Id: coldsync.h,v 1.12 2000-01-22 05:00:36 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_

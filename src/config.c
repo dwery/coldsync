@@ -2,7 +2,7 @@
  *
  * Functions dealing with loading the configuration.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.15 2000-01-19 06:14:06 arensb Exp $
+ * $Id: config.c,v 1.16 2000-01-22 05:00:48 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
