@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.16 2000-01-27 02:33:31 arensb Exp $
+ * $Id: GenericConduit.cc,v 1.17 2000-01-27 02:38:33 arensb Exp $
  */
 /* XXX - Figure out how to do I18N: the usual 'cout << foo << bar;'
  * construct doesn't lend itself well to this. It might be necessary to
@@ -2053,11 +2053,10 @@ int
 GenericConduit::read_backup()
 {
 	int err;
-	char bakfname[MAXPATHLEN+1];	// Backup filename
+	const char *bakfname;		// Backup filename
 
-	/* Construct the full pathname of the backup file */
-	strncpy(bakfname, mkbakfname(_dbinfo), MAXPATHLEN);
-	bakfname[MAXPATHLEN] = '\0';	// Terminate pathname, just in case
+	bakfname = mkbakfname(_dbinfo);
+			/* Construct the full pathname of the backup file */
 
 	/* See if the backup file exists */
 	struct stat statbuf;
