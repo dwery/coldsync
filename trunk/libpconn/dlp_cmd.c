@@ -12,21 +12,33 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.1 1999-09-09 05:17:56 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.2 1999-11-04 10:45:17 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
-#include <string.h>		/* For memcpy() et al. */
+
+#if STDC_HEADERS
+# include <string.h>		/* For memcpy() et al. */
+#else	/* STDC_HEADERS */
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif	/* HAVE_STRCHR */
+# ifndef HAVE_MEMCPY
+#  define memcpy(d,s,n)		bcopy ((s), (d), (n))
+#  define memmove(d,s,n)	bcopy ((s), (d), (n))
+# endif	/* HAVE_MEMCPY */
+#endif	/* STDC_HEADERS */
+
 #include <stdlib.h>		/* For malloc() */
-/*  #include "coldsync.h" */
 #include <pconn/dlp.h>
 #include <pconn/dlp_cmd.h>
 #include <pconn/util.h>
-/*  #include "pack.h" */
 #include <pconn/palm_errno.h>
 
-#define DLPC_TRACE(n)	if (0)	/* XXX - Figure out how best to put this
-				 * back in */
+int dlpc_trace = 0;		/* Debugging level for DLP commands */
+
+#define DLPC_TRACE(n)	if (dlpc_trace >= (n))
 
 /* XXX - Finish plugging buffer overflows. */
 
