@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.13 2000-05-06 11:18:38 arensb Exp $
+# $Id: Makefile,v 1.14 2000-05-19 12:03:01 arensb Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -32,6 +32,7 @@ DISTFILES =	README \
 		TODO \
 		FAQ \
 		install-sh \
+		mkinstalldirs \
 		configure
 
 # Files to include in distributions, but not in snapshots
@@ -54,9 +55,7 @@ configure:	configure.in
 	autoconf
 
 distfiles-core::
-	if test ! -d "${TOPDISTDIR}"; then \
-		mkdir "${TOPDISTDIR}"; \
-	fi
+	${MKDIR} "${TOPDISTDIR}";
 
 # Emacs TAGS file
 tags:	TAGS
