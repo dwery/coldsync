@@ -1,3 +1,7 @@
+- Add a Bool check_palm_owner(pda_block, palm) (or something) function
+  that verifies that the Palm (which is known to have the correct
+  serial number) has the proper username/userid and whatnot. For
+  standalone mode: if it doesn't match, don't sync.
 - Bug: should be smarter about installing files: it'd be nice to make
   sure that there's enough memory.
 - Bug: if you start a restore, then cancel on the Palm, ColdSync
