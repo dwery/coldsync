@@ -1,4 +1,11 @@
-# $Id: Makefile,v 1.4 2000-03-04 01:03:59 arensb Exp $
+# $Id: Makefile,v 1.5 2000-04-09 13:54:24 arensb Exp $
+
+# XXX - It would be nice to arrange things so that the <lang>.po files
+# aren't modified all the time (and cause CVS to think the file has
+# changed, when all that has changed is some line numbers in the
+# comments). Presumably, then, should either remove line numbers from
+# the .po files (yuck!) or not feed changes back into .po files (but
+# then this loses information about added and removed messages).
 
 TOP =		..
 SUBDIR =	i18n
@@ -16,7 +23,7 @@ DISTFILES =	Makefile \
 CLEAN =		core *.core *.bak *~ errs errs.* ${MOFILES}
 SPOTLESS =	messages.po
 
-include ../Make.rules
+include ${TOP}/Make.rules
 
 all::	${MOFILES}
 
