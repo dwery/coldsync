@@ -18,7 +18,6 @@
   list. Uses special fields "X-PILOTID" and "X-PILOTSTAT", presumably
   for Palm syncing. Also "X-ORGANIZER:MAILTO:arensb@localhost", not
   sure what for.
-- Fix PADP so it can dump when writing, as well as when reading.
 - Modem, IR, network sync
 - NetSync: figure out just how it works and stuff.
   Blargh. From the output of 'tcpdump', it looks as if the host with
@@ -215,19 +214,36 @@
 			path "/my/conduit";
 		}
 	.endif
+	A simpler way is just to have a command-line argument
 - Additional arguments on command line: if an argument is of the form
   "FOO=bar", it should set the variable FOO to the value "bar".
 - Add libraries to dependencies?
 - Perl: methods: $pdb->append($record). $pdb->find($ID) or
   $pdb->find($record). The latter should use
   $pdb->cmp($record1,$record2) to see if two records are equal.
-- Snapshots don't need to contain everything. Specifically, they don't
-  need bulky .info and .ps files. Ditto for .mo files, presumably,
-  once i18n is fully implemented. Split "distdir" into "distdir-core"
-  and "distdir". "distdir-core" includes only the bare minimum, that
-  which developers (as opposed to the guys who'll just build the port)
-  need.
-- Make i18n optional: --without-i18n
 - Find all of the messages of the form "<function-name>: <message>"
   and print the function name as a separate argument. This should
   reduce the number of messages to translate.
+- Fix error messages to give some idea which database is involved.
+- With BSD make, always reruns 'ar' in the library directories. Why?
+  According to 'make -dm', it seems to recognize the target as a
+  library.
+- Rewrite GenericConduit in C, for simplicity. That way, don't have to
+  check for C++ in 'configure', and can simplify the 'make depend'
+  targets.
+- Perl: write a ColdSync module, to simplify writing conduits.
+- Open a Unix domain socket that a client can listen on. Send
+  conduits' messages to that socket. Define error codes like 22z =
+  progress, so that clients can monitor how things are going.
+- Use STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO (from <unistd.h>)
+  where applicable.
+- Having multiple Fetch conduits for the same database can be
+  dangerous, since if the conduits are naive, the results of the first
+  conduit will be clobbered by the second one, and so forth. Some
+  solutions include:
+	a) Add a flag to struct dlp_dbinfo indicating that a Fetch
+	   conduit has already been run on it. Add a keyword to the
+	   conduit block in .coldsyncrc saying that this conduit is
+	   smart enough to cope with this. Make it an error to run a
+	   second Fetch conduit on this database unless that flag is
+	   set.
