@@ -305,3 +305,4 @@
 - Rename handledb.c, since it no longer contains a HandleDB()
   function. See whether it makes sense to rename this file and put
   some of the more generally useful functions in there. Or something.
+- Document "[generic]" conduit.
