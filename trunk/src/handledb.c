@@ -6,17 +6,13 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: handledb.c,v 1.8 1999-11-20 05:19:41 arensb Exp $
+ * $Id: handledb.c,v 1.9 1999-11-27 05:53:38 arensb Exp $
  */
 
 #include "config.h"
 #include <stdio.h>
-#include <unistd.h>		/* For chdir() */
-#include <stdlib.h>		/* For getenv() */
 #include <string.h>		/* For strncpy() and friends */
 #include <sys/param.h>		/* For MAXPATHLEN */
-#include <sys/types.h>		/* For stat() */
-#include <sys/stat.h>		/* For stat() */
 
 #if HAVE_LIBINTL
 #  include <libintl.h>		/* For i18n */
