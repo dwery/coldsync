@@ -29,6 +29,7 @@ StartConduit('sync');
 
 	if (defined $vol)
 	{
+		# XXX 'use constant' for 0x1F
 		my ($err, $res, $fileRef) = dlp_VFSFileOpen($vol, 0x1F, $destination);
 
 		if (defined $fileRef)
