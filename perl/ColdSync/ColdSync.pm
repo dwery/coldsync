@@ -5,14 +5,14 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.19 2002-10-16 18:39:20 azummo Exp $
+# $Id: ColdSync.pm,v 1.20 2002-10-19 12:07:45 azummo Exp $
 package ColdSync;
 use strict;
 
 use vars qw( $VERSION @ISA @EXPORT $FLAVOR %MANDATORY_HEADERS %HEADERS 
 	@HEADERS %PREFERENCES $PDB );
 
-$VERSION = sprintf "%d.%03d", '$Revision: 1.19 $ ' =~ m{(\d+)\.(\d+)};
+$VERSION = sprintf "%d.%03d", '$Revision: 1.20 $ ' =~ m{(\d+)\.(\d+)};
 
 =head1 NAME
 
@@ -174,6 +174,7 @@ sub DumpConfig
 	# Check $path for leading ./
 
 	$path =~ s|^(\.)/|$ENV{'PWD'}/|;
+	$path =~ s|^([^/].*/)|$ENV{'PWD'}/$1|;
 
 
 	print "\tpath: \"$path\";\n";
