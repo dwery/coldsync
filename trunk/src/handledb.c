@@ -2,7 +2,7 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: handledb.c,v 1.2 1999-07-12 09:31:08 arensb Exp $
  */
 
 #include <stdio.h>
@@ -36,7 +36,10 @@ HandleDB(struct PConnection *pconn,
 
 	if (DBINFO_ISRSRC(dbinfo))
 	{
-		fprintf(stderr, "HandleDB: \"%s\": I don't deal with resource databases (yet).\n",
+		SYNC_TRACE(2)
+			fprintf(stderr,
+				"HandleDB: \"%s\": I don't deal with "
+				"resource databases (yet).\n",
 			dbinfo->name);
 /*  		return -1; */
 		return 0;
@@ -47,10 +50,12 @@ HandleDB(struct PConnection *pconn,
 	 */
 	if ((conduit = find_conduit(dbinfo)) != NULL)
 	{
-		fprintf(stderr, "Found a conduit for \"%s\"\n",
-			dbinfo->name);
+		SYNC_TRACE(3)
+			fprintf(stderr, "Found a conduit for \"%s\"\n",
+				dbinfo->name);
 		err = (*(conduit->run))(pconn, palm, dbinfo);
-		fprintf(stderr, "Conduit returned %d\n", err);
+		SYNC_TRACE(3)
+			fprintf(stderr, "Conduit returned %d\n", err);
 		return err;
 	}
 
@@ -64,6 +69,8 @@ HandleDB(struct PConnection *pconn,
  * return a pointer to it.
  * The caller need not free the string. OTOH, if ve wants to do anything
  * with it later, ve needs to make a copy.
+ * This isn't a method in GenericConduit because it's generic enough that
+ * other conduits might want to make use of it.
  */
 const char *
 mkbakfname(const struct dlp_dbinfo *dbinfo)

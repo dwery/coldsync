@@ -7,11 +7,12 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: dlp.c,v 1.2 1999-07-12 09:22:14 arensb Exp $
  */
 #include <stdio.h>
 #include <stdlib.h>		/* For calloc() */
 #include <string.h>		/* For memcpy() et al. */
+#include "coldsync.h"
 #include "palm_types.h"
 #include "palm_errno.h"
 #include "dlp.h"
@@ -21,17 +22,6 @@
 
 #define DLP_DEFAULT_ARGV_LEN	10	/* Initial length of argv, in
 					 * PConnection. */
-
-#define DLP_DEBUG	1
-#ifdef DLP_DEBUG
-
-int dlp_debug = 0;
-
-#define DLP_TRACE(level, format...)		\
-	if (dlp_debug >= (level))		\
-		fprintf(stderr, "DLP:" format)
-
-#endif	/* DLP_DEBUG */
 
 /* dlp_init
  * Initialize the DLP part of a new PConnection.
@@ -90,8 +80,9 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 	wptr = outbuf;
 	put_ubyte(&wptr, header->id);
 	put_ubyte(&wptr, header->argc);
-	DLP_TRACE(5, ">>> request id 0x%02x, %d args\n",
-		  header->id, header->argc);
+	DLP_TRACE(5)
+		fprintf(stderr, ">>> request id 0x%02x, %d args\n",
+			header->id, header->argc);
 
 	/* Append the request headers to the output buffer */
 	for (i = 0; i < header->argc; i++)
@@ -102,8 +93,10 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 		if (argv[i].size <= DLP_TINYARG_MAXLEN)
 		{
 			/* Tiny argument */
-			DLP_TRACE(10, "Tiny argument %d, id 0x%02x, size %ld\n",
-				  i, argv[i].id, argv[i].size);
+			DLP_TRACE(10)
+				fprintf(stderr,
+					"Tiny argument %d, id 0x%02x, size %ld\n",
+					i, argv[i].id, argv[i].size);
 			put_ubyte(&wptr, argv[i].id & 0x3f);
 					/* Make sure the high two bits are
 					 * 00, since this is a tiny
@@ -113,8 +106,10 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 		} else if (argv[i].size <= DLP_SMALLARG_MAXLEN)
 		{
 			/* Small argument */
-			DLP_TRACE(10, "Small argument %d, id 0x%02x, size %ld\n",
-				  i, argv[i].id, argv[i].size);
+			DLP_TRACE(10)
+				fprintf(stderr,
+					"Small argument %d, id 0x%02x, size %ld\n",
+					i, argv[i].id, argv[i].size);
 			put_ubyte(&wptr, (argv[i].id & 0x3f) | 0x80);
 					/* Make sure the high two bits are
 					 * 10, since this is a small
@@ -127,8 +122,10 @@ dlp_send_req(struct PConnection *pconn,		/* Connection to Palm */
 			/* XXX - Check to make sure the comm. protocol
 			 * supports long arguments.
 			 */
-			DLP_TRACE(10, "Long argument %d, id 0x%04x, size %ld\n",
-				  i, argv[i].id, argv[i].size);
+			DLP_TRACE(10)
+				fprintf(stderr,
+					"Long argument %d, id 0x%04x, size %ld\n",
+					i, argv[i].id, argv[i].size);
 			put_uword(&wptr, (argv[i].id & 0x3fff) | 0xc000);
 					/* Make sure the high two bits are
 					 * 11, since this is a long
@@ -190,10 +187,11 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 	header->id = get_ubyte(&rptr);
 	header->argc = get_ubyte(&rptr);
 	header->errno = get_uword(&rptr);
-	DLP_TRACE(6, "Got response, id 0x%02x, argc %d, errno %d\n",
-		  header->id,
-		  header->argc,
-		  header->errno);
+	DLP_TRACE(6)
+		fprintf(stderr, "Got response, id 0x%02x, argc %d, errno %d\n",
+			header->id,
+			header->argc,
+			header->errno);
 
 	/* Make sure it's really a DLP response */
 	if ((header->id & 0x80) != 0x80)
@@ -240,25 +238,30 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 		switch (*rptr & 0xc0)
 		{
 		    case 0xc0:		/* Long argument */
-			DLP_TRACE(5, "Arg %d is long\n", i);
+			DLP_TRACE(5)
+				fprintf(stderr, "Arg %d is long\n", i);
 			pconn->dlp.argv[i].id = get_uword(&rptr);
 			pconn->dlp.argv[i].size = get_udword(&rptr);
 			break;
 		    case 0x80:		/* Small argument */
-			DLP_TRACE(5, "Arg %d is small\n", i);
+			DLP_TRACE(5)
+				fprintf(stderr, "Arg %d is small\n", i);
 			pconn->dlp.argv[i].id = get_ubyte(&rptr);
 			get_ubyte(&rptr);	/* Skip over padding */
 			pconn->dlp.argv[i].size = get_uword(&rptr);
 			break;
 		    default:		/* Tiny argument */
-			DLP_TRACE(5, "Arg %d is tiny\n", i);
+			DLP_TRACE(5)
+				fprintf(stderr, "Arg %d is tiny\n", i);
 			pconn->dlp.argv[i].id = get_ubyte(&rptr);
 			pconn->dlp.argv[i].size = get_ubyte(&rptr);
 			break;
 		}
 		pconn->dlp.argv[i].id &= 0x3f;	/* Stip off the size bits */
-		DLP_TRACE(6, "Got arg %d, id 0x%02x, size %ld\n",
-			  i, pconn->dlp.argv[i].id, pconn->dlp.argv[i].size);
+		DLP_TRACE(6)
+			fprintf(stderr, "Got arg %d, id 0x%02x, size %ld\n",
+				i, pconn->dlp.argv[i].id,
+				pconn->dlp.argv[i].size);
 		pconn->dlp.argv[i].data = (ubyte *) rptr;
 		rptr += pconn->dlp.argv[i].size;
 	}

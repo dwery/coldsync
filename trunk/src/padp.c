@@ -8,7 +8,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.1 1999-07-04 13:40:33 arensb Exp $
+ * $Id: padp.c,v 1.2 1999-07-12 09:25:15 arensb Exp $
  */
 #include <stdio.h>
 #include <sys/types.h>			/* For select() */
@@ -16,22 +16,13 @@
 #include <unistd.h>			/* For select() */
 #include <string.h>			/* For bzero() for select() */
 #include <stdlib.h>			/* For free() */
+#include "coldsync.h"
 #include "palm_types.h"
 #include "palm_errno.h"
 #include "slp.h"
 #include "padp.h"
 #include "util.h"
 #include "PConnection.h"
-
-#define PADP_DEBUG	1
-#ifdef PADP_DEBUG
-int padp_debug = 0;
-
-#define PADP_TRACE(level, format...)		\
-	if (padp_debug >= (level))		\
-		fprintf(stderr, "PADP:" format)
-
-#endif	/* PADP_DEBUG */
 
 /* bump_xid
  * Pick a new transaction ID by incrementing the existing one, and
@@ -156,17 +147,16 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	header.flags = get_ubyte(&rptr);
 	header.size = get_uword(&rptr);
 
-	PADP_TRACE(5, "Got PADP message: type %d, flags 0x%02x, size %d\n",
-		   header.type,
-		   header.flags,
-		   header.size);
-
-#if PADP_DEBUG
+	PADP_TRACE(5)
+		fprintf(stderr,
+			"Got PADP message: type %d, flags 0x%02x, size %d\n",
+			header.type,
+			header.flags,
+			header.size);
 	/* Dump the body, for debugging */
-	if (padp_debug >= 6)
+	PADP_TRACE(6)
 		debug_dump(stderr, "PADP <<<", inbuf+PADP_HEADER_LEN,
 			   inlen-PADP_HEADER_LEN);
-#endif	/* PADP_DEBUG */
 
 	/* See what type of packet this is */
 	switch (header.type)
@@ -178,7 +168,8 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 		/* XXX - I'm not sure what to do in this case. Drop
 		 * the packet and wait for a new one?
 		 */
-fprintf(stderr, "##### I just got an unexpected ACK. I'm confused!\n");
+		fprintf(stderr, "##### I just got an unexpected ACK. "
+			"I'm confused!\n");
 		return -1;
 	    case PADP_FRAGTYPE_TICKLE:
 		/* Tickle packets aren't acknowledged, but the connection
@@ -191,7 +182,8 @@ fprintf(stderr, "##### I just got an unexpected ACK. I'm confused!\n");
 		return -1;
 	    default:
 		/* XXX */
-fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
+		fprintf(stderr, "##### Unexpected packet type %d\n",
+			header.type);
 		return -1;
 	};
 
@@ -216,11 +208,14 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 		 */
 		pconn->padp.xid = pconn->slp.last_xid;
 
-		PADP_TRACE(5, "Sending ACK: type %d, flags 0x%02x, size %d, xid 0x%02x\n",
-			   PADP_FRAGTYPE_ACK,
-			   header.flags,
-			   header.size,
-			   pconn->padp.xid);
+		PADP_TRACE(5)
+			fprintf(stderr,
+				"Sending ACK: type %d, flags 0x%02x, "
+				"size %d, xid 0x%02x\n",
+				PADP_FRAGTYPE_ACK,
+				header.flags,
+				header.size,
+				pconn->padp.xid);
 
 		/* Send the ACK as a SLP packet */
 		err = slp_write(pconn, outbuf, PADP_HEADER_LEN);
@@ -240,22 +235,29 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 		/* XXX - Make sure the 'first' flag is set */
 
 		/* It's a multi-fragment packet */
-		PADP_TRACE(6, "Got part 1 of a multi-fragment message\n");
+		PADP_TRACE(6)
+			fprintf(stderr,
+				"Got part 1 of a multi-fragment message\n");
 
 		msg_len = header.size;	/* Total length of message */
-		PADP_TRACE(7, "MP: Total length == %d\n", msg_len);
+		PADP_TRACE(7)
+			fprintf(stderr, "MP: Total length == %d\n", msg_len);
 
 		/* Allocate (or reallocate) a buffer in the PADP part of
 		 * the PConnection large enough to hold the entire message.
 		 */
 		if (pconn->padp.inbuf == NULL)
 		{
-			PADP_TRACE(7, "MP: Allocating new MP buffer\n");
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: Allocating new MP buffer\n");
 			/* Allocate a new buffer */
 			if ((pconn->padp.inbuf = (ubyte *) malloc(msg_len))
 			    == NULL)
 			{
-				PADP_TRACE(7, "MP: Can't allocate new MP buffer\n");
+				PADP_TRACE(7)
+					fprintf(stderr,
+						"MP: Can't allocate new MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
 				/* XXX - Should return an ACK to the Palm
 				 * that says we're out of memory.
@@ -266,11 +268,15 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 			/* Resize the existing buffer to a new size */
 			ubyte *eptr;	/* Pointer to reallocated buffer */
 
-			PADP_TRACE(7, "MP: Resizing existing MP buffer\n");
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: Resizing existing MP buffer\n");
 			if ((eptr = (ubyte *) realloc(pconn->padp.inbuf,
 						      msg_len)) == NULL)
 			{
-				PADP_TRACE(7, "MP: Can't resize existing MP buffer\n");
+				PADP_TRACE(7)
+					fprintf(stderr,
+						"MP: Can't resize existing MP buffer\n");
 				palm_errno = PALMERR_NOMEM;
 				return -1;
 			}
@@ -281,8 +287,10 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 		/* Copy the first fragment to the PConnection buffer */
 		memcpy(pconn->padp.inbuf, rptr, inlen-PADP_HEADER_LEN);
 		cur_offset = inlen-PADP_HEADER_LEN;
-		PADP_TRACE(7, "MP: Copied first fragment. cur_offset == %d\n",
-			   cur_offset);
+		PADP_TRACE(7)
+			fprintf(stderr,
+				"MP: Copied first fragment. cur_offset == %d\n",
+				cur_offset);
 
 		/* Send an ACK for the first fragment */
 		/* Construct an output packet header and put it in 'outbuf' */
@@ -297,11 +305,14 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 		 */
 		pconn->padp.xid = pconn->slp.last_xid;
 
-		PADP_TRACE(5, "Sending ACK: type %d, flags 0x%02x, size %d, xid 0x%02x\n",
-			   PADP_FRAGTYPE_ACK,
-			   header.flags,
-			   header.size,
-			   pconn->padp.xid);
+		PADP_TRACE(5)
+			fprintf(stderr,
+				"Sending ACK: type %d, flags 0x%02x, "
+				"size %d, xid 0x%02x\n",
+				PADP_FRAGTYPE_ACK,
+				header.flags,
+				header.size,
+				pconn->padp.xid);
 
 		/* Send the ACK as a SLP packet */
 		err = slp_write(pconn, outbuf, PADP_HEADER_LEN);
@@ -310,7 +321,9 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 
 		/* Get the rest of the message */
 		do {
-			PADP_TRACE(7, "MP: Waiting for more fragments\n");
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: Waiting for more fragments\n");
 			/* Receive a new fragment */
 		  mpretry:		/* It can take several attempts to
 					 * read a packet, if the Palm sends
@@ -365,17 +378,20 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 			header.flags = get_ubyte(&rptr);
 			header.size = get_uword(&rptr);
 
-			PADP_TRACE(5, "Got PADP message: type %d, flags 0x%02x, size %d\n",
-				   header.type,
-				   header.flags,
-				   header.size);
+			PADP_TRACE(5)
+				fprintf(stderr,
+					"Got PADP message: type %d, "
+					"flags 0x%02x, size %d\n",
+					header.type,
+					header.flags,
+					header.size);
 
-#if PADP_DEBUG
 			/* Dump the body, for debugging */
-			if (padp_debug >= 6)
-				debug_dump(stderr, "PADP <<<", inbuf+PADP_HEADER_LEN,
+			PADP_TRACE(6)
+				debug_dump(stderr,
+					   "PADP <<<",
+					   inbuf+PADP_HEADER_LEN,
 					   inlen-PADP_HEADER_LEN);
-#endif	/* PADP_DEBUG */
 
 			/* See what type of packet this is */
 			switch (header.type)
@@ -414,7 +430,9 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 				/* palm_errno = XXX */
 				return -1;
 			}
-			PADP_TRACE(7, "MP: It's not a new fragment\n");
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: It's not a new fragment\n");
 
 			if (header.size != cur_offset)
 			{
@@ -423,13 +441,17 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 					cur_offset, header.size);
 				return -1;
 			}
-			PADP_TRACE(7, "MP: It goes at the right offset\n");
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: It goes at the right offset\n");
 
 			/* Copy fragment to pconn->padp.inbuf */
 			memcpy(pconn->padp.inbuf+cur_offset, rptr,
 			       inlen-PADP_HEADER_LEN);
-			PADP_TRACE(7, "MP: Copies this fragment to inbuf+%d\n",
-				   cur_offset);
+			PADP_TRACE(7)
+				fprintf(stderr,
+					"MP: Copies this fragment to inbuf+%d\n",
+					cur_offset);
 
 			/* Update cur_offset */
 			cur_offset += inlen-PADP_HEADER_LEN;
@@ -449,11 +471,14 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 			 */
 			pconn->padp.xid = pconn->slp.last_xid;
 
-			PADP_TRACE(5, "Sending ACK: type %d, flags 0x%02x, size %d, xid 0x%02x\n",
-				   PADP_FRAGTYPE_ACK,
-				   header.flags,
-				   header.size,
-				   pconn->padp.xid);
+			PADP_TRACE(5)
+				fprintf(stderr,
+					"Sending ACK: type %d, "
+					"flags 0x%02x, size %d, xid 0x%02x\n",
+					PADP_FRAGTYPE_ACK,
+					header.flags,
+					header.size,
+					pconn->padp.xid);
 
 			/* Send the ACK as a SLP packet */
 			err = slp_write(pconn, outbuf, PADP_HEADER_LEN);
@@ -461,16 +486,19 @@ fprintf(stderr, "##### Unexpected packet type %d\n", header.type);
 				return err;	/* An error has occurred */
 
 		} while ((header.flags & PADP_FLAG_LAST) == 0);
-		PADP_TRACE(7, "MP: That was the last fragment. Returning:\n");
+		PADP_TRACE(7)
+			fprintf(stderr,
+				"MP: That was the last fragment. "
+				"Returning:\n");
 
 		/* Return the message to the caller */
 		*buf = pconn->padp.inbuf;	/* Message data */
 		*len = msg_len;			/* Message length */
-		PADP_TRACE(10, "\tlen == %d\n", *len);
-#if PADP_DEBUG
-		if (padp_debug >= 10)
+		PADP_TRACE(10)
+		{
+			fprintf(stderr, "\tlen == %d\n", *len);
 			debug_dump(stderr, "+MP", *buf, *len);
-#endif /* PADP_DEBUG */
+		}
 		return 0;
 	}
 
@@ -511,7 +539,8 @@ padp_write(struct PConnection *pconn,
 		ubyte frag_flags;	/* Flags for this fragment */
 		uword frag_len;		/* Length of this fragment */
 
-		PADP_TRACE(6, "offset == %d (of %d)\n", offset, len);
+		PADP_TRACE(6)
+			fprintf(stderr, "offset == %d (of %d)\n", offset, len);
 		frag_flags = 0;
 
 		if (offset == 0)
@@ -529,8 +558,10 @@ padp_write(struct PConnection *pconn,
 			/* It's not the last fragment */
 			frag_len = PADP_MAX_PACKET_LEN;
 		}
-		PADP_TRACE(7, "frag_flags == 0x%02x, frag_len == %d\n",
-	frag_flags, frag_len);
+		PADP_TRACE(7)
+			fprintf(stderr,
+				"frag_flags == 0x%02x, frag_len == %d\n",
+				frag_flags, frag_len);
 
 		/* Construct a header in 'outbuf' */
 		wptr = outbuf;
@@ -542,12 +573,13 @@ padp_write(struct PConnection *pconn,
 			put_uword(&wptr, offset);
 		memcpy(outbuf+PADP_HEADER_LEN, buf+offset, frag_len);
 
-		PADP_TRACE(5, "Sending type %d, flags 0x%02x, size %d, "
-			   "xid 0x%02x\n",
-			   PADP_FRAGTYPE_DATA,
-			   frag_flags,
-			   frag_len,
-			   pconn->padp.xid);
+		PADP_TRACE(5)
+			fprintf(stderr, "Sending type %d, flags 0x%02x, "
+				"size %d, xid 0x%02x\n",
+				PADP_FRAGTYPE_DATA,
+				frag_flags,
+				frag_len,
+				pconn->padp.xid);
 
 		/* Set the timeout length, for select() */
 		timeout.tv_sec = PADP_ACK_TIMEOUT;
@@ -565,7 +597,8 @@ padp_write(struct PConnection *pconn,
 				fprintf(stderr, "Write timeout. Attempting to resend.\n");
 				continue;
 			}
-			PADP_TRACE(6, "about to slp_write()\n");
+			PADP_TRACE(6)
+				fprintf(stderr, "about to slp_write()\n");
 
 			/* Send 'outbuf' as a SLP packet */
 			err = slp_write(pconn, outbuf,
@@ -641,12 +674,14 @@ padp_write(struct PConnection *pconn,
 					pconn->padp.xid, pconn->slp.last_xid);
 				return -1;
 			}
-			PADP_TRACE(5, "Got an ACK: type %d, flags 0x%02x, "
-				   "size %d, xid 0x%02x\n",
-				   ack_header.type,
-				   ack_header.flags,
-				   ack_header.size,
-				   pconn->slp.last_xid);
+			PADP_TRACE(5)
+				fprintf(stderr,
+					"Got an ACK: type %d, flags 0x%02x, "
+					"size %d, xid 0x%02x\n",
+					ack_header.type,
+					ack_header.flags,
+					ack_header.size,
+					pconn->slp.last_xid);
 			/* XXX - If it's not an ACK packet, assume that the
 			 * ACK was sent and lost in transit, and that this
 			 * is the response to the query we just sent.
@@ -657,13 +692,18 @@ padp_write(struct PConnection *pconn,
 
 		if (attempt >= PADP_MAX_RETRIES)
 		{
-			PADP_TRACE(5, "PADP: Reached retry limit. Abandoning.\n");
+			PADP_TRACE(5)
+				fprintf(stderr,
+					"PADP: Reached retry limit. "
+					"Abandoning.\n");
 			palm_errno = PALMERR_TIMEOUT;
 			return -1;
 		}
-		PADP_TRACE(7, "Bottom of offset-loop\n");
+		PADP_TRACE(7)
+			fprintf(stderr, "Bottom of offset-loop\n");
 	}
-	PADP_TRACE(7, "After offset-loop\n");
+	PADP_TRACE(7)
+		fprintf(stderr, "After offset-loop\n");
 
 	return 0;
 }

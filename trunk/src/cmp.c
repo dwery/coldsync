@@ -2,24 +2,15 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.1 1999-07-04 13:40:32 arensb Exp $
+ * $Id: cmp.c,v 1.2 1999-07-12 09:21:27 arensb Exp $
  */
 #include <stdio.h>
+#include "coldsync.h"
 #include "palm_types.h"
 #include "palm_errno.h"
 #include "padp.h"
 #include "cmp.h"
 #include "util.h"
-
-#define CMP_DEBUG	1
-#ifdef CMP_DEBUG
-int cmp_debug = 0;
-
-#define CMP_TRACE(level, format...)		\
-	if (cmp_debug >= (level))		\
-		fprintf(stderr, "CMP:" format)
-
-#endif	/* CMP_DEBUG */
 
 int
 cmp_read(struct PConnection *pconn,
@@ -47,12 +38,15 @@ cmp_read(struct PConnection *pconn,
 	rptr += 2;		/* Skip over the reserved word */
 	packet->rate = get_udword(&rptr);
 
-	CMP_TRACE(5, "Got a message: type %d, flags 0x%02x, v%d.%d, rate %ld\n",
-		  packet->type,
-		  packet->flags,
-		  packet->ver_major,
-		  packet->ver_minor,
-		  packet->rate);
+	CMP_TRACE(5)
+		fprintf(stderr,
+			"Got a message: type %d, flags 0x%02x, "
+			"v%d.%d, rate %ld\n",
+			packet->type,
+			packet->flags,
+			packet->ver_major,
+			packet->ver_minor,
+			packet->rate);
 
 	return 0;
 }
@@ -67,12 +61,14 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
 
 	palm_errno = PALMERR_NOERR;
 
-	CMP_TRACE(5, "Sending type %d, flags 0x%02x, v%d.%d, rate %ld\n",
-		  packet->type,
-		  packet->flags,
-		  packet->ver_major,
-		  packet->ver_minor,
-		  packet->rate);
+	CMP_TRACE(5)
+		fprintf(stderr,
+			"Sending type %d, flags 0x%02x, v%d.%d, rate %ld\n",
+			packet->type,
+			packet->flags,
+			packet->ver_major,
+			packet->ver_minor,
+			packet->rate);
 
 	/* Build the outgoing packet from 'packet' */
 	wptr = outbuf;
