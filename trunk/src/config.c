@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: config.c,v 1.71 2001-07-28 22:48:47 arensb Exp $
+ * $Id: config.c,v 1.72 2001-07-30 07:09:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -105,6 +105,7 @@ static void set_debug_level(const char *str);
 static int set_mode(const char *str);
 static void usage(int argc, char *argv[]);
 static int name2listen_type(const char *str);
+static int name2protocol(const char *str);
 static int get_fullname(char *buf, const int buflen,
 			const struct passwd *pwent);
 static int get_userinfo(struct userinfo *userinfo);
@@ -138,7 +139,8 @@ parse_args(int argc, char *argv[])
 	/* Read command-line options. */
 	opterr = 0;			/* Don't want getopt() writing to
 					 * stderr */
-	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:b:r:p:t:d:")) != -1)
+	while ((arg = getopt(argc, argv, ":hvVSFRIszf:l:m:b:r:p:t:P:d:"))
+	       != -1)
 		/* XXX - The "-b" and "-r" options are obsolete, and should
 		 * be removed some time after v1.4.6.
 		 * How about 2.0.0? Sounds like a good breakpoint.
@@ -241,6 +243,19 @@ parse_args(int argc, char *argv[])
 			if (global_opts.devtype < 0)
 			{
 				Error(_("Unknown device type: \"%s\"."),
+				      optarg);
+				usage(argc, argv);
+				return -1;
+			}
+			break;
+
+		    case 'P':	/* -P <protocol>: Use the named software
+				 * for talking to the cradle.
+				 */
+			global_opts.protocol = name2protocol(optarg);
+			if (global_opts.protocol < 0)
+			{
+				Error(_("Unknown protocol: \"%s\"."),
 				      optarg);
 				usage(argc, argv);
 				return -1;
@@ -515,6 +530,7 @@ load_config(const Bool read_user_config)
 			fprintf(stderr, "\tType: %d\n", l->listen_type);
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
 			fprintf(stderr, "\tSpeed: %ld\n", l->speed);
+			fprintf(stderr, "\tProtocol: %d\n", l->protocol);
 		}
 
 		fprintf(stderr, "Known PDAs:\n");
@@ -1278,7 +1294,7 @@ print_pda_block(FILE *outfile, const pda_block *pda, struct Palm *palm)
 
 /* name2listen_type
  * Convert the name of a listen type to its integer value. See the LISTEN_*
- * defines in "coldsync.h".
+ * defines in "pconn/PConnection.h".
  */
 static int
 name2listen_type(const char *str)
@@ -1292,6 +1308,26 @@ name2listen_type(const char *str)
 		return LISTEN_USB;
 	if (strcasecmp(str, "usb_m50x") == 0)
 		return LISTEN_USB_M50x;
+	return -1;		/* None of the above */
+}
+
+/* name2protocol
+ * Given the name of a software protocol stack keyword, convert it to its
+ * corresponding integer value. See the PCONN_STACK_* defines in
+ * "pconn/PConnection.h"
+ */
+static int
+name2protocol(const char *str)
+{
+	if (strcasecmp(str, "default") == 0)
+		return PCONN_STACK_DEFAULT;
+	if (strcasecmp(str, "full") == 0)
+		return PCONN_STACK_FULL;
+	if ((strcasecmp(str, "simple") == 0) ||
+	    (strcasecmp(str, "m50x") == 0))
+		return PCONN_STACK_SIMPLE;
+	if (strcasecmp(str, "net") == 0)
+		return PCONN_STACK_NET;
 	return -1;		/* None of the above */
 }
 
@@ -1742,6 +1778,7 @@ new_listen_block()
 	/* Initialize the new listen_block */
 	retval->next = NULL;
 	retval->listen_type = LISTEN_SERIAL;	/* By default */
+	retval->protocol = PCONN_STACK_DEFAULT;
 	retval->device = NULL;
 	retval->speed = 0L;
 
