@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.23 2000-06-18 07:04:40 arensb Exp $
+ * $Id: conduit.c,v 1.24 2000-06-23 11:33:35 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -512,6 +512,10 @@ spawn_conduit(
 		perror("pipe(inpipe)");
 		exit(1);
 	}
+	SYNC_TRACE(6)
+		fprintf(stderr, "spawn_conduit: inpipe == %d, %d\n",
+			inpipe[0], inpipe[1]);
+
 	/* Turn this file descriptor into a file handle */
 	SYNC_TRACE(5)
 		fprintf(stderr, "spawn_conduit: tochild fd == %d\n",
@@ -533,6 +537,9 @@ spawn_conduit(
 		perror("pipe(outpipe)");
 		exit(1);
 	}
+	SYNC_TRACE(6)
+		fprintf(stderr, "spawn_conduit: outpipe == %d, %d\n",
+			outpipe[0], outpipe[1]);
 	SYNC_TRACE(5)
 		fprintf(stderr, "spawn_conduit: fromchild fd == %d\n",
 			outpipe[0]);
