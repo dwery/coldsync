@@ -1,0 +1,63 @@
+\input texinfo		@c -*- texinfo -*-
+@c %** Start of header
+@setfilename libpalm.info
+@settitle libpalm Library
+@c %** End of header
+
+@setchapternewpage odd
+
+@ifinfo
+First draft.
+
+#include <copyright>
+@end ifinfo
+
+@titlepage
+@sp 10
+@center @titlefont{libpalm Library}
+
+@page
+@vskip 0pt plus 1filll
+#include <copyright>
+@end titlepage
+
+@comment node-name,	next,		previous,	up
+@node	Top,		First Chapter,	(dir),		(dir)
+
+@menu
+* First Chapter::       The only chapter in this bogus info file.
+* Concept Index::       Skeletal index.
+@end menu
+
+@comment node-name,	next,		previous,	up
+@node   First Chapter,  Concept Index,  Top,            Top
+
+@chapter First Chapter
+@cindex Sample index entry
+
+This is the first, and highly bogus, chapter.
+@cindex Another sample index entry
+
+Here is a numbered list:
+
+@enumerate
+@item
+First item.
+
+@item
+Second item
+
+@end enumerate
+
+The @code{makeinfo} and @code{texinfo-format-buffer} commands
+transform a Texinfo file such as this one into an Info file, and
+@TeX{} typesets it for a printed manual.
+
+@comment node-name,	next,		previous,	up
+@node   Concept Index,  ,               First Chapter,  top
+@unnumbered Concept Index
+
+@printindex cp
+
+@contents
+@bye
