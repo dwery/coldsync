@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001-08-16 00:29:48 arensb Exp $
+# $Id: Makefile,v 1.12 2001-09-05 07:36:09 arensb Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -16,9 +16,49 @@ EXTRA_INFOFILES =	${TEXIFILES:.texi=.info-*}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
 PSFILES =	${TEXIFILES:.texi=.ps}
 PDFFILES =	${TEXIFILES:.texi=.pdf}
+MAN3FILES =	libpconn.3 \
+		DlpAddSyncLogEntry.3 \
+		DlpCallApplication.3 \
+		DlpCleanUpDataBase.3 \
+		DlpDeleteRecord.3 \
+		DlpEndOfSync.3 \
+		DlpGetSysDateTime.3 \
+		DlpMoveCategory.3 \
+		DlpOpenConduit.3 \
+		DlpOpenDB.3 \
+		DlpReadAppBlock.3 \
+		DlpReadAppPreference.3 \
+		DlpReadDBList.3 \
+		DlpReadFeature.3 \
+		DlpReadNetSyncInfo.3 \
+		DlpReadOpenDBInfo.3 \
+		DlpReadRecordByID.3 \
+		DlpReadRecordIDList.3 \
+		DlpReadResourceByIndex.3 \
+		DlpReadStorageInfo.3 \
+		DlpReadSysInfo.3 \
+		DlpReadUserInfo.3 \
+		DlpResetRecordIndex.3 \
+		DlpResetSyncFlags.3 \
+		DlpResetSystem.3 \
+		DlpRPC.3 \
+		DlpWriteRecord.3 \
+		DlpWriteResource.3 \
+		PConnClose.3 \
+		PConn_bind.3 \
+		RDLP_Backlight.3 \
+		RDLP_BatteryDialog.3 \
+		RDLP_GetOSVersionString.3 \
+		RDLP_MemHandleNew.3 \
+		RDLP_PluggedIn.3 \
+		RDLP_ROMToken.3 \
+		new_PConnection.3 \
+		time_dlp2palmtime.3 \
+		libpdb.3
+MAN8FILES =	coldsync.8
 
 DISTFILES =	Makefile \
-		coldsync.8 \
+		${MAN3FILES} ${MAN8FILES} \
 		${TEXIFILES} \
 		libpalm.texi \
 		texinfo.tex \
@@ -27,6 +67,7 @@ DISTFILES =	Makefile \
 
 EXTRA_DISTFILES = \
 		${INFOFILES} \
+		${EXTRA_INFOFILES} \
 		${PSFILES}
 
 CLEAN =		${INFOFILES} ${EXTRA_INFOFILES} ${DVIFILES} ${PSFILES} \
@@ -41,9 +82,19 @@ include ${TOP}/Make.rules
 all::	${INFOFILES}
 
 install::	coldsync.8 ${INFOFILES}
-	${MKDIR} ${MAN8DIR} ${INFODIR} ${SYSCONFDIR}
-	${INSTALL_MAN} coldsync.8 ${MAN8DIR}/coldsync.8
+	-${MKDIR} ${MAN3DIR}
+	@for i in ${MAN3FILES}; do \
+		echo ${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
+		${INSTALL_MAN} $$i ${MAN3DIR}/$$i; \
+	done
+	-${MKDIR} ${MAN8DIR}
+	@for i in ${MAN8FILES}; do \
+		echo ${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
+		${INSTALL_MAN} $$i ${MAN8DIR}/$$i; \
+	done
+	-${MKDIR} ${SYSCONFDIR}
 	${INSTALL_DATA} sample.coldsync.rc ${SYSCONFDIR}/sample.coldsync.rc
+	${MKDIR} ${INFODIR}
 	@for file in ${INFOFILES} ${EXTRA_INFOFILES}; do \
 		echo "${INSTALL_DATA} $${file} ${INFODIR}/$${file}"; \
 		${INSTALL_DATA} $${file} ${INFODIR}/$${file}; \
