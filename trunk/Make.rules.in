@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.22 2002-12-10 11:52:27 azummo Exp $
+# $Id: Make.rules.in,v 1.23 2002-12-28 01:10:39 azummo Exp $
 
 # Note: there aren't many portable Makefile constructs. In particular,
 # various versions of 'make' don't recognize one or more of
@@ -229,7 +229,7 @@ ${RECURSIVE_TARGETS}::
 		echo "$@: Entering directory \`${SUBDIR}/$$dir'"; \
 		(cd $$dir && \
 		 ${MAKE} SUBDIR="${SUBDIR}/$$dir" TOP=${TOP}/.. \
-		 	PREFIX="${PREFIX}" prefix="${prefix}" $@); \
+		 	PREFIX="${PREFIX}" prefix="${prefix}" $@) || exit 1; \
 		echo "$@: Leaving directory \`${SUBDIR}/$$dir'"; \
 	done
 
