@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.22 2002-04-27 18:36:31 azummo Exp $
+ * $Id: padp.c,v 1.23 2002-10-27 15:34:16 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -568,7 +568,7 @@ padp_write(PConnection *pconn,
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	int attempt;		/* Send attempt number */
 	struct timeval timeout;	/* Timeout length, for select() */
-	uword offset;		/* Current offset */
+	udword offset;		/* Current offset */
 
 	pconn->palm_errno = PALMERR_NOERR;
 
@@ -580,7 +580,7 @@ padp_write(PConnection *pconn,
 		uword frag_len;		/* Length of this fragment */
 
 		PADP_TRACE(6)
-			fprintf(stderr, "offset == %d (of %d)\n", offset, len);
+			fprintf(stderr, "offset == %ld (of %d)\n", offset, len);
 		frag_flags = 0;
 
 		if (offset == 0)
