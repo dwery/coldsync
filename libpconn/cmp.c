@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.3 2000-05-19 12:07:27 arensb Exp $
+ * $Id: cmp.c,v 1.4 2000-12-11 09:08:05 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -15,6 +15,10 @@
 #include <pconn/padp.h>
 #include <pconn/cmp.h>
 #include <pconn/util.h>
+
+#if HAVE_LIBINTL_H
+#  include <libintl.h>		/* For i18n */
+#endif	/* HAVE_LIBINTL_H */
 
 int cmp_trace = 0;		/* Debugging level for CMP */
 #define CMP_TRACE(n)	if (cmp_trace >= (n))
@@ -96,6 +100,61 @@ cmp_write(struct PConnection *pconn,			/* File descriptor */
 	/* XXX - Error-handling */
 
 	return err;
+}
+
+/* cmp_accept
+ * Negotiate the CMP part of establishing a connection with the Palm. 'bps'
+ * gives the desktop's desired speed. 0 means "I don't care. Whatever the
+ * Palm suggests".
+ * Returns the speed in bps if successful, or 0 in case of error.
+ * This function is here, and not in PConnection_* because it's used for
+ * both serial and USB connections.
+ */
+udword
+cmp_accept(struct PConnection *pconn, udword bps)
+{
+	int err;
+	struct cmp_packet cmpp;
+
+	do {
+		CMP_TRACE(5)
+			fprintf(stderr, "===== Waiting for wakeup packet\n");
+
+		err = cmp_read(pconn, &cmpp);
+		if (err < 0)
+		{
+			if (palm_errno == PALMERR_TIMEOUT)
+				continue;
+			fprintf(stderr, _("Error during cmp_read: (%d) %s\n"),
+				palm_errno,
+				_(palm_errlist[palm_errno]));
+			return -1;
+		}
+	} while (cmpp.type != CMP_TYPE_WAKEUP);
+
+	CMP_TRACE(5)
+		fprintf(stderr, "===== Got a wakeup packet\n");
+
+	/* Compose a reply */
+	/* XXX - This ought to be in a separate function in cmp.c */
+	cmpp.type = CMP_TYPE_INIT;
+	cmpp.ver_major = CMP_VER_MAJOR;
+	cmpp.ver_minor = CMP_VER_MINOR;
+	if ((bps != 0) && (cmpp.rate != bps))
+	{
+		/* Caller has requested a specific rate */
+		cmpp.rate = bps;
+		cmpp.flags = CMP_IFLAG_CHANGERATE;
+	}
+
+	CMP_TRACE(5)
+		fprintf(stderr, "===== Sending INIT packet\n");
+	cmp_write(pconn, &cmpp);	/* XXX - Error-checking */
+
+	CMP_TRACE(5)
+		fprintf(stderr, "===== Finished sending INIT packet\n");
+
+	return cmpp.rate;
 }
 
 /* This is for Emacs's benefit:
