@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.13 2000-09-17 22:24:32 arensb Exp $
+# $Id: Makefile,v 2.14 2000-11-10 03:36:29 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -65,3 +65,8 @@ coldsync:	${TOP}/libpdb/libpdb.a
 
 lex.yy.c:	parser.h
 y.tab.c:	parser.h
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

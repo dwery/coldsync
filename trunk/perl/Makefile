@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2000-05-20 22:43:30 arensb Exp $
+# $Id: Makefile,v 1.9 2000-11-10 03:36:24 arensb Exp $
 
 TOP =		..
 SUBDIR =	perl
@@ -23,3 +23,8 @@ include ${TOP}/Make.rules
 
 ColdSync/Makefile:	ColdSync/Makefile.PL
 	cd ColdSync && ${PERL} Makefile.PL
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

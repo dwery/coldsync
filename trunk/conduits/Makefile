@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2000-09-22 14:39:53 arensb Exp $
+# $Id: Makefile,v 1.8 2000-11-10 03:35:43 arensb Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -50,3 +50,8 @@ install::	${CONDUITS} manifypods
 	for i in ${PERL_CONDUITS}; do \
 		${INSTALL_DATA} $$i.1 ${MAN1DIR}/$$i.1; \
 	done
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

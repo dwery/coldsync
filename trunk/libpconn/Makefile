@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000-04-09 14:16:23 arensb Exp $
+# $Id: Makefile,v 1.5 2000-11-10 03:36:14 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpconn
@@ -49,3 +49,8 @@ all::	${LIBRARY}
 # people can write other programs that communicate with the Palm, but
 # not just yet.
 # install::
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

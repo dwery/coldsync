@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000-02-05 06:08:32 arensb Exp $
+# $Id: Makefile,v 1.5 2000-11-10 03:36:19 arensb Exp $
 
 TOP =		..
 SUBDIR =	libpdb
@@ -26,3 +26,8 @@ all::	${LIBRARY}
 # people can write other programs that communicate with the Palm, but
 # not just yet.
 # install::
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000-05-19 12:06:54 arensb Exp $
+# $Id: Makefile,v 1.7 2000-11-10 03:35:57 arensb Exp $
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has
@@ -56,3 +56,8 @@ install-i18n::	${MOFILES}
 		${INSTALL_DATA} "$$lang.mo" \
 			"${LOCALEDIR}/$$lang/LC_MESSAGES/${PACKAGE}.mo"; \
 	done
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***

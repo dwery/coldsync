@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2000-02-03 02:52:52 arensb Exp $
+# $Id: Makefile,v 1.3 2000-11-10 03:36:04 arensb Exp $
 
 TOP =		..
 SUBDIR =	include
@@ -9,3 +9,8 @@ DISTFILES =	Makefile \
 		${HEADERS}
 
 include ${TOP}/Make.rules
+
+# This is for Emacs's benefit:
+# Local Variables:	***
+# fill-column:	75	***
+# End:			***
