@@ -8,7 +8,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.7 1999-03-16 11:30:17 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.8 1999-03-28 09:58:25 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
@@ -41,10 +41,6 @@ dlpcmd_gettime(const ubyte **rptr, struct dlp_time *t)
 	t->minute = get_ubyte(rptr);
 	t->second = get_ubyte(rptr);
 	get_ubyte(rptr);		/* Skip padding */
-
-	/* XXX - If the year is 0, then this is really a nonexistent date.
-	 * Presumably, then the other fields should be set to 0 as well.
-	 */
 }
 
 /* dlpcmd_puttime
@@ -62,9 +58,10 @@ dlpcmd_puttime(ubyte **wptr, const struct dlp_time *t)
 	put_ubyte(wptr, 0);		/* Padding */
 }
 
-/* XXX - Perhaps there ought to be functions for converting between
- * 'time_t's and 'dlp_time's? */
-
+/* DlpReadUserInfo
+ * Read the user information from the Palm. The 'userinfo' struct will be
+ * filled with this information.
+ */
 int
 DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 		struct dlp_userinfo *userinfo)
@@ -91,7 +88,8 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	DLPC_TRACE(10, "DlpReadUserInfo: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_ReadUserInfo, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_ReadUserInfo,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;	/* Error */
 
@@ -118,7 +116,8 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			userinfo->usernamelen = get_ubyte(&rptr);
 			userinfo->passwdlen = get_ubyte(&rptr);
 			/* XXX - Potential buffer overflow */
-			memcpy(userinfo->username, rptr, userinfo->usernamelen);
+			memcpy(userinfo->username, rptr,
+			       userinfo->usernamelen);
 			rptr += userinfo->usernamelen;
 			/* XXX - Potential buffer overflow */
 			memcpy(userinfo->passwd, rptr, userinfo->passwdlen);
@@ -184,9 +183,6 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
 	static ubyte outbuf[DLPARGLEN_WriteUserInfo_UserInfo +
 		DLPCMD_USERNAME_LEN];	/* Buffer holding outgoing arg */
-					/* XXX - Fixed size: bad!
-					 * (OTOH, the maximum size is
-					 * pretty much determined.) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1, ">>> WriteUserInfo\n");
