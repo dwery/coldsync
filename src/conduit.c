@@ -7,13 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 1.15 2000-02-06 22:13:09 arensb Exp $
- */
-/* XXX - At some point, the API for built-in conduits should become much
- * simpler. A lot of the crap in this file will disappear, since it's
- * intended to handle an obsolete conduit model. Presumably, there'll just
- * be a single table that maps an internal conduit name (e.g., "<Generic>")
- * to the function that implements it.
+ * $Id: conduit.c,v 1.16 2000-02-07 04:42:28 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -134,6 +128,10 @@ tini_conduits()
  *
  * Returns 0 if successful, or a negative value in case of error.
  */
+/* XXX - Default conduits:
+ * Figure out how to run the last conduit marked 'default', but only if no
+ * others have run.
+ */
 static int
 run_conduits(struct dlp_dbinfo *dbinfo,
 	     conduit_block *queue,
@@ -144,6 +142,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 	int err;
 	conduit_block *conduit;
 	sighandler old_sigchld;		/* Previous SIGCHLD handler */
+	conduit_block *def_conduit;	/* Default conduit */
 
 	/* Set handler for SIGCHLD, so that we can keep track of what
 	 * happens to conduit child processes.
@@ -157,6 +156,7 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		return -1;
 	}
 
+	def_conduit = NULL;		/* No default conduit yet */
 	for (conduit = queue;
 	     conduit != NULL;
 	     conduit = conduit->next)
@@ -170,7 +170,6 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 					 * the child. This is used as its
 					 * exit status.
 					 */
-		/* XXX - Check for "final" and "default" flags. */
 
 		SYNC_TRACE(3)
 			fprintf(stderr, "Trying conduit...\n");
@@ -181,11 +180,19 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		{
 			SYNC_TRACE(5)
 				fprintf(stderr,
-					"  Creator: database is 0x%08lx, "
-					"conduit is 0x%08lx. Not "
-					"applicable.\n",
+					"  Creator: database is 0x%08lx "
+					"(%c%c%c%c), conduit is 0x%08lx. "
+					"(%c%c%c%c).\n\t=>Not applicable.\n",
 					dbinfo->creator,
-					conduit->dbcreator);
+					(char) ((dbinfo->creator >>24) & 0xff),
+					(char) ((dbinfo->creator >>16) & 0xff),
+					(char) ((dbinfo->creator >> 8) & 0xff),
+					(char) (dbinfo->creator & 0xff),
+					conduit->dbcreator,
+					(char) ((conduit->dbcreator>>24)&0xff),
+					(char) ((conduit->dbcreator>>16)&0xff),
+					(char) ((conduit->dbcreator>> 8)&0xff),
+					(char) (conduit->dbcreator & 0xff));
 			continue;
 		}
 
@@ -195,10 +202,19 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		{
 			SYNC_TRACE(5)
 				fprintf(stderr,
-					"  Type: database is 0x%08lx, "
-					"conduit is 0x%08lx. Not applicable.\n",
+					"  Type: database is 0x%08lx "
+					"(%c%c%c%c), conduit is 0x%08lx "
+					"(%c%c%c%c).\n\t=>Not applicable.\n",
 					dbinfo->type,
-					conduit->dbtype);
+					(char) ((dbinfo->type >>24) & 0xff),
+					(char) ((dbinfo->type >>16) & 0xff),
+					(char) ((dbinfo->type >> 8) & 0xff),
+					(char) (dbinfo->type & 0xff),
+					conduit->dbtype,
+					(char) ((conduit->dbtype >>24) & 0xff),
+					(char) ((conduit->dbtype >>16) & 0xff),
+					(char) ((conduit->dbtype >> 8) & 0xff),
+					(char) (conduit->dbtype & 0xff));
 			continue;
 		}
 
@@ -209,9 +225,35 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 				(conduit->path == NULL ? "(null)" :
 				 conduit->path));
 
+		if (conduit->flags & CONDFL_DEFAULT)
+		{
+			SYNC_TRACE(2)
+				fprintf(stderr, "This is a default conduit\n");
+
+			/* Remember this conduit as the default if no other
+			 * conduits match.
+			 */
+			/* XXX - Need to run this conduit if no others
+			 * match. Can't just 'goto' into the middle of this
+			 * loop, though, since that would cause all of the
+			 * other conduits to run as well.
+			 */
+			def_conduit = conduit;
+			continue;
+		}
+
 		/* XXX - See if conduit->path is a predefined string (set
 		 * up a table of built-in conduits). If so, run the
 		 * corresponding built-in conduit.
+		 */
+		/* XXX - Ideally, it should be possible to define a conduit
+		 * with no path: just say
+		 *	conduit dump {
+		 *		type * / *;
+		 *		final;
+		 *	}
+		 * as a dummy conduit, just to say that it's the last
+		 * conduit.
 		 */
 
 		argv[0] = conduit->path;	/* Path to conduit */
@@ -304,6 +346,16 @@ run_conduits(struct dlp_dbinfo *dbinfo,
 		fclose(fromchild);
 
 		/* XXX - May want to do something with 'laststatus' */
+
+		/* If this is a final conduit, don't look any further. */
+		if (conduit->flags & CONDFL_FINAL)
+		{
+			SYNC_TRACE(2)
+				fprintf(stderr, "This is a final conduit. "
+					"Not looking any further.\n");
+
+			break;
+		}
 	}
 
 	/* Restore previous SIGCHLD handler */
