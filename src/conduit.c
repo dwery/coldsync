@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.67 2003-10-01 12:29:39 azummo Exp $
+ * $Id: conduit.c,v 2.68 2003-10-05 17:49:47 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -354,12 +354,6 @@ run_conduit(struct Palm *palm,
 	unsigned int num_headers = 0;		/* Number of headers in list */
 	unsigned int max_headers = 0;		/* Amount of room in list */
 	int spcpipe[2];		/* Pipe for SPC-based communication */
-	char spcnumbuf[4];	/* Buffer to hold the child's SPC file
-				 * descriptor number. This only goes up to
-				 * 999, but if that's not enough, then
-				 * there's a serious file descriptor leak
-				 * going on.
-				 */
 	static enum { SPC_Read_Header,  SPC_Read_Data,
 		      SPC_Write_Header, SPC_Write_Data
 	} spc_state;		/* This variable helps us implement a state
@@ -622,12 +616,22 @@ run_conduit(struct Palm *palm,
 	 */
 	if (with_spc)
 	{
-		sprintf(spcnumbuf, "%d", spcpipe[0]);
-				/* This will fail if spcpipe[0] > 999, but
-				 * we've checked for that already. */
+		char numbuf[16]; /* big enough for a fd value or a version */
 
+		sprintf(numbuf, "%d", spcpipe[0]);
 		add_header(&headers, &num_headers, &max_headers,
-			"SPCPipe", spcnumbuf);
+			"SPCPipe", numbuf);
+
+		/* provide DLP version numbers. We only bother when we've
+		 * got SPC enabled since it's useless otherwise.
+		 */
+		sprintf(numbuf, "%d", palm_dlp_ver_major(palm));
+		add_header(&headers, &num_headers, &max_headers,
+			"PDA-DLP-major", numbuf );
+
+		sprintf(numbuf, "%d", palm_dlp_ver_minor(palm));
+		add_header(&headers, &num_headers, &max_headers,
+			"PDA-DLP-minor", numbuf );
 	}
 
 	/* Now append the user-supplied headers to the system headers. This

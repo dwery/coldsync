@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.19 2003-08-07 01:14:06 azummo Exp $
+ * $Id: spalm.c,v 2.20 2003-10-05 17:49:47 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -790,6 +790,44 @@ palm_rom_version(struct Palm *palm)
 			return 0;
 		}
 	return palm->sysinfo_.rom_version;
+}
+
+/* palm_dlp_ver_major
+ * Returns the major version of the Palm's DLP protocol, or -1 if case of error.
+ */
+const int
+palm_dlp_ver_major(struct Palm *palm)
+{
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
+	/* Fetch SysInfo if we haven't done so yet */
+	if (!palm->have_sysinfo_)
+		if (fetch_sysinfo(palm) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
+			return -1;
+		}
+	return palm->sysinfo_.dlp_ver_maj;
+}
+
+/* palm_dlp_ver_minor
+ * Returns the minor version of the Palm's DLP protocol, or -1 if case of error.
+ */
+const int
+palm_dlp_ver_minor(struct Palm *palm)
+{
+	/* Pretend the accessor will work just fine. */
+	palm->accessor_status_ = PALMACC_NOERR;
+
+	/* Fetch SysInfo if we haven't done so yet */
+	if (!palm->have_sysinfo_)
+		if (fetch_sysinfo(palm) < 0)
+		{
+			palm->accessor_status_ = PALMACC_FAIL;
+			return -1;
+		}
+	return palm->sysinfo_.dlp_ver_min;
 }
 
 /* palm_username
