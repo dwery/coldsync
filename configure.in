@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.55 2000-02-07 00:50:11 arensb Exp $
+dnl # $Id: configure.in,v 1.56 2000-02-07 01:47:26 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -355,6 +355,9 @@ if test x"$EXIT_STATUS" != x0; then
 	try again.])
 fi
 dnl #'
+# Create the Makefile for the Perl module(s)
+(cd perl/ColdSync; $PERL Makefile.PL)
+AC_OUTPUT_COMMANDS([cd perl/ColdSync && ${PERL} Makefile.PL])
 
 # XXX - I'm not sure this is working quite right everywhere just yet
 #  AC_MSG_RESULT(dnl
