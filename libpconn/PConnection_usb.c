@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_usb.c,v 1.35 2002-04-14 05:08:32 arensb Exp $
+ * $Id: PConnection_usb.c,v 1.36 2002-05-09 13:50:59 arensb Exp $
  */
 
 #include "config.h"
@@ -67,10 +67,10 @@
 #  define UCR(field)	field
 #endif	/* WITH_UDI_PREFIX */
 
+#define IOBUF_LEN	1024
+
 struct usb_data {
-	unsigned char iobuf[1024];	/* XXX - Is there anything
-					 * magical about 1024? Make
-					 * this a cpp symbol */
+	unsigned char iobuf[IOBUF_LEN];
 	unsigned char *iobufp;
 	int iobuflen;
 };
