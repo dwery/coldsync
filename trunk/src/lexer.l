@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.17 2000-05-21 08:07:33 arensb Exp $
+ * $Id: lexer.l,v 2.18 2000-06-03 06:36:04 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -175,6 +175,8 @@ ID		[-a-zA-Z_0-9]
 "snum"		{ KEYWORD(SNUM);	}
 "speed"		{ KEYWORD(SPEED);	}
 "type"		{ KEYWORD(TYPE);	}
+"userid"	{ KEYWORD(USERID);	}
+"username"	{ KEYWORD(USERNAME);	}
 
  /* Conduit flavors */
 "sync"		{ KEYWORD(SYNC);	}
@@ -281,31 +283,31 @@ ID		[-a-zA-Z_0-9]
 	}
 
 [-+]?{DIGIT}{1,10}	{
-		int value;
+		long value;
 
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found number [%s]\n", yytext);
-		sscanf(yytext, "%i", &value);
+		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
 		return NUMBER;
 	}
 
 [-+]?0{ODIGIT}{1,11}	{
-		int value;
+		long value;
 
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found number [%s]\n", yytext);
-		sscanf(yytext, "%i", &value);
+		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
 		return NUMBER;
 	}
 
 [-+]?0x{XDIGIT}{1,8}	{
-		int value;
+		long value;
 
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found number [%s]\n", yytext);
-		sscanf(yytext, "%i", &value);
+		sscanf(yytext, "%li", &value);
 		yylval.integer = value;
 		return NUMBER;
 	}
@@ -319,7 +321,6 @@ ID		[-a-zA-Z_0-9]
 	PARSE_TRACE(3)
 		fprintf(stderr, "Found word [%s]\n", yytext);
 
-	/* XXX - Easier to just use strdup() */
 	if ((yylval.string = strdup(yytext)) == NULL)
 	{
 		fprintf(stderr, _("%s: Can't make copy of string.\n"),
