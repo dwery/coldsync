@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.9.2.4 2000-09-03 02:24:49 arensb Exp $
+ * $Id: conduit.c,v 2.9.2.5 2000-09-03 03:13:43 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -278,7 +278,7 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 				/* Pointer into spc_inbuf or spc_outbuf */
 	sigset_t sigmask;
 				/* Signal mask for {,un}block_sigchld() */
-	const struct pref_item **pref_list;
+	const struct pref_item ** volatile pref_list = NULL;
 				/* Array of pointers to preference items in
 				 * the cache */
 
@@ -338,7 +338,8 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	/* Before all the jumping stuff, make sure the pref_list is
 	 * allocated
 	 */
-	pref_list = calloc(sizeof *pref_list, conduit->num_prefs);
+	if (conduit->num_prefs > 0)
+		pref_list = calloc(conduit->num_prefs, sizeof *pref_list);
 
 	/* When the child exits, sigchld_handler() will longjmp() back to
 	 * here. This way, none of the other code has to worry about
@@ -937,7 +938,8 @@ run_conduit(struct dlp_dbinfo *dbinfo,	/* The database to sync */
 	/* XXX - This is an array of pointers, but the individual elements
 	 * are not freed. Does this leak memory?
 	 */
-	free(pref_list);
+	if (pref_list != NULL)
+		free(pref_list);
 
 	return laststatus;
 }
