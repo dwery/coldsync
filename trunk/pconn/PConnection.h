@@ -3,7 +3,7 @@
  * Defines the PConnection abstraction, which embodies a connection
  * to a P device.
  *
- * $Id: PConnection.h,v 1.5 1999-06-06 16:13:43 arensb Exp $
+ * $Id: PConnection.h,v 1.6 1999-07-04 02:53:04 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -48,7 +48,6 @@ struct PConnection
 				 * dynamically resized to hold however many
 				 * arguments there are in the response.
 				 */
-		/* XXX - Should have something here for the log */
 	} dlp;
 
 	/* Packet Assembly/Disassembly Protocol (PADP) */
