@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.155 2002-12-18 00:19:45 azummo Exp $
+dnl # $Id: configure.in,v 1.156 2002-12-18 00:52:21 azummo Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -766,7 +766,7 @@ if test x"$HAVE_SOCKETPAIR" != x"yes"; then
 	EXIT_STATUS=1
 fi
 
-AC_DEFINE_UNQUOTED(SYSCONFDIR,"`eval echo \"${sysconfdir}\"`")
+AC_DEFINE_UNQUOTED(SYSCONFDIR,"`eval echo \"${sysconfdir}\"/coldsync`")
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT([Make.rules
