@@ -1,11 +1,11 @@
 /* pconn.h
  * Simple include file that includes all of the pconn-related .h files
  *
- *	Copyright (C) 1999-2000, Andrew Arensburger.
+ *	Copyright (C) 1999-2001, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pconn.h,v 1.6 2001-07-06 05:44:33 arensb Exp $
+ * $Id: pconn.h,v 1.7 2001-07-09 10:36:17 arensb Exp $
  */
 #ifndef __pconn_h__
 #define __pconn_h__
@@ -44,3 +44,9 @@ extern int dlpc_trace;		/* Debugging level for Desktop Link
 extern uword crc16(const ubyte *buf, uword len, const uword start);
 
 #endif	/* __pconn_h__ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
