@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pconn.h,v 1.5 2001-01-09 16:36:10 arensb Exp $
+ * $Id: pconn.h,v 1.5.4.1 2001-07-25 04:15:29 arensb Exp $
  */
 #ifndef __pconn_h__
 #define __pconn_h__
@@ -17,6 +17,14 @@
 				 * multiple memory cards is added, if it
 				 * ever is.
 				 */
+
+#define NETSYNC_WAKEUP_MAGIC    0xfade
+#define NETSYNC_WAKEUP_PORT     14237   /* UDP port on which the client
+                                         * sends out the wakeup request.
+                                         */
+#define NETSYNC_DATA_PORT       14238   /* TCP port on which the client and
+                                         * server exchange sync data.
+                                         */
 
 /* Debugging variables */
 extern int slp_trace;		/* Debugging level for Serial Link Protocol */
