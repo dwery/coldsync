@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.5 2002-10-16 18:59:32 azummo Exp $
+ * $Id: runmode.c,v 2.6 2002-10-31 15:30:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -69,7 +69,7 @@ run_mode_Standalone(int argc, char *argv[])
 	time_t now;
 
 	/* Connect to the Palm */
-	if( (palm = palm_Connect()) == NULL )
+	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
 	/* Figure out which Palm we're dealing with */
@@ -198,7 +198,7 @@ run_mode_Standalone(int argc, char *argv[])
 		return -1;
 	}
 
-	return do_sync( pda, palm );
+	return do_sync(pda, palm);
 }
 
 int
@@ -246,7 +246,7 @@ run_mode_Backup(int argc, char *argv[])
 		return -1;
 	}
 
-	if( (palm = palm_Connect()) == NULL )
+	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
 	/* Do the backup */
@@ -343,7 +343,7 @@ run_mode_Restore(int argc, char *argv[])
 	struct Palm *palm;
 
 
-	if( (palm = palm_Connect()) == NULL )
+	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
 	/* Parse arguments: for each argument, if it's a file, upload that
@@ -432,7 +432,7 @@ run_mode_Init(int argc, char *argv[])
 	udword new_userid = 0;		/* What the userid should be */
 	int p_snum_len;			/* Length of serial number on Palm */
 
-	if( (palm = palm_Connect()) == NULL )
+	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
 	/* Get the Palm's serial number, if possible */
@@ -622,7 +622,7 @@ run_mode_Init(int argc, char *argv[])
 		struct dlp_setuserinfo uinfo;
 
 		/* Clear uinfo */
-		memset( &uinfo, sizeof(struct dlp_userinfo), 0x00);
+		memset(&uinfo, sizeof(struct dlp_userinfo), 0x00);
 
 		/* XXX - Set viewer ID? */
 
@@ -781,7 +781,7 @@ run_mode_Daemon(int argc, char *argv[])
 	}
 
 	/* Connect to the Palm */
-	if( (palm = palm_Connect()) == NULL )
+	if ((palm = palm_Connect()) == NULL )
 		return -1;
 
 	/* Check if this palm is uninitialized and if autoinit is true*/
@@ -808,6 +808,8 @@ run_mode_Daemon(int argc, char *argv[])
 		}
 		else
 		{
+			/* XXX here we must send any program in the global autoinit directory */
+		
 			Error(_("No matching entry in %s, couldn't autoinit."), _PATH_PALMS);
 			/* XXX - Write reason to Palm log */
 			palm_Disconnect(palm, DLPCMD_SYNCEND_CANCEL);
@@ -833,7 +835,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Find the matching passwd structure */
 	pwent = getpasswd_from_palment(palment);
 	
-	if( pwent == NULL)
+	if (pwent == NULL)
 	{
 		Error(_("Unknown user/uid: \"%s\"."),
 			palment->luser);
@@ -899,7 +901,7 @@ run_mode_Daemon(int argc, char *argv[])
 	/* Look up the PDA in the user's configuration */
 	pda = find_pda_block(palm, True);
 
-	return do_sync( pda, palm );
+	return do_sync(pda, palm);
 }
 
 /* snum_checksum

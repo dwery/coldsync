@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.60 2002-09-12 21:31:11 azummo Exp $
+ * $Id: conduit.c,v 2.61 2002-10-31 15:30:20 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -248,7 +248,6 @@ static char cond_stdout_buf[BUFSIZ];	/* Buffer for conduit's stdout */
 
 static int
 run_conduit(struct Palm *palm,
-
 		const struct dlp_dbinfo *dbinfo,	/* The database to sync */
 		char *flavor,				/* Name of the flavor */
 		unsigned short flavor_mask,		/* Mask of the flavor */
