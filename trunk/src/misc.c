@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.1 2000-09-17 22:27:09 arensb Exp $
+ * $Id: misc.c,v 2.2 2000-10-22 08:39:32 arensb Exp $
  */
 
 #include "config.h"
@@ -39,6 +39,14 @@
 #include "pconn/pconn.h"
 #include "pdb.h"
 #include "conduit.h"
+
+static int stat_err;		/* Return value from last stat() or
+				 * lstat(), used by (l)exists() and is_*(),
+				 * below.
+				 */
+static struct stat statbuf;	/* Results of last stat() or lstat(), used
+				 * by (l)exists() and is_*(), below.
+				 */
 
 /* mkfname
  * Append the name of `dbinfo' to the directory `dirname', escaping any
@@ -257,6 +265,78 @@ fname2dbname(const char *fname)
 		fprintf(stderr, "fname2dbname: Returning  \"%s\"\n",
 			dbname);
 	return dbname;
+}
+
+/* The next few functions cache their results in 'stat_err' and 'statbuf'
+ * (see above).
+ */
+
+/* exists
+ * Returns True iff 'fname' exists. If 'fname' is NULL, uses the results of
+ * the previous call to exists(), lexists(), or is_*().
+ */
+const Bool
+exists(const char *fname)
+{
+	/* stat() the file, if it was given */
+	if (fname != NULL)
+		stat_err = stat(fname, &statbuf);
+
+	return stat_err < 0 ? False : True;
+}
+
+/* lexists
+ * Returns True iff 'fname' exists. If 'fname' is NULL, uses the results of
+ * the previous call to exists(), lexists(), or is_*().
+ * This differs from exists() in that it uses lstat(), so the file may be a
+ * symlink.
+ */
+const Bool
+lexists(const char *fname)
+{
+	/* lstat() the file, if it was given */
+	if (fname != NULL)
+		stat_err = lstat(fname, &statbuf);
+
+	return stat_err < 0 ? False : True;
+}
+
+/* is_file
+ * Returns True iff 'fname' exists and is a plain file. If 'fname' is NULL,
+ * uses the results of the previous call to exists(), lexists(), or is_*().
+ */
+const Bool
+is_file(const char *fname)
+{
+	/* stat() the file, if it was given */
+	if (fname != NULL)
+		stat_err = stat(fname, &statbuf);
+
+	/* See if the file exists */
+	if (stat_err < 0)
+		return False;		/* Nope */
+
+	/* See if the file is a plain file */
+	return S_ISREG(statbuf.st_mode) ? True : False;
+}
+
+/* is_directory
+ * Returns True iff 'fname' exists and is a directory. If 'fname' is NULL,
+ * uses the results of the previous call to exists(), lexists(), or is_*().
+ */
+const Bool
+is_directory(const char *fname)
+{
+	/* stat() the file, if it was given */
+	if (fname != NULL)
+		stat_err = stat(fname, &statbuf);
+
+	/* See if the file exists */
+	if (stat_err < 0)
+		return False;		/* Nope */
+
+	/* See if the file is a directory */
+	return S_ISDIR(statbuf.st_mode) ? True : False;
 }
 
 /* This is for Emacs's benefit:
