@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.52 2000-02-03 04:12:02 arensb Exp $
+dnl # $Id: configure.in,v 1.53 2000-02-04 16:05:25 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -48,7 +48,9 @@ CPPFLAGS="-I${prefix}/include"
 ## Checks for programs.
 
 AC_PROG_CC
-AC_PROG_CXX
+
+# AIX sucks so bad, it requires its own special check.
+AC_AIX
 
 # XXX - It ought to be possible to turn off pedantic compilation. But
 # this also ought to be cached. How?
@@ -72,6 +74,50 @@ else
 		CXXFLAGS=\"-Wall -ansi -pedantic\" ./configure])
 fi
 AC_SUBST(CFLAGS)
+
+AC_PROG_CXX
+
+## Test C++ compiler characteristics
+dnl # Save the current language
+AC_LANG_SAVE
+dnl # Make C++ the current language for testing programs
+AC_LANG_CPLUSPLUS
+
+# Make sure C++ compiler understands 'bool' (yes, I've gotten mail
+# from someone who complained that his compiler didn't understand it).
+AC_MSG_CHECKING([whether the C++ compiler understands 'bool'])
+AC_TRY_COMPILE([],
+	[bool foo; foo = true;],
+	AC_MSG_RESULT(yes),
+	AC_MSG_WARN([
+	Hrung! C++ compiler no understand 'bool' keyword.
+	You make ftp magic[,] install new version[,] make spirits happy.
+
+	(Translation: you seem to be using an ancient C++ compiler that
+	doesn't understand the 'bool' keyword. You need to upgrade to a
+	newer compiler.)])
+	EXIT_STATUS=1)
+dnl #'
+
+# Make sure C++ compiler understands new-style casts
+# ("static_cast<int>(foo)" rather than "(int) foo").
+
+AC_MSG_CHECKING([whether the C++ compiler understands new-style casts])
+AC_TRY_COMPILE([],
+	[int i; int *p = &i; i = static_cast<int>(p);],
+	AC_MSG_RESULT(yes),
+	AC_MSG_WARN([
+	Alack! This venerable compiler doth not understand the sweet
+	'static_cast'[,] of which the poet Meyers doth sing. An you heed
+	my advice[,] gentle[,] hie to the land of GNU[,] to fetch the compiler
+	thereof[,] and much merriment shall ensue.
+
+	(Translation: you need to install a C++ compiler that understands
+	new-style casts such as \"static_cast<int>(foo)\")])
+	EXIT_STATUS=1)
+
+dnl # Restore the old language
+AC_LANG_RESTORE
 
 AC_PROG_RANLIB
 AC_PROG_INSTALL
@@ -129,51 +175,6 @@ if test -z "$YACC"; then
 	YACC=true		# Just in case the bozo tries to build anyway
 	EXIT_STATUS=1
 fi
-
-# AIX sucks so bad, it requires its own special check.
-AC_AIX
-
-## Test C++ compiler characteristics
-dnl # Save the current language
-AC_LANG_SAVE
-dnl # Make C++ the current language for testing programs
-AC_LANG_CPLUSPLUS
-
-# Make sure C++ compiler understands 'bool' (yes, I've gotten mail
-# from someone who complained that his compiler didn't understand it).
-AC_MSG_CHECKING([whether the C++ compiler understands 'bool'])
-AC_TRY_COMPILE([],
-	[bool foo; foo = true;],
-	AC_MSG_RESULT(yes),
-	AC_MSG_WARN([
-	Hrung! C++ compiler no understand 'bool' keyword.
-	You make ftp magic[,] install new version[,] make spirits happy.
-
-	(Translation: you seem to be using an ancient C++ compiler that
-	doesn't understand the 'bool' keyword. You need to upgrade to a
-	newer compiler.)])
-	EXIT_STATUS=1)
-dnl #'
-
-# Make sure C++ compiler understands new-style casts
-# ("static_cast<int>(foo)" rather than "(int) foo").
-
-AC_MSG_CHECKING([whether the C++ compiler understands new-style casts])
-AC_TRY_COMPILE([],
-	[int i; int *p = &i; i = static_cast<int>(p);],
-	AC_MSG_RESULT(yes),
-	AC_MSG_WARN([
-	Alack! This venerable compiler doth not understand the sweet
-	'static_cast'[,] of which the poet Meyers doth sing. An you heed
-	my advice[,] gentle[,] hie to the land of GNU[,] to fetch the compiler
-	thereof[,] and much merriment shall ensue.
-
-	(Translation: you need to install a C++ compiler that understands
-	new-style casts such as \"static_cast<int>(foo)\")])
-	EXIT_STATUS=1)
-
-dnl # Restore the old language
-AC_LANG_RESTORE
 
 # XXX - Fails due to -Wall
 dnl # AC_C_INLINE
