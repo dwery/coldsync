@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.17 2000-09-09 21:27:45 arensb Exp $
+ * $Id: log.c,v 1.18 2000-12-10 00:28:38 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -19,7 +19,7 @@
 
 #include "coldsync.h"
 
-char *synclog;			/* Log that'll be uploaded to the Palm */
+char *synclog = NULL;		/* Log that'll be uploaded to the Palm */
 static int log_size = 0;	/* Size of 'synclog' */
 static int log_len = 0;		/* Length of log == strlen(synclog) */
 
