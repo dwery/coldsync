@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.11 2000-11-27 09:52:14 arensb Exp $
+ * $Id: padp.c,v 1.12 2000-11-27 12:00:01 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -756,8 +756,7 @@ padp_write(struct PConnection *pconn,
 				 * the connection doesn't time out as long
 				 * as they keep coming in. Just ignore it.
 				 */
-				attempt--;	/* Hack! */
-				continue;
+				goto mpretry;
 			    case PADP_FRAGTYPE_ABORT:
 				palm_errno = PALMERR_ABORT;
 				return -1;
