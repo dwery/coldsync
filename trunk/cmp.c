@@ -2,7 +2,7 @@
  *
  * Implements Palm's Connection Management Protocol (CMP).
  *
- * $Id: cmp.c,v 1.1 1999-01-22 18:13:12 arensb Exp $
+ * $Id: cmp.c,v 1.2 1999-01-23 23:08:24 arensb Exp $
  */
 #include <stdio.h>
 #include "cmp.h"
@@ -89,6 +89,10 @@ cmp_recv(int fd,		/* File descriptor on which to receive */
 		(inbuf[7] << 16) |
 		(inbuf[8] << 8)  |
 		inbuf[9];
+	/* XXX - Ought to remember the version number, so that the DLP
+	 * stuff can avoid using functions that the Palm doesn't
+	 * understand.
+	 */
 
 	/* Dump the packet information, for debugging */
 	fprintf(stderr, "<<< CMP: ");
