@@ -13,7 +13,7 @@
  * Palm; and, of course, a machine has any number of users.
  * Hence, the configuration is (will be) somewhat complicated.
  *
- * $Id: config.c,v 1.20 2000-04-09 14:24:43 arensb Exp $
+ * $Id: config.c,v 1.21 2000-04-10 09:31:37 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -520,6 +520,10 @@ get_config(int argc, char *argv[])
 		}
 	}
 
+	/* Set up the list of PDAs in the main configuration */
+	config.pda = user_config->pda;
+	user_config->pda = NULL;
+
 	/* Set up the conduit lists in the main configuration */
 	if (user_config == NULL)
 	{
@@ -545,6 +549,7 @@ get_config(int argc, char *argv[])
 	{
 		/* Dump a summary of the config file */
 		listen_block *l;
+		pda_block *p;
 		conduit_block *c;
 
 		fprintf(stderr, "Summary of sync configuration:\n");
@@ -554,6 +559,19 @@ get_config(int argc, char *argv[])
 			fprintf(stderr, "\tType: %d\n", l->listen_type);
 			fprintf(stderr, "\tDevice: [%s]\n", l->device);
 			fprintf(stderr, "\tSpeed: %d\n", l->speed);
+		}
+
+		fprintf(stderr, "Known PDAs:\n");
+		for (p = config.pda; p != NULL; p = p->next)
+		{
+			fprintf(stderr, "PDA:\n");
+			fprintf(stderr, "\tSerial number: [%s]\n",
+				(p->snum == NULL ? "(null)" : p->snum));
+			fprintf(stderr, "\tDirectory: [%s]\n",
+				(p->directory == NULL ? "(null)" :
+				 p->directory));
+			if ((p->flags & PDAFL_DEFAULT) != 0)
+				fprintf(stderr, "\tDEFAULT\n");
 		}
 
 		fprintf(stderr, "Sync conduits:\n");
@@ -700,8 +718,7 @@ name2listen_type(const char *str)
 }
 
 int
-load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
-	/* XXX - In fact, a lot of this is totally bogus */
+load_palm_config(struct Palm *palm)
 {
 	/* XXX - For now, this assumes that 'coldsync' runs as a user app,
 	 * i.e., it's started by the user at login time (or 'startx' time).
@@ -718,6 +735,74 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 	uid_t uid;		/* UID of user running 'coldsync' */
 	struct passwd *pwent;	/* /etc/passwd entry for current user */
 	struct stat statbuf;	/* For checking for files and directories */
+	pda_block *pda;		/* Description of the current PDA */
+
+	/* Try to find a pda_block for the current PDA */
+	{
+		pda_block *cur;	/* The pda-block we're currently looking at */
+		pda_block *default_pda;
+				/* pda_block for the default PDA, if no
+				 * better match is found.
+				 */
+
+		pda = NULL;
+		default_pda = NULL;
+		for (cur = config.pda; cur != NULL; cur = cur->next)
+		{
+			if ((cur->flags & PDAFL_DEFAULT) != 0)
+			{
+				MISC_TRACE(3)
+					fprintf(stderr,
+						"Found a default PDA\n");
+
+				/* Mark this as the default pda_block */
+				default_pda = cur;
+			}
+
+			/* See if this pda_block has a serial number and if
+			 * so, whether it matches the one we read off of
+			 * the Palm.
+			 * Palms with pre-3.0 ROMs don't have serial
+			 * numbers. They can be represented in the
+			 * .coldsyncrc file with
+			 *	snum "";
+			 * This does mean that you shouldn't have more than
+			 * one pda_block with an empty string.
+			 */
+			if ((cur->snum != NULL) &&
+			    (strncasecmp(cur->snum, palm->serial, SNUM_MAX)
+			     == 0))
+			{
+				/* It matches. */
+				MISC_TRACE(3)
+				{
+					fprintf(stderr, "Found a match for "
+						"this PDA:\n");
+					fprintf(stderr, "\tS/N: [%s]\n",
+						cur->snum);
+					fprintf(stderr, "\tDirectory: [%s]\n",
+						cur->directory);
+				}
+
+				pda = cur;
+				break;
+			}
+		}
+
+		if (pda == NULL)
+		{
+			MISC_TRACE(3)
+				fprintf(stderr, "No exact match found for "
+					"this PDA. Using default\n");
+			/* Fall back to the default pda_block */
+			pda = default_pda;
+		}
+	}
+
+	MISC_TRACE(3)
+		if (pda == NULL)
+			fprintf(stderr, "No PDA found in config file. Using "
+				"system defaults.\n");
 
 	/* Get the current user's UID */
 	uid = getuid();		/* Can't fail, according to TFM */
@@ -746,27 +831,23 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 	/* Make sure the various directories (~/.palm/...) exist, and create
 	 * them if necessary.
 	 */
-	if (stat(userinfo.homedir, &statbuf) < 0)
-	{
-		/* Home directory doesn't exist. Not much we can do about
-		 * that.
-		 */
-		perror("load_palm_config: stat($HOME)");
-		return -1;
-	}
 
-	/* Construct the various directory paths */
-	/* XXX - By default, the backup directory should be of the form
-	 * ~<user>/.palm/<palm ID>/backup or something. <palm ID> should be
-	 * the serial number for a Palm III, not sure what for others.
-	 * Perhaps 'ColdSync' could create a resource database with this
-	 * information?
-	 */
+	/* Figure out what the base directory is */
+	if ((pda != NULL) && (pda->directory != NULL))
+	{
+		/* Use the directory specified in the config file */
+		strncpy(palmdir, pda->directory, MAXPATHLEN);
+	} else {
+		/* Either there is no applicable PDA, or else it doesn't
+		 * specify a directory. Use the default (~/.palm).
+		 */
+		strncpy(palmdir, userinfo.homedir, MAXPATHLEN);
+		strncat(palmdir, "/.palm", MAXPATHLEN - strlen(palmdir));
+	}
+	MISC_TRACE(3)
+		fprintf(stderr, "Base directory is [%s]\n", palmdir);
 
 	/* ~/.palm */
-	strncpy(palmdir, userinfo.homedir, MAXPATHLEN);
-	strncat(palmdir, "/.palm", MAXPATHLEN - strlen(palmdir));
-
 	if (stat(palmdir, &statbuf) < 0)
 	{
 		/* ~/.palm doesn't exist. Create it */
@@ -803,7 +884,8 @@ load_palm_config(struct Palm *palm)	/* XXX - Unused argument */
 		if ((err = mkdir(atticdir, DIR_MODE)) < 0)
 		{
 			/* Can't create the directory */
-			perror("load_palm_config: mkdir(~/.palm/backup/Attic)\n");
+			perror("load_palm_config: "
+			       "mkdir(~/.palm/backup/Attic)\n");
 			return -1;
 		}
 	}
@@ -917,6 +999,7 @@ new_config()
 	/* Initialize fields */
 	retval->mode = Standalone;
 	retval->listen		= NULL;
+	retval->pda		= NULL;
 	retval->sync_q		= NULL;
 	retval->fetch_q		= NULL;
 	retval->dump_q		= NULL;
@@ -934,6 +1017,8 @@ free_config(struct config *config)
 {
 	listen_block *l;
 	listen_block *nextl;
+	pda_block *p;
+	pda_block *nextp;
 	conduit_block *c;
 	conduit_block *nextc;
 
@@ -945,54 +1030,49 @@ free_config(struct config *config)
 	for (l = config->listen, nextl = NULL; l != NULL; l = nextl)
 	{
 		nextl = l->next;
+		free_listen_block(l);
+	}
 
-		free(l->device);
-		free(l);
+	/* Free the PDA blocks */
+	for (p = config->pda, nextp = NULL; p != NULL; p = nextp)
+	{
+		nextp = p->next;
+		free_pda_block(p);
 	}
 
 	/* Free sync_q */
 	for (c = config->sync_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
-
-		free(c->path);
-		free(c);
+		free_conduit_block(c);
 	}
 
 	/* Free fetch_q */
 	for (c = config->fetch_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
-
-		free(c->path);
-		free(c);
+		free_conduit_block(c);
 	}
 
 	/* Free dump_q */
 	for (c = config->dump_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
-
-		free(c->path);
-		free(c);
+		free_conduit_block(c);
 	}
 
 	/* Free install_q */
 	for (c = config->install_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
-
-		free(c->path);
-		free(c);
+		free_conduit_block(c);
 	}
 
 	/* Free uninstall_q */
 	for (c = config->uninstall_q, nextc = NULL; c != NULL; c = nextc)
 	{
 		nextc = c->next;
-
-		free(c->path);
-		free(c);
+		free_conduit_block(c);
 	}
 
 	/* Free the config itself */
@@ -1123,6 +1203,43 @@ free_conduit_block(conduit_block *c)
 	if (c->path != NULL)
 		free(c->path);
 	free(c);
+}
+
+/* new_pda_block
+ * Allocate and initialize a new pda_block.
+ * Returns a pointer to the new pda_block, or NULL in case of error.
+ */
+pda_block *
+new_pda_block()
+{
+	pda_block *retval;
+
+	/* Allocate the new pda_block */
+	if ((retval = (pda_block *) malloc(sizeof(pda_block))) == NULL)
+		return NULL;
+
+	/* Initialize the new pda_block */
+	retval->next = NULL;
+	retval->snum = NULL;
+	retval->directory = NULL;
+
+	return retval;
+}
+
+/* free_pda_block
+ * Free a pda block. Note that this function does not pay attention to any
+ * other pda_blocks on the list. If you have a list of pda_blocks, you can
+ * use this function to free each individual element in the list, but not
+ * the whole list.
+ */
+void
+free_pda_block(pda_block *p)
+{
+	if (p->snum != NULL)
+		free(p->snum);
+	if (p->directory != NULL)
+		free(p->directory);
+	free(p);
 }
 
 /* This is for Emacs's benefit:
