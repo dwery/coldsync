@@ -8,10 +8,11 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.4 1999-02-24 13:11:30 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.5 1999-03-11 03:24:19 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcpy() et al. */
+#include <stdlib.h>		/* For malloc() */
 #include "dlp.h"
 #include "dlp_cmd.h"
 #include "util.h"
@@ -709,58 +710,76 @@ DlpReadDBList(struct PConnection *pconn,			/* File descriptor */
 			       dbs->size - DLPCMD_DBNAME_LEN);
 			rptr += dbs->size - DLPCMD_DBNAME_LEN;
 
-			fprintf(stderr, "Database info:\n");
-			fprintf(stderr, "\tsize %d, misc flags 0x%02x, DB flags 0x%04x\n",
-				dbs->size,
-				dbs->misc_flags,
-				dbs->db_flags);
-			fprintf(stderr, "\tDB flags:");
-			if (dbs->db_flags & DLPCMD_DBFLAG_RESDB) fprintf(stderr, " RESDB");
-			if (dbs->db_flags & DLPCMD_DBFLAG_RO) fprintf(stderr, " RO");
-			if (dbs->db_flags & DLPCMD_DBFLAG_APPDIRTY) fprintf(stderr, " APPDIRTY");
-			if (dbs->db_flags & DLPCMD_DBFLAG_BACKUP) fprintf(stderr, " BACKUP");
-			if (dbs->db_flags & DLPCMD_DBFLAG_OKNEWER) fprintf(stderr, " OKNEWER");
-			if (dbs->db_flags & DLPCMD_DBFLAG_RESET) fprintf(stderr, " RESET");
-			if (dbs->db_flags & DLPCMD_DBFLAG_OPEN) fprintf(stderr, " OPEN");
-			fprintf(stderr, "\n");
-			fprintf(stderr, "\ttype '%c%c%c%c' (0x%08lx), creator '%c%c%c%c' (0x%08lx), version %d, modnum %ld\n",
-				(char) (dbs->type >> 24) & 0xff,
-				(char) (dbs->type >> 16) & 0xff,
-				(char) (dbs->type >> 8) & 0xff,
-				(char) dbs->type & 0xff,
-				dbs->type,
-				(char) (dbs->creator >> 24) & 0xff,
-				(char) (dbs->creator >> 16) & 0xff,
-				(char) (dbs->creator >> 8) & 0xff,
-				(char) dbs->creator & 0xff,
-				dbs->creator,
-				dbs->version,
-				dbs->modnum);
-			fprintf(stderr, "\tCreated %02d:%02d:%02d, %d/%d/%d\n",
-				dbs->ctime.hour,
-				dbs->ctime.minute,
-				dbs->ctime.second,
-				dbs->ctime.day,
-				dbs->ctime.month,
-				dbs->ctime.year);
-			fprintf(stderr, "\tModified %02d:%02d:%02d, %d/%d/%d\n",
-				dbs->mtime.hour,
-				dbs->mtime.minute,
-				dbs->mtime.second,
-				dbs->mtime.day,
-				dbs->mtime.month,
-				dbs->mtime.year);
-			fprintf(stderr, "\tBacked up %02d:%02d:%02d, %d/%d/%d\n",
-				dbs->baktime.hour,
-				dbs->baktime.minute,
-				dbs->baktime.second,
-				dbs->baktime.day,
-				dbs->baktime.month,
-				dbs->baktime.year);
-			fprintf(stderr, "\tindex %d\n",
-				dbs->index);
-			fprintf(stderr, "\tName: \"%s\"\n",
-				dbs->name);
+#ifdef DLPC_DEBUG
+			if (dlpc_debug >= 5)
+			{
+				fprintf(stderr, "Database info:\n");
+				fprintf(stderr, "\tsize %d, misc flags 0x%02x,"
+					" DB flags 0x%04x\n",
+					dbs->size,
+					dbs->misc_flags,
+					dbs->db_flags);
+				fprintf(stderr, "\tDB flags:");
+				if (dbs->db_flags & DLPCMD_DBFLAG_RESDB)
+					fprintf(stderr, " RESDB");
+				if (dbs->db_flags & DLPCMD_DBFLAG_RO)
+					fprintf(stderr, " RO");
+				if (dbs->db_flags & DLPCMD_DBFLAG_APPDIRTY)
+					fprintf(stderr, " APPDIRTY");
+				if (dbs->db_flags & DLPCMD_DBFLAG_BACKUP)
+					fprintf(stderr, " BACKUP");
+				if (dbs->db_flags & DLPCMD_DBFLAG_OKNEWER)
+					fprintf(stderr, " OKNEWER");
+				if (dbs->db_flags & DLPCMD_DBFLAG_RESET)
+					fprintf(stderr, " RESET");
+				if (dbs->db_flags & DLPCMD_DBFLAG_OPEN)
+					fprintf(stderr, " OPEN");
+				fprintf(stderr, "\n");
+				fprintf(stderr, "\ttype '%c%c%c%c' (0x%08lx), "
+					"creator '%c%c%c%c' (0x%08lx), "
+					"version %d, modnum %ld\n",
+					(char) (dbs->type >> 24) & 0xff,
+					(char) (dbs->type >> 16) & 0xff,
+					(char) (dbs->type >> 8) & 0xff,
+					(char) dbs->type & 0xff,
+					dbs->type,
+					(char) (dbs->creator >> 24) & 0xff,
+					(char) (dbs->creator >> 16) & 0xff,
+					(char) (dbs->creator >> 8) & 0xff,
+					(char) dbs->creator & 0xff,
+					dbs->creator,
+					dbs->version,
+					dbs->modnum);
+				fprintf(stderr, "\tCreated %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					dbs->ctime.hour,
+					dbs->ctime.minute,
+					dbs->ctime.second,
+					dbs->ctime.day,
+					dbs->ctime.month,
+					dbs->ctime.year);
+				fprintf(stderr, "\tModified %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					dbs->mtime.hour,
+					dbs->mtime.minute,
+					dbs->mtime.second,
+					dbs->mtime.day,
+					dbs->mtime.month,
+					dbs->mtime.year);
+				fprintf(stderr, "\tBacked up %02d:%02d:%02d, "
+					"%d/%d/%d\n",
+					dbs->baktime.hour,
+					dbs->baktime.minute,
+					dbs->baktime.second,
+					dbs->baktime.day,
+					dbs->baktime.month,
+					dbs->baktime.year);
+				fprintf(stderr, "\tindex %d\n",
+					dbs->index);
+				fprintf(stderr, "\tName: \"%s\"\n",
+					dbs->name);
+			}
+#endif	/* DLPC_DEBUG */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1180,14 +1199,14 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 }
 
 /* DlpWriteAppBlock
- * XXX - The API probably needs to be reworked.
+ * Write the AppInfo block for a database.
  */
 int
-DlpWriteAppBlock(struct PConnection *pconn,	/* File descriptor */
-		 const struct dlp_appblock *appblock,
-				/* Application block descriptor */
-		 const ubyte *data)
-				/* The data to write */
+DlpWriteAppBlock(struct PConnection *pconn,	/* Connection */
+		 const ubyte handle,	/* Handle */
+		 const uword offset,	/* Offset at which to start writing */
+		 const uword len,	/* Length of data */
+		 const ubyte *data)	/* The data to write */
 {
 	int i;
 	int err;
@@ -1201,19 +1220,26 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* File descriptor */
 
 	DLPC_TRACE(1, ">>> WriteAppBlock\n");
 
+if (DLPARGLEN_WriteAppBlock_Block + len > 1024)
+{
+fprintf(stderr, "##### I can't send this AppInfo block: it's too big\n");
+return -1;
+}
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteAppBlock;
 	header.argc = 1;
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, appblock->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Unused */
-	put_uword(&wptr, appblock->len);
+	put_uword(&wptr, len);
+	memcpy(wptr, data, len);
+	wptr += len;
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteAppBlock_Block;
-	argv[0].size = DLPARGLEN_WriteAppBlock_Block + appblock->len;
+	argv[0].size = DLPARGLEN_WriteAppBlock_Block + len;
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
@@ -1255,15 +1281,12 @@ DlpWriteAppBlock(struct PConnection *pconn,	/* File descriptor */
  * XXX - Not terribly well-tested.
  */
 int
-DlpReadSortBlock(struct PConnection *pconn,	/* File descriptor */
-/*  		 struct dlp_sortblock *sortblock, */
-				/* Sort block descriptor */
+DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 		 const ubyte handle,	/* Database handle */
 		 const uword offset,	/* Where to start reading */
 		 const uword len,	/* Max # bytes to read */
 		 uword *size,		/* # bytes read returned here */
-		 const ubyte **data)
-					/* Set to the data read */
+		 const ubyte **data)	/* Set to the data read */
 {
 	int i;
 	int err;
@@ -1338,15 +1361,16 @@ DlpReadSortBlock(struct PConnection *pconn,	/* File descriptor */
 
 /* DlpWriteSortBlock
  * Write the database's sort block.
- * XXX - The API probably needs to be reworked.
  * XXX - Not terribly well-tested.
  */
 int
 DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
-		  const struct dlp_sortblock *sortblock,
+/*  		  const struct dlp_sortblock *sortblock, */
 				/* Sort block descriptor */
-		  const ubyte *data)
-				/* The data to write */
+		  const ubyte handle,	/* Handle */
+		  const uword offset,	/* Offset at which to start writing */
+		  const uword len,	/* Length of data */
+		  const ubyte *data)	/* The data to write */
 {
 	int i;
 	int err;
@@ -1359,6 +1383,11 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
 	DLPC_TRACE(1, ">>> WriteSortBlock\n");
+if (DLPARGLEN_WriteSortBlock_Block + len > 1024)
+{
+fprintf(stderr, "##### I can't send this sort block: it's too big\n");
+return -1;
+}
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteSortBlock;
@@ -1366,13 +1395,15 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, sortblock->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, 0);		/* Unused */
-	put_uword(&wptr, sortblock->len);
+	put_uword(&wptr, len);
+	memcpy(wptr, data, len);
+	wptr += len;
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteSortBlock_Block;
-	argv[0].size = DLPARGLEN_WriteSortBlock_Block + sortblock->len;
+	argv[0].size = DLPARGLEN_WriteSortBlock_Block + len;
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
@@ -1417,11 +1448,12 @@ DlpWriteSortBlock(struct PConnection *pconn,	/* File descriptor */
  * XXX - The caller needs access to this.
  */
 int
-DlpReadNextModifiedRec(struct PConnection *pconn,	/* File descriptor */
-		       const ubyte handle,
-				/* Database ID (handle) */
-		       struct dlp_readrecret *record)
+DlpReadNextModifiedRec(
+	struct PConnection *pconn,	/* File descriptor */
+	const ubyte handle,		/* Database ID (handle) */
 				/* Record will be put here */
+	struct dlp_recinfo *recinfo,
+	const ubyte **data)
 {
 	int i;
 	int err;
@@ -1441,7 +1473,7 @@ DlpReadNextModifiedRec(struct PConnection *pconn,	/* File descriptor */
 	/* Fill in the argument */
 	argv[0].id = DLPARG_ReadNextModifiedRec_Req;
 	argv[0].size = DLPARGLEN_ReadNextModifiedRec_Req;
-	argv[0].data = (void *) &handle/*outbuf*/;
+	argv[0].data = (void *) &handle;
 
 	/* Send the DLP request */
 	err = dlp_send_req(pconn, &header, argv);
@@ -1470,21 +1502,27 @@ DlpReadNextModifiedRec(struct PConnection *pconn,	/* File descriptor */
 		switch (ret_argv[i].id)
 		{
 		    case DLPRET_ReadNextModifiedRec_Rec:
-			record->recid = get_udword(&rptr);
-			record->index = get_uword(&rptr);
-			record->size = get_uword(&rptr);
-			record->attributes = get_ubyte(&rptr);
-			record->category = get_ubyte(&rptr);
-			record->data = rptr;
+			recinfo->id = get_udword(&rptr);
+			recinfo->index = get_uword(&rptr);
+			recinfo->size = get_uword(&rptr);
+			recinfo->attributes = get_ubyte(&rptr);
+			recinfo->category = get_ubyte(&rptr);
+			*data = rptr;
 
 			DLPC_TRACE(6, "Read a record (by ID):\n");
-			DLPC_TRACE(6, "\tID == 0x%08lx\n", record->recid);
-			DLPC_TRACE(6, "\tindex == 0x%04x\n", record->index);
-			DLPC_TRACE(6, "\tsize == 0x%04x\n", record->size);
+			DLPC_TRACE(6, "\tID == 0x%08lx\n", recinfo->id);
+			DLPC_TRACE(6, "\tindex == 0x%04x\n", recinfo->index);
+			DLPC_TRACE(6, "\tsize == 0x%04x\n", recinfo->size);
 			DLPC_TRACE(6, "\tattributes == 0x%02x\n",
-				   record->attributes);
+				   recinfo->attributes);
 			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
-				   record->category);
+				   recinfo->category);
+#ifdef DLPC_DEBUG
+			if (dlpc_debug >= 10)
+				debug_dump(stderr, "REC",
+					   *data,
+					   recinfo->size);
+#endif	/* DLPC_DEBUG */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1580,6 +1618,11 @@ DlpReadRecordByID(struct PConnection *pconn,	/* File descriptor */
 				   recinfo->attributes);
 			DLPC_TRACE(6, "\tcategory == 0x%02x\n",
 				   recinfo->category);
+#ifdef DLPC_DEBUG
+			DLPC_TRACE(10, "\tdata:\n");
+			if (dlpc_debug >= 10)
+				debug_dump(stderr, "RR", *data, recinfo->size);
+#endif	/* DLPC_DEBUG */
 			break;
 		    default:	/* Unknown argument type */
 			fprintf(stderr, "##### Unknown argument type: 0x%02x\n",
@@ -1699,11 +1742,13 @@ DlpReadRecordByIndex(struct PConnection *pconn,	/* File descriptor */
  * from another database, but not create a new one myself.
  */
 int
-DlpWriteRecord(struct PConnection *pconn,		/* File descriptor */
-	       const udword len,	/* Length of record data */
+DlpWriteRecord(struct PConnection *pconn,	/* Connection */
+	       const ubyte handle,	/* Database handle */
 	       const struct dlp_writerec *rec,
-				/* Record descriptor */
-	       udword *recid)	/* Record ID returned here */
+					/* Record descriptor */
+	       const udword len,	/* Length of record data */
+	       const ubyte *data,	/* Record data */
+	       udword *recid)		/* Record ID returned here */
 {
 	int i;
 	int err;
@@ -1718,12 +1763,18 @@ DlpWriteRecord(struct PConnection *pconn,		/* File descriptor */
 
 	DLPC_TRACE(1, ">>> WriteRecord: dbid %d, flags 0x%02x, "
 		   "recid 0x%08lx, attr 0x%02x, category %d, len %ld\n",
-		   rec->dbid,
+		   handle/*rec->dbid*/,
 		   rec->flags,
 		   rec->recid,
 		   rec->attributes,
 		   rec->category,
 		   len);
+	DLPC_TRACE(10, "Raw record data (%ld == 0x%04lx bytes):\n",
+		   len, len);
+#ifdef DLPC_DEBUG
+	if (dlpc_debug >= 10)
+		debug_dump(stderr, "WR", data, len);
+#endif	/* DLPC_DEBUG */
 
 	/* Fill in the header values */
 	header.id = DLPCMD_WriteRecord;
@@ -1731,12 +1782,16 @@ DlpWriteRecord(struct PConnection *pconn,		/* File descriptor */
 
 	/* Construct the argument */
 	wptr = outbuf;
-	put_ubyte(&wptr, rec->dbid);
+	put_ubyte(&wptr, handle);
 	put_ubyte(&wptr, rec->flags);
 	put_udword(&wptr, rec->recid);
 	put_ubyte(&wptr, rec->attributes);
+		/* XXX - According to Palm's documentation, only certain
+		 * flags are allowed here, and they vary by DLP version.
+		 */
+	put_ubyte(&wptr, rec->category);
 	/* XXX - Potential buffer overflow. Check this */
-	memcpy(wptr, rec->data, len);
+	memcpy(wptr, data, len);
 	wptr += len;
 
 	/* Fill in the argument */
@@ -1752,7 +1807,8 @@ DlpWriteRecord(struct PConnection *pconn,		/* File descriptor */
 	DLPC_TRACE(10, "DlpWriteRecord: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteRecord,
+			    &resp_header, &ret_argv);
 	if (err < 0)
 		return err;
 
@@ -2074,10 +2130,12 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 	struct dlp_resp_header resp_header;	/* Response header */
 	struct dlp_arg argv[1];		/* Request argument list */
 	const struct dlp_arg *ret_argv;	/* Response argument list */
-	static ubyte outbuf[2048];	/* Output buffer */
+/*	static ubyte outbuf[2048];*/	/* Output buffer */
 					/* XXX - Fixed size: bad! */
+ubyte *outbuf;
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 
+fprintf(stderr, "DlpWriteResource: fd == %d\n", pconn->fd);
 	DLPC_TRACE(1, "WriteResource: type '%c%c%c%c' (0x%08lx), id %d, "
 		   "size %d\n",
 		   (char) (type >> 24) & 0xff,
@@ -2092,6 +2150,11 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 	header.argc = 1;
 
 	/* Construct the argument */
+if ((outbuf = (ubyte *) malloc(DLPARGLEN_WriteResource_Rsrc+size)) == NULL)
+{
+fprintf(stderr, "Out of memory\n");
+return -1;
+}
 	wptr = outbuf;
 	put_ubyte(&wptr, dbid);
 	put_ubyte(&wptr, 0);		/* Padding */
@@ -2101,6 +2164,8 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 	/* XXX - Potential buffer overflow */
 	memcpy(wptr, data, size);
 	wptr += size;
+fprintf(stderr, "DlpWriteResource 2: fd == %d\n", pconn->fd);
+fprintf(stderr, "DlpWriteResource: writing %d bytes\n", wptr-outbuf);
 
 	/* Fill in the argument */
 	argv[0].id = DLPARG_WriteResource_Rsrc;
@@ -2108,23 +2173,36 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 	argv[0].data = outbuf;
 
 	/* Send the DLP request */
+fprintf(stderr, "DlpWriteResource 3: fd == %d\n", pconn->fd);
 	err = dlp_send_req(pconn, &header, argv);
+fprintf(stderr, "DlpWriteResource 4: fd == %d\n", pconn->fd);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
 
 	DLPC_TRACE(10, "DlpWriteResource: waiting for response\n");
 
 	/* Get a response */
-	err = dlp_recv_resp(pconn, DLPCMD_WriteResource, &resp_header, &ret_argv);
+	err = dlp_recv_resp(pconn, DLPCMD_WriteResource,
+			    &resp_header, &ret_argv);
+fprintf(stderr, "DlpWriteResource: dlp_recv_resp() returned %d\n", err);
 	if (err < 0)
+	{
+		free(outbuf);
 		return err;
+	}
 
 	DLPC_TRACE(2, "Got response, id 0x%02x, args %d, status %d\n",
 		   resp_header.id,
 		   resp_header.argc,
 		   resp_header.errno);
 	if (resp_header.errno != DLPSTAT_NOERR)
+	{
+		free(outbuf);
 		return resp_header.errno;
+	}
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2138,6 +2216,7 @@ DlpWriteResource(struct PConnection *pconn,		/* File descriptor */
 		}
 	}
 
+free(outbuf);
 	return 0;		/* Success */
 }
 
