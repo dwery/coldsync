@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.73 2002-11-23 16:30:55 azummo Exp $
+ * $Id: parser.y,v 2.74 2003-06-26 21:01:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -99,6 +99,7 @@ static struct sync_config *file_config;	/* As the parser runs, it will fill
 %token NOPROMPT
 %token TYPE
 %token UNSAVED
+%token USE_CARD_SERIAL
 
 %token SERIAL
 %token USB
@@ -946,6 +947,18 @@ option:	FORCE_INSTALL colon boolean ';'
 		PARSE_TRACE(3)
 			fprintf(stderr, "Option: filter_dbs.\n");
 		file_config->options.filter_dbs = True3;
+	}
+	| USE_CARD_SERIAL colon boolean ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: use_card_serial.\n");
+		file_config->options.use_card_serial = $3;
+	}
+	| USE_CARD_SERIAL ';'
+	{
+		PARSE_TRACE(3)
+			fprintf(stderr, "Option: use_card_serial.\n");
+		file_config->options.use_card_serial = True3;
 	}
 	| HOSTID colon NUMBER semicolon
 	{

@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palmconn.c,v 2.6 2002-11-02 12:51:18 azummo Exp $
+ * $Id: palmconn.c,v 2.7 2003-06-26 21:01:07 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -147,6 +147,11 @@ palm_Connect( void )
 		Disconnect(pconn, DLPCMD_SYNCEND_CANCEL);
 		return NULL;
 	}
+
+	/* Check if we should enable the read_serial_num_from_expcard hack */
+	
+	if (global_opts.use_card_serial == True3)
+		palm_serial_hack(palm, 1);
 
 	return palm;
 }

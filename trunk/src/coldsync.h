@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.74 2002-12-28 23:56:02 azummo Exp $
+ * $Id: coldsync.h,v 1.75 2003-06-26 21:01:07 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -101,6 +101,11 @@ struct cmd_opts {
 				 * ~/.palm/install, even if the modnum of
 				 * the database to be installed is smaller
 				 * than that of the existing database.
+				 */
+	Bool3 use_card_serial;	/* If true, coldsync will try to retrieve a valid
+				 * serial number from the SD/MMC card if the
+				 * Palm has no internal serial number
+				 * (m125, Zire71)
 				 */
 	int verbosity;		/* Level of verbosity. This is different
 				 * from debugging messages, in that
@@ -326,6 +331,12 @@ struct sync_config {
 		Bool3 filter_dbs;	/* If true, coldsync will retrieve from the pda
 					 * only the dbs specified in the conduit blocks.
 					 */
+		Bool3 use_card_serial;	/* If true, coldsync will try to retrieve a valid
+					 * serial number from the SD/MMC card if the
+					 * Palm has no internal serial number
+					 * (m125, Zire71)
+					 */
+
 		/* XXX - Perhaps allow "final" here, so that the sysadmin
 		 * can lock options in place.
 		 */
