@@ -2,7 +2,7 @@
 #
 # Top-level Makefile
 #
-# $Id: Makefile,v 1.23 2004-11-02 04:27:00 christophe Exp $
+# $Id: Makefile,v 1.24 2004-11-02 04:47:10 christophe Exp $
 
 # In each Makefile, ${TOP} is the top of the source tree. ${SUBDIR} is the
 # path to the current directory, relative to ${TOP}. These two variables
@@ -92,9 +92,6 @@ snapshot:	distfiles-core
 	GZIP="--best" ${TAR} chozf "${PACKAGE}-${VERSION}-$${date}.tar.gz" \
 		${TOPDISTDIR}
 	rm -rf ${TOPDISTDIR}
-
-buildfiles:
-	find ${DESTDIR} -type f | sed s+${DESTDIR}+/+g > buildfiles
 
 spotless::
 	rm -rf ${TOPDISTDIR} autom4te.cache
