@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColdSync 2.1.3\n"
-"POT-Creation-Date: 2001-12-07 00:00+0100\n"
+"POT-Creation-Date: 2001-12-07 08:53-0500\n"
 "PO-Revision-Date: 2001-12-07 00:01+0100\n"
 "Last-Translator: Petr Kubánek <petr@kubanek.net>\n"
 "Language-Team: cs <cs@li.org>\n"
@@ -13,43 +13,136 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-2\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/parser.y:293 ../src/parser.y:520 ../src/parser.y:993
+#: ../src/config.c:819
+msgid "\t-F:\t\tForce fast sync.\n"
+msgstr "\t-F:\t\tVynutí rychlou synchronizaci.\n"
+
+#: ../src/config.c:817
+msgid "\t-I:\t\tForce installation of new databases.\n"
+msgstr "\t-I:\t\tVynutí nainstaci nových databází.\n"
+
+#: ../src/config.c:823
+msgid "\t-P <protocol>:\tSoftware protocol [default|full|simple|net].\n"
+msgstr ""
+
+#: ../src/config.c:820
+msgid "\t-R:\t\tCheck ROM databases.\n"
+msgstr "\t-R:\t\tProvìøí ROM databázi.\n"
+
+#: ../src/config.c:818
+msgid "\t-S:\t\tForce slow sync.\n"
+msgstr "\t-S:\t\tVynutí pomalou synchronizaci.\n"
+
+#: ../src/config.c:814
+msgid "\t-V:\t\tPrint version and exit.\n"
+msgstr "\t-V:\t\tVytiskne verzi a skonèí.\n"
+
+#: ../src/config.c:829
+msgid "\t-d <fac[:level]>:\tSet debugging level.\n"
+msgstr "\t-d <fact[:level]>:Nastaví debugging level.\n"
+
+#: ../src/config.c:815
+msgid "\t-f <file>:\tRead configuration from <file>\n"
+msgstr "\t-f <file>:\tNaète konfiguraci ze souboru <file>\n"
+
+#: ../src/config.c:813
+msgid "\t-h:\t\tPrint this help message and exit.\n"
+msgstr "\t-h:\t\tVytiskne tuto nápovìdu a skonèí.\n"
+
+#: ../src/config.c:826
+msgid "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
+msgstr "\t-l: <soubor>:\tZapí¹e logovací/debugovací zprávy do <soubor>u.\n"
+
+#: ../src/config.c:807
+msgid "\t-mI:\tInitialize.\n"
+msgstr "\t-mI:\tInicializuj Palma.\n"
+
+#: ../src/config.c:808
+msgid ""
+"\t-mb <dir> [database...]\n"
+"\t\tPerform a backup to <dir>.\n"
+msgstr "\t-mb <dir> [databáze...]\n"
+"\t\tZazálohuj databáze do <dir>.\n"
+
+#: ../src/config.c:810
+msgid ""
+"\t-mr <file|dir>...\n"
+"\t\tRestore or install new databases.\n"
+msgstr "\t-mr <file|dir>...\n"
+"\t\tObnov data nebo nainstaluj nové databáze.\n"
+
+#: ../src/config.c:806
+msgid "\t-ms:\tSynchronize (default).\n"
+msgstr "\t-ms:\tSynchronizuj (defaultní).\n"
+
+#: ../src/config.c:821
+msgid "\t-p <port>:\tListen on device <port>.\n"
+msgstr "\t-p <port>:\tBude naslouchat zaøízení na <port>u.\n"
+
+#: ../src/config.c:825
+msgid "\t-s:\t\tLog error messages to syslog.\n"
+msgstr "\t-s:\t\tZaloguje chybové zprávy do syslogu.\n"
+
+#: ../src/config.c:822
+msgid "\t-t <devtype>:\tPort type [serial|usb|net].\n"
+msgstr "\t-t <devtype>:\tTyp portu [serial|usb|net].\n"
+
+#: ../src/config.c:828
+msgid "\t-v:\t\tIncrease verbosity.\n"
+msgstr "\t-v:\t\tZvìt¹í mno¾ství informací od programu.\n"
+
+#: ../src/config.c:816
+msgid "\t-z:\t\tInstall databases after sync.\n"
+msgstr "\t-z:\t\tPo dokonèení synchronizace nainstaluje na Palm\n"
+"\t\t\t\tnové databáze.\n"
+
+#: ../src/parser.y:326 ../src/parser.y:584 ../src/parser.y:1128
 #, c-format
 msgid "\tError near \"%s\"."
 msgstr "\tChyba v okolí \"%s\"."
 
-#: ../src/parser.y:1029
+#: ../src/parser.y:1157
 msgid "\tMissing ':'."
 msgstr "\tChybí ':'."
 
-#: ../src/parser.y:1044
+#: ../src/parser.y:1174
 msgid "\tMissing ';'."
 msgstr "\tChybí ';'."
 
-#: ../src/parser.y:1037
+#: ../src/parser.y:1166
 msgid "\tMissing '{'."
 msgstr "\tChybí '{'."
 
-#: ../src/parser.y:685
+#: ../src/parser.y:749
 #, c-format
 msgid "\tMissing argument name near \": %s\"."
 msgstr "\tChybìjící jméno argumentu poblí¾ \": %s\"."
 
-#: ../src/parser.y:232
+#: ../src/parser.y:247
 msgid "\tMissing listen block type."
 msgstr "\tChybí typ listen blocku."
 
-#: ../src/parser.y:381
+#: ../src/parser.y:821
+#, fuzzy, c-format
+msgid "\tMissing option name near \"%s\"."
+msgstr "Chybí argument optionu po \"%s\"."
+
+#: ../src/parser.y:414
 #, c-format
 msgid "\tUnrecognized conduit flavor \"%s\"."
 msgstr "\tNerozpoznaný druh conduitu \"%s\"."
 
-#: ../src/parser.y:234
+#: ../src/parser.y:249
 #, c-format
 msgid "\tUnrecognized listen type \"%s\"."
 msgstr "\tNerozponaný druh naslouchání \"%s\"."
 
-#: ../src/config.c:796
+#: ../src/parser.y:448
+#, fuzzy, c-format
+msgid "\tUnrecognized protocol: \"%s\"."
+msgstr "Nerozpoznaná optiona: \"%s\"."
+
+#: ../src/config.c:874
 #, c-format
 msgid ""
 "\n"
@@ -58,7 +151,7 @@ msgstr ""
 "\n"
 "    Defaultní globální konfiguraèní soubor: %s\n"
 
-#: ../src/coldsync.c:438
+#: ../src/coldsync.c:386
 #, c-format
 msgid ""
 "\n"
@@ -67,7 +160,7 @@ msgstr ""
 "\n"
 "Log zavøen v %s"
 
-#: ../src/coldsync.c:1863
+#: ../src/coldsync.c:1824
 msgid ""
 "\n"
 "This Palm already has user information that matches neither what's in your\n"
@@ -86,7 +179,7 @@ msgstr ""
 "Vá¹ .coldsyncrc by mìl obsahovat variaci na následující text:\n"
 "\n"
 
-#: ../src/config.c:792
+#: ../src/config.c:869
 msgid ""
 "    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
 "        to case, whenever possible.\n"
@@ -94,61 +187,57 @@ msgstr ""
 "    HAVE_STRCASECMP, HAVE_STRNCASECMP: øetìzce jsou porovnávány bez ohledu\n"
 "        na velikost, kdykoliv je to mo¾né.\n"
 
-#: ../src/config.c:787
+#: ../src/config.c:864
 msgid "    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"
 msgstr ""
 "    WITH_EFENCE: pøeteèení zásobníku zpùsobí chybu stránkování \n"
 "             (segment violation).\n"
 
-#: ../src/config.c:783
+#: ../src/config.c:860
 msgid "    WITH_USB: USB support.\n"
 msgstr "    WITH_USB: podporuje USB zaøízení.\n"
 
-#: ../src/GenericConduit.cc:242
-msgid " (1st) - "
-msgstr " (1.) - "
+#: ../libpdb/pdb.c:546
+#, fuzzy, c-format
+msgid "\"%.*s\" record 0x%08lx has length 0.\n"
+msgstr "%s záznam 0x%08lx má nulovou délku.\n"
 
-#: ../src/coldsync.c:1283
+#: ../src/coldsync.c:1312
 #, c-format
 msgid "\"%s\" exists, but is not a directory."
 msgstr "\"%s\" existuje, ale není adresáøem."
 
-#: ../src/restore.c:101
-#, c-format
-msgid "\"%s\" is a read-only database. Not uploading."
-msgstr "Databáze \"%s\" je pøístupná pouze pro ètení. Nenahrávám ji."
-
-#: ../libpconn/dlp_cmd.c:1491 ../libpconn/dlp_cmd.c:1580
-#: ../libpconn/dlp_cmd.c:1671 ../libpconn/dlp_cmd.c:1773
-#: ../libpconn/dlp_cmd.c:2323 ../libpconn/dlp_cmd.c:2761
-#: ../libpconn/dlp_cmd.c:2915 ../libpconn/dlp_cmd.c:2974
-#: ../libpconn/dlp_cmd.c:3057 ../libpconn/dlp_cmd.c:3129
-#: ../libpconn/dlp_cmd.c:3206 ../libpconn/dlp_cmd.c:3265
-#: ../libpconn/dlp_cmd.c:3333 ../libpconn/dlp_cmd.c:3400
-#: ../libpconn/dlp_cmd.c:3524 ../libpconn/dlp_cmd.c:3633
-#: ../libpconn/dlp_cmd.c:3744 ../libpconn/dlp_cmd.c:3851
-#: ../libpconn/dlp_cmd.c:3948 ../libpconn/dlp_cmd.c:4060
-#: ../libpconn/dlp_cmd.c:4173
+#: ../libpconn/dlp_cmd.c:1517 ../libpconn/dlp_cmd.c:1606
+#: ../libpconn/dlp_cmd.c:1697 ../libpconn/dlp_cmd.c:1799
+#: ../libpconn/dlp_cmd.c:2352 ../libpconn/dlp_cmd.c:2792
+#: ../libpconn/dlp_cmd.c:2946 ../libpconn/dlp_cmd.c:3005
+#: ../libpconn/dlp_cmd.c:3092 ../libpconn/dlp_cmd.c:3164
+#: ../libpconn/dlp_cmd.c:3241 ../libpconn/dlp_cmd.c:3300
+#: ../libpconn/dlp_cmd.c:3369 ../libpconn/dlp_cmd.c:3436
+#: ../libpconn/dlp_cmd.c:3560 ../libpconn/dlp_cmd.c:3670
+#: ../libpconn/dlp_cmd.c:3782 ../libpconn/dlp_cmd.c:3889
+#: ../libpconn/dlp_cmd.c:3986 ../libpconn/dlp_cmd.c:4098
+#: ../libpconn/dlp_cmd.c:4213
 #, c-format
 msgid "##### %s: Unknown argument type: 0x%02x\n"
 msgstr "##### %s: Neznámý typ argumentu: 0x%02x\n"
 
-#: ../libpconn/dlp_cmd.c:205 ../libpconn/dlp_cmd.c:308
-#: ../libpconn/dlp_cmd.c:415 ../libpconn/dlp_cmd.c:484
-#: ../libpconn/dlp_cmd.c:562 ../libpconn/dlp_cmd.c:699
-#: ../libpconn/dlp_cmd.c:932 ../libpconn/dlp_cmd.c:1034
-#: ../libpconn/dlp_cmd.c:1140 ../libpconn/dlp_cmd.c:1219
-#: ../libpconn/dlp_cmd.c:1302 ../libpconn/dlp_cmd.c:1400
-#: ../libpconn/dlp_cmd.c:1887 ../libpconn/dlp_cmd.c:2003
-#: ../libpconn/dlp_cmd.c:2132 ../libpconn/dlp_cmd.c:2217
-#: ../libpconn/dlp_cmd.c:2436 ../libpconn/dlp_cmd.c:2540
-#: ../libpconn/dlp_cmd.c:2627 ../libpconn/dlp_cmd.c:2695
-#: ../libpconn/dlp_cmd.c:4269
+#: ../libpconn/dlp_cmd.c:218 ../libpconn/dlp_cmd.c:322
+#: ../libpconn/dlp_cmd.c:432 ../libpconn/dlp_cmd.c:501
+#: ../libpconn/dlp_cmd.c:579 ../libpconn/dlp_cmd.c:716
+#: ../libpconn/dlp_cmd.c:950 ../libpconn/dlp_cmd.c:1053
+#: ../libpconn/dlp_cmd.c:1160 ../libpconn/dlp_cmd.c:1244
+#: ../libpconn/dlp_cmd.c:1328 ../libpconn/dlp_cmd.c:1426
+#: ../libpconn/dlp_cmd.c:1914 ../libpconn/dlp_cmd.c:2031
+#: ../libpconn/dlp_cmd.c:2160 ../libpconn/dlp_cmd.c:2246
+#: ../libpconn/dlp_cmd.c:2466 ../libpconn/dlp_cmd.c:2570
+#: ../libpconn/dlp_cmd.c:2657 ../libpconn/dlp_cmd.c:2726
+#: ../libpconn/dlp_cmd.c:4309
 #, c-format
 msgid "##### %s: Unknown argument type: 0x%02x.\n"
 msgstr "##### %s: Neznámý typ argumentu: 0x%02x.\n"
 
-#: ../libpconn/padp.c:479
+#: ../libpconn/padp.c:484
 #, c-format
 msgid "##### Bad offset: wanted %d, got %d.\n"
 msgstr "##### ©patný offset: po¾adováno %d, obdr¾eno %d.\n"
@@ -158,7 +247,7 @@ msgstr "##### ©patný offset: po¾adováno %d, obdr¾eno %d.\n"
 msgid "##### Bad response ID: expected 0x%02x, got 0x%02x.\n"
 msgstr "##### ©patné ID odpovìdi: oèekáváno 0x%02x, obdr¾eno 0x%02x.\n"
 
-#: ../libpconn/padp.c:791
+#: ../libpconn/padp.c:802
 #, c-format
 msgid "##### Expected XID 0x%02x, got 0x%02x.\n"
 msgstr "##### Oèekáváno XID 0x%02x, obdr¾eno 0x%02x.\n"
@@ -167,66 +256,82 @@ msgstr "##### Oèekáváno XID 0x%02x, obdr¾eno 0x%02x.\n"
 msgid "##### Expected a DLP response, but this isn't one!\n"
 msgstr "##### Oèekávána DLP odpovìï, ale ¾ádnou jsem nedostal!\n"
 
-#: ../libpconn/padp.c:724
+#: ../libpconn/padp.c:729
 msgid "##### Got an unexpected data packet. Sending an ACK to shut it up.\n"
 msgstr ""
 "##### Obdr¾en neoèekávaný datový paket. Posílám ACK na jeho ukonèení.\n"
 
-#: ../libpconn/padp.c:198 ../libpconn/padp.c:441
+#: ../libpconn/padp.c:198 ../libpconn/padp.c:446
 msgid "##### I just got an unexpected ACK. I'm confused!\n"
 msgstr "##### Právì jsem obdr¾el neoèekávané ACK. Jsem z nìho zmatený!\n"
 
-#: ../libpconn/padp.c:466
+#: ../libpconn/padp.c:471
 msgid "##### I wasn't expecting a new fragment. I'm confused!\n"
 msgstr "##### Opravdu jsem neoèekával nový fragment. Jsem z nìho zmatený!\n"
 
-#: ../libpconn/padp.c:212 ../libpconn/padp.c:456 ../libpconn/padp.c:779
+#: ../libpconn/padp.c:217 ../libpconn/padp.c:461 ../libpconn/padp.c:790
 #, c-format
 msgid "##### Unexpected packet type %d.\n"
 msgstr "##### Neoèekávaný typ paketu %d.\n"
 
-#: ../libpdb/pdb.c:510
+#: lexer.l:459
 #, c-format
-msgid "%s record 0x%08lx has length 0.\n"
-msgstr "%s záznam 0x%08lx má nulovou délku.\n"
+msgid ""
+"%d: Unexpected character near \"%s\".\n"
+"    You probably meant \"$(%.*s)\".\n"
+msgstr ""
 
-#: ../src/config.c:768
+#: lexer.l:468
+#, c-format
+msgid ""
+"%d: Unexpected character near \"%s\".\n"
+"    You probably meant \"${%.*s}\".\n"
+msgstr ""
+
+#: lexer.l:473
+#, c-format
+msgid ""
+"%d: Unterminated variable reference near \"%s\".\n"
+"    You probably meant \"$(%.*s)\".\n"
+msgstr ""
+
+#: ../src/config.c:845
 #, c-format
 msgid "%s version %s.\n"
 msgstr "%s verze %s.\n"
 
-#: ../src/parser.y:549
+#: ../src/parser.y:613
 #, c-format
 msgid "%s: %d: Bogus creator \"%s\"."
 msgstr "%s: %d: Bogus vytvoøitel \"%s\"."
 
-#: ../src/parser.y:573
+#: ../src/parser.y:637
 #, c-format
 msgid "%s: %d: Bogus type \"%s\"."
 msgstr "%s: %d: Bogus typ \"%s\"."
 
-#: ../src/parser.y:430
+#: ../src/parser.y:497
 #, c-format
 msgid "%s: %d: Can't add creator-type pair to list. This is very bad."
 msgstr ""
 "%s: %d: Nemohu pøidat pár creator-typ do seznamu. To je opravdu velmi zlé."
 
-#: ../src/parser.y:488
+#: ../src/parser.y:552
 #, c-format
 msgid "%s: %d: Can't add preference to list. This is very bad."
 msgstr "%s: %d: Nemohu pøidat nastavení do seznamu. To je opravdu velmi zlé."
 
-#: ../src/parser.y:271
+#: ../src/parser.y:286
 #, c-format
 msgid "%s: %d: Device already defined."
 msgstr "%s: %d: Zaøízení bylo ji¾ navoleno."
 
-#: ../src/parser.y:895
+#: ../src/parser.y:1030
 #, c-format
 msgid "%s: %d: Directory already defined."
 msgstr "%s: %d: Adresáø byl ji¾ zvolen."
 
-#: ../src/parser.y:865
+#: ../src/parser.y:1000
 #, c-format
 msgid ""
 "%s: %d: Incorrect checksum\n"
@@ -235,23 +340,12 @@ msgstr ""
 "%s: %d: ©patný kontrolní souèet\n"
 "pro sériové èíslo \"%s-%c\". Mìl by být \"%s-%c\"."
 
-#: ../src/parser.y:1015
-#, c-format
-msgid ""
-"%s: %d: Missing ':'\n"
-"\tColons are now required after most directives.\n"
-"\t(This warning will only be shown once.)"
-msgstr ""
-"%s: %d: Postrádám ':'\n"
-"\tNyní jsou po vìt¹inì nastavení vy¾adovány støedníky.\n"
-"\t(Toto varování bude zobrazeno pouze jednou.)"
-
-#: ../src/parser.y:446
+#: ../src/parser.y:513
 #, c-format
 msgid "%s: %d: Path already defined."
 msgstr "%s: %d: Cesta byla ji¾ nastavena."
 
-#: ../src/parser.y:844
+#: ../src/parser.y:979
 #, c-format
 msgid ""
 "%s: %d: Serial number \"%s\" has no checksum.\n"
@@ -260,22 +354,22 @@ msgstr ""
 "%s: %d: Sériové èíslo \"%s\" nemá kontrolní souèet.\n"
 "Mo¾ná by jste ho mìli pøepsat na \"%s-%c\"."
 
-#: ../src/parser.y:813
+#: ../src/parser.y:948
 #, c-format
 msgid "%s: %d: Serial number already defined."
 msgstr "%s: %d: Sériové èíslo bylo ji¾ nastaveno."
 
-#: ../src/parser.y:285
+#: ../src/parser.y:300
 #, c-format
 msgid "%s: %d: Speed already defined."
 msgstr "%s: %d: Rychlost byla ji¾ zadána."
 
-#: ../src/parser.y:931
+#: ../src/parser.y:1066
 #, c-format
 msgid "%s: %d: Userid already defined."
 msgstr "%s: %d: Userid bylo ji¾ zadáno."
 
-#: ../src/parser.y:916
+#: ../src/parser.y:1051
 #, c-format
 msgid "%s: %d: Username already defined."
 msgstr "%s: %d: U¾ivatelské jméno bylo ji¾ zadáno."
@@ -285,178 +379,178 @@ msgstr "%s: %d: U¾ivatelské jméno bylo ji¾ zadáno."
 msgid "%s: Can't allocate %ld-byte buffer.\n"
 msgstr "%s: Nemohu naalokovat %ld-bytový buffer.\n"
 
-#: ../src/parser.y:708
+#: ../src/parser.y:843
 #, c-format
 msgid "%s: Can't allocate PDA block."
 msgstr "%s: Nemohu alokovat PDA blok."
 
-#: ../src/parser.y:643
+#: ../src/parser.y:707
 #, c-format
 msgid "%s: Can't allocate conduit header."
 msgstr "%s: Nemohu naalokovat hlavièku conduitu."
 
-#: ../src/parser.y:306
+#: ../src/parser.y:339
 #, c-format
 msgid "%s: Can't allocate conduit_block!"
 msgstr "%s: Nemohu naalokovat conduit_block!"
 
-#: ../src/parser.y:163
+#: ../src/parser.y:176
 #, c-format
 msgid "%s: Can't allocate listen block."
 msgstr "%s: Nemohu naalokovat listen block."
 
-#: ../src/GenericConduit.cc:1106
+#: ../src/GenericConduit.cc:1121
 #, c-format
 msgid "%s: Can't allocate new record."
 msgstr "%s: Nemohu naalokovat nový záznam."
 
-#: ../src/GenericConduit.cc:1205
+#: ../src/GenericConduit.cc:1221
 #, c-format
 msgid "%s: Can't append new record to database: %d."
 msgstr "%s: Nemohu pøidat nový záznam do databáze: %d."
 
-#: ../src/backup.c:210
+#: lexer.l:365
+#, fuzzy, c-format
+msgid "%s: Can't append to qstring."
+msgstr "%s: Nemohu vytvoøit kopii øetìzce."
+
+#: ../src/backup.c:716
 #, c-format
 msgid "%s: Can't back up \"%s\"."
 msgstr "%s: Nemohu zazálohovat \"%s\"."
 
-#: ../src/GenericConduit.cc:446 ../src/GenericConduit.cc:936
-#: ../src/GenericConduit.cc:1472
+#: ../src/GenericConduit.cc:448 ../src/GenericConduit.cc:948
+#: ../src/GenericConduit.cc:1490
 #, c-format
 msgid "%s: Can't clean up database: %d."
 msgstr "%s: Nemohu vyèistit databázi: %d."
 
-#: ../src/GenericConduit.cc:1940 ../src/GenericConduit.cc:1978
-#: ../src/GenericConduit.cc:2112
+#: ../src/GenericConduit.cc:1960 ../src/GenericConduit.cc:1998
+#: ../src/GenericConduit.cc:2132
 #, c-format
 msgid "%s: Can't copy record."
 msgstr "%s: Nemohu nakopírovat záznam."
 
-#: ../src/conduit.c:1386
+#: ../src/conduit.c:1540
 #, c-format
 msgid "%s: Can't create file handle to child's stdin."
 msgstr "%s: Nemohu vytvoøit file handle pro stdin potomka."
 
-#: ../src/conduit.c:1414
+#: ../src/conduit.c:1568
 #, c-format
 msgid "%s: Can't create file handle to child's stdout."
 msgstr "%s: Nemohu vytvoøit file handle pro stdout potomka."
 
-#: ../src/coldsync.c:3763 ../src/coldsync.c:3783
+#: ../src/coldsync.c:3680 ../src/coldsync.c:3700
 #, c-format
 msgid "%s: Can't create staging file \"%s\"."
 msgstr "%s: Nemohu vytvoøit staging file \"%s\"."
 
-#: ../src/coldsync.c:3773
+#: ../src/coldsync.c:3690
 #, c-format
 msgid "%s: Can't create staging file name."
 msgstr "%s: Nemohu vytvoøit jméno staging souboru."
 
-#: ../src/GenericConduit.cc:601
+#: ../src/GenericConduit.cc:608
 #, c-format
 msgid "%s: Can't download \"%s\"."
 msgstr "%s: Nemohu nahrát \"%s\"."
 
-#: ../src/conduit.c:1868
+#: ../src/conduit.c:2035
 #, c-format
 msgid "%s: Can't get child process status."
 msgstr "%s: Nemohu získat stav potomka."
 
-#: ../libpconn/PConnection_usb.c:389
+#: ../libpconn/PConnection_usb.c:505
 #, c-format
 msgid "%s: Can't get information about USB device.\n"
 msgstr "%s: Nemohu získat informace o USB zaøízení.\n"
 
-#: ../src/GenericConduit.cc:2074 ../src/GenericConduit.cc:2123
+#: ../src/GenericConduit.cc:2094 ../src/GenericConduit.cc:2143
 #, c-format
 msgid "%s: Can't insert record 0x%08lx."
 msgstr "%s: Nemohu vlo¾it záznam 0x%08lx."
 
-#: ../src/GenericConduit.cc:2456
+#: ../src/GenericConduit.cc:2505
 #, c-format
 msgid "%s: Can't load \"%s\"."
 msgstr "%s: Nemohu nahrát \"%s\"."
 
-#: ../src/install.c:79 ../src/install.c:335
+#: ../src/install.c:270 ../src/install.c:526
 #, c-format
 msgid "%s: Can't load database \"%s\"."
 msgstr "%s: Nemohu nahrát databázi \"%s\"."
 
-#: ../src/conduit.c:1432
+#: ../src/conduit.c:1586
 #, c-format
 msgid "%s: Can't make child's stdout be line-buffered."
 msgstr "%s: Nemohu zmìnit buffrování stdout potomka na linkové."
 
-#: lexer.l:120 lexer.l:133 lexer.l:255 lexer.l:333
+#: lexer.l:135 lexer.l:148 lexer.l:227 lexer.l:302 lexer.l:517 lexer.l:567
 #, c-format
 msgid "%s: Can't make copy of string."
 msgstr "%s: Nemohu vytvoøit kopii øetìzce."
 
-#: lexer.l:283
-#, c-format
-msgid "%s: Can't malloc copy of string."
-msgstr "%s: Nemohu malloc-ovat kopii øetìzce."
-
-#: ../src/GenericConduit.cc:2446 ../src/archive.c:68 ../src/archive.c:127
-#: ../src/install.c:69 ../src/install.c:234 ../src/install.c:325
-#: ../src/parser.y:1084
+#: ../src/GenericConduit.cc:2495 ../src/archive.c:68 ../src/archive.c:127
+#: ../src/install.c:260 ../src/install.c:425 ../src/install.c:516
+#: ../src/parser.y:1215
 #, c-format
 msgid "%s: Can't open \"%s\"."
 msgstr "%s: Nemohu otevøít \"%s\"."
 
-#: ../libpconn/PConnection_usb.c:584
+#: ../libpconn/PConnection_usb.c:718
 #, c-format
 msgid "%s: Can't open \"%s\".\n"
 msgstr "%s: Nemohu otevøít \"%s\".\n"
 
-#: ../src/GenericConduit.cc:300 ../src/GenericConduit.cc:319
-#: ../src/GenericConduit.cc:563 ../src/GenericConduit.cc:581
-#: ../src/GenericConduit.cc:1050 ../src/GenericConduit.cc:1068
+#: ../src/GenericConduit.cc:298 ../src/GenericConduit.cc:318
+#: ../src/GenericConduit.cc:568 ../src/GenericConduit.cc:587
+#: ../src/GenericConduit.cc:1063 ../src/GenericConduit.cc:1082
 #, c-format
 msgid "%s: Can't open \"%s\": %d."
 msgstr ""
 
-#: ../libpconn/PConnection_usb.c:375
+#: ../libpconn/PConnection_usb.c:491
 #, c-format
 msgid "%s: Can't open USB device.\n"
 msgstr "%s: Nemohu otevøít USB zaøízení.\n"
 
-#: ../src/coldsync.c:3024
+#: ../src/coldsync.c:2941
 #, c-format
 msgid "%s: Can't open directory \"%s\"."
 msgstr "%s: Nemohu otevøít adresáø \"%s\"."
 
-#: ../src/install.c:212 ../src/install.c:277
+#: ../src/install.c:403 ../src/install.c:468
 #, c-format
 msgid "%s: Can't open install directory."
 msgstr "%s: Nemohu otevøít adresáø s instalací."
 
-#: ../src/GenericConduit.cc:195
+#: ../src/GenericConduit.cc:194
 #, c-format
 msgid "%s: Can't read %s backup file."
 msgstr "%s: Nemohu pøeèíst zálohový soubor ze souboru %s."
 
-#: ../libpdb/pdb.c:754
+#: ../src/backup.c:166
 #, c-format
 msgid "%s: Can't read AppInfo block for %s: %d.\n"
 msgstr "%s: Nemohu pøeèíst AppInfo block pro %s: %d.\n"
 
-#: ../libpdb/pdb.c:702
+#: ../src/backup.c:111
 #, c-format
 msgid "%s: Can't read database info: %d.\n"
 msgstr "%s: Nemohu pøeèíst informaci o databázi: %d.\n"
 
-#: ../libpdb/pdb.c:791
+#: ../src/backup.c:206
 #, c-format
 msgid "%s: Can't read sort block for %s: %d.\n"
 msgstr "%s: Nemohu pøeèíst tøídící blok pro %s: %d.\n"
 
-#: ../src/coldsync.c:3129 ../src/coldsync.c:3167
+#: ../src/coldsync.c:3046 ../src/coldsync.c:3084
 #, c-format
 msgid "%s: Can't rename \"%s\" to \"%s\"."
 msgstr "%s: Nemohu pøejmenovat \"%s\" na \"%s\"."
 
-#: ../src/GenericConduit.cc:2515
+#: ../src/GenericConduit.cc:2564
 #, c-format
 msgid ""
 "%s: Can't rename staging file.\n"
@@ -465,13 +559,13 @@ msgstr ""
 "%s: Nemohu pøejmenovat staging file.\n"
 "Záloha je snad v \"%s\"."
 
-#: ../src/GenericConduit.cc:465 ../src/GenericConduit.cc:954
-#: ../src/GenericConduit.cc:1491
+#: ../src/GenericConduit.cc:468 ../src/GenericConduit.cc:967
+#: ../src/GenericConduit.cc:1510
 #, c-format
 msgid "%s: Can't reset sync flags: %d."
 msgstr "%s: Nemohu resetovat sync flagy: %d."
 
-#: ../src/restore.c:140
+#: ../src/restore.c:120
 #, c-format
 msgid "%s: Can't restore %s: it is opened by another application."
 msgstr "%s: Nemohu obnovit %s: je otevøené jinou aplikací."
@@ -481,19 +575,19 @@ msgstr "%s: Nemohu obnovit %s: je otevøené jinou aplikací."
 msgid "%s: Can't seek to end of file."
 msgstr "%s: Nemohu pøejít na konec souboru."
 
-#: ../src/conduit.c:371
+#: ../src/conduit.c:373
 #, c-format
 msgid "%s: Can't set signal handler."
 msgstr "%s: Nemohu nastavit signal handler."
 
-#: ../src/conduit.c:425
+#: ../src/conduit.c:427
 #, c-format
 msgid "%s: Can't spawn conduit."
 msgstr "%s: Nemohu naspawnovat (vytvoøit potomka) conduitu."
 
-#: ../libpdb/pdb.c:556
-#, c-format
-msgid "%s: Can't write AppInfo block.\n"
+#: ../libpdb/pdb.c:598
+#, fuzzy, c-format
+msgid "%s: Can't write AppInfo block for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat AppInfo blok.\n"
 
 #: ../src/archive.c:89
@@ -501,53 +595,53 @@ msgstr "%s: Nemohu zapsat AppInfo blok.\n"
 msgid "%s: Can't write archive file header."
 msgstr "%s: Nemohu napsat hlavièku archivního souboru."
 
-#: ../src/GenericConduit.cc:418 ../src/GenericConduit.cc:914
-#: ../src/GenericConduit.cc:1444
+#: ../src/GenericConduit.cc:419 ../src/GenericConduit.cc:925
+#: ../src/GenericConduit.cc:1461
 #, c-format
 msgid "%s: Can't write backup file."
 msgstr "%s: Nemohu zapsat zálo¾ní soubor."
 
-#: ../libpdb/pdb.c:612
-#, c-format
-msgid "%s: Can't write record data.\n"
+#: ../libpdb/pdb.c:659
+#, fuzzy, c-format
+msgid "%s: Can't write record data for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat délku dat.\n"
 
-#: ../libpdb/pdb.c:526
-#, c-format
-msgid "%s: Can't write record index entry.\n"
+#: ../libpdb/pdb.c:564
+#, fuzzy, c-format
+msgid "%s: Can't write record index entry for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat polo¾ku indexu záznamu.\n"
 
-#: ../libpdb/pdb.c:593
-#, c-format
-msgid "%s: Can't write resource data.\n"
+#: ../libpdb/pdb.c:639
+#, fuzzy, c-format
+msgid "%s: Can't write resource data for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat resource data.\n"
 
-#: ../libpdb/pdb.c:479
-#, c-format
-msgid "%s: Can't write resource index entry.\n"
+#: ../libpdb/pdb.c:513
+#, fuzzy, c-format
+msgid "%s: Can't write resource index entry for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat polo¾ku indexu resourcu.\n"
 
-#: ../libpdb/pdb.c:569
-#, c-format
-msgid "%s: Can't write sort block.\n"
+#: ../libpdb/pdb.c:613
+#, fuzzy, c-format
+msgid "%s: Can't write sort block for \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat tøídící blok.\n"
 
-#: ../src/GenericConduit.cc:2503
+#: ../src/GenericConduit.cc:2552
 #, c-format
 msgid "%s: Can't write staging file \"%s\"."
 msgstr "%s: Nemohu zapsat staging soubor \"%s\"."
 
-#: ../libpdb/pdb.c:544
-#, c-format
-msgid "%s: Can't write the two useless NULs.\n"
+#: ../libpdb/pdb.c:584
+#, fuzzy, c-format
+msgid "%s: Can't write the two useless NULs to \"%.*s\".\n"
 msgstr "%s: Nemohu zapsat dva neu¾iteèné NULy.\n"
 
-#: ../src/conduit.c:1693
+#: ../src/conduit.c:1858
 #, c-format
 msgid "%s: Conduit exited unexpectedly."
 msgstr "%s: Conduit neoèekávanì skonèil."
 
-#: ../src/conduit.c:675
+#: ../src/conduit.c:677
 #, c-format
 msgid ""
 "%s: Conduit handler is in an inconsistent state at\n"
@@ -556,7 +650,7 @@ msgstr ""
 "%s: Handler conduitu je v nekonzistentním stavu v\n"
 "%s, øádce %d. Prosím, upozornìte o tom maintainera."
 
-#: ../src/conduit.c:1684
+#: ../src/conduit.c:1849
 #, c-format
 msgid ""
 "%s: Conduit is running happily, but hasn't printed anything.\n"
@@ -565,67 +659,72 @@ msgstr ""
 "%s: Conduit spokojenì bì¾í, ale zatím nepøedal ¾ádné výsledky.\n"
 "A teï jsem byl upozornìn. To je chyba. Prosím, upozornìte o tom maintainera."
 
-#: ../libpconn/PConnection_usb.c:503
+#: ../libpconn/PConnection_usb.c:626
 #, c-format
 msgid "%s: Could not find HotSync endpoint on Visor.\n"
 msgstr "%s: Nemohu najít endpoint HotSyncu na Visoru.\n"
 
-#: ../src/restore.c:129
+#: ../src/restore.c:109
 #, c-format
 msgid "%s: Database %s doesn't exist, yet it is open. Huh?"
 msgstr "%s: Databáze %s neexistuje, ale pøesto je otevøena. Uh?"
 
-#: ../src/install.c:144 ../src/install.c:392
+#: ../src/install.c:335 ../src/install.c:580
 #, c-format
 msgid "%s: Error deleting \"%s\"."
 msgstr "%s: Chyba pøi mazání \"%s\"."
 
-#: ../src/GenericConduit.cc:1338 ../src/GenericConduit.cc:1377
+#: ../src/GenericConduit.cc:1355 ../src/GenericConduit.cc:1394
 #, c-format
 msgid "%s: Error deleting record 0x%08lx: %d."
 msgstr "%s: Chyba pøi mazání záznamu 0x%08lx: %d."
 
-#: ../libpconn/dlp_rpc.c:447
+#: ../src/conduit.c:788
+#, fuzzy, c-format
+msgid "%s: Error header wrong length %ld."
+msgstr "%s: Chyba pøi mazání \"%s\"."
+
+#: ../libpconn/dlp_rpc.c:444
 #, c-format
 msgid "%s: Error in DlpRPC().\n"
 msgstr "%s: Chyba v DlpRPC().\n"
 
-#: ../src/conduit.c:706
+#: ../src/conduit.c:708
 #, c-format
 msgid "%s: Error in select()."
 msgstr "%s: Chyba pøi volání select()."
 
-#: ../src/conduit.c:772
+#: ../src/conduit.c:774
 #, c-format
 msgid "%s: Error reading SPC request from conduit."
 msgstr "%s: Chyba pøi ètení SPC po¾adavku conduitu."
 
-#: ../src/conduit.c:841
+#: ../src/conduit.c:847
 #, c-format
 msgid "%s: Error reading SPC request."
 msgstr "%s Chyba pøi ètení SPC po¾adavku."
 
-#: ../src/conduit.c:966
+#: ../src/conduit.c:975
 #, c-format
 msgid "%s: Error sending SPC response data."
 msgstr "%s: Chyba pøi posílání dat SPC odpovìdi."
 
-#: ../libpconn/padp.c:751
+#: ../libpconn/padp.c:757
 #, c-format
 msgid "%s: Error sending dummy ACK. This is serious.\n"
 msgstr "%s: Chyba pøi posílání prázdného ACK. To je záva¾né.\n"
 
-#: ../src/install.c:165 ../src/install.c:421
+#: ../src/install.c:356 ../src/install.c:612
 #, c-format
 msgid "%s: Error uploading \"%s\"."
 msgstr "%s: Chyba pøi uploadingu \"%s\"."
 
-#: ../libpconn/dlp_rpc.c:171
+#: ../libpconn/dlp_rpc.c:167
 #, c-format
 msgid "%s: Error: dlp.write returned %d.\n"
 msgstr "%s: Chyba: dlp.write vrátil %d.\n"
 
-#: ../src/conduit.c:351
+#: ../src/conduit.c:353
 #, c-format
 msgid ""
 "%s: I just got file descriptor %d. There appears to be a file\n"
@@ -634,20 +733,20 @@ msgstr ""
 "%s: Právì jsem obdr¾el file descriptor %d. Vypadá to s ním\n"
 "nìjak bledì, asi nìkam utekl. Prosím upozornìte mainteinera."
 
-#: ../src/GenericConduit.cc:1330 ../src/GenericConduit.cc:1369
-#: ../src/GenericConduit.cc:1610 ../src/GenericConduit.cc:1660
-#: ../src/GenericConduit.cc:1826 ../src/GenericConduit.cc:2178
-#: ../src/GenericConduit.cc:2220
+#: ../src/GenericConduit.cc:1347 ../src/GenericConduit.cc:1386
+#: ../src/GenericConduit.cc:1630 ../src/GenericConduit.cc:1680
+#: ../src/GenericConduit.cc:1846 ../src/GenericConduit.cc:2198
+#: ../src/GenericConduit.cc:2240
 #, c-format
 msgid "%s: Lost connection to Palm."
 msgstr "%s: Ztratil jsem spojení s Palmem."
 
-#: ../src/config.c:690
+#: ../src/config.c:721
 #, c-format
 msgid "%s: Missing mode string. This should never happen."
 msgstr "%s: Chybí mi mode string. To by se nikdy nemìlo stát."
 
-#: ../src/parser.y:318
+#: ../src/parser.y:351
 #, c-format
 msgid ""
 "%s: No `type:' line seen\n"
@@ -656,69 +755,74 @@ msgstr ""
 "%s: V definici \"%s\"\n"
 "\tnení ¾ádný `type:' øádek."
 
-#: ../src/config.c:1022 ../src/config.c:1058 ../src/config.c:1080
-#: ../src/log.c:72 ../src/pref.c:234 ../src/pref.c:299
+#: ../src/conduit.c:1662
+#, c-format
+msgid "%s: No executable \"%s\" in $CONDUIT_PATH or $CONDUITDIR.\n"
+msgstr ""
+
+#: ../src/config.c:1100 ../src/config.c:1136 ../src/config.c:1158
+#: ../src/pref.c:234 ../src/pref.c:299 lexer.l:704
 #, c-format
 msgid "%s: Out of memory."
 msgstr "%s: Mimo pamìt (out of memory)."
 
-#: ../libpconn/dlp_cmd.c:1432 ../libpconn/dlp_cmd.c:1613
-#: ../libpconn/dlp_cmd.c:2483 ../libpconn/dlp_cmd.c:2801
-#: ../libpconn/dlp_cmd.c:3886 ../libpdb/pdb.c:728 ../libpdb/pdb.c:774
-#: ../libpdb/pdb.c:1305 ../libpdb/pdb.c:1376 ../libpdb/pdb.c:1430
-#: ../libpdb/pdb.c:1475 ../libpdb/pdb.c:1779 ../libpdb/pdb.c:1892
-#: ../libpdb/pdb.c:2001 ../libpdb/pdb.c:2157 ../libpdb/pdb.c:2291
-#: ../libpdb/pdb.c:2368 ../libpdb/pdb.c:2412 ../libpdb/pdb.c:2531
-#: ../libpdb/pdb.c:2584
+#: ../libpconn/dlp_cmd.c:1458 ../libpconn/dlp_cmd.c:1639
+#: ../libpconn/dlp_cmd.c:2513 ../libpconn/dlp_cmd.c:2832
+#: ../libpconn/dlp_cmd.c:3924 ../libpdb/pdb.c:965 ../libpdb/pdb.c:1036
+#: ../libpdb/pdb.c:1090 ../libpdb/pdb.c:1137 ../libpdb/pdb.c:1448
+#: ../libpdb/pdb.c:1563 ../libpdb/pdb.c:1676 ../libpdb/pdb.c:1840
+#: ../libpdb/pdb.c:1981 ../src/backup.c:138 ../src/backup.c:187
+#: ../src/backup.c:287 ../src/backup.c:333 ../src/backup.c:454
+#: ../src/backup.c:509
 #, c-format
 msgid "%s: Out of memory.\n"
 msgstr "%s: Mimo pamìt (out of memory).\n"
 
-#: ../src/conduit.c:359
+#: ../src/conduit.c:361
 #, c-format
 msgid "%s: Too many file descriptors. Aborting."
 msgstr "%s: Pøíli¹ mnoho file deskriptorù. Konèím."
 
-#: ../src/GenericConduit.cc:1618 ../src/GenericConduit.cc:1668
-#: ../src/GenericConduit.cc:1834 ../src/GenericConduit.cc:2186
-#: ../src/GenericConduit.cc:2228
+#: ../src/GenericConduit.cc:1638 ../src/GenericConduit.cc:1688
+#: ../src/GenericConduit.cc:1854 ../src/GenericConduit.cc:2206
+#: ../src/GenericConduit.cc:2248
 #, c-format
 msgid "%s: Warning: Can't delete record 0x%08lx: %d."
 msgstr "%s: Upozornìní: Nemohu smazat záznam 0x%08ls: %d."
 
-#: ../libpconn/PConnection_usb.c:420
+#: ../libpconn/PConnection_usb.c:543
 #, c-format
 msgid "%s: Warning: Unexpected USB vendor ID %#x.\n"
 msgstr "%s: Upozornìní: Neoèekávané ID USB zaøízení %#x.\n"
 
-#: ../libpconn/slp.c:248
+#: ../libpconn/slp.c:250
 #, c-format
 msgid "%s: bad checksum: expected 0x%02x, got 0x%02x.\n"
 msgstr ""
 "%s: ¹patný kontrolní souèet: oèekával jsem 0x%02x\n"
 "\tdostal jsem 0x%02x.\n"
 
-#: ../libpdb/pdb.c:1331 ../libpdb/pdb.c:1401
+#: ../libpdb/pdb.c:991 ../libpdb/pdb.c:1061
 #, c-format
 msgid "%s: can't allocate data.\n"
 msgstr "%s: nemohu naalokovat data.\n"
 
-#: ../libpdb/pdb.c:648
+#: ../src/backup.c:55
 #, c-format
 msgid "%s: can't allocate pdb.\n"
 msgstr "%s: nemohu naalokovat pdb.\n"
 
-#: ../libpdb/pdb.c:1446
-#, c-format
-msgid "%s: can't allocate record data.\n"
+#: ../libpdb/pdb.c:1106
+#, fuzzy, c-format
+msgid "%s: can't allocate record data for \"%.*s\".\n"
 msgstr "%s: nemohu naalokovat data pro polo¾ku.\n"
 
-#: ../libpdb/pdb.c:1490
-#, c-format
-msgid "%s: can't allocate resource data.\n"
+#: ../libpdb/pdb.c:1152
+#, fuzzy, c-format
+msgid "%s: can't allocate resource data for \"%.*s\".\n"
 msgstr "%s: nemohu naalokovat resource data.\n"
 
-#: ../src/backup.c:58
+#: ../src/backup.c:557
 #, c-format
 msgid ""
 "%s: can't create new backup file %s.\n"
@@ -727,47 +831,47 @@ msgstr ""
 "%s: nemohu vytvoøit nový zálo¾ní soubor %s.\n"
 "Je mo¾né, ¾e ji¾ existuje."
 
-#: ../src/backup.c:164
+#: ../src/backup.c:668
 #, c-format
 msgid "%s: can't write database \"%s\" to \"%s\"."
 msgstr "%s: nemohu zapsat databázi \"%s\" do \"%s\"."
 
-#: ../libpdb/pdb.c:429
-#, c-format
-msgid "%s: can't write database header.\n"
+#: ../libpdb/pdb.c:459
+#, fuzzy, c-format
+msgid "%s: can't write database header for \"%.*s\".\n"
 msgstr "%s: nemohu zapsat hlavièku databáze.\n"
 
-#: ../libpdb/pdb.c:447
-#, c-format
-msgid "%s: can't write record list header.\n"
+#: ../libpdb/pdb.c:479
+#, fuzzy, c-format
+msgid "%s: can't write record list header for \"%.*s\".\n"
 msgstr "%s: nemohu zapsat hlavièku listu záznamu.\n"
 
-#: ../libpdb/pdb.c:1791
-#, c-format
-msgid "%s: error reading record index entry (%d bytes): %d.\n"
+#: ../libpdb/pdb.c:1460
+#, fuzzy, c-format
+msgid "%s: error reading record index entry for \"%.*s\" (%d bytes): %d.\n"
 msgstr "%s: chyba pøi ètení index záznamu polo¾ky (%d bytù): %d.\n"
 
-#: ../src/conduit.c:933
+#: ../src/conduit.c:942
 #, c-format
 msgid "%s: error sending SPC response header."
 msgstr "%s: chyba pøi posílání SPC odpovìdní hlavièky."
 
-#: ../src/conduit.c:1507
+#: ../src/conduit.c:1672
 #, c-format
 msgid "%s: execvp(%s) failed and returned %d."
 msgstr "%s: selhalo execvp(%s). Jeho návratová hodnota: %d."
 
-#: ../src/config.c:1146 ../src/log.c:101
+#: ../src/config.c:1224 lexer.l:730
 #, c-format
 msgid "%s: realloc(%d) failed."
 msgstr "%s: realloc(%d) selhal."
 
-#: ../src/conduit.c:720
+#: ../src/conduit.c:722
 #, c-format
 msgid "%s: select() returned 0. I'm puzzled."
 msgstr "%s: select() vrátil 0. Nevím, co dál."
 
-#: ../src/conduit.c:1630
+#: ../src/conduit.c:1795
 #, c-format
 msgid ""
 "%s: select() returned 0. This should never happen. Please notify the "
@@ -776,27 +880,27 @@ msgstr ""
 "%s: select() vrátil 0. To by se nikdy nemìlo stát. Prosím upozornìte na to "
 "maintainera."
 
-#: ../src/conduit.c:1587
+#: ../src/conduit.c:1752
 #, c-format
 msgid "%s: select() returned an unexpected error. This should never happen."
 msgstr "%s: select() vrátil neoèekávanou chybu. To by se nikdy nemìlo stát."
 
-#: ../src/config.c:947
+#: ../src/config.c:1025
 #, c-format
 msgid "%s: socket() returned %d."
 msgstr "%s: socket() vrátil %d."
 
-#: ../libpconn/PConnection_usb.c:540
+#: ../libpconn/PConnection_usb.c:663
 #, c-format
 msgid "%s: unexpected response %d to GetBytesAvailable.\n"
 msgstr "%s: neoèekávaná odpoveï %d z volání GetBytesAvailable.\n"
 
-#: ../libpconn/PConnection.c:110
+#: ../libpconn/PConnection.c:124
 #, c-format
 msgid "%s: unknown listen type %d.\n"
 msgstr "%s: neznámý listen type %d.\n"
 
-#: lexer.l:394
+#: lexer.l:631
 #, c-format
 msgid ""
 "%s: unknown start state %d.\n"
@@ -805,221 +909,235 @@ msgstr ""
 "%s: neznámý poèáteèní stav %d.\n"
 "Prosím upozornìte maintainera, aby opravil 'lexer.l'."
 
-#: ../src/coldsync.c:1022 ../src/coldsync.c:2733
+#: ../src/GenericConduit.cc:250 ../src/GenericConduit.cc:303
+#: ../src/GenericConduit.cc:323 ../src/GenericConduit.cc:343
+#: ../src/GenericConduit.cc:423 ../src/GenericConduit.cc:452
+#: ../src/GenericConduit.cc:480 ../src/GenericConduit.cc:492
+#, fuzzy
+msgid "(1st)"
+msgstr " (1.) - "
+
+#: ../src/coldsync.c:1089 ../src/coldsync.c:2678
 msgid "*Cancelled*\n"
 msgstr "*Zru¹eno*\n"
 
-#: ../libpconn/padp.c:671
+#: ../libpconn/padp.c:676
 msgid "ACK Timeout. Attempting to resend.\n"
 msgstr "ACK Timeout. Zkou¹ím poslat data znovu.\n"
 
-#: ../src/backup.c:50
+#: ../src/backup.c:549
 #, c-format
 msgid "Backing up \"%s\""
 msgstr "Zálohuji \"%s\""
 
-#: ../src/backup.c:43 ../src/coldsync.c:1379
-msgid "Backup "
+#: ../src/backup.c:563 ../src/backup.c:581 ../src/backup.c:596
+#: ../src/backup.c:628 ../src/backup.c:655 ../src/backup.c:675
+#: ../src/backup.c:686 ../src/coldsync.c:1414
+#, fuzzy
+msgid "Backup"
 msgstr "Záloha "
 
-#: ../libpconn/palm_errno.c:32
+#: ../libpconn/palm_errno.c:48
 msgid "Bad file descriptor"
 msgstr "©patný descriptor souboru"
 
-#: ../src/coldsync.c:830 ../src/coldsync.c:2556
+#: ../src/coldsync.c:897 ../src/coldsync.c:2501
 #, c-format
 msgid "CacheFromConduits() returned %d."
 msgstr "CacheFromConduits() vrátil %d."
 
-#: ../libpdb/pdb.c:2475
+#: ../src/backup.c:396
 msgid "Can't allocate list of record IDs.\n"
 msgstr "nemohu naalokovat seznam ID záznamù.\n"
 
-#: ../src/config.c:443 ../src/config.c:482
+#: ../src/config.c:467 ../src/config.c:508
 msgid "Can't allocate listen block."
 msgstr "Nemohu naalokovat listen block."
 
-#: ../src/config.c:317
+#: ../src/config.c:320
 msgid "Can't allocate new conduit block."
 msgstr "Nemohu naalokovat nový conduit block."
 
-#: ../src/config.c:298
+#: ../src/config.c:297
 msgid "Can't allocate new configuration."
 msgstr "Nemohu naalokovat novou konfiguraci."
 
-#: ../libpconn/PConnection.c:49
+#: ../libpconn/PConnection.c:65
 msgid "Can't allocate new connection.\n"
 msgstr "Nemohu naalokovat nové spojení.\n"
 
-#: ../src/coldsync.c:507 ../src/coldsync.c:1325 ../src/coldsync.c:1495
-#: ../src/coldsync.c:1688 ../src/coldsync.c:2160
+#: ../src/coldsync.c:566 ../src/coldsync.c:1359 ../src/coldsync.c:1506
+#: ../src/coldsync.c:1649 ../src/coldsync.c:2102
 msgid "Can't allocate struct Palm."
 msgstr "Nemohu naalokovat struct Palm."
 
-#: ../src/coldsync.c:498 ../src/coldsync.c:1317 ../src/coldsync.c:1487
-#: ../src/coldsync.c:1680 ../src/coldsync.c:2151
+#: ../src/coldsync.c:557 ../src/coldsync.c:1351 ../src/coldsync.c:1498
+#: ../src/coldsync.c:1641 ../src/coldsync.c:2093
 msgid "Can't connect to Palm."
 msgstr "Nemohu se pøipojit k Palmu."
 
-#: ../libpconn/PConnection_net.c:457
+#: ../libpconn/PConnection_net.c:407
 msgid "Can't connect to server.\n"
 msgstr "Nemohu se pøipojit k serveru.\n"
 
-#: ../src/GenericConduit.cc:712 ../src/GenericConduit.cc:2065
+#: ../src/GenericConduit.cc:720 ../src/GenericConduit.cc:2085
 msgid "Can't copy a new record."
 msgstr "Nemohu zkopírovat nový záznam."
 
-#: ../src/coldsync.c:2356
+#: ../src/coldsync.c:2298
 msgid "Can't copy config file name"
 msgstr "Nemohu zkopírovat øetìzec s názvem konfiguraèního souboru"
 
-#: ../src/config.c:451 ../src/config.c:490
+#: ../src/config.c:475 ../src/config.c:516
 msgid "Can't copy string."
 msgstr "Nemohu zkopírovat øetìzec."
 
-#: ../src/GenericConduit.cc:2387
+#: ../src/GenericConduit.cc:2436
 #, c-format
 msgid "Can't create \"%s\"."
 msgstr "Nemohu vytvoøit \"%s\"."
 
-#: ../src/config.c:1522
+#: ../src/config.c:1626
 #, c-format
 msgid "Can't create archive directory %s."
 msgstr "Nemohu vytvoøit archivní adresáø %s."
 
-#: ../src/config.c:1504
+#: ../src/config.c:1608
 #, c-format
 msgid "Can't create attic directory %s."
 msgstr "Nemohu vytvoøit attic adresáø %s."
 
-#: ../src/config.c:1486
+#: ../src/config.c:1590
 #, c-format
 msgid "Can't create backup directory %s."
 msgstr "Nemohu vytvoøit zálo¾ní adresáø %s."
 
-#: ../src/config.c:1468
+#: ../src/config.c:1572
 #, c-format
 msgid "Can't create base sync directory %s."
 msgstr "Nemohu vytvoøit základní adresáø %s."
 
-#: ../src/coldsync.c:756 ../src/coldsync.c:2476
+#: ../src/coldsync.c:823 ../src/coldsync.c:2421
 msgid "Can't create connection to forwarding host."
 msgstr "Nemohu vytvoøit spojení na forwardující host."
 
-#: ../src/config.c:1540
+#: ../src/config.c:1644
 #, c-format
 msgid "Can't create install directory %s."
 msgstr "Nemohu vytvoøit instalaèní adresáø %s."
 
-#: ../libpdb/pdb.c:810
+#: ../src/backup.c:226
 msgid "Can't download record or resource index.\n"
 msgstr "Nemohu vytvoøit záznam nebo resource index.\n"
 
-#: ../src/coldsync.c:234
+#: ../src/coldsync.c:461
 msgid "Can't dup(stderr)."
 msgstr "Nemohu provést dup(stderr)."
 
-#: ../src/coldsync.c:768 ../src/coldsync.c:2488
+#: ../src/coldsync.c:835 ../src/coldsync.c:2433
 msgid "Can't establish connection with forwarding host."
 msgstr "Nemohu vytvoøit spojení s forwardujícím hostem."
 
-#: ../src/coldsync.c:907 ../src/coldsync.c:2622
+#: ../src/coldsync.c:974 ../src/coldsync.c:2567
 msgid "Can't fetch list of databases."
 msgstr "Nemohu naèíst seznam databází."
 
-#: ../src/coldsync.c:1156 ../src/coldsync.c:2857
+#: ../src/coldsync.c:1194 ../src/coldsync.c:2774
 #, c-format
 msgid "Can't fetch preference 0x%08lx/%d."
 msgstr "Nemohu naèíst preference 0x%08lx/%d."
 
-#: ../libpdb/pdb.c:2245
-#, c-format
-msgid "Can't find record %d.\n"
+#: ../libpdb/pdb.c:1933
+#, fuzzy, c-format
+msgid "Can't find record %d in \"%.*s\".\n"
 msgstr "Nemohu najít záznam %d.\n"
 
-#: ../libpdb/pdb.c:2120
-#, c-format
-msgid "Can't find resource %d.\n"
+#: ../libpdb/pdb.c:1801
+#, fuzzy, c-format
+msgid "Can't find resource %d in \"%.*s\".\n"
 msgstr "Nemohu najít zdroj %d.\n"
 
-#: ../libpdb/pdb.c:1923
-msgid "Can't find the AppInfo block!\n"
+#: ../libpdb/pdb.c:1596
+#, fuzzy, c-format
+msgid "Can't find the AppInfo block in \"%.*s\"!\n"
 msgstr "Nemohu najít blok s AppInfem!\n"
 
-#: ../libpdb/pdb.c:2032
-msgid "Can't find the sort block!\n"
+#: ../libpdb/pdb.c:1709
+#, fuzzy, c-format
+msgid "Can't find the sort block in \"%.*s\"!\n"
 msgstr "Nemohu najít tøídíci blok!\n"
 
-#: ../src/coldsync.c:172
+#: ../src/coldsync.c:173
 msgid "Can't get host ID."
 msgstr "Neznámé ID hostu."
 
-#: ../src/coldsync.c:719 ../src/coldsync.c:2440
+#: ../src/coldsync.c:783 ../src/coldsync.c:2382
 msgid "Can't get host addresses."
 msgstr "Neznámá adresa hostu."
 
-#: ../src/config.c:821
+#: ../src/config.c:899
 msgid "Can't get host name."
 msgstr "Neznámé jméno hostu."
 
-#: ../src/coldsync.c:841 ../src/coldsync.c:2567
+#: ../src/coldsync.c:908 ../src/coldsync.c:2512
 msgid "Can't get last sync PC from Palm"
 msgstr "Nemohu z Palmu dostat poslední sync"
 
-#: ../src/palm.c:447
+#: ../src/spalm.c:451
 msgid "Can't get location of serial number."
 msgstr "Nemohu získat umístìní seriového èísla."
 
-#: ../src/conduit.c:501
+#: ../src/conduit.c:503
 msgid "Can't get preference item."
 msgstr "Nemohu získat polo¾ku preferencí."
 
-#: ../src/palm.c:220
+#: ../src/spalm.c:224
 msgid "Can't get system info."
 msgstr "Nemohu obdr¾et systémové informace."
 
-#: ../src/coldsync.c:576 ../src/coldsync.c:1802
+#: ../src/coldsync.c:640 ../src/coldsync.c:1763
 msgid "Can't get user ID from Palm."
 msgstr "Nemohu obdr¾et ID z Palmu."
 
-#: ../src/config.c:370 ../src/palm.c:320
+#: ../src/config.c:373 ../src/spalm.c:324
 msgid "Can't get user info."
 msgstr "Nemohu obdr¾et u¾ivatelské informace."
 
-#: ../src/coldsync.c:629
+#: ../src/coldsync.c:693
 msgid "Can't get user name from Palm."
 msgstr "Nemohu obdr¾et z Palmu jméno u¾ivatele."
 
-#: ../src/config.c:1694
+#: ../src/config.c:1798
 msgid "Can't get user's full name."
 msgstr "Nemohu obdr¾et plné jméno u¾ivatele."
 
-#: ../src/coldsync.c:942 ../src/coldsync.c:1190 ../src/coldsync.c:2657
-#: ../src/coldsync.c:2891
+#: ../src/coldsync.c:1009 ../src/coldsync.c:1228 ../src/coldsync.c:2602
+#: ../src/coldsync.c:2808
 msgid "Can't install new files."
 msgstr "Nemohu nainstalovat nové soubory."
 
-#: ../src/coldsync.c:2373
-msgid "Can't load configuration"
-msgstr "Nemohu nahrát konfiguraci"
-
-#: ../src/coldsync.c:283
+#: ../src/coldsync.c:232 ../src/coldsync.c:2315
 msgid "Can't load configuration."
 msgstr "Nemohu nahrát konfiguraci."
 
-#: ../src/install.c:243
+#: ../src/install.c:434
 msgid "Can't load header."
 msgstr "Nemohu nahrát hlavièku."
 
-#: ../libpdb/pdb.c:273 ../libpdb/pdb.c:281
+#: ../libpdb/pdb.c:289
 msgid "Can't load header.\n"
 msgstr "Nemohu nahrát hlavièku.\n"
 
-#: ../src/coldsync.c:530
+#: ../libpdb/pdb.c:297
+#, fuzzy, c-format
+msgid "Can't load record list header for \"%.*s\".\n"
+msgstr "%s: nemohu zapsat hlavièku listu záznamu.\n"
+
+#: ../src/coldsync.c:589
 msgid "Can't look up Palm."
 msgstr "Nemohu najít Palma."
 
-#: ../src/config.c:830
+#: ../src/config.c:908
 msgid "Can't look up my address."
 msgstr "Nemohu najít moji adresu."
 
@@ -1028,35 +1146,35 @@ msgstr "Nemohu najít moji adresu."
 msgid "Can't open %s."
 msgstr "Nemohu otevøít %s."
 
-#: ../src/backup.c:92
+#: ../src/backup.c:593
 msgid "Can't open backup conduit."
 msgstr "Nemohu otevøít zálo¾ní conduit."
 
-#: ../libpdb/pdb.c:867
+#: ../src/install.c:84
 #, c-format
 msgid "Can't open conduit for \"%s\": %d.\n"
 msgstr "Nemohu otevøít modul pro \"%s\": %d.\n"
 
-#: ../src/coldsync.c:489 ../src/coldsync.c:1309 ../src/coldsync.c:1479
-#: ../src/coldsync.c:1672 ../src/coldsync.c:2142
+#: ../src/coldsync.c:548 ../src/coldsync.c:1343 ../src/coldsync.c:1490
+#: ../src/coldsync.c:1633 ../src/coldsync.c:2084
 msgid "Can't open connection."
 msgstr "Nemohu otevøít spojení."
 
-#: ../src/backup.c:122
+#: ../src/backup.c:624
 #, c-format
 msgid "Can't open database \"%s\"."
 msgstr "Nemohu otevøít databázi \"%s\"."
 
-#: ../src/coldsync.c:247
+#: ../src/coldsync.c:475
 #, c-format
 msgid "Can't open log file \"%s\"."
 msgstr "Nemohu otevøít log soubor \"%s\"."
 
-#: ../src/coldsync.c:259
+#: ../src/coldsync.c:489
 msgid "Can't open log file on stderr."
 msgstr "Nemohu otevøít log soubor na stderr."
 
-#: ../src/coldsync.c:181
+#: ../src/coldsync.c:185
 msgid "Can't parse command-line arguments."
 msgstr "Nemohu pøeèíst argumenty pøíkazové øádky."
 
@@ -1065,232 +1183,238 @@ msgstr "Nemohu pøeèíst argumenty pøíkazové øádky."
 msgid "Can't read %s."
 msgstr "Nemohu pøeèíst %s."
 
-#: ../libpdb/pdb.c:315
-msgid "Can't read AppInfo block.\n"
-msgstr "Nemohu pøeèíst AppInfo block.\n"
+#: ../libpdb/pdb.c:337
+#, fuzzy, c-format
+msgid "Can't read AppInfo block for \"%.*s\".\n"
+msgstr "%s: Nemohu pøeèíst AppInfo block pro %s: %d.\n"
 
-#: ../src/palm.c:296
+#: ../src/spalm.c:300
 msgid "Can't read NetSync info."
 msgstr "Nemohu pøeèíst NetSync info."
 
-#: ../src/restore.c:247
+#: ../src/restore.c:227
 #, c-format
 msgid "Can't read contents of directory %s."
 msgstr "Nemohu pøeèíst obsah adresáøe %s."
 
-#: ../src/coldsync.c:1697
+#: ../src/coldsync.c:1658
 msgid "Can't read length of serial number."
 msgstr "Nemohu pøeèíst délku seriového èísla."
 
-#: ../libpdb/pdb.c:2300
-#, c-format
-msgid "Can't read record %d.\n"
-msgstr "Nemohu pøeèíst záznam %d.\n"
+#: ../libpdb/pdb.c:1990
+#, fuzzy, c-format
+msgid "Can't read record %d in \"%.*s\".\n"
+msgstr "Nemohu pøeèíst záznam %d : %d.\n"
 
-#: ../libpdb/pdb.c:2545
+#: ../src/backup.c:469
 #, c-format
 msgid "Can't read record %d: %d.\n"
 msgstr "Nemohu pøeèíst záznam %d : %d.\n"
 
-#: ../libpdb/pdb.c:2499
+#: ../src/backup.c:421
 msgid "Can't read record ID list.\n"
 msgstr "Nemohu pøeèíst seznam ID záznamù.\n"
 
-#: ../libpdb/pdb.c:300
-msgid "Can't read record index.\n"
+#: ../libpdb/pdb.c:320
+#, fuzzy, c-format
+msgid "Can't read record index for \"%.*s\".\n"
 msgstr "Nemohu pøeèíst index záznamù.\n"
 
-#: ../libpdb/pdb.c:342
-msgid "Can't read records.\n"
-msgstr "Nemohu vytvoøit záznamy.\n"
+#: ../libpdb/pdb.c:370
+#, fuzzy, c-format
+msgid "Can't read records for \"%.*s\".\n"
+msgstr "Nemohu pøeèíst záznam %d.\n"
 
-#: ../libpdb/pdb.c:2166
-#, c-format
-msgid "Can't read resource %d.\n"
-msgstr "Nemohu pøeèíst resource %d.\n"
+#: ../libpdb/pdb.c:1849
+#, fuzzy, c-format
+msgid "Can't read resource %d in \"%.*s\".\n"
+msgstr "Nemohu pøeèíst resource %d : %d.\n"
 
-#: ../libpdb/pdb.c:2381
+#: ../src/backup.c:302
 #, c-format
 msgid "Can't read resource %d: %d.\n"
 msgstr "Nemohu pøeèíst resource %d : %d.\n"
 
-#: ../libpdb/pdb.c:292
-msgid "Can't read resource index.\n"
+#: ../libpdb/pdb.c:310
+#, fuzzy, c-format
+msgid "Can't read resource index for \"%.*s\".\n"
 msgstr "Nemohu pøeèíst index resourcù.\n"
 
-#: ../libpdb/pdb.c:334
-msgid "Can't read resources.\n"
-msgstr "Nemohu pøeèíst resourci.\n"
+#: ../libpdb/pdb.c:360
+#, fuzzy, c-format
+msgid "Can't read resources for \"%.*s\".\n"
+msgstr "Nemohu pøeèíst resource %d.\n"
 
-#: ../src/coldsync.c:1709 ../src/palm.c:480
+#: ../src/coldsync.c:1670 ../src/spalm.c:484
 msgid "Can't read serial number."
 msgstr "Nemohu pøeèíst seriové èíslo."
 
-#: ../libpdb/pdb.c:323
-msgid "Can't read sort block.\n"
-msgstr "Nemohu pøeèíst sort block.\n"
+#: ../libpdb/pdb.c:347
+#, fuzzy, c-format
+msgid "Can't read sort block for \"%.*s\".\n"
+msgstr "%s: Nemohu pøeèíst tøídící blok pro %s: %d.\n"
 
-#: ../src/coldsync.c:155 ../src/coldsync.c:160 ../src/coldsync.c:165
+#: ../src/coldsync.c:156 ../src/coldsync.c:161 ../src/coldsync.c:166
 #, c-format
 msgid "Can't reserve file descriptor %d."
 msgstr "Nemohu si zarezervovat descriptor souboru %d."
 
-#: ../src/palm.c:1002
+#: ../src/spalm.c:1006
 msgid "Can't resize palm->dblist."
 msgstr "Nemohu zmìnit velikost palm->dblist."
 
-#: ../src/coldsync.c:728 ../src/coldsync.c:2449
+#: ../src/coldsync.c:792 ../src/coldsync.c:2391
 msgid "Can't resolve forwarding address."
 msgstr "Nemohu resolovat forwarding adresu."
 
-#: ../src/coldsync.c:1521 ../src/coldsync.c:1547 ../src/coldsync.c:1571
+#: ../src/coldsync.c:1533 ../src/coldsync.c:1556
 msgid "Can't restore directory."
 msgstr "Nemohu obnovit adresáø."
 
-#: ../src/coldsync.c:2338
+#: ../src/coldsync.c:2280
 msgid "Can't setuid"
 msgstr "Nemohu provést setuid"
 
-#: ../src/coldsync.c:1094 ../src/coldsync.c:2796
+#: ../src/coldsync.c:1160 ../src/coldsync.c:2740
 msgid "Can't write user info."
 msgstr "Nemohu zapsat u¾ivatelské info."
 
-#: ../src/GenericConduit.cc:253 ../src/GenericConduit.cc:517
-#: ../src/GenericConduit.cc:1006 ../src/backup.c:80 ../src/restore.c:203
-msgid "Cancelled\n"
+#: ../src/GenericConduit.cc:250 ../src/GenericConduit.cc:522
+#: ../src/GenericConduit.cc:1019 ../src/backup.c:581 ../src/restore.c:181
+#, fuzzy
+msgid "Cancelled"
 msgstr "Zru¹eno\n"
 
-#: ../src/backup.c:76 ../src/coldsync.c:1345 ../src/coldsync.c:1393
-#: ../src/coldsync.c:1515 ../src/coldsync.c:1540 ../src/coldsync.c:1564
-#: ../src/conduit.c:1174 ../src/conduit.c:1232 ../src/restore.c:294
+#: ../src/backup.c:576 ../src/coldsync.c:1379 ../src/coldsync.c:1427
+#: ../src/coldsync.c:1526 ../src/coldsync.c:1549 ../src/conduit.c:1183
+#: ../src/conduit.c:1243 ../src/restore.c:274
 msgid "Cancelled by Palm."
 msgstr "Zru¹eno Palmem."
 
-#: ../src/config.c:773
+#: ../src/config.c:850
 msgid "ColdSync homepage at http://www.ooblick.com/software/coldsync/\n"
 msgstr ""
 "Domovská stránka ColdSync na http://www.ooblick.com/software/coldsync/\n"
 
-#: ../src/config.c:779
+#: ../src/config.c:856
 msgid "Compile-type options:\n"
 msgstr "Optiony pøi kompilaci:\n"
 
-#: ../src/conduit.c:1180 ../src/conduit.c:1238
+#: ../src/conduit.c:1189 ../src/conduit.c:1249
 #, c-format
 msgid "Conduit %s exited abnormally. Continuing."
 msgstr "Conduit %s skonèil nenormálnì. Pokraèuji."
 
-#: ../src/conduit.c:1160 ../src/conduit.c:1218
+#: ../src/conduit.c:1169 ../src/conduit.c:1229
 #, c-format
 msgid "Conduit %s is not a %s conduit."
 msgstr "Conduit %s není %s conduitem."
 
-#: ../src/coldsync.c:1036 ../src/coldsync.c:2747
+#: ../src/coldsync.c:1102 ../src/coldsync.c:2691
 msgid "Conduit failed for unknown reason."
 msgstr "Conduit z neznámých dùvodù selhal."
 
-#: ../src/config.c:381
+#: ../src/config.c:384
 #, c-format
 msgid "Config file \"%s\" doesn't exist."
 msgstr "Konfiguraèní soubor \"%s\" neexistuje."
 
-#: ../src/coldsync.c:1205 ../src/coldsync.c:1447 ../src/coldsync.c:1618
-#: ../src/coldsync.c:2030 ../src/coldsync.c:2906
+#: ../src/coldsync.c:1243 ../src/coldsync.c:1453 ../src/coldsync.c:1574
+#: ../src/coldsync.c:1959 ../src/coldsync.c:2823
 msgid "Couldn't disconnect."
 msgstr "Nemohu se odpojit"
 
-#: ../src/config.c:333
+#: ../src/config.c:336
 msgid "Couldn't initialize configuration."
 msgstr "Nemohu nastavit konfiguraci."
 
-#: ../src/config.c:356 ../src/config.c:415
+#: ../src/config.c:359 ../src/config.c:418
 #, c-format
 msgid "Couldn't read configuration file \"%s\"."
 msgstr "Nemohu pøeèíst konfiguraèní soubor \"%s\"."
 
-#: ../src/conduit.c:617
+#: ../src/conduit.c:619
 msgid "Couldn't send header to conduit."
 msgstr "Nemohu poslat hlavièku conduitu."
 
-#: ../src/coldsync.c:1109 ../src/coldsync.c:1418 ../src/coldsync.c:1592
-#: ../src/coldsync.c:2003 ../src/coldsync.c:2811
-msgid "Couldn't write sync log."
-msgstr "Nemohu zapsat sync log."
-
-#: ../libpdb/pdb.c:2507
+#: ../src/backup.c:430
 msgid "DlpReadRecordIDList() read 0 records. What happened?\n"
 msgstr "DlpReadRecordIDList() pøeèetl 0 záznamù. Co se me stalo?\n"
 
-#: ../libpconn/dlp_cmd.c:2041
+#: ../libpconn/dlp_cmd.c:2069
 msgid "DlpWriteRecord: Can't allocate output buffer.\n"
 msgstr "DlpWriteRecord: nemohu naalokovat výstupní buffer.\n"
 
-#: ../src/coldsync.c:1941 ../src/coldsync.c:3299
+#: ../src/coldsync.c:1899 ../src/coldsync.c:3216
 #, c-format
 msgid "DlpWriteUserInfo failed: %d."
 msgstr "DlpWriteUserInfo selhal: %d"
 
-#: ../src/coldsync.c:862 ../src/coldsync.c:866
+#: ../src/coldsync.c:929 ../src/coldsync.c:933
 msgid "Doing a fast sync."
 msgstr "Provádím rychlou synchonizaci."
 
-#: ../src/coldsync.c:860 ../src/coldsync.c:864
+#: ../src/coldsync.c:927 ../src/coldsync.c:931
 msgid "Doing a slow sync."
 msgstr "Provádím pomalou synchronizaci."
 
-#: ../libpconn/palm_errno.c:33
+#: ../libpconn/palm_errno.c:50
 msgid "End of file"
 msgstr "Konec souboru"
 
-#: ../src/GenericConduit.cc:304 ../src/GenericConduit.cc:323
-#: ../src/GenericConduit.cc:342 ../src/GenericConduit.cc:421
-#: ../src/GenericConduit.cc:449 ../src/GenericConduit.cc:475
-#: ../src/GenericConduit.cc:566 ../src/GenericConduit.cc:584
-#: ../src/GenericConduit.cc:604 ../src/GenericConduit.cc:713
-#: ../src/GenericConduit.cc:917 ../src/GenericConduit.cc:939
-#: ../src/GenericConduit.cc:964 ../src/GenericConduit.cc:1053
-#: ../src/GenericConduit.cc:1071 ../src/GenericConduit.cc:1111
-#: ../src/GenericConduit.cc:1212 ../src/GenericConduit.cc:1447
-#: ../src/GenericConduit.cc:1475 ../src/GenericConduit.cc:1501
-#: ../src/backup.c:63 ../src/backup.c:94 ../src/backup.c:125
-#: ../src/backup.c:151 ../src/backup.c:170 ../src/install.c:147
-#: ../src/install.c:168 ../src/install.c:395 ../src/install.c:424
-#: ../src/install.c:524 ../src/restore.c:213
+#: ../src/GenericConduit.cc:303 ../src/GenericConduit.cc:323
+#: ../src/GenericConduit.cc:343 ../src/GenericConduit.cc:423
+#: ../src/GenericConduit.cc:452 ../src/GenericConduit.cc:481
+#: ../src/GenericConduit.cc:572 ../src/GenericConduit.cc:591
+#: ../src/GenericConduit.cc:612 ../src/GenericConduit.cc:723
+#: ../src/GenericConduit.cc:929 ../src/GenericConduit.cc:952
+#: ../src/GenericConduit.cc:978 ../src/GenericConduit.cc:1067
+#: ../src/GenericConduit.cc:1086 ../src/GenericConduit.cc:1127
+#: ../src/GenericConduit.cc:1229 ../src/GenericConduit.cc:1465
+#: ../src/GenericConduit.cc:1494 ../src/GenericConduit.cc:1521
+#: ../src/backup.c:563 ../src/backup.c:596 ../src/backup.c:628
+#: ../src/backup.c:655 ../src/backup.c:675 ../src/install.c:586
+#: ../src/install.c:618 ../src/install.c:730 ../src/restore.c:192
+#, fuzzy
+msgid "Error"
+msgstr "Chyba\n"
+
+#: ../src/install.c:338 ../src/install.c:359
 msgid "Error\n"
 msgstr "Chyba\n"
 
-#: ../src/coldsync.c:930 ../src/coldsync.c:1178 ../src/coldsync.c:2645
-#: ../src/coldsync.c:2879
+#: ../src/coldsync.c:997 ../src/coldsync.c:1216 ../src/coldsync.c:2590
+#: ../src/coldsync.c:2796
 #, c-format
 msgid "Error %d running install conduits."
 msgstr "Chyba %d v prùbìhu spou¹tìní instalaèních conduitu."
 
-#: ../src/coldsync.c:1219 ../src/coldsync.c:2919
+#: ../src/coldsync.c:1257 ../src/coldsync.c:2836
 #, c-format
 msgid "Error %d running post-dump conduits."
 msgstr "Chyba %d v prùbìhu spou¹tìní post-dump conduitu."
 
-#: ../src/coldsync.c:989 ../src/coldsync.c:2702
+#: ../src/coldsync.c:1056 ../src/coldsync.c:2647
 #, c-format
 msgid "Error %d running pre-fetch conduits."
 msgstr "Chyba %d pøi spouètìní pre-feth conduitu."
 
-#: ../src/coldsync.c:1401
+#: ../src/coldsync.c:1435
 #, c-format
 msgid "Error backing up \"%s\"."
 msgstr "Chyba pøi zálohování \"%s\"."
 
-#: ../libpdb/pdb.c:884
+#: ../src/install.c:106
 #, c-format
 msgid "Error creating database \"%s\": %d.\n"
 msgstr "Chyba pøi vytváøení databáze \"%s\": %d.\n"
 
-#: ../src/install.c:542
+#: ../src/install.c:751
 #, c-format
 msgid "Error deleting \"%s\"."
 msgstr "Chyba pøi mazání \"%s\"."
 
-#: ../src/coldsync.c:2986
+#: ../src/coldsync.c:2903
 #, c-format
 msgid "Error during DlpEndOfSync: (%d) %s."
 msgstr "Chyba pøi DlpEndOfSync: (%d) %s."
@@ -1300,75 +1424,86 @@ msgstr "Chyba pøi DlpEndOfSync: (%d) %s."
 msgid "Error during cmp_read: (%d) %s.\n"
 msgstr "Chyba pøi cmp_read: (%d) %s.\n"
 
-#: ../libpconn/PConnection_serial.c:320
+#: ../libpconn/PConnection_serial.c:342
 msgid "Error establishing CMP connection.\n"
 msgstr "Chyba pøi navazování CMP spojení.\n"
 
-#: ../libpconn/palm_errno.c:29
+#: ../libpconn/palm_errno.c:42
 msgid "Error in system call or library function"
 msgstr "Chyba pøi systémovém volání nebo v knihovní funkci"
 
-#: ../src/install.c:505
+#: ../src/install.c:705
 #, c-format
 msgid "Error opening \"%s\"."
 msgstr "Chyba pøi otvírání \"%s\"."
 
-#: ../libpconn/netsync.c:103
+#: ../libpconn/netsync.c:467
 msgid "Error reading NetSync packet header.\n"
 msgstr "Chyba pøi ètení hlavièky NetSync paketu.\n"
 
-#: ../libpconn/netsync.c:209
+#: ../libpconn/netsync.c:588
 msgid "Error sending NetSync header.\n"
 msgstr "Chyba pøi posílání hlavièky NetSync u.\n"
 
-#: ../libpconn/PConnection_serial.c:333
+#: ../libpconn/PConnection_serial.c:378
 msgid "Error trying to set speed.\n"
 msgstr "Chyba pøi pokusu nastavit rychlost.\n"
 
-#: ../src/GenericConduit.cc:877 ../src/GenericConduit.cc:1414
-#: ../src/GenericConduit.cc:1724 ../src/GenericConduit.cc:1869
-#: ../src/GenericConduit.cc:2035 ../src/GenericConduit.cc:2269
+#: ../src/GenericConduit.cc:888 ../src/GenericConduit.cc:1431
+#: ../src/GenericConduit.cc:1744 ../src/GenericConduit.cc:1889
+#: ../src/GenericConduit.cc:2055 ../src/GenericConduit.cc:2289
 #, c-format
 msgid "Error uploading record 0x%08lx: %d."
 msgstr "Chyba pøi uploadingu záznamu 0x%08lx: %d."
 
-#: ../src/misc.c:103
+#: ../src/misc.c:108
 msgid "Error: "
 msgstr "Chyba: "
 
-#: ../libpconn/PConnection_serial.c:473 ../libpconn/PConnection_usb.c:344
+#: ../libpconn/PConnection_serial.c:612 ../libpconn/PConnection_usb.c:460
 #, c-format
 msgid "Error: Can't open \"%s\".\n"
 msgstr "Chyba: Nemohu otevøít \"%s\".\n"
 
-#: ../libpconn/PConnection.c:104
+#: ../libpconn/PConnection_serial.c:368
+#, c-format
+msgid ""
+"Error: Palm suggested %ld bps, but the serial port can't go that fast.\n"
+msgstr ""
+
+#: ../libpconn/PConnection_serial.c:358
+#, c-format
+msgid "Error: Palm suggested unknown speed %ld\n"
+msgstr ""
+
+#: ../libpconn/PConnection.c:118
 msgid "Error: USB support not enabled.\n"
 msgstr "Chyba: není nastavena podpora USB.\n"
 
-#: ../libpconn/netsync.c:109
+#: ../libpconn/netsync.c:474
 #, c-format
 msgid "Error: only read %d bytes of NetSync packet header.\n"
 msgstr "Chyba: pøeèetl jsme pouze %d bytù z hlavièky NetSync paketu.\n"
 
-#: ../libpdb/pdb.c:265
+#: ../libpdb/pdb.c:281
 msgid "File isn't seekable.\n"
 msgstr "Na souboru nefunguje metoda seek.\n"
 
-#: ../libpdb/pdb.c:2207
-#, c-format
-msgid "Hey! I can't find the %dth record!\n"
+#: ../libpdb/pdb.c:1893
+#, fuzzy, c-format
+msgid "Hey! I can't find the %dth record in \"%.*s\"!\n"
 msgstr "Hey! Nemohu nalézt %d. záznam!\n"
 
-#: ../libpdb/pdb.c:2076
-#, c-format
-msgid "Hey! I can't find the %dth resource!\n"
+#: ../libpdb/pdb.c:1755
+#, fuzzy, c-format
+msgid "Hey! I can't find the %dth resource in \"%.*s\"!\n"
 msgstr "Hey! Nemohu nají %d. resource!\n"
 
-#: ../src/config.c:846
+#: ../src/config.c:924
 msgid "Hey! This isn't an AF_INET address!"
 msgstr "Hey! To není AF_INET adresa!"
 
-#: ../src/GenericConduit.cc:1184
+#: ../src/GenericConduit.cc:1200
 msgid ""
 "I have a new, deleted record that is neither archived nor expunged\n"
 "What am I supposed to do?"
@@ -1376,177 +1511,181 @@ msgstr ""
 "Mám nový smazaný záznam, který není ani archivován, ani vyprázdnìn\n"
 "Co mám dìlat?"
 
-#: ../src/conduit.c:2002
+#: ../src/conduit.c:2169
 msgid "Inside run_DummyConduit.\n"
 msgstr "V run_DummyConduit.\n"
 
-#: ../src/install.c:126 ../src/install.c:383
+#: ../src/install.c:584 ../src/install.c:616 ../src/install.c:701
+#: ../src/install.c:709 ../src/install.c:728 ../src/install.c:733
+#, fuzzy
+msgid "Install"
+msgstr "Instaluji "
+
+#: ../src/install.c:317
 msgid "Install "
 msgstr "Instaluji "
 
-#: ../libpconn/palm_errno.c:37
+#: ../libpconn/palm_errno.c:58
 msgid "Invalid argument ID"
 msgstr "©patný ID argument"
 
-#: ../libpconn/palm_errno.c:35
+#: ../libpconn/palm_errno.c:54
 msgid "Invalid request ID"
 msgstr "©patné ID po¾adavku"
 
-#: ../libpconn/palm_errno.c:36
+#: ../libpconn/palm_errno.c:56
 msgid "Invalid result ID"
 msgstr "©patné ID výsledku"
 
-#: ../src/coldsync.c:270
+#: ../src/coldsync.c:500
 #, c-format
 msgid "Log started on %s"
 msgstr "Log zahájen v %s"
 
-#: ../src/coldsync.c:524 ../src/coldsync.c:570 ../src/coldsync.c:623
-#: ../src/coldsync.c:902 ../src/coldsync.c:1001 ../src/coldsync.c:1031
-#: ../src/coldsync.c:1058 ../src/coldsync.c:1152 ../src/coldsync.c:1228
-#: ../src/coldsync.c:1350 ../src/coldsync.c:1398 ../src/coldsync.c:1518
-#: ../src/coldsync.c:1543 ../src/coldsync.c:1567 ../src/coldsync.c:2618
-#: ../src/coldsync.c:2714 ../src/coldsync.c:2742 ../src/coldsync.c:2763
-#: ../src/coldsync.c:2853 ../src/coldsync.c:2928 ../src/conduit.c:498
-#: ../src/restore.c:298
+#: ../src/coldsync.c:583 ../src/coldsync.c:634 ../src/coldsync.c:687
+#: ../src/coldsync.c:969 ../src/coldsync.c:1068 ../src/coldsync.c:1097
+#: ../src/coldsync.c:1124 ../src/coldsync.c:1190 ../src/coldsync.c:1266
+#: ../src/coldsync.c:1384 ../src/coldsync.c:1432 ../src/coldsync.c:1529
+#: ../src/coldsync.c:1552 ../src/coldsync.c:2563 ../src/coldsync.c:2659
+#: ../src/coldsync.c:2686 ../src/coldsync.c:2707 ../src/coldsync.c:2770
+#: ../src/coldsync.c:2845 ../src/conduit.c:500 ../src/restore.c:278
 msgid "Lost connection to Palm."
 msgstr "Ztratil jsem spojení s Palmem."
 
-#: ../src/conduit.c:1177 ../src/conduit.c:1235
+#: ../src/conduit.c:1186 ../src/conduit.c:1246
 msgid "Lost connection to Palm. Aborting."
 msgstr "Ztratil jsem spojení s Palmem. Konèím."
 
-#: ../src/config.c:264
+#: ../src/config.c:263
 #, c-format
 msgid "Missing option argument after \"%s\"."
 msgstr "Chybí argument optionu po \"%s\"."
 
-#: ../src/coldsync.c:780 ../src/coldsync.c:2500
+#: ../src/config.c:805
+msgid "Modes:\n"
+msgstr "Módy:\n"
+
+#: ../src/coldsync.c:847 ../src/coldsync.c:2445
 msgid "Network sync forwarding failed."
 msgstr "Sí»ový sync forwarding selhal."
 
-#: ../src/palm.c:284
+#: ../src/spalm.c:288
 msgid "No NetSync info.\n"
 msgstr "Nemám NetSync info.\n"
 
-#: ../src/coldsync.c:1260
+#: ../src/coldsync.c:1290
 msgid "No backup directory specified."
 msgstr "Nebyl zadán backup adresáø."
 
-#: ../libpconn/palm_errno.c:28
+#: ../libpconn/palm_errno.c:40
 msgid "No error"
 msgstr "Bez chyby"
 
-#: ../src/coldsync.c:2287
+#: ../src/coldsync.c:2229
 #, c-format
 msgid "No matching entry in %s."
 msgstr "V %s nemám shodnou polo¾ku."
 
-#: ../src/coldsync.c:476 ../src/coldsync.c:1296 ../src/coldsync.c:1466
-#: ../src/coldsync.c:1659 ../src/coldsync.c:2126
+#: ../src/coldsync.c:529 ../src/coldsync.c:1325 ../src/coldsync.c:1472
+#: ../src/coldsync.c:1615 ../src/coldsync.c:2063
 msgid "No port specified."
 msgstr "Nebyl navolen port."
 
-#: ../src/coldsync.c:1382
-msgid "No such database\n"
+#: ../src/coldsync.c:1416
+#, fuzzy
+msgid "No such database"
 msgstr "Databáze neexistuje\n"
 
-#: ../src/coldsync.c:1377
+#: ../src/coldsync.c:1411
 #, c-format
 msgid "No such database: \"%s\"."
 msgstr "Databáze \"%s\" neexistuje."
 
-#: ../src/coldsync.c:1286
+#: ../src/coldsync.c:1315
 #, c-format
 msgid "No such directory: \"%s\"."
 msgstr "Adresáø \"%s\" neexistuje."
 
-#: ../src/GenericConduit.cc:485 ../src/GenericConduit.cc:974
-#: ../src/GenericConduit.cc:1511 ../src/backup.c:180 ../src/install.c:503
-#: ../src/install.c:526 ../src/restore.c:217
-msgid "OK\n"
+#: ../src/GenericConduit.cc:492 ../src/GenericConduit.cc:989
+#: ../src/GenericConduit.cc:1531 ../src/backup.c:686 ../src/install.c:703
+#: ../src/install.c:735 ../src/restore.c:197
+#, fuzzy
+msgid "OK"
 msgstr "OK\n"
 
-#: ../libpconn/palm_errno.c:30
+#: ../src/config.c:812
+msgid "Options:\n"
+msgstr "Optiony:\n"
+
+#: ../libpconn/palm_errno.c:44
 msgid "Out of memory"
 msgstr "Out of memory (nedostatek pamìti)"
 
-#: ../libpconn/PConnection_serial.c:510 ../libpconn/PConnection_usb.c:321
+#: ../libpconn/PConnection_serial.c:653 ../libpconn/PConnection_usb.c:435
 msgid "Please press the HotSync button.\n"
 msgstr "Prosím stisknìte tlaèítko HotSync.\n"
 
-#: ../src/install.c:508
-msgid "Problem\n"
+#: ../src/install.c:711
+#, fuzzy
+msgid "Problem"
 msgstr "Problém\n"
 
-#: ../src/GenericConduit.cc:143
-msgid "ROM\n"
-msgstr "ROM\n"
-
-#: ../src/restore.c:177
-msgid "Restore "
+#: ../src/restore.c:181 ../src/restore.c:192 ../src/restore.c:197
+#, fuzzy
+msgid "Restore"
 msgstr "Obnovuji "
 
-#: ../src/restore.c:169
+#: ../src/restore.c:149
 #, c-format
 msgid "Restore: Can't delete database \"%s\": %d."
 msgstr "Obnovení: nemohu smazat databázi \"%s\": %d."
 
-#: ../src/coldsync.c:1212
+#: ../src/coldsync.c:1250
 msgid "Running Dump conduits"
 msgstr "Spou¹tím dump conduity"
 
-#: ../src/coldsync.c:982
+#: ../src/coldsync.c:1049
 msgid "Running Fetch conduits"
 msgstr "Spou¹tím stahovací conduity"
 
-#: ../src/coldsync.c:926 ../src/coldsync.c:1174 ../src/coldsync.c:2641
-#: ../src/coldsync.c:2875
+#: ../src/coldsync.c:993 ../src/coldsync.c:1212 ../src/coldsync.c:2586
+#: ../src/coldsync.c:2792
 msgid "Running Install conduits"
 msgstr "Spou¹tím instalaèní conduity"
 
-#: ../src/coldsync.c:1007
+#: ../src/coldsync.c:1074
 msgid "Running Sync conduits"
 msgstr "Spou¹tím Sync conduity"
 
-#: ../libpconn/slp.c:389
+#: ../libpconn/slp.c:391
 #, c-format
 msgid "SLP: bad CRC: expected 0x%04x, got 0x%04x.\n"
 msgstr "SLP: ¹patný CRC: oèekával jsem 0x%04x, doslal jsem 0x%04x.\n"
 
-#: ../src/coldsync.c:1894
-msgid "Set user ID: "
+#: ../src/coldsync.c:1854
+#, fuzzy
+msgid "Set user ID"
 msgstr "Nastaveno u¾ivatelské ID:"
 
-#: ../src/coldsync.c:1930
-msgid "Set username: "
+#: ../src/coldsync.c:1889
+#, fuzzy
+msgid "Set username"
 msgstr "Nastaveno u¾ivatelské jméno: "
 
-#: ../src/coldsync.c:1053
+#: ../src/coldsync.c:1119
 msgid "Sync cancelled by Palm."
 msgstr "Sync pøeru¹en Palmem."
 
-#: ../src/coldsync.c:1021 ../src/coldsync.c:2732
+#: ../src/coldsync.c:1088 ../src/coldsync.c:2677
 msgid "Sync cancelled."
 msgstr "Sync pøeru¹en."
 
-#: ../src/config.c:211
-msgid ""
-"The \"-b <dir>\" option is obsolete. Please use \"-mb <dir>\"\n"
-"instead."
+#: ../src/coldsync.c:621
+#, c-format
+msgid "Sync for %s at %s"
 msgstr ""
-"Optiona \"-b <dir>\" je zastaralá. Prosím pou¾ijte místo ní\n"
-"\"-mb <dir>."
 
-#: ../src/config.c:223
-msgid ""
-"The \"-r <dir>\" option is obsolete. Please use \"-mr <dir>\"\n"
-"instead."
-msgstr ""
-"Optiona \"-r <dir>\" je zastaralá. Prosím pou¾ijte místo ní\n"
-"\"-mr <dir>."
-
-#: ../src/coldsync.c:584
+#: ../src/coldsync.c:648
 #, c-format
 msgid ""
 "This Palm has user ID %ld (I was expecting %ld).\n"
@@ -1564,7 +1703,7 @@ msgstr ""
 "\tVá¹ konfiguraèní soubor by mìl obsahovat PDA block vypadající\n"
 "nìjak takto:"
 
-#: ../src/coldsync.c:639
+#: ../src/coldsync.c:703
 #, c-format
 msgid ""
 "This Palm has user name \"%.*s\" (I was expecting \"%.*s\").\n"
@@ -1582,43 +1721,44 @@ msgstr ""
 "\tVá¹ konfiguraèní soubor by mìl obsahovat PDA block vypadající\n"
 "nìjak takto:"
 
-#: ../src/config.c:867
+#: ../src/config.c:945
 msgid "This host doesn't appear to have an IP address."
 msgstr "Tento host nevypadá na to, ¾e by mìl IP adresu."
 
-#: ../libpconn/palm_errno.c:31
+#: ../libpconn/palm_errno.c:46
 msgid "Timeout"
 msgstr "Timeout (vypr¹el èas)"
 
-#: ../src/parser.y:32
-msgid "Too many errors. Aborting."
-msgstr "Pøíli¹ mnoho chyb. Konèím."
-
-#: ../src/coldsync.c:3185
+#: ../src/coldsync.c:3102
 #, c-format
 msgid "Too many files named \"%s\" in the attic."
 msgstr "V attic u je pojmenováno pøíli¹ mnoho souborù \"%s\""
 
-#: ../libpconn/palm_errno.c:34
+#: ../libpconn/palm_errno.c:52
 msgid "Transfer aborted"
 msgstr "Transfer byl pøeru¹en"
 
-#: ../src/config.c:243
+#: ../src/config.c:229
 #, c-format
 msgid "Unknown device type: \"%s\"."
 msgstr "Neznámý druh zaøízení: \"%s\"."
 
-#: ../src/config.c:675
+#: ../libpconn/palm_errno.c:64
+#, fuzzy
+msgid "Unknown error"
+msgstr "Bez chyby"
+
+#: ../src/config.c:706
 #, c-format
 msgid "Unknown facility \"%s\"."
 msgstr "Neznámá facilita \"%s\"."
 
-#: ../src/config.c:724
+#: ../src/config.c:755
 #, c-format
 msgid "Unknown mode: \"%s\"."
 msgstr "Neznámý mód: \"%s\"."
 
-#: ../src/coldsync.c:399
+#: ../src/coldsync.c:345
 #, c-format
 msgid ""
 "Unknown mode: %d.\n"
@@ -1627,17 +1767,27 @@ msgstr ""
 "Neznámý mód: %d.\n"
 "To je chyba. Prosím, upozornìte o tom maintainera."
 
-#: ../src/coldsync.c:2318
+#: ../src/config.c:242
+#, fuzzy, c-format
+msgid "Unknown protocol: \"%s\"."
+msgstr "Neznámý mód: \"%s\"."
+
+#: ../src/coldsync.c:2260
 #, c-format
 msgid "Unknown user/uid: \"%s\"."
 msgstr "Neznámý u¾ivatel/uid(user id): \"%s\"."
 
-#: ../src/config.c:255
+#: ../src/config.c:254
 #, c-format
 msgid "Unrecognized option: \"%s\"."
 msgstr "Nerozpoznaná optiona: \"%s\"."
 
-#: ../libpdb/pdb.c:851
+#: lexer.l:504
+#, c-format
+msgid "Unterminated string at line %d (string started on line %d)\n"
+msgstr ""
+
+#: ../src/install.c:79
 #, c-format
 msgid "Upload of \"%s\" cancelled by Palm.\n"
 msgstr "Nahrávání \"%s\" pøeru¹eno Palmem.\n"
@@ -1647,72 +1797,25 @@ msgstr "Nahrávání \"%s\" pøeru¹eno Palmem.\n"
 msgid "Uploading \"%s\""
 msgstr "Nahrávám \"%s\""
 
-#: ../src/config.c:736
+#: ../src/config.c:834
 #, c-format
-msgid ""
-"Usage: %s [options] <mode> <mode args>\n"
-"Modes:\n"
-"\t-ms:\tSynchronize (default).\n"
-"\t-mI:\tInitialize.\n"
-"\t-mb <dir> [database...]\n"
-"\t\tPerform a backup to <dir>.\n"
-"\t-mr <file|dir>...\n"
-"\t\tRestore or install new databases.\n"
-"Options:\n"
-"\t-h:\t\tPrint this help message and exit.\n"
-"\t-V:\t\tPrint version and exit.\n"
-"\t-f <file>:\tRead configuration from <file>\n"
-"\t-z:\t\tInstall databases after sync.\n"
-"\t-I:\t\tForce installation of new databases.\n"
-"\t-S:\t\tForce slow sync.\n"
-"\t-F:\t\tForce fast sync.\n"
-"\t-R:\t\tCheck ROM databases.\n"
-"\t-p <port>:\tListen on device <port>.\n"
-"\t-t <devtype>:\tPort type [serial|usb|tcp].\n"
-"\t-s:\t\tLog error messages to syslog.\n"
-"\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
-"\t-v:\t\tIncrease verbosity.\n"
-"\t-d <fac[:level]>:\tSet debugging level.\n"
-msgstr ""
-"Pou¾ití: %s [options] <mode> <mode args>\n"
-"Módy:\n"
-"\t-ms:\tSynchronizuj (defaultní).\n"
-"\t-mI:\tInicializuj Palma.\n"
-"\t-mb <dir> [databáze...]\n"
-"\t\tZazálohuj databáze do <dir>.\n"
-"\t-mr <file|dir>...\n"
-"\t\tObnov data nebo nainstaluj nové databáze.\n"
-"Optiony:\n"
-"\t-h:\t\tVytiskne tuto nápovìdu a skonèí.\n"
-"\t-V:\t\tVytiskne verzi a skonèí.\n"
-"\t-f <file>:\tNaète konfiguraci ze souboru <file>\n"
-"\t-z:\t\tPo dokonèení synchronizace nainstaluje na Palm\n"
-"\t\t\t\tnové databáze.\n"
-"\t-I:\t\tVynutí nainstaci nových databází.\n"
-"\t-S:\t\tVynutí pomalou synchronizaci.\n"
-"\t-F:\t\tVynutí rychlou synchronizaci.\n"
-"\t-R:\t\tProvìøí ROM databázi.\n"
-"\t-p <port>:\tBude naslouchat zaøízení na <port>u.\n"
-"\t-t <devtype>:\tTyp portu [serial|usb|tcp].\n"
-"\t-s:\t\tZaloguje chybové zprávy do syslogu.\n"
-"\t-l: <soubor>:\tZapí¹e logovací/debugovací zprávy do <soubor>u.\n"
-"\t-v:\t\tZvìt¹í mno¾ství informací od programu.\n"
-"\t-d <fact[:level]>:Nastaví debugging level.\n"
+msgid "Usage: %s [options] <mode> <mode args>\n"
+msgstr "Pou¾ití: %s [options] <mode> <mode args>\n"
 
-#: ../src/misc.c:70
+#: ../src/misc.c:75
 msgid "Warning: "
 msgstr "Varování: "
 
-#: ../libpdb/pdb.c:1909
-#, c-format
+#: ../libpdb/pdb.c:1580
+#, fuzzy, c-format
 msgid ""
-"Warning: AppInfo block isn't where I thought it would be.\n"
+"Warning: AppInfo block in \"%.*s\" isn't where I thought it would be.\n"
 "Expected 0x%lx, but we're at 0x%lx.\n"
 msgstr ""
 "Varování: AppInfo block je na divném místì.\n"
 "Oèekával jsem ho na 0x%lx, ale jsem na 0x%lx.\n"
 
-#: ../src/palm.c:457
+#: ../src/spalm.c:461
 #, c-format
 msgid ""
 "Warning: ROM serial number is %d characters long. Please notify the\n"
@@ -1721,7 +1824,16 @@ msgstr ""
 "Varování: sériové èíslo z ROM pamìti je dlouhé %d znakù.\n"
 "Prosím uvìdomte o tom maintainera."
 
-#: ../libpconn/PConnection_serial.c:309
+#: ../libpconn/PConnection_serial.c:329
+#, fuzzy, c-format
+msgid ""
+"Warning: can't set the serial port to the speed you requested (%ld bps).\n"
+"Using default.\n"
+msgstr ""
+"Varování: nemohu nastavit rychlost na po¾adovanou hodnotu (%ld bps).\n"
+"Pou¾iji defaultní nastavení.\n"
+
+#: ../libpconn/PConnection_serial.c:318
 #, c-format
 msgid ""
 "Warning: can't set the speed you requested (%ld bps).\n"
@@ -1730,43 +1842,47 @@ msgstr ""
 "Varování: nemohu nastavit rychlost na po¾adovanou hodnotu (%ld bps).\n"
 "Pou¾iji defaultní nastavení.\n"
 
-#: ../libpconn/PConnection_serial.c:465
+#: ../libpconn/PConnection_serial.c:603
 #, c-format
 msgid "Warning: no device on %s. Sleeping\n"
 msgstr "Varování: na %s není pøipojeno ¾ádné zaøízení. Èekám\n"
 
-#: ../libpdb/pdb.c:2229
-#, c-format
+#: ../libpdb/pdb.c:1916
+#, fuzzy, c-format
 msgid ""
-"Warning: record %d isn't where I thought it would be.\n"
+"Warning: record %d in \"%.*s\" isn't where I thought it would be.\n"
 "Expected 0x%lx, but we're at 0x%lx.\n"
 msgstr ""
 "Varování: záznam %d je na divném místì.\n"
 "Oèekával jsem ho na 0x%lx, ale jsem na 0x%lx.\n"
 
-#: ../libpdb/pdb.c:2103
-#, c-format
+#: ../libpdb/pdb.c:1783
+#, fuzzy, c-format
 msgid ""
-"Warning: resource %d isn't where I thought it would be.\n"
+"Warning: resource %d in \"%.*s\" isn't where I thought it would be.\n"
 "Expected 0x%lx, but we're at 0x%lx.\n"
 msgstr ""
 "Varování: resource %d je na neoèekávaném místì.\n"
 "Oèekával jsem ho na 0x%lx, ale jsem na 0x%lx.\n"
 
-#: ../libpdb/pdb.c:2018
-#, c-format
+#: ../libpdb/pdb.c:1693
+#, fuzzy, c-format
 msgid ""
-"Warning: sort block isn't where I thought it would be.\n"
+"Warning: sort block in \"%.*s\" isn't where I thought it would be.\n"
 "Expected 0x%lx, but we're at 0x%lx.\n"
 msgstr ""
 "Varování: tøídicí block (sort block) je na neoèekávaném místì.\n"
 "Oèekávál jsem ho na 0x%lx, ale jsme na 0x%lx.\n"
 
-#: ../libpconn/padp.c:642
+#: ../libpconn/padp.c:647
 msgid "Write timeout. Attempting to resend.\n"
 msgstr "Timeout pøi zápisu. Zkou¹ím data poslat znovu.\n"
 
-#: ../src/palm.c:559
+#: ../libpconn/palm_errno.c:60
+msgid "XID on ACK doesn't match request"
+msgstr ""
+
+#: ../src/spalm.c:563
 msgid ""
 "You have an old Palm, one that doesn't say how many\n"
 "databases it has. I can't cope with this."
@@ -1774,7 +1890,7 @@ msgstr ""
 "Máte starého Palma, nìjakého z tìch, co mì neøeknout,\n"
 "kolik má databází. Je mi líto, ale bez toho neumohu pracovat."
 
-#: ../src/config.c:697
+#: ../src/config.c:728
 #, c-format
 msgid ""
 "You shouldn't specify two -m<mode> options.\n"
@@ -1783,7 +1899,7 @@ msgstr ""
 "Nemìli by jste zadávat dva -m<mode> parametry.\n"
 "\tPou¾iji -m%s."
 
-#: ../src/config.c:270
+#: ../src/config.c:269
 #, c-format
 msgid ""
 "You specified an apparently legal option (\"-%c\"), but I don't know what\n"
@@ -1792,15 +1908,15 @@ msgstr ""
 "Specifikovali jste podle v¹eho legální parametr (\"-%c\"), ale nevím,\n"
 "co s ním dìlat. To je chyba. Prosím kontaktujte maintainera."
 
-#: ../src/GenericConduit.cc:178
+#: ../src/GenericConduit.cc:177
 msgid "[generic]: Aborting."
 msgstr "[generic]: Pøeru¹uji."
 
-#: ../libpconn/PConnection_usb.c:526
+#: ../libpconn/PConnection_usb.c:649
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetBytesAvailable selhalo"
 
-#: ../libpconn/PConnection_usb.c:463
+#: ../libpconn/PConnection_usb.c:586
 msgid "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo failed"
 msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo selhalo"
 
@@ -1808,6 +1924,109 @@ msgstr "ioctl(USB_DO_REQUEST) usbRequestVendorGetConnectionInfo selhalo"
 msgid "pdb_Download() failed."
 msgstr "pdb_Download() selhala."
 
-#: ../libpconn/PConnection_usb.c:164
+#: ../libpconn/PConnection_usb.c:181
 msgid "usb: trying to fill a non-empty buffer.\n"
 msgstr "usb: pokou¹ím se naplnit neprázdný buffer.\n"
+
+#~ msgid "\"%s\" is a read-only database. Not uploading."
+#~ msgstr "Databáze \"%s\" je pøístupná pouze pro ètení. Nenahrávám ji."
+
+#~ msgid ""
+#~ "%s: %d: Missing ':'\n"
+#~ "\tColons are now required after most directives.\n"
+#~ "\t(This warning will only be shown once.)"
+#~ msgstr ""
+#~ "%s: %d: Postrádám ':'\n"
+#~ "\tNyní jsou po vìt¹inì nastavení vy¾adovány støedníky.\n"
+#~ "\t(Toto varování bude zobrazeno pouze jednou.)"
+
+#~ msgid "%s: Can't malloc copy of string."
+#~ msgstr "%s: Nemohu malloc-ovat kopii øetìzce."
+
+#~ msgid "Can't load configuration"
+#~ msgstr "Nemohu nahrát konfiguraci"
+
+#~ msgid "Can't read AppInfo block.\n"
+#~ msgstr "Nemohu pøeèíst AppInfo block.\n"
+
+#~ msgid "Can't read records.\n"
+#~ msgstr "Nemohu vytvoøit záznamy.\n"
+
+#~ msgid "Can't read resources.\n"
+#~ msgstr "Nemohu pøeèíst resourci.\n"
+
+#~ msgid "Can't read sort block.\n"
+#~ msgstr "Nemohu pøeèíst sort block.\n"
+
+#~ msgid "Couldn't write sync log."
+#~ msgstr "Nemohu zapsat sync log."
+
+#~ msgid "ROM\n"
+#~ msgstr "ROM\n"
+
+#~ msgid ""
+#~ "The \"-b <dir>\" option is obsolete. Please use \"-mb <dir>\"\n"
+#~ "instead."
+#~ msgstr ""
+#~ "Optiona \"-b <dir>\" je zastaralá. Prosím pou¾ijte místo ní\n"
+#~ "\"-mb <dir>."
+
+#~ msgid ""
+#~ "The \"-r <dir>\" option is obsolete. Please use \"-mr <dir>\"\n"
+#~ "instead."
+#~ msgstr ""
+#~ "Optiona \"-r <dir>\" je zastaralá. Prosím pou¾ijte místo ní\n"
+#~ "\"-mr <dir>."
+
+#~ msgid "Too many errors. Aborting."
+#~ msgstr "Pøíli¹ mnoho chyb. Konèím."
+
+#~ msgid ""
+#~ "Usage: %s [options] <mode> <mode args>\n"
+#~ "Modes:\n"
+#~ "\t-ms:\tSynchronize (default).\n"
+#~ "\t-mI:\tInitialize.\n"
+#~ "\t-mb <dir> [database...]\n"
+#~ "\t\tPerform a backup to <dir>.\n"
+#~ "\t-mr <file|dir>...\n"
+#~ "\t\tRestore or install new databases.\n"
+#~ "Options:\n"
+#~ "\t-h:\t\tPrint this help message and exit.\n"
+#~ "\t-V:\t\tPrint version and exit.\n"
+#~ "\t-f <file>:\tRead configuration from <file>\n"
+#~ "\t-z:\t\tInstall databases after sync.\n"
+#~ "\t-I:\t\tForce installation of new databases.\n"
+#~ "\t-S:\t\tForce slow sync.\n"
+#~ "\t-F:\t\tForce fast sync.\n"
+#~ "\t-R:\t\tCheck ROM databases.\n"
+#~ "\t-p <port>:\tListen on device <port>.\n"
+#~ "\t-t <devtype>:\tPort type [serial|usb|tcp].\n"
+#~ "\t-s:\t\tLog error messages to syslog.\n"
+#~ "\t-l: <file>:\tWrite error/debugging messages to <file>.\n"
+#~ "\t-v:\t\tIncrease verbosity.\n"
+#~ "\t-d <fac[:level]>:\tSet debugging level.\n"
+#~ msgstr ""
+#~ "Pou¾ití: %s [options] <mode> <mode args>\n"
+#~ "Módy:\n"
+#~ "\t-ms:\tSynchronizuj (defaultní).\n"
+#~ "\t-mI:\tInicializuj Palma.\n"
+#~ "\t-mb <dir> [databáze...]\n"
+#~ "\t\tZazálohuj databáze do <dir>.\n"
+#~ "\t-mr <file|dir>...\n"
+#~ "\t\tObnov data nebo nainstaluj nové databáze.\n"
+#~ "Optiony:\n"
+#~ "\t-h:\t\tVytiskne tuto nápovìdu a skonèí.\n"
+#~ "\t-V:\t\tVytiskne verzi a skonèí.\n"
+#~ "\t-f <file>:\tNaète konfiguraci ze souboru <file>\n"
+#~ "\t-z:\t\tPo dokonèení synchronizace nainstaluje na Palm\n"
+#~ "\t\t\t\tnové databáze.\n"
+#~ "\t-I:\t\tVynutí nainstaci nových databází.\n"
+#~ "\t-S:\t\tVynutí pomalou synchronizaci.\n"
+#~ "\t-F:\t\tVynutí rychlou synchronizaci.\n"
+#~ "\t-R:\t\tProvìøí ROM databázi.\n"
+#~ "\t-p <port>:\tBude naslouchat zaøízení na <port>u.\n"
+#~ "\t-t <devtype>:\tTyp portu [serial|usb|tcp].\n"
+#~ "\t-s:\t\tZaloguje chybové zprávy do syslogu.\n"
+#~ "\t-l: <soubor>:\tZapí¹e logovací/debugovací zprávy do <soubor>u.\n"
+#~ "\t-v:\t\tZvìt¹í mno¾ství informací od programu.\n"
+#~ "\t-d <fact[:level]>:Nastaví debugging level.\n"
