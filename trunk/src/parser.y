@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.53 2001-11-10 03:04:01 arensb Exp $
+ * $Id: parser.y,v 2.54 2001-11-10 03:13:36 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -759,14 +759,34 @@ options_list: options_list option
 
 option:	FORCE_INSTALL ';'
 	{
+		/* XXX - Allow an optional value: "true", "false", "yes",
+		 * or "no".
+		 */
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found force_install.\n");
+		/* XXX - This is bogus: it overrides the command line.
+		 * Perhaps better to define a struct for the parser, with
+		 * this option as a three-way boolean:
+		 * true/false/undefined, with undefined as the default.
+		 * Then set 'global_opts.force_install' only if the user
+		 * hasn't specified -I on the command line.
+		 */
 		global_opts.force_install = True;
 	}
 	| INSTALL_FIRST ';'
 	{
+		/* XXX - Allow an optional value: "true", "false", "yes",
+		 * or "no".
+		 */
 		PARSE_TRACE(3)
 			fprintf(stderr, "Found install_first.\n");
+		/* XXX - This is bogus: it overrides the command line.
+		 * Perhaps better to define a struct for the parser, with
+		 * this option as a three-way boolean:
+		 * true/false/undefined, with undefined as the default.
+		 * Then set 'global_opts.force_install' only if the user
+		 * hasn't specified -z on the command line.
+		 */
 		global_opts.install_first = True;
 	}
 	/* XXX - This is still broken: it accepts assignments of the form
