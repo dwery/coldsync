@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.3 1999-02-22 10:26:03 arensb Exp $
+dnl # $Id: configure.in,v 1.4 1999-02-24 13:28:46 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -9,7 +9,7 @@ dnl # Berkeley 'make' copes quite well with the equivalent
 dnl #	if test "$var1" = value; then var2=true; fi
 
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.0.5)
+AM_INIT_AUTOMAKE(coldsync, 0.1.2)
 AM_CONFIG_HEADER(config.h)
 
 dnl # XXX - Without this, the Makefile contains
@@ -45,12 +45,23 @@ dnl # echo "HAVE_FCNTL == $ac_cv_header_fcntl_h"
 dnl # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_HEADER_TIME
+AC_STRUCT_TIMEZONE
+
+dnl # XXX - How do you find out how big an 'off_t' is?
+dnl AC_CHECK_SIZEOF(off_t)
 
 dnl # Checks for library functions.
 AC_CHECK_FUNCS(select \
 	cfsetspeed \
 	cfmakeraw \
 	snprintf)
+
+# Tell the various Makefiles to use the compatibility function provided
+if test x"$ac_cv_func_cfmakeraw" = xno ; then
+	COMPAT="$COMPAT cfmakeraw.c"
+fi
+
+AC_SUBST(COMPAT)
 
 dnl # Should print out an error if one or more required components
 dnl # couldn't be found. Use AC_MSG_WARN([message])
