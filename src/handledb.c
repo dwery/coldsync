@@ -2,9 +2,10 @@
  *
  * Figure out what to do with a database on the Palm.
  *
- * $Id: handledb.c,v 1.2 1999-07-12 09:31:08 arensb Exp $
+ * $Id: handledb.c,v 1.3 1999-08-01 08:06:05 arensb Exp $
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <unistd.h>		/* For chdir() */
 #include <stdlib.h>		/* For getenv() */
@@ -12,7 +13,6 @@
 #include <sys/param.h>		/* For MAXPATHLEN */
 #include <sys/types.h>		/* For stat() */
 #include <sys/stat.h>		/* For stat() */
-#include "config.h"
 #include "coldsync.h"
 #include "dlp_cmd.h"
 #include "pdb.h"

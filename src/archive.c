@@ -1,8 +1,9 @@
 /* archive.c
  *
- * $Id: archive.c,v 1.2 1999-07-12 09:13:52 arensb Exp $
+ * $Id: archive.c,v 1.3 1999-08-01 08:02:11 arensb Exp $
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For getenv() */
 #include <string.h>		/* For strncat() et al. */

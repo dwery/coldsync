@@ -2,8 +2,9 @@
  *
  * Convenience functions for logging.
  *
- * $Id: log.c,v 1.3 1999-07-14 13:53:18 arensb Exp $
+ * $Id: log.c,v 1.4 1999-08-01 08:06:14 arensb Exp $
  */
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>		/* For realloc() */
 #include <string.h>		/* For strcat() */
