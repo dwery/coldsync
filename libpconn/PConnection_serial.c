@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.11 2000-12-11 09:23:16 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.12 2000-12-13 16:27:25 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -35,6 +35,9 @@
 #if !HAVE_CFMAKERAW
 extern void cfmakeraw(struct termios *t);
 #endif	/* HAVE_CFMAKERAW */
+
+static int find_available_speeds(int fd);
+static inline int bps_entry(const udword bps);
 
 /* XXX - This should be defined elsewhere (e.g., in a config file)
  * (Actually, it should be determined dynamically: try to figure out how
@@ -71,47 +74,164 @@ static struct {
 				 */
 } speeds[] = {
 #ifdef B230400
-	{ 230400,	B230400 },
+	{ 1,	230400,	B230400 },
 #endif	/* B230400 */
 #ifdef B115200
-	{ 115200,	B115200 },
+	{ 1,	115200,	B115200 },
 #endif	/* B115200 */
 #ifdef B76800
-	{ 76800,	B76800 },
+	{ 1,	 76800,	 B76800 },
 #endif	/* B76800 */
 #ifdef B57600
-	{ 57600,	B57600 },
+	{ 1,	 57600,	 B57600 },
 #endif	/* B57600 */
 #ifdef B38400
-	{ 38400,	B38400 },
+	{ 1,	 38400,	 B38400 },
 #endif	/* B38400 */
 #ifdef B28800
-	{ 28800,	B28800 },
+	{ 1,	 28800,	 B28800 },
 #endif	/* B28800 */
 #ifdef B19200
-	{ 19200,	B19200 },
+	{ 1,	 19200,	 B19200 },
 #endif	/* B19200 */
 #ifdef B14400
-	{ 14400,	B14400 },
+	{ 1,	 14400,	 B14400 },
 #endif	/* B14400 */
 #ifdef B9600
-	{  9600,	 B9600 },
+	{ 1,	  9600,	  B9600 },
 #endif	/* B9600 */
 #ifdef B7200
-	{  7200,	 B7200 },
+	{ 1,	  7200,	  B7200 },
 #endif	/* B7200 */
 #ifdef B4800
-	{  4800,	 B4800 },
+	{ 1,	  4800,	  B4800 },
 #endif	/* B4800 */
 #ifdef B2400
-	{  2400,	 B2400 },
+	{ 1,	  2400,	  B2400 },
 #endif	/* B2400 */
 #ifdef B1200
-	{  1200,	 B1200 },
+	{ 1,	  1200,	  B1200 },
 #endif	/* B1200 */
 	/* I doubt anyone wants to go any slower than 1200 bps */
 };
 #define num_speeds	sizeof(speeds) / sizeof(speeds[0])
+
+/* find_available_speeds
+ * Go through the entries in 'speeds[]', and see if the serial port can go
+ * at that speed. Update speeds[].usable.
+ * Returns 0 if successful, or a negative value in case of error.
+ *
+ * Note: this function assumes that a) speeds[] is sorted in order of
+ * descending speed, and b) if the serial port can go at speed S, then it
+ * can go at all slower speeds as well.
+ */
+static int
+find_available_speeds(int fd)
+{
+	int i;
+	int err;
+	struct termios term;
+
+	IO_TRACE(3)
+		fprintf(stderr, "Discovering available speeds.\n");
+
+	err = tcgetattr(fd, &term);	/* Get current terminal attributes */
+	if (err < 0)
+		return -1;
+
+	for (i = 0; i < num_speeds; i++)
+	{
+		if (!speeds[i].usable)
+			/* Skip speeds that have been marked unusable.
+			 * Presumably, this should never happen, since this
+			 * function is supposed to find out, but maybe a
+			 * speed has had its 'usable' field initialized to
+			 * 0 for future expansion, though we don't want to
+			 * use it.
+			 */
+			continue;
+
+		IO_TRACE(3)
+			fprintf(stderr, "Trying %ld bps (%d)... ",
+				speeds[i].bps, speeds[i].tcspeed);
+
+		/* Try setting the input speed */
+		if ((err = cfsetispeed(&term, speeds[i].tcspeed)) < 0)
+		{
+			/* Hard to imagine that we'd ever get here */
+			IO_TRACE(3)
+				fprintf(stderr, "no (cfsetispeed)\n");
+			speeds[i].usable = 0;
+			continue;
+		}
+
+		/* Try setting the output speed */
+		if ((err = cfsetospeed(&term, speeds[i].tcspeed)) < 0)
+		{
+			/* Hard to imagine that we'd ever get here */
+			IO_TRACE(3)
+				fprintf(stderr, "no (cfsetospeed)\n");
+			speeds[i].usable = 0;
+			continue;
+		}
+
+		/* Make it so */
+		if ((err = tcsetattr(fd, TCSANOW, &term)) < 0)
+		{
+			IO_TRACE(3)
+				fprintf(stderr, "no (tcsetattr)\n");
+			speeds[i].usable = 0;
+			continue;
+		}
+
+		IO_TRACE(3)
+			fprintf(stderr, "yes\n");
+		speeds[i].usable = 1;
+
+		/* If we've gotten this far, then speeds[i] is the fastest
+		 * speed at which the serial port can go. Break out of the
+		 * loop and mark all remaining speeds as usable.
+		 */
+		break;
+	}
+
+	for (; i < num_speeds; i++)
+	{
+		IO_TRACE(3)
+			fprintf(stderr, "Assuming %ld bps (%d) yes\n",
+				speeds[i].bps, speeds[i].tcspeed);
+		speeds[i].usable = 1;
+	}
+
+	return 0;
+}
+
+/* bps_entry
+ * Convenience function: given a speed in bps, find the entry in 'speeds[]'
+ * for that speed.
+ * Returns that entry's index in 'speeds' if successful, or a negative value
+ * otherwise.
+ */
+static inline int
+bps_entry(const udword bps)
+{
+	int i;
+
+	IO_TRACE(6)
+		fprintf(stderr, "bps_entry(%ld) == ", bps);
+
+	for (i = 0; i < num_speeds; i++)
+		if (speeds[i].bps == bps)
+		{
+			IO_TRACE(6)
+				fprintf(stderr, "%d\n", i);
+			return i;
+		}
+
+	IO_TRACE(6)
+		fprintf(stderr, "-1\n");
+	return -1;		/* Couldn't find it */
+}
 
 static int
 serial_read(struct PConnection *p, unsigned char *buf, int len)
@@ -129,14 +249,15 @@ serial_write(struct PConnection *p, unsigned char *buf, int len)
  * separate from "whatever the Palm suggests". If the Palm suggests 300 bps
  * but the user doesn't know how fast the serial port can go, this would
  * set the speed to be as fast as the serial port can go.
+ * However, bear in mind that the speed given in the CMP wakeup packet is
+ * the highest speed that the Palm can handle.
  */
 static int
 serial_accept(struct PConnection *pconn)
 {
 	int err;
-	int i;
+	int speed_ix;			/* Index into 'speeds[]' */
 	udword newspeed;
-	udword bps = SYNC_RATE;		/* Connection speed, in bps */
 	speed_t tcspeed = BSYNC_RATE;	/* B* value corresponding to 'bps'
 					 * (a necessary distinction because
 					 * some OSes (hint to Sun!) have
@@ -158,27 +279,8 @@ serial_accept(struct PConnection *pconn)
 	 */
 	if (pconn->speed != 0)
 	{
-		for (i = 0; i < num_speeds; i++)
-		{
-			/* XXX - Make sure the speed is usable (when
-			 * speeds[i].usable has been set).
-			 */
-			IO_TRACE(7)
-				fprintf(stderr, "Comparing %ld ==? %ld\n",
-					speeds[i].bps, pconn->speed);
-
-			if (speeds[i].bps == pconn->speed)
-			{
-				/* Found it */
-				IO_TRACE(7)
-					fprintf(stderr, "Found it\n");
-				bps = speeds[i].bps;
-				tcspeed = speeds[i].tcspeed;
-				break;
-			}
-		}
-
-		if (i >= num_speeds)
+		speed_ix = bps_entry(pconn->speed);
+		if (speed_ix < 0)
 		{
 			/* The requested speed wasn't found */
 			fprintf(stderr, _("Warning: can't set the speed you "
@@ -198,6 +300,9 @@ serial_accept(struct PConnection *pconn)
 
 	/* XXX - Find 'tcspeed' from 'newspeed' */
 	pconn->speed = newspeed;
+	speed_ix = bps_entry(newspeed);
+	/* XXX - Error-checking */
+	tcspeed = speeds[speed_ix].tcspeed;
 
 	/* Change the speed */
 	if ((err = (*pconn->io_setspeed)(pconn, tcspeed)) < 0)
@@ -338,10 +443,24 @@ pconn_serial_open(struct PConnection *pconn, char *device, int prompt)
 
 	/* Open the device. */
 	if ((pconn->fd = open(device, O_RDWR | O_BINARY)) < 0) 
+	{
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
 		return pconn->fd;
+	}
 
 	IO_TRACE(5)
 		fprintf(stderr, "PConnection fd == %d\n", pconn->fd);
+
+	/* Find the speeds at which the serial port can go */
+	if (find_available_speeds(pconn->fd) < 0)
+	{
+		dlp_tini(pconn);
+		padp_tini(pconn);
+		slp_tini(pconn);
+		return -1;
+	}
 
 	/* Set up the terminal characteristics */
 	tcgetattr(pconn->fd, &term);	/* Get current characteristics */
