@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.6 2000-07-14 04:37:49 arensb Exp $
+ * $Id: conduit.c,v 2.7 2000-07-18 15:59:10 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -506,7 +506,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 	{
 		SYNC_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n", fileno(tochild));
-		fpurge(tochild);
 		fclose(tochild);
 	}
 	if (fromchild != NULL)
@@ -514,7 +513,6 @@ run_conduit(struct dlp_dbinfo *dbinfo,
 		SYNC_TRACE(7)
 			fprintf(stderr, "- Closing fd %d\n",
 				fileno(fromchild));
-		fpurge(fromchild);
 		fclose(fromchild);
 	}
 
