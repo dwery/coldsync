@@ -69,7 +69,7 @@
   encoding. Most Unix boxen use EUC for Japanese, but the Visor uses
   SJIS.
 - Fix API bogosities in libpdb, libpconn.
-- 'make install' should install libraries, headers.
+- 'make install' should install libraries, headers. (done)
 - Redo error return status in {upload,download}_database() and
   friends, as per XXX comments.
 - Separate i18n stuff for libpconn/libpdb into separate files. Figure
@@ -375,16 +375,17 @@
   database.
 	At the end of the local sync, if the dirty flag is still
   false, don't bother writing the database to disk.
+  (done, Palm::PDB has an is_Dirty(), EndConduit() uses it)
 - libpdb and libpconn are useful in their own right. Turn them into
-  standalone packages. At least libpdb.
+  standalone packages. At least libpdb. (done)
 - Perhaps the job of communicating with the Palm can be done in a
   separate (Posix) thread? That way, that thread can deal more
   naturally and more single-mindedly with things (e.g., timeouts,
   unexpected data packets, etc.). In particular, it would be able to
   send tickle packets at appropriate intervals.
-- ColdSync.pm should open SPC file handle as appropriate.
-- Add some "pref" lines to sample.coldsync.rc
-- Rewrite 'send-mail' as a Sync conduit.
+- ColdSync.pm should open SPC file handle as appropriate. (done)
+- Add some "pref" lines to sample.coldsync.rc (done)
+- Rewrite 'send-mail' as a Sync conduit. (done)
 - Do something with Daniel Klein's <bilderzeitung@hotmail.com> Doc
   stuff.
 - The $VERSION stuff in the Perl modules doesn't handle branch
