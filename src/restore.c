@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.7 2000-02-07 01:46:39 arensb Exp $
+ * $Id: restore.c,v 2.8 2000-03-14 07:08:32 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -210,13 +210,41 @@ Restore(struct PConnection *pconn,
 			 * to overwrite it anyway (e.g., "Graffiti
 			 * Shortcuts").
 			 */
-			/* XXX - Look the database up in 'palm'. See
-			 * if it has the OKNEWER flag set. If so,
-			 * 'break'. Otherwise, 'continue'.
-			 */
-if (strcmp(pdb->name, "Graffiti ShortCuts") == 0)
-continue;
-			/* Otherwise, fall through */
+		    {
+			    struct dlp_dbinfo *remotedb;
+
+			    /* Look up the database on the Palm. If it
+			     * has the OKNEWER flag set, then go ahead
+			     * and upload the new database anyway.
+			     */
+			    remotedb = find_dbentry(palm, pdb->name);
+			    if (remotedb == NULL)
+			    {
+				    /* This should never happen */
+				    fprintf(stderr,
+					    _("%s: Database %s doesn't exist, "
+					      "yet it is open. Huh?\n"),
+					    "Restore",
+					    pdb->name);
+				    /* But it shouldn't bother us any */
+				    break;
+			    }
+
+			    if ((remotedb->db_flags & DLPCMD_DBFLAG_OKNEWER)
+				== 0)
+			    {
+				    fprintf(stderr,
+					    _("%s: Can't restore %s: it is "
+					      "opened by another application"
+					      "\n"),
+					    "Restore",
+					    pdb->name);
+				    continue;
+			    }
+
+			    break;	/* Okay to overwrite */
+		    }
+
 		    default:
 			fprintf(stderr,
 				_("Restore: Can't delete database \"%s\"."
@@ -231,9 +259,9 @@ continue;
 		add_to_log(_("Restore "));
 		add_to_log(pdb->name);
 		add_to_log(" - ");
-fprintf(stderr, "Calling pdb_Upload() to install %s\n", pdb->name);
 		err = pdb_Upload(pconn, pdb);
-fprintf(stderr, "pdb_Upload returned %d\n", err);  
+		SYNC_TRACE(4)
+			fprintf(stderr, "pdb_Upload returned %d\n", err);  
 		if (err < 0)
 			add_to_log(_("Error\n"));
 		else
