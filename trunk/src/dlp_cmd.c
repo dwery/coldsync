@@ -3,12 +3,16 @@
  * Functions for manipulating a remote Palm device via the Desktop Link
  * Protocol (DLP).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * The functions in this file constitute the programmer-visible DLP
  * interface. They package their arguments up, pass them on to the DLP
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.5 1999-08-25 04:11:32 arensb Exp $
+ * $Id: dlp_cmd.c,v 1.6 1999-09-04 21:05:07 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -98,9 +102,9 @@ DlpReadUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -275,9 +279,9 @@ DlpWriteUserInfo(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -330,9 +334,9 @@ DlpReadSysInfo(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Before parsing the arguments, set the DLP 1.2 fields to 0, for
 	 * devices that don't return them.
@@ -431,9 +435,9 @@ DlpGetSysDateTime(struct PConnection *pconn,
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -520,9 +524,9 @@ DlpSetSysDateTime(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -595,9 +599,9 @@ DlpReadStorageInfo(struct PConnection *pconn,
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Set the extended fields to zero, in case this Palm doesn't
 	 * return them.
@@ -771,9 +775,9 @@ DlpReadDBList(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -961,9 +965,9 @@ DlpOpenDB(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1066,9 +1070,9 @@ DlpCreateDB(struct PConnection *pconn,		/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1150,9 +1154,9 @@ DlpCloseDB(struct PConnection *pconn,		/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1229,9 +1233,9 @@ DlpDeleteDB(struct PConnection *pconn,		/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1309,9 +1313,9 @@ DlpReadAppBlock(struct PConnection *pconn,	/* Connection */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1411,9 +1415,9 @@ return -1;
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1491,9 +1495,9 @@ DlpReadSortBlock(struct PConnection *pconn,	/* Connection */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1586,9 +1590,9 @@ return -1;
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1658,9 +1662,9 @@ DlpReadNextModifiedRec(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1768,9 +1772,9 @@ DlpReadRecordByID(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -1887,9 +1891,9 @@ DlpReadRecordByIndex(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2029,11 +2033,11 @@ DlpWriteRecord(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
 	{
 		free(outbuf);
-		return resp_header.errno;
+		return resp_header.error;
 	}
 
 	/* Parse the argument(s) */
@@ -2118,9 +2122,9 @@ DlpDeleteRecord(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2204,9 +2208,9 @@ DlpReadResourceByIndex(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2315,9 +2319,9 @@ DlpReadResourceByType(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2438,11 +2442,11 @@ fprintf(stderr, "### Buffer overflow in DlpWriteResource!\n");
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
 	{
 		free(outbuf);
-		return resp_header.errno;
+		return resp_header.error;
 	}
 
 	/* Parse the argument(s) */
@@ -2525,9 +2529,9 @@ DlpDeleteResource(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2590,9 +2594,9 @@ DlpCleanUpDatabase(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2654,9 +2658,9 @@ DlpResetSyncFlags(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2774,9 +2778,9 @@ DlpCallApplication(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2854,9 +2858,9 @@ DlpResetSystem(struct PConnection *pconn)	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2922,9 +2926,9 @@ DlpAddSyncLogEntry(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -2988,9 +2992,9 @@ DlpReadOpenDBInfo(struct PConnection *pconn,	/* Connection */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3067,9 +3071,9 @@ DlpMoveCategory(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3124,9 +3128,9 @@ DlpOpenConduit(struct PConnection *pconn)	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3190,9 +3194,9 @@ DlpEndOfSync(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3255,9 +3259,9 @@ DlpResetRecordIndex(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3343,9 +3347,9 @@ DlpReadRecordIDList(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3431,9 +3435,9 @@ DlpReadNextRecInCategory(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3540,9 +3544,9 @@ DlpReadNextModifiedRecInCategory(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3655,9 +3659,9 @@ DlpReadAppPreference(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3757,9 +3761,9 @@ DlpWriteAppPreference(
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3819,9 +3823,9 @@ DlpReadNetSyncInfo(struct PConnection *pconn,
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -3966,9 +3970,9 @@ DlpWriteNetSyncInfo(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)
@@ -4050,9 +4054,9 @@ DlpReadFeature(struct PConnection *pconn,	/* Connection to Palm */
 			"Got response, id 0x%02x, args %d, status %d\n",
 			resp_header.id,
 			resp_header.argc,
-			resp_header.errno);
-	if (resp_header.errno != DLPSTAT_NOERR)
-		return resp_header.errno;
+			resp_header.error);
+	if (resp_header.error != DLPSTAT_NOERR)
+		return resp_header.error;
 
 	/* Parse the argument(s) */
 	for (i = 0; i < resp_header.argc; i++)

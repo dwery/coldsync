@@ -2,12 +2,16 @@
  *
  * Implementation of the Desktop Link Protocol (DLP).
  *
+ *	Copyright (C) 1999, Andrew Arensburger.
+ *	You may distribute this file under the terms of the Artistic
+ *	License, as specified in the README file.
+ *
  * Note that the functions in this file just implement the protocol
  * itself. They are not really expected to be called by conduits or
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.3 1999-08-01 08:05:38 arensb Exp $
+ * $Id: dlp.c,v 1.4 1999-09-04 21:02:20 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -229,12 +233,12 @@ dlp_recv_resp(struct PConnection *pconn,	/* Connection to Palm */
 	rptr = inbuf;
 	header->id = get_ubyte(&rptr);
 	header->argc = get_ubyte(&rptr);
-	header->errno = get_uword(&rptr);
+	header->error = get_uword(&rptr);
 	DLP_TRACE(6)
 		fprintf(stderr, "Got response, id 0x%02x, argc %d, errno %d\n",
 			header->id,
 			header->argc,
-			header->errno);
+			header->error);
 
 	/* Make sure it's really a DLP response */
 	if ((header->id & 0x80) != 0x80)
