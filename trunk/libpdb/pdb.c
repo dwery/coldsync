@@ -6,7 +6,15 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.22 2000-05-06 11:26:41 arensb Exp $
+ * $Id: pdb.c,v 1.23 2000-05-11 16:56:00 arensb Exp $
+ */
+/* XXX - The way zero-length records are handled is a bit of a kludge. They
+ * shouldn't normally exist, with the exception of expunged records. But,
+ * of course, a malformed conduit or something can create them.
+ * The half-assed way they're handled here is to a) not upload zero-length
+ * records to the Palm, b) warn the user if they're written to a file, c)
+ * provide a utility (in the p5-Palm package) to delete zero-length
+ * records.
  */
 
 #include "config.h"
@@ -499,6 +507,15 @@ pdb_Write(const struct pdb *db,
 
 			/* Construct the record index entry */
 			wptr = recbuf;
+
+			/* Sanity check */
+			if (rec->data_len == 0)
+			{
+				fprintf(stderr,
+					_("%s record 0x%08lx has length 0\n"),
+					db->name, rec->id);
+			}
+
 			put_udword(&wptr, offset);
 			put_ubyte(&wptr, merge_attributes(
 				rec->flags,
