@@ -5,28 +5,22 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.1 1999-10-23 04:45:23 arensb Exp $
+ * $Id: parser.h,v 2.2 1999-11-04 10:59:27 arensb Exp $
  */
 #ifndef _parser_h_
 #define _parser_h_
 
 #include <stdio.h>
 #include <sys/param.h>		/* For MAXPATHLEN */
+#include "coldsync.h"
+#include "pconn/pconn.h"	/* For Palm types */
 
-/* listen_block
- * The information specified in a 'listen' block: which device to
- * listen on, and so forth.
- */
-struct listen_block
-{
-	char device[MAXPATHLEN];	/* Device to listen on */
-	int speed;			/* How fast to sync */
-};
-
-extern FILE *yyin;
-extern FILE *yyout;			/* XXX - Is this useful? */
-
-extern int yyparse(void);
-extern int handle_listen(const struct listen_block *block);
+extern int lineno;		/* Line number */
 
 #endif	/* _parser_h_ */
+
+/* This is for Emacs's benefit:
+ * Local Variables: ***
+ * fill-column:	75 ***
+ * End: ***
+ */
