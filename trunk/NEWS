@@ -23,7 +23,7 @@ ColdSync 3.0
 		'coldsync -m list' to list your files.
 	- N-palms -> single-unix-user mapping in daemon mode.
 	- Linux capabilities support (libcap).
-	- Configuration files moved to /etc/coldsync .
+	- Configuration files moved to <sysconfdir>/etc/coldsync .
 	- More sample conduits
 	- VFS and ExpSlot support in the perl modules
 	- many more DLP calls for perl sync conduits
