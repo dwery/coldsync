@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.11 2001-08-22 06:43:01 arensb Exp $
+ * $Id: netsync.c,v 1.12 2001-09-07 10:04:37 arensb Exp $
  */
 
 #include "config.h"
@@ -174,6 +174,10 @@ ritual_exch_server(PConnection *pconn)
 		err = netsync_read_method(pconn, &inbuf, &inlen, True);
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+	    case PCONN_STACK_FULL:
+		/* XXX - Error */
 	    default:
 		/* XXX - No other protocols should be using this. Notify of
 		 * error: unsupported protocol.
