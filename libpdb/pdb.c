@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.5 1999-11-04 10:46:58 arensb Exp $
+ * $Id: pdb.c,v 1.6 1999-11-20 05:12:31 arensb Exp $
  */
 
 #include "config.h"
@@ -188,7 +188,7 @@ pdb_Read(int fd)
 
 	/* Find out how long the file is */
 	retval->file_size = get_file_length(fd);
-	if (retval->file_size < 0)
+	if (retval->file_size == ~0)
 	{
 		/* The file isn't seekable */
 		fprintf(stderr, "File isn't seekable.\n");
@@ -786,7 +786,7 @@ pdb_Upload(struct PConnection *pconn,
 			fprintf(stderr, "Uploading AppInfo block\n");
 
 		err = DlpWriteAppBlock(pconn, dbh,
-				       0, db->appinfo_len,
+				       db->appinfo_len,
 				       db->appinfo);
 		if (err < 0)
 			return err;
@@ -799,7 +799,7 @@ pdb_Upload(struct PConnection *pconn,
 			fprintf(stderr, "Uploading sort block\n");
 
 		err = DlpWriteSortBlock(pconn, dbh,
-					0, db->sortinfo_len,
+					db->sortinfo_len,
 					db->sortinfo);
 		if (err < 0)
 			return err;
@@ -1285,7 +1285,7 @@ struct pdb_resource *pdb_CopyResource(
 /*** Helper functions ***/
 
 /* get_file_length
- * Return the length of a file, in bytes.
+ * Return the length of a file, in bytes. In case of error, returns ~0.
  */
 static uword
 get_file_length(int fd)
@@ -1294,15 +1294,15 @@ get_file_length(int fd)
 	off_t eof;
 
 	/* Get the current position within the file */
-	here = lseek(fd, 0, SEEK_CUR);
+	here = lseek(fd, 0L, SEEK_CUR);
 	if (here < 0)
 		/* The file isn't seekable, presumably either because it
 		 * isn't open, or because it's a pipe/socket/FIFO/tty.
 		 */
-		return -1;
+		return ~0;
 
 	/* Go to the end of the file */
-	eof = lseek(fd, 0, SEEK_END);
+	eof = lseek(fd, 0L, SEEK_END);
 
 	/* And return to where we were before */
 	lseek(fd, here, SEEK_SET);
@@ -1499,7 +1499,7 @@ pdb_LoadRsrcIndex(int fd,
 		}
 
 		/* Append the new resource to the list */
-		pdb_AppendResource(db, rsrc);
+		pdb_AppendResource(db, rsrc);	/* XXX - Error-checking */
 		db->numrecs = totalrsrcs;	/* Kludge */
 	}
 
@@ -1586,7 +1586,7 @@ pdb_LoadRecIndex(int fd,
 			       rec->id);
 
 		/* Append the new record to the database */
-		pdb_AppendRecord(db, rec); 
+		pdb_AppendRecord(db, rec); 	/* XXX - Error-checking */
 		db->numrecs = totalrecs;	/* Kludge */
 	}
 
@@ -1662,7 +1662,7 @@ pdb_LoadAppBlock(int fd,
 	/* Just out of paranoia, make sure we're at the correct offset in
 	 * the file.
 	 */
-	offset = lseek(fd, 0, SEEK_CUR);	/* Find out where we are */
+	offset = lseek(fd, 0L, SEEK_CUR);	/* Find out where we are */
 	if (offset != db->appinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
@@ -1762,7 +1762,7 @@ pdb_LoadSortBlock(int fd,
 	/* Just out of paranoia, make sure we're at the correct offset in
 	 * the file.
 	 */
-	offset = lseek(fd, 0, SEEK_CUR);	/* Find out where we are */
+	offset = lseek(fd, 0L, SEEK_CUR);	/* Find out where we are */
 	if (offset != db->sortinfo_offset)
 	{
 		/* Oops! We're in the wrong place */
@@ -1835,7 +1835,7 @@ pdb_LoadResources(int fd,
 			       (char) rsrc->type & 0xff);
 
 		/* Out of paranoia, make sure we're in the right place */
-		offset = lseek(fd, 0, SEEK_CUR);
+		offset = lseek(fd, 0L, SEEK_CUR);
 					/* Find out where we are now */
 		if (offset != rsrc->offset)
 		{
@@ -1946,7 +1946,7 @@ pdb_LoadRecords(int fd,
 			printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
 
 		/* Out of paranoia, make sure we're in the right place */
-		offset = lseek(fd, 0, SEEK_CUR);
+		offset = lseek(fd, 0L, SEEK_CUR);
 					/* Find out where we are now */
 		if (offset != rec->offset)
 		{
@@ -2123,7 +2123,7 @@ pdb_DownloadResources(struct PConnection *pconn,
 			debug_dump(stderr, "RSRC", rsrc->data, rsrc->data_len);
 
 		/* Append the resource to the database */
-		pdb_AppendResource(db, rsrc);
+		pdb_AppendResource(db, rsrc);	/* XXX - Error-checking */
 		db->numrecs = totalrsrcs;	/* Kludge */
 	}
 
@@ -2277,7 +2277,7 @@ pdb_DownloadRecords(struct PConnection *pconn,
 		}
 
 		/* Append the record to the database */
-		pdb_AppendRecord(db, rec);
+		pdb_AppendRecord(db, rec);	/* XXX - Error-checking */
 		db->numrecs = totalrecs;	/* Kludge */
 	}
 
