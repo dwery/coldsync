@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.14 2000-12-13 16:30:29 arensb Exp $
+ * $Id: padp.c,v 1.15 2000-12-13 16:59:11 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -89,6 +89,9 @@ padp_init(struct PConnection *pconn)
 int
 padp_tini(struct PConnection *pconn)
 {
+	if (pconn == NULL)
+		return 0;
+
 	/* Free the buffer for multi-fragment messages, if there is one */
 	if (pconn->padp.inbuf != NULL)
 		free(pconn->padp.inbuf);

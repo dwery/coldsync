@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.12 2000-12-13 16:27:25 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.13 2000-12-13 16:58:43 arensb Exp $
  */
 /* XXX - The code to find the maximum speed ought to be in this file. The
  * table of available speeds should be here, not in coldsync.c.
@@ -334,7 +334,7 @@ serial_close(struct PConnection *p)
 	padp_tini(p);
 	slp_tini(p);
 
-	return close(p->fd);
+	return (p->fd >= 0 ? close(p->fd) : 0);
 }
 
 static int

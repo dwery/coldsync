@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.3 2000-12-13 16:30:10 arensb Exp $
+ * $Id: netsync.c,v 1.4 2000-12-13 16:59:05 arensb Exp $
  */
 
 #include "config.h"
@@ -63,7 +63,11 @@ netsync_init(struct PConnection *pconn)
 int
 netsync_tini(struct PConnection *pconn)
 {
-	/* XXX */
+	if (pconn == NULL)
+		return 0;
+
+	if (pconn->net.inbuf != NULL)
+		free(pconn->net.inbuf);
 	return 0;
 }
 
