@@ -4,7 +4,7 @@
 .\" You may distribute this file under the terms of the Artistic
 .\" License, as specified in the README file.
 .\"
-.\" $Id: coldsync.8,v 1.20 2000-06-18 07:07:26 arensb Exp $
+.\" $Id: coldsync.8,v 1.21 2000-07-06 04:01:07 arensb Exp $
 .\"
 .\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
 .\" the old 'man' package, you may run into problems.
@@ -459,6 +459,19 @@ and
 makes the conduit apply to all databases. Only the last of these is
 generally useful.
 .Pp
+You may specify several
+.Li type
+lines, e.g.,
+.Bd -literal -offset indent
+conduit fetch {
+	path: /usr/local/libexec/coldsync/very-generic;
+	type: addr/DATA;
+	type: memo/DATA;
+	type: graf/macr;
+}
+.Ed
+This conduit will match any of the three creator/type pairs.
+.Pp
 The following flags are defined for conduit blocks:
 .Li default
 and
@@ -607,7 +620,6 @@ Other upgrades are more complex, and
 .Nm ColdSync
 can't handle them. For these, you'll need to follow Palm's
 instructions.
-.\" .Sh EXAMPLES
 .Sh FILES
 .Bl -tag -width ~/.palm/archive -compact
 .It Pa ~/.coldsyncrc
@@ -645,12 +657,6 @@ USB support.
 .Sh DIAGNOSTICS
 Many and hopefully self-explanatory.
 .Sh BUGS
-.Pp
-.Nm ColdSync
-tends to print confusing or misleading error messages when reporting
-errors in the
-.Pa .coldsyncrc
-file.
 .Pp
 In the
 .Pa .coldsyncrc
