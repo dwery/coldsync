@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.11 2001-01-09 16:05:19 arensb Exp $
+ * $Id: misc.c,v 2.12 2001-01-25 07:43:32 arensb Exp $
  */
 
 #include "config.h"
@@ -17,6 +17,7 @@
 #include <sys/stat.h>		/* For stat() */
 #include <ctype.h>		/* For isprint() and friends */
 #include <errno.h>		/* For errno. Duh. */
+#include <syslog.h>		/* For syslog() */
 
 #if STDC_HEADERS
 # include <string.h>		/* For memcpy() et al. */
@@ -52,22 +53,64 @@ static struct stat statbuf;	/* Results of last stat() or lstat(), used
 int
 Warn(const char *format, ...)
 {
+	int err = 0;
 	va_list ap;
 
 	va_start(ap, format);
-	fprintf(stderr, _("Warning: "));
-	return vfprintf(stderr, format, ap);
+
+	/* XXX - Are there cases where we might want to print to both syslog
+	 * and stderr?
+	 */
+	if (global_opts.use_syslog)
+	{
+		/* It'd be nice to use vsyslog() here, but I'm pretty sure
+		 * it's not portable.
+		 */
+		char msgbuf[256];	/* Error messages shouldn't be long */
+
+		err = vsnprintf(msgbuf, sizeof(msgbuf),
+				format, ap);
+		syslog(LOG_WARNING, msgbuf);
+	} else {
+		fprintf(stderr, _("Warning: "));
+		err = vfprintf(stderr, format, ap);
+		fprintf(stderr, "\n");
+	}
+
+	return err;
 }
 
 int
 Error(const char *format, ...)
 {
+	int err = 0;
 	va_list ap;
 
 	va_start(ap, format);
-	fprintf(stderr, _("Error: "));
-	return vfprintf(stderr, format, ap);
+
+	/* XXX - Are there cases where we might want to print to both syslog
+	 * and stderr?
+	 */
+	if (global_opts.use_syslog)
+	{
+		/* It'd be nice to use vsyslog() here, but I'm pretty sure
+		 * it's not portable.
+		 */
+		char msgbuf[256];	/* Error messages shouldn't be long */
+
+		err = vsnprintf(msgbuf, sizeof(msgbuf),
+				format, ap);
+		syslog(LOG_ERR, msgbuf);
+	} else {
+		fprintf(stderr, _("Error: "));
+		err = vfprintf(stderr, format, ap);
+		fprintf(stderr, "\n");
+	}
+
+	return err;
 }
+
+/* XXX - Ditto Perror(), replacement for 'perror()' */
 
 /* mkfname
  * Concatenate all of the arguments, and return a pointer to the resulting
