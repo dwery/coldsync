@@ -2,7 +2,7 @@
  *
  * Functions for dealing with Palm databases and such.
  *
- * $Id: pdb.c,v 1.11 1999-03-16 11:11:19 arensb Exp $
+ * $Id: pdb.c,v 1.12 1999-03-16 11:56:43 arensb Exp $
  */
 #include <stdio.h>
 #include <fcntl.h>		/* For open() */
@@ -444,12 +444,9 @@ fprintf(stderr, "Creating staging file \"%s\"\n", tempfname);
 			wptr = recbuf;
 			put_udword(&wptr, offset);
 			put_ubyte(&wptr, rec->attributes);
-			put_ubyte(&wptr,
-				  (char) ((rec->uniqueID >> 16) & 0xff));
-			put_ubyte(&wptr,
-				  (char) ((rec->uniqueID >> 8) & 0xff));
-			put_ubyte(&wptr,
-				  (char) (rec->uniqueID & 0xff));
+			put_ubyte(&wptr, (char) ((rec->id >> 16) & 0xff));
+			put_ubyte(&wptr, (char) ((rec->id >> 8) & 0xff));
+			put_ubyte(&wptr, (char) (rec->id & 0xff));
 
 			/* Write the resource index entry */
 			if (write(fd, recbuf, PDB_RECORDIX_LEN) !=
@@ -736,8 +733,8 @@ fprintf(stderr, "pdb_Download: this db doesn't have an AppInfo block\n");
 }
 
 /* pdb_FindRecordByID
- * Find the record in 'db' whose uniqueID is 'id'. Return a pointer to it.
- * If no such record exists, or in case of error, returns NULL.
+ * Find the record in 'db' whose ID is 'id'. Return a pointer to it. If no
+ * such record exists, or in case of error, returns NULL.
  */
 struct pdb_record *
 pdb_FindRecordByID(
@@ -749,7 +746,7 @@ pdb_FindRecordByID(
 	/* Walk the list of records, comparing IDs */
 	for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
 	{
-		if (rec->uniqueID == id)
+		if (rec->id == id)
 			return rec;
 	}
 
@@ -817,8 +814,8 @@ pdb_DeleteRecordByID(
 	last = NULL;		/* Haven't seen any records yet */
 	for (rec = db->rec_index.rec; rec != NULL; rec = rec->next)
 	{
-		/* See if the uniqueID matches */
-		if (rec->uniqueID == id)
+		/* See if the ID matches */
+		if (rec->id == id)
 		{
 			/* Found it */
 
@@ -1001,7 +998,7 @@ pdb_InsertResource(struct pdb *db,	/* The database to insert into */
  */
 struct pdb_record *
 new_Record(const ubyte attributes,
-	   const udword uniqueID,
+	   const udword id,
 	   const uword len,
 	   const ubyte *data)
 {
@@ -1019,7 +1016,7 @@ new_Record(const ubyte attributes,
 	retval->next = NULL;
 	retval->offset = 0L;
 	retval->attributes = attributes;
-	retval->uniqueID = uniqueID;
+	retval->id = id;
 
 	/* Allocate space to put the record data */
 	if ((retval->data = (ubyte *) malloc(len)) == NULL)
@@ -1064,7 +1061,7 @@ struct pdb_record *pdb_CopyRecord(
 	/* Copy the old record to the new copy */
 	retval->offset = rec->offset;
 	retval->attributes = rec->attributes;
-	retval->uniqueID = rec->uniqueID;
+	retval->id = rec->id;
 
 	/* Allocate space for the record data itself */
 	if ((retval->data = (ubyte *) malloc(rec->data_len)) == NULL)
@@ -1411,7 +1408,7 @@ pdb_LoadRecIndex(int fd,
 		rptr = inbuf;
 		rec->offset = get_udword(&rptr);
 		rec->attributes = get_ubyte(&rptr);
-		rec->uniqueID =
+		rec->id =
 			((udword) (get_ubyte(&rptr) << 16)) |
 			((udword) (get_ubyte(&rptr) << 8)) |
 			((udword) get_ubyte(&rptr));
@@ -1420,11 +1417,11 @@ pdb_LoadRecIndex(int fd,
  * debugging flag.
  */
 #if 0
-printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, uniqueID 0x%08lx\n",
+printf("\tRecord %d: offset 0x%04lx, attr 0x%02x, ID 0x%08lx\n",
        i,
        rec->offset,
        rec->attributes,
-       rec->uniqueID);
+       rec->ID);
 #endif	/* 0 */
 
 		/* Append the new record to the database */
@@ -1777,7 +1774,7 @@ pdb_LoadRecords(int fd,
 			return -1;
 		}
 
-printf("Reading record %d (id 0x%08lx)\n", i, rec->uniqueID);
+printf("Reading record %d (id 0x%08lx)\n", i, rec->id);
 
 		/* Out of paranoia, make sure we're in the right place */
 		offset = lseek(fd, 0, SEEK_CUR);
@@ -2058,7 +2055,7 @@ fprintf(stderr, "\tcategory: %d\n", recinfo.category);
 		rec->offset = 0L;	/* For now */
 					/* XXX - Should this be filled in? */
 		rec->attributes = recinfo.attributes;
-		rec->uniqueID = recinfo.id;
+		rec->id = recinfo.id;
 
 		/* Fill in the data size entry */
 		rec->data_len = recinfo.size;

@@ -2,7 +2,7 @@
  *
  * Functions for uploading a Palm database to a Palm.
  *
- * $Id: upload.c,v 1.4 1999-03-16 11:15:31 arensb Exp $
+ * $Id: upload.c,v 1.5 1999-03-16 11:56:46 arensb Exp $
  */
 #include <stdio.h>
 #include <string.h>		/* For memcmp() */
@@ -167,7 +167,7 @@ fprintf(stderr, "\tResource %d, type '%c%c%c%c'\n",
 		{
 			/* Construct the record description */
 			rec.flags = 0x80;	/* I think 0x80 is mandatory */
-			rec.recid = db->rec_index.rec[i].uniqueID;
+			rec.recid = db->rec_index.rec[i].id;
 			rec.attributes = db->rec_index.rec[i].attributes &
 				0xf0;
 			rec.category = db->rec_index.rec[i].attributes & 0x0f;
