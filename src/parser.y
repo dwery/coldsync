@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.17 2000-05-19 12:15:09 arensb Exp $
+ * $Id: parser.y,v 2.18 2000-05-20 16:33:21 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -732,7 +732,7 @@ pda_directive:
 						 */
 			checksum = snum_checksum(cur_pda->snum,
 						 strlen(cur_pda->snum));
-			if (toupper(checksum) != toupper(*csum_ptr))
+			if (toupper(checksum) != toupper((int) *csum_ptr))
 			{
 				fprintf(stderr,
 					_("Warning: incorrect checksum for "
