@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.141 2002-08-31 19:26:03 azummo Exp $
+ * $Id: coldsync.c,v 1.142 2002-10-26 12:05:12 azummo Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -99,6 +99,7 @@ main(int argc, char *argv[])
 	global_opts.verbosity		= 0;
 	global_opts.listen_name		= NULL;
 	global_opts.autoinit		= Undefined;	/* Default to False */
+	global_opts.autorescue		= Undefined;	/* Default to False */
 
 	/* Initialize the debugging levels to 0 */
 	slp_trace	= 0;
@@ -292,6 +293,8 @@ main(int argc, char *argv[])
 			Bool3str(global_opts.force_install));
 		fprintf(stderr, "\tautoinit: %s\n",
 			Bool3str(global_opts.autoinit));
+		fprintf(stderr, "\tautorescue: %s\n",
+			Bool3str(global_opts.autorescue));
 		fprintf(stderr, "\tuse_syslog: %s\n",
 			global_opts.use_syslog ? "True" : "False");
 		tmp = get_symbol("LOGFILE");

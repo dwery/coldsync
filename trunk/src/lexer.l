@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.51 2002-08-31 19:26:03 azummo Exp $
+ * $Id: lexer.l,v 2.52 2002-10-26 12:05:12 azummo Exp $
  */
 #include <stdio.h>
 #include <string.h>
@@ -172,6 +172,7 @@ QSTR		[^\\\$\"\n]
 "hostid"	{ KEYWORD(HOSTID);	}
 "install_first"	{ KEYWORD(INSTALL_FIRST);	}
 "autoinit"	{ KEYWORD(AUTOINIT);	}
+"autorescue"	{ KEYWORD(AUTORESCUE);	}
 "filter_dbs"	{ KEYWORD(FILTER_DBS);	}
 "listen"	{ KEYWORD(LISTEN);	}
 "options"	{ KEYWORD(OPTIONS);	}

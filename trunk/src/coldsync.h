@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.68 2002-08-31 19:26:03 azummo Exp $
+ * $Id: coldsync.h,v 1.69 2002-10-26 12:05:12 azummo Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -82,7 +82,7 @@ struct cmd_opts {
 	Bool force_fast;	/* If true, force fast syncing */
 	Bool check_ROM;		/* If false, ignore ROM databases */
 	Bool3 autoinit;		/* If true, tries to initialize the palm 
-				 * when in daemon mode
+				 * when in daemon mode.
 				 */
 	Bool3 install_first;	/* If true, install new databases before
 				 * doing the rest of the sync. Otherwise,
@@ -307,6 +307,10 @@ struct sync_config {
 					 * main sync.
 					 */
 		Bool3 autoinit;		/* If true, tries to initialize the palm 
+					 * when in daemon mode
+					 */
+		Bool3 autorescue;	/* If true, tries to upload the missing files
+					 * from the rescue directory 
 					 * when in daemon mode
 					 */
 		Bool3 filter_dbs;	/* If true, coldsync will retrieve from the pda
