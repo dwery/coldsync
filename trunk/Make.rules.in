@@ -3,7 +3,7 @@
 # Common rules for building stuff. All of the Makefiles include this
 # file.
 #
-# $Id: Make.rules.in,v 1.3 2000-01-27 07:38:16 arensb Exp $
+# $Id: Make.rules.in,v 1.4 2000-02-03 02:47:32 arensb Exp $
 
 # The basics
 PACKAGE =	@PACKAGE@
@@ -24,6 +24,7 @@ LIBDIR =	@libdir@
 INCLUDEDIR =	@includedir@
 INFODIR =	@infodir@
 MANDIR =	@mandir@
+MAN8DIR =	${MANDIR}/man8
 
 # Compilation-related programs and flags
 CC =		@CC@
@@ -64,22 +65,10 @@ DISTDIR =	${TOPDISTDIR}/${SUBDIR}
 TARBALL =	${TOPDISTDIR}.tar.gz
 
 INSTALL =	@INSTALL@
-# Default owners and modes. These may be overridden on the 'make'
-# command line, naturally.
-# Arguments to 'install'. These are shamelessly stolen from BSD
-BINOWN =	root
-BINGRP =	wheel
-SHAREOWN =	root
-SHAREGRP =	wheel
-MANOWN =	root
-MANGRP =	wheel
-INSTALL_PROGRAM = \
-		${INSTALL} -s -o ${BINOWN} -g ${BINGRP} \
-		-m ${BINMODE}
-INSTALL_SCRIPT = \
-		${INSTALL} -o ${BINOWN} -g ${BINGRP} -m ${BINMODE}
-INSTALL_DATA =	${INSTALL} -o ${SHAREOWN} -g ${SHAREGRP} -m ${SHAREMODE}
-INSTALL_MAN =	${INSTALL} -o ${MANOWN} -g ${MANGRP} -m ${MANMODE}
+INSTALL_PROGRAM =	@INSTALL_PROGRAM@ -m 555
+INSTALL_SCRIPT =	@INSTALL_SCRIPT@ -m 555
+INSTALL_DATA =		@INSTALL_DATA@
+INSTALL_MAN =		${INSTALL_DATA}
 
 # End of 'configure'-generated stuff.
 
@@ -112,7 +101,7 @@ LIBRARY =	lib${LIBNAME}.a
 # each subdirectory.
 RECURSIVE_TARGETS = \
 		all depend clean distclean spotless distfiles-core distfiles \
-		install lint
+		install lint TAGS
 
 # This empty rule is so that `make' (build the first target) and `make
 # all' will do the same thing. `all' is actually built according to
@@ -166,6 +155,12 @@ distfiles::	distfiles-core ${EXTRA_DISTFILES}
 		echo "cp -p ${EXTRA_DISTFILES} ${TOPDISTDIR}/${SUBDIR}"; \
 		cp -p ${EXTRA_DISTFILES} ${TOPDISTDIR}/${SUBDIR}; \
 	fi
+
+TAGS::
+	files="${SRCS} ${HEADERS} ${OTHERTAGFILES}"; \
+	for f in $$files; do \
+		etags -a -o ${TOP}/TAGS $$f; \
+	done
 
 # Common rule for building recursive targets
 # The completely redundant subdirs="${SUBDIRS}" assignment is there
