@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.12 2000-02-06 22:12:42 arensb Exp $
+ * $Id: log.c,v 1.13 2000-03-14 06:53:45 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -100,7 +100,7 @@ add_to_log(char *msg)
 	strcat(synclog, msg);
 	log_len += msglen;
 
-	SYNC_TRACE(4)
+	SYNC_TRACE(7)
 		fprintf(stderr, "Now log is \"%s\"\n", synclog);
 	return 0;
 }
