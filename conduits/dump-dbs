@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: dump-dbs,v 1.1 2003-06-14 17:42:46 azummo Exp $
+# $Id: dump-dbs,v 1.2 2003-06-26 19:20:42 azummo Exp $
 
 # dumps the current database list (RAM, then ROM)
 
@@ -29,7 +29,42 @@ while (my $dbinfo = dlp_ReadDBList(0, 0x40, $start)) {
 	$start = $dbinfo->{'last_index'} + 1;
 }
 
-EndConduit;
+print STDERR "Weasel books...\n";
+my @books = dlp_FindDBByCreatorType(undef, "zTXT");
+foreach(@books) {
+	print STDERR "$_->{name}\n";
+}
+
+print STDERR "Again, 'cause I can't think of something better...\n";
+my $ns = 1;
+while(my $book = dlp_FindDBByCreatorType(undef, "zTXT", $ns)) {
+	print STDERR "$book->{name}\n";
+	$ns = 0;
+}
+
+print STDERR "Mail database is called...\n";
+my $maildb = dlp_FindDBByCreatorType("mail", "DATA");
+if (defined $maildb) {
+	print STDERR "$maildb->{name} on card $maildb->{cardno}\n";
+}
+
+print STDERR "Mail database is...\n";
+$maildb = dlp_FindDBByName($maildb->{name}, $maildb->{cardno});
+if (defined $maildb) {
+	foreach (qw(name creator type version modnum)) {
+		print STDERR "$_: $maildb->{$_}\n";
+	}
+}
+
+print STDERR "Address database is...\n";
+my $addrdb = dlp_FindDBByName("AddressDB");
+if (defined $addrdb) {
+	foreach (qw(name creator type version modnum)) {
+		print STDERR "$_: $addrdb->{$_}\n";
+	}
+}
+
+EndConduit();
 
 __END__;
 
