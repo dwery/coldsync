@@ -1,6 +1,6 @@
 # sample.coldsyncrc
 #
-# $Id: sample.coldsync.rc,v 1.8 2002-11-02 17:17:19 azummo Exp $
+# $Id: sample.coldsync.rc,v 1.9 2002-11-09 21:55:00 azummo Exp $
 #
 # This is an example .coldsyncrc file. It is NOT intended as a working
 # configuration. It is rather a series of examples. Read it through.
@@ -55,6 +55,8 @@ listen usb "usb-bsd" {
 # the USB bus look like a serial device" hack, also known
 # as "the visor kernel module", you should use "serial"
 # anyway:
+
+# NOTE: You need to use "protocol: full;" for some Visor units.
 
 listen serial "usb-linux" {
 	protocol: net;
