@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.4 1999-11-27 05:54:15 arensb Exp $
+ * $Id: lexer.l,v 2.5 1999-12-02 09:18:41 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -33,6 +33,15 @@
 #ifdef ECHO
 #undef ECHO		/* <termios.h> also defines ECHO */
 #endif	/* ECHO */
+
+/* This is a hack for Solaris. It requires __EXTENSIONS__ or
+ * _POSIX_C_SOURCE to be defined in order to find the declaration for
+ * fileno(). However, lint defines fileno() as a cpp macro, hence the
+ * #ifndef block.
+ */
+#ifndef fileno
+extern int fileno(FILE *);
+#endif  /* fileno */
 
 int lineno;
 %}
