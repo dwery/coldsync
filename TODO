@@ -13,17 +13,6 @@
   one can try to figure out what to do next (usually sync). Otherwise,
   wait for a <break> (or HUP?) and start 'login' on this tty, or a POP
   daemon, or whatever.
-- Write a class to sync two generic databases: a database is an
-  ordered list of records; if they differ, they need to be synched.
-  The normal case of synching a database on the palm with one on the
-  desktop is just a specific subclass. Allow subclasses to override
-  retrieving, comparing, storing, the logic underlying what to copy
-  where, etc.
-  How do you sync two heterogenous databases (e.g., ToDo.pdb and an
-  XPostitNote of things to do)?
-  (A: By using an intermediate format. In this case, have a function
-  that reads XPostitNotes into a PDB, and another that takes a PDB and
-  stores it as XPostitNotes.)
 - A lot of assertion-checking would probably be a Good Thing.
 - (When ColdSync actually gets written:) Gnome and KDE support
 - Fix PADP so it can dump when writing, as well as when reading.
@@ -37,7 +26,6 @@
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
-- Clean up the logging code.
 - add_to_log() should probably also use printf() syntax, for
   convenience.
 - Make the *_TRACE stuff go to a separate debugging log file.
@@ -199,3 +187,26 @@
 - Might be nice if there were some "canned" debug levels, so you could
   say "-d3" and that would give you a fair amount of information,
   without you having to specify each level independently.
+- Solaris's printf() can't print NULL strings. Fix all printf()
+  statements that might try to print a NULL pointer (e.g., debugging
+  statements).
+- Add a log when doing a backup or restore. Need not be anything
+  complicated, just something better than the default "All records
+  successfully synchronized." Maybe just "Backup successful" or
+  something.
+- When printing "questionable" types (uid_t, etc.), cast them to long,
+  or whatever the largest type is, to shut compilers up.
+- Under Solaris 2.5, need:
+	env LIBS="-lbind -lsocket -lnsl" ./configure
+- Under DU 4.0, 'make' doesn't appear to know how to build .cc->.o
+- AIX 4.1 uses some weird-ass shit instead of FD_SETs, for select().
+  Need to work around that.
+- AIX 4.1: str(n)casecmp is in <strings.h>, not <string.h>. Need to
+  include both.
+- AIX 4.1: linker complains about:
+	ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
+	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
+	ld: 0711-224 WARNING: Duplicate symbol: _IO_cleanup_registration_needed
+	ld: 0711-345 Use the -bloadmap or -bnoquiet option to obtain more information.
+  This appears to be something in GenericConduit.cc, but I haven't
+  been able to find anything more.
