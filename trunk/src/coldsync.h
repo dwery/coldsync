@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.57 2001-11-10 03:13:54 arensb Exp $
+ * $Id: coldsync.h,v 1.58 2001-11-12 01:06:52 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -28,10 +28,12 @@ extern int misc_trace;		/* Debugging level for miscellaneous stuff */
 #define SYNC_TRACE(n)	if (sync_trace >= (n))
 #define MISC_TRACE(n)	if (misc_trace >= (n))
 
-/* XXX - Perhaps
- * typedef enum { False = 0, True = 1, Undefined = 2 } Bool3;
- * for things like options, where "Undefined" means "use the default".
+/* Bool3
+ * This is just like a boolean, except that it also includes the value
+ * "Undefined", meaning that the value hasn't been set. This is useful for
+ * variables.
  */
+typedef enum { False3 = 0, True3 = 1, Undefined } Bool3;
 
 /* userinfo
  * Information about the user whose Palm we're syncing.
@@ -77,12 +79,12 @@ struct cmd_opts {
 	Bool force_slow;	/* If true, force slow syncing */
 	Bool force_fast;	/* If true, force fast syncing */
 	Bool check_ROM;		/* Iff false, ignore ROM databases */
-	Bool install_first;	/* If true, install new databases before
+	Bool3 install_first;	/* If true, install new databases before
 				 * doing the rest of the sync. Otherwise,
 				 * install them after everything else has
 				 * been synced.
 				 */
-	Bool force_install;	/* If true, install databases from
+	Bool3 force_install;	/* If true, install databases from
 				 * ~/.palm/install, even if the modnum of
 				 * the database to be installed is smaller
 				 * than that of the existing database.
@@ -270,6 +272,18 @@ typedef struct pda_block
  */
 struct sync_config {
 	/* XXX */
+	struct {
+		Bool3 force_install;	/* Install databases in
+					 * ~/.palm/install, even if they're
+					 * the same version as on the Palm.
+					 */
+		Bool3 install_first;	/* Install new databases before the
+					 * main sync.
+					 */
+		/* XXX - Perhaps allow "final" here, so that the sysadmin
+		 * can lock options in place.
+		 */
+	} options;
 	listen_block *listen;		/* List of listen blocks */
 	pda_block *pda;			/* List of known PDAs */
 	conduit_block *conduits;	/* List of all conduits */
@@ -384,6 +398,7 @@ extern const Bool lexists(const char *fname);
 extern const Bool is_file(const char *fname);
 extern const Bool is_directory(const char *fname);
 extern const Bool is_database_name(const char *fname);
+extern const char *Bool3str(const Bool3 var);
 
 #if !HAVE_SNPRINTF
 extern int snprintf(char *buf, size_t len, const char *format, ...);
