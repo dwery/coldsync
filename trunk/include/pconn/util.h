@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.1 1999-09-09 05:17:05 arensb Exp $
+ * $Id: util.h,v 1.2 2000-05-03 03:32:05 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
@@ -15,10 +15,12 @@
 #include "palm_types.h"
 #include "dlp_cmd.h"
 
+/* XXX - The functions declared INLINE, below, really ought to be inline
+ * functions. I'm not sure how to do this portably, though.
+ */
 #ifdef __GNUC__
 #  define INLINE __inline__
 #else
-   /* XXX - Really should have a HAVE_INLINE configuration option */
 #  define INLINE
 #endif	/* __GNUC__ */
 
