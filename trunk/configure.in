@@ -1,5 +1,5 @@
 dnl #
-dnl # $Id: configure.in,v 1.13 1999-06-24 02:44:05 arensb Exp $
+dnl # $Id: configure.in,v 1.14 1999-06-29 14:48:01 arensb Exp $
 dnl #
 
 dnl # XXX - 'make clean' doesn't work with Berkeley 'make': the
@@ -12,7 +12,7 @@ dnl # XXX - Test to see whether cpp accepts macro definitions with
 dnl # "..." as argument.
 
 AC_INIT(pconn/PConnection.c)
-AM_INIT_AUTOMAKE(coldsync, 0.3.0)
+AM_INIT_AUTOMAKE(coldsync, 0.3.1)
 AM_CONFIG_HEADER(config.h)
 
 dnl # Checks for programs.
@@ -58,14 +58,13 @@ dnl AC_CHECK_SIZEOF(off_t)
 
 dnl # Checks for library functions.
 AC_CHECK_FUNCS(select \
-	cfsetspeed \
 	cfmakeraw \
 	snprintf)
 
 # XXX - Under RedHat, if you compile with "gcc -ansi", it complains
 # about "implicit declaration of cfmakeraw()". You can fix this with
 # "-D_BSD_SOURCE", but is there a better way of turning this on?
-# Ditto for cfsetspeed(), mkstemp()
+# Ditto for mkstemp()
 # XXX - Under RedHat 5.2 Linux, mkstemp() requires <stdlib.h>,
 # although the man page just says <unistd.h>
 
