@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.c,v 1.51 2000-09-27 19:43:43 arensb Exp $
+ * $Id: coldsync.c,v 1.52 2000-09-30 16:26:25 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -163,17 +163,20 @@ main(int argc, char *argv[])
 	 */
 	if (reserve_fd(0, O_RDONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 0);
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 0);
 		exit(1);
 	}
 	if (reserve_fd(1, O_WRONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 1);
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 1);
 		exit(1);
 	}
 	if (reserve_fd(2, O_RDONLY) < 0)
 	{
-		fprintf(stderr, _("Error: can't reserve file descriptor %d\n"), 2);
+		fprintf(stderr,
+			_("Error: can't reserve file descriptor %d\n"), 2);
 		exit(1);
 	}
 
@@ -202,6 +205,27 @@ main(int argc, char *argv[])
 	MISC_TRACE(2)
 	{
 		fprintf(stderr, "Options:\n");
+		fprintf(stderr, "\tMode: ");
+		switch (global_opts.mode) {
+		    case mode_Standalone:
+			fprintf(stderr, "Standalone\n");
+			break;
+		    case mode_Backup:
+			fprintf(stderr, "Backup\n");
+			break;
+		    case mode_Restore:
+			fprintf(stderr, "Restore\n");
+			break;
+		    case mode_Daemon:
+			fprintf(stderr, "Daemon\n");
+			break;
+		    case mode_Init:
+			fprintf(stderr, "Init\n");
+			break;
+		    default:
+			fprintf(stderr, "* UNKNOWN *\n");
+			break;
+		}
 		fprintf(stderr, "\tdo_backup: %s\n",
 			global_opts.do_backup ? "True" : "False");
 		fprintf(stderr, "\tbackupdir: \"%s\"\n",
@@ -1533,134 +1557,6 @@ find_max_speed(struct PConnection *pconn)
 	}
 
 	return -1;
-}
-
-/* set_debug_level
- * Set a debugging/trace value. These are settable on a per-facility basis
- * (see struct debug_flags in "coldsync.h"). Thus, specifying
- * "-d SLP:1 -d PADP:10" will give the barest minimum of information as to
- * what is happening in the SLP layer, but will spew gobs of information
- * about the PADP layer, including dumps of every packet going back and
- * forth.
- * Note to hackers: as a general rule, a debugging level of 0 means no
- * debugging messages (this is the default). 1 means give the user some
- * idea of what is going on. 5 means print a message for every packet; 6
- * means print the contents of every packet. 10 means... well, let's just
- * not think about that, shall we?
- * These numbers are just guidelines, though. Your circumstances will vary.
- *
- * 'str' can take on one of the following
- * forms:
- *	FAC	Set facility FAC to level 1
- *	FAC:N	Set facility FAC to level N
- */
-void
-set_debug_level(const char *str)
-{
-	const char *lvlstr;	/* Pointer to trace level in 'str' */
-	int lvl;		/* Trace level */
-
-	/* See if 'str' contains a colon */
-	if ((lvlstr = strchr(str, ':')) != NULL)
-	{
-		/* 'str' contains a colon. Parse the string */
-		lvlstr++;		/* Make 'lvlstr' point to the level
-					 * number */
-		lvl = atoi(lvlstr);
-	} else {
-		/* 'str' does not contain a colon. Set the trace level to 1 */
-		lvl = 1;
-	}
-
-	/* Set the appropriate debugging facility. */
-	if (strncasecmp(str, "slp", 3) == 0)
-		slp_trace = lvl;
-	else if (strncasecmp(str, "cmp", 3) == 0)
-		cmp_trace = lvl;
-	else if (strncasecmp(str, "padp", 4) == 0)
-		padp_trace = lvl;
-	else if (strncasecmp(str, "dlpc", 4) == 0)
-		dlpc_trace = lvl;
-	else if (strncasecmp(str, "dlp", 3) == 0)
-		dlp_trace = lvl;
-	else if (strncasecmp(str, "sync", 4) == 0)
-		sync_trace = lvl;
-	else if (strncasecmp(str, "pdb", 3) == 0)
-		pdb_trace = lvl;
-	else if (strncasecmp(str, "parse", 5) == 0)
-		parse_trace = lvl;
-	else if (strncasecmp(str, "misc", 4) == 0)
-		misc_trace = lvl;
-	else if (strncasecmp(str, "io", 2) == 0)
-		io_trace = lvl;
-	else {
-		fprintf(stderr, _("Unknown facility \"%s\"\n"), str);
-	}
-}
-
-/* usage
- * Print out a usage string.
- * XXX - Move this to "config.c"
- */
-/* ARGSUSED */
-void
-usage(int argc, char *argv[])
-{
-	printf(_("Usage: %s [options] -p port\n"
-		 "Options:\n"
-		 "\t-h:\t\tPrint this help message and exit.\n"
-		 "\t-V:\t\tPrint version and exit.\n"
-		 "\t-f <file>:\tRead configuration from <file>.\n"
-		 "\t-b <dir>:\tPerform a backup to <dir>.\n"
-		 "\t-r <dir>:\tRestore from <dir>.\n"
-		 "\t-I:\t\tForce installation of new databases.\n"
-		 "\t-S:\t\tForce slow sync.\n"
-		 "\t-F:\t\tForce fast sync.\n"
-		 "\t-R:\t\tCheck ROM databases.\n"
-		 "\t-p <port>:\tListen on device <port>\n"
-		 "\t-t <devtype>:\tPort type [serial|usb]\n"
-		 "\t-d <fac[:level]>:\tSet debugging level.\n")
-	       ,
-	       argv[0]);
-}
-
-/* print_version
- * Print out the version of ColdSync.
- */
-void
-print_version(void)
-{
-	printf(_("%s version %s\n"),
-	       /* These two strings are defined in "config.h" */
-	       PACKAGE,
-	       VERSION);
-	printf(_("ColdSync homepage at http://www.ooblick.com/software/"
-		 "coldsync/\n"));
-	/* XXX - Ought to print out other information, e.g., copyright,
-	 * compile-time flags, optional packages, maybe OS name and
-	 * version, who compiled it and when, etc.
-	 */
-	printf(_("Compile-type options:\n"));
-
-#if WITH_USB
-	printf(
-_("    WITH_USB: USB support.\n"));
-#endif	/* WITH_USB */
-#if WITH_EFENCE
-	printf(
-_("    WITH_EFENCE: buffer overruns will cause a segmentation violation.\n"));
-#endif	/* WITH_EFENCE */
-
-#if HAVE_STRCASECMP && HAVE_STRNCASECMP
-	printf(
-_("    HAVE_STRCASECMP, HAVE_STRNCASECMP: strings are compared without regard\n"
-"        to case, whenever possible.\n"));
-#endif	/* HAVE_STRCASECMP && HAVE_STRNCASECMP */
-/* XXX */
-	printf(
-_("\n"
-"    Default global configuration file: %s\n"),
-		DEFAULT_GLOBAL_CONFIG);
 }
 
 /* find_dbentry
