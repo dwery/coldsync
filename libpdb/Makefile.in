@@ -4,11 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: Makefile.in,v 1.1 1999-10-22 02:38:05 arensb Exp $
-
-# XXX - Explicitly write .c.o , .cc.o and executable targets:
-# different compilers have different default rules, and I don't want
-# to deal with them.
+# $Id: Makefile.in,v 1.2 1999-11-02 03:40:23 arensb Exp $
 
 PACKAGE =	@PACKAGE@
 VERSION =	@VERSION@
@@ -38,15 +34,6 @@ SRCS =		pdb.c
 
 OBJS =		pdb.o
 
-# HEADERS =	dlp_cmd.h \
-# 		util.h \
-# 		dlp.h \
-# 		palm_errno.h \
-# 		padp.h \
-# 		slp.h \
-# 		cmp.h \
-# 		PConnection.h
-
 DISTDIR =	${top_srcdir}/${PACKAGE}-${VERSION}
 DISTFILES =	${SRCS} ${HEADERS} \
 		Makefile.in
@@ -54,11 +41,6 @@ DISTFILES =	${SRCS} ${HEADERS} \
 CLEAN =		libpdb.a *.o *.bak *~ core *.core
 DISTCLEAN =	Makefile .depend
 SPOTLESS =
-
-# XXX - Figure out where to put this. Also, allow for -R flag if ever
-# decide to build shared libraries.
-#LIBPCONN =	-L${top_srcdir}/libpconn -lpconn
-#LIBPDB =	-L${top_srcdir}/libpdb -lpdb
 
 # Explicitly say how things are to be compiled: the default varies
 # between systems.
@@ -87,19 +69,16 @@ RANLIB =	@RANLIB@
 # throughout.
 all:	libpdb.a
 
-# XXX - This is probably very OS-dependent.
 libpdb.a:	${OBJS}
 	ar cq $@ ${OBJS}
 	${RANLIB} $@
 
 install:	libpdb.a
-	${INSTALL} ${INSTALLARGS} libpdb.a ${BINDIR}
-
-# XXX - 'makedepend' doesn't find C++ dependencies. Need to explicitly
-# specify -I/usr/include/g++
-# Actually, 'gcc -M' generates a dependency list the right way. This
-# may be exploited, but the sources then need to be separated into
-# C_SRCS and CXX_SRCS.
+	if test ! -d ${LIBDIR}; then \
+		mkdir ${LIBDIR}; \
+		chmod 755 ${LIBDIR}; \
+	fi
+	${INSTALL} ${INSTALLARGS} libpdb.a ${LIBDIR}
 
 depend:
 	${MKDEP} ${DEFS} ${INCLUDES} ${SRCS}
