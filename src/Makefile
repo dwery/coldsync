@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.9 2000-05-20 22:44:14 arensb Exp $
+# $Id: Makefile,v 2.10 2000-05-21 08:06:15 arensb Exp $
 
 TOP =		..
 SUBDIR =	src
@@ -36,7 +36,8 @@ LIBPDB = 	-L${TOP}/libpdb -lpdb
 EXTRA_LIBS =	${LIBPDB} ${LIBPCONN} ${LIBYACC} ${LIBLEX}
 CLEAN =		${CXXPROG} ${OBJS} \
 		*.ln *.bak *~ core *.core .depend \
-		lex.yy.c y.tab.c y.tab.h y.output parser.output
+		lex.yy.c y.tab.c y.tab.h y.output \
+		parser.tab.c parser.tab.h parser.output
 
 DISTFILES =	Makefile \
 		${SRCS} ${HEADERS} \
