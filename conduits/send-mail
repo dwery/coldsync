@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.8 2001-06-04 02:29:12 arensb Exp $
+# $Id: send-mail,v 1.9 2001-11-13 13:51:00 arensb Exp $
 #
 use strict;
 use Palm::Mail;
@@ -17,12 +17,29 @@ use Text::Wrap;
 	"Wrap"		=> 74,
 	"Outbox-name"	=> "Outbox",	# Name of category for outgoing mail
 
-	# XXX - There's no good way to set these to non-default values
 	"Paragraph"	=> "",		# Paragraph indent
 	"Line-Indent"	=> "",		# Line indentation
 );
 
-my $VERSION = (qw( $Revision: 1.8 $ ))[1];	# Conduit version
+my $VERSION = (qw( $Revision: 1.9 $ ))[1];	# Conduit version
+
+# print_header
+# Print a valid mail header. Headers with empty values are ignored.
+# Newlines are replaced with newline-whitespace, per RFC822.
+sub print_header
+{
+	my $header_name = shift;
+	my $header_content = shift;
+
+	if (!defined($header_content) || ($header_content eq ""))
+	{
+		# Empty header
+		return;
+	}
+
+	$header_content =~ s/\n(?!\s)/\n\t/mg;
+	print SENDMAIL "$header_name: $header_content\n";
+}
 
 StartConduit("dump");
 
@@ -50,22 +67,17 @@ foreach $record (@{$PDB->{records}})
 		die "502 Can't run $HEADERS{Sendmail}: $!\n";
 	select SENDMAIL;
 
-	# XXX - Some of these headers are bogus. In particular, a "to"
-	# field that contains "arensb,\narnie" will not result in an
-	# RFC822-compliant header (the \n should be followed by
-	# whitespace).
-	print "From: $whoami\n";
-	print "To: ", $record->{to}, "\n" if $record->{to} ne "";
-	print "Cc: ", $record->{cc}, "\n" if $record->{cc} ne "";
-	print "Bcc: ", $record->{bcc}, "\n"
-		if $record->{bcc} ne "";
-	print "Reply-To: ", $record->{reply_to}, "\n"
-		if $record->{reply_to} ne "";
-	print "X-Sent-To: ", $record->{sent_to}, "\n"
-		if $record->{sent_to} ne "";
-	print "X-Mailer: $HEADERS{Daemon} $HEADERS{Version}/send-mail conduit $VERSION\n";
-	print "Subject: ", $record->{subject}, "\n"
-		if $record->{subject} ne "";
+	# Print header fields so that they conform to RFC822 (a continuation
+	# line must start with a whitespace or tab character).
+	&print_header("From", $whoami);
+	&print_header("To", $record->{"to"});
+	&print_header("Cc", $record->{"cc"});
+	&print_header("Bcc", $record->{bcc});
+	&print_header("Reply-To", $record->{reply_to})
+	&print_header("X-Sent-To", $record->{send_to});
+	&print_header("X-Mailer",
+	    "$HEADERS{Daemon} $HEADERS{Version}/send-mail conduit $VERSION");
+	&print_header("Subject", $record->{subject});
 
 	my $body = $record->{body};
 
