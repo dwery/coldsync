@@ -8,26 +8,27 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.1 1999-01-31 22:27:22 arensb Exp $
+ * $Id: util.c,v 1.2 1999-02-14 04:31:09 arensb Exp $
  */
 #include <stdio.h>
+#include <ctype.h>	/* For isprint() */
 #include "util.h"
 
 INLINE ubyte
-peek_ubyte(ubyte *buf)
+peek_ubyte(const ubyte *buf)
 {
 	return buf[0];
 }
 
 INLINE uword
-peek_uword(ubyte *buf)
+peek_uword(const ubyte *buf)
 {
 	return ((uword) buf[0] << 8) |
 		buf[1];
 }
 
 INLINE udword
-peek_udword(ubyte *buf)
+peek_udword(const ubyte *buf)
 {
 	return ((uword) buf[0] << 24) |
 		((uword) buf[1] << 16) |
@@ -36,7 +37,7 @@ peek_udword(ubyte *buf)
 }
 
 INLINE ubyte
-get_ubyte(ubyte **buf)
+get_ubyte(const ubyte **buf)
 {
 	ubyte retval;
 
@@ -54,7 +55,7 @@ put_ubyte(ubyte **buf, ubyte value)
 }
 
 INLINE uword
-get_uword(ubyte **buf)
+get_uword(const ubyte **buf)
 {
 	uword retval;
 
@@ -74,7 +75,7 @@ put_uword(ubyte **buf, uword value)
 }
 
 INLINE udword
-get_udword(ubyte **buf)
+get_udword(const ubyte **buf)
 {
 	udword retval;
 
@@ -101,22 +102,41 @@ put_udword(ubyte **buf, udword value)
  * Dump the contents of an array of ubytes to stderr, for debugging.
  */
 void
-debug_dump(char *prefix, ubyte *buf, udword len)
+debug_dump(const char *prefix, const ubyte *buf, const udword len)
 {
-	int i;
+	int lineoff;
 
-	fprintf(stderr, "%s ", prefix);
-
-	for (i = 0; i < len; i++)
+	for (lineoff = 0; lineoff < len; lineoff += 16)
 	{
-		fprintf(stderr, "%02x ", buf[i]);
-		if ((i & 0x0f) == 0x0f)
-			fprintf(stderr, "\n%s ", prefix);
+		int i;
+
+		fprintf(stderr, "%s ", prefix);
+		for (i = 0; i < 16; i++)
+		{
+			if (lineoff + i < len)
+			{
+				/* Regular bytes */
+				fprintf(stderr, "%02x ", buf[lineoff+i]);
+			} else {
+				/* Filler at the end of the line */
+				fprintf(stderr, "   ");
+			}
+		}
+		fprintf(stderr, "  | ");
+		for (i = 0; i < 16; i++)
+		{
+			if (lineoff + i < len)
+			{
+				/* Regular bytes */
+				if (isprint(buf[lineoff+i]))
+					fprintf(stderr, "%c", buf[lineoff+i]);
+				else
+					fprintf(stderr, ".");
+			} else
+				break;
+		}
+		fprintf(stderr, "\n");
 	}
-	/* XXX - I'm sure this breaks for certain values of 'len', but
-	 * at this point, I don't care yet.
-	 */
-	fprintf(stderr, "\n");
 }
 
 /* icrctb
