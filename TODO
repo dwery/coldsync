@@ -46,24 +46,12 @@
   two cradles, or over the net.
 - Add identd support?
 - PAM for security throughout?
-- Figure out a sane source directory organization and stick to it. I'm
-  not going to worry about it too much in this alpha stage, though.
-- Get dependencies working right in Makefiles, so stuff gets rebuilt
-  properly.
 - Add code to check ~/.palm/backup to look for databases that aren't
-  on the Palm. Not sure what to do about those, though: if the user
-  deliberately deleted them, don't want them restored, but if the Palm
-  had to be cold-reset, then you _do_ want them restored.
-	Under what circumstances do you want to restore a database
-  that exists on the desktop but not the Palm? (example: sysadmin
-  setting up a default configuration for a user.) Should this be
-  manual or automatic? Would it be a good idea to always check for
-  extraneous databases and ask the user what to do about them?
-	Best solution is probably: if database exists on desktop but
-  not on Palm, move it to an 'attic' directory (like CVS). That way,
-  at least it's not gone. Should also be possible to force a backup
-  from the backup directory: don't try to do anything fancy, just
-  restore everything as is.
+  on the Palm. Best solution is probably: if database exists on
+  desktop but not on Palm, move it to an 'attic' directory (like CVS).
+  That way, at least it's not gone. Should also be possible to force a
+  backup from the backup directory: don't try to do anything fancy,
+  just restore everything as is.
 	List of Palm's databases is in 'palm->dblist[]', so check the
   backup directory for files that aren't in there.
 - Look into autoconf's AC_REPLACE_FUNCS for cfmakeraw() etc.
@@ -76,8 +64,6 @@
   probably return an error if the sync is being run in batch
   (non-interactive) mode, i.e. when there's no one there to respond to
   the dialog.
-- Move the DLP time conversion functions out of pconn/util.[ch]. Then
-  take the #include <coldsync/whatever> out of util.c
 - Write a utility to just dump the contents of a pdb file.
 - Add CTRACE() macro for debugging, like the *_TRACE() ones.
 - Turn the pdb stuff into its own library.
@@ -157,7 +143,6 @@
 - Separate the distribution into 'coldsync' and 'coldsync-doc', since
   the documentation is almost three times as large as everything else.
 - Split up the doc directory into directories, one per document.
-- Man page for coldsync.
 - Write a license (Artistic? Adapt it?).
 - The daemon ought to have some way to communicate with actual users,
   so that they can be notified when a sync starts, be asked questions,
@@ -181,3 +166,5 @@
   bother downloading the database from the Palm.
 - Add convenience functions for the various RPC calls, or at least the
   more useful ones. See SysTraps.h for list of traps.
+- Where appropriate, replace memcpy() with strncpy(): the former
+  copies N bytes no matter what; the latter copies _up to_ N bytes.
