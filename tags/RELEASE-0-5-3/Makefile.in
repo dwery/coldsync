@@ -1,0 +1,98 @@
+# Makefile.in
+# $Id: Makefile.in,v 1.13 1999-11-10 06:44:00 arensb Exp $
+
+PACKAGE =	@PACKAGE@
+VERSION =	@VERSION@
+
+SRCDIR =	@srcdir@
+CURDIR =	${SRCDIR}
+SUBDIRS =	include libpconn libpdb src doc
+PREFIX = 	@prefix@
+
+TAR =		@TAR@
+GZIP =		@GZIP@
+DATE =		@DATE@
+
+# List of recursive targets, i.e., those where you build the target in
+# each subdirectory.
+RECURSIVE_TARGETS = \
+		all depend clean distclean spotless distdir install
+
+DISTFILES =	README \
+		AUTHORS \
+		ChangeLog \
+		HACKING \
+		Makefile.in \
+		configure.in \
+		aclocal.m4 \
+		config.h.in \
+		TODO \
+		install-sh \
+		configure
+
+DISTDIR =	${SRCDIR}/${PACKAGE}-${VERSION}
+TARBALL =	${DISTDIR}.tar.gz
+TAR_CMD =	GZIP=--best ${TAR} chozf
+COMPRESS =	true ${TARBALL}
+
+# Additional files to delete when making 'clean', 'distclean' and
+# 'spotless', respectively. Each one includes the previous ones.
+CLEAN =		core *.core *.bak *~ errs errs.*
+DISTCLEAN =	Makefile config.cache config.h config.log config.status ID \
+		.depend
+SPOTLESS =	${TARBALL} ${DISTDIR} configure
+
+# This empty rule is just so that 'make' (build the first target) and
+# 'make all' (build the "all" target) build the same thing, the way
+# you'd expect.
+all::
+
+install::
+	if test ! -d ${PREFIX}; then \
+		mkdir ${PREFIX}; \
+		chmod 755 ${PREFIX}; \
+	fi
+
+distdir::
+	rm -rf ${DISTDIR}
+	mkdir ${DISTDIR}
+
+distdir::	${DISTFILES}
+	cp -p ${DISTFILES} ${DISTDIR}
+
+dist::	distdir
+	GZIP="--best" ${TAR} chozf ${TARBALL} ${DISTDIR}
+	rm -rf ${DISTDIR}
+
+${RECURSIVE_TARGETS}::
+	@for dir in ${SUBDIRS}; do \
+		echo "$@: Entering directory \`${CURDIR}/$$dir'"; \
+		(cd $$dir && ${MAKE} $@); \
+		echo "$@: Leaving directory \`${CURDIR}/$$dir'"; \
+	done
+
+snapshot:	distdir
+	date=`${DATE} "+%Y%m%d"`; \
+	GZIP="--best" ${TAR} chozf "${PACKAGE}-${VERSION}$${date}.tar.gz" \
+		${DISTDIR}
+	rm -rf ${DISTDIR}
+
+# Targets for various progressive levels of cleanliness. Each one is
+# cleaner than the previous.
+clean-here:
+	-rm -f ${CLEAN}
+clean::		clean-here
+
+distclean-here:
+	-rm -f ${CLEAN} ${DISTCLEAN}
+distclean::	distclean-here
+
+spotless-here:
+	-rm -f ${CLEAN} ${DISTCLEAN} ${SPOTLESS}
+spotless::	spotless-here 
+
+# This creates the ID file that lists where various identifiers are
+# found. Used by 'lid', part of the id-utils package.
+id:	ID
+ID:
+	@MKID@
