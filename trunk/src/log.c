@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.11 2000-01-26 11:29:25 arensb Exp $
+ * $Id: log.c,v 1.12 2000-02-06 22:12:42 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -64,7 +64,7 @@ add_to_log(char *msg)
 
 			if ((newlog = malloc(newsize)) == NULL)
 			{
-				fprintf(stderr, _("%s: Out of memory\n"),
+				fprintf(stderr, _("%s: Out of memory.\n"),
 					"add_to_log");
 				perror("malloc");
 				return -1;
