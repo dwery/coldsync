@@ -1,15 +1,21 @@
+- "System MIDI Sounds.pdb" complains that
+	I have a new, deleted record that is neither archived nor expunged
+	What am I supposed to do?
+  Investigate.
+- Getty mode ("-mg"). First mode-specific argument is either "net" to
+  listen on the network (this could be how inetd mode could work), or
+  a serial device name in /dev.
+	Should there be a separate /etc/coldsync.getty file?
+	How does getty mode work with USB connections (Visor under
+  FreeBSD)? Best thing to do is probably to ignore it completely: tell
+  people to use 'usbd', and add an appropriate entry to /etc/usbd.conf
+- NetSync forwarding: there's a comment in usb_select() hinting that
+  select() on /dev/ugen0 is broken and always returns ready.
 - NetSync should time out after a while: if no TCP connection received
   N seconds after accepting a UDP connection, stop waiting and abort.
-- Add "-t net"
 - Update FreeBSD port to include .mo files
 - Bug: run coldsync -mr ... . Kill xcopilot before running HotSync.
   ColdSync dumps core.
-- Memory leaks: when specifying bogus device, the strings strdup()ed
-  from the config file don't get freed.
-	When specifying a bogus config file, the standard stuff
-  doesn't get freed.
-- Perhaps move all of the "this software includes code contributed by
-  UCBerkeley" etc. to "AUTHORS"?
 - It'd be nice to have a tool to make sure i18n/FILES contains all of
   the appropriate files. For that matter, it'd be nice to make sure
   that all files that CVS knows about are in the distribution
