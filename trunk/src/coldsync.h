@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.55 2001-10-06 22:11:01 arensb Exp $
+ * $Id: coldsync.h,v 1.56 2001-10-18 02:47:46 arensb Exp $
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_
@@ -69,16 +69,6 @@ struct cmd_opts {
 	pconn_proto_t protocol;	/* Protocol stack for talking to cradle */
 	Bool use_syslog;	/* Use syslog for error messages? */
 	char *log_fname;	/* Where to write the log file */
-	/* XXX - do_backup and do_restore are made obsolete by run modes */
-	/* XXX - backupdir and restoredir are made obsolete by
-	 * mode-specific functions.
-	 */
-	Bool do_backup;		/* True iff we should do a full backup */
-	char *backupdir;	/* Where to put the files when doing a 
-				 * backup */
-	Bool do_restore;	/* True iff we should restore from a
-				 * full backup */
-	char *restoredir;	/* Where to restore from */
 	Bool force_slow;	/* If true, force slow syncing */
 	Bool force_fast;	/* If true, force fast syncing */
 	Bool check_ROM;		/* Iff false, ignore ROM databases */
