@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.8 1999-12-01 06:10:27 arensb Exp $
+ * $Id: parser.y,v 2.9 2000-01-13 17:51:55 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -47,7 +47,9 @@ static struct config *file_config;	/* As the parser runs, it will fill
 %token <integer>	NUMBER
 %token <string>		STRING
 %token CONDUIT
+%token DEFAULT
 %token DEVICE
+%token FINAL
 %token LISTEN
 %token NAME
 %token PATH
@@ -385,7 +387,7 @@ conduit_directive:
 		free($2); $2 = NULL;
 		free($4); $4 = NULL;
 	}
-	| NAME STRING ';'
+	| NAME STRING ';'	/* XXX - Is this used? */
 	| PATH STRING ';'
 	{
 		/* Path to the conduit program. If this is a relative
@@ -399,6 +401,18 @@ conduit_directive:
 		PARSE_TRACE(4)
 			fprintf(stderr, "Conduit path: [%s]\n",
 				cur_conduit->path);
+	}
+	| DEFAULT ';'
+	{
+		/* Mark this conduit as being a fall-back default */
+		cur_conduit->flags |= CONDFL_DEFAULT;	/* XXX - Test this */
+	}
+	| FINAL ';'
+	{
+		/* Mark this conduit as being final: if it matches, don't
+		 * even look through the rest of the queue.
+		 */
+		cur_conduit->flags |= CONDFL_FINAL;	/* XXX - Test this */
 	}
 	;
 
