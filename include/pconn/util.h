@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.7 2001-07-06 05:44:00 arensb Exp $
+ * $Id: util.h,v 1.8 2003-08-05 13:32:04 arensb Exp $
  */
 #ifndef _util_h_
 #define _util_h_
@@ -38,6 +38,10 @@ extern INLINE udword get_udword(const ubyte **buf);
 extern INLINE void put_ubyte(ubyte **buf, const ubyte value);
 extern INLINE void put_uword(ubyte **buf, const uword value);
 extern INLINE void put_udword(ubyte **buf, const udword value);
+
+/* Functions for reversing the bytes in values */
+extern INLINE uword reverse_uword(const uword value);
+extern INLINE udword reverse_udword(const udword value);
 
 /* Functions for converting between DLP's time format and Unix's
  * time_ts and the time_t-with-offset that the rest of the Palm stuff
