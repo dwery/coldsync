@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.11 2000-12-18 06:15:57 arensb Exp $
+ * $Id: dlp_cmd.h,v 1.12 2000-12-23 11:35:19 arensb Exp $
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_
@@ -726,13 +726,15 @@ struct dlp_netsyncinfo
 				 * is willing to accept NetSyncs.
 				 */
 	ubyte reserved1;	/* Set to 0 */
-	udword reserved1b;	/* Set to 0 */	/* XXX - bogus name */
+	udword reserved1b;	/* Set to 0 */
 	udword reserved2;	/* Set to 0 */
 	udword reserved3;	/* Set to 0 */
 	udword reserved4;	/* Set to 0 */
-		/* For some reason, the hostname, address and netmask
-		 * are not stored as binary data (4 bytes for the IP
-		 * address), but rather as NUL-terminated strings.
+		/* The hostname, address and netmask are not stored as
+		 * binary data (4 bytes for the IP address), but rather as
+		 * NUL-terminated strings.
+		 * This is arguably good, since it leaves the door open for
+		 * IPv6 and other fun stuff.
 		 */
 	uword hostnamesize;	/* Length of sync host's name, including
 				 * terminating NUL. */
