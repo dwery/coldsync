@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.29 2001-07-30 07:22:46 arensb Exp $
+ * $Id: PConnection_serial.c,v 1.30 2001-09-07 09:46:12 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -253,11 +253,14 @@ serial_bind(PConnection *pconn,
 	{
 	    case PCONN_STACK_FULL:
 		return slp_bind(pconn, (const struct slp_addr *) addr);
-		break;
 
 	    case PCONN_STACK_SIMPLE:	/* Fall through */
 	    case PCONN_STACK_NET:
 		return 0;
+
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol stack */
 		return -1;
@@ -350,6 +353,9 @@ serial_accept(PConnection *pconn)
 			return -1;
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol */
 		return -1;
@@ -447,7 +453,7 @@ serial_select(PConnection *p,
 int
 pconn_serial_open(PConnection *pconn,
 		  const char *device,
-		  const int protocol,
+		  const pconn_proto_t protocol,
 		  const Bool prompt)
 {
 	struct termios term;
@@ -506,6 +512,9 @@ pconn_serial_open(PConnection *pconn,
 		}
 		break;
 
+	    case PCONN_STACK_NONE:
+	    case PCONN_STACK_DEFAULT:
+		/* XXX - Error */
 	    default:
 		/* XXX - Indicate error: unsupported protocol stack */
 		return -1;
