@@ -6,20 +6,15 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.16 2000-05-20 23:15:15 arensb Exp $
- */
-/* XXX - 'flex' by itself can (apparently) deal with infinitely-long
- * tokens. 'flex -l' (and presumably 'lex') can't. Figure out some way of
- * dealing with this, particularly wrt strings and user-supplied conduit
- * arguments. Perhaps replace ".*" with ".{0,255}" or some such.
+ * $Id: lexer.l,v 2.17 2000-05-21 08:07:33 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
 
-#if HAVE_LIBINTL
+#if HAVE_LIBINTL_H
 #  include <libintl.h>		/* For i18n */
-#endif	/* HAVE_LIBINTL */
+#endif	/* HAVE_LIBINTL_H */
 
 #include "parser.h"
 #include "y.tab.h"
@@ -54,6 +49,13 @@
 #ifndef fileno
 extern int fileno(FILE *);
 #endif  /* fileno */
+
+/* Hack for Linux: "../config.h" contains magic to that makes the
+ * declaration of strdup() be included, but "../config.h" is included only
+ * after <stdio.h>, which includes <features.h>, which controls whether
+ * strdup() is declared :-(
+ */
+extern char *strdup(const char *string);
 
 int lineno;
 
