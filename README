@@ -23,7 +23,7 @@ California, Berkeley and its contributors.
 
 	ColdSync is a tool for synchronizing data between Palm
 computing devices (such as the PalmPilot, PalmPilot Pro, Palm V,
-QualComm PDQ, and so forth), and a Unix workstation.
+QualComm PDQ, Handspring Visor and so forth), and a Unix workstation.
 	ColdSync can back up and restore the state of a Palm, as well
 as synchronize its data, which is sort of like a two-way rdist (see
 below). In future versions, it will be possible to do more interesting
@@ -105,11 +105,16 @@ so fix it.
 
 COMPATIBILITY NOTES
 
-* ColdSync 0.5.6:
+* ColdSync 1.0.0:
 
 FreeBSD:
 	This package was developed under FreeBSD 3.x, and compiles
 	cleanly with no modification under 3.3-RELEASE.
+
+	On later versions of FreeBSD (4.0 and beyond), it's possible
+	to communicate with the Handspring Visor using its USB
+	interface.  Configure a listen type of "usb" rather than
+	"serial", and use device /dev/ugen0.
 
 Redhat Linux 6.1:
 	(as of ColdSync v0.5.4)

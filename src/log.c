@@ -2,11 +2,11 @@
  *
  * Convenience functions for logging.
  *
- *	Copyright (C) 1999, Andrew Arensburger.
+ *	Copyright (C) 1999, 2000, Andrew Arensburger.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.9 1999-11-27 05:54:33 arensb Exp $
+ * $Id: log.c,v 1.10 2000-01-25 11:26:09 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -19,9 +19,9 @@
 
 #include "coldsync.h"
 
-extern char *synclog;
-extern int log_size;
-extern int log_len;
+char *synclog;			/* Log that'll be uploaded to the Palm */
+static int log_size = 0;	/* Size of 'synclog' */
+static int log_len = 0;		/* Length of log == strlen(synclog) */
 
 /* add_to_log
  * Unfortunately, the DlpAddSyncLogEntry() function's name is
@@ -31,53 +31,76 @@ extern int log_len;
  * up a log entry one string at a time. At the end of the sync, the
  * entire log will be written to the Palm.
  */
-/* XXX - This setup is extremely ugly, what with the log-related
- * variables scattered amongst several files and whatnot. Perhaps a
- * better setup would be to have three functions:
- *	log_t *open_synclog(struct PConnection *);
- *	int sync_log(log_t *, char *msg);
- *	int close_synclog(log_t *);
- * How best to do this? A log is really associated with a given sync,
- * not a connection, really. Perhaps it'd be best to add some fields
- * to 'struct Palm'?
+/* XXX - This isn't the prettiest setup imaginable, what with the
+ * global variables and all. Since a log is associated with a
+ * particular sync, it might be better to add a 'log' field to 'struct
+ * Palm'.
  */
 int
 add_to_log(char *msg)
 {
-	SYNC_TRACE(5)
+	int msglen;		/* Length of 'msg' */
+
+	SYNC_TRACE(6)
 		fprintf(stderr, "add_to_log(\"%s\")\n", msg);
-	if (strlen(msg) + log_len >= log_size)
+
+	msglen = (synclog == NULL ? 0 : strlen(synclog));
+
+	/* Increase the size of the log buffer, if necessary */
+	if (log_len + msglen >= log_size)
 	{
 		char *newlog;
-		int newsize = log_size;
+		int newsize;
 
 		if (log_size == 0)
-			newsize = 1024;
-		while (newsize < strlen(msg) + log_len)
-			newsize *= 2;
-
-		/* (Re)allocate memory for log */
-		if (log_size == 0)
-			newlog = malloc(newsize);
-		else
-			newlog = realloc(synclog, newsize);
-
-		if (newlog == NULL)
 		{
-			fprintf(stderr, _("%s: realloc failed\n"),
-				"add_to_log");
-			perror(_("realloc"));
-			return -1;
+			/* First time around. Need to allocate a new
+			 * log buffer. Make it big enough for the
+			 * current string, rounded up to the nearest
+			 * Kb.
+			 */
+			newsize = (msglen + 1023) & 0x03ff;
+				/* (msglen + 1023) % 1024 */
+
+			if ((newlog = malloc(newsize)) == NULL)
+			{
+				fprintf(stderr, _("%s: Out of memory\n"),
+					"add_to_log");
+				perror("malloc");
+				return -1;
+			}
+
+			synclog = newlog;
+			log_len = msglen;
+			log_size = newsize;
+
+		} else {
+			/* Second through nth time around. The buffer
+			 * already exists, but it's too small. Double
+			 * its size. If that's still not enough,
+			 * double it again, and so forth.
+			 */
+			newsize = log_size;
+			while (log_len + msglen >= newsize)
+				newsize *= 2;
+
+			if ((newlog = realloc(synclog, newsize)) == NULL)
+			{
+				fprintf(stderr, _("%s: realloc failed\n"),
+					add_to_log);
+				perror("realloc");
+				return -1;
+			}
+
+			synclog = newlog;
+			log_size = newsize;
 		}
-		if (log_size == 0)
-			newlog[0] = '\0';	/* Terminate the
-						 * newly-allocated string
-						 */
-		synclog = newlog;
-		log_size = newsize;
 	}
+
 	strcat(synclog, msg);
-	SYNC_TRACE(6)
+	log_len += msglen;
+
+	SYNC_TRACE(4)
 		fprintf(stderr, "Now log is \"%s\"\n", synclog);
 	return 0;
 }

@@ -12,21 +12,11 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.3 1999-11-27 05:45:42 arensb Exp $
+ * $Id: padp.c,v 1.4 2000-01-25 11:25:52 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
-#include <sys/types.h>			/* For select() */
-#if  HAVE_SYS_SELECT_H
-#  include <sys/select.h>		/* To make select() work rationally
-					 * under AIX */
-#endif	/* HAVE_SYS_SELECT_H */
-#include <sys/time.h>			/* For select() */
-#include <unistd.h>			/* For select() */
-#include <string.h>			/* For bzero() for select() */
-#if HAVE_STRINGS_H
-#  include <strings.h>			/* For bzero() under AIX */
-#endif	/* HAVE_STRINGS_H */
+
 #include <stdlib.h>			/* For free() */
 
 #if HAVE_LIBINTL
@@ -111,8 +101,6 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	uword inlen;		/* Length of incoming data */
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
-	fd_set readfds;		/* Set of readable file descriptors
-				 * (for select()) */
 	struct timeval timeout;	/* Read timeout, for select() */
 
 	palm_errno = PALMERR_NOERR;
@@ -129,10 +117,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 	timeout.tv_sec = pconn->padp.read_timeout;
 	timeout.tv_usec = 0L;		/* Set the timeout */
 
-	FD_ZERO(&readfds);		/* Set of file descriptors to
-					 * listen to */
-	FD_SET(pconn->fd, &readfds);
-	err = select(pconn->fd+1, &readfds, NULL, NULL, &timeout);
+	err = (*pconn->io_select)(pconn, forReading, &timeout);
 					/* Wait for 'pconn->fd' to become
 					 * readable, or time out.
 					 */
@@ -357,11 +342,7 @@ padp_read(struct PConnection *pconn,	/* Connection to Palm */
 			timeout.tv_sec = pconn->padp.read_timeout / 10;
 			timeout.tv_usec = 0L;		/* Set the timeout */
 
-			FD_ZERO(&readfds);		/* Set of file
-							 * descriptors to
-							 * listen to */
-			FD_SET(pconn->fd, &readfds);
-			err = select(pconn->fd+1, &readfds, NULL, NULL, &timeout);
+			err = (*pconn->io_select)(pconn, forReading, &timeout);
 					/* Wait for 'pconn->fd' to become
 					 * readable, or time out.
 					 */
@@ -552,10 +533,6 @@ padp_write(struct PConnection *pconn,
 	const ubyte *rptr;	/* Pointer into buffers (for reading) */
 	ubyte *wptr;		/* Pointer into buffers (for writing) */
 	int attempt;		/* Send attempt number */
-	fd_set readfds;		/* File descriptors to read from, for
-				 * select() */
-	fd_set writefds;	/* File descriptors to write to, for
-				 * select() */
 	struct timeval timeout;	/* Timeout length, for select() */
 	uword offset;		/* Current offset */
 
@@ -616,10 +593,7 @@ padp_write(struct PConnection *pconn,
 
 		for (attempt = 0; attempt < PADP_MAX_RETRIES; attempt++)
 		{
-			FD_ZERO(&writefds);
-			FD_SET(pconn->fd, &writefds);
-			err = select(pconn->fd+1, NULL, &writefds, NULL,
-				     &timeout);
+			err = (*pconn->io_select)(pconn, forWriting, &timeout);
 			if (err == 0)
 			{
 				/* select() timed out */
@@ -645,11 +619,7 @@ padp_write(struct PConnection *pconn,
 			 * become readable. If nothing comes in, time out
 			 * and retry.
 			 */
-			FD_ZERO(&readfds);
-			FD_SET(pconn->fd, &readfds);
-			err = select(pconn->fd+1,
-				     &readfds, NULL, NULL,
-				     &timeout);
+			err = (*pconn->io_select)(pconn, forReading, &timeout);
 			if (err == 0)
 			{
 				/* select() timed out */

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.1 1999-09-09 05:13:46 arensb Exp $
+ * $Id: PConnection.h,v 1.2 2000-01-25 11:25:43 arensb Exp $
  */
 #ifndef _PConn_h_
 #define _PConn_h_
@@ -18,6 +18,18 @@
 #include "slp.h"
 #include "padp.h"
 #include "dlp.h"
+
+#include <sys/types.h>			/* For select() */
+#if  HAVE_SYS_SELECT_H
+#  include <sys/select.h>		/* To make select() work rationally
+					 * under AIX */
+#endif	/* HAVE_SYS_SELECT_H */
+#include <sys/time.h>			/* For select() */
+#include <unistd.h>			/* For select() */
+#include <string.h>			/* For bzero() for select() */
+#if HAVE_STRINGS_H
+#  include <strings.h>			/* For bzero() under AIX */
+#endif	/* HAVE_STRINGS_H */
 
 /* PConnection
  * This struct is an opaque type that contains all of the state about
@@ -33,6 +45,27 @@ struct PConnection
 {
 	/* Common part */
 	int fd;				/* File descriptor */
+
+	/* The following io_* fields are really virtual functions that
+	 * allow you to choose between serial and USB I/O.
+	 */
+	int (*io_read)(struct PConnection *p, unsigned char *buf, int len);
+	int (*io_write)(struct PConnection *p, unsigned char *buf, int len);
+	int (*io_drain)(struct PConnection *p);
+	int (*io_close)(struct PConnection *p);
+	int (*io_select)(struct PConnection *p, int direction,
+			 struct timeval *tvp);
+	int (*io_setspeed)(struct PConnection *p, int speed);
+
+#define forReading 0
+#define forWriting 1
+
+	void *io_private;	/* XXX - This is only used by the USB code.
+				 * It'd be cleaner to either declare it as
+				 * such, or just give it its own space in
+				 * the struct, along with all the other
+				 * protocols.
+				 */
 
 	/* The HotSync protocol version number that the other end
 	 * understands. This is determined by the CMP layer, and
@@ -106,7 +139,7 @@ struct PConnection
 	} slp;
 };
 
-extern struct PConnection *new_PConnection(char *fname);
+extern struct PConnection *new_PConnection(char *fname, int listenType);
 extern int PConnClose(struct PConnection *pconn);
 extern int PConn_bind(struct PConnection *pconn, struct slp_addr *addr);
 extern int PConnSetSpeed(struct PConnection *pconn, speed_t speed);	/* XXX */

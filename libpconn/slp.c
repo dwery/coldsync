@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: slp.c,v 1.3 1999-11-27 05:46:42 arensb Exp $
+ * $Id: slp.c,v 1.4 2000-01-25 11:25:53 arensb Exp $
  */
 
 #include "config.h"
@@ -147,7 +147,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	/* Read the preamble. */
 	for (i = 0; i < sizeof(slp_preamble); i++)
 	{
-		err = read(pconn->fd, pconn->slp.header_inbuf+i, 1);
+		err = (*pconn->io_read)(pconn, pconn->slp.header_inbuf+i, 1);
 		if (err < 0)
 		{
 			perror("slp_read: read");
@@ -177,7 +177,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	got = SLP_PREAMBLE_LEN;
 	while (want > got)
 	{
-		err = read(pconn->fd, pconn->slp.header_inbuf+got, want-got);
+		err = (*pconn->io_read)(pconn,
+					pconn->slp.header_inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read");
@@ -289,7 +290,7 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = read(pconn->fd, pconn->slp.inbuf+got, want-got);
+		err = (*pconn->io_read)(pconn, pconn->slp.inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read2");
@@ -314,7 +315,8 @@ slp_read(struct PConnection *pconn,	/* Connection to Palm */
 	got = 0;
 	while (want > got)
 	{
-		err = read(pconn->fd, pconn->slp.crc_inbuf+got, want-got);
+		err = (*pconn->io_read)(pconn,
+					pconn->slp.crc_inbuf+got, want-got);
 		if (err < 0)
 		{
 			perror("slp_read: read");

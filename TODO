@@ -260,4 +260,3 @@
   to sync them as well.
 - Perhaps status codes 6xx can be used for machine-readable
   informational messages, e.g., "NN% complete".
-- Add Louis Mamakos's USB patches.

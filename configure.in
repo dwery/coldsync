@@ -1,5 +1,5 @@
 dnl #					-*- Sh -*-
-dnl # $Id: configure.in,v 1.43 2000-01-23 21:21:07 arensb Exp $
+dnl # $Id: configure.in,v 1.44 2000-01-25 11:25:40 arensb Exp $
 dnl #
 
 dnl # XXX - Test for MAXHOSTNAMELEN, MAXPATHLEN
@@ -178,7 +178,7 @@ if test -z "$ac_cv_prog_TEXI2HTML" -o x"$ac_cv_prog_TEXI2HTML" = x"true"; then
 	\"make dist\".])
 fi
 
-dnl ## Checks for libraries.
+## Checks for libraries.
 
 # XXX - RedHat 6.0 has gethostbyname() in libnsl, but also has it in
 # libc. This test adds "-lnsl" to $LIBS, even though it isn't
@@ -193,7 +193,7 @@ AC_SUBST(LIBYACC)
 # ElectricFence (optional)
 AC_ARG_WITH(efence,dnl
 [  --with-efence           Use Electric Fence memory checking library
-                          (only desirable for developers).],dnl
+                            (only desirable for developers).],dnl
 [AC_CHECK_LIB(efence,malloc)
 if test "$ac_cv_lib_efence_malloc" = yes; then
 	AC_DEFINE_UNQUOTED(WITH_EFENCE)
@@ -202,7 +202,7 @@ else
 	#' # For Emacs
 fi])
 
-dnl ## Checks for header files.
+## Checks for header files.
 
 AC_HEADER_STDC
 AC_HEADER_DIRENT
@@ -221,7 +221,7 @@ AC_CHECK_HEADERS([\
 #echo "ac_cv_header_blah_h == <$ac_cv_header_blah_h>"	# <>
 #echo "ac_cv_header_fcntl_h == <$ac_cv_header_fcntl_h>"	# <yes>
 
-dnl ## Checks for typedefs, structures, and compiler characteristics.
+## Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
@@ -233,7 +233,7 @@ AC_HEADER_TIME
 dnl AC_STRUCT_TM
 AC_STRUCT_TIMEZONE
 
-dnl ## Checks for library functions.
+## Checks for library functions.
 AC_CHECK_FUNCS(getopt \
 	select \
 	rename \
@@ -244,16 +244,20 @@ AC_CHECK_FUNCS(getopt \
 	sysconf
 )
 
-# Tell the various Makefiles to use the compatibility function provided
-if test -z "$ac_cv_func_cfmakeraw" -o x"$ac_cv_func_cfmakeraw" = xno ; then
-	COMPAT="$COMPAT cfmakeraw.c"
-	COMPATOBJS="$COMPATOBJS cfmakeraw.o"
-	COMPATLINTOBJS="$COMPATLINTOBJS cfmakeraw.ln"
-fi
-
-AC_SUBST(COMPAT)
-AC_SUBST(COMPATOBJS)
-AC_SUBST(COMPATLINTOBJS)
+# Optional USB support
+# (Only works under FreeBSD 4.x, for now)
+AC_ARG_WITH(usb,dnl
+[  --with-usb              Enable USB support for Visor (experimental,
+                             FreeBSD 4.x only).],
+	# XXX - Should check to see whether /sys/dev/usb/usb.h exists,
+	# whether it contains 'struct usb_device_info', whether that
+	# struct contains a "release" field, and whether the cpp
+	# symbol UT_READ_VECTOR_ENDPOINT is defined.
+	WITH_USB="$withval"
+	if test x"$WITH_USB" != xno; then
+		AC_DEFINE_UNQUOTED(WITH_USB)
+	fi
+)
 
 # Print error messages for various required bits that couldn't be found.
 if test -z "$ac_cv_func_getopt" -o x"$ac_cv_func_getopt" = x"no" ; then
