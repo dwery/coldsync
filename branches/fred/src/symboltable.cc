@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.cc,v 1.1.2.3 2001-10-11 03:35:47 arensb Exp $
+ * $Id: symboltable.cc,v 1.1.2.4 2001-10-11 10:08:26 arensb Exp $
  */
 
 #include <config.h>
@@ -17,6 +17,8 @@ extern "C" {
 #include <stdlib.h>		/* For malloc() */
 #include "symboltable.h"
 }
+
+static char *make_c_string(const string &s);
 
 map<string,string> table;	/* XXX - Is this going to cause problems on
 				 * machines where the assembler or linker
@@ -73,7 +75,7 @@ get_symbol(const char *name)
 /* make_c_string
  * C helper function: convert an STL string to a C-style "char *".
  */
-char *
+static char *
 make_c_string(const string &s)
 {
 	char *ret = (char *) malloc(s.length() + 1);
