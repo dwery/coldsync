@@ -1,4 +1,4 @@
-- Implement multi-fragment messages in PADP.
+- Implement sending multi-fragment messages in PADP.
 - SLP and PADP should probably be able to deal with chains of buffers,
   the way the network protocol stacks deal with chains of mbufs, or
   like writev().
@@ -42,10 +42,13 @@
 - PAM for security throughout?
 - Figure out a sane source directory organization and stick to it. I'm
   not going to worry about it too much in this alpha stage, though.
-- Screw the socket idea. Just come up with a good abstraction. Get rid
-  of the file descriptors, just pass pointers to PConnections.
 - Figure out why 'pconn/foo' and HotSync on the Palm don't always
   finish at the same time.
 - Would it be a good idea to grab as many of the identifiers from the
   Palm header files as practical, to make it easier to switch to them
   at some future point?
+- Get dependencies working right in Makefiles, so stuff gets rebuilt
+  properly.
+- Change file descriptors to "PConnection *"s wherever it makes sense.
+  Possibly the easiest way to do this is to comment out PConnLookup
+  and see what breaks.
