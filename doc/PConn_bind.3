@@ -1,0 +1,55 @@
+.\" PConn_bind.3
+.\" 
+.\" Copyright 2001, Andrew Arensburger.
+.\" You may distribute this file under the terms of the Artistic
+.\" License, as specified in the README file.
+.\"
+.\" $Id: PConn_bind.3,v 1.1 2001-09-05 07:29:41 arensb Exp $
+.\"
+.\" This man page uses the 'mdoc' formatting macros. If your 'man' uses
+.\" the old 'man' package, you may run into problems.
+.\"
+.Dd Aug 16, 2001
+.Dt PConn_bind 3
+.Sh NAME
+.Nm PConn_bind
+.Nd bind an address to a
+.Ft PConnection
+.Sh LIBRARY
+.Pa libpconn
+.Sh SYNOPSIS
+.Fd #include <palm.h>
+.Fd #include <pconn/pconn.h>
+.Ft int
+.Fn PConn_bind "PConnection *pconn" "const void *addr" "const int addrlen"
+.Sh DESCRIPTION
+.Nm
+associates an address with
+.Fa pconn ,
+which must already have been created with
+.Fn new_PConnection .
+.Pp
+In practice, this function is not terribly useful. If
+.Fa pconn
+was created with
+.Dv PCONN_STACK_FULL ,
+use
+.Bd -literal -offset
+        struct slp_addr pcaddr;
+
+        pcaddr.protocol = SLP_PKTTYPE_PAD;
+        pcaddr.port = SLP_PORT_DLP;
+        PConn_bind(pconn, &pcaddr, sizeof(struct slp_addr));
+.Ed
+.Pp
+In all other cases,
+.Fa addr
+and
+.Fa addrlen
+are ignored. However, it is still necessary to call
+.Nm
+since it may have side effects.
+.Sh RETURN VALUE
+.Sh SEE ALSO
+.Xr libpconn 3 ,
+.Xr new_PConnection 3 .
