@@ -1,3 +1,5 @@
+- "-r <dir> -dsync:1" should print each database as it is uploaded.
+  Ditto for "-d <dir> -dsync:1".
 - Ideally, you should be able to use Pilot VT100 and HotSync on the
   same cradle, without having to change anything.
   More realistically, though, it'll be necessary to write a ColdSync
@@ -21,6 +23,19 @@
   Oh, well. Can always come up with a reimplementation for Unix hosts.
   That would probably be a win anyway, since it would allows us to do
   the usual Unix-y stuff, like SSL, TCP wrappers, identd etc.
+- NetSync:
+	From Alex Tronin's tcpdump:
+	Cradle host sends three UDP datagrams to the sync host,
+  containing
+	- 0xfade 0x0119 - dunno
+	- Sync host's IP address
+	- Sync host's netmask
+	- Sync host's name (NUL-terminated)
+	The hosts exchange plain PADP packets over TCP (just forward
+  them back and forth).
+	This is unfortunate (it would have been better to send CMP
+  and/or DLP packets back and forth), but can be worked around. Just
+  add "methods" like those for serial/USB, but one layer up.
 - Add a type for those four-letter creator types and such.
 - Something to parse version numbers, as per <System/NetMgr.h> and
   <System/SystemMgr.h>
