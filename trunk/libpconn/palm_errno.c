@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.6 2001-09-08 01:13:00 arensb Exp $
+ * $Id: palm_errno.c,v 1.7 2001-12-09 22:44:21 arensb Exp $
  */
 #include "config.h"
 
@@ -44,6 +44,8 @@ palm_strerror(const palmerr_t errno)
 		return N_("Out of memory");
 	    case PALMERR_TIMEOUT:
 		return N_("Timeout");
+	    case PALMERR_TIMEOUT2:
+		return N_("Unexpected timeout");
 	    case PALMERR_BADF:
 		return N_("Bad file descriptor");
 	    case PALMERR_EOF:
