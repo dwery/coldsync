@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.9 2000-01-13 17:51:55 arensb Exp $
+ * $Id: parser.y,v 2.10 2000-01-19 06:13:00 arensb Exp $
  */
 /* XXX - Variable assignments, manipulation, and lookup. */
 /* XXX - Error-checking */
@@ -334,6 +334,9 @@ conduit_directives:
 
 conduit_directive:
 	TYPE STRING '/' STRING ';'
+	/* XXX - This ought to take an optional argument saying that this
+	 * conduit applies to just resource or record databases.
+	 */
 	{
 		if (strcmp($2, "*") == 0)
 		{
