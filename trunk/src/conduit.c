@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.c,v 2.33 2001-02-23 14:15:40 arensb Exp $
+ * $Id: conduit.c,v 2.34 2001-03-16 14:15:46 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -505,6 +505,11 @@ run_conduit(const struct dlp_dbinfo *dbinfo,
 			(char) conduit->prefs[i].creator & 0xff,
 			conduit->prefs[i].id,
 			pref_list[i]->contents_info->len);
+
+		/* XXX - Bug! This always returns a pointer to the same
+		 * static buffer, so you can't have more than one
+		 * preference.
+		 */
 		headers[last_header].value = tmpvalue;
 	}
 
