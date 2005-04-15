@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.c,v 1.44 2001-11-20 14:32:01 arensb Exp $
+ * $Id: pdb.c,v 1.45 2005-04-15 18:26:18 arensb Exp $
  */
 /* XXX - The way zero-length records are handled is a bit of a kludge. They
  * shouldn't normally exist, with the exception of expunged records. But,
@@ -409,6 +409,10 @@ pdb_Write(const struct pdb *db,
 				/* Buffer for writing the two useless NULs */
 	ubyte *wptr;		/* Pointer into buffers, for writing */
 	udword offset;		/* The next offset we're interested in */
+
+	/* XXX - Count the records/resources. Don't take the caller's word
+	 * that the count is accurate.
+	 */
 
 	/* Initialize 'offset': the next variable-sized item will go after
 	 * the header, after the index header, after the index, after the

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.9 2004-10-24 14:29:05 azummo Exp $
+ * $Id: PConnection_libusb.c,v 1.10 2005-04-15 18:22:30 arensb Exp $
  */
 
 #include "config.h"
@@ -154,6 +154,10 @@ typedef struct {
 #define GARMIN_VENDOR_ID		0x091E
 #define GARMIN_IQUE_3600_ID		0x0004
 
+/* XXX - This doesn't seem to ever be used. Perhaps it should be retained
+ * to make debugging messages prettier (in which case it should be moved
+ * closer to the hs_usbfun_* definitions) or something.
+ */
 static char *hs_usb_functions[] = {
 	"Generic",
 	"Debugger",
