@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.46 2005-03-09 03:16:40 christophe Exp $
+ * $Id: PConnection_serial.c,v 1.47 2005-04-15 18:23:54 arensb Exp $
  */
 #include "config.h"
 #include <stdio.h>
@@ -17,6 +17,14 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#if HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif	/* HAVE_SYS_TYPES_H */
+
+#if HAVE_SYS_SOCKET_H
+#  include <sys/socket.h>
+#endif	/* HAVE_SYS_SOCKET_H */
 
 #ifndef HAVE_ENODEV
 #  define ENODEV	999	/* Some hopefully-impossible value */
