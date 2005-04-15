@@ -3,7 +3,7 @@ dnl # Copyright (C) 1999-2001, Andrew Arensburger.
 dnl # You may distribute this file under the terms of the Artistic
 dnl # License, as specified in the README file.
 dnl #
-dnl # $Id: configure.in,v 1.161 2004-11-01 17:48:04 azummo Exp $
+dnl # $Id: configure.in,v 1.162 2005-04-15 03:03:03 arensb Exp $
 dnl #
 
 dnl # XXX - Check for strtoul(). If nonexistent, try using atol() in palment.c
@@ -319,7 +319,6 @@ AC_CHECK_HEADERS([\
 	fcntl.h \
 	libintl.h \
 	locale.h \
-	resolv.h \
 	strings.h \
 	stropts.h \
 	termios.h \
@@ -332,6 +331,14 @@ AC_CHECK_HEADERS([\
 	sys/param.h \
 	netinet/in.h
 ])
+
+# Under FreeBSD at least, resolv.h requires netinet/in.h to be included
+# first. And autoconf 2.59 actually checks for this, so when testing
+# for resolv.h, include <netinet/in.h> first.
+AC_CHECK_HEADER(resolv.h, [AC_DEFINE_UNQUOTED(HAVE_RESOLV_H)], [],
+[#if HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+#endif])
 
 #echo "ac_cv_header_blah_h == <$ac_cv_header_blah_h>"	# <>
 #echo "ac_cv_header_fcntl_h == <$ac_cv_header_fcntl_h>"	# <yes>
