@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.6 2002-11-28 21:58:08 azummo Exp $
+# $Id: VFS.pm,v 1.7 2005-07-28 01:43:34 christophe Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.6 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.7 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 # File Origin constants: (for the origins of relative offsets passed to 'seek' type routines)
@@ -100,6 +100,7 @@ use constant vfsFileDateAccessed	=> 3;
 	dlp_VFSFileResize
 	dlp_VFSFileDelete
 	dlp_VFSDirEntryEnumerate
+	dlp_VFSDirCreate
 );
 
 %ColdSync::SPC::VFS::EXPORT_TAGS = (
@@ -440,6 +441,22 @@ sub dlp_VFSFileDelete
 	my $path	= shift;	# File path
 
 	my ($err, @argv) = dlp_req(DLPCMD_VFSFileDelete,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("n Z*", $volRefNum, $path),
+				 }
+				 );
+
+	# No return arguments to parse
+	return $err;
+}
+
+sub dlp_VFSDirCreate
+{
+	my $volRefNum	= shift;	# Volume refNum
+	my $path	= shift;	# File path
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSDirCreate,
 				 {
 					 id   => dlpFirstArgID,
 					 data => pack("n Z*", $volRefNum, $path),
