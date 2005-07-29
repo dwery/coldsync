@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2005-07-29 03:08:07 christophe Exp $
+# $Id: Makefile,v 1.21 2005-07-29 03:10:07 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -74,6 +74,9 @@ install::	${CONDUITS} manifypods
 			< $$i > $$i.inst; \
 		${INSTALL_SCRIPT} $$i.inst ${DESTDIR}/${CONDUITDIR}/$$i; \
 		rm -f $$i.inst; \
+	done
+	for i in ${C_CONDUITS}; do \
+		${INSTALL_PROGRAM} $$i ${DESTDIR}/${CONDUITDIR}/$$i; \
 	done
 	@for i in ${PERL_CONDUITS}; do \
 		echo "${INSTALL_DATA} $$i.1 ${DESTDIR}/${MAN1DIR}/$$i.1"; \
