@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2004-11-07 22:47:02 christophe Exp $
+# $Id: Makefile,v 1.20 2005-07-29 03:08:07 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -13,10 +13,12 @@ PERL_CONDUITS =	copy-appinfo \
 		archive-sync \
 		purge-todo
 
+C_CONDUITS = time-conduit
+
 # XXX - memo-text and std-categories aren't ready for prime time, so
 # they're listed under DISTFILES so they won't be installed.
 
-CONDUITS =	${PERL_CONDUITS}
+CONDUITS =	${PERL_CONDUITS} $(C_CONDUITS)
 
 # XXX - The *.1 is bad: it will nuke separate man pages, if there are ever any
 CLEAN =		*.1 \
@@ -39,6 +41,10 @@ DISTFILES =	Makefile \
 		archive-sync \
 		memo-conduit.c \
 		time-conduit.c
+
+LIBPCONN =  -L${TOP}/libpconn -lpconn
+LIBPDB =    -L${TOP}/libpdb -lpdb
+EXTRA_LIBS =   ${LIBPDB} ${LIBPCONN}
 
 all::
 
@@ -73,6 +79,9 @@ install::	${CONDUITS} manifypods
 		echo "${INSTALL_DATA} $$i.1 ${DESTDIR}/${MAN1DIR}/$$i.1"; \
 		${INSTALL_DATA} $$i.1 ${DESTDIR}/${MAN1DIR}/$$i.1; \
 	done
+
+time-conduit:   ${TOP}/libpconn/libpconn.a
+time-conduit:   ${TOP}/libpdb/libpdb.a
 
 # This is for Emacs's benefit:
 # Local Variables:	***
