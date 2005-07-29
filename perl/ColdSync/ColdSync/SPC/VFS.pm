@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.7 2005-07-28 01:43:34 christophe Exp $
+# $Id: VFS.pm,v 1.8 2005-07-29 01:25:05 christophe Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.7 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.8 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 # File Origin constants: (for the origins of relative offsets passed to 'seek' type routines)
@@ -99,6 +99,7 @@ use constant vfsFileDateAccessed	=> 3;
 	dlp_VFSFileSize
 	dlp_VFSFileResize
 	dlp_VFSFileDelete
+	dlp_VFSFileGetDates
 	dlp_VFSDirEntryEnumerate
 	dlp_VFSDirCreate
 );
@@ -127,9 +128,16 @@ use constant vfsFileDateAccessed	=> 3;
 		vfsFileAttrLink
 		vfsFileAttrAll
 	) ],
+
+	'vfs_filedates' => [ qw (
+
+		vfsFileDateCreated
+		vfsFileDateModified
+		vfsFileDateAccessed
+	) ],
 );
 
-Exporter::export_ok_tags('vfs_opentags','vfs_fileattrs');
+Exporter::export_ok_tags('vfs_opentags','vfs_fileattrs','vfs_filedates');
 
 
 
@@ -419,6 +427,50 @@ sub dlp_VFSFileSize
 	return ($err, $retval, $retval->{'fileSize'});
 }
 
+=head2 dlp_VFSFileGetDates
+
+	my ($err,$hashref,$date) = dlp_VFSFileGetDates( $fileref, vfsFileDateModified );
+
+Fetches the appropriate date and returns a Unix epoch value. Note that there may be
+timezone issues since Palm times are always in a local timezone.
+
+=cut
+
+sub dlp_VFSFileGetDates
+{
+	my $fileRef	= shift;	# fileRef
+	my $type = shift;		# vfsFileDate*
+
+	my %type2str = (
+		vfsFileDateCreated => 'dateCreated',
+		vfsFileDateModified => 'dateModified',
+		vfsFileDateAccessed => 'dateAccessed',
+		);
+
+	return undef unless exists $type2str{$type};
+
+	my ($err, @argv) = dlp_req(DLPCMD_VFSFileSize,
+				 {
+					 id   => dlpFirstArgID,
+					 data => pack("N n", $fileRef, $type),
+				 }
+				 );
+
+	return undef unless defined $err;
+
+	# Parse the return arguments.
+	my $retval = {};
+
+	foreach my $arg (@argv) {
+		if ($arg->{id} == dlpFirstArgID)
+		{
+			$retval->{$type2str{$type}} = unpack("N",$arg->{data}) - 2082844800;
+		}
+	}
+
+	return ($err, $retval, $retval->{$type2str{$type}});
+}
+
 sub dlp_VFSFileResize
 {
 	my $fileRef	= shift;	# fileRef
@@ -450,6 +502,15 @@ sub dlp_VFSFileDelete
 	# No return arguments to parse
 	return $err;
 }
+
+=head2 dlp_VFSDirCreate
+
+	my $err = dlp_VFSDirCreate( $volref, "/AUDIO" );
+
+Creates a directory on a VFS volume. Behaviour is undefined if the directory already
+exists (i.e. you'd better check first, I've seen really strange stuff).
+
+=cut
 
 sub dlp_VFSDirCreate
 {
