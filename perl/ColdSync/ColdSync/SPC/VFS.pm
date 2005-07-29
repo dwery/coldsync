@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.8 2005-07-29 01:25:05 christophe Exp $
+# $Id: VFS.pm,v 1.9 2005-07-29 02:24:02 christophe Exp $
 
 # XXX - Write POD
 
@@ -36,7 +36,7 @@ use Exporter;
 
 
 @ColdSync::SPC::VFS::ISA	= qw( Exporter );
-$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.8 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$ColdSync::SPC::VFS::VERSION	= do { my @r = (q$Revision: 1.9 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 
 # File Origin constants: (for the origins of relative offsets passed to 'seek' type routines)
@@ -378,7 +378,7 @@ sub dlp_VFSFileWrite
 				 }
 				 );
 
-	return undef unless defined $err;
+	return undef unless defined $err and $err == 0;
 
 	print STDERR "File write failed: $err\n" unless $err eq 0;
 
