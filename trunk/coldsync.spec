@@ -2,11 +2,11 @@ Summary: synchronize Palm OS devices with Unix workstations
 Name: coldsync
 Version: 3.0
 Release: 1
-Copyright: Artistic
+License: Artistic
 Group: Applications/Communications
 URL: http://www.coldsync.org/
 Packager: root@localhost
-BuildRoot: /tmp/coldsync-3.0/
+BuildRoot: buildroot
 Requires: perl
 
 %description
@@ -22,7 +22,7 @@ tar -xzvf $RPM_SOURCE_DIR/coldsync-3.0.tar.gz
 %build
 cd $RPM_BUILD_DIR/coldsync-3.0
 autoconf
-./configure
+./configure --prefix=/usr
 make
 
 %install
