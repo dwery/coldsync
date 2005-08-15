@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2004-11-02 04:22:19 christophe Exp $
+# $Id: Makefile,v 1.20 2005-08-15 01:35:21 christophe Exp $
 
 TOP =		..
 SUBDIR =	doc
@@ -12,7 +12,7 @@ INFOFILES =	${TEXIFILES:.texi=.info}
 # are no existing foo.info-* files, /bin/sh just expands the glob to the
 # string "foo.info-*". Then 'make' complains that it doesn't know how to
 # build this file.
-EXTRA_INFOFILES =	${TEXIFILES:.texi=.info*}
+EXTRA_INFOFILES =	${TEXIFILES:.texi=.info}
 DVIFILES =	${TEXIFILES:.texi=.dvi}
 PSFILES =	${TEXIFILES:.texi=.ps}
 PDFFILES =	${TEXIFILES:.texi=.pdf}
