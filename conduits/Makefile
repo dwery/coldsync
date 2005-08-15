@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.21 2005-07-29 03:10:07 christophe Exp $
+# $Id: Makefile,v 1.22 2005-08-15 01:35:18 christophe Exp $
 
 TOP =		..
 SUBDIR =	conduits
@@ -24,7 +24,7 @@ CONDUITS =	${PERL_CONDUITS} $(C_CONDUITS)
 CLEAN =		*.1 \
 		pod2html-dircache pod2html-itemcache
 DISTFILES =	Makefile \
-		${CONDUITS} \
+		${PERL_CONDUITS} \
 		memo-text \
 		std-categories \
 		dump-headers \
