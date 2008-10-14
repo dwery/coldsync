@@ -21,7 +21,6 @@
 	PDA-DLP-major: 1;				(done)
 	PDA-DLP-minor: 3;				(done)
 - Add the PDA-xxx headers to the conduits development documentation.
-- Add a warning about listen usb under linux.
 - Fix --with-getlong 
 - Review USB support in configure.in
 - UDP wakeup packet support has been partially removed in one of the 
@@ -42,9 +41,6 @@
 - Review Alessandro Zummo's SPC.pm. Add POD. Improve some of the
   identifiers.
 - Perhaps add "force_fast" and/or "force_slow" .coldsyncrc options?
-- Windows appears to use an ioctl() on the USB device to get the
-  serial number. Is this possible here as well? If so, how to
-  communicate this to the appropriate levels?
 - Would it be possible to implement a web clipping server?
 - Add a ~/.palm/commands file, containing commands to execute on the
   next sync. If absent, this should default to "sync". That way, you
