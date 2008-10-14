@@ -71,6 +71,17 @@ is_database_restorable(PConnection *pconn,
 		return False;
 	}
 
+	/* Zeroed type/creator will cause troubles when reading the
+	 * database list
+	 */
+
+	if (pdb->type == 0x00 || pdb->creator == 0x00)
+	{
+		SYNC_TRACE(6)
+			fprintf(stderr, " creator/type is zero!\n");  
+		return False;
+	}
+
 	dbinfo = palm_find_dbentry(palm, pdb->name);
 	if (dbinfo == NULL)
 	{
@@ -110,7 +121,7 @@ is_database_restorable(PConnection *pconn,
 	if (pdb->type != dbinfo->type || pdb->creator != dbinfo->creator)
 	{
 		SYNC_TRACE(6)
-			fprintf(stderr, "creator/type mismatch\n");  
+			fprintf(stderr, " creator/type mismatch\n");  
 		return False;
 	}
 
@@ -154,6 +165,7 @@ restore_file(PConnection *pconn,
 	{
 		SYNC_TRACE(4)
 			fprintf(stderr, "database is not restorable\n");  
+		Error(_("%s cannot be restored."), fname);
 		va_add_to_log(pconn, "%s %s - %s\n",
 			      _("Restore"), pdb->name, _("Not restorable"));
 		return 0;
