@@ -962,6 +962,29 @@ run_mode_List(int argc, char *argv[])
 	return 0;
 }
 
+int
+run_mode_Info(int argc, char *argv[])
+{
+	int err;
+
+	struct Palm *palm;
+
+
+	/* Connect to the Palm */
+	if ((palm = palm_Connect()) == NULL )
+		return -1;
+
+	/* Ugly but works... */
+	if (misc_trace < 4)
+		misc_trace = 4;
+
+	palm_reload(palm);	
+
+	palm_Disconnect(palm, DLPCMD_SYNCEND_NORMAL);
+
+	return 0;
+}
+
 
 /* snum_checksum
  * Calculate and return the checksum character for a checksum 'snum' of

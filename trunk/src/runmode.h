@@ -14,4 +14,4 @@ extern int run_mode_Restore(int argc, char *argv[]);
 extern int run_mode_Init(int argc, char *argv[]);   
 extern int run_mode_Daemon(int argc, char *argv[]);
 extern int run_mode_List(int argc, char *argv[]);
-
+extern int run_mode_Info(int argc, char *argv[]);

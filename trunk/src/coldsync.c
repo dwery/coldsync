@@ -368,6 +368,9 @@ main(int argc, char *argv[])
 	    case mode_List:
 		err = run_mode_List(argc, argv);
 		break;
+	    case mode_Info:
+		err = run_mode_Info(argc, argv);
+		break;
 	    default:
 		/* This should never happen */
 		Error(_("Unknown mode: %d.\n"
