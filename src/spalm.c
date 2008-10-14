@@ -1379,6 +1379,9 @@ palm_reload(struct Palm *palm)
 {
 	int err;
 	
+	if ((err = fetch_sysinfo(palm)) < 0)
+		return err;
+
 	if ((err = fetch_userinfo(palm)) < 0)
 		return err;
 
