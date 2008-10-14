@@ -585,6 +585,19 @@ load_config(const Bool read_user_config)
 		 * config files. Create a new, default listen block.
 		 */
 
+#ifdef WITH_LIBUSB
+		MISC_TRACE(4)
+			fprintf(stderr, "No device specified on the "
+				"command line or in config file.\n"
+				"Using libusb\n");
+
+		if (prepend_listen_block("libusb", LISTEN_LIBUSB, global_opts.protocol) < 0)
+		{
+			free_sync_config(sync_config);
+			sync_config = NULL;
+			return -1;
+		}
+#else
 		MISC_TRACE(4)
 			fprintf(stderr, "No device specified on the "
 				"command line or in config file.\n"
@@ -597,6 +610,7 @@ load_config(const Bool read_user_config)
 			sync_config = NULL;
 			return -1;
 		}
+#endif
 	}
 
 	SYNC_TRACE(4)
