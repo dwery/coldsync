@@ -283,7 +283,7 @@ download_resources(PConnection *pconn,
 
 		/* Download the 'i'th resource from the Palm */
 		err = DlpReadResourceByIndex(pconn, dbh, i, 0,
-					     DLPC_RESOURCE_TOEND,
+					     DLPC_RESOURCE_TOEND, /* XXX should this be the max rec size? */
 					     &resinfo,
 					     &rptr);
 

@@ -47,7 +47,11 @@
 #include "pconn/palm_errno.h"
 #include "pconn/netsync.h"
 
-#define IOBUF_LEN	1024
+/* This one seems to fail when set too high with some prcs and some
+ * devices (max 128 on Tungsten E and 'Saved Preferences', so let's
+ * stay safe.
+ */
+#define IOBUF_LEN 64
 
 struct usb_data {
 	usb_dev_handle *dev;
