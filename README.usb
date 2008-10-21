@@ -5,6 +5,10 @@ $Id: README.usb,v 1.8 2004-11-12 02:08:42 christophe Exp $
 Linux
 =====
 
+	WARNING: The support via the visor kernel driver
+	is somewhat deprecated. Please read README.libusb
+	for the new-and-improved way. 
+
 	Linux natively supports USB connection at the kernel
 	level. The kernel module is called visor.o and will expose
 	the USB connection as a serial one (namely /dev/ttyUSBx
