@@ -9,15 +9,26 @@ $Id: README.libusb,v 1.3 2004-11-01 17:24:38 azummo Exp $
 	The correct way to use it with coldsync is with a
 	proper listen libusb block, just like this one:
 
-	listen libusb "myusb" {
+	listen libusb "libusb" {
 	}
 
 	Then just launch coldsync as usual:
 
-		coldsync --listen myusb
+		coldsync --listen libusb ...
 
-	Under Linux, you sometimes have to disable the HotPlug
-	support in order to avoid conflicts.
+	As of coldsync 3.0, this listen block is automatically
+	added unless you specify a device on the command line
+	(and coldsync has been compiled with libusb support).
+
+	If that is the case, you can launch coldsync as in
+
+		coldsync
+
+	Easy, isn'it ? :)
+		
+	
+	Under Linux, udev/hotplug might try to load the visor
+	driver which would conflict with colsync.
 
 	If loaded, you should also rmmod the visor driver.
 
