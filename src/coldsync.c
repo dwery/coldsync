@@ -288,6 +288,9 @@ main(int argc, char *argv[])
 		    case mode_List:
 			fprintf(stderr, "List\n");
 			break;
+		    case mode_Info:
+			fprintf(stderr, "Info\n");
+			break;
 		    default:
 			fprintf(stderr, "* UNKNOWN *\n");
 			break;
