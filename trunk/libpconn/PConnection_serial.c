@@ -485,6 +485,9 @@ serial_drain(PConnection *p)
 			perror("tcdrain");
 	}
 
+	/* Some serial drivers need some time to settle down */
+	usleep(50000);
+
 	return err;
 }
 
