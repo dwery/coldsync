@@ -3,7 +3,7 @@
  * libusb support.
  *
  *	Copyright (C) 2000, Louis A. Mamakos.
- *	Copyright (C) 2002-04, Alessandro Zummo.
+ *	Copyright (C) 2002-08, Alessandro Zummo.
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
@@ -12,7 +12,7 @@
 
 #include "config.h"
 
-#include <stdio.h>	/* This is left outside of the #if WITH_USB solely
+#include <stdio.h>	/* This is left outside of the #if WITH_LIBUSB solely
 			 * to make 'gcc' shut up: apparently, ANSI C
 			 * doesn't like empty source files.
 			 */
@@ -46,18 +46,20 @@
 #include "palm.h"
 #include "pconn/palm_errno.h"
 #include "pconn/netsync.h"
+#include "pconn/ids.h"
 
 /* This one seems to fail when set too high with some prcs and some
  * devices (max 128 on Tungsten E and 'Saved Preferences', so let's
  * stay safe.
+ * XXX Might be worthwile to check the usb max packet size.
  */
 #define IOBUF_LEN 64
 
 struct usb_data {
 	usb_dev_handle *dev;
-	int hotsync_ep_out;
-	int hotsync_ep_in;
-	int hotsync_ep_int;
+	int ep_out;
+	int ep_in;
+	int ep_int;
 	unsigned char iobuf[IOBUF_LEN];
 	unsigned char *iobufp;
 	int iobuflen;
@@ -120,43 +122,6 @@ typedef struct {
 #define	hs_usbfun_RemoteFileSys	4
 #define	hs_usbfun_MAX		4
 
-
-/* USB vendors/products */
-
-#define HANDSPRING_VENDOR_ID		0x082d
-#define HANDSPRING_VISOR_ID		0x0100
-#define HANDSPRING_TREO_ID		0x0200
-#define HANDSPRING_TREO_600_ID		0x0300
-
-#define PALM_VENDOR_ID			0x0830
-#define PALM_M500_ID			0x0001
-#define PALM_M505_ID			0x0002
-#define PALM_M515_ID			0x0003
-#define PALM_I705_ID			0x0020
-#define PALM_M125_ID			0x0040
-#define PALM_M130_ID			0x0050
-#define PALM_TUNGSTEN_T_ID              0x0060
-#define PALM_TUNGSTEN_Z_ID		0x0031
-#define PALM_ZIRE_ID			0x0070
-#define PALM_ZIRE_31_72_ID		0x0061 /* Those USB ids must be very procey, they
-						* keep using the same... <g>
-						*/
-
-#define SONY_VENDOR_ID			0x054C
-#define SONY_CLIE_3_5_ID		0x0038
-#define SONY_CLIE_4_0_ID		0x0066
-#define SONY_CLIE_S360_ID		0x0095
-#define SONY_CLIE_4_1_ID		0x009A
-#define SONY_CLIE_NX60_ID		0x00DA
-#define SONY_CLIE_NZ90V_ID		0x00E9
-#define SONY_CLIE_UX50_ID		0x0144
-#define SONY_CLIE_TJ25_ID		0x0169
-
-#define ACEECA_VENDOR_ID		0x4766
-#define ACEECA_MEZ_1000_ID		0x0001
-
-#define GARMIN_VENDOR_ID		0x091E
-#define GARMIN_IQUE_3600_ID		0x0004
 
 /* XXX - This doesn't seem to ever be used. Perhaps it should be retained
  * to make debugging messages prettier (in which case it should be moved
@@ -251,15 +216,15 @@ libusb_read(PConnection *p, unsigned char *buf, int len)
 			do {
 				char intbuf[8];
 
-				u->iobuflen = usb_interrupt_read(u->dev, u->hotsync_ep_int | 0x80,
+				u->iobuflen = usb_interrupt_read(u->dev, u->ep_int | 0x80,
 					&intbuf[0], 8, 10);
 			}
 			while (u->iobuflen > 0);
 
 			u->iobufp = u->iobuf;
 			IO_TRACE(5)
-				fprintf(stderr, "calling usb_bulk_read(%02x)\n", u->hotsync_ep_in | 0x80);
-			u->iobuflen = usb_bulk_read(u->dev, u->hotsync_ep_in | 0x80,
+				fprintf(stderr, "calling usb_bulk_read(%02x)\n", u->ep_in | 0x80);
+			u->iobuflen = usb_bulk_read(u->dev, u->ep_in | 0x80,
 				(char *)u->iobufp, sizeof(u->iobuf), 5000);
 			IO_TRACE(5)
 				fprintf(stderr, "usb read %d, ret %d\n", sizeof(u->iobuf), u->iobuflen);
@@ -279,7 +244,7 @@ libusb_write(PConnection *p, unsigned const char *buf, const int len)
 	struct usb_data *u = p->io_private;
 	int ret;
 
-	ret = usb_bulk_write(u->dev, u->hotsync_ep_out, (char *)buf, len, 5000);
+	ret = usb_bulk_write(u->dev, u->ep_out, (char *)buf, len, 5000);
 	IO_TRACE(5)
 		fprintf(stderr, "usb write %d, ret %d\n", len, ret);
 	if (ret < 0)
@@ -409,8 +374,7 @@ libusb_drain(PConnection *p)
 }
 
 static int
-libusb_probe_os3(PConnection *pconn,
-		struct usb_data *u,
+libusb_probe_os3(struct usb_data *u,
 		struct usb_device *dev)
 {
 	int ret, i;
@@ -454,21 +418,21 @@ libusb_probe_os3(PConnection *pconn,
 	{
 		if (ci.connections[i].portFunctionID == hs_usbfun_Hotsync)
 		{
-			u->hotsync_ep_in  = ci.connections[i].port;
-			u->hotsync_ep_out = ci.connections[i].port;
-			u->hotsync_ep_int = 0;
+			u->ep_in  = ci.connections[i].port;
+			u->ep_out = ci.connections[i].port;
+			u->ep_int = 0;
 		}
 	}
 
-	if (u->hotsync_ep_in == 0)
+	if (u->ep_in == 0)
 	{
 		IO_TRACE(1) {
 			fprintf(stderr, "No ports found, trying defaults\n");
  		}
 
-	 	u->hotsync_ep_in  = 2;
-		u->hotsync_ep_out = 2;
-		u->hotsync_ep_int = 0;
+	 	u->ep_in  = 2;
+		u->ep_out = 2;
+		u->ep_int = 0;
 	}
 
 	/* Make it so */
@@ -476,8 +440,7 @@ libusb_probe_os3(PConnection *pconn,
 }
 
 static int
-libusb_probe_generic(PConnection *pconn,
-		struct usb_data *u,
+libusb_probe_generic(struct usb_data *u,
 		struct usb_device *dev)
 {
 	int ret, i;
@@ -509,33 +472,36 @@ libusb_probe_generic(PConnection *pconn,
 	{
 		IO_TRACE(1) {
 			fprintf(stderr,
-				"   port[%d]: %d\n"
-				"   info[%d]: %x\n",
+				"   port[%d]    : %d\n"
+				"   info[%d]    : %x\n"
+				"   reserved[%d]: %d\n"
+				"   creator[%d] : %c%c%c%c\n",
 				i, extci.connections[i].port,
-				i, extci.connections[i].info
+				i, extci.connections[i].info,
+				i, extci.connections[i].reserved,
+				i,
+				extci.connections[i].creatorID[0],
+				extci.connections[i].creatorID[1],
+				extci.connections[i].creatorID[2],
+				extci.connections[i].creatorID[3]
 			);
  		}
 	}
 
 	/* XXX We are always using the first connection entry */
+	/* XXX creator is cnys for hotsync and _ppp for PPP */
 
-	if (extci.numPorts > 0)
-	{
-		if (extci.differentEndPoints)
-		{
-			u->hotsync_ep_in  = extci.connections[0].info >> 4;
-			u->hotsync_ep_out = extci.connections[0].info & 0x0F;
-			u->hotsync_ep_int = 0;
+	if (extci.numPorts > 0) {
+		if (extci.differentEndPoints) {
+			u->ep_in  = extci.connections[0].info >> 4;
+			u->ep_out = extci.connections[0].info & 0x0F;
+			u->ep_int = 0;
+		} else {
+			u->ep_in  = extci.connections[0].port;
+			u->ep_out = extci.connections[0].port;
+			u->ep_int = 0;
 		}
-		else
-		{
-			u->hotsync_ep_in  = extci.connections[0].port;
-			u->hotsync_ep_out = extci.connections[0].port;
-			u->hotsync_ep_int = 0;
-		}
-	}
-	else
-	{
+	} else {
 		IO_TRACE(1) {
 			fprintf(stderr, "No ports found, trying defaults\n");
  		}
@@ -544,15 +510,13 @@ libusb_probe_generic(PConnection *pconn,
 		if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
 			dev->descriptor.idProduct == HANDSPRING_TREO_ID)
 		{
-		 	u->hotsync_ep_in  = 4;
-			u->hotsync_ep_out = 3;
-			u->hotsync_ep_int = 2;
-		}
-		else
-		{
-		 	u->hotsync_ep_in  = 2;
-			u->hotsync_ep_out = 2;
-			u->hotsync_ep_int = 0;
+		 	u->ep_in  = 4;
+			u->ep_out = 3;
+			u->ep_int = 2;
+		} else {
+		 	u->ep_in  = 2;
+			u->ep_out = 2;
+			u->ep_int = 0;
 		}
 	}
 
@@ -560,15 +524,52 @@ libusb_probe_generic(PConnection *pconn,
 	return 1;
 }
 
+struct usb_device *
+pconn_libusb_find_device(void)
+{
+	struct usb_device *dev;
+	struct usb_bus *busses, *bus;
+
+	usb_find_busses();
+	usb_find_devices();
+
+	busses = usb_get_busses();
+
+	for (bus = busses; bus; bus = bus->next) {
+		for (dev = bus->devices; dev; dev = dev->next)
+		{
+			/* XXX We should evaluate the devices, not the vendors */
+
+			if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID)
+				break;
+
+			if (dev->descriptor.idVendor == PALM_VENDOR_ID)
+				break;
+
+			if (dev->descriptor.idVendor == SONY_VENDOR_ID)
+				break;
+
+			if (dev->descriptor.idVendor == ACEECA_VENDOR_ID)
+				break;
+
+			if (dev->descriptor.idVendor == GARMIN_VENDOR_ID)
+				break;
+		}
+
+		if (dev)
+			return dev;
+	}
+
+	return NULL;
+}
+
 int
 pconn_libusb_open(PConnection *pconn,
 		const char *device,
 		const pconn_proto_t protocol)
 {
-	struct usb_data *u;
 	int i;
-
-	struct usb_bus *bus;
+	struct usb_data *u;
 	struct usb_device *dev;
 
 
@@ -606,44 +607,9 @@ pconn_libusb_open(PConnection *pconn,
 
 	usb_init();
 
-	dev = NULL;
-	
-	i = 0;
-	
-	while (i < 30)
+	for (i = 0; i < 30;)
 	{
-		struct usb_bus *busses;
-
-		usb_find_busses();
-		usb_find_devices();
-
-		busses = usb_get_busses();
-
-		for (bus = busses; bus; bus = bus->next) {
-			for (dev = bus->devices; dev; dev = dev->next)
-			{
-				/* XXX We should evaluate the devices, not the vendors */
-
-				if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID)
-					break;
-
-				if (dev->descriptor.idVendor == PALM_VENDOR_ID)
-					break;
-
-				if (dev->descriptor.idVendor == SONY_VENDOR_ID)
-					break;
-
-				if (dev->descriptor.idVendor == ACEECA_VENDOR_ID)
-					break;
-
-				if (dev->descriptor.idVendor == GARMIN_VENDOR_ID)
-					break;
-			}
-
-			if (dev)
-				break;
-		}
-
+		dev = pconn_libusb_find_device();
 		if (dev)
 			break;
 
@@ -750,7 +716,6 @@ pconn_libusb_open(PConnection *pconn,
 			"USB device information: vendor %04x product %04x\n",
 			dev->descriptor.idVendor,
 			dev->descriptor.idProduct);
- 
 	}
 
 	/*
@@ -767,18 +732,17 @@ pconn_libusb_open(PConnection *pconn,
 
 
 	/* Probe */
-
 	if (dev->descriptor.idVendor == HANDSPRING_VENDOR_ID &&
 		dev->descriptor.idProduct == HANDSPRING_VISOR_ID)
-		libusb_probe_os3(pconn, u, dev);
+		libusb_probe_os3(u, dev);
 	else
-		libusb_probe_generic(pconn, u, dev);
+		libusb_probe_generic(u, dev);
 
 	/* Make it so */
 	return 1;
 }
 
-#endif	/* WITH_USB */
+#endif	/* WITH_LIBUSB */
 
 /* This is for Emacs's benefit:
  * Local Variables: ***
