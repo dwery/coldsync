@@ -1,0 +1,59 @@
+
+	A little guide to HotSync your Palm OS device via bluetooth. This not
+	network HotSync but a direct HotSync.
+
+	You are supposed to know how to bind and permanentely authorize
+	the bluetooth device to connect to your pc.
+
+
+Configure your connection
+=========================
+
+	Go in Preferences/Connection and add a connection with the
+	following parameters:
+
+	Connect to: PC
+	Via: Bluetooth
+	Device: discover and bind your pc here
+	
+
+	Then, in the HotSync application, select the Local mode
+	and choice the connection you have just created.
+	
+
+On your host
+============
+
+	Add HotSync to the list of supporte services
+	on your host pc:
+
+	sdptool add HOTSYNC
+
+	By default, sdptool uses channel 22 when registering the
+	HotSync service. You can check it with:
+
+	sdptool browse local
+
+	Service Name: PalmOS HotSync
+	Service RecHandle: 0x10004
+	Service Class ID List:
+	  UUID 128: d80cf9ea-134c-11d5-83ce-0030657c543c
+	Protocol Descriptor List:
+	  "L2CAP" (0x0100)
+	  "RFCOMM" (0x0003)
+	    Channel: 22
+
+	You can now tell rfcomm to listen on channel 22 and launch
+	ColdSync when the device connects:
+
+	rfcomm listen 0 22 coldsync -m info --device {}
+
+	Where 0 is the refcomm device, 22 the channel and the {} will be
+	filled by the appropriate device name, like /dev/rfcomm0 .
+
+	Be sure to have appropriate permissions on that device. Adding your
+	user to the dialout group will work on most Linux distributions.
+
+	On your device, launch HotSync in "Local" mode and select
+	the connection you have created 
+
