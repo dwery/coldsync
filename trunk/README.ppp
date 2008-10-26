@@ -1,0 +1,28 @@
+
+	ColdSync comes with a nice utility to let your Palm OS device connect
+	to your network via a PPP connection with your host pc.
+
+	It will probably work only under Linux due to the libusb-1.0
+	requirement and the pty option of pppd.
+
+
+COMPILING
+
+	It's not compiled by default and you'll need libusb-1.0 .
+
+	cd coldsync-ppp
+	gcc -I../include -lusb-1.0 -o coldsync-ppp coldsync-ppp.c 
+
+
+USAGE
+
+	pppd local passive noauth nodetach 10.0.0.1:10.0.0.2 pty coldsync-ppp-usb
+
+	Where 10.0.0.2 will be the address of your Palm OS device and
+	10.0.0.1 will be assigned to your host PC. Don't use addresses 
+	that already exist on your LAN or you'll get in trouble.
+
+	You can add the debug option to pppd to see all the juicy bits of
+	the PPP handshake.
+
+	To test your connection you can simply ping 10.0.0.2 
