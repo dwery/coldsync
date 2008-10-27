@@ -1,3 +1,11 @@
+/* coldsync-ppp.c
+ *
+ *      Copyright (C) 2008, Alessandro Zummo.
+ *      You may distribute this file under the terms of the Artistic
+ *      License, as specified in the README file.
+ *
+ * $Id: $
+ */
 
 
 #include <stdio.h>
@@ -34,10 +42,10 @@ find_and_open_device(void)
 		struct libusb_device_descriptor desc;
 
 		int r = libusb_get_device_descriptor(dev, &desc);
-                if (r < 0) {
-                        fprintf(stderr, "failed to get device descriptor");
-                        return NULL;
-                }
+		if (r < 0) {
+			fprintf(stderr, "failed to get device descriptor");
+			return NULL;
+		}
 
 		/* XXX mmust check for the devices, not the vendors */
 		switch (desc.idVendor) {
@@ -47,7 +55,7 @@ find_and_open_device(void)
 			case ACEECA_VENDOR_ID:
 			case GARMIN_VENDOR_ID:
 				found = dev;
-        			break;
+				break;
     		}
 	}
 
