@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.h,v 2.13 2002-04-02 15:29:49 azummo Exp $
+ * $Id$
  */
 #ifndef _parser_h_
 #define _parser_h_

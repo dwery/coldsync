@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cs_error.h,v 2.8 2002-09-04 09:45:23 azummo Exp $
+ * $Id$
  */
 #ifndef _cs_error_h_
 #define _cs_error_h_

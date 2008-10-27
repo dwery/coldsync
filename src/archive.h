@@ -9,7 +9,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.h,v 1.7 2000-01-27 04:18:38 arensb Exp $
+ * $Id$
  */
 #ifndef _archive_h_
 #define _archive_h_

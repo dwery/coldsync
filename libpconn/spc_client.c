@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.c,v 1.6 2002-07-04 21:04:09 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

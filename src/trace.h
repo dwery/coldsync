@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: trace.h,v 1.2 2002-08-31 19:26:03 azummo Exp $
+ * $Id$
  */
 
 #define SYNC_TRACE(n)		if (sync_trace >= (n))

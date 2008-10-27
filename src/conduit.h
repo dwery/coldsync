@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduit.h,v 1.18 2002-11-09 15:06:28 azummo Exp $
+ * $Id$
  */
 #ifndef _conduit_h_
 #define _conduit_h_

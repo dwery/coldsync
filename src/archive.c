@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: archive.c,v 1.21 2001-01-28 22:38:00 arensb Exp $
+ * $Id$
  */
 
 #include "config.h"

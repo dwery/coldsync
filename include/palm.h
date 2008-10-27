@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm.h,v 1.1 2001-06-26 06:14:12 arensb Exp $
+ * $Id$
  */
 #ifndef _palm_h_
 #define _palm_h_

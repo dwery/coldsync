@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_libusb.c,v 1.10 2005-04-15 18:22:30 arensb Exp $
+ * $Id$
  */
 
 #include "config.h"

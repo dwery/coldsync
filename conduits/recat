@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the coldsync README file.
 #
-# $Id: recat,v 1.1 2003-06-28 14:30:24 azummo Exp $
+# $Id$
 
 use strict;
 use ColdSync;

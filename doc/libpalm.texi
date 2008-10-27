@@ -1,6 +1,6 @@
 \input texinfo		@c -*- texinfo -*-
 @c
-@c $Id: libpalm.texi,v 1.10 1999-11-12 09:45:18 arensb Exp $
+@c $Id$
 @c $Revision: 1.10 $
 @c
 @c %** Start of header

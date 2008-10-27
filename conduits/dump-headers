@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: dump-headers,v 1.2 2003-10-05 17:53:02 azummo Exp $
+# $Id$
 
 # This conduit dumps the headers received from ColdSync.
 

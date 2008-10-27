@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palment.c,v 2.10 2002-11-26 18:30:44 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

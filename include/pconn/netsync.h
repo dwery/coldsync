@@ -37,7 +37,7 @@
  * (Note: most all of this is conjecture: it could be that the <length>
  * field is really a short flags field followed by a length field.)
  *
- * $Id: netsync.h,v 1.9 2002-11-03 14:12:30 azummo Exp $
+ * $Id$
  */
 
 #ifndef _netsync_h_

@@ -12,7 +12,7 @@
  * protocol functions, interpret their results, and repackage them back for
  * return to the caller.
  *
- * $Id: dlp_cmd.c,v 1.39 2003-08-15 09:51:12 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

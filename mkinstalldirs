@@ -4,7 +4,7 @@
 # Created: 1993-05-16
 # Public domain
 
-# $Id: mkinstalldirs,v 1.2 2002-03-09 05:37:14 arensb Exp $
+# $Id$
 
 errstatus=0
 

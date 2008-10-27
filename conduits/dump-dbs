@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: dump-dbs,v 1.2 2003-06-26 19:20:42 azummo Exp $
+# $Id$
 
 # dumps the current database list (RAM, then ROM)
 

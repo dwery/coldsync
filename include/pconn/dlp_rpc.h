@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_rpc.h,v 1.5 2001-09-08 02:10:16 arensb Exp $
+ * $Id$
  *
  * Structure of an RPC-over-DLP request:
  *      +------+------+------+------+

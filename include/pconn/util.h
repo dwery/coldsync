@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: util.h,v 1.8 2003-08-05 13:32:04 arensb Exp $
+ * $Id$
  */
 #ifndef _util_h_
 #define _util_h_

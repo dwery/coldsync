@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2002-03-10 23:11:53 arensb Exp $
+# $Id$
 
 TOP =		..
 SUBDIR =	perl

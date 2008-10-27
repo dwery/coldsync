@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dlp_cmd.h,v 1.27 2003-11-30 17:19:34 azummo Exp $
+ * $Id$
  */
 #ifndef _dlp_cmd_h_
 #define _dlp_cmd_h_

@@ -1,4 +1,4 @@
-$Id: INSTALL,v 1.6 2005-02-02 02:31:59 christophe Exp $
+$Id$
 
 The latter part of this file is the standard GNU tool installation
 instructions. Skip them if you're used to building GNU packages.

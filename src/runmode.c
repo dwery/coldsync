@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: runmode.c,v 2.10 2002-12-28 23:55:01 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

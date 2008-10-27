@@ -2,7 +2,7 @@
  *
  * NetSync-related functions.
  *
- * $Id: netsync.c,v 1.28 2004-10-20 22:37:15 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

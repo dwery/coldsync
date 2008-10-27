@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_serial.c,v 1.47 2005-04-15 18:23:54 arensb Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

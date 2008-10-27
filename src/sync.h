@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.h,v 2.1 2002-07-18 16:43:16 azummo Exp $
+ * $Id$
  */
 
 extern int do_sync(pda_block *pda, struct Palm *palm);

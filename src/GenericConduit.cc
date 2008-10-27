@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: GenericConduit.cc,v 1.63 2002-10-16 18:59:32 azummo Exp $
+ * $Id$
  */
 
 /* Note on I/O:

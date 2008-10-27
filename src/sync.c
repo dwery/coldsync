@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: sync.c,v 2.7 2002-11-13 12:07:20 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

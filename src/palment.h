@@ -21,7 +21,7 @@
  *
  * 'name' and 'conf_fname' are optional.
  *
- * $Id: palment.h,v 2.10 2002-12-28 23:59:11 azummo Exp $
+ * $Id$
  */
 #ifndef _palment_h_
 #define _palment_h_

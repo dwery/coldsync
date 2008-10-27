@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.h,v 1.38 2004-03-27 15:23:57 azummo Exp $
+ * $Id$
  */
 #ifndef _PConnection_h_
 #define _PConnection_h_

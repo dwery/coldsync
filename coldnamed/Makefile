@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004-11-02 04:22:19 christophe Exp $
+# $Id$
 
 TOP =		..
 SUBDIR =	coldnamed

@@ -8,7 +8,7 @@
  *
  * This file was created by Fred Gylys-Colwell
  *
- * $Id: spc_client.h,v 1.3 2002-03-09 05:42:30 arensb Exp $
+ * $Id$
  */
 #ifndef _spc_client_h_
 #define _spc_client_h_

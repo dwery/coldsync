@@ -1,4 +1,4 @@
-# $Id: Makefile,v 2.37 2004-11-02 04:22:20 christophe Exp $
+# $Id$
 
 TOP =		..
 SUBDIR =	src

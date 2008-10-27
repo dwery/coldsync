@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2005-08-15 01:35:21 christophe Exp $
+# $Id$
 
 TOP =		..
 SUBDIR =	doc

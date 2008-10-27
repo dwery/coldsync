@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.22 2005-08-15 01:35:18 christophe Exp $
+# $Id$
 
 TOP =		..
 SUBDIR =	conduits

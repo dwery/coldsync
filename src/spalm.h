@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.h,v 2.9 2003-10-05 17:49:47 azummo Exp $
+ * $Id$
  */
 #ifndef _spalm_h_
 #define _spalm_h_

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexhack.c,v 2.1 2001-01-30 08:09:20 arensb Exp $
+ * $Id$
  */
 /* This is a gross hack. The file created by 'flex' contains
  *	#include "config.h"

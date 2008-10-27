@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: net_compat.h,v 2.2 2001-01-30 08:13:35 arensb Exp $
+ * $Id$
  */
 #include "config.h"
 #include <netdb.h>

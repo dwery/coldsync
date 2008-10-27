@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldsync.h,v 1.78 2003-10-01 12:29:39 azummo Exp $
+ * $Id$
  */
 #ifndef _coldsync_h_
 #define _coldsync_h_

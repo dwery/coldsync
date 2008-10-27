@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: restore.c,v 2.36 2003-10-16 15:28:40 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

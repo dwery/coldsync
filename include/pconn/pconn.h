@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pconn.h,v 1.8 2001-07-26 06:58:58 arensb Exp $
+ * $Id$
  */
 #ifndef __pconn_h__
 #define __pconn_h__

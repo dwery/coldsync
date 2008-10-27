@@ -52,7 +52,7 @@
  *	However, since SLP does include a checksum and CRC, if a
  *	packet is accepted, its contents are known to be good.
  *
- * $Id: slp.h,v 1.8 2001-09-07 23:35:56 arensb Exp $
+ * $Id$
  */
 #ifndef _slp_h_
 #define _slp_h_
