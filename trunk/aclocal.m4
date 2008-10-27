@@ -4,7 +4,7 @@
 #
 #	Copyright (C) 1999, Andrew Arensburger
 #
-# $Id: aclocal.m4,v 1.3 2000-12-23 11:30:24 arensb Exp $
+# $Id$
 
 # XXX - This won't compile on systems that use 'struct direct'. Then
 # again, is that bad?

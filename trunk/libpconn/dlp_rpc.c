@@ -8,7 +8,7 @@
  *
  * See description of RPC-over-DLP in <include/pconn/dlp_rpc.h>.
  *
- * $Id: dlp_rpc.c,v 1.8 2001-09-08 02:13:50 arensb Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

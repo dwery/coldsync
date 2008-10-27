@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: log.c,v 1.26 2004-10-21 20:23:37 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

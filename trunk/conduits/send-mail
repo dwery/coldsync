@@ -2,7 +2,7 @@
 #
 # ColdSync Mail conduit
 #
-# $Id: send-mail,v 1.10 2003-05-26 14:25:07 azummo Exp $
+# $Id$
 #
 use strict;
 use Palm::Mail;

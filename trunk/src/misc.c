@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: misc.c,v 2.19 2001-11-12 01:09:27 arensb Exp $
+ * $Id$
  */
 
 #include "config.h"

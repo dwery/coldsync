@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2004-11-02 04:22:19 christophe Exp $
+# $Id$
 
 # XXX - It would be nice to arrange things so that the <lang>.po files
 # aren't modified all the time (and cause CVS to think the file has

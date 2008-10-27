@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002-12-10 16:55:31 azummo Exp $
+# $Id$
 
 TOP =		../..
 SUBDIR =	src/conduits

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pdb.h,v 1.11 2001-11-20 14:31:42 arensb Exp $
+ * $Id$
  */
 #ifndef _pdb_h_
 #define _pdb_h_

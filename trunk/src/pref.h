@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: pref.h,v 2.2 2000-12-24 21:24:57 arensb Exp $
+ * $Id$
  */
 #ifndef _pref_h_
 #define _pref_h_

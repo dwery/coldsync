@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.c,v 1.6 2003-06-26 20:54:36 azummo Exp $
+ * $Id$
  *
  * This file implements the symbol table, as used in the .coldsyncrc
  * parser. No, it's not terribly sophisticated, because we're likely

@@ -8,7 +8,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: net_compat.c,v 2.2 2001-01-30 08:13:00 arensb Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>		/* For NULL */

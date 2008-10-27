@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: generic.hh,v 1.2 2002-12-18 00:21:02 azummo Exp $
+ * $Id$
  */
 #ifndef _GenericConduit_hh_
 #define _GenericConduit_hh_

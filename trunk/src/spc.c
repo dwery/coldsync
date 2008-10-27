@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.c,v 2.14 2002-08-31 19:26:03 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

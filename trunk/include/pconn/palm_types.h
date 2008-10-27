@@ -5,7 +5,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_types.h,v 1.3 2001-03-10 05:30:51 arensb Exp $
+ * $Id$
  */
 #ifndef _palm_types_h_
 #define _palm_types_h_

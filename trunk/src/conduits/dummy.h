@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: dummy.h,v 1.1 2002-12-10 11:54:51 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

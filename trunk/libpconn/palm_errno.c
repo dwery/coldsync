@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.c,v 1.9 2003-02-24 23:54:31 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 

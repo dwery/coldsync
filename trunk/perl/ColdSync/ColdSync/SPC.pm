@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: SPC.pm,v 1.30 2004-07-07 02:20:43 christophe Exp $
+# $Id$
 
 # XXX - Write POD
 

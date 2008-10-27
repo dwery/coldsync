@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: VFS.pm,v 1.9 2005-07-29 02:24:02 christophe Exp $
+# $Id$
 
 # XXX - Write POD
 

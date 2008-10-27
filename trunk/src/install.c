@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: install.c,v 2.42 2004-10-21 20:24:14 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

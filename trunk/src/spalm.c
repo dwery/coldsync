@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spalm.c,v 2.21 2004-10-24 15:00:51 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

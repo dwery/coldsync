@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: lexer.l,v 2.60 2003-11-12 07:16:24 azummo Exp $
+ * $Id$
  */
 #include <stdio.h>
 #include <string.h>

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: generic.cc,v 1.2 2002-12-18 00:18:16 azummo Exp $
+ * $Id$
  */
 
 /* Note on I/O:

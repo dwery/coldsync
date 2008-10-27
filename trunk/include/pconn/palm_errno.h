@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: palm_errno.h,v 1.8 2003-03-02 12:24:07 azummo Exp $
+ * $Id$
  */
 #ifndef _palm_errno_h_
 #define _palm_errno_h_

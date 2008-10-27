@@ -1,6 +1,6 @@
 	Some notes on running ColdSync with libusb 
 
-$Id: README.libusb,v 1.3 2004-11-01 17:24:38 azummo Exp $
+$Id$
 
 
 	libusb is an USB abstraction library that's used

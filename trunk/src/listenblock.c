@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: listenblock.c,v 2.5 2002-11-23 16:30:55 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

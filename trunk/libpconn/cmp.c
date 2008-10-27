@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: cmp.c,v 1.17 2003-11-30 17:19:34 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

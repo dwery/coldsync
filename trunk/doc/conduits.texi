@@ -1,6 +1,6 @@
 \input texinfo	@c -*-texinfo-*-
 @c
-@c $Id: conduits.texi,v 1.19 2003-10-10 10:58:20 azummo Exp $
+@c $Id$
 @c
 @c %**start of header
 @setfilename conduits.info

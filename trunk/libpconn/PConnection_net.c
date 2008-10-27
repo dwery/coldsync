@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection_net.c,v 1.32 2003-02-24 23:55:15 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

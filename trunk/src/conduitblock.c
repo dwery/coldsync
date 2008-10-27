@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: conduitblock.c,v 2.4 2003-10-01 12:29:39 azummo Exp $
+ * $Id$
  */
 
 #include "config.h"

@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: netsync.c,v 2.3 2002-12-18 01:41:04 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

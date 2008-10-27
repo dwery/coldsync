@@ -6,7 +6,7 @@
 #   - try to send
 #   - if sent, delete from Palm outbox
 #
-# $Id: send-mail-2,v 1.1 2003-06-28 14:30:24 azummo Exp $
+# $Id$
 #
 use strict;
 

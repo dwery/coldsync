@@ -41,7 +41,7 @@
  * machine the server, and the Palm the client. The Palm headers,
  * however, have this reversed.
  *
- * $Id: cmp.h,v 1.8 2003-11-30 17:19:34 azummo Exp $
+ * $Id$
  */
 #ifndef _cmp_h_
 #define _cmp_h_

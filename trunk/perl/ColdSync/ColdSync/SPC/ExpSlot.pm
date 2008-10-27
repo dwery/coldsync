@@ -6,7 +6,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ExpSlot.pm,v 1.6 2003-06-25 19:48:28 azummo Exp $
+# $Id$
 
 # XXX - Write POD
 

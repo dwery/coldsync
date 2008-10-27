@@ -12,7 +12,7 @@
  * further up the stack" or "data sent down to a protocol further down
  * the stack (SLP)", or something else, depending on context.
  *
- * $Id: padp.c,v 1.26 2004-03-27 15:26:54 azummo Exp $
+ * $Id$
  */
 
 /*

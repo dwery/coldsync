@@ -12,7 +12,7 @@
  * native format, convert them to Palm (big-endian) format, and write
  * them to a ubyte string.
  *
- * $Id: util.c,v 1.5 2003-08-05 13:32:45 arensb Exp $
+ * $Id$
  */
 
 #include "config.h"

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: spc.h,v 2.6 2004-11-05 02:17:43 christophe Exp $
+ * $Id$
  *
  * Structure of an SPC request:
  *	[request header] [data]

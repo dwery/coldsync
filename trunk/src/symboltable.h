@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: symboltable.h,v 2.4 2002-03-18 08:28:41 arensb Exp $
+ * $Id$
  */
 /* XXX - Redo the API: get_symbol() ought to return a (struct symbol *). */
 

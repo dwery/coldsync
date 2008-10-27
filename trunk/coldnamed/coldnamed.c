@@ -4,7 +4,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: coldnamed.c,v 1.1 2002-03-19 12:00:10 arensb Exp $
+ * $Id$
  */
 
 #include "config.h"

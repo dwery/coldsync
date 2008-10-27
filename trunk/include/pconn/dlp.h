@@ -57,7 +57,7 @@
  * in the request. However, even in DLP 2.0, the Palm is not expected
  * to originate long arguments, even though it will accept them.
  *
- * $Id: dlp.h,v 1.9 2003-11-30 17:19:34 azummo Exp $
+ * $Id$
  */
 #ifndef _dlp_h_
 #define _dlp_h_

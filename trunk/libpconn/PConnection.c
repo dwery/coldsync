@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: PConnection.c,v 1.36 2004-03-27 15:23:58 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

@@ -7,7 +7,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: backup.c,v 2.40 2002-10-16 18:59:32 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

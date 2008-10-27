@@ -11,7 +11,7 @@
  * other user programs: for them, see the DLP convenience functions in
  * dlp_cmd.c.
  *
- * $Id: dlp.c,v 1.22 2004-10-21 20:29:05 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

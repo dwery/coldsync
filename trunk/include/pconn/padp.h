@@ -55,7 +55,7 @@
  * indicate that the receiving end can't allocate enough memory to
  * receive the entire packet.
  *
- * $Id: padp.h,v 1.8 2001-09-07 23:49:23 arensb Exp $
+ * $Id$
  */
 #ifndef _padp_h_
 #define _padp_h_

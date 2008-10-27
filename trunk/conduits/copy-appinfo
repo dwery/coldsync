@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: copy-appinfo,v 3.6 2004-02-25 12:38:56 azummo Exp $
+# $Id$
 
 # This conduit simply copies the AppInfo block from the database on the
 # Palm to the desktop.

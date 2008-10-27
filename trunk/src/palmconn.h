@@ -5,7 +5,7 @@
  *      You may distribute this file under the terms of the Artistic
  *      License, as specified in the README file.
  *
- * $Id: palmconn.h,v 2.3 2002-09-04 14:19:09 azummo Exp $
+ * $Id$
  */
 
 #ifndef _palmconn_h_

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: parser.y,v 2.75 2003-10-01 12:29:39 azummo Exp $
+ * $Id$
  */
 #include "config.h"
 #include <stdio.h>

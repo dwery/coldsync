@@ -4,7 +4,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: std-categories,v 3.5 2001-06-04 01:41:10 arensb Exp $
+# $Id$
 #
 # This is a ColdSync Sync conduit for synchronizing the categories between
 # a database on the Palm and one on the desktop.

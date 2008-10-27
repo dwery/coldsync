@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2004-11-02 04:22:19 christophe Exp $
+# $Id$
 
 TOP =		../..
 SUBDIR =	include/pconn

@@ -5,7 +5,7 @@
 #	You may distribute this file under the terms of the Artistic
 #	License, as specified in the README file.
 #
-# $Id: ColdSync.pm,v 1.28 2004-10-26 12:31:12 christophe Exp $
+# $Id$
 package ColdSync;
 use strict;
 

@@ -6,7 +6,7 @@
  *	You may distribute this file under the terms of the Artistic
  *	License, as specified in the README file.
  *
- * $Id: crc.c,v 1.1 2001-07-06 05:41:02 arensb Exp $
+ * $Id$
  */
 
 #include "palm.h"
