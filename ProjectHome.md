@@ -1,0 +1,1 @@
+ColdSync is a tool for synchronizing Palm OS devices (PalmPilot, Palm V, Qualcomm PDQ, etc.) with Unix workstations. This is an open source project, and is free for both commercial and non-commercial use, under the terms of the Artistic license.
